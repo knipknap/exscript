@@ -10,12 +10,6 @@ class Job(threading.Thread):
         self.logfile_lock   = None
         self.debug          = kwargs.get('debug', 0)
         self.action.debug   = self.debug
-        action.signal_connect('data_received', self._on_log_data_received)
-        action.signal_connect('notify',        self._on_log_data_received)
-
-
-    def _on_log_data_received(self, name, data):
-        sys.stdout.write(data)
 
 
     def run(self):

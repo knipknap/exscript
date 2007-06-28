@@ -16,7 +16,7 @@ class Transport(Base):
     def __init__(self, *args, **kwargs):
         Base.__init__(self, **kwargs)
         self.tn        = None
-        self.timeout   = 5
+        self.timeout   = 30
         self.host_type = 'unknown'
         self.debug     = kwargs.get('debug',   0)
         self.echo      = kwargs.get('echo',    False)
@@ -49,6 +49,10 @@ class Transport(Base):
             self.prompt = prompt_re
         else:
             self.prompt = prompt
+
+
+    def set_timeout(self, timeout):
+        self.timeout = timeout
 
 
     def connect(self, hostname):

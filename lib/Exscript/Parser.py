@@ -57,24 +57,30 @@ class Parser:
         return (line_start, line_end)
 
 
-    def error(self, line, char, type, error):
+    def error(self, line, char, type, typename, error):
+        if type is None:
+            type = Exception
         start, end = self.get_line_position_from_char(char)
         output  = self.input[start:end] + '\n'
         output += (' ' * (char - start)) + '^\n'
         output += '%s in line %s' % (error, line)
-        raise Exception, 'Exscript: ' + type  + ':\n' + output + '\n'
+        raise type, 'Exscript: ' + typename  + ':\n' + output + '\n'
 
 
     def syntax_error(self, error):
-        self.error(self.current_line, self.current_char, 'Syntax error', error)
+        self.error(self.current_line, self.current_char, None, 'Syntax error', error)
 
 
-    def generic_error(self, sender, type, error):
-        self.error(sender.line, sender.char, type, error)
+    def generic_error(self, sender, typename, error):
+        self.error(sender.line, sender.char, None, typename, error)
 
 
     def runtime_error(self, sender, error):
         self.generic_error(sender, 'Runtime error', error)
+
+
+    def exception(self, sender, type, typename, error):
+        self.error(sender.line, sender.char, type, typename, error)
 
 
     def match(self):

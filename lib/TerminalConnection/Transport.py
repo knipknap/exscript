@@ -11,6 +11,14 @@ class Transport:
         self.on_data_received_args = args
 
 
+    def set_prompt(self, prompt = None):
+        AbstractMethod()
+
+
+    def set_timeout(self, timeout):
+        AbstractMethod()
+
+
     def connect(self, hostname):
         AbstractMethod()
 

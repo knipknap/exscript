@@ -20,17 +20,38 @@ class IfCondition(Token):
         # Body of the if block.
         while parser.next_if('newline') or parser.next_if('whitespace'):
             pass
-        self.block = Exscript.Exscript(parser, scope)
+        self.if_block    = Exscript.Exscript(parser, scope)
+        self.elif_blocks = []
+        self.else_block  = None
+
+        # If there is no "else" statement, just return.
+        while parser.next_if('newline') or parser.next_if('whitespace'):
+            pass
+        if not parser.next_if('keyword', 'else'):
+            return
+
+        # If the "else" statement is followed by an "if" (=elif),
+        # read the next if condition recursively and return.
+        while parser.next_if('newline') or parser.next_if('whitespace'):
+            pass
+        if parser.next_if('if'):
+            self.else_block = IfCondition(parser, scope)
+            return
+
+        # There was no "elif", so we handle a normal "else" condition here.
+        self.else_block = Exscript.Exscript(parser, scope)
 
 
     def value(self):
         if self.expression.value():
-            self.block.value()
+            self.if_block.value()
+        elif self.else_block is not None:
+            self.else_block.value()
         return 1
 
 
     def dump(self, indent = 0):
         print (' ' * indent) + self.name, 'start'
         self.expression.dump(indent + 1)
-        self.block.dump(indent + 1)
+        self.if_block.dump(indent + 1)
         print (' ' * indent) + self.name, 'end'

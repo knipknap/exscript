@@ -6,13 +6,13 @@ class WorkQueue:
     def __init__(self, *args, **kwargs):
         self.main_loop       = MainLoop()
         self.main_loop.debug = kwargs.get('debug', 0)
-        if kwargs.has_key('max_connections'):
-            self.main_loop.set_max_connections(kwargs['max_connections'])
+        if kwargs.has_key('max_threads'):
+            self.main_loop.set_max_threads(kwargs['max_threads'])
         self.main_loop.start()
 
-    def set_max_connections(self, max_connections):
-        assert max_connections is not None
-        self.main_loop.set_max_connections(max_connections)
+    def set_max_threads(self, max_threads):
+        assert max_threads is not None
+        self.main_loop.set_max_threads(max_threads)
 
     def enqueue(self, action):
         self.main_loop.enqueue(action)

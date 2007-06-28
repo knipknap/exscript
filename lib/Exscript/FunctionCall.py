@@ -13,6 +13,9 @@ class FunctionCall(Token):
         (type, token) = parser.token()
         parser.expect('open_function_call')
         self.funcname = token[:-1]
+        function      = self.parent.get(self.funcname)
+        if function is None:
+            self.parser.syntax_error('Undefined function %s' % self.funcname)
 
         # Parse the argument list.
         (type, token) = parser.token()

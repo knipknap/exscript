@@ -1,5 +1,6 @@
 import re
-from Token import Token
+from Token     import Token
+from Exception import DeviceException
 
 string_re = re.compile(r'(?<!\\)\$([a-z][\w_]+\b)', re.I)
 error_re  = re.compile(r'^%? ?(?:error|invalid|incomplete)', re.I)
@@ -60,12 +61,13 @@ class Execute(Token):
             error = 'Error while waiting for response from device'
             self.parser.runtime_error(self, error)
 
+        response = response[1:] # Skip the first line, which is the echo of the command sent.
         for line in response:
             match = error_re.match(line)
             if match is None:
                 continue
             error = 'Device said:\n' + '\n'.join(response)
-            self.parser.runtime_error(self, error)
+            self.parser.exception(self, DeviceException, 'Exception', error)
 
         self.parent.define(_response = response)
         return 1

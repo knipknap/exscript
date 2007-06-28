@@ -1,5 +1,5 @@
 import threading
-from Action import Action
+from WorkQueue.Action import Action
 
 True  = 1
 False = 0

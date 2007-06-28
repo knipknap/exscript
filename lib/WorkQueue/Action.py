@@ -1,5 +1,4 @@
-import os, sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import os
 from Trackable      import Trackable
 from AbstractMethod import AbstractMethod
 

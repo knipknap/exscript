@@ -1,14 +1,12 @@
-__all__ = ['Action',
-           'Sequence',
+__all__ = ['LoggedSequence',
            'Authenticate',
            'Authorize',
            'Close',
-           'Connect',
            'Command',
-           'CommandScript']
+           'CommandScript',
+           'Connect']
 
-from Action         import Action
-from Sequence       import Sequence
+from LoggedSequence import LoggedSequence
 from Authenticate   import Authenticate
 from Authorize      import Authorize
 from Close          import Close

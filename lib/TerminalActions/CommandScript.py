@@ -1,5 +1,5 @@
-#import copy
-from Action import Action
+import copy
+from WorkQueue.Action import Action
 
 True  = 1
 False = 0
@@ -9,6 +9,7 @@ class CommandScript(Action):
         assert exscript is not None
         Action.__init__(self)
         self.exscript = exscript
+
         #FIXME: In Python > 2.2 you should be able to do this:
         #self.exscript = copy.deepcopy(exscript)
         self.exscript.signal_connect('notify', self.emit)

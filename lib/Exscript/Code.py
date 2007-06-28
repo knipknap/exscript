@@ -4,6 +4,7 @@ from Extract      import Extract
 from IfCondition  import IfCondition
 from FunctionCall import FunctionCall
 from Loop         import Loop
+from Try          import Try
 from Enter        import Enter
 
 varname_re = r'[a-zA-Z][\w_]+'
@@ -17,7 +18,7 @@ grammar = (
     ('close_bracket',       r'\)'),
     ('comma',               r','),
     ('whitespace',          r'[ \t]+'),
-    ('keyword',             r'\b(?:extract|as|if|else|end|loop|enter)\b'),
+    ('keyword',             r'\b(?:extract|as|if|else|end|loop|try|enter)\b'),
     ('assign',              r'='),
     ('comparison',          r'\b(?:is\s+not|is|ge|gt|le|lt|matches)\b'),
     ('arithmetic_operator', r'(?:\*|\+|-|/)'),
@@ -48,8 +49,13 @@ class Code(Scope):
                 self.children.append(IfCondition(parser, self))
             elif parser.next_if('keyword', 'loop'):
                 self.children.append(Loop(parser, self))
+            elif parser.current_is('keyword', 'try'):
+                self.children.append(Try(parser, self))
             elif parser.current_is('keyword', 'enter'):
                 self.children.append(Enter(parser, self))
+            elif parser.current_is('keyword', 'else'):
+                parent.exit_request()
+                break
             elif parser.next_if('keyword', 'end'):
                 parent.exit_request()
                 while parser.next_if('whitespace') or parser.next_if('newline'):
