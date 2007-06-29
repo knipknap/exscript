@@ -1,0 +1,23 @@
+Exscript
+---------
+Exscript is a scripting/template language for automating Telnet
+and SSH sessions.
+
+
+Installation
+-------------
+Extract the archive and you are ready to start the interpreter:
+
+  ./exscript --help
+
+Provides an overview over command line options. For example Exscript
+programs, have a look into the lib/Exscript/tests/ directory.
+
+More information can be found on the project homepage:
+http://code.google.com/p/exscript/
+
+
+Requirements
+-------------
+Python >= 2.2
+Python-crypto
