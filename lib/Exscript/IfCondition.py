@@ -34,11 +34,12 @@ class IfCondition(Token):
         # read the next if condition recursively and return.
         while parser.next_if('newline') or parser.next_if('whitespace'):
             pass
-        if parser.next_if('if'):
+        if parser.next_if('keyword', 'if'):
             self.else_block = IfCondition(parser, scope)
             return
 
         # There was no "elif", so we handle a normal "else" condition here.
+        parser.expect('close_curly_bracket')
         self.else_block = Exscript.Exscript(parser, scope)
 
 
@@ -54,4 +55,6 @@ class IfCondition(Token):
         print (' ' * indent) + self.name, 'start'
         self.expression.dump(indent + 1)
         self.if_block.dump(indent + 1)
+        if self.else_block is not None:
+            self.else_block.dump(indent + 1)
         print (' ' * indent) + self.name, 'end'

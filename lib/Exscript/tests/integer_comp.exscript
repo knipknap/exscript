@@ -1,0 +1,21 @@
+{if 20 is 5 * 4}
+  #Integer comparison "20 is 5 * 4" works
+{end}
+{if 21 is 5 * 4}
+  #Integer comparison "21 is 5 * 4" broken
+{end}
+{if 5 * 4 is 20 and not 1 is 0}
+  #Integer comparison "5 * 4 is 20 and not 1 is 0" works
+{end}
+{if 5 * 4 is 22 or 5 * 4 is 20}
+  #Integer comparison "5 * 4 is 22 or 5 * 4 is 20" works
+{end}
+{if 5 * 4 is not 5 * 5}
+  #Integer comparison "5 * 4 is not 5 * 5" works
+{end}
+{if 5 * 4 is 20 and 30 is 10 * 3}
+  #Integer comparison "5 * 4 is 20 and 30 is 10 * 3" works
+{end}
+{if 20 is 5 * 4 and 30 is 10 * 3 and not 0}
+  #Integer comparison "20 is 5 * 4 and 30 is 10 * 3 and not 0" works
+{end}

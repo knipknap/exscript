@@ -28,7 +28,8 @@ class Regex(Token):
             else:
                 type = parser.token()[0]
                 parser.syntax_error('Expected regular expression but got %s' % type)
-        self.regex = re.compile(regex)
+        self.pattern = regex
+        self.regex   = re.compile(regex)
         parser.restore_grammar()
 
 

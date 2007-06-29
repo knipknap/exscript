@@ -1,0 +1,8 @@
+{if    40   is  5 * 4 * 2
+   and 30   is 10 * 3
+   and 1200 is 40 * 30
+   and 1
+   and "test" is "test"
+   and not 1234 is not 1234}
+  #Mixed comparison 1 works
+{end}

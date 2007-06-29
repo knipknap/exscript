@@ -37,6 +37,7 @@ class Transport(Base):
         data = data.replace('\r', '')
         if self.echo:
             sys.stdout.write(data)
+            sys.stdout.flush()
         if self.log is not None:
             self.log.write(data)
         if self.on_data_received_cb is not None:

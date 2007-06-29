@@ -44,7 +44,7 @@ class Extract(Token):
         # Walk through all lines, matching each one against the regular
         # expression.
         for line in self.parent.get('_response'):
-            match = self.regex.value().match(line)
+            match = self.regex.value().search(line)
             if match is None:
                 continue
 
@@ -68,4 +68,4 @@ class Extract(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.varnames
+        print (' ' * indent) + self.name, self.regex.pattern, 'into', self.varnames

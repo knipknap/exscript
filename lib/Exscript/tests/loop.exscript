@@ -1,0 +1,4 @@
+show {extract /^(\S+)/ as interfaces}
+{loop interfaces as interface}
+  show $interface
+{end}

@@ -32,8 +32,9 @@ class Parser:
             for funcname in dir(module):
                 if funcname.startswith('_'):
                     continue
-                efuncname = 'exscript.' + modname.lower() + '.' + funcname
-                print 'Loading function', efuncname
+                efuncname = modname.lower() + '.' + funcname
+                if self.debug > 0:
+                    print 'Loading function', efuncname
                 self.stdlib[efuncname] = module.__dict__[funcname]
 
 

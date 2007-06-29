@@ -1,0 +1,4 @@
+show ip int brie {
+    extract /^(\S+)\s(\S+)/ as interfaces, status
+    extract /^hostname (.*)/ as title
+}

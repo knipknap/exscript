@@ -1,0 +1,10 @@
+test {extract // as interface}
+{if interface is "POS1/0"}
+  # interface is "POS1/0" - works
+{end}
+{if "POS1/0" is "POS1/0"}
+  # "POS1/0" is "POS1/0" - works
+{end}
+{if "POS1/0" is not "POS2/0"}
+  # "POS1/0" is not "POS2/0" - works
+{end}
