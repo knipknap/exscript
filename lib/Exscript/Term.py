@@ -1,17 +1,3 @@
-# Copyright (C) 2007 Samuel Abels, http://debain.org
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2, as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Token        import Token
 from Variable     import Variable
 from Number       import Number
@@ -20,30 +6,29 @@ from String       import String
 from Regex        import Regex
 
 class Term(Token):
-    def __init__(self, parser, scope):
+    def __init__(self, parser, parent):
         Token.__init__(self, 'Term', parser)
-        self.term   = None
-        self.lft    = None
-        self.rgt    = None
-        self.op     = None
-        self.scope = scope
+        self.term = None
+        self.lft  = None
+        self.rgt  = None
+        self.op   = None
 
         # Expect a term.
         (type, token) = parser.token()
-        if parser.next_if('varname'):
-            if not scope.is_defined(token):
-                parser.generic_error(self, 'Error', 'Undeclared variable %s' % token)
-            self.term = Variable(scope, token)
+        if parser.current_is('varname'):
+            if not parent.is_defined(token):
+                parent.generic_error(self, 'Error', 'Undeclared variable %s' % token)
+            self.term = Variable(parser, parent)
         elif parser.current_is('open_function_call'):
-            self.term = FunctionCall(parser, scope)
+            self.term = FunctionCall(parser, parent)
         elif parser.next_if('string_delimiter'):
-            self.term = String(parser)
+            self.term = String(parser, parent)
         elif parser.next_if('number'):
             self.term = Number(token)
         elif parser.next_if('regex_delimiter'):
             self.term = Regex(parser)
         else:
-            parser.syntax_error('Expected term but got %s' % type)
+            parent.syntax_error(self, 'Expected term but got %s' % type)
 
 
     def priority(self):

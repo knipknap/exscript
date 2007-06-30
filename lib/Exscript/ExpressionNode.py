@@ -1,17 +1,3 @@
-# Copyright (C) 2007 Samuel Abels, http://debain.org
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2, as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Token import Token
 from Term  import Term
 from Regex import Regex
@@ -50,7 +36,7 @@ class ExpressionNode(Token):
         if not parser.next_if('arithmetic_operator') and \
            not parser.next_if('logical_operator') and \
            not parser.next_if('comparison'):
-            parser.syntax_error('Expected operator but got %s' % self.op_type)
+            parent.syntax_error(self, 'Expected operator but got %s' % self.op_type)
 
         # Expect the second term.
         self.rgt = ExpressionNode(parser, scope, self)
@@ -99,7 +85,7 @@ class ExpressionNode(Token):
                 match = regex.match(subject)
             except:
                 error = 'Right hand operator is not a regular expression'
-                self.parser.runtime_error(self.rgt, error)
+                self.parent.runtime_error(self.rgt, error)
             if match is None:
                 return 0
             return 1

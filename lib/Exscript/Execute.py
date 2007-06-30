@@ -1,17 +1,3 @@
-# Copyright (C) 2007 Samuel Abels, http://debain.org
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2, as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
 from Token     import Token
 from Exception import DeviceException
@@ -36,9 +22,11 @@ class Execute(Token):
         varname = match.group(1)
         value   = self.parent.get(varname)
         if value is None:
-            self.parser.runtime_error(self, 'Undefined variable %s' % varname)
+            self.char = self.char + self.command.find('$' + varname)
+            self.parent.generic_error(self, 'Undefined', 'Undefined variable %s' % varname)
         elif type(value) == type(self.variable_test_cb):
-            self.parser.runtime_error(self, '%s is not a variable name' % varname)
+            self.char = self.char + self.command.find('$' + varname)
+            self.parent.generic_error(self, 'Undefined', '%s is not a variable name' % varname)
         return match.group(0)
 
 
@@ -46,9 +34,11 @@ class Execute(Token):
         varname = match.group(1)
         value   = self.parent.get(varname)
         if value is None:
-            self.parser.runtime_error(self, 'Undefined variable %s' % varname)
+            self.char = self.char + self.command.find('$' + varname)
+            self.parent.runtime_error(self, 'Undefined variable %s' % varname)
         elif type(value) == type(self.variable_test_cb):
-            self.parser.runtime_error(self, '%s is not a variable name' % varname)
+            self.char = self.char + self.command.find('$' + varname)
+            self.parent.runtime_error(self, '%s is not a variable name' % varname)
         elif type(value) == type([]):
             if len(value) > 0:
                 value = value[0]
@@ -60,7 +50,7 @@ class Execute(Token):
     def value(self):
         if not self.parent.is_defined('_connection'):
             error = 'Undefined variable "_connection"'
-            self.parser.runtime_error(self, error)
+            self.parent.runtime_error(self, error)
         conn = self.parent.get('_connection')
 
         # Substitute variables in the command for values.
@@ -73,7 +63,7 @@ class Execute(Token):
 
         if response is None:
             error = 'Error while waiting for response from device'
-            self.parser.runtime_error(self, error)
+            self.parent.runtime_error(self, error)
 
         response = response[1:] # Skip the first line, which is the echo of the command sent.
         for line in response:
@@ -81,7 +71,8 @@ class Execute(Token):
             if match is None:
                 continue
             error = 'Device said:\n' + '\n'.join(response)
-            self.parser.exception(self, DeviceException, 'Exception', error)
+            self.parent.exception(self, DeviceException, 'DeviceException', error)
+
 
         self.parent.define(_response = response)
         return 1

@@ -1,17 +1,3 @@
-# Copyright (C) 2007 Samuel Abels, http://debain.org
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2, as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
 from Token import Token
 
@@ -41,7 +27,7 @@ class Regex(Token):
                 break
             else:
                 type = parser.token()[0]
-                parser.syntax_error('Expected regular expression but got %s' % type)
+                parent.syntax_error(self, 'Expected regular expression but got %s' % type)
         self.pattern = regex
         self.regex   = re.compile(regex)
         parser.restore_grammar()

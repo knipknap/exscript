@@ -1,21 +1,7 @@
-# Copyright (C) 2007 Samuel Abels, http://debain.org
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2, as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import copy
 import types
 import stdlib
-from Exscript import Exscript
+from Program import Program
 
 class Parser:
     def __init__(self, *args, **kwargs):
@@ -62,42 +48,6 @@ class Parser:
         self.token_buffer = None
 
 
-    def get_line_position_from_char(self, char):
-        line_start = char
-        while line_start != 0:
-            if self.input[line_start - 1] == '\n':
-                break
-            line_start -= 1
-        line_end = self.input.find('\n', char)
-        return (line_start, line_end)
-
-
-    def error(self, line, char, type, typename, error):
-        if type is None:
-            type = Exception
-        start, end = self.get_line_position_from_char(char)
-        output  = self.input[start:end] + '\n'
-        output += (' ' * (char - start)) + '^\n'
-        output += '%s in line %s' % (error, line)
-        raise type, 'Exscript: ' + typename  + ':\n' + output + '\n'
-
-
-    def syntax_error(self, error):
-        self.error(self.current_line, self.current_char, None, 'Syntax error', error)
-
-
-    def generic_error(self, sender, typename, error):
-        self.error(sender.line, sender.char, None, typename, error)
-
-
-    def runtime_error(self, sender, error):
-        self.generic_error(sender, 'Runtime error', error)
-
-
-    def exception(self, sender, type, typename, error):
-        self.error(sender.line, sender.char, type, typename, error)
-
-
     def match(self):
         if self.current_char >= self.input_length:
             self.token_buffer = ('EOF', '')
@@ -109,6 +59,10 @@ class Parser:
                 #print "Match:", self.token_buffer
                 return
         self.syntax_error('Invalid syntax: %s' % self.input[self.current_char:])
+
+
+    def syntax_error(self, error):
+        raise Exception, error
 
 
     def next(self):
@@ -134,7 +88,7 @@ class Parser:
                 error = 'Expected %s but got %s' % (type, cur_type)
             else:
                 error = 'Expected "%s" but got "%s"' % (token, cur_token)
-            self.syntax_error(error)
+            self.syntax_error(error) #FIXME: Context free sucks here. Move to a place where the sender is available.
         return 1
 
 
@@ -171,7 +125,7 @@ class Parser:
         # Define the standard library now, in order to prevent it from being overwritten
         # by the user.
         self.define(**self.stdlib)
-        compiled = Exscript(self, None, variables = self.variables)
+        compiled = Program(self, None, variables = self.variables)
         if self.debug > 3:
             compiled.dump()
         return compiled
