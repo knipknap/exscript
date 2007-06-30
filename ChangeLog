@@ -1,0 +1,8 @@
+2007-06-30 Samuel Abels <http://debain.org>
+
+	* Exscript/*.py: Fix: Runtime error handling was broken when
+	compiling two scripts using the same compiler instance.
+
+2007-06-29 Samuel Abels <http://debain.org>
+
+	* Initial release 0.9
