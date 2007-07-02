@@ -41,7 +41,11 @@ class Authorize(Action):
         assert local_context  is not None
         local_context['transport'].set_on_data_received_cb(self._on_data_received)
         self.tacacs_lock(global_context, local_context['user']).acquire()
-        local_context['transport'].authorize(self.password)
+        try:
+            local_context['transport'].authorize(self.password)
+        except:
+            self.tacacs_lock(global_context, local_context['user']).release()
+            raise
         self.tacacs_lock(global_context, local_context['user']).release()
         local_context['transport'].set_on_data_received_cb(None)
         return True

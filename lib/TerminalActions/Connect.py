@@ -36,6 +36,7 @@ class Connect(Action):
     def execute(self, global_context, local_context):
         assert global_context is not None
         assert local_context  is not None
+        self.emit('notify', 'Connecting to %s' % self.hostname)
         self.transport.debug = self.debug
         self.global_context  = global_context
         if not self.transport.connect(self.hostname):

@@ -19,10 +19,10 @@ import telnetlib
 True  = 1
 False = 0
 
-cisco_user_re = re.compile(r'[\r\n]username: ', re.I)
-junos_user_re = re.compile(r'[\r\n]login: ?',   re.I)
-unix_user_re  = re.compile(r'(user|login): ?',  re.I)
-pass_re       = re.compile(r'password:? ?',     re.I)
+cisco_user_re = re.compile(r'[\r\n]username:', re.I)
+junos_user_re = re.compile(r'[\r\n]login:',    re.I)
+unix_user_re  = re.compile(r'(user|login):',   re.I)
+pass_re       = re.compile(r'password:? ?',    re.I)
 skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
 prompt_re     = re.compile(r'[\r\n][\-\w\(\)@]+[#>%] ?', re.I)
 
@@ -86,15 +86,12 @@ class Transport(Base):
         host_type   = ['cisco',       'junos',       'unix']
         user_prompt = [cisco_user_re, junos_user_re, unix_user_re]
         which       = None
-        if self.debug > 0:
+        try:
             (which, _, _)  = self.tn.expect(user_prompt, self.timeout)
             self.host_type = host_type[which]
-        else:
-            try:
-                (which, _, _)  = self.tn.expect(user_prompt, self.timeout)
-                self.host_type = host_type[which]
-            except:
-                raise Exception("Error while waiting for username prompt")
+        except:
+            print 'Error while waiting for username prompt'
+            raise
 
         # Send the user name.
         self.send(user + '\n')
@@ -103,13 +100,11 @@ class Transport(Base):
         prompt  = [skey_re, pass_re, self.prompt]
         which   = None
         matches = None
-        if self.debug > 0:
+        try:
             (which, matches, _) = self.tn.expect(prompt, self.timeout)
-        else:
-            try:
-                (which, matches, _) = self.tn.expect(prompt, self.timeout)
-            except:
-                raise Exception("Error while waiting for password prompt")
+        except:
+            print 'Error while waiting for password prompt'
+            raise
 
         # Send the password (if a password prompt was received).
         if which == 0:
@@ -143,7 +138,8 @@ class Transport(Base):
         try:
             (which, matches, _) = self.tn.expect(prompt, self.timeout)
         except:
-            raise Exception("Error while waiting for password prompt")
+            print 'Error while waiting for password prompt'
+            raise
 
         # Send the password (if a password prompt was received).
         if which == 0:
@@ -166,7 +162,8 @@ class Transport(Base):
         try:
             (_, _, response) = self.tn.expect([self.prompt], self.timeout)
         except:
-            raise Exception("Error while waiting for the prompt")
+            print 'Error while waiting for a prompt'
+            raise
         if response is None:
             return response
         return response.split('\n')
@@ -177,7 +174,8 @@ class Transport(Base):
         try:
             self.tn.write(data)
         except:
-            raise Exception("Error while writing to connection")
+            print 'Error while writing to connection'
+            raise
 
 
     def execute(self, data):

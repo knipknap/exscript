@@ -1,11 +1,17 @@
+import copy
 from Exscript import Exscript
 from Scope    import Scope
 
 class Program(Scope):
     def __init__(self, parser, *args, **kwargs):
         Scope.__init__(self, 'Program', parser, None, **kwargs)
-        self.input = parser.input
+        self.init_variables = kwargs.get('variables', {})
+        self.input          = parser.input
         self.children.append(Exscript(parser, self))
+
+
+    def init(self, *args, **kwargs):
+        self.init_variables.update(kwargs)
 
 
     def get_line_position_from_char(self, char):
@@ -44,5 +50,8 @@ class Program(Scope):
         self.generic_error(sender, 'Runtime error', error)
 
 
-    def execute(self):
+    def execute(self, *args, **kwargs):
+        self.variables = copy.copy(self.init_variables)
+        if kwargs.has_key('variables'):
+            self.variables.update(kwargs.get('variables'))
         return self.value()

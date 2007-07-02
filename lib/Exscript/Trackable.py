@@ -1,4 +1,4 @@
-class Slot:
+class Slot(object):
     def __init__(self):
         self.subscribers = []
 
@@ -10,7 +10,7 @@ class Slot:
             func(name, **kwargs)
 
 
-class Trackable:
+class Trackable(object):
     def __init__(self):
         self.slots = {}
 

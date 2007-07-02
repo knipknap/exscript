@@ -24,9 +24,3 @@ def vendor(scope, force = 0):
         vendor = ['unknown']
     scope.define(**{'_stdlib.device.vendor': vendor})
     return vendor
-
-
-def set_prompt(scope, prompt = None):
-    conn = scope.get('_connection')
-    conn.set_prompt(prompt)
-    return 1

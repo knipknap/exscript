@@ -10,7 +10,7 @@ grammar_c = []
 for type, regex in grammar:
     grammar_c.append((type, re.compile(regex)))
 
-class String:
+class String(object):
     def __init__(self, parser, parent):
         parser.set_grammar(grammar_c)
         self.string = ''

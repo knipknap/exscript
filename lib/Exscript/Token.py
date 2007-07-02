@@ -1,4 +1,4 @@
-class Token:
+class Token(object):
     def __init__(self, name, parser):
         self.name   = name
         #self.parser = parser

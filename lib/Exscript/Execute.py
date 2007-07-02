@@ -73,7 +73,6 @@ class Execute(Token):
             error = 'Device said:\n' + '\n'.join(response)
             self.parent.exception(self, DeviceException, 'DeviceException', error)
 
-
         self.parent.define(_response = response)
         return 1
 

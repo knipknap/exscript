@@ -36,16 +36,20 @@ class LoggedSequence(Sequence):
             action.signal_connect('notify',        self._on_log_data_received)
 
 
-    def _log(self, logfile, lock_key, data):
-        if logfile is None or lock_key is None:
+    def _log(self, logfile_name, lock_key, data):
+        if logfile_name is None or lock_key is None:
             return
         logfile_lock = self.global_context.get(lock_key, None)
         if logfile_lock is None:
             logfile_lock = threading.Lock()
             self.global_context[lock_key] = logfile_lock
         logfile_lock.acquire()
-        logfile = open(logfile, 'a')
-        logfile.write(data)
+        try:
+            logfile = open(logfile_name, 'a')
+            logfile.write(data)
+        except:
+            print 'Error while writing to logfile (%s)' % logfile_name
+            pass
         logfile_lock.release()
 
 

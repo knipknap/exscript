@@ -3,22 +3,8 @@
 ## Date:        2007-06-04
 ## Description: Use the EScript interpreter with a multi threaded configuration
 ##              engine to execute commands on a list of hosts.
-# Copyright (C) 2007 Samuel Abels, http://debain.org
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2, as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, time, os, re, signal
-sys.path.insert(0, 'lib')
+sys.path.insert(0, '/nmc/scripts/lib/python/')
 import Exscript
 from FooLib             import Interact
 from FooLib             import OptionParser
@@ -161,6 +147,8 @@ if options.get('hosts') is not None:
     # Read the hostnames.
     for line in file:
         hostname = line.strip()
+        if hostname == '':
+            continue
         hostnames.append(hostname)
         defines[hostname] = options['define'].copy()
 
@@ -183,7 +171,7 @@ if len(hostnames) <= 0:
 parser = Exscript.Parser(debug = options['parser-verbose'])
 parser.define(**defines[hostnames[0]])
 try:
-    parser.parse_file(exscript)
+    excode = parser.parse_file(exscript)
 except Exception, e:
     if options['verbose'] > 0:
         raise
@@ -202,7 +190,7 @@ def on_posix_signal(signum, frame):
     raise KeyboardInterrupt
 
 signal.signal(signal.SIGINT,  on_posix_signal)
-#signal.signal(signal.SIGTERM, on_posix_signal)
+signal.signal(signal.SIGTERM, on_posix_signal)
 
 # Initialize the workqueue.
 workqueue = WorkQueue(max_threads = options['connections'],
@@ -220,7 +208,7 @@ for hostname in hostnames:
     #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of recompile
     # numerous times.
     excode = parser.parse_file(exscript)
-    excode.define(**variables)
+    excode.init(**variables)
 
     # One logfile per host.
     logfile       = None

@@ -14,7 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from AbstractMethod import AbstractMethod
 
-class Transport:
+class Transport(object):
     def __init__(self, *args, **kwargs):
         self.on_data_received_cb   = kwargs.get('on_data_received',      None)
         self.on_data_received_args = kwargs.get('on_data_received_args', None)

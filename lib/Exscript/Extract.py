@@ -41,6 +41,9 @@ class Extract(Token):
         for varname in self.varnames:
             self.variables[varname] = []
 
+        response = self.parent.get('_response')
+        #print "Response is", response
+
         # Walk through all lines, matching each one against the regular
         # expression.
         for line in self.parent.get('_response'):

@@ -12,7 +12,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import copy
 from WorkQueue.Action import Action
 
 True  = 1
@@ -23,9 +22,6 @@ class CommandScript(Action):
         assert exscript is not None
         Action.__init__(self)
         self.exscript = exscript
-
-        #FIXME: In Python > 2.2 you should be able to do this:
-        #self.exscript = copy.deepcopy(exscript)
         self.exscript.signal_connect('notify', self.emit)
 
 

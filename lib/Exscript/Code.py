@@ -1,11 +1,12 @@
 import re
 from Scope        import Scope
+from Assign       import Assign
+from Enter        import Enter
 from Extract      import Extract
-from IfCondition  import IfCondition
 from FunctionCall import FunctionCall
+from IfCondition  import IfCondition
 from Loop         import Loop
 from Try          import Try
-from Enter        import Enter
 
 varname_re = r'[a-zA-Z][\w_]+'
 
@@ -49,6 +50,8 @@ class Code(Scope):
                 self.children.append(IfCondition(parser, self))
             elif parser.next_if('keyword', 'loop'):
                 self.children.append(Loop(parser, self))
+            elif parser.current_is('varname'):
+                self.children.append(Assign(parser, self))
             elif parser.current_is('keyword', 'try'):
                 self.children.append(Try(parser, self))
             elif parser.current_is('keyword', 'enter'):

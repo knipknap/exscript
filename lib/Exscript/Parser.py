@@ -3,7 +3,7 @@ import types
 import stdlib
 from Program import Program
 
-class Parser:
+class Parser(object):
     def __init__(self, *args, **kwargs):
         self.input        = ''
         self.input_length = 0
@@ -120,12 +120,12 @@ class Parser:
         self.current_line = 0
         self.token_buffer = None
         self.grammar      = []
-        self.variables    = copy.copy(self.variables)
 
         # Define the standard library now, in order to prevent it from being overwritten
         # by the user.
-        self.define(**self.stdlib)
-        compiled = Program(self, None, variables = self.variables)
+        variables = copy.copy(self.variables)
+        variables.update(self.stdlib)
+        compiled = Program(self, None, variables = variables)
         if self.debug > 3:
             compiled.dump()
         return compiled

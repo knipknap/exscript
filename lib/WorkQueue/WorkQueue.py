@@ -16,7 +16,7 @@ import threading
 import time
 from MainLoop import MainLoop
 
-class WorkQueue:
+class WorkQueue(object):
     def __init__(self, *args, **kwargs):
         self.main_loop       = MainLoop()
         self.main_loop.debug = kwargs.get('debug', 0)

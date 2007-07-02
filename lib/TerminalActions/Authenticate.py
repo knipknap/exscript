@@ -44,7 +44,12 @@ class Authenticate(Action):
         assert local_context  is not None
         local_context['transport'].set_on_data_received_cb(self._on_data_received)
         self.tacacs_lock(global_context, self.user).acquire()
-        local_context['transport'].authenticate(self.user, self.password)
+        try:
+            local_context['transport'].authenticate(self.user, self.password)
+        except:
+            self.tacacs_lock(global_context, self.user).release()
+            local_context['transport'].set_on_data_received_cb(None)
+            raise
         local_context['user'] = self.user
         self.tacacs_lock(global_context, self.user).release()
         local_context['transport'].set_on_data_received_cb(None)

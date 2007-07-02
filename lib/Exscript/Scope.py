@@ -2,7 +2,7 @@ from Token     import Token
 from Trackable import Trackable
 
 class Scope(Token, Trackable):
-    def __init__(self, name, parser, parent, *args, **kwargs):
+    def __init__(self, name, parser, parent = None, *args, **kwargs):
         Trackable.__init__(self)
         Token.__init__(self, name, parser)
         self.variables      = kwargs.get('variables', {})
@@ -66,3 +66,10 @@ class Scope(Token, Trackable):
         for child in self.children:
             child.dump(indent + 1)
         print (' ' * indent) + self.name, 'end'
+
+
+    def dump1(self):
+        if self.parent is not None:
+            self.parent.dump1()
+            return
+        print "Scope:", self.variables

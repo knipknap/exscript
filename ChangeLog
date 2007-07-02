@@ -1,3 +1,23 @@
+2007-07-02 Samuel Abels <http://debain.org>
+
+	* all-over: Use new-style classes.
+	* lib/Exscript/stdlib/Device.py: Moved set_timeout and set_prompt
+	  into new class.
+	* lib/Exscript/stdlib/Connection.py (set_timeout, set_prompt): New.
+	* lib/Exscript/stdlib/Sys.py (message): New.
+	* lib/Exscript/Parser.py: Improved variable initialization.
+	* lib/Exscript/Program.py: Dito.
+	* lib/Exscript/Scope.py: Dito.
+	* lib/Exscript/Code.py: Implemented support for variable assignment.
+	* lib/Exscript/Assign.py: New.
+	* lib/TerminalTransport/Telnet.py: Cleanups.
+	* lib/TerminalActions/Connect.py: Send a notification when connecting.
+	* lib/TerminalActions/Authenticate.py: Fix a deadlock that happened when
+	  an error occured during authentication.
+	* lib/TerminalActions/Authorize.py: Dito.
+	* lib/TerminalActions/LoggedSequence.py: Catch logfile errors so that
+	  the lock is released even when logging is broken.
+
 2007-06-30 Samuel Abels <http://debain.org>
 
 	* Exscript/*.py: Fix: Runtime error handling was broken when
