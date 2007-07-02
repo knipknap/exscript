@@ -4,7 +4,7 @@
 ## Description: Use the EScript interpreter with a multi threaded configuration
 ##              engine to execute commands on a list of hosts.
 import sys, time, os, re, signal
-sys.path.insert(0, '/nmc/scripts/lib/python/')
+sys.path.insert(0, 'lib')
 import Exscript
 from FooLib             import Interact
 from FooLib             import OptionParser
