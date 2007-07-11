@@ -16,8 +16,21 @@ from AbstractMethod import AbstractMethod
 
 class Transport(object):
     def __init__(self, *args, **kwargs):
+        self.prompt                = None
+        self.host_type             = 'unknown'
+        self.echo                  = kwargs.get('echo',    0)
+        self.timeout               = kwargs.get('timeout', 30)
+        self.logfile               = kwargs.get('logfile', None)
+        self.log                   = None
         self.on_data_received_cb   = kwargs.get('on_data_received',      None)
         self.on_data_received_args = kwargs.get('on_data_received_args', None)
+        if self.logfile is not None:
+            self.log = open(kwargs['logfile'], 'a')
+
+
+    def __del__(self):
+        if self.log is not None:
+            self.log.close()
 
 
     def set_on_data_received_cb(self, func, args = None):
@@ -26,11 +39,14 @@ class Transport(object):
 
 
     def set_prompt(self, prompt = None):
-        AbstractMethod()
+        if prompt is None:
+            self.prompt = prompt_re
+        else:
+            self.prompt = prompt
 
 
     def set_timeout(self, timeout):
-        AbstractMethod()
+        self.timeout = timeout
 
 
     def connect(self, hostname):

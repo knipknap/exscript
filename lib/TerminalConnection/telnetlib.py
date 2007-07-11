@@ -206,7 +206,7 @@ class Telnet:
         self.host = host
         self.port = port
         msg = "getaddrinfo returns an empty list"
-        for res in socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM):
+        for res in socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM):
             af, socktype, proto, canonname, sa = res
             try:
                 self.sock = socket.socket(af, socktype, proto)
@@ -418,7 +418,12 @@ class Telnet:
                     if self.option_callback:
                         self.option_callback(self.sock, c, opt)
                     else:
-                        self.sock.send(IAC + WONT + opt)
+                        try:
+                            self.sock.send(IAC + WONT + opt)
+                        except socket.error, v:
+                            # Try again.
+                            if v[0] == 32:
+                                self.sock.send(IAC + WONT + opt)
                 elif c in (WILL, WONT):
                     opt = self.rawq_getchar()
                     self.msg('IAC %s %d',
@@ -426,7 +431,12 @@ class Telnet:
                     if self.option_callback:
                         self.option_callback(self.sock, c, opt)
                     else:
-                        self.sock.send(IAC + DONT + opt)
+                        try:
+                            self.sock.send(IAC + DONT + opt)
+                        except socket.error, v:
+                            # Try again.
+                            if v[0] == 32:
+                                self.sock.send(IAC + DONT + opt)
                 else:
                     self.msg('IAC %d not recognized' % ord(opt))
         except EOFError: # raised by self.rawq_getchar()

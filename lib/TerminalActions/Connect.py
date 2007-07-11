@@ -33,12 +33,13 @@ class Connect(Action):
         self.emit('data_received', data)
 
 
-    def execute(self, global_context, local_context):
+    def execute(self, global_lock, global_context, local_context):
+        assert global_lock    is not None
         assert global_context is not None
         assert local_context  is not None
         self.emit('notify', 'Connecting to %s' % self.hostname)
         self.transport.debug = self.debug
-        self.global_context  = global_context
+        #self.global_context  = global_context
         if not self.transport.connect(self.hostname):
             raise Exception, 'Connect failed: %s' % self.transport.error()
         local_context['hostname']  = self.hostname

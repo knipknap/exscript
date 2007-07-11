@@ -1,6 +1,0 @@
-* Exscript Interpreter: Design exception classes properly.
-
-* Exscript Interpreter: Allow executing an action after catching an
-  exception.
-
-* Exscript Interpreter: Allow assigning variables.

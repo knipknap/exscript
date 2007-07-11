@@ -29,21 +29,9 @@ prompt_re     = re.compile(r'[\r\n][\-\w\(\)@]+[#>%] ?', re.I)
 class Transport(Base):
     def __init__(self, *args, **kwargs):
         Base.__init__(self, **kwargs)
-        self.tn        = None
-        self.timeout   = 30
-        self.host_type = 'unknown'
-        self.debug     = kwargs.get('debug',   0)
-        self.echo      = kwargs.get('echo',    False)
-        self.logfile   = kwargs.get('logfile', None)
-        self.log       = None
-        self.prompt    = prompt_re
-        if self.logfile is not None:
-            self.log = open(kwargs['logfile'], 'a')
-
-
-    def __del__(self):
-        if self.log is not None:
-            self.log.close()
+        self.tn     = None
+        self.debug  = kwargs.get('debug',   0)
+        self.prompt = prompt_re
 
 
     def _receive_cb(sender, data, *args, **kwargs):
@@ -57,17 +45,6 @@ class Transport(Base):
         if self.on_data_received_cb is not None:
             self.on_data_received_cb(data, self.on_data_received_args)
         return data
-
-
-    def set_prompt(self, prompt = None):
-        if prompt is None:
-            self.prompt = prompt_re
-        else:
-            self.prompt = prompt
-
-
-    def set_timeout(self, timeout):
-        self.timeout = timeout
 
 
     def connect(self, hostname):

@@ -4,7 +4,7 @@
 ## Description: Use the EScript interpreter with a multi threaded configuration
 ##              engine to execute commands on a list of hosts.
 import sys, time, os, re, signal
-sys.path.insert(0, 'lib')
+sys.path.insert(0, '/nmc/scripts/lib/python/')
 import Exscript
 from FooLib             import Interact
 from FooLib             import OptionParser
@@ -46,6 +46,10 @@ def usage():
     print "                 Each filename consists of the hostname with \"_log\" appended."
     print "                 Errors are written to a separate file, where the filename"
     print "                 consists of the hostname with \".log.error\" appended."
+    print "  -p, --protocol STRING"
+    print "                 Specify which protocol to use to connect to the remote host."
+    print "                 STRING is one of: telnet ssh"
+    print "                 The default protocol is telnet."
     print "  -v, --verbose NUM"
     print "                 Print out debug information about the network activity."
     print "                 NUM is a number between 0 (min) and 5 (max)"
@@ -57,11 +61,13 @@ def usage():
 # Define default options.
 default_options = [
   ('authorize',       'A',  False),
+  ('no-echo',         None, False),
   ('connections=',    'c:', 1),
   ('csv-hosts=',      None, None),
   ('define=',         'd:', {'hostname': 'unknown'}),
   ('hosts=',          None, None),
   ('logdir=',         'l:', None),
+  ('protocol=',       'p:', 'telnet'),
   ('verbose=',        'v:', 0),
   ('parser-verbose=', 'V:', 0),
   ('help',            'h',  False)
@@ -192,49 +198,57 @@ def on_posix_signal(signum, frame):
 signal.signal(signal.SIGINT,  on_posix_signal)
 signal.signal(signal.SIGTERM, on_posix_signal)
 
-# Initialize the workqueue.
-workqueue = WorkQueue(max_threads = options['connections'],
-                      debug       = options['verbose'])
-
-# Build the action sequence.
-for hostname in hostnames:
-    if options['verbose'] > 0:
-        print 'Building sequence for %s.' % hostname
-
-    # Prepare variables that are passed to the exscript interpreter.
-    variables             = defines[hostname]
-    variables['hostname'] = hostname
-
-    #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of recompile
-    # numerous times.
-    excode = parser.parse_file(exscript)
-    excode.init(**variables)
-
-    # One logfile per host.
-    logfile       = None
-    error_logfile = None
-    if options.get('logdir') is None:
-        sequence = Sequence()
-    else:
-        logfile       = os.path.join(options.get('logdir'), hostname + '.log')
-        error_logfile = logfile + '.error'
-        sequence      = LoggedSequence(logfile = logfile, error_logfile = error_logfile)
-
-    # Build the sequence.
-    sequence.add(Connect(Telnet, hostname, echo = options['connections'] == 1))
-    sequence.add(Authenticate(user, password))
-    if options['authorize']:
-        sequence.add(Authorize(password))
-    sequence.add(CommandScript(excode))
-    sequence.add(Command('exit'))
-    sequence.add(Close())
-    workqueue.enqueue(sequence)
-
-# Run.
 try:
+    # Initialize the workqueue.
+    workqueue = WorkQueue(max_threads = options['connections'],
+                          debug       = options['verbose'])
+
     print 'Starting engine...'
     workqueue.start()
     print 'Engine running.'
+
+    # Build the action sequence.
+    print 'Building sequence...'
+    for hostname in hostnames:
+        if options['verbose'] > 0:
+            print 'Building sequence for %s.' % hostname
+
+        # Prepare variables that are passed to the exscript interpreter.
+        variables             = defines[hostname]
+        variables['hostname'] = hostname
+
+        #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
+        # recompiling numerous times.
+        parser = Exscript.Parser(debug = options['parser-verbose'])
+        parser.define(**variables)
+        excode = parser.parse_file(exscript)
+        excode.init(**variables)
+
+        # One logfile per host.
+        logfile       = None
+        error_logfile = None
+        if options.get('logdir') is None:
+            sequence = Sequence(name = hostname)
+        else:
+            logfile       = os.path.join(options.get('logdir'), hostname + '.log')
+            error_logfile = logfile + '.error'
+            sequence      = LoggedSequence(name          = hostname,
+                                           logfile       = logfile,
+                                           error_logfile = error_logfile)
+
+        # Build the sequence.
+        echo = options['connections'] == 1 and options['no-echo'] == 0
+        sequence.add(Connect(Telnet, hostname, echo = echo))
+        sequence.add(Authenticate(user, password))
+        if options['authorize']:
+            sequence.add(Authorize(password))
+        sequence.add(CommandScript(excode))
+        sequence.add(Command('exit'))
+        sequence.add(Close())
+        workqueue.enqueue(sequence)
+
+    # Wait until the engine is finished.
+    print 'All actions enqueued.'
     while workqueue.get_queue_length() > 0:
         #print '%s jobs left, waiting.' % workqueue.get_queue_length()
         time.sleep(1)

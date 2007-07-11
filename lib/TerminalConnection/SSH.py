@@ -12,25 +12,41 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from WorkQueue.Action import Action
+from Transport import Transport as Base
+import os, time
 
-True  = 1
-False = 0
-
-class Close(Action):
-    def __init__(self):
-        Action.__init__(self)
-
-
-    def _on_data_received(self, data, args):
-        self.emit('data_received', data)
+class Transport(Base):
+    def __init__(self, *args, **kwargs):
+        Base.__init__(self, **kwargs)
+        self.pid    = None
+        self.fd     = None
+        self.debug  = kwargs.get('debug', 0)
+        self.prompt = prompt_re
 
 
-    def execute(self, global_lock, global_context, local_context):
-        assert global_lock    is not None
-        assert global_context is not None
-        assert local_context  is not None
-        local_context['transport'].set_on_data_received_cb(self._on_data_received)
-        local_context['transport'].close()
-        local_context['transport'].set_on_data_received_cb(None)
-        return True
+    def connect(self, hostname):
+        #FIXME
+
+
+    def authenticate(self, user, password):
+        #FIXME
+
+
+    def authorize(self, password):
+        #FIXME
+
+
+    def expect_prompt(self):
+        #FIXME
+
+
+    def execute(self, command):
+        #FIXME
+
+
+    def send(self, data):
+        #FIXME
+
+
+    def close(self):
+        #FIXME

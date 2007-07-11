@@ -22,13 +22,14 @@ False = 0
 class MainLoop(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
-        self.queue          = []
-        self.running_jobs   = []
-        self.paused         = True
-        self.shutdown_now   = False
-        self.max_threads    = 1
-        self.global_context = {}
-        self.debug          = 0
+        self.queue               = []
+        self.running_jobs        = []
+        self.paused              = True
+        self.shutdown_now        = False
+        self.max_threads         = 1
+        self.global_context      = {}
+        self.global_context_lock = threading.Lock()
+        self.debug               = 0
         self.setDaemon(1)
 
     def set_max_threads(self, max_threads):
@@ -83,7 +84,10 @@ class MainLoop(threading.Thread):
             # Take the next action and start it in a new thread.
             action    = self.queue.pop(0)
             n_threads = len(self.running_jobs)
-            job       = Job(self.global_context, action, debug = self.debug)
+            job       = Job(self.global_context_lock,
+                            self.global_context,
+                            action,
+                            debug = self.debug)
             job.start()
             self.running_jobs.append(job)
             print 'Job "%s" started.' % job.getName()

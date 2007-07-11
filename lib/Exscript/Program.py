@@ -11,7 +11,7 @@ class Program(Scope):
 
 
     def init(self, *args, **kwargs):
-        self.init_variables.update(kwargs)
+        self.init_variables.update(copy.deepcopy(kwargs))
 
 
     def get_line_position_from_char(self, char):

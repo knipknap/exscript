@@ -123,7 +123,7 @@ class Parser(object):
 
         # Define the standard library now, in order to prevent it from being overwritten
         # by the user.
-        variables = copy.copy(self.variables)
+        variables = copy.deepcopy(self.variables)
         variables.update(self.stdlib)
         compiled = Program(self, None, variables = variables)
         if self.debug > 3:

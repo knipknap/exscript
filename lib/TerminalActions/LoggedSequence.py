@@ -20,7 +20,7 @@ False = 0
 
 class LoggedSequence(Sequence):
     def __init__(self, *args, **kwargs):
-        Sequence.__init__(self)
+        Sequence.__init__(self, **kwargs)
         lock_key_prefix             = 'lock::filesystem::'
         self.logfile                = kwargs.get('logfile', None)
         self.logfile_lock_key       = None
@@ -67,14 +67,15 @@ class LoggedSequence(Sequence):
         self.actions.append(action)
 
 
-    def execute(self, global_context, local_context):
+    def execute(self, global_lock, global_context, local_context):
+        assert global_lock    is not None
         assert local_context  is not None
         assert global_context is not None
         self.global_context = global_context
         try:
             for action in self.actions:
                 action.debug = self.debug
-                if not action.execute(global_context, local_context):
+                if not action.execute(global_lock, global_context, local_context):
                     return False
         except Exception, e:
             self._log(self.error_logfile, self.error_logfile_lock_key, '%s' % e)

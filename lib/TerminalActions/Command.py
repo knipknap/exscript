@@ -28,7 +28,8 @@ class Command(Action):
         self.emit('data_received', data)
 
 
-    def execute(self, global_context, local_context):
+    def execute(self, global_lock, global_context, local_context):
+        assert global_lock    is not None
         assert global_context is not None
         assert local_context  is not None
         local_context['transport'].set_on_data_received_cb(self._on_data_received)

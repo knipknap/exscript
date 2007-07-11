@@ -23,7 +23,8 @@ class Action(Trackable):
     def __init__(self, *args, **kwargs):
         Trackable.__init__(self)
         self.debug = kwargs.get('debug', 0)
+        self.name  = kwargs.get('name',  None)
 
 
-    def execute(self, global_context, local_context):
+    def execute(self, global_lock, global_context, local_context):
         AbstractMethod(self)

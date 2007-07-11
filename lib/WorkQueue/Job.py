@@ -12,18 +12,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import threading, sys
+import threading, sys, traceback
 
 class Job(threading.Thread):
-    def __init__(self, global_context, action, *args, **kwargs):
+    def __init__(self, lock, global_context, action, *args, **kwargs):
         threading.Thread.__init__(self)
-        self.global_context = global_context
-        self.local_context  = {}
-        self.action         = action
-        self.logfile        = None
-        self.logfile_lock   = None
-        self.debug          = kwargs.get('debug', 0)
-        self.action.debug   = self.debug
+        self.global_context_lock = lock
+        self.global_context      = global_context
+        self.local_context       = {}
+        self.action              = action
+        self.logfile             = None
+        self.logfile_lock        = None
+        self.debug               = kwargs.get('debug', 0)
+        self.action.debug        = self.debug
 
 
     def run(self):
@@ -32,8 +33,11 @@ class Job(threading.Thread):
         if self.debug:
             print "Job running: %s" % self
         try:
-            self.action.execute(self.global_context, self.local_context)
+            self.action.execute(self.global_context_lock,
+                                self.global_context,
+                                self.local_context)
         except Exception, e:
-            print 'Job "%s" failed: %s' % (self.getName(), e)
+            action_name = self.action.name or 'no name'
+            print 'Job "%s" (%s) failed: %s' % (self.getName(), action_name, e)
             if self.debug:
-                raise
+                traceback.print_exc()

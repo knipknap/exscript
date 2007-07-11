@@ -32,25 +32,28 @@ class Authenticate(Action):
         self.emit('data_received', data)
 
 
-    def tacacs_lock(self, context, user):
+    def tacacs_lock(self, lock, context, user):
+        lock.acquire()
         key = self.lock_key_prefix + user
         if not context.has_key(key):
             context[key] = threading.Lock()
+        lock.release()
         return context[key]
 
 
-    def execute(self, global_context, local_context):
+    def execute(self, global_lock, global_context, local_context):
+        assert global_lock    is not None
         assert global_context is not None
         assert local_context  is not None
         local_context['transport'].set_on_data_received_cb(self._on_data_received)
-        self.tacacs_lock(global_context, self.user).acquire()
+        self.tacacs_lock(global_lock, global_context, self.user).acquire()
         try:
             local_context['transport'].authenticate(self.user, self.password)
         except:
-            self.tacacs_lock(global_context, self.user).release()
+            self.tacacs_lock(global_lock, global_context, self.user).release()
             local_context['transport'].set_on_data_received_cb(None)
             raise
         local_context['user'] = self.user
-        self.tacacs_lock(global_context, self.user).release()
+        self.tacacs_lock(global_lock, global_context, self.user).release()
         local_context['transport'].set_on_data_received_cb(None)
         return True
