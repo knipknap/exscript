@@ -221,7 +221,7 @@ try:
          this_user,
          this_pass,
          this_host,
-         this_query) = UrlParser.parse_url(hostname)
+         this_query) = UrlParser.parse_url(hostname, options['protocol'])
         variables             = defines[hostname]
         variables['hostname'] = this_host
         variables.update(this_query)
