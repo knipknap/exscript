@@ -4,10 +4,11 @@
 ## Description: Use the EScript interpreter with a multi threaded configuration
 ##              engine to execute commands on a list of hosts.
 import sys, time, os, re, signal
-sys.path.insert(0, '/nmc/scripts/lib/python/')
+sys.path.insert(0, 'lib')
 import Exscript
 from FooLib             import Interact
 from FooLib             import OptionParser
+from FooLib             import UrlParser
 from WorkQueue          import WorkQueue
 from WorkQueue          import Sequence
 from TerminalConnection import Telnet
@@ -176,6 +177,8 @@ if len(hostnames) <= 0:
 # Parse the exscript.
 parser = Exscript.Parser(debug = options['parser-verbose'])
 parser.define(**defines[hostnames[0]])
+_, _, _, _, this_query = UrlParser.parse_url(hostnames[0])
+parser.define(**this_query)
 try:
     excode = parser.parse_file(exscript)
 except Exception, e:
@@ -214,8 +217,17 @@ try:
             print 'Building sequence for %s.' % hostname
 
         # Prepare variables that are passed to the exscript interpreter.
+        (this_proto,
+         this_user,
+         this_pass,
+         this_host,
+         this_query) = UrlParser.parse_url(hostname)
         variables             = defines[hostname]
-        variables['hostname'] = hostname
+        variables['hostname'] = this_host
+        variables.update(this_query)
+        if this_user is None:
+            this_user = user
+            this_pass = password
 
         #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
         # recompiling numerous times.
@@ -228,18 +240,27 @@ try:
         logfile       = None
         error_logfile = None
         if options.get('logdir') is None:
-            sequence = Sequence(name = hostname)
+            sequence = Sequence(name = this_host)
         else:
-            logfile       = os.path.join(options.get('logdir'), hostname + '.log')
+            logfile       = os.path.join(options.get('logdir'), this_host + '.log')
             error_logfile = logfile + '.error'
-            sequence      = LoggedSequence(name          = hostname,
+            sequence      = LoggedSequence(name          = this_host,
                                            logfile       = logfile,
                                            error_logfile = error_logfile)
 
+        # Choose the protocol.
+        if this_proto == 'telnet':
+            protocol = Telnet
+        elif this_proto == 'ssh':
+            protocol = SSH
+        else:
+            print 'Unsupported protocol %s' % this_proto
+            continue
+
         # Build the sequence.
         echo = options['connections'] == 1 and options['no-echo'] == 0
-        sequence.add(Connect(Telnet, hostname, echo = echo))
-        sequence.add(Authenticate(user, password))
+        sequence.add(Connect(protocol, this_host, echo = echo))
+        sequence.add(Authenticate(this_user, this_pass))
         if options['authorize']:
             sequence.add(Authorize(password))
         sequence.add(CommandScript(excode))

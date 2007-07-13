@@ -1,4 +1,7 @@
 __all__ = ['Interact',
-           'OptionParser']
+           'OptionParser',
+           'UrlParser']
+
 from Interact     import *
 from OptionParser import *
+from UrlParser    import *
