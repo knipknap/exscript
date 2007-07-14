@@ -1,3 +1,15 @@
+2007-07-13 Samuel Abels <http://debain.org>
+
+	* exscript.py: Add support for selecting the protocol using -p or
+	--protocol.
+	* exscript.py: Add support for URL formatted hostnames. (#2)
+
+2007-07-11 Samuel Abels <http://debain.org>
+
+	* lib/WorkQueue/*.py, lib/TerminalActions/*.py: Be more strict with
+	the locking. This should not make a difference with the current
+	implementation of Python, but that might change in the future.
+
 2007-07-02 Samuel Abels <http://debain.org>
 
 	* all-over: Use new-style classes.
