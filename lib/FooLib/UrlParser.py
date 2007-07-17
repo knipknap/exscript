@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: Latin-1 -*-
 import re
-from urlparse import *
+from urlparse import urlparse, urlsplit
 
-_hextochr = dict(('%02x' % i, chr(i)) for i in range(256))
-_hextochr.update(('%02X' % i, chr(i)) for i in range(256))
+_hextochr = dict()
+for i in range(256):
+   _hextochr['%02x' % i] = chr(i)
+   _hextochr['%02X' % i] = chr(i)
 
 def parse_url(url, default_protocol = 'telnet'):
     # We substitute the protocol name by 'http' to support the usual http URL
@@ -13,11 +15,24 @@ def parse_url(url, default_protocol = 'telnet'):
     protocol   = urlparse(url, default_protocol, 0)[0]
     url        = 'http://' + re.sub('^' + protocol + ':(?://)?', '', url)
     components = urlsplit(url, 'http', 0)
+    netloc     = components[1]
+    path       = components[2]
+    query      = components[3]
+    auth       = ''
+    username   = None
+    password   = None
+    hostname   = netloc
+    if netloc.find('@') >= 0:
+        auth, hostname = netloc.split('@')
+    if auth != '':
+        username = auth
+    if auth.find(':') >= 0:
+        username, password = auth.split(':')
     return (protocol,
-            components.username,
-            components.password,
-            components.hostname or components.netloc or components.path,
-            urlparse_qs('http://dummy/?' + components.query))
+            username,
+            password,
+            hostname or path,
+            urlparse_qs('http://dummy/?' + query))
 
 
 def unquote(s):

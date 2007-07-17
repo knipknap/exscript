@@ -12,7 +12,7 @@ for type, regex in grammar:
     grammar_c.append((type, re.compile(regex)))
 
 class Regex(Token):
-    def __init__(self, parser):
+    def __init__(self, parser, parent):
         Token.__init__(self, 'Regular Expression', parser)
         parser.set_grammar(grammar_c)
         regex = ''
@@ -29,7 +29,10 @@ class Regex(Token):
                 type = parser.token()[0]
                 parent.syntax_error(self, 'Expected regular expression but got %s' % type)
         self.pattern = regex
-        self.regex   = re.compile(regex)
+        try:
+            self.regex = re.compile(regex)
+        except Exception, e:
+            parent.syntax_error(self, 'Invalid regular expression: %s' % e)
         parser.restore_grammar()
 
 

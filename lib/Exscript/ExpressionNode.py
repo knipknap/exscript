@@ -1,6 +1,5 @@
 from Token import Token
 from Term  import Term
-from Regex import Regex
 
 class ExpressionNode(Token):
     def __init__(self, parser, scope, parent = None):

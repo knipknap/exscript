@@ -11,7 +11,7 @@ class Extract(Token):
         # First expect a regular expression.
         parser.expect('whitespace')
         parser.expect('regex_delimiter')
-        self.regex = Regex(parser)
+        self.regex = Regex(parser, parent)
 
         # Expect "as" keyword.
         parser.expect('whitespace')

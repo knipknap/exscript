@@ -1,3 +1,7 @@
+2007-07-17 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/*.py: Check regular expression syntax at compile time.
+
 2007-07-13 Samuel Abels <http://debain.org>
 
 	* exscript.py: Add support for selecting the protocol using -p or

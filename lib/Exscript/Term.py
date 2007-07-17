@@ -26,7 +26,7 @@ class Term(Token):
         elif parser.next_if('number'):
             self.term = Number(token)
         elif parser.next_if('regex_delimiter'):
-            self.term = Regex(parser)
+            self.term = Regex(parser, parent)
         else:
             parent.syntax_error(self, 'Expected term but got %s' % type)
 
