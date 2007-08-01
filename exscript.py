@@ -111,13 +111,14 @@ if options.get('csv-hosts') is not None:
     if re.search(r'^hostname(?:\t[^\t]+)*$', header) is None:
         print "Syntax error in CSV file header: %s" % header
         print "Make sure to separate columns by tabs."
+        sys.exit(1)
     varnames = header.split('\t')
     varnames.pop(0)
     
     # Walk through all lines and create a map that maps hostname to definitions.
     last_hostname = ''
     for line in file:
-        line     = line.rstrip()
+        line     = line.rstrip('\r\n')
         values   = line.split('\t')
         hostname = values.pop(0).strip()
 
@@ -131,7 +132,10 @@ if options.get('csv-hosts') is not None:
         # Define variables according to the definition.
         for i in range(0, len(varnames)):
             varname = varnames[i]
-            value   = values[i]
+            try:
+                value = values[i]
+            except:
+                value = ''
             if defines[hostname].has_key(varname):
                 defines[hostname][varname].append(value)
             else:
