@@ -38,13 +38,6 @@ class Transport(object):
         self.on_data_received_args = args
 
 
-    def set_prompt(self, prompt = None):
-        if prompt is None:
-            self.prompt = prompt_re
-        else:
-            self.prompt = prompt
-
-
     def set_timeout(self, timeout):
         self.timeout = timeout
 

@@ -38,6 +38,7 @@ To do:
 
 # Imported modules
 import sys
+import time
 import socket
 import select
 
@@ -119,7 +120,6 @@ PRAGMA_HEARTBEAT = chr(140) # TELOPT PRAGMA HEARTBEAT
 EXOPL = chr(255) # Extended-Options-List
 
 class Telnet:
-
     """Telnet interface class.
 
     An instance of this class represents a connection to a telnet
@@ -472,8 +472,8 @@ class Telnet:
             self.rawq = ''
             self.irawq = 0
         # The buffer size should be fairly small so as to avoid quadratic
-        # behavior in process_rawq() above
-        buf = self.sock.recv(50)
+        # behavior in process_rawq() above.
+        buf = self.sock.recv(64)
         if self.data_callback is not None:
             self.data_callback(buf, **self.data_callback_kwargs)
         self.msg("recv %s", `buf`)
@@ -560,6 +560,7 @@ class Telnet:
                 list[i] = re.compile(list[i])
         while 1:
             self.process_rawq()
+            #print "Queue: >>>%s<<<" % repr(self.cookedq)
             for i in indices:
                 m = list[i].search(self.cookedq)
                 if m:
@@ -570,9 +571,19 @@ class Telnet:
             if self.eof:
                 break
             if timeout is not None:
-                r, w, x = select.select([self.fileno()], [], [], timeout)
-                if not r:
+                # This is a workaround for the problem with select() below.
+                seconds = 0
+                while not self.sock_avail() and seconds < timeout:
+                    time.sleep(.1)
+                    seconds += .005
+                if seconds >= timeout:
                     break
+                # The following will sometimes lock even if data is available
+                # and I have no idea why. Do NOT reverse this unless you are sure
+                # that you found the reason. The error is rare, but it does happen.
+                #r, w, x = select.select([self.sock], [], [], timeout)
+                #if not r:
+                #    break
             self.fill_rawq()
         text = self.read_very_lazy()
         if not text and self.eof:

@@ -19,32 +19,44 @@ import telnetlib
 True  = 1
 False = 0
 
-cisco_user_re = re.compile(r'[\r\n]username:', re.I)
-junos_user_re = re.compile(r'[\r\n]login:',    re.I)
-unix_user_re  = re.compile(r'(user|login):',   re.I)
-pass_re       = re.compile(r'password:? ?',    re.I)
+flags         = re.I | re.M
+ctrl_char     = r'(?:[^' + re.escape(telnetlib.IAC) + r']..)'
+newline       = r'^' + ctrl_char + r'*'
+cisco_user_re = re.compile(newline + r'username:', flags)
+junos_user_re = re.compile(newline + r'login:',    flags)
+unix_user_re  = re.compile(r'(user|login): ?$',    flags)
+pass_re       = re.compile(r'password:?',          flags)
 skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
-prompt_re     = re.compile(r'[\r\n][\-\w\(\)@]+[#>%] ?', re.I)
+prompt_re     = re.compile(newline + r'[\-\w\(\)@:~]+[#>%\$]',        flags)
+login_fail_re = re.compile(newline + r'[^\r\n]*(?:incorrect|failed)', flags)
 
 class Transport(Base):
     def __init__(self, *args, **kwargs):
         Base.__init__(self, **kwargs)
         self.tn     = None
-        self.debug  = kwargs.get('debug',   0)
+        self.debug  = kwargs.get('debug', 0)
         self.prompt = prompt_re
 
 
     def _receive_cb(sender, data, *args, **kwargs):
         self = kwargs['telnet']
         data = data.replace('\r', '')
+        text = re.sub(re.escape(telnetlib.IAC) + '+..', '', data)
         if self.echo:
-            sys.stdout.write(data)
+            sys.stdout.write(text)
             sys.stdout.flush()
         if self.log is not None:
-            self.log.write(data)
+            self.log.write(text)
         if self.on_data_received_cb is not None:
             self.on_data_received_cb(data, self.on_data_received_args)
         return data
+
+
+    def set_prompt(self, prompt = None):
+        if prompt is None:
+            self.prompt = prompt_re
+        else:
+            self.prompt = prompt
 
 
     def connect(self, hostname):
@@ -58,49 +70,62 @@ class Transport(Base):
 
 
     def authenticate(self, user, password):
-        # Wait for the user prompt.
-        #print 'Waiting for prompt'
-        host_type   = ['cisco',       'junos',       'unix']
-        user_prompt = [cisco_user_re, junos_user_re, unix_user_re]
-        which       = None
-        try:
-            (which, _, _)  = self.tn.expect(user_prompt, self.timeout)
-            self.host_type = host_type[which]
-        except:
-            print 'Error while waiting for username prompt'
-            raise
+        while 1:
+            # Wait for the user prompt.
+            #print 'Waiting for prompt'
+            prompt  = [login_fail_re,
+                       cisco_user_re,
+                       junos_user_re,
+                       unix_user_re,
+                       skey_re,
+                       pass_re,
+                       self.prompt]
+            which   = None
+            matches = None
+            try:
+                (which, matches, _) = self.tn.expect(prompt, self.timeout)
+            except:
+                print 'Telnet.authenticate(): Error while waiting for prompt'
+                raise
 
-        # Send the user name.
-        self.send(user + '\n')
+            # No match.
+            if which < 0:
+                raise Exception("Timeout while waiting for prompt")
 
-        # Wait for the password, s/key, or the shell prompt.
-        prompt  = [skey_re, pass_re, self.prompt]
-        which   = None
-        matches = None
-        try:
-            (which, matches, _) = self.tn.expect(prompt, self.timeout)
-        except:
-            print 'Error while waiting for password prompt'
-            raise
+            # Login error detected.
+            elif which == 0:
+                raise Exception("Login failed")
 
-        # Send the password (if a password prompt was received).
-        if which == 0:
-            seq    = int(matches.group(1))
-            seed   = matches.group(2)
-            #print "Seq:", seq, "Seed:", seed
-            phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
-            self.send(phrase + '\n')
-            self.expect_prompt()
-        elif which == 1:
-            self.send(password + '\n')
-            self.expect_prompt()
+            # User name prompt.
+            elif which <= 3:
+                self.host_type = ('cisco', 'junos', 'unix')[which - 1]
+                self.send(user + '\r')
+                continue
 
-        #FIXME: Fetch login errors.
+            # s/key prompt.
+            elif which == 4:
+                seq    = int(matches.group(1))
+                seed   = matches.group(2)
+                #print "Seq:", seq, "Seed:", seed
+                phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
+                self.send(phrase + '\n')
+                continue
+            
+            # Cleartext password prompt.
+            elif which == 5:
+                self.send(password + '\n')
+                continue
 
-        # Switch to script compatible output (where supported).
-        #print 'Host type:', self.host_type
-        if self.host_type == 'cisco':
-            self.execute('terminal length 0')
+            # Shell prompt.
+            elif which == 6:
+                # Switch to script compatible output (where supported).
+                #print 'Host type:', self.host_type
+                if self.host_type == 'cisco':
+                    self.execute('terminal length 0')
+                break
+
+            else:
+                assert 0 # Not reached.
 
 
     def authorize(self, password):
@@ -110,28 +135,8 @@ class Transport(Base):
 
         self.send('en\n')
 
-        # Wait for the password, s/key, or the shell prompt.
-        prompt = [skey_re, pass_re, self.prompt]
-        try:
-            (which, matches, _) = self.tn.expect(prompt, self.timeout)
-        except:
-            print 'Error while waiting for password prompt'
-            raise
-
-        # Send the password (if a password prompt was received).
-        if which == 0:
-            seq    = int(matches.group(1))
-            seed   = matches.group(2)
-            #print "Seq:", seq, "Seed:", seed
-            phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
-            self.send(phrase + '\n')
-        elif which == 1:
-            self.send(password + '\n')
-        elif which == 2:
-            return
-
-        # Wait for a prompt.
-        self.expect_prompt()
+        # The username should not be asked, so not passed.
+        return self.authenticate('', password)
 
 
     def expect_prompt(self):

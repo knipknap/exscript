@@ -1,3 +1,7 @@
+2007-08-01 Samuel Abels <http://debain.org>
+
+	* lib/TerminalConnection/T*.py: Improved prompt recognition. (#4)
+
 2007-07-17 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/*.py: Check regular expression syntax at compile time.
