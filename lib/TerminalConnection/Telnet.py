@@ -98,26 +98,31 @@ class Transport(Base):
 
             # User name prompt.
             elif which <= 3:
+                print "Username prompt received."
                 self.host_type = ('cisco', 'junos', 'unix')[which - 1]
                 self.send(user + '\r')
                 continue
 
             # s/key prompt.
             elif which == 4:
+                print "S/Key prompt received."
                 seq    = int(matches.group(1))
                 seed   = matches.group(2)
                 #print "Seq:", seq, "Seed:", seed
                 phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
+                self.tn.expect([pass_re])
                 self.send(phrase + '\n')
                 continue
             
             # Cleartext password prompt.
             elif which == 5:
+                print "Cleartext prompt received."
                 self.send(password + '\n')
                 continue
 
             # Shell prompt.
             elif which == 6:
+                print "Shell prompt received."
                 # Switch to script compatible output (where supported).
                 #print 'Host type:', self.host_type
                 if self.host_type == 'cisco':
