@@ -1,3 +1,8 @@
+2007-09-07 Samuel Abels <http://debain.org>
+
+	* lib/TerminalConnection/T*.py: Further improved prompt recognition.
+	Correctly filter out telnet control characters.
+
 2007-08-01 Samuel Abels <http://debain.org>
 
 	* lib/TerminalConnection/T*.py: Improved prompt recognition. (#4)

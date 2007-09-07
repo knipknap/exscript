@@ -13,21 +13,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Transport import Transport as Base
-import re, exceptions, sys, otp
+import re, exceptions, sys, otp, string
 import telnetlib
 
 True  = 1
 False = 0
 
 flags         = re.I | re.M
-ctrl_char     = r'(?:[^' + re.escape(telnetlib.IAC) + r']..)'
-newline       = r'^' + ctrl_char + r'*'
+printable     = re.escape(string.printable)
+ctrl_char     = r'(?:' + re.escape(telnetlib.IAC) + r'[^' + printable + ']+)'
+newline       = r'[\r\n]' + ctrl_char + r'*'
 cisco_user_re = re.compile(newline + r'username:', flags)
 junos_user_re = re.compile(newline + r'login:',    flags)
 unix_user_re  = re.compile(r'(user|login): ?$',    flags)
 pass_re       = re.compile(r'password:?',          flags)
 skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
-prompt_re     = re.compile(newline + r'[\-\w\(\)@:~]+[#>%\$]',        flags)
+prompt_re     = re.compile(newline + r'\w+[\-\w\(\)@\:~]*[#>%\$]',    flags)
 login_fail_re = re.compile(newline + r'[^\r\n]*(?:incorrect|failed)', flags)
 
 class Transport(Base):
@@ -98,31 +99,32 @@ class Transport(Base):
 
             # User name prompt.
             elif which <= 3:
-                print "Username prompt received."
+                #print "Username prompt received."
                 self.host_type = ('cisco', 'junos', 'unix')[which - 1]
                 self.send(user + '\r')
                 continue
 
             # s/key prompt.
             elif which == 4:
-                print "S/Key prompt received."
+                #print "S/Key prompt received."
                 seq    = int(matches.group(1))
                 seed   = matches.group(2)
                 #print "Seq:", seq, "Seed:", seed
                 phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
                 self.tn.expect([pass_re])
-                self.send(phrase + '\n')
+                self.send(phrase + '\r')
+                #print "Password sent."
                 continue
             
             # Cleartext password prompt.
             elif which == 5:
-                print "Cleartext prompt received."
-                self.send(password + '\n')
+                #print "Cleartext prompt received."
+                self.send(password + '\r')
                 continue
 
             # Shell prompt.
             elif which == 6:
-                print "Shell prompt received."
+                #print "Shell prompt received."
                 # Switch to script compatible output (where supported).
                 #print 'Host type:', self.host_type
                 if self.host_type == 'cisco':
@@ -138,7 +140,7 @@ class Transport(Base):
         if self.host_type != 'cisco':
             return
 
-        self.send('en\n')
+        self.send('en\r')
 
         # The username should not be asked, so not passed.
         return self.authenticate('', password)
@@ -167,7 +169,7 @@ class Transport(Base):
 
     def execute(self, data):
         # Send the command.
-        self.send(data + '\n')
+        self.send(data + '\r')
         return self.expect_prompt()
 
 
