@@ -1,5 +1,7 @@
 __all__ = ['Transport',
-           'Telnet']
+           'Telnet',
+           'SSH']
 
 #from Transport import Transport
 from Telnet    import Transport
+#from SSH       import Transport

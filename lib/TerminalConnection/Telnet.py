@@ -39,7 +39,7 @@ class Transport(Base):
         self.prompt = prompt_re
 
 
-    def _receive_cb(sender, data, *args, **kwargs):
+    def _receive_cb(sender, data, **kwargs):
         self = kwargs['telnet']
         data = data.replace('\r', '')
         text = re.sub(re.escape(telnetlib.IAC) + '+..', '', data)

@@ -14,39 +14,75 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Transport import Transport as Base
 import os, time
+import pexpect
+from Telnet import newline, prompt_re, pass_re, login_fail_re
+
+True  = 1
+False = 0
+
 
 class Transport(Base):
     def __init__(self, *args, **kwargs):
         Base.__init__(self, **kwargs)
-        self.pid    = None
-        self.fd     = None
-        self.debug  = kwargs.get('debug', 0)
-        self.prompt = prompt_re
+        self.pid      = None
+        self.fd       = None
+        self.debug    = kwargs.get('debug', 0)
+        self.prompt   = prompt_re
+        self.hostname = None
+
+
+    def _receive_cb(sender, data, **kwargs):
+        self = kwargs['connection']
+        text = data.replace('\r', '')
+        if self.echo:
+            sys.stdout.write(text)
+            sys.stdout.flush()
+        if self.log is not None:
+            self.log.write(text)
+        if self.on_data_received_cb is not None:
+            self.on_data_received_cb(data, self.on_data_received_args)
+        return data
+
+
+    def set_prompt(self, prompt = None):
+        if prompt is None:
+            self.prompt = prompt_re
+        else:
+            self.prompt = prompt
 
 
     def connect(self, hostname):
-        #FIXME
+        self.hostname = hostname
+        return True
 
 
     def authenticate(self, user, password):
-        #FIXME
+        self.conn = pexpect.spawn('ssh %s@%s' % (user, self.hostname))
+        self.conn.expect(pass_re)
+        self._receive_cb(self.conn.before + self.conn.after, connection = self.conn)
+        self.execute(password)
 
 
     def authorize(self, password):
-        #FIXME
+        pass #FIXME: No idea whether AAA is supported via SSH
 
 
     def expect_prompt(self):
-        #FIXME
+        self.conn.expect(self.prompt)
+        self._receive_cb(self.conn.before + self.conn.after, connection = self.conn)
+        return (self.conn.before + self.conn.after).split('\n')
 
 
     def execute(self, command):
-        #FIXME
+        self.conn.sendline(command)
+        return self.expect_prompt()
 
 
     def send(self, data):
-        #FIXME
+        self.conn.send(data)
 
 
     def close(self):
-        #FIXME
+        self.conn.close()
+        self.conn.expect(pexpect.EOF)
+        self._receive_cb(self.conn.before + self.conn.after, connection = self.conn)

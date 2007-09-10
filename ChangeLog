@@ -1,3 +1,10 @@
+2007-09-10 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/Loop.py: Loops can now iterate over multiple lists at once.
+	Correctly filter out telnet control characters.
+	* lib/TerminalConnection/: Added the humble beginnings of an SSH adapter
+	based on pexpect.
+
 2007-09-07 Samuel Abels <http://debain.org>
 
 	* lib/TerminalConnection/T*.py: Further improved prompt recognition.
