@@ -11,14 +11,17 @@ from FooLib             import OptionParser
 from FooLib             import UrlParser
 from WorkQueue          import WorkQueue
 from WorkQueue          import Sequence
-from TerminalConnection import Telnet
+from TerminalConnection import *
 from TerminalActions    import *
 
 True  = 1
 False = 0
 
+__version__ = '0.9.8'
+
 def usage():
-    print "Copyright 2007 by Samuel Abels <spam2 debain org>."
+    print "Exscript %s" % __version__
+    print "Copyright (C) 2007 by Samuel Abels <http://debain.org>."
     print "Syntax: ./exscript.py [options] exscript [hostname [hostname ...]]"
     print "  -A, --authorize"
     print "                 When given, authorization is performed on devices that"

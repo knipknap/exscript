@@ -4,6 +4,7 @@
 	Correctly filter out telnet control characters.
 	* lib/TerminalConnection/: Added the humble beginnings of an SSH adapter
 	based on pexpect.
+	* Relased 0.9.8.
 
 2007-09-07 Samuel Abels <http://debain.org>
 

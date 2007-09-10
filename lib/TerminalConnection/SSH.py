@@ -13,26 +13,31 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Transport import Transport as Base
-import os, time
+import sys, os, time, re
 import pexpect
-from Telnet import newline, prompt_re, pass_re, login_fail_re
+from Telnet import newline, pass_re, login_fail_re
 
 True  = 1
 False = 0
+
+flags     = re.I | re.M
+prompt_re = re.compile(r'[\r\n]*\w+[\-\w\(\)\@:~]*[#>%\$]',    flags)
 
 
 class Transport(Base):
     def __init__(self, *args, **kwargs):
         Base.__init__(self, **kwargs)
-        self.pid      = None
-        self.fd       = None
+        self.conn     = None
         self.debug    = kwargs.get('debug', 0)
         self.prompt   = prompt_re
         self.hostname = None
 
 
-    def _receive_cb(sender, data, **kwargs):
-        self = kwargs['connection']
+    def __del__(self):
+        self.conn.close(True)
+
+
+    def _receive_cb(self, data, **kwargs):
         text = data.replace('\r', '')
         if self.echo:
             sys.stdout.write(text)
@@ -58,8 +63,9 @@ class Transport(Base):
 
     def authenticate(self, user, password):
         self.conn = pexpect.spawn('ssh %s@%s' % (user, self.hostname))
+        self.conn.setecho(self.echo)
         self.conn.expect(pass_re)
-        self._receive_cb(self.conn.before + self.conn.after, connection = self.conn)
+        self._receive_cb(self.conn.before + self.conn.after)
         self.execute(password)
 
 
@@ -68,9 +74,13 @@ class Transport(Base):
 
 
     def expect_prompt(self):
-        self.conn.expect(self.prompt)
-        self._receive_cb(self.conn.before + self.conn.after, connection = self.conn)
-        return (self.conn.before + self.conn.after).split('\n')
+        try:
+            self.conn.expect(self.prompt)
+            buf = self.conn.before + self.conn.after
+        except pexpect.EOF:
+            buf = self.conn.before
+        self._receive_cb(buf)
+        return buf.split('\n')
 
 
     def execute(self, command):
@@ -83,6 +93,6 @@ class Transport(Base):
 
 
     def close(self):
-        self.conn.close()
         self.conn.expect(pexpect.EOF)
-        self._receive_cb(self.conn.before + self.conn.after, connection = self.conn)
+        self._receive_cb(self.conn.before)
+        self.conn.close()
