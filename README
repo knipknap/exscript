@@ -21,3 +21,5 @@ Requirements
 -------------
 Python >= 2.2
 Python-crypto
+python-pexpect
+ssh
