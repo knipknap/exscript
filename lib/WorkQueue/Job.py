@@ -25,13 +25,14 @@ class Job(threading.Thread):
         self.logfile_lock        = None
         self.debug               = kwargs.get('debug', 0)
         self.action.debug        = self.debug
+        self.setName(self.action.name)
 
 
     def run(self):
         """
         """
         if self.debug:
-            print "Job running: %s" % self
+            print "Job running: %s" % self.getName()
         try:
             self.action.execute(self.global_context_lock,
                                 self.global_context,

@@ -11,7 +11,13 @@ class Program(Scope):
 
 
     def init(self, *args, **kwargs):
-        self.init_variables.update(copy.deepcopy(kwargs))
+        for key in kwargs:
+            if key.find('.') >= 0 or key.startswith('_'):
+                continue
+            if type(kwargs[key]) == type([]):
+                self.init_variables[key] = kwargs[key]
+            else:
+                self.init_variables[key] = [kwargs[key]]
 
 
     def get_line_position_from_char(self, char):

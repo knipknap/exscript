@@ -3,7 +3,7 @@ from Token import Token
 class Variable(Token):
     def __init__(self, parser, parent):
         Token.__init__(self, 'Variable', parser)
-        self.parent  = parent
+        self.parent = parent
 
         (type, self.varname) = parser.token()
         parser.expect('varname')

@@ -20,7 +20,15 @@ class Parser(object):
             self.debug = int(kwargs['debug'])
 
 
-    def define(self, *args, **kwargs):
+    def define(self, **kwargs):
+        for key in kwargs:
+            if type(kwargs[key]) == type([]):
+                self.variables[key] = kwargs[key]
+            else:
+                self.variables[key] = [kwargs[key]]
+
+
+    def define_function(self, **kwargs):
         self.variables.update(kwargs)
 
 

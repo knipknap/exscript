@@ -7,6 +7,7 @@ class Extract(Token):
         self.parent    = parent
         self.varnames  = []
         self.variables = {}
+        self.append    = False
 
         # First expect a regular expression.
         parser.expect('whitespace')
@@ -15,7 +16,13 @@ class Extract(Token):
 
         # Expect "as" keyword.
         parser.expect('whitespace')
-        parser.expect('keyword', 'as')
+        if parser.next_if('keyword', 'as'):
+            self.append = False
+        elif parser.next_if('keyword', 'into'):
+            self.append = False
+        else:
+            (type, token) = parser.token()
+            parent.syntax_error(self, 'Expected "as" or "into" but got %s' % token)
 
         # Expect a list of variable names.
         while 1:
@@ -35,18 +42,18 @@ class Extract(Token):
         self.parent.define(**self.variables)
 
 
-    def value(self):
+    def extract(self):
         # Re-initialize the variable content, because this method
         # might be called multiple times.
         for varname in self.varnames:
             self.variables[varname] = []
 
-        response = self.parent.get('_response')
+        response = self.parent.get('_buffer')
         #print "Response is", response
 
         # Walk through all lines, matching each one against the regular
         # expression.
-        for line in self.parent.get('_response'):
+        for line in self.parent.get('_buffer'):
             match = self.regex.value().search(line)
             if match is None:
                 continue
@@ -66,9 +73,18 @@ class Extract(Token):
                     self.parent.runtime_error(self, msg)
                 self.variables[varname].append(value)
 
-        self.parent.define(**self.variables)
+
+    def value(self):
+        self.extract()
+        if not self.append:
+            self.parent.define(**self.variables)
+        else:
+            for key in self.variables:
+                existing = self.parent.get('key')
+                self.parent.define(**{key: existing + self.variables})
         return 1
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.regex.pattern, 'into', self.varnames
+        mode = self.append and 'into' or 'as'
+        print (' ' * indent) + self.name, self.regex.pattern, mode, self.varnames

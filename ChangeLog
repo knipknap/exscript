@@ -1,7 +1,19 @@
+2007-09-12 Samuel Abels <http://debain.org>
+
+	* lib/TerminalConnection/T*.py: Reworked the telnet adapter such that it
+	supports negotiation. This means that a connection should now automatically
+	choose a script-friendly terminal type. (e.g. one that uses no color control
+	characters).
+	* lib/Exscript/Loop.py: Fixed a bug that some operations would not work when
+	accessing the iterator variable in the body of a loop tag.
+	* lib/Exscript/Loop.py: Added support for "while" and "until" loops.
+	* lib/Exscript/Extract.py: Added support for "into" keyword.
+	* lib/WorkQueue/Job.py: Use friendlier thread names.
+	* lib/Exscript/*.py: Fix: In several cases accessing a variable could fail.
+
 2007-09-10 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/Loop.py: Loops can now iterate over multiple lists at once.
-	Correctly filter out telnet control characters.
 	* lib/TerminalConnection/: Added the humble beginnings of an SSH adapter
 	based on pexpect.
 	* Relased 0.9.8.

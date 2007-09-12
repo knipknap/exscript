@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 ## Author:      Samuel Abels
 ## Date:        2007-06-04
-## Description: Use the EScript interpreter with a multi threaded configuration
+## Description: Use the Exscript interpreter with a multi threaded configuration
 ##              engine to execute commands on a list of hosts.
 import sys, time, os, re, signal
 sys.path.insert(0, 'lib')

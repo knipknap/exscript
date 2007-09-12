@@ -56,6 +56,8 @@ DONT = chr(254)
 DO   = chr(253)
 WONT = chr(252)
 WILL = chr(251)
+SB   = chr(250)
+SE   = chr(240)
 theNULL = chr(0)
 
 # Telnet protocol options code (don't change)
@@ -401,46 +403,46 @@ class Telnet:
         buf = ''
         try:
             while self.rawq:
+                #print "RAWQ:", repr(self.rawq)
                 c = self.rawq_getchar()
-                if c == theNULL:
-                    continue
-                if c == "\021":
-                    continue
                 if c != IAC:
                     buf = buf + c
+                    #print "Got:", repr(buf)
                     continue
                 c = self.rawq_getchar()
-                if c == IAC:
-                    buf = buf + c
-                elif c in (DO, DONT):
-                    opt = self.rawq_getchar()
+                #print "Char:", repr(c)
+                if c == theNULL:
+                    self.msg('IAC NOP')
+                    continue
+                opt = self.rawq_getchar()
+                #print "Opt:", repr(opt)
+                if c in (DO, DONT):
                     self.msg('IAC %s %d', c == DO and 'DO' or 'DONT', ord(opt))
                     if self.option_callback:
                         self.option_callback(self.sock, c, opt)
+                    elif opt == TTYPE:
+                        self.sock.send(IAC + WILL + opt)
                     else:
-                        try:
-                            self.sock.send(IAC + WONT + opt)
-                        except socket.error, v:
-                            # Try again.
-                            if v[0] == 32:
-                                self.sock.send(IAC + WONT + opt)
+                        self.sock.send(IAC + WONT + opt)
+                elif c == SB:
+                    self.msg('IAC SUBCOMMAND %d', ord(opt))
+                    while self.rawq_getchar() != SE:
+                        pass
+                    self.msg('IAC SUBCOMMAND_END')
+                    self.sock.send(IAC + SB + TTYPE + theNULL + 'dumb' + IAC + SE)
                 elif c in (WILL, WONT):
-                    opt = self.rawq_getchar()
                     self.msg('IAC %s %d',
                              c == WILL and 'WILL' or 'WONT', ord(opt))
                     if self.option_callback:
                         self.option_callback(self.sock, c, opt)
                     else:
-                        try:
-                            self.sock.send(IAC + DONT + opt)
-                        except socket.error, v:
-                            # Try again.
-                            if v[0] == 32:
-                                self.sock.send(IAC + DONT + opt)
+                        self.sock.send(IAC + DONT + opt)
                 else:
                     self.msg('IAC %d not recognized' % ord(opt))
         except EOFError: # raised by self.rawq_getchar()
             pass
+        if self.data_callback is not None:
+            self.data_callback(buf, **self.data_callback_kwargs)
         self.cookedq = self.cookedq + buf
 
     def rawq_getchar(self):
@@ -474,8 +476,6 @@ class Telnet:
         # The buffer size should be fairly small so as to avoid quadratic
         # behavior in process_rawq() above.
         buf = self.sock.recv(64)
-        if self.data_callback is not None:
-            self.data_callback(buf, **self.data_callback_kwargs)
         self.msg("recv %s", `buf`)
         self.eof = (not buf)
         self.rawq = self.rawq + buf

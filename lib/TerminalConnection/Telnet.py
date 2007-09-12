@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Transport import Transport as Base
-import re, exceptions, sys, otp, string
+import os, re, exceptions, sys, otp, string
 import telnetlib
 
 True  = 1
@@ -21,14 +21,13 @@ False = 0
 
 flags         = re.I | re.M
 printable     = re.escape(string.printable)
-ctrl_char     = r'(?:' + re.escape(telnetlib.IAC) + r'[^' + printable + ']+)'
-newline       = r'[\r\n]' + ctrl_char + r'*'
+newline       = r'[\r\n]'
 cisco_user_re = re.compile(newline + r'username:', flags)
 junos_user_re = re.compile(newline + r'login:',    flags)
 unix_user_re  = re.compile(r'(user|login): ?$',    flags)
 pass_re       = re.compile(r'password:?',          flags)
 skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
-prompt_re     = re.compile(newline + r'\w+[\-\w\(\)@\:~]*[#>%\$]',    flags)
+prompt_re     = re.compile(newline + r'\w+[\-\w\(\)@:~]*[#>%\$]',    flags)
 login_fail_re = re.compile(newline + r'[^\r\n]*(?:incorrect|failed)', flags)
 
 class Transport(Base):
@@ -41,8 +40,8 @@ class Transport(Base):
 
     def _receive_cb(sender, data, **kwargs):
         self = kwargs['telnet']
-        data = data.replace('\r', '')
-        text = re.sub(re.escape(telnetlib.IAC) + '+..', '', data)
+        text = data.replace('\r', '')
+        #text = re.sub('[^' + printable + ']', '', data)
         if self.echo:
             sys.stdout.write(text)
             sys.stdout.flush()

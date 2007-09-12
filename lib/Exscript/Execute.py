@@ -41,7 +41,7 @@ class Execute(Token):
             self.parent.runtime_error(self, '%s is not a variable name' % varname)
         elif type(value) == type([]):
             if len(value) > 0:
-                value = value[0]
+                value = str(value[0])
             else:
                 value = ''
         return value
@@ -73,7 +73,7 @@ class Execute(Token):
             error = 'Device said:\n' + '\n'.join(response)
             self.parent.exception(self, DeviceException, 'DeviceException', error)
 
-        self.parent.define(_response = response)
+        self.parent.define(_buffer = response)
         return 1
 
 

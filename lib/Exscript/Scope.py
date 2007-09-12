@@ -9,6 +9,9 @@ class Scope(Token, Trackable):
         self.children       = []
         self.parent         = parent
         self.exit_requested = 0
+        for key in self.variables:
+            if key.find('.') < 0 and not key.startswith('_'):
+                assert type(self.variables[key]) == type([])
 
 
     def exit_request(self):
@@ -31,11 +34,19 @@ class Scope(Token, Trackable):
         self.parent.runtime_error(sender, error)
 
 
-    def define(self, *args, **kwargs):
-        if self.parent is None:
-            self.variables.update(kwargs)
-        else:
-            self.parent.define(**kwargs)
+    def define(self, **kwargs):
+        if self.parent is not None:
+            return self.parent.define(**kwargs)
+        for key in kwargs:
+            if key.find('.') >= 0 or key.startswith('_') \
+              or type(kwargs[key]) == type([]):
+                self.variables[key] = kwargs[key]
+            else:
+                self.variables[key] = [kwargs[key]]
+
+
+    def define_function(self, **kwargs):
+        self.variables.update(kwargs)
 
 
     def is_defined(self, name):

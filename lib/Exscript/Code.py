@@ -19,7 +19,7 @@ grammar = (
     ('close_bracket',       r'\)'),
     ('comma',               r','),
     ('whitespace',          r'[ \t]+'),
-    ('keyword',             r'\b(?:extract|as|if|else|end|loop|try|enter)\b'),
+    ('keyword',             r'\b(?:extract|as|into|if|else|end|loop|try|enter|until|while)\b'),
     ('assign',              r'='),
     ('comparison',          r'\b(?:is\s+not|is|ge|gt|le|lt|matches)\b'),
     ('arithmetic_operator', r'(?:\*|\+|-|/)'),
