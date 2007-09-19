@@ -12,17 +12,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Transport import Transport as Base
 import sys, os, time, re
 import pexpect
-from Telnet import newline, pass_re, login_fail_re
+from Transport import Transport as Base, \
+                      cisco_user_re,     \
+                      junos_user_re,     \
+                      unix_user_re,      \
+                      pass_re,           \
+                      skey_re,           \
+                      prompt_re,         \
+                      login_fail_re
 
 True  = 1
 False = 0
-
-flags     = re.I | re.M
-prompt_re = re.compile(r'[\r\n]*\w+[\-\w\(\)\@:~]*[#>%\$]',    flags)
-
 
 class Transport(Base):
     def __init__(self, *args, **kwargs):
@@ -64,9 +66,69 @@ class Transport(Base):
     def authenticate(self, user, password):
         self.conn = pexpect.spawn('ssh %s@%s' % (user, self.hostname))
         self.conn.setecho(self.echo)
-        self.conn.expect(pass_re)
-        self._receive_cb(self.conn.before + self.conn.after)
-        self.execute(password)
+        while 1:
+            # Wait for the user prompt.
+            prompt  = [login_fail_re,
+                       cisco_user_re,
+                       junos_user_re,
+                       unix_user_re,
+                       skey_re,
+                       pass_re,
+                       self.prompt]
+            #print 'Waiting for prompt:', self.conn.buffer, self.conn.before, self.conn.after
+            try:
+                which = self.conn.expect_list(prompt, self.timeout)
+            except:
+                print 'Buffer:', repr(self.conn.buffer), \
+                                 repr(self.conn.before), \
+                                 repr(self.conn.after)
+                raise
+            self._receive_cb(self.conn.before + self.conn.after)
+
+            # No match.
+            if which < 0:
+                raise Exception("Timeout while waiting for prompt")
+
+            # Login error detected.
+            elif which == 0:
+                raise Exception("Login failed")
+
+            # User name prompt.
+            elif which <= 3:
+                #print "Username prompt received."
+                self.host_type = ('cisco', 'junos', 'unix')[which - 1]
+                self.send(user + '\r')
+                continue
+
+            # s/key prompt.
+            elif which == 4:
+                #print "S/Key prompt received."
+                seq    = int(self.conn.match.group(1))
+                seed   = self.conn.match.group(2)
+                #print "Seq:", seq, "Seed:", seed
+                phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
+                self.conn.expect(pass_re, self.timeout)
+                self.send(phrase + '\r')
+                #print "Password sent."
+                continue
+            
+            # Cleartext password prompt.
+            elif which == 5:
+                #print "Cleartext prompt received."
+                self.send(password + '\r')
+                continue
+
+            # Shell prompt.
+            elif which == 6:
+                #print "Shell prompt received."
+                # Switch to script compatible output (where supported).
+                #print 'Host type:', self.host_type
+                if self.host_type == 'cisco':
+                    self.execute('terminal length 0')
+                break
+
+            else:
+                assert 0 # Not reached.
 
 
     def authorize(self, password):

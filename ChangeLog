@@ -1,3 +1,10 @@
+2007-09-19 Samuel Abels <http://debain.org>
+
+	* *.py: Backported such that Python 2.2 is now also supported.
+	* exscript.py: Load the protocol adapters dynamically, such that 
+	SSH related modules are not required when Telnet is used.
+	* lib/TerminalConnection/*.py: Further improved prompt recognition.
+
 2007-09-12 Samuel Abels <http://debain.org>
 
 	* lib/TerminalConnection/T*.py: Reworked the telnet adapter such that it

@@ -6,13 +6,12 @@
 import sys, time, os, re, signal
 sys.path.insert(0, 'lib')
 import Exscript
-from FooLib             import Interact
-from FooLib             import OptionParser
-from FooLib             import UrlParser
-from WorkQueue          import WorkQueue
-from WorkQueue          import Sequence
-from TerminalConnection import *
-from TerminalActions    import *
+from FooLib          import Interact
+from FooLib          import OptionParser
+from FooLib          import UrlParser
+from WorkQueue       import WorkQueue
+from WorkQueue       import Sequence
+from TerminalActions import *
 
 True  = 1
 False = 0
@@ -25,10 +24,10 @@ def usage():
     print "Syntax: ./exscript.py [options] exscript [hostname [hostname ...]]"
     print "  -A, --authorize"
     print "                 When given, authorization is performed on devices that"
-    print "                 support AAA (by default, $0 only authenticates)"
+    print "                 support AAA (by default, Exscript only authenticates)"
     print "  -c, --connections=NUM"
     print "                 Maximum number of concurrent connections."
-    print "                 NUM is a number between 1 and 20, default is 5"
+    print "                 NUM is a number between 1 and 20, default is 1"
     print "      --csv-hosts FILE"
     print "                 Loads a list of hostnames and definitions from the given file."
     print "                 The first line of the file must have the column headers in the"
@@ -50,6 +49,11 @@ def usage():
     print "                 Each filename consists of the hostname with \"_log\" appended."
     print "                 Errors are written to a separate file, where the filename"
     print "                 consists of the hostname with \".log.error\" appended."
+    print "      --no-echo"
+    print "                 Turns off the echo, such that the network activity is no longer"
+    print "                 written to stdout."
+    print "                 This is already the default behavior if the -c option was given"
+    print "                 with a number greater than 1."
     print "  -p, --protocol STRING"
     print "                 Specify which protocol to use to connect to the remote host."
     print "                 STRING is one of: telnet ssh"
@@ -121,7 +125,7 @@ if options.get('csv-hosts') is not None:
     # Walk through all lines and create a map that maps hostname to definitions.
     last_hostname = ''
     for line in file:
-        line     = line.rstrip('\r\n')
+        line     = re.sub(r'[\r\n]*$', '', line)
         values   = line.split('\t')
         hostname = values.pop(0).strip()
 
@@ -257,9 +261,15 @@ try:
 
         # Choose the protocol.
         if this_proto == 'telnet':
-            protocol = Telnet
+            protocol = __import__('TerminalConnection.Telnet',
+                                  globals(),
+                                  locals(),
+                                  'Telnet')
         elif this_proto == 'ssh':
-            protocol = SSH
+            protocol = __import__('TerminalConnection.SSH',
+                                  globals(),
+                                  locals(),
+                                  'SSH')
         else:
             print 'Unsupported protocol %s' % this_proto
             continue

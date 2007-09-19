@@ -12,23 +12,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Transport import Transport as Base
-import os, re, exceptions, sys, otp, string
+import os, re, exceptions, sys, otp
 import telnetlib
+from Transport import Transport as Base, \
+                      cisco_user_re,     \
+                      junos_user_re,     \
+                      unix_user_re,      \
+                      pass_re,           \
+                      skey_re,           \
+                      prompt_re,         \
+                      login_fail_re
 
 True  = 1
 False = 0
-
-flags         = re.I | re.M
-printable     = re.escape(string.printable)
-newline       = r'[\r\n]'
-cisco_user_re = re.compile(newline + r'username:', flags)
-junos_user_re = re.compile(newline + r'login:',    flags)
-unix_user_re  = re.compile(r'(user|login): ?$',    flags)
-pass_re       = re.compile(r'password:?',          flags)
-skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
-prompt_re     = re.compile(newline + r'\w+[\-\w\(\)@:~]*[#>%\$]',    flags)
-login_fail_re = re.compile(newline + r'[^\r\n]*(?:incorrect|failed)', flags)
 
 class Transport(Base):
     def __init__(self, *args, **kwargs):
@@ -110,7 +106,7 @@ class Transport(Base):
                 seed   = matches.group(2)
                 #print "Seq:", seq, "Seed:", seed
                 phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
-                self.tn.expect([pass_re])
+                self.tn.expect([pass_re], self.timeout)
                 self.send(phrase + '\r')
                 #print "Password sent."
                 continue

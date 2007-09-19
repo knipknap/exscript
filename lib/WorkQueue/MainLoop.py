@@ -66,7 +66,7 @@ class MainLoop(threading.Thread):
                 if job.isAlive():
                     running_jobs.append(job)
                     continue
-                print 'Job "%s" finished' % job.getName()
+                print 'Job "%s" completed.' % job.getName()
                 job.join()
             self.running_jobs = running_jobs[:]
 

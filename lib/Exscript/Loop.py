@@ -95,8 +95,10 @@ class Loop(Token):
 
         # Iterate.
         for i in xrange(len(lists[0])):
-            for f, list in enumerate(lists):
+            f = 0
+            for list in lists:
                 self.block.define(**{self.iter_varnames[f]: [list[i]]})
+                f += 1
             if self.until is not None and self.until.value():
                 break
             if self.during is not None and not self.during.value():
