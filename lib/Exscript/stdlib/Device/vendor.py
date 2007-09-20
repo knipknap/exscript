@@ -1,8 +1,10 @@
 import re
 
+signature = [('self', 'integer')]
+
 #FIXME: This function should really only call a show version parser that does
 # all the heavy lifting and extracts more than just the vendor.
-def vendor(scope, force = 0):
+def execute(scope, force = 0):
     # If the vendor is cached, return it.
     vendor = scope.get('_stdlib.device.vendor')
     if vendor is not None and force == 0:

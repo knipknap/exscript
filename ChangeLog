@@ -1,3 +1,10 @@
+2007-09-20 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/*.py: Added missing copyleft headers.
+	* lib/Exscript/stdlib/*: Reorganized the standard library such that every
+	function has it's own file. Fixed sys.wait().
+	* lib/Exscript/Parser.py: Fixed the debug argument of the constructor.
+
 2007-09-19 Samuel Abels <http://debain.org>
 
 	* *.py: Backported such that Python 2.2 is now also supported.

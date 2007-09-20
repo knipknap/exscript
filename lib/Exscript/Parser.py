@@ -1,3 +1,17 @@
+# Copyright (C) 2007 Samuel Abels, http://debain.org
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import copy
 import types
 import stdlib
@@ -12,12 +26,10 @@ class Parser(object):
         self.current_line = 1
         self.token_buffer = None
         self.grammar      = []
-        self.debug        = 0
+        self.debug        = kwargs.get('debug', 0)
         self.variables    = {}
         self.stdlib       = {}
-        self.load_stdlib()
-        if kwargs.has_key('debug'):
-            self.debug = int(kwargs['debug'])
+        self.load_module(stdlib)
 
 
     def define(self, **kwargs):
@@ -32,18 +44,23 @@ class Parser(object):
         self.variables.update(kwargs)
 
 
-    def load_stdlib(self):
-        for modname in stdlib.__dict__['__all__']:
-            if self.debug > 0:
-                print 'Loading module', modname
-            module = __import__('stdlib.' + modname, globals(), locals(), ['stdlib'])
-            for funcname in dir(module):
-                if funcname.startswith('_'):
-                    continue
-                efuncname = modname.lower() + '.' + funcname
-                if self.debug > 0:
-                    print 'Loading function', efuncname
-                self.stdlib[efuncname] = module.__dict__[funcname]
+    def load_module(self, module):
+        if self.debug > 0:
+            print 'Loading module', module.__name__
+        for name in module.__dict__['__all__']:
+            if name.startswith('_'):
+                continue
+            mod_name  = module.__name__[module.__name__.index('.') + 1:]
+            item_name = mod_name + '.' + name
+            item      = __import__(item_name, globals(), locals(), [mod_name])
+            if not 'execute' in dir(item):
+                self.load_module(item)
+                continue
+            func_name = item_name + '.execute'
+            item_name = item_name[item_name.index('.') + 1:].lower()
+            if self.debug > 1:
+                print 'Loaded function', item_name
+            self.stdlib[item_name] = item.__dict__['execute']
 
 
     def set_grammar(self, grammar):
