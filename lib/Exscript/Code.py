@@ -57,7 +57,7 @@ grammar = (
     ('keyword',             r'\b(?:' + '|'.join(keywords)  + r')\b'),
     ('assign',              r'='),
     ('comparison',          r'\b(?:' + '|'.join(operators) + r')\b'),
-    ('arithmetic_operator', r'(?:\*|\+|-|/)'),
+    ('arithmetic_operator', r'(?:\*|\+|-|/|\.)'),
     ('logical_operator',    r'\b(?:and|or|not)\b'),
     ('open_function_call',  varname_re + r'(?:\.' + varname_re + r')*\('),
     ('varname',             varname_re),

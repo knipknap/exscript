@@ -28,6 +28,7 @@ class ExpressionNode(Token):
         self.rgt     = None
         self.op      = None
         self.op_type = None
+        self.scope   = scope
         self.parent  = parent
 
         # The "not" operator requires special treatment because it is
@@ -49,7 +50,7 @@ class ExpressionNode(Token):
         if not parser.next_if('arithmetic_operator') and \
            not parser.next_if('logical_operator') and \
            not parser.next_if('comparison'):
-            parent.syntax_error(self, 'Expected operator but got %s' % self.op_type)
+            scope.syntax_error(self, 'Expected operator but got %s' % self.op_type)
 
         # Expect the second term.
         self.rgt = ExpressionNode(parser, scope, self)
@@ -57,10 +58,12 @@ class ExpressionNode(Token):
 
     def priority(self):
         if self.op is None:
-            return 5
+            return 6
         elif self.op == 'not':
+            return 5
+        elif self.op_type == 'arithmetic_operator' and self.op != '.':
             return 4
-        elif self.op_type == 'arithmetic_operator':
+        elif self.op == '.':
             return 3
         elif self.op_type == 'comparison':
             return 2
@@ -84,6 +87,17 @@ class ExpressionNode(Token):
         if type(rgt_lst) == type([]):
             rgt = len(rgt_lst) > 0 and rgt_lst[0] or ''
 
+        if self.op_type == 'arithmetic_operator' and self.op != '.':
+            error = 'Operand for %s is not a number' % (self.op)
+            try:
+                lft = int(lft)
+            except:
+                self.scope.runtime_error(self.lft, error)
+            try:
+                rgt = int(rgt)
+            except:
+                self.scope.runtime_error(self.rgt, error)
+
         # Two-term expressions.
         if self.op == 'is':
             return [lft == rgt]
@@ -96,7 +110,7 @@ class ExpressionNode(Token):
                 match = regex.match(lft)
             except:
                 error = 'Right hand operator is not a regular expression'
-                self.parent.runtime_error(self.rgt, error)
+                self.scope.runtime_error(self.rgt, error)
             if match is None:
                 return 0
             return 1
@@ -119,11 +133,13 @@ class ExpressionNode(Token):
         elif self.op == 'or':
             return [lft or rgt]
         elif self.op == '*':
-            return [lft * rgt]
+            return [int(lft) * int(rgt)]
         elif self.op == '/':
             return [int(lft) / int(rgt)]
+        elif self.op == '.':
+            return [str(lft) + str(rgt)]
         elif self.op == '+':
-            return [lft + rgt]
+            return [int(lft) + int(rgt)]
         elif self.op == '-':
             return [int(lft) - int(rgt)]
 
