@@ -18,7 +18,7 @@ from Code    import Code
 from Execute import Execute
 
 grammar = (
-    ('escaped_data',        r'\\{'),
+    ('escaped_data',        r'\\.'),
     ('open_curly_bracket',  '{'),
     ('newline',             r'\n'),
     ('raw_data',            r'[^\r\n{}]+')
@@ -44,7 +44,11 @@ class Exscript(Scope):
                 code = Code(parser, self)
                 self.children.append(code)
             elif parser.current_is('raw_data'):
-                buffer += parser.token()[1]
+                if parser.token()[1].lstrip().startswith('#'):
+                    while not parser.current_is('newline'):
+                        parser.next()
+                else:
+                    buffer += parser.token()[1]
                 parser.next()
             elif parser.current_is('escaped_data'):
                 buffer += parser.token()[1][1]

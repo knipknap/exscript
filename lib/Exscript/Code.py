@@ -23,6 +23,18 @@ from Loop         import Loop
 from Try          import Try
 
 varname_re = r'[a-zA-Z][\w_]+'
+keywords = ['as',
+            'else',
+            'end',
+            'enter',
+            'extract',
+            'if',
+            'into',
+            'loop',
+            'try',
+            'until',
+            'when',
+            'while']
 
 grammar = (
     ('escaped_data',        r'\\.'),
@@ -33,7 +45,7 @@ grammar = (
     ('close_bracket',       r'\)'),
     ('comma',               r','),
     ('whitespace',          r'[ \t]+'),
-    ('keyword',             r'\b(?:extract|as|into|if|else|end|loop|try|enter|until|while)\b'),
+    ('keyword',             r'\b(?:' + '|'.join(keywords) + r')\b'),
     ('assign',              r'='),
     ('comparison',          r'\b(?:is\s+not|is|ge|gt|le|lt|matches)\b'),
     ('arithmetic_operator', r'(?:\*|\+|-|/)'),

@@ -1,3 +1,14 @@
+2007-09-21 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/Execute.py, lib/Exscript/Token.py, lib/Exscript/String.py:
+	Fixed a bug that escaping of some characters outside of code context did not
+	work.
+	Fixed another bug that escaping quotes in a string would not work. Added 
+	support for using $-prefixed variable names in strings.
+	* lib/Exscript/Execute.py: Added the builtin variable "response", that now
+	includes the response of the last command.
+	* lib/Exscript/Exscript.py: #-prefixed lines are now comments.
+
 2007-09-20 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/*.py: Added missing copyleft headers.

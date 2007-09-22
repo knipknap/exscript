@@ -62,12 +62,12 @@ class Extract(Token):
         for varname in self.varnames:
             self.variables[varname] = []
 
-        response = self.parent.get('_buffer')
-        #print "Response is", response
+        buffer = self.parent.get('_buffer')
+        #print "Buffer contains", buffer
 
         # Walk through all lines, matching each one against the regular
         # expression.
-        for line in self.parent.get('_buffer'):
+        for line in buffer:
             match = self.regex.value().search(line)
             if match is None:
                 continue

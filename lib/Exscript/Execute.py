@@ -13,52 +13,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-from Token     import Token
+from Token     import Token, string_re
 from Exception import DeviceException
 
-string_re = re.compile(r'(?<!\\)\$([a-z][\w_]+\b)', re.I)
-error_re  = re.compile(r'^%? ?(?:error|invalid|incomplete)', re.I)
+error_re = re.compile(r'^%? ?(?:error|invalid|incomplete)', re.I)
 
 class Execute(Token):
     def __init__(self, parser, parent, command):
         Token.__init__(self, 'Execute', parser)
-        self.parent  = parent
-        self.command = command
-
+        self.parent = parent
+        self.string = command
         # Make the debugger point to the beginning of the command.
-        self.char = self.char - len(command) - 1
+        self.char   = self.char - len(command) - 1
 
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, command)
-
-
-    def variable_test_cb(self, match):
-        varname = match.group(1)
-        value   = self.parent.get(varname)
-        if value is None:
-            self.char = self.char + self.command.find('$' + varname)
-            self.parent.generic_error(self, 'Undefined', 'Undefined variable %s' % varname)
-        elif type(value) == type(self.variable_test_cb):
-            self.char = self.char + self.command.find('$' + varname)
-            self.parent.generic_error(self, 'Undefined', '%s is not a variable name' % varname)
-        return match.group(0)
-
-
-    def variable_sub_cb(self, match):
-        varname = match.group(1)
-        value   = self.parent.get(varname)
-        if value is None:
-            self.char = self.char + self.command.find('$' + varname)
-            self.parent.runtime_error(self, 'Undefined variable %s' % varname)
-        elif type(value) == type(self.variable_test_cb):
-            self.char = self.char + self.command.find('$' + varname)
-            self.parent.runtime_error(self, '%s is not a variable name' % varname)
-        elif type(value) == type([]):
-            if len(value) > 0:
-                value = str(value[0])
-            else:
-                value = ''
-        return value
+        self.parent.define(response = [])
 
 
     def value(self):
@@ -68,7 +38,7 @@ class Execute(Token):
         conn = self.parent.get('_connection')
 
         # Substitute variables in the command for values.
-        command = string_re.sub(self.variable_sub_cb, self.command)
+        command = string_re.sub(self.variable_sub_cb, self.string)
         command = command.lstrip()
 
         # Execute the command.
@@ -87,9 +57,10 @@ class Execute(Token):
             error = 'Device said:\n' + '\n'.join(response)
             self.parent.exception(self, DeviceException, 'DeviceException', error)
 
-        self.parent.define(_buffer = response)
+        self.parent.define(_buffer  = response)
+        self.parent.define(response = response)
         return 1
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.command
+        print (' ' * indent) + self.name, self.string

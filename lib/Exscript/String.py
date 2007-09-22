@@ -13,10 +13,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
+from Token import Token, string_re
 
 grammar = (
+    ('string_data',      r'\\\$'),
     ('escaped_data',     r'\\.'),
-    ('string_data',      r'[^\r\n"]+'),
+    ('string_data',      r'[^\r\n"\\]+'),
     ('string_delimiter', r'"'),
 )
 
@@ -24,9 +26,11 @@ grammar_c = []
 for type, regex in grammar:
     grammar_c.append((type, re.compile(regex)))
 
-class String(object):
+class String(Token):
     def __init__(self, parser, parent):
+        Token.__init__(self, 'String', parser)
         parser.set_grammar(grammar_c)
+        self.parent = parent
         self.string = ''
         while 1:
             if parser.current_is('string_data'):
@@ -40,11 +44,13 @@ class String(object):
             else:
                 type = parser.token()[0]
                 parent.syntax_error(self, 'Expected string but got %s' % type)
+        # Make sure that any variables specified in the command are declared.
+        string_re.sub(self.variable_test_cb, self.string)
         parser.restore_grammar()
 
 
     def value(self):
-        return [self.string]
+        return [string_re.sub(self.variable_sub_cb, self.string)]
 
 
     def dump(self, indent = 0):
