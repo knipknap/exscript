@@ -35,6 +35,15 @@ keywords = ['as',
             'until',
             'when',
             'while']
+operators = ['in',
+             r'not\s+in',
+             'is',
+             r'is\s+not',
+             'ge',
+             'gt',
+             'le',
+             'lt',
+             'matches']
 
 grammar = (
     ('escaped_data',        r'\\.'),
@@ -45,9 +54,9 @@ grammar = (
     ('close_bracket',       r'\)'),
     ('comma',               r','),
     ('whitespace',          r'[ \t]+'),
-    ('keyword',             r'\b(?:' + '|'.join(keywords) + r')\b'),
+    ('keyword',             r'\b(?:' + '|'.join(keywords)  + r')\b'),
     ('assign',              r'='),
-    ('comparison',          r'\b(?:is\s+not|is|ge|gt|le|lt|matches)\b'),
+    ('comparison',          r'\b(?:' + '|'.join(operators) + r')\b'),
     ('arithmetic_operator', r'(?:\*|\+|-|/)'),
     ('logical_operator',    r'\b(?:and|or|not)\b'),
     ('open_function_call',  varname_re + r'(?:\.' + varname_re + r')*\('),

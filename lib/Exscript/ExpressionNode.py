@@ -73,29 +73,27 @@ class ExpressionNode(Token):
         if self.op is None:
             return self.lft.value()
         elif self.op == 'not':
-            return not self.rgt.value()
+            return [not self.rgt.value()[0]]
 
         # There are only two types of values: Regular expressions and lists.
         # We also have to make sure that empty lists do not cause an error.
-        lft = self.lft.value()
-        if type(lft) == type([]) and len(lft) > 0:
-            lft = lft[0]
-        rgt = self.rgt.value()
-        if type(rgt) == type([]) and len(rgt) > 0:
-            rgt = rgt[0]
+        lft_lst = self.lft.value()
+        if type(lft_lst) == type([]):
+            lft = len(lft_lst) > 0 and lft_lst[0] or ''
+        rgt_lst = self.rgt.value()
+        if type(rgt_lst) == type([]):
+            rgt = len(rgt_lst) > 0 and rgt_lst[0] or ''
 
         # Two-term expressions.
         if self.op == 'is':
-            #print "CMP:", lft, rgt
-            return lft == rgt
+            return [lft == rgt]
         elif self.op == 'matches':
-            regex   = self.rgt.value()
-            subject = self.lft.value()[0]
-            match   = None
+            regex = rgt_lst
+            match = None
             # The "matches" keyword requires a regular expression as the right hand
             # operand. The exception throws if "regex" does not have a match() method.
             try:
-                match = regex.match(subject)
+                match = regex.match(lft)
             except:
                 error = 'Right hand operator is not a regular expression'
                 self.parent.runtime_error(self.rgt, error)
@@ -103,27 +101,31 @@ class ExpressionNode(Token):
                 return 0
             return 1
         elif self.op == 'is not':
-            return lft != rgt
+            return [lft != rgt]
+        elif self.op == 'in':
+            return [lft in rgt_lst]
+        elif self.op == 'not in':
+            return [lft not in rgt_lst]
         elif self.op == 'ge':
-            return int(lft) >= int(rgt)
+            return [int(lft) >= int(rgt)]
         elif self.op == 'gt':
-            return int(lft) > int(rgt)
+            return [int(lft) > int(rgt)]
         elif self.op == 'le':
-            return int(lft) <= int(rgt)
+            return [int(lft) <= int(rgt)]
         elif self.op == 'lt':
-            return int(lft) < int(rgt)
+            return [int(lft) < int(rgt)]
         elif self.op == 'and':
-            return lft and rgt
+            return [lft and rgt]
         elif self.op == 'or':
-            return lft or rgt
+            return [lft or rgt]
         elif self.op == '*':
-            return int(lft) * int(rgt)
+            return [lft * rgt]
         elif self.op == '/':
-            return int(lft) / int(rgt)
+            return [int(lft) / int(rgt)]
         elif self.op == '+':
-            return int(lft) + int(rgt)
+            return [lft + rgt]
         elif self.op == '-':
-            return int(lft) - int(rgt)
+            return [int(lft) - int(rgt)]
 
 
     def dump(self, indent = 0):

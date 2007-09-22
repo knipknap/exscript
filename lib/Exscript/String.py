@@ -37,7 +37,13 @@ class String(Token):
                 self.string += parser.token()[1]
                 parser.next()
             elif parser.current_is('escaped_data'):
-                self.string += parser.token()[1][1]
+                char = parser.token()[1][1]
+                if char == 'n':
+                    self.string += '\n'
+                elif char == 'r':
+                    self.string += '\r'
+                else:
+                    self.string += char
                 parser.next()
             elif parser.next_if('string_delimiter'):
                 break

@@ -58,7 +58,7 @@ class IfCondition(Token):
 
 
     def value(self):
-        if self.expression.value():
+        if self.expression.value()[0]:
             self.if_block.value()
         elif self.else_block is not None:
             self.else_block.value()

@@ -1,3 +1,11 @@
+2007-09-22 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/String.py: It is now possible to use \r and \n in strings.
+	* lib/Exscript/ExpressionNode.py: Strings may now be concatenated using the
+	"+" operator.
+	* lib/Exscript/Code.py, lib/Exscript/ExpressionNode.py: Added "in" and "not
+	in" operators for searching through a list.
+
 2007-09-21 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/Execute.py, lib/Exscript/Token.py, lib/Exscript/String.py:
