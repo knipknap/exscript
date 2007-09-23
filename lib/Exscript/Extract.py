@@ -55,6 +55,11 @@ class Extract(Token):
             break
         self.parent.define(**self.variables)
 
+        if len(self.varnames) != self.regex.n_groups:
+            count = (len(self.varnames), self.regex.n_groups)
+            error = '%s variables, but regex has %s groups' % count
+            parent.syntax_error(self, error)
+
 
     def extract(self):
         # Re-initialize the variable content, because this method

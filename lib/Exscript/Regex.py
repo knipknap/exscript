@@ -15,7 +15,12 @@
 import re
 from Token import Token
 
+# Matches any opening parenthesis that is neither preceeded by a backslash
+# nor has a "?:" or "?<" appended.
+bracket_re = re.compile(r'(?<!\\)\((?!\?[:<])', re.I)
+
 grammar = (
+    ('escaped_bracket', r'\\/'),
     ('escaped_data',    r'\\/'),
     ('regex_data',      r'[^/\r\n\/]+'),
     ('regex_delimiter', r'/'),
@@ -30,6 +35,7 @@ for type, regex in grammar:
 class Regex(Token):
     def __init__(self, parser, parent):
         Token.__init__(self, 'Regular Expression', parser)
+        self.n_groups = 0
         parser.set_grammar(grammar_c)
         parser.expect(self, 'regex_delimiter')
         regex = ''
@@ -56,6 +62,7 @@ class Regex(Token):
             self.regex = re.compile(regex)
         except Exception, e:
             parent.syntax_error(self, 'Invalid regular expression: %s' % e)
+        self.n_groups = len(bracket_re.findall(regex))
         parser.restore_grammar()
         self.mark_end()
 
