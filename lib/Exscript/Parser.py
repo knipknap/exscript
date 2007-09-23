@@ -91,8 +91,10 @@ class Parser(object):
 
 
     def next(self):
-        self.last_char     = self.current_char + 1
+        #print "Old:", repr(self.input[self.current_char:])
+        self.last_char     = self.current_char
         self.current_char += len(self.token_buffer[1])
+        #print "New:", repr(self.input[self.current_char:])
         if self.token_buffer[0] == 'newline':
             self.current_line += 1
             #print "Line:", self.current_line
@@ -110,7 +112,7 @@ class Parser(object):
         (cur_type, cur_token) = self.token()
         if not self.next_if(type, token):
             if token is None:
-                error = 'Expected %s but got %s' % (type, cur_type)
+                error = 'Expected %s but got %s' % (type, cur_token)
             else:
                 error = 'Expected "%s" but got "%s"' % (token, cur_token)
             self.syntax_error(error) #FIXME: Context free sucks here. Move to a place where the sender is available.

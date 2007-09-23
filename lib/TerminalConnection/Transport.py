@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import string, re
+import string, re, sys
 from AbstractMethod import AbstractMethod
 
 flags         = re.I | re.M
@@ -42,6 +42,7 @@ junos_user_re = re.compile(newline + r'login:',    flags)
 unix_user_re  = re.compile(r'(user|login): ?$',    flags)
 pass_re       = re.compile(r'password:?',          flags)
 skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
+error_re      = re.compile(r'^%? ?(?:error|invalid|incomplete)', re.I)
 login_fail_re = re.compile(newline + r'[^\r\n]*(?:incorrect|failed|denied)', flags)
 
 # Test the prompt types. FIXME: Move into a unit test.
@@ -67,7 +68,8 @@ for prompt in prompts:
 
 class Transport(object):
     def __init__(self, *args, **kwargs):
-        self.prompt                = None
+        self.prompt_re             = prompt_re
+        self.error_re              = error_re
         self.host_type             = 'unknown'
         self.echo                  = kwargs.get('echo',    0)
         self.timeout               = kwargs.get('timeout', 10)
@@ -75,6 +77,7 @@ class Transport(object):
         self.log                   = None
         self.on_data_received_cb   = kwargs.get('on_data_received',      None)
         self.on_data_received_args = kwargs.get('on_data_received_args', None)
+        self.response              = None
         if self.logfile is not None:
             self.log = open(kwargs['logfile'], 'a')
 
@@ -84,13 +87,28 @@ class Transport(object):
             self.log.close()
 
 
+    def _receive_cb(self, data, **kwargs):
+        text = data.replace('\r', '')
+        if self.echo:
+            sys.stdout.write(text)
+            sys.stdout.flush()
+        if self.log is not None:
+            self.log.write(text)
+        if self.on_data_received_cb is not None:
+            self.on_data_received_cb(data, self.on_data_received_args)
+        return data
+
+
     def set_on_data_received_cb(self, func, args = None):
         self.on_data_received_cb   = func
         self.on_data_received_args = args
 
 
     def set_prompt(self, prompt = None):
-        AbstractMethod()
+        if prompt is None:
+            self.prompt = prompt_re
+        else:
+            self.prompt = prompt
 
 
     def set_timeout(self, timeout):

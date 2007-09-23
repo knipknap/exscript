@@ -24,6 +24,7 @@ class Expression(Token):
 
         # Reorder the tree according to the operator priorities.
         self.prioritize(self.root)
+        self.mark_end()
 
 
     def prioritize(self, start, prio = 1):
@@ -76,4 +77,5 @@ class Expression(Token):
     def dump(self, indent = 0):
         print (' ' * indent) + self.name, 'start'
         self.root.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end'
+        print (' ' * indent) + self.name, 'end.',
+        self.dump_input()

@@ -12,15 +12,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, re, exceptions, sys, otp
+import os, re, exceptions, otp
 import telnetlib
+from Exception import TransportException
 from Transport import Transport as Base, \
                       cisco_user_re,     \
                       junos_user_re,     \
                       unix_user_re,      \
                       pass_re,           \
                       skey_re,           \
-                      prompt_re,         \
                       login_fail_re
 
 True  = 1
@@ -31,34 +31,12 @@ class Transport(Base):
         Base.__init__(self, **kwargs)
         self.tn     = None
         self.debug  = kwargs.get('debug', 0)
-        self.prompt = prompt_re
-
-
-    def _receive_cb(sender, data, **kwargs):
-        self = kwargs['telnet']
-        text = data.replace('\r', '')
-        #text = re.sub('[^' + printable + ']', '', data)
-        if self.echo:
-            sys.stdout.write(text)
-            sys.stdout.flush()
-        if self.log is not None:
-            self.log.write(text)
-        if self.on_data_received_cb is not None:
-            self.on_data_received_cb(data, self.on_data_received_args)
-        return data
-
-
-    def set_prompt(self, prompt = None):
-        if prompt is None:
-            self.prompt = prompt_re
-        else:
-            self.prompt = prompt
 
 
     def connect(self, hostname):
         assert self.tn is None
         self.tn = telnetlib.Telnet(hostname)
-        self.tn.set_receive_callback(self._receive_cb, telnet = self)
+        self.tn.set_receive_callback(self._receive_cb)
         #self.tn.set_debuglevel(1)
         if self.tn is None:
             return False
@@ -75,7 +53,7 @@ class Transport(Base):
                        unix_user_re,
                        skey_re,
                        pass_re,
-                       self.prompt]
+                       self.prompt_re]
             which   = None
             matches = None
             try:
@@ -86,11 +64,11 @@ class Transport(Base):
 
             # No match.
             if which < 0:
-                raise Exception("Timeout while waiting for prompt")
+                raise TransportException("Timeout while waiting for prompt")
 
             # Login error detected.
             elif which == 0:
-                raise Exception("Login failed")
+                raise TransportException("Login failed")
 
             # User name prompt.
             elif which <= 3:
@@ -143,15 +121,26 @@ class Transport(Base):
 
     def expect_prompt(self):
         # Wait for a prompt.
+        self.response = None
         try:
-            (_, _, response) = self.tn.expect([self.prompt], self.timeout)
+            (_, _, self.response) = self.tn.expect([self.prompt_re],
+                                                   self.timeout)
         except:
             print 'Error while waiting for a prompt'
             raise
-        if response is None:
-            return response
-        return response.split('\n')
-        
+
+        if self.response is None:
+            error = 'Error while waiting for response from device'
+            raise TransportException(error)
+
+        # We skip the first line because it contains the echo of the command
+        # sent.
+        for line in self.response.split('\n')[1:]:
+            match = self.error_re.match(line)
+            if match is None:
+                continue
+            raise TransportException('Device said:\n' + '\n'.join(response))
+
 
     def send(self, data):
         #print 'Sending "%s"' % data

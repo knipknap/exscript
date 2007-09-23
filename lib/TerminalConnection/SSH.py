@@ -12,15 +12,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, os, time, re
+import os, time, re
 import pexpect
+from Exception import TransportException
 from Transport import Transport as Base, \
                       cisco_user_re,     \
                       junos_user_re,     \
                       unix_user_re,      \
                       pass_re,           \
                       skey_re,           \
-                      prompt_re,         \
                       login_fail_re
 
 True  = 1
@@ -31,31 +31,11 @@ class Transport(Base):
         Base.__init__(self, **kwargs)
         self.conn     = None
         self.debug    = kwargs.get('debug', 0)
-        self.prompt   = prompt_re
         self.hostname = None
 
 
     def __del__(self):
         self.conn.close(True)
-
-
-    def _receive_cb(self, data, **kwargs):
-        text = data.replace('\r', '')
-        if self.echo:
-            sys.stdout.write(text)
-            sys.stdout.flush()
-        if self.log is not None:
-            self.log.write(text)
-        if self.on_data_received_cb is not None:
-            self.on_data_received_cb(data, self.on_data_received_args)
-        return data
-
-
-    def set_prompt(self, prompt = None):
-        if prompt is None:
-            self.prompt = prompt_re
-        else:
-            self.prompt = prompt
 
 
     def connect(self, hostname):
@@ -74,7 +54,7 @@ class Transport(Base):
                        unix_user_re,
                        skey_re,
                        pass_re,
-                       self.prompt]
+                       self.prompt_re]
             #print 'Waiting for prompt:', self.conn.buffer, self.conn.before, self.conn.after
             try:
                 which = self.conn.expect_list(prompt, self.timeout)
@@ -83,15 +63,16 @@ class Transport(Base):
                                  repr(self.conn.before), \
                                  repr(self.conn.after)
                 raise
-            self._receive_cb(self.conn.before + self.conn.after)
+            self.response = self.conn.before + self.conn.after
+            self._receive_cb(self.response)
 
             # No match.
             if which < 0:
-                raise Exception("Timeout while waiting for prompt")
+                raise TransportException("Timeout while waiting for prompt")
 
             # Login error detected.
             elif which == 0:
-                raise Exception("Login failed")
+                raise TransportException("Login failed")
 
             # User name prompt.
             elif which <= 3:
@@ -108,6 +89,8 @@ class Transport(Base):
                 #print "Seq:", seq, "Seed:", seed
                 phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
                 self.conn.expect(pass_re, self.timeout)
+                self.response = self.conn.before + self.conn.after
+                self._receive_cb(self.response)
                 self.send(phrase + '\r')
                 #print "Password sent."
                 continue
@@ -137,12 +120,23 @@ class Transport(Base):
 
     def expect_prompt(self):
         try:
-            self.conn.expect(self.prompt)
-            buf = self.conn.before + self.conn.after
+            self.conn.expect(self.prompt_re)
+            self.response = self.conn.before + self.conn.after
         except pexpect.EOF:
-            buf = self.conn.before
-        self._receive_cb(buf)
-        return buf.split('\n')
+            self.response = self.conn.before
+
+        if self.response is None:
+            error = 'Error while waiting for response from device'
+            raise TransportException(error)
+        self._receive_cb(self.response)
+
+        # We skip the first line because it contains the echo of the command
+        # sent.
+        for line in self.response.split('\n')[1:]:
+            match = self.error_re.match(line)
+            if match is None:
+                continue
+            raise TransportException('Device said:\n' + '\n'.join(response))
 
 
     def execute(self, command):
@@ -156,5 +150,6 @@ class Transport(Base):
 
     def close(self):
         self.conn.expect(pexpect.EOF)
+        self.response = self.conn.before
         self._receive_cb(self.conn.before)
         self.conn.close()

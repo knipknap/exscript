@@ -17,9 +17,11 @@ string_re = re.compile(r'(?<!\\)\$([a-z][\w_]+\b)', re.I)
 
 class Token(object):
     def __init__(self, name, parser):
-        self.name = name
-        self.line = parser.current_line
-        self.char = parser.last_char
+        self.name   = name
+        self.line   = parser.current_line
+        self.char   = parser.current_char
+        self.parser = parser
+        self.end    = parser.current_char + 10
 
 
     # Tokens that include variables in a string may use this callback to
@@ -58,5 +60,14 @@ class Token(object):
     def value(self):
         raise Exception, "Abstract method, not implemented" #FIXME: Mark abstract
 
+
+    def mark_end(self):
+        self.end = self.parser.current_char
+
+
     def dump(self, indent = 0):
         print (' ' * indent) + self.name
+
+
+    def dump_input(self):
+        print 'Input: %s' % repr(self.parser.input[self.char:self.end])

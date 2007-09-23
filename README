@@ -19,7 +19,7 @@ http://code.google.com/p/exscript/
 
 Requirements
 -------------
-Python >= 2.2
-Python-crypto
-python-pexpect
-ssh
+Python 2.2 or greater
+python-crypto
+python-pexpect (optional, for SSH support)
+ssh (optional, for SSH support)

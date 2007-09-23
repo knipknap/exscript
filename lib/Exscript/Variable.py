@@ -18,9 +18,9 @@ class Variable(Token):
     def __init__(self, parser, parent):
         Token.__init__(self, 'Variable', parser)
         self.parent = parent
-
         (type, self.varname) = parser.token()
         parser.expect('varname')
+        self.mark_end()
 
 
     def value(self):
@@ -31,4 +31,5 @@ class Variable(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + 'Variable', self.varname
+        print (' ' * indent) + 'Variable', self.varname, '.',
+        self.dump_input()

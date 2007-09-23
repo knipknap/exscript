@@ -1,3 +1,10 @@
+2007-09-23 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/*.py: Greatly improved the error handling of the parser.
+	* lib/Exscript/Execute.py, lib/Exscript/TerminalConnection/*.py: Moved the
+	response error handling out of the Exscript interpreter into the connection
+	code. This will let us improve error handling in the future.
+
 2007-09-22 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/String.py: It is now possible to use \r and \n in strings.

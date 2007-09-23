@@ -13,10 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-from Token     import Token, string_re
-from Exception import DeviceException
+from Token import Token, string_re
 
-error_re = re.compile(r'^%? ?(?:error|invalid|incomplete)', re.I)
 
 class Execute(Token):
     def __init__(self, parser, parent, command):
@@ -25,6 +23,7 @@ class Execute(Token):
         self.string = command
         # Make the debugger point to the beginning of the command.
         self.char   = self.char - len(command) - 1
+        self.end    = self.char + len(command)
 
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, command)
@@ -42,20 +41,8 @@ class Execute(Token):
         command = command.lstrip()
 
         # Execute the command.
-        #print command
-        response = conn.execute(command)
-
-        if response is None:
-            error = 'Error while waiting for response from device'
-            self.parent.runtime_error(self, error)
-
-        response = response[1:] # Skip the first line, which is the echo of the command sent.
-        for line in response:
-            match = error_re.match(line)
-            if match is None:
-                continue
-            error = 'Device said:\n' + '\n'.join(response)
-            self.parent.exception(self, DeviceException, 'DeviceException', error)
+        conn.execute(command)
+        response = conn.response.split('\n')[1:]
 
         self.parent.define(_buffer  = response)
         self.parent.define(response = response)
@@ -63,4 +50,5 @@ class Execute(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.string
+        print (' ' * indent) + self.name, self.string,
+        self.dump_input()

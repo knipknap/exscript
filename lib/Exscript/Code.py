@@ -79,11 +79,11 @@ class Code(Scope):
                 break
             elif parser.next_if('whitespace') or parser.next_if('newline'):
                 pass
-            elif parser.next_if('keyword', 'extract'):
+            elif parser.current_is('keyword', 'extract'):
                 self.children.append(Extract(parser, self))
-            elif parser.next_if('keyword', 'if'):
+            elif parser.current_is('keyword', 'if'):
                 self.children.append(IfCondition(parser, self))
-            elif parser.next_if('keyword', 'loop'):
+            elif parser.current_is('keyword', 'loop'):
                 self.children.append(Loop(parser, self))
             elif parser.current_is('varname'):
                 self.children.append(Assign(parser, self))

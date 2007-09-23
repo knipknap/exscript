@@ -29,6 +29,7 @@ class Regex(Token):
     def __init__(self, parser, parent):
         Token.__init__(self, 'Regular Expression', parser)
         parser.set_grammar(grammar_c)
+        parser.expect('regex_delimiter')
         regex = ''
         while 1:
             if parser.current_is('regex_data'):
@@ -48,6 +49,7 @@ class Regex(Token):
         except Exception, e:
             parent.syntax_error(self, 'Invalid regular expression: %s' % e)
         parser.restore_grammar()
+        self.mark_end()
 
 
     def value(self):
@@ -55,4 +57,5 @@ class Regex(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.regex.pattern
+        print (' ' * indent) + self.name, self.regex.pattern,
+        self.dump_input()

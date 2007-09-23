@@ -35,14 +35,15 @@ class Term(Token):
             self.term = Variable(parser, parent)
         elif parser.current_is('open_function_call'):
             self.term = FunctionCall(parser, parent)
-        elif parser.next_if('string_delimiter'):
+        elif parser.current_is('string_delimiter'):
             self.term = String(parser, parent)
         elif parser.next_if('number'):
             self.term = Number(token)
-        elif parser.next_if('regex_delimiter'):
+        elif parser.current_is('regex_delimiter'):
             self.term = Regex(parser, parent)
         else:
             parent.syntax_error(self, 'Expected term but got %s' % type)
+        self.mark_end()
 
 
     def priority(self):
@@ -54,5 +55,6 @@ class Term(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name
+        print (' ' * indent) + self.name,
+        self.dump_input()
         self.term.dump(indent + 1)

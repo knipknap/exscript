@@ -26,6 +26,7 @@ class Loop(Token):
         self.iter_varnames  = []
 
         # Expect one ore more lists.
+        parser.expect('keyword', 'loop')
         parser.expect('whitespace')
         if not parser.current_is('keyword', 'while') and \
            not parser.current_is('keyword', 'until'):
@@ -67,6 +68,7 @@ class Loop(Token):
             parser.next_if('whitespace')
         
         # End of statement.
+        self.mark_end()
         parser.next_if('whitespace')
         if not parser.next_if('close_curly_bracket'):
             token = parser.token()
@@ -125,4 +127,5 @@ class Loop(Token):
         print (' ' * indent) + self.name,
         print self.list_variables, 'as', self.iter_varnames, 'start'
         self.block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end'
+        print (' ' * indent) + self.name, 'end.',
+        self.dump_input()

@@ -21,8 +21,10 @@ class IfCondition(Token):
         Token.__init__(self, 'If-condition', parser)
 
         # Expect an expression.
+        parser.expect('keyword', 'if')
         parser.expect('whitespace')
         self.expression = Expression(parser, scope)
+        self.mark_end()
 
         # End of expression.
         parser.next_if('whitespace')
@@ -71,4 +73,5 @@ class IfCondition(Token):
         self.if_block.dump(indent + 1)
         if self.else_block is not None:
             self.else_block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end'
+        print (' ' * indent) + self.name, 'end.',
+        self.dump_input()

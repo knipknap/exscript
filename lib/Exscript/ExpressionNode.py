@@ -43,6 +43,7 @@ class ExpressionNode(Token):
             if not parser.current_is('arithmetic_operator') and \
                not parser.current_is('logical_operator') and \
                not parser.current_is('comparison'):
+                self.mark_end()
                 return
 
         # Expect the operator.
@@ -50,10 +51,12 @@ class ExpressionNode(Token):
         if not parser.next_if('arithmetic_operator') and \
            not parser.next_if('logical_operator') and \
            not parser.next_if('comparison'):
+            self.mark_end()
             scope.syntax_error(self, 'Expected operator but got %s' % self.op_type)
 
         # Expect the second term.
         self.rgt = ExpressionNode(parser, scope, self)
+        self.mark_end()
 
 
     def priority(self):
@@ -112,8 +115,8 @@ class ExpressionNode(Token):
                 error = 'Right hand operator is not a regular expression'
                 self.scope.runtime_error(self.rgt, error)
             if match is None:
-                return 0
-            return 1
+                return [0]
+            return [1]
         elif self.op == 'is not':
             return [lft != rgt]
         elif self.op == 'in':
@@ -151,4 +154,5 @@ class ExpressionNode(Token):
         print (' ' * (indent + 1)) + 'Operator', self.op
         if self.rgt is not None:
             self.rgt.dump(indent + 1)
-        print (' ' * indent) + self.name, self.op, 'end'
+        print (' ' * indent) + self.name, self.op, 'end.',
+        self.dump_input()

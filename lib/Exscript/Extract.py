@@ -24,8 +24,8 @@ class Extract(Token):
         self.append    = False
 
         # First expect a regular expression.
+        parser.expect('keyword', 'extract')
         parser.expect('whitespace')
-        parser.expect('regex_delimiter')
         self.regex = Regex(parser, parent)
 
         # Expect "as" keyword.
