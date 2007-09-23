@@ -20,7 +20,7 @@ class Enter(Token):
         Token.__init__(self, 'Enter', parser)
         self.parent  = parent
 
-        parser.expect('keyword', 'enter')
+        parser.expect(self, 'keyword', 'enter')
         while parser.next_if('whitespace') or parser.next_if('newline'):
             pass
 

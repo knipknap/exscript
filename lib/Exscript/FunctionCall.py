@@ -25,7 +25,7 @@ class FunctionCall(Token):
 
         # Extract the function name.
         (type, token) = parser.token()
-        parser.expect('open_function_call')
+        parser.expect(self, 'open_function_call')
         self.funcname = token[:-1]
         function      = self.parent.get(self.funcname)
         if function is None:

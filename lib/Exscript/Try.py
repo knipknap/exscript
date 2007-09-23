@@ -21,7 +21,7 @@ class Try(Scope):
 
         # End of expression.
         parser.next_if('whitespace')
-        parser.expect('keyword', 'try')
+        parser.expect(self, 'keyword', 'try')
         if not parser.next_if('close_curly_bracket'):
             token = parser.token()
             error = 'Unexpected %s at end of "try" keyword: %s' % token

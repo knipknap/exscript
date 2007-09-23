@@ -22,10 +22,10 @@ class Assign(Token):
 
         # Extract the variable name.
         (type, self.varname) = parser.token()
-        parser.expect('varname')
-        parser.expect('whitespace')
-        parser.expect('assign')
-        parser.expect('whitespace')
+        parser.expect(self, 'varname')
+        parser.expect(self, 'whitespace')
+        parser.expect(self, 'assign')
+        parser.expect(self, 'whitespace')
         self.expression = Expression.Expression(parser, parent)
         self.parent.define(**{self.varname: None})
 

@@ -26,8 +26,8 @@ class Loop(Token):
         self.iter_varnames  = []
 
         # Expect one ore more lists.
-        parser.expect('keyword', 'loop')
-        parser.expect('whitespace')
+        parser.expect(self, 'keyword', 'loop')
+        parser.expect(self, 'whitespace')
         if not parser.current_is('keyword', 'while') and \
            not parser.current_is('keyword', 'until'):
             self.list_variables = [Term(parser, scope)]
@@ -38,32 +38,32 @@ class Loop(Token):
                 parser.next_if('whitespace')
 
             # Expect the "as" keyword.
-            parser.expect('keyword', 'as')
+            parser.expect(self, 'keyword', 'as')
 
             # The iterator variable.
             parser.next_if('whitespace')
             (type, iter_varname) = parser.token()
-            parser.expect('varname')
+            parser.expect(self, 'varname')
             scope.define(**{iter_varname: []})
             self.iter_varnames = [iter_varname]
             parser.next_if('whitespace')
             while parser.next_if('comma'):
                 parser.next_if('whitespace')
                 (type, iter_varname) = parser.token()
-                parser.expect('varname')
+                parser.expect(self, 'varname')
                 scope.define(**{iter_varname: []})
                 self.iter_varnames.append(iter_varname)
                 parser.next_if('whitespace')
 
         # Check if this is a "while" loop.
         if parser.next_if('keyword', 'while'):
-            parser.expect('whitespace')
+            parser.expect(self, 'whitespace')
             self.during = Expression(parser, scope)
             parser.next_if('whitespace')
         
         # Check if this is an "until" loop.
         if parser.next_if('keyword', 'until'):
-            parser.expect('whitespace')
+            parser.expect(self, 'whitespace')
             self.until = Expression(parser, scope)
             parser.next_if('whitespace')
         

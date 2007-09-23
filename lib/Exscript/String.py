@@ -30,7 +30,7 @@ class String(Token):
     def __init__(self, parser, parent):
         Token.__init__(self, 'String', parser)
         parser.set_grammar(grammar_c)
-        parser.expect('string_delimiter')
+        parser.expect(self, 'string_delimiter')
         self.parent = parent
         self.string = ''
         while 1:

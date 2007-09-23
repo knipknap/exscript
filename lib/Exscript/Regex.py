@@ -19,6 +19,8 @@ grammar = (
     ('escaped_data',    r'\\/'),
     ('regex_data',      r'[^/\r\n\/]+'),
     ('regex_delimiter', r'/'),
+    ('newline',         r'[\r\n]'),
+    ('invalid_char',    r'.'),
 )
 
 grammar_c = []
@@ -29,7 +31,7 @@ class Regex(Token):
     def __init__(self, parser, parent):
         Token.__init__(self, 'Regular Expression', parser)
         parser.set_grammar(grammar_c)
-        parser.expect('regex_delimiter')
+        parser.expect(self, 'regex_delimiter')
         regex = ''
         while 1:
             if parser.current_is('regex_data'):
@@ -40,9 +42,15 @@ class Regex(Token):
                 parser.next()
             elif parser.next_if('regex_delimiter'):
                 break
+            elif parser.next_if('newline'):
+                self.char = self.char + len(regex)
+                error     = 'Unexpected end of regular expression'
+                parent.syntax_error(self, error)
             else:
-                type = parser.token()[0]
-                parent.syntax_error(self, 'Expected regular expression but got %s' % type)
+                char      = parser.token()[1]
+                self.char = self.char + len(regex)
+                error     = 'Invalid char "%s" in regular expression' % char
+                parent.syntax_error(self, error)
         self.pattern = regex
         try:
             self.regex = re.compile(regex)

@@ -21,8 +21,8 @@ class IfCondition(Token):
         Token.__init__(self, 'If-condition', parser)
 
         # Expect an expression.
-        parser.expect('keyword', 'if')
-        parser.expect('whitespace')
+        parser.expect(self, 'keyword', 'if')
+        parser.expect(self, 'whitespace')
         self.expression = Expression(parser, scope)
         self.mark_end()
 
@@ -55,7 +55,7 @@ class IfCondition(Token):
             return
 
         # There was no "elif", so we handle a normal "else" condition here.
-        parser.expect('close_curly_bracket')
+        parser.expect(self, 'close_curly_bracket')
         self.else_block = Exscript.Exscript(parser, scope)
 
 

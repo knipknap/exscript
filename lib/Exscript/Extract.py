@@ -24,12 +24,12 @@ class Extract(Token):
         self.append    = False
 
         # First expect a regular expression.
-        parser.expect('keyword', 'extract')
-        parser.expect('whitespace')
+        parser.expect(self, 'keyword', 'extract')
+        parser.expect(self, 'whitespace')
         self.regex = Regex(parser, parent)
 
         # Expect "as" keyword.
-        parser.expect('whitespace')
+        parser.expect(self, 'whitespace')
         if parser.next_if('keyword', 'as'):
             self.append = False
         elif parser.next_if('keyword', 'into'):
@@ -41,9 +41,9 @@ class Extract(Token):
         # Expect a list of variable names.
         while 1:
             # Variable name.
-            parser.expect('whitespace')
+            parser.expect(self, 'whitespace')
             (type, token) = parser.token()
-            parser.expect('varname')
+            parser.expect(self, 'varname')
             if self.variables.has_key(token):
                 parent.syntax_error(self, 'Duplicate variable name %s')
             self.varnames.append(token)

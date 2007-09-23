@@ -108,14 +108,15 @@ class Parser(object):
         return 1
 
 
-    def expect(self, type, token = None):
+    def expect(self, sender, type, token = None):
         (cur_type, cur_token) = self.token()
         if not self.next_if(type, token):
             if token is None:
                 error = 'Expected %s but got %s' % (type, cur_token)
             else:
                 error = 'Expected "%s" but got "%s"' % (token, cur_token)
-            self.syntax_error(error) #FIXME: Context free sucks here. Move to a place where the sender is available.
+            sender.char = self.current_char
+            sender.parent.syntax_error(sender, error)
         return 1
 
 

@@ -19,7 +19,7 @@ class Variable(Token):
         Token.__init__(self, 'Variable', parser)
         self.parent = parent
         (type, self.varname) = parser.token()
-        parser.expect('varname')
+        parser.expect(self, 'varname')
         self.mark_end()
 
 
