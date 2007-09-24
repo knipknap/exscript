@@ -26,6 +26,8 @@ from Transport import Transport as Base, \
 True  = 1
 False = 0
 
+escape_re = re.compile(r'(?:[\x00-\x09]|\x1b\[[^m]*m|\x1b\][^\x07]*\x07)')
+
 class Transport(Base):
     def __init__(self, *args, **kwargs):
         Base.__init__(self, **kwargs)
@@ -36,6 +38,11 @@ class Transport(Base):
 
     def __del__(self):
         self.conn.close(True)
+
+
+    def _remove_esc(self, response):
+        #print "PRE:", repr(response)
+        return escape_re.sub('', response)
 
 
     def connect(self, hostname):
@@ -63,7 +70,7 @@ class Transport(Base):
                                  repr(self.conn.before), \
                                  repr(self.conn.after)
                 raise
-            self.response = self.conn.before + self.conn.after
+            self.response = self._remove_esc(self.conn.before + self.conn.after)
             self._receive_cb(self.response)
 
             # No match.
@@ -89,7 +96,8 @@ class Transport(Base):
                 #print "Seq:", seq, "Seed:", seed
                 phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
                 self.conn.expect(pass_re, self.timeout)
-                self.response = self.conn.before + self.conn.after
+                response      = self.conn.before + self.conn.after
+                self.response = self._remove_esc(response)
                 self._receive_cb(self.response)
                 self.send(phrase + '\r')
                 #print "Password sent."
@@ -121,9 +129,9 @@ class Transport(Base):
     def expect_prompt(self):
         try:
             self.conn.expect(self.prompt_re)
-            self.response = self.conn.before + self.conn.after
+            self.response = self._remove_esc(self.conn.before + self.conn.after)
         except pexpect.EOF:
-            self.response = self.conn.before
+            self.response = self._remove_esc(self.conn.before)
 
         if self.response is None:
             error = 'Error while waiting for response from device'
@@ -150,6 +158,6 @@ class Transport(Base):
 
     def close(self):
         self.conn.expect(pexpect.EOF)
-        self.response = self.conn.before
-        self._receive_cb(self.conn.before)
+        self.response = self._remove_esc(self.conn.before)
+        self._receive_cb(self.response)
         self.conn.close()

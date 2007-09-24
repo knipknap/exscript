@@ -1,7 +1,12 @@
+2007-09-24 Samuel Abels <http://debain.org>
+
+	* lib/TerminalConnection/SSH.py: The SSH adapter now automatically removes
+	control characters from the data stream.
+
 2007-09-23 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/*.py: Greatly improved the error handling of the parser.
-	* lib/Exscript/Regex.py, lib/Exscript/Regex.py: Detect whether the correct
+	* lib/Exscript/Extract.py, lib/Exscript/Regex.py: Detect whether the correct
 	number of match groups is used in a regular expression.
 	* lib/Exscript/Execute.py, lib/Exscript/TerminalConnection/*.py: Moved the
 	response error handling out of the Exscript interpreter into the connection
