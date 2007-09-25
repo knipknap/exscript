@@ -3,7 +3,7 @@
 ## Date:        2007-06-04
 ## Description: Use the Exscript interpreter with a multi threaded configuration
 ##              engine to execute commands on a list of hosts.
-import sys, time, os, re, signal
+import sys, time, os, re, signal, gc, copy, socket
 sys.path.insert(0, 'lib')
 import Exscript
 from FooLib          import Interact
@@ -185,13 +185,22 @@ if len(hostnames) <= 0:
     usage()
     sys.exit(1)
 
+# Read the Exscript.
+try:
+    file = open(exscript, 'r')
+except:
+    print "Unable to open '%s'. Perhaps you do not have read permission?" % exscript
+    sys.exit(1)
+exscript_content = file.read()
+file.close()
+
 # Parse the exscript.
 parser = Exscript.Parser(debug = options['parser-verbose'])
 parser.define(**defines[hostnames[0]])
 _, _, _, _, this_query = UrlParser.parse_url(hostnames[0])
 parser.define(**this_query)
 try:
-    excode = parser.parse_file(exscript)
+    excode = parser.parse(exscript_content)
 except Exception, e:
     if options['verbose'] > 0:
         raise
@@ -224,6 +233,11 @@ try:
     # Build the action sequence.
     print 'Building sequence...'
     for hostname in hostnames:
+        # To save memory, limit the number of parsed (=in-memory) items.
+        while workqueue.get_queue_length() > options['connections'] * 2:
+            time.sleep(1)
+        gc.collect()
+
         if options['verbose'] > 0:
             print 'Building sequence for %s.' % hostname
 
@@ -242,10 +256,12 @@ try:
 
         #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
         # recompiling numerous times.
-        parser = Exscript.Parser(debug = options['parser-verbose'])
-        parser.define(**variables)
-        excode = parser.parse_file(exscript)
+        #parser = Exscript.Parser(debug = options['parser-verbose'])
+        #parser.define(**variables)
+        excode = parser.parse(exscript_content)
+        #excode = copy.deepcopy(excode)
         excode.init(**variables)
+        #del parser
 
         # One logfile per host.
         logfile       = None
@@ -281,7 +297,7 @@ try:
         if options['authorize']:
             sequence.add(Authorize(password))
         sequence.add(CommandScript(excode))
-        sequence.add(Command('exit'))
+        sequence.add(Command('exit', False))
         sequence.add(Close())
         workqueue.enqueue(sequence)
 
@@ -290,6 +306,7 @@ try:
     while workqueue.get_queue_length() > 0:
         #print '%s jobs left, waiting.' % workqueue.get_queue_length()
         time.sleep(1)
+        gc.collect()
     print 'Shutting down engine...'
 except KeyboardInterrupt:
     print 'Interrupt caught succcessfully.'

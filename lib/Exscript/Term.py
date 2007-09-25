@@ -43,7 +43,7 @@ class Term(Token):
             self.term = Regex(parser, parent)
         else:
             parent.syntax_error(self, 'Expected term but got %s' % type)
-        self.mark_end()
+        self.mark_end(parser)
 
 
     def priority(self):
@@ -55,6 +55,5 @@ class Term(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name,
-        self.dump_input()
+        print (' ' * indent) + self.name, self.input
         self.term.dump(indent + 1)

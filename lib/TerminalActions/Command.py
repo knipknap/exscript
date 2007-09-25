@@ -18,10 +18,11 @@ True  = 1
 False = 0
 
 class Command(Action):
-    def __init__(self, command):
+    def __init__(self, command, wait = True):
         assert command is not None
         Action.__init__(self)
         self.command = command
+        self.wait    = wait
 
 
     def _on_data_received(self, data, args):
@@ -33,6 +34,9 @@ class Command(Action):
         assert global_context is not None
         assert local_context  is not None
         local_context['transport'].set_on_data_received_cb(self._on_data_received)
-        local_context['transport'].execute(self.command)
+        if self.wait:
+            local_context['transport'].execute(self.command)
+        else:
+            local_context['transport'].send(self.command + '\n')
         local_context['transport'].set_on_data_received_cb(None)
         return True

@@ -22,8 +22,8 @@ class Execute(Token):
         self.parent = parent
         self.string = command
         # Make the debugger point to the beginning of the command.
-        self.char   = self.char - len(command) - 1
-        self.end    = self.char + len(command)
+        self.char = self.char - len(command) - 1
+        self.mark_end(parser, self.char + len(command))
 
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, command)
@@ -50,5 +50,4 @@ class Execute(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.string,
-        self.dump_input()
+        print (' ' * indent) + self.name, self.string, self.input

@@ -68,7 +68,7 @@ class Loop(Token):
             parser.next_if('whitespace')
         
         # End of statement.
-        self.mark_end()
+        self.mark_end(parser)
         parser.next_if('whitespace')
         if not parser.next_if('close_curly_bracket'):
             token = parser.token()
@@ -127,5 +127,4 @@ class Loop(Token):
         print (' ' * indent) + self.name,
         print self.list_variables, 'as', self.iter_varnames, 'start'
         self.block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.',
-        self.dump_input()
+        print (' ' * indent) + self.name, 'end.', self.input

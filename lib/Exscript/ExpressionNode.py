@@ -43,7 +43,7 @@ class ExpressionNode(Token):
             if not parser.current_is('arithmetic_operator') and \
                not parser.current_is('logical_operator') and \
                not parser.current_is('comparison'):
-                self.mark_end()
+                self.mark_end(parser)
                 return
 
         # Expect the operator.
@@ -51,12 +51,12 @@ class ExpressionNode(Token):
         if not parser.next_if('arithmetic_operator') and \
            not parser.next_if('logical_operator') and \
            not parser.next_if('comparison'):
-            self.mark_end()
+            self.mark_end(parser)
             scope.syntax_error(self, 'Expected operator but got %s' % self.op_type)
 
         # Expect the second term.
         self.rgt = ExpressionNode(parser, scope, self)
-        self.mark_end()
+        self.mark_end(parser)
 
 
     def priority(self):
@@ -106,17 +106,17 @@ class ExpressionNode(Token):
             return [lft == rgt]
         elif self.op == 'matches':
             regex = rgt_lst
-            match = None
             # The "matches" keyword requires a regular expression as the right hand
             # operand. The exception throws if "regex" does not have a match() method.
             try:
-                match = regex.match(lft)
+                regex.match(lft)
             except:
                 error = 'Right hand operator is not a regular expression'
                 self.scope.runtime_error(self.rgt, error)
-            if match is None:
-                return [0]
-            return [1]
+            for line in lft_lst:
+                if regex.search(line):
+                    return [1]
+            return [0]
         elif self.op == 'is not':
             return [lft != rgt]
         elif self.op == 'in':
@@ -154,5 +154,4 @@ class ExpressionNode(Token):
         print (' ' * (indent + 1)) + 'Operator', self.op
         if self.rgt is not None:
             self.rgt.dump(indent + 1)
-        print (' ' * indent) + self.name, self.op, 'end.',
-        self.dump_input()
+        print (' ' * indent) + self.name, self.op, 'end.', self.input

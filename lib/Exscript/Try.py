@@ -13,7 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import Exscript
-from Scope import Scope
+from TerminalConnection.Exception import TransportException
+from Scope                        import Scope
 
 class Try(Scope):
     def __init__(self, parser, parent):

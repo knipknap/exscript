@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
-import time
+import time, gc
 from Job import Job
 
 True  = 1
@@ -68,7 +68,9 @@ class MainLoop(threading.Thread):
                     continue
                 print 'Job "%s" completed.' % job.getName()
                 job.join()
+                del job
             self.running_jobs = running_jobs[:]
+            gc.collect()
 
             # Don't bother looking if the queue is empty.
             if len(self.queue) <= 0 or self.paused:

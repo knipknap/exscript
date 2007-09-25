@@ -19,12 +19,13 @@ from Expression import Expression
 class IfCondition(Token):
     def __init__(self, parser, scope):
         Token.__init__(self, 'If-condition', parser)
+        self.parent = scope
 
         # Expect an expression.
         parser.expect(self, 'keyword', 'if')
         parser.expect(self, 'whitespace')
         self.expression = Expression(parser, scope)
-        self.mark_end()
+        self.mark_end(parser)
 
         # End of expression.
         parser.next_if('whitespace')
@@ -50,7 +51,7 @@ class IfCondition(Token):
         # read the next if condition recursively and return.
         while parser.next_if('newline') or parser.next_if('whitespace'):
             pass
-        if parser.next_if('keyword', 'if'):
+        if parser.current_is('keyword', 'if'):
             self.else_block = IfCondition(parser, scope)
             return
 
@@ -73,5 +74,4 @@ class IfCondition(Token):
         self.if_block.dump(indent + 1)
         if self.else_block is not None:
             self.else_block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.',
-        self.dump_input()
+        print (' ' * indent) + self.name, 'end.', self.input

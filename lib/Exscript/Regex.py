@@ -64,7 +64,7 @@ class Regex(Token):
             parent.syntax_error(self, 'Invalid regular expression: %s' % e)
         self.n_groups = len(bracket_re.findall(regex))
         parser.restore_grammar()
-        self.mark_end()
+        self.mark_end(parser)
 
 
     def value(self):
@@ -72,5 +72,4 @@ class Regex(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.regex.pattern,
-        self.dump_input()
+        print (' ' * indent) + self.name, self.regex.pattern, self.input

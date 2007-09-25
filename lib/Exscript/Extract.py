@@ -15,6 +15,9 @@
 from Token import Token
 from Regex import Regex
 
+True  = 1
+False = 0
+
 class Extract(Token):
     def __init__(self, parser, parent):
         Token.__init__(self, 'Extract', parser)

@@ -36,10 +36,6 @@ class Transport(Base):
         self.hostname = None
 
 
-    def __del__(self):
-        self.conn.close(True)
-
-
     def _remove_esc(self, response):
         #print "PRE:", repr(response)
         return escape_re.sub('', response)
@@ -144,7 +140,7 @@ class Transport(Base):
             match = self.error_re.match(line)
             if match is None:
                 continue
-            raise TransportException('Device said:\n' + '\n'.join(response))
+            raise TransportException('Device said:\n' + self.response)
 
 
     def execute(self, command):

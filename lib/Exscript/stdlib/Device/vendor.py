@@ -11,9 +11,9 @@ def execute(scope, force = 0):
         return vendor
 
     # Find out the vendor.
-    conn     = scope.get('_connection')
-    response = conn.execute('show version')
-    for line in response:
+    conn = scope.get('_connection')
+    conn.execute('show version')
+    for line in conn.response.split('\n')[1:]:
         match = re.match(r'^cisco', line)
         if match is not None:
             vendor = ['cisco']

@@ -52,6 +52,8 @@ prompts = [r'[sam123@home ~]$',
            r'sam@MyHost-X123#',
            r'MyHost-ABC-CDE123>',
            r'MyHost-A1#',
+           r'0123456-1-1-abc#',
+           r'0123456-1-1-a>',
            r'MyHost-A1(config)#',
            r'MyHost-A1(config)>',
            r'FA/0/1/2/3>',
@@ -82,11 +84,6 @@ class Transport(object):
             self.log = open(kwargs['logfile'], 'a')
 
 
-    def __del__(self):
-        if self.log is not None:
-            self.log.close()
-
-
     def _receive_cb(self, data, **kwargs):
         text = data.replace('\r', '')
         if self.echo:
@@ -106,9 +103,9 @@ class Transport(object):
 
     def set_prompt(self, prompt = None):
         if prompt is None:
-            self.prompt = prompt_re
+            self.prompt_re = prompt_re
         else:
-            self.prompt = prompt
+            self.prompt_re = prompt
 
 
     def set_timeout(self, timeout):

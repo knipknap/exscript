@@ -222,10 +222,6 @@ class Telnet:
         if not self.sock:
             raise socket.error, msg
 
-    def __del__(self):
-        """Destructor -- close the connection."""
-        self.close()
-
     def msg(self, msg, *args):
         """Print a debug message, when the debug level is > 0.
 
@@ -551,6 +547,7 @@ class Telnet:
         results are undeterministic, and may depend on the I/O timing.
 
         """
+        #print "Expecting", [l.pattern for l in list]
         re = None
         list = list[:]
         indices = range(len(list))

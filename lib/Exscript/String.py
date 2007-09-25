@@ -54,7 +54,7 @@ class String(Token):
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, self.string)
         parser.restore_grammar()
-        self.mark_end()
+        self.mark_end(parser)
 
 
     def value(self):

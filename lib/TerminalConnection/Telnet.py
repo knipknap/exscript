@@ -101,7 +101,7 @@ class Transport(Base):
                 # Switch to script compatible output (where supported).
                 #print 'Host type:', self.host_type
                 if self.host_type == 'cisco':
-                    self.execute('terminal length 0')
+                    self.execute('term len 0')
                 break
 
             else:
@@ -113,7 +113,7 @@ class Transport(Base):
         if self.host_type != 'cisco':
             return
 
-        self.send('en\r')
+        self.send('enable\r')
 
         # The username should not be asked, so not passed.
         return self.authenticate('', password)
@@ -123,13 +123,13 @@ class Transport(Base):
         # Wait for a prompt.
         self.response = None
         try:
-            (_, _, self.response) = self.tn.expect([self.prompt_re],
-                                                   self.timeout)
+            (result, _, self.response) = self.tn.expect([self.prompt_re],
+                                                        self.timeout)
         except:
             print 'Error while waiting for a prompt'
             raise
 
-        if self.response is None:
+        if result == -1 or self.response is None:
             error = 'Error while waiting for response from device'
             raise TransportException(error)
 
@@ -139,7 +139,7 @@ class Transport(Base):
             match = self.error_re.match(line)
             if match is None:
                 continue
-            raise TransportException('Device said:\n' + '\n'.join(response))
+            raise TransportException('Device said:\n' + self.response)
 
 
     def send(self, data):
