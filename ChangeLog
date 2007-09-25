@@ -1,3 +1,7 @@
+2007-09-25 Samuel Abels <http://debain.org>
+
+	* Release 0.9.9
+
 2007-09-24 Samuel Abels <http://debain.org>
 
 	* lib/TerminalConnection/SSH.py: The SSH adapter now automatically removes
