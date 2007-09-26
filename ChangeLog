@@ -1,3 +1,14 @@
+2007-09-26 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/ExpressionNode.py: Fix: Arithmetic operations with 0 no
+	longer fail.
+	* lib/Exscript/Loop.py: Fix: "while" and "until" loops would not always
+	work.
+	* lib/Exscript/Extract.py: Added support for the "from" keyword.
+	* lib/Exscript/Regex.py: Fix: Escaping '/' would not work.
+	* lib/Exscript/Code.py: Fix the "is not" operator.
+	* Release 0.9.10
+
 2007-09-25 Samuel Abels <http://debain.org>
 
 	* Release 0.9.9

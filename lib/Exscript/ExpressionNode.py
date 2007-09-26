@@ -85,10 +85,16 @@ class ExpressionNode(Token):
         # We also have to make sure that empty lists do not cause an error.
         lft_lst = self.lft.value()
         if type(lft_lst) == type([]):
-            lft = len(lft_lst) > 0 and lft_lst[0] or ''
+            if len(lft_lst) > 0:
+                lft = lft_lst[0]
+            else:
+                lft = ''
         rgt_lst = self.rgt.value()
         if type(rgt_lst) == type([]):
-            rgt = len(rgt_lst) > 0 and rgt_lst[0] or ''
+            if len(rgt_lst) > 0:
+                rgt = rgt_lst[0]
+            else:
+                rgt = ''
 
         if self.op_type == 'arithmetic_operator' and self.op != '.':
             error = 'Operand for %s is not a number' % (self.op)
@@ -109,15 +115,16 @@ class ExpressionNode(Token):
             # The "matches" keyword requires a regular expression as the right hand
             # operand. The exception throws if "regex" does not have a match() method.
             try:
-                regex.match(lft)
-            except:
+                regex.match(str(lft))
+            except Exception, e:
                 error = 'Right hand operator is not a regular expression'
                 self.scope.runtime_error(self.rgt, error)
             for line in lft_lst:
-                if regex.search(line):
+                if regex.search(str(line)):
                     return [1]
             return [0]
         elif self.op == 'is not':
+            #print "LFT: '%s', RGT: '%s', RES: %s" % (lft, rgt, [lft != rgt])
             return [lft != rgt]
         elif self.op == 'in':
             return [lft in rgt_lst]

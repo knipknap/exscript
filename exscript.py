@@ -16,7 +16,7 @@ from TerminalActions import *
 True  = 1
 False = 0
 
-__version__ = '0.9.9'
+__version__ = '0.9.10'
 
 def usage():
     print "Exscript %s" % __version__

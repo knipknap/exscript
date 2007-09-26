@@ -21,8 +21,8 @@ bracket_re = re.compile(r'(?<!\\)\((?!\?[:<])', re.I)
 
 grammar = (
     ('escaped_bracket', r'\\/'),
-    ('escaped_data',    r'\\/'),
-    ('regex_data',      r'[^/\r\n\/]+'),
+    ('escaped_data',    r'\\.'),
+    ('regex_data',      r'[^/\r\n\\]+'),
     ('regex_delimiter', r'/'),
     ('newline',         r'[\r\n]'),
     ('invalid_char',    r'.'),
@@ -35,6 +35,7 @@ for type, regex in grammar:
 class Regex(Token):
     def __init__(self, parser, parent):
         Token.__init__(self, 'Regular Expression', parser)
+        self.parent   = parent
         self.n_groups = 0
         parser.set_grammar(grammar_c)
         parser.expect(self, 'regex_delimiter')
@@ -43,8 +44,11 @@ class Regex(Token):
             if parser.current_is('regex_data'):
                 regex += parser.token()[1]
                 parser.next()
-            elif parser.current_is('escaped_data'):
+            elif parser.current_is('escaped_bracket'):
                 regex += parser.token()[1][1]
+                parser.next()
+            elif parser.current_is('escaped_data'):
+                regex += parser.token()[1]
                 parser.next()
             elif parser.next_if('regex_delimiter'):
                 break
@@ -61,7 +65,8 @@ class Regex(Token):
         try:
             self.regex = re.compile(regex)
         except Exception, e:
-            parent.syntax_error(self, 'Invalid regular expression: %s' % e)
+            error =  'Invalid regular expression %s: %s' % (repr(regex), e)
+            parent.syntax_error(self, error)
         self.n_groups = len(bracket_re.findall(regex))
         parser.restore_grammar()
         self.mark_end(parser)

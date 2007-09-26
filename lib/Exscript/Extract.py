@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Token import Token
 from Regex import Regex
+from Term  import Term
 
 True  = 1
 False = 0
@@ -25,6 +26,7 @@ class Extract(Token):
         self.varnames  = []
         self.variables = {}
         self.append    = False
+        self.source    = None
 
         # First expect a regular expression.
         parser.expect(self, 'keyword', 'extract')
@@ -63,6 +65,14 @@ class Extract(Token):
             error = '%s variables, but regex has %s groups' % count
             parent.syntax_error(self, error)
 
+        # Handle the "from" keyword.
+        while parser.next_if('whitespace'):
+            pass
+        if parser.next_if('keyword', 'from'):
+            parser.expect(self, 'whitespace')
+            self.source = Term(parser, parent)
+        self.mark_end(parser)
+
 
     def extract(self):
         # Re-initialize the variable content, because this method
@@ -70,7 +80,10 @@ class Extract(Token):
         for varname in self.varnames:
             self.variables[varname] = []
 
-        buffer = self.parent.get('_buffer')
+        if self.source is None:
+            buffer = self.parent.get('_buffer')
+        else:
+            buffer = self.source.value()
         #print "Buffer contains", buffer
 
         # Walk through all lines, matching each one against the regular

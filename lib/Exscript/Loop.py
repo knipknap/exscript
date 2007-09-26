@@ -90,13 +90,13 @@ class Loop(Token):
         if len(self.list_variables) == 0:
             # If this is a "while" loop, iterate as long as the condition is True.
             if self.during is not None:
-                while self.during.value():
+                while self.during.value()[0]:
                     self.block.value()
                 return 1
 
             # If this is an "until" loop, iterate until the condition is True.
             if self.until is not None:
-                while not self.until.value():
+                while not self.until.value()[0]:
                     self.block.value()
                 return 1
 
@@ -115,9 +115,9 @@ class Loop(Token):
             for list in lists:
                 self.block.define(**{self.iter_varnames[f]: [list[i]]})
                 f += 1
-            if self.until is not None and self.until.value():
+            if self.until is not None and self.until.value()[0]:
                 break
-            if self.during is not None and not self.during.value():
+            if self.during is not None and not self.during.value()[0]:
                 break
             self.block.value()
         return 1
@@ -126,5 +126,9 @@ class Loop(Token):
     def dump(self, indent = 0):
         print (' ' * indent) + self.name,
         print self.list_variables, 'as', self.iter_varnames, 'start'
+        if self.during is not None:
+            self.during.dump(indent + 1)
+        if self.until is not None:
+            self.until.dump(indent + 1)
         self.block.dump(indent + 1)
         print (' ' * indent) + self.name, 'end.', self.input
