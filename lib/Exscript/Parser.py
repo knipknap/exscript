@@ -83,7 +83,9 @@ class Parser(object):
                 self.token_buffer = (type, match.group(0))
                 #print "Match:", self.token_buffer
                 return
-        self.syntax_error('Invalid syntax: %s' % self.input[self.current_char:])
+        end   = self.input.find('\n', self.current_char + 2)
+        error = 'Invalid syntax: %s' % repr(self.input[self.current_char:end])
+        self.syntax_error(error)
 
 
     def syntax_error(self, error):

@@ -63,7 +63,7 @@ grammar = (
     ('open_function_call',  varname_re + r'(?:\.' + varname_re + r')*\('),
     ('varname',             varname_re),
     ('number',              r'\d+'),
-    ('newline',             r'\n'),
+    ('newline',             r'[\r\n]'),
     ('raw_data',            r'[^\r\n{}]+')
 )
 

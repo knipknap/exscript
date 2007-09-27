@@ -21,7 +21,7 @@ grammar = (
     ('escaped_data',        r'\\.'),
     ('open_curly_bracket',  '{'),
     ('close_curly_bracket', '}'),
-    ('newline',             r'\n'),
+    ('newline',             r'[\r\n]'),
     ('raw_data',            r'[^\r\n{}\\]+')
 )
 

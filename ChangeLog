@@ -1,3 +1,7 @@
+2007-09-27 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/Code.py, lib/Exscript/Exscript.py: Support windows newlines.
+
 2007-09-26 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/ExpressionNode.py: Fix: Arithmetic operations with 0 no
