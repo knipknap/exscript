@@ -1,6 +1,7 @@
 2007-09-27 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/Code.py, lib/Exscript/Exscript.py: Support windows newlines.
+	* exscript.py: Added a --version flag.
 
 2007-09-26 Samuel Abels <http://debain.org>
 

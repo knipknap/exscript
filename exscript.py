@@ -64,6 +64,7 @@ def usage():
     print "  -V, --parser-verbose NUM"
     print "                 Print out debug information about the Exscript parser."
     print "                 NUM is a number between 0 (min) and 5 (max)"
+    print "      --version  Prints the version number."
     print "  -h, --help     Prints this help."
 
 # Define default options.
@@ -78,23 +79,35 @@ default_options = [
   ('protocol=',       'p:', 'telnet'),
   ('verbose=',        'v:', 0),
   ('parser-verbose=', 'V:', 0),
+  ('version',         None, False),
   ('help',            'h',  False)
 ]
 
 # Parse options.
 try:
     options, args = OptionParser.parse_options(sys.argv, default_options)
-    exscript      = args.pop(0)
-    hostnames     = args
 except:
     usage()
     sys.exit(1)
-defines = dict([(hostname, options['define']) for hostname in hostnames])
 
 # Show the help, if requested.
 if options['help']:
     usage()
     sys.exit()
+
+# Show the version number, if requested.
+if options['version']:
+    print "Exscript %s" % __version__
+    sys.exit()
+
+# Check command line syntax.
+try:
+    exscript  = args.pop(0)
+    hostnames = args
+except:
+    usage()
+    sys.exit(1)
+defines = dict([(hostname, options['define']) for hostname in hostnames])
 
 # If a filename containing hostnames AND VARIABLES was given, read it.
 if options.get('csv-hosts') is not None:
