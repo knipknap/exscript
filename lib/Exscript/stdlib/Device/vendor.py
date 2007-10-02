@@ -14,7 +14,7 @@ def execute(scope, force = 0):
     conn = scope.get('_connection')
     conn.execute('show version')
     for line in conn.response.split('\n')[1:]:
-        match = re.match(r'^cisco', line)
+        match = re.match(r'^cisco', line, re.I)
         if match is not None:
             vendor = ['cisco']
         match = re.match(r'^JUNOS', line)

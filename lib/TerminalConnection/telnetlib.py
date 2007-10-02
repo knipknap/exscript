@@ -551,6 +551,7 @@ class Telnet:
         re = None
         list = list[:]
         indices = range(len(list))
+        search_window_size = 40
         for i in indices:
             if not hasattr(list[i], "search"):
                 if not re: import re
@@ -559,7 +560,7 @@ class Telnet:
             self.process_rawq()
             #print "Queue: >>>%s<<<" % repr(self.cookedq)
             for i in indices:
-                m = list[i].search(self.cookedq)
+                m = list[i].search(self.cookedq, search_window_size * -1)
                 if m:
                     e = m.end()
                     text = self.cookedq[:e]

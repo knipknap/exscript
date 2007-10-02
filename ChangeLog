@@ -1,3 +1,10 @@
+2007-10-02 Samuel Abels <http://debain.org>
+
+	* lib/TerminalConnection/telnetlib.py: Speed up prompt matching by only
+	searching through the last 40 bytes in the buffer. This also limits the
+	maximum prompt length to 40 characters.
+	* lib/Exscript/stdlib/Device/vendor.py: Improved Cisco router detection.
+
 2007-09-27 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/Code.py, lib/Exscript/Exscript.py: Support windows newlines.
