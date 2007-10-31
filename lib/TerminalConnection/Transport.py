@@ -39,11 +39,11 @@ prompt_re     = re.compile(prompt_start                 \
                          + r'\]?'                       \
                          + r'[#>%\$] ?$', flags)
 
-huawei_re     = re.compile(r'huawei',                    flags)
-cisco_user_re = re.compile(newline + r'user ?name:\s*$', flags)
-junos_user_re = re.compile(newline + r'login:\s*?$',     flags)
-unix_user_re  = re.compile(r'(user|login):\s*$',         flags)
-pass_re       = re.compile(r'password:?\s*$',            flags)
+huawei_re     = re.compile(r'huawei',                flags)
+cisco_user_re = re.compile(r'user ?name:\s*$',       flags)
+junos_user_re = re.compile(newline + r'login:\s*?$', flags)
+unix_user_re  = re.compile(r'(user|login):\s*$',     flags)
+pass_re       = re.compile(r'password:?\s*$',        flags)
 skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
 error_re      = re.compile(r'^%? ?(?:error|invalid|incomplete)', re.I)
 login_fail_re = re.compile(newline + r'[^\r\n]*(?:incorrect|failed|denied)', flags)
