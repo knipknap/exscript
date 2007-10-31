@@ -559,12 +559,17 @@ class Telnet:
         while 1:
             self.process_rawq()
             #print "Queue: >>>%s<<<" % repr(self.cookedq)
+            search_window = self.cookedq[search_window_size * -1:]
+            #print "Search window: >>>%s<<<" % repr(search_window)
             for i in indices:
-                m = list[i].search(self.cookedq, search_window_size * -1)
+                m = list[i].search(search_window)
                 if m:
-                    e = m.end()
+                    #print "Match End:", m.end()
+                    e    = search_window_size - m.end() - 1
+                    e    = len(self.cookedq) - e
                     text = self.cookedq[:e]
-                    self.cookedq = self.cookedq[e:]
+                    self.cookedq = search_window[m.end():]
+                    #print "END:", e, "MATCH:", i, m, repr(text)
                     return (i, m, text)
             if self.eof:
                 break
@@ -573,7 +578,7 @@ class Telnet:
                 seconds = 0
                 while not self.sock_avail() and seconds < timeout:
                     time.sleep(.1)
-                    seconds += .005
+                    seconds += .1
                 if seconds >= timeout:
                     break
                 # The following will sometimes lock even if data is available

@@ -78,6 +78,6 @@ class LoggedSequence(Sequence):
                 if not action.execute(global_lock, global_context, local_context):
                     return False
         except Exception, e:
-            self._log(self.error_logfile, self.error_logfile_lock_key, '%s' % e)
+            self._log(self.error_logfile, self.error_logfile_lock_key, '%s\n' % e)
             raise
         return True

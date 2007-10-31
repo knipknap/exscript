@@ -1,3 +1,10 @@
+2007-10-31 Samuel Abels <http://debain.org>
+
+	* exscript.py: Added -a and -n switches.
+	* lib/FooLib/Interact.py: get_user(): New.
+	* lib/TerminalConnection/*.py: Add support for Huawei routers.
+	* lib/TerminalConnection/Transport.py: Improved prompt matching.
+
 2007-10-02 Samuel Abels <http://debain.org>
 
 	* lib/TerminalConnection/telnetlib.py: Speed up prompt matching by only

@@ -3,7 +3,7 @@
 ## Date:        2007-06-04
 ## Description: Use the Exscript interpreter with a multi threaded configuration
 ##              engine to execute commands on a list of hosts.
-import sys, time, os, re, signal, gc, copy, socket
+import sys, time, os, re, signal, gc, copy, socket, getpass
 sys.path.insert(0, 'lib')
 import Exscript
 from FooLib          import Interact
@@ -16,15 +16,18 @@ from TerminalActions import *
 True  = 1
 False = 0
 
-__version__ = '0.9.10'
+__version__ = '0.9.11'
 
 def usage():
     print "Exscript %s" % __version__
     print "Copyright (C) 2007 by Samuel Abels <http://debain.org>."
     print "Syntax: ./exscript.py [options] exscript [hostname [hostname ...]]"
-    print "  -A, --authorize"
+    print "  -a, --authorize"
     print "                 When given, authorization is performed on devices that"
     print "                 support AAA (by default, Exscript only authenticates)"
+    print "  -A, --authorize2"
+    print "                 Like -a, but uses the authentication password instead of"
+    print "                 asking for a password to be entered."
     print "  -c, --connections=NUM"
     print "                 Maximum number of concurrent connections."
     print "                 NUM is a number between 1 and 20, default is 1"
@@ -54,6 +57,8 @@ def usage():
     print "                 written to stdout."
     print "                 This is already the default behavior if the -c option was given"
     print "                 with a number greater than 1."
+    print "  -n, --no-authentication"
+    print "                 When given, the authentication procedure is skipped."
     print "  -p, --protocol STRING"
     print "                 Specify which protocol to use to connect to the remote host."
     print "                 STRING is one of: telnet ssh"
@@ -69,18 +74,20 @@ def usage():
 
 # Define default options.
 default_options = [
-  ('authorize',       'A',  False),
-  ('no-echo',         None, False),
-  ('connections=',    'c:', 1),
-  ('csv-hosts=',      None, None),
-  ('define=',         'd:', {'hostname': 'unknown'}),
-  ('hosts=',          None, None),
-  ('logdir=',         'l:', None),
-  ('protocol=',       'p:', 'telnet'),
-  ('verbose=',        'v:', 0),
-  ('parser-verbose=', 'V:', 0),
-  ('version',         None, False),
-  ('help',            'h',  False)
+  ('authorize',         'a',  False),
+  ('authorize2',        'A',  False),
+  ('no-echo',           None, False),
+  ('connections=',      'c:', 1),
+  ('csv-hosts=',        None, None),
+  ('define=',           'd:', {'hostname': 'unknown'}),
+  ('hosts=',            None, None),
+  ('logdir=',           'l:', None),
+  ('protocol=',         'p:', 'telnet'),
+  ('no-authentication', 'n',  False),
+  ('verbose=',          'v:', 0),
+  ('parser-verbose=',   'V:', 0),
+  ('version',           None, False),
+  ('help',              'h',  False)
 ]
 
 # Parse options.
@@ -101,6 +108,10 @@ if options['version']:
     sys.exit()
 
 # Check command line syntax.
+if options['authorize'] and options['authorize2']:
+    print "Error: Can't use both, -a and -A switch."
+    sys.exit(1)
+
 try:
     exscript  = args.pop(0)
     hostnames = args
@@ -186,7 +197,7 @@ if options.get('hosts') is not None:
 # Create the log directory.
 if options.get('logdir') is not None:
     if not os.path.exists(options.get('logdir')):
-        print 'Creating log directory...'
+        print 'Creating log directory (%s)...' % options.get('logdir')
         try:
             os.mkdir(options.get('logdir'))
         except:
@@ -222,7 +233,14 @@ except Exception, e:
 
 # Read username and password.
 try:
-    user, password = Interact.get_login()
+    if options['no-authentication']:
+        user     = Interact.get_user()
+        password = None
+    else:
+	user, password = Interact.get_login()
+    if options['authorize']:
+        msg       = 'Please enter your authorization password: '
+        password2 = getpass.getpass(msg)
 except:
     sys.exit(1)
 
@@ -306,9 +324,12 @@ try:
         # Build the sequence.
         echo = options['connections'] == 1 and options['no-echo'] == 0
         sequence.add(Connect(protocol, this_host, echo = echo))
-        sequence.add(Authenticate(this_user, this_pass))
+        if not options['no-authentication']:
+            sequence.add(Authenticate(this_user, this_pass))
         if options['authorize']:
-            sequence.add(Authorize(password))
+            sequence.add(Authorize(password2))
+        if options['authorize2']:
+            sequence.add(Authorize(this_pass))
         sequence.add(CommandScript(excode))
         sequence.add(Command('exit', False))
         sequence.add(Close())

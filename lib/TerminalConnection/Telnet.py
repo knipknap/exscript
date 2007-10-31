@@ -21,6 +21,7 @@ from Transport import Transport as Base, \
                       unix_user_re,      \
                       pass_re,           \
                       skey_re,           \
+                      huawei_re,         \
                       login_fail_re
 
 True  = 1
@@ -53,6 +54,7 @@ class Transport(Base):
                        unix_user_re,
                        skey_re,
                        pass_re,
+                       huawei_re,
                        self.prompt_re]
             which   = None
             matches = None
@@ -73,7 +75,8 @@ class Transport(Base):
             # User name prompt.
             elif which <= 3:
                 #print "Username prompt received."
-                self.host_type = ('cisco', 'junos', 'unix')[which - 1]
+                if self.host_type == 'unknown':
+                    self.host_type = ('cisco', 'junos', 'unix')[which - 1]
                 self.send(user + '\r')
                 continue
 
@@ -95,8 +98,12 @@ class Transport(Base):
                 self.send(password + '\r')
                 continue
 
-            # Shell prompt.
+            # Huawei welcome message.
             elif which == 6:
+                self.host_type = 'huawei'
+
+            # Shell prompt.
+            elif which == 7:
                 #print "Shell prompt received."
                 # Switch to script compatible output (where supported).
                 #print 'Host type:', self.host_type

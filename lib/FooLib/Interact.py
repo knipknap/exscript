@@ -14,7 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import getpass
 
-def get_login():
+def get_user():
     """
     Returns a tuple containing the username and the password.
     May throw an exception if EOF is given by the user.
@@ -27,5 +27,14 @@ def get_login():
             user = env_user
     except:
         user = raw_input('Please enter your user name: ' % user)
+    return user
+
+
+def get_login():
+    """
+    Returns a tuple containing the username and the password.
+    May throw an exception if EOF is given by the user.
+    """
+    user     = get_user()
     password = getpass.getpass('Please enter your password: ')
     return (user, password)

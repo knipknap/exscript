@@ -41,7 +41,7 @@ class Connect(Action):
         self.transport.debug = self.debug
         #self.global_context  = global_context
         if not self.transport.connect(self.hostname):
-            raise Exception, 'Connection failed.'
+            raise Exception('Connection failed.')
         local_context['hostname']  = self.hostname
         local_context['transport'] = self.transport
         local_context['transport'].set_on_data_received_cb(None)
