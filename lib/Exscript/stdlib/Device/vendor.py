@@ -11,18 +11,22 @@ def execute(scope, force = 0):
         return vendor
 
     # Find out the vendor.
-    conn = scope.get('_connection')
+    conn   = scope.get('_connection')
+    vendor = [conn.host_type]
     conn.execute('show version')
     for line in conn.response.split('\n')[1:]:
+        match = re.match(r'^Cisco IOS XR', line, re.I)
+        if match is not None:
+            vendor = ['cisco_crs1']
+            break
         match = re.match(r'^cisco', line, re.I)
         if match is not None:
             vendor = ['cisco']
+            break
         match = re.match(r'^JUNOS', line)
         if match is not None:
             vendor = ['juniper']
+            break
 
-    # If it was still not found, return 'unknown'.
-    if vendor is None:
-        vendor = ['unknown']
     scope.define(**{'_stdlib.device.vendor': vendor})
     return vendor
