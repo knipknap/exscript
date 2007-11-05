@@ -111,10 +111,10 @@ if options['version']:
 if options['authorize'] and options['authorize2']:
     print "Error: Can't use both, -a and -A switch."
     sys.exit(1)
-if options['no-authenticate'] and options['authorize']:
+if options['no-authentication'] and options['authorize']:
     print "Error: Can't use both, -n and -a switch."
     sys.exit(1)
-if options['no-authenticate'] and options['authorize2']:
+if options['no-authentication'] and options['authorize2']:
     print "Error: Can't use both, -n and -A switch."
     sys.exit(1)
 
