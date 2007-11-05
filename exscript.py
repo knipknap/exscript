@@ -111,6 +111,12 @@ if options['version']:
 if options['authorize'] and options['authorize2']:
     print "Error: Can't use both, -a and -A switch."
     sys.exit(1)
+if options['no-authenticate'] and options['authorize']:
+    print "Error: Can't use both, -n and -a switch."
+    sys.exit(1)
+if options['no-authenticate'] and options['authorize2']:
+    print "Error: Can't use both, -n and -A switch."
+    sys.exit(1)
 
 try:
     exscript  = args.pop(0)
@@ -234,10 +240,10 @@ except Exception, e:
 # Read username and password.
 try:
     if options['no-authentication']:
-        user     = Interact.get_user()
+        user     = None
         password = None
     else:
-	user, password = Interact.get_login()
+        user, password = Interact.get_login()
     if options['authorize']:
         msg       = 'Please enter your authorization password: '
         password2 = getpass.getpass(msg)
