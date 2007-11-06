@@ -18,10 +18,11 @@ True  = 1
 False = 0
 
 class Authorize(Action):
-    def __init__(self, password):
+    def __init__(self, password, wait = True):
         assert password is not None
         Action.__init__(self)
         self.password        = password
+        self.wait            = wait
         self.lock_key_prefix = 'lock::authentication::tacacs::'
 
 
@@ -42,14 +43,15 @@ class Authorize(Action):
         assert global_lock    is not None
         assert global_context is not None
         assert local_context  is not None
-        local_context['transport'].set_on_data_received_cb(self._on_data_received)
+        conn = local_context['transport']
+        conn.set_on_data_received_cb(self._on_data_received)
         self.tacacs_lock(global_lock, global_context, local_context['user']).acquire()
         try:
-            local_context['transport'].authorize(self.password)
+            conn.authorize(self.password, self.wait)
         except:
             self.tacacs_lock(global_lock, global_context, local_context['user']).release()
-            local_context['transport'].set_on_data_received_cb(None)
+            conn.set_on_data_received_cb(None)
             raise
         self.tacacs_lock(global_lock, global_context, local_context['user']).release()
-        local_context['transport'].set_on_data_received_cb(None)
+        conn.set_on_data_received_cb(None)
         return True

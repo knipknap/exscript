@@ -44,7 +44,7 @@ class Transport(Base):
         return True
 
 
-    def authenticate(self, user, password):
+    def authenticate(self, user, password, wait = True):
         while 1:
             # Wait for the user prompt.
             #print 'Waiting for prompt'
@@ -90,12 +90,16 @@ class Transport(Base):
                 self.tn.expect([pass_re], self.timeout)
                 self.send(phrase + '\r')
                 #print "Password sent."
+                if not wait:
+                    break
                 continue
             
             # Cleartext password prompt.
             elif which == 5:
                 #print "Cleartext prompt received."
                 self.send(password + '\r')
+                if not wait:
+                    break
                 continue
 
             # Huawei welcome message.
@@ -115,7 +119,7 @@ class Transport(Base):
                 assert 0 # Not reached.
 
 
-    def authorize(self, password):
+    def authorize(self, password, wait = True):
         # Make sure that the device supports AAA.
         if self.host_type != 'cisco':
             return
@@ -123,7 +127,7 @@ class Transport(Base):
         self.send('enable\r')
 
         # The username should not be asked, so not passed.
-        return self.authenticate('', password)
+        return self.authenticate('', password, wait)
 
 
     def expect_prompt(self):

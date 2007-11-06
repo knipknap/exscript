@@ -47,7 +47,7 @@ class Transport(Base):
         return True
 
 
-    def authenticate(self, user, password):
+    def authenticate(self, user, password, wait = True):
         self.conn = pexpect.spawn('ssh %s@%s' % (user, self.hostname))
         self.conn.setecho(self.echo)
         while 1:
@@ -100,12 +100,16 @@ class Transport(Base):
                 self._receive_cb(self.response)
                 self.send(phrase + '\r')
                 #print "Password sent."
+                if not wait:
+                    break
                 continue
             
             # Cleartext password prompt.
             elif which == 5:
                 #print "Cleartext prompt received."
                 self.send(password + '\r')
+                if not wait:
+                    break
                 continue
 
             # Huawei welcome message.
@@ -125,7 +129,7 @@ class Transport(Base):
                 assert 0 # Not reached.
 
 
-    def authorize(self, password):
+    def authorize(self, password, wait = True):
         pass #FIXME: No idea whether AAA is supported via SSH
 
 

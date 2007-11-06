@@ -1,6 +1,7 @@
 2007-10-31 Samuel Abels <http://debain.org>
 
 	* exscript.py: Added -a and -n switches.
+	* exscript.py: Added --no-prompt switch.
 	* lib/FooLib/Interact.py: get_user(): New.
 	* lib/TerminalConnection/*.py: Add support for Huawei routers.
 	* lib/TerminalConnection/Transport.py: Improved prompt matching.

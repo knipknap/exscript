@@ -121,7 +121,7 @@ class Transport(object):
         AbstractMethod()
 
 
-    def authenticate(self, user, password):
+    def authenticate(self, user, password, wait = True):
         AbstractMethod()
 
 

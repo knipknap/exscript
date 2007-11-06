@@ -59,6 +59,8 @@ def usage():
     print "                 with a number greater than 1."
     print "  -n, --no-authentication"
     print "                 When given, the authentication procedure is skipped."
+    print "      --no-prompt"
+    print "                 Do not wait for a prompt after sending the password."
     print "  -p, --protocol STRING"
     print "                 Specify which protocol to use to connect to the remote host."
     print "                 STRING is one of: telnet ssh"
@@ -84,6 +86,7 @@ default_options = [
   ('logdir=',           'l:', None),
   ('protocol=',         'p:', 'telnet'),
   ('no-authentication', 'n',  False),
+  ('no-prompt',         None, False),
   ('verbose=',          'v:', 0),
   ('parser-verbose=',   'V:', 0),
   ('version',           None, False),
@@ -329,13 +332,14 @@ try:
 
         # Build the sequence.
         echo = options['connections'] == 1 and options['no-echo'] == 0
+        wait = not options['no-prompt']
         sequence.add(Connect(protocol, this_host, echo = echo))
         if not options['no-authentication']:
-            sequence.add(Authenticate(this_user, this_pass))
+            sequence.add(Authenticate(this_user, this_pass, wait))
         if options['authorize']:
-            sequence.add(Authorize(password2))
+            sequence.add(Authorize(password2, wait))
         if options['authorize2']:
-            sequence.add(Authorize(this_pass))
+            sequence.add(Authorize(this_pass, wait))
         sequence.add(CommandScript(excode))
         sequence.add(Command('exit', False))
         sequence.add(Close())
