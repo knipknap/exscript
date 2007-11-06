@@ -62,13 +62,13 @@ class ExpressionNode(Token):
     def priority(self):
         if self.op is None:
             return 6
-        elif self.op == 'not':
-            return 5
         elif self.op_type == 'arithmetic_operator' and self.op != '.':
-            return 4
+            return 5
         elif self.op == '.':
-            return 3
+            return 4
         elif self.op_type == 'comparison':
+            return 3
+        elif self.op == 'not':
             return 2
         elif self.op_type == 'logical_operator':
             return 1

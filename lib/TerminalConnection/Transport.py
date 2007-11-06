@@ -129,6 +129,10 @@ class Transport(object):
         AbstractMethod()
 
 
+    def expect(self, prompt):
+        AbstractMethod()
+
+
     def expect_prompt(self):
         AbstractMethod()
 

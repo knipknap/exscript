@@ -130,19 +130,23 @@ class Transport(Base):
         return self.authenticate('', password, wait)
 
 
-    def expect_prompt(self):
+    def expect(self, prompt):
         # Wait for a prompt.
         self.response = None
         try:
-            (result, _, self.response) = self.tn.expect([self.prompt_re],
+            (result, _, self.response) = self.tn.expect([prompt],
                                                         self.timeout)
         except:
-            print 'Error while waiting for a prompt'
+            print 'Error while waiting for %s' % prompt.pattern
             raise
 
         if result == -1 or self.response is None:
             error = 'Error while waiting for response from device'
             raise TransportException(error)
+
+
+    def expect_prompt(self):
+        self.expect(self.prompt_re)
 
         # We skip the first line because it contains the echo of the command
         # sent.

@@ -1,7 +1,15 @@
+2007-10-06 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/stdlib/Connection/wait_for.py: New builtin function.
+	* lib/Exscript/ExpressionNode.py: Decreased priority of the "not" operator.
+
+2007-10-05 Samuel Abels <http://debain.org>
+
+	* exscript.py: Added --no-prompt switch.
+
 2007-10-31 Samuel Abels <http://debain.org>
 
 	* exscript.py: Added -a and -n switches.
-	* exscript.py: Added --no-prompt switch.
 	* lib/FooLib/Interact.py: get_user(): New.
 	* lib/TerminalConnection/*.py: Add support for Huawei routers.
 	* lib/TerminalConnection/Transport.py: Improved prompt matching.

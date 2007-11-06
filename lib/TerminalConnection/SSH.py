@@ -133,9 +133,9 @@ class Transport(Base):
         pass #FIXME: No idea whether AAA is supported via SSH
 
 
-    def expect_prompt(self):
+    def expect(self, prompt):
         try:
-            self.conn.expect(self.prompt_re)
+            self.conn.expect(prompt)
             self.response = self._remove_esc(self.conn.before + self.conn.after)
         except pexpect.EOF:
             self.response = self._remove_esc(self.conn.before)
@@ -144,6 +144,10 @@ class Transport(Base):
             error = 'Error while waiting for response from device'
             raise TransportException(error)
         self._receive_cb(self.response)
+
+
+    def expect_prompt(self):
+        self.expect(self.prompt_re)
 
         # We skip the first line because it contains the echo of the command
         # sent.
