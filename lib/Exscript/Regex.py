@@ -32,12 +32,23 @@ grammar_c = []
 for type, regex in grammar:
     grammar_c.append((type, re.compile(regex)))
 
+modifier_grammar = (
+    ('modifier',     r'[i]'),
+    ('invalid_char', r'.'),
+)
+
+modifier_grammar_c = []
+for type, regex in modifier_grammar:
+    modifier_grammar_c.append((type, re.compile(regex)))
+
 class Regex(Token):
     def __init__(self, parser, parent):
         Token.__init__(self, 'Regular Expression', parser)
         self.parent   = parent
         self.n_groups = 0
         parser.set_grammar(grammar_c)
+
+        # Collect the regular expression.
         parser.expect(self, 'regex_delimiter')
         regex = ''
         while 1:
@@ -61,12 +72,28 @@ class Regex(Token):
                 self.char = self.char + len(regex)
                 error     = 'Invalid char "%s" in regular expression' % char
                 parent.syntax_error(self, error)
+
+        # Collect modifiers.
+        parser.set_grammar(modifier_grammar_c)
+        flags = 0
+        while parser.current_is('modifier'):
+            if parser.next_if('modifier', 'i'):
+                flags = flags | re.I
+            else:
+                modifier = parser.token()[1]
+                error    = 'Invalid regular expression modifier "%s"' % modifier
+                parent.syntax_error(self, error)
+        parser.restore_grammar()
+
+        # Compile the regular expression.
         self.pattern = regex
         try:
-            self.regex = re.compile(regex)
+            self.regex = re.compile(regex, flags)
         except Exception, e:
-            error =  'Invalid regular expression %s: %s' % (repr(regex), e)
+            error = 'Invalid regular expression %s: %s' % (repr(regex), e)
             parent.syntax_error(self, error)
+
+        # Count the number of groups in the expression.
         self.n_groups = len(bracket_re.findall(regex))
         parser.restore_grammar()
         self.mark_end(parser)

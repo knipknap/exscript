@@ -14,6 +14,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import string, re, sys
 from AbstractMethod import AbstractMethod
+from Exception      import TransportException
+
+True  = 1 
+False = 0 
 
 flags         = re.I | re.M
 printable     = re.escape(string.printable)
@@ -45,7 +49,7 @@ junos_user_re = re.compile(newline + r'login:\s*?$', flags)
 unix_user_re  = re.compile(r'(user|login):\s*$',     flags)
 pass_re       = re.compile(r'password:?\s*$',        flags)
 skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
-error_re      = re.compile(r'^%? ?(?:error|invalid|incomplete)', re.I)
+error_re      = re.compile(r'^%? ?(?:error|invalid|incomplete|unrecognized)', re.I)
 login_fail_re = re.compile(newline + r'[^\r\n]*(?:incorrect|failed|denied)', flags)
 
 # Test the prompt types. FIXME: Move into a unit test.
@@ -77,7 +81,6 @@ class Transport(object):
     def __init__(self, *args, **kwargs):
         self.prompt_re             = prompt_re
         self.error_re              = error_re
-        self.host_type             = 'unknown'
         self.echo                  = kwargs.get('echo',    0)
         self.timeout               = kwargs.get('timeout', 10)
         self.logfile               = kwargs.get('logfile', None)
@@ -85,6 +88,11 @@ class Transport(object):
         self.on_data_received_cb   = kwargs.get('on_data_received',      None)
         self.on_data_received_args = kwargs.get('on_data_received_args', None)
         self.response              = None
+        self.remote_info           = {
+          'vendor':    'unknown',
+          'model':     'unknown',
+          'os':        'unknown'
+        }
         if self.logfile is not None:
             self.log = open(kwargs['logfile'], 'a')
 
@@ -121,7 +129,7 @@ class Transport(object):
         AbstractMethod()
 
 
-    def authenticate(self, user, password, wait = True):
+    def authenticate(self, user, password, wait = 1):
         AbstractMethod()
 
 
@@ -134,7 +142,15 @@ class Transport(object):
 
 
     def expect_prompt(self):
-        AbstractMethod()
+        self.expect(self.prompt_re)
+
+        # We skip the first line because it contains the echo of the command
+        # sent.
+        for line in self.response.split('\n')[1:]:
+            match = self.error_re.match(line)
+            if match is None:
+                continue
+            raise TransportException('Device said:\n' + self.response)
 
 
     def execute(self, command):

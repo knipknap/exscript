@@ -75,8 +75,9 @@ class Transport(Base):
             # User name prompt.
             elif which <= 3:
                 #print "Username prompt received."
-                if self.host_type == 'unknown':
-                    self.host_type = ('cisco', 'junos', 'unix')[which - 1]
+                if self.remote_info['os'] == 'unknown':
+                    self.remote_info['os']     = ('ios',   'junos',   'shell')[which - 1]
+                    self.remote_info['vendor'] = ('cisco', 'juniper', 'unix')[which - 1]
                 self.send(user + '\r')
                 continue
 
@@ -104,14 +105,15 @@ class Transport(Base):
 
             # Huawei welcome message.
             elif which == 6:
-                self.host_type = 'huawei'
+                self.remote_info['os']     = 'vrp'
+                self.remote_info['vendor'] = 'huawei'
 
             # Shell prompt.
             elif which == 7:
                 #print "Shell prompt received."
                 # Switch to script compatible output (where supported).
-                #print 'Host type:', self.host_type
-                if self.host_type == 'cisco':
+                #print 'Remote OS:', self.remote_info['os']
+                if self.remote_info['os'] == 'ios':
                     self.execute('term len 0')
                 break
 
@@ -121,7 +123,7 @@ class Transport(Base):
 
     def authorize(self, password, wait = True):
         # Make sure that the device supports AAA.
-        if self.host_type != 'cisco':
+        if self.remote_info['os'] != 'ios':
             return
 
         self.send('enable\r')
@@ -137,24 +139,12 @@ class Transport(Base):
             (result, _, self.response) = self.tn.expect([prompt],
                                                         self.timeout)
         except:
-            print 'Error while waiting for %s' % prompt.pattern
+            print 'Error while waiting for %s' % repr(prompt.pattern)
             raise
 
         if result == -1 or self.response is None:
             error = 'Error while waiting for response from device'
             raise TransportException(error)
-
-
-    def expect_prompt(self):
-        self.expect(self.prompt_re)
-
-        # We skip the first line because it contains the echo of the command
-        # sent.
-        for line in self.response.split('\n')[1:]:
-            match = self.error_re.match(line)
-            if match is None:
-                continue
-            raise TransportException('Device said:\n' + self.response)
 
 
     def send(self, data):

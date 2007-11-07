@@ -1,3 +1,11 @@
+2007-10-07 Samuel Abels <http://debain.org>
+
+	* lib/TerminalConnection/*.py, lib/Exscript/stdlib/Device/vendor.py:
+	Improved operating system and vendor detection.
+	* lib/Exscript/Regex.py: Added support for regular expression modifiers.
+	* lib/Exscript/stdlib/Device/os.py: New builtin function device.os().
+	* exscript.py: Execute "quit" instead of "exit" on Huawei routers.
+
 2007-10-06 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/stdlib/Connection/wait_for.py: New builtin function.

@@ -37,6 +37,6 @@ class Command(Action):
         if self.wait:
             local_context['transport'].execute(self.command)
         else:
-            local_context['transport'].send(self.command + '\n')
+            local_context['transport'].send(self.command + '\r')
         local_context['transport'].set_on_data_received_cb(None)
         return True

@@ -82,8 +82,9 @@ class Transport(Base):
             # User name prompt.
             elif which <= 3:
                 #print "Username prompt received."
-                if self.host_type == 'unknown':
-                    self.host_type = ('cisco', 'junos', 'unix')[which - 1]
+                if self.remote_info['os'] == 'unknown':
+                    self.remote_info['os']     = ('ios',   'junos',   'shell')[which - 1]
+                    self.remote_info['vendor'] = ('cisco', 'juniper', 'unix')[which - 1]
                 self.send(user + '\r')
                 continue
 
@@ -114,15 +115,16 @@ class Transport(Base):
 
             # Huawei welcome message.
             elif which == 6:
-                self.host_type = 'huawei'
+                self.remote_info['os']     = 'vrp'
+                self.remote_info['vendor'] = 'huawei'
 
             # Shell prompt.
             elif which == 7:
                 #print "Shell prompt received."
                 # Switch to script compatible output (where supported).
-                #print 'Host type:', self.host_type
-                if self.host_type == 'cisco':
-                    self.execute('terminal length 0')
+                #print 'Remote OS:', self.remote_info['os']
+                if self.remote_info['os'] == 'ios':
+                    self.execute('term len 0')
                 break
 
             else:

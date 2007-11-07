@@ -227,6 +227,16 @@ except:
 exscript_content = file.read()
 file.close()
 
+# Prepare the code that is executed after the user script has completed.
+exscript_content += r'''
+## Exscript generated commands. ##
+{if device.os(0) is "huawei"}
+    {connection.send("quit\r")}
+{else}
+    {connection.send("exit\r")}
+{end}
+'''
+
 # Parse the exscript.
 parser = Exscript.Parser(debug = options['parser-verbose'])
 parser.define(**defines[hostnames[0]])
@@ -341,7 +351,6 @@ try:
         if options['authorize2']:
             sequence.add(Authorize(this_pass, wait))
         sequence.add(CommandScript(excode))
-        sequence.add(Command('exit', False))
         sequence.add(Close())
         workqueue.enqueue(sequence)
 
