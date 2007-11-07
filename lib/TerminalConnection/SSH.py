@@ -148,18 +148,6 @@ class Transport(Base):
         self._receive_cb(self.response)
 
 
-    def expect_prompt(self):
-        self.expect(self.prompt_re)
-
-        # We skip the first line because it contains the echo of the command
-        # sent.
-        for line in self.response.split('\n')[1:]:
-            match = self.error_re.match(line)
-            if match is None:
-                continue
-            raise TransportException('Device said:\n' + self.response)
-
-
     def execute(self, command):
         self.conn.sendline(command)
         return self.expect_prompt()
