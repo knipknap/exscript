@@ -82,7 +82,7 @@ class Transport(object):
         self.prompt_re             = prompt_re
         self.error_re              = error_re
         self.echo                  = kwargs.get('echo',    0)
-        self.timeout               = kwargs.get('timeout', 10)
+        self.timeout               = kwargs.get('timeout', 30)
         self.logfile               = kwargs.get('logfile', None)
         self.log                   = None
         self.on_data_received_cb   = kwargs.get('on_data_received',      None)

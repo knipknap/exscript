@@ -163,4 +163,5 @@ class Transport(Base):
 
 
     def close(self):
+        self.tn.read_all()
         self.tn.close()

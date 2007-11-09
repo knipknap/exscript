@@ -231,9 +231,9 @@ file.close()
 exscript_content += r'''
 ## Exscript generated commands. ##
 {if device.os(0) is "huawei"}
-    {connection.send("quit\r")}
+    {connection.send("quit\r", 0)}
 {else}
-    {connection.send("exit\r")}
+    {connection.send("exit\r", 0)}
 {end}
 '''
 

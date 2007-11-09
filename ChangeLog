@@ -1,3 +1,10 @@
+2007-10-09 Samuel Abels <http://debain.org>
+
+	* lib/TerminalConnection/Transport.py: Increase default timeout to 30
+	seconds.
+	* exscript.py, lib/Exscript/stdlib/Connection/send.py: Fix: exit/quit
+	command.
+
 2007-10-07 Samuel Abels <http://debain.org>
 
 	* lib/TerminalConnection/*.py, lib/Exscript/stdlib/Device/vendor.py:
