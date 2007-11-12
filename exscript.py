@@ -230,7 +230,7 @@ file.close()
 # Prepare the code that is executed after the user script has completed.
 exscript_content += r'''
 ## Exscript generated commands. ##
-{if device.os(0) is "huawei"}
+{if device.os(0) is "vrp"}
     {connection.send("quit\r", 0)}
 {else}
     {connection.send("exit\r", 0)}

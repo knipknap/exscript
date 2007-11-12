@@ -1,3 +1,7 @@
+2007-10-12 Samuel Abels <http://debain.org>
+
+	* exscript.py: Hopefully fixed the "quit" command on Huawei routers.
+
 2007-10-09 Samuel Abels <http://debain.org>
 
 	* lib/TerminalConnection/Transport.py: Increase default timeout to 30
