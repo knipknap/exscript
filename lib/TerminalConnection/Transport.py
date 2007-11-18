@@ -32,7 +32,7 @@ host          = r'(?:[\w+\-\.]+)'
 user          = r'(?:[\w+\-]+)'
 user_host     = r'(?:(?:' + user + r'\@)?' + host + r')'
 prompt_re     = re.compile(prompt_start                 \
-                         + r'\[?'                       \
+                         + r'[\[\<]?'                   \
                          + r'\w+'                       \
                          + user_host + r'?'             \
                          + r'[: ]?'                     \
@@ -41,7 +41,7 @@ prompt_re     = re.compile(prompt_start                 \
                          + any_path + r'?'              \
                          + r'(?:\(' + filename + '\))?' \
                          + r'\]?'                       \
-                         + r'[#>%\$] ?$', flags)
+                         + r'[#>%\$\]] ?$', flags)
 
 huawei_re     = re.compile(r'huawei',                flags)
 cisco_user_re = re.compile(r'user\s?name:\s*$',      flags)
@@ -54,12 +54,14 @@ login_fail_re = re.compile(newline + r'[^\r\n]*(?:incorrect|failed|denied)', fla
 
 # Test the prompt types. FIXME: Move into a unit test.
 prompts = [r'[sam123@home ~]$',
+           r'[MyHost-A1]',
+           r'<MyHost-A1>',
            r'sam@knip:~/Code/exscript$',
            r'sam@MyHost-X123>',
            r'sam@MyHost-X123#',
            r'MyHost-ABC-CDE123>',
            r'MyHost-A1#',
-           r'S-OAS#',
+           r'S-ABC#',
            r'0123456-1-1-abc#',
            r'0123456-1-1-a>',
            r'MyHost-A1(config)#',

@@ -48,13 +48,13 @@ class Transport(Base):
         while 1:
             # Wait for the user prompt.
             #print 'Waiting for prompt'
-            prompt  = [login_fail_re,
+            prompt  = [huawei_re,
+                       login_fail_re,
                        cisco_user_re,
                        junos_user_re,
                        unix_user_re,
                        skey_re,
                        pass_re,
-                       huawei_re,
                        self.prompt_re]
             which   = None
             matches = None
@@ -68,12 +68,17 @@ class Transport(Base):
             if which < 0:
                 raise TransportException("Timeout while waiting for prompt")
 
-            # Login error detected.
+            # Huawei welcome message.
             elif which == 0:
+                self.remote_info['os']     = 'vrp'
+                self.remote_info['vendor'] = 'huawei'
+
+            # Login error detected.
+            elif which == 1:
                 raise TransportException("Login failed")
 
             # User name prompt.
-            elif which <= 3:
+            elif which <= 4:
                 #print "Username prompt received."
                 if self.remote_info['os'] == 'unknown':
                     self.remote_info['os']     = ('ios',   'junos',   'shell')[which - 1]
@@ -82,7 +87,7 @@ class Transport(Base):
                 continue
 
             # s/key prompt.
-            elif which == 4:
+            elif which == 5:
                 #print "S/Key prompt received."
                 seq    = int(matches.group(1))
                 seed   = matches.group(2)
@@ -96,17 +101,12 @@ class Transport(Base):
                 continue
             
             # Cleartext password prompt.
-            elif which == 5:
+            elif which == 6:
                 #print "Cleartext prompt received."
                 self.send(password + '\r')
                 if not wait:
                     break
                 continue
-
-            # Huawei welcome message.
-            elif which == 6:
-                self.remote_info['os']     = 'vrp'
-                self.remote_info['vendor'] = 'huawei'
 
             # Shell prompt.
             elif which == 7:
