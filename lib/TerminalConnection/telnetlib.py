@@ -171,7 +171,7 @@ class Telnet:
 
     """
 
-    def __init__(self, host=None, port=0):
+    def __init__(self, host=None, port=0, **kwargs):
         """Constructor.
 
         When called without arguments, create an unconnected instance.
@@ -187,8 +187,8 @@ class Telnet:
         self.irawq = 0
         self.cookedq = ''
         self.eof = 0
-        self.data_callback        = None
-        self.data_callback_kwargs = None
+        self.data_callback        = kwargs.get('receive_callback', None)
+        self.data_callback_kwargs = {}
         self.option_callback = None
         if host:
             self.open(host, port)
@@ -547,15 +547,15 @@ class Telnet:
         results are undeterministic, and may depend on the I/O timing.
 
         """
-        #print "Expecting", [l.pattern for l in list]
         re = None
         list = list[:]
         indices = range(len(list))
-        search_window_size = 40
+        search_window_size = 60
         for i in indices:
             if not hasattr(list[i], "search"):
                 if not re: import re
                 list[i] = re.compile(list[i])
+        self.msg("Expecting %s" % [l.pattern for l in list])
         while 1:
             self.process_rawq()
             #print "Queue: >>>%s<<<" % repr(self.cookedq)

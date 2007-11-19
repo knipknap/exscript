@@ -36,9 +36,10 @@ class Transport(Base):
 
     def connect(self, hostname):
         assert self.tn is None
-        self.tn = telnetlib.Telnet(hostname)
-        self.tn.set_receive_callback(self._receive_cb)
-        #self.tn.set_debuglevel(1)
+        self.tn = telnetlib.Telnet(hostname,
+                                   receive_callback = self._receive_cb)
+        if self.debug >= 5:
+            self.tn.set_debuglevel(1)
         if self.tn is None:
             return False
         return True
