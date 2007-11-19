@@ -70,6 +70,7 @@ class Transport(Base):
 
             # Huawei welcome message.
             elif which == 0:
+                self.dbg(1, "Huawei router detected.")
                 self.remote_info['os']     = 'vrp'
                 self.remote_info['vendor'] = 'huawei'
 
@@ -79,40 +80,42 @@ class Transport(Base):
 
             # User name prompt.
             elif which <= 4:
-                #print "Username prompt received."
+                self.dbg(1, "Username prompt %s received." % which)
                 if self.remote_info['os'] == 'unknown':
-                    self.remote_info['os']     = ('ios',   'junos',   'shell')[which - 1]
-                    self.remote_info['vendor'] = ('cisco', 'juniper', 'unix')[which - 1]
+                    self.remote_info['os']     = ('ios',   'junos',   'shell')[which - 2]
+                    self.remote_info['vendor'] = ('cisco', 'juniper', 'unix')[which - 2]
                 self.send(user + '\r')
                 continue
 
             # s/key prompt.
             elif which == 5:
-                #print "S/Key prompt received."
+                self.dbg(1, "S/Key prompt received.")
                 seq    = int(matches.group(1))
                 seed   = matches.group(2)
-                #print "Seq:", seq, "Seed:", seed
+                self.dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
                 self.tn.expect([pass_re], self.timeout)
                 self.send(phrase + '\r')
-                #print "Password sent."
+                self.dbg(1, "Password sent.")
                 if not wait:
+                    self.dbg(1, "Bailing out as requested.")
                     break
                 continue
             
             # Cleartext password prompt.
             elif which == 6:
-                #print "Cleartext prompt received."
+                self.dbg(1, "Cleartext prompt received.")
                 self.send(password + '\r')
                 if not wait:
+                    self.dbg(1, "Bailing out as requested.")
                     break
                 continue
 
             # Shell prompt.
             elif which == 7:
-                #print "Shell prompt received."
+                self.dbg(1, 'Shell prompt received.')
+                self.dbg(1, 'Remote OS: %s' % self.remote_info['os'])
                 # Switch to script compatible output (where supported).
-                #print 'Remote OS:', self.remote_info['os']
                 if self.remote_info['os'] == 'ios':
                     self.execute('term len 0')
                 break

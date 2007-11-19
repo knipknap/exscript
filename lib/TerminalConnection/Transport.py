@@ -116,6 +116,12 @@ class Transport(object):
         self.on_data_received_args = args
 
 
+    def dbg(self, level, msg):
+        if self.debug < level:
+            return
+        print msg
+
+
     def set_prompt(self, prompt = None):
         if prompt is None:
             self.prompt_re = prompt_re
