@@ -6,11 +6,11 @@ and SSH sessions.
 
 Installation
 -------------
-Extract the archive and you are ready to start the interpreter:
+Extract the archive and you are ready to start the interpreter.
 
   ./exscript --help
 
-Provides an overview over command line options. For example Exscript
+provides an overview over command line options. For example Exscript
 programs, have a look into the lib/Exscript/tests/ directory.
 
 More information can be found on the project homepage:

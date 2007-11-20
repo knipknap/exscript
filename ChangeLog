@@ -1,6 +1,7 @@
-2007-10-12 Samuel Abels <http://debain.org>
+2007-10-20 Samuel Abels <http://debain.org>
 
-	* exscript.py: Hopefully fixed the "quit" command on Huawei routers.
+	* exscript.py: Fixed the "quit" command on Huawei routers.
+	* Release 0.9.11
 
 2007-10-09 Samuel Abels <http://debain.org>
 
