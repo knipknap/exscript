@@ -550,7 +550,7 @@ class Telnet:
         re = None
         list = list[:]
         indices = range(len(list))
-        search_window_size = 60
+        search_window_size = 250
         for i in indices:
             if not hasattr(list[i], "search"):
                 if not re: import re
