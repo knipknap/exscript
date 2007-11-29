@@ -59,6 +59,9 @@ def usage():
     print "                 with a number greater than 1."
     print "  -n, --no-authentication"
     print "                 When given, the authentication procedure is skipped."
+    print "      --no-auto-logout"
+    print "                 Do not attempt to execute the exit or quit command at the end"
+    print "                 of a script."
     print "      --no-prompt"
     print "                 Do not wait for a prompt after sending the password."
     print "  -p, --protocol STRING"
@@ -87,6 +90,7 @@ default_options = [
   ('protocol=',         'p:', 'telnet'),
   ('no-authentication', 'n',  False),
   ('no-prompt',         None, False),
+  ('no-auto-logout',    None, False),
   ('verbose=',          'v:', 0),
   ('parser-verbose=',   'V:', 0),
   ('version',           None, False),
@@ -228,14 +232,14 @@ exscript_content = file.read()
 file.close()
 
 # Prepare the code that is executed after the user script has completed.
-exscript_content += r'''
+if not options['no-auto-logout']:
+    exscript_content += r'''
 ## Exscript generated commands. ##
 {if device.os(0) is "vrp"}
     {connection.send("quit\r", 0)}
 {else}
     {connection.send("exit\r", 0)}
-{end}
-'''
+{end}'''
 
 # Parse the exscript.
 parser = Exscript.Parser(debug = options['parser-verbose'])

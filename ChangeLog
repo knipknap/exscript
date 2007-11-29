@@ -1,5 +1,11 @@
 2007-10-20 Samuel Abels <http://debain.org>
 
+	* lib/TerminalConnection/telnetlib.py: Fixed a bug that the prompt match
+	would sometimes not add the correct content into the response buffer.
+	* exscript.py: Added the --no-auto-logout switch.
+
+2007-10-20 Samuel Abels <http://debain.org>
+
 	* exscript.py: Fixed the "quit" command on Huawei routers.
 	* Release 0.9.11
 

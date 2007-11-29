@@ -142,6 +142,8 @@ class Transport(Base):
         try:
             (result, _, self.response) = self.tn.expect([prompt],
                                                         self.timeout)
+            self.dbg(2, "Got a prompt, match was %s" % repr(_.group()))
+            self.dbg(5, "Response was %s" % repr(self.response))
         except:
             print 'Error while waiting for %s' % repr(prompt.pattern)
             raise

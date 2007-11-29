@@ -23,7 +23,7 @@ flags         = re.I | re.M
 printable     = re.escape(string.printable)
 ignore        = r'[\x1b\x07]'
 newline       = r'[\r\n]'
-prompt_start  = r'.*(?:' + newline + r'[^' + printable + r']?|' + ignore + '+)'
+prompt_start  = r'(?:' + newline + r'[^' + printable + r']?|' + ignore + '+)'
 prompt_chars  = r'[\-\w\(\)@:~]'
 filename      = r'(?:[\w\+\-\._]+)'
 path          = r'(?:(?:' + filename + r')?(?:/' + filename + r')*/?)'
@@ -43,11 +43,11 @@ prompt_re     = re.compile(prompt_start                 \
                          + r'\]?'                       \
                          + r'[#>%\$\]] ?$', flags)
 
-huawei_re     = re.compile(r'huawei',                flags)
-cisco_user_re = re.compile(r'user\s?name:\s*$',      flags)
-junos_user_re = re.compile(newline + r'login:\s*?$', flags)
-unix_user_re  = re.compile(r'(user|login):\s*$',     flags)
-pass_re       = re.compile(r'password:?\s*$',        flags)
+huawei_re     = re.compile(r'huawei',               flags)
+cisco_user_re = re.compile(r'user ?name: *$',       flags)
+junos_user_re = re.compile(newline + r'login: *?$', flags)
+unix_user_re  = re.compile(r'(user|login): *$',     flags)
+pass_re       = re.compile(r'password:? *$',        flags)
 skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
 error_re      = re.compile(r'^%? ?(?:error|invalid|incomplete|unrecognized)', re.I)
 login_fail_re = re.compile(newline + r'[^\r\n]*(?:incorrect|failed|denied)', flags)

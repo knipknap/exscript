@@ -550,7 +550,7 @@ class Telnet:
         re = None
         list = list[:]
         indices = range(len(list))
-        search_window_size = 250
+        search_window_size = 150
         for i in indices:
             if not hasattr(list[i], "search"):
                 if not re: import re
@@ -565,7 +565,8 @@ class Telnet:
                 m = list[i].search(search_window)
                 if m:
                     #print "Match End:", m.end()
-                    e    = search_window_size - m.end() - 1
+                    #e    = search_window_size - m.end() - 1
+                    e    = len(m.group())
                     e    = len(self.cookedq) - e
                     text = self.cookedq[:e]
                     self.cookedq = search_window[m.end():]
