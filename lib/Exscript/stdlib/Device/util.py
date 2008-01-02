@@ -9,10 +9,16 @@ def update_host_info(scope, force = 0):
 
     conn = scope.get('_connection')
     conn.execute('show version')
-    for line in conn.response.split('\n')[1:]:
+    response = conn.response.split('\n')[1:]
+    for line in response:
         if re.match(r'^JUNOS', line, re.I) is not None:
             conn.remote_info['os']     = 'junos'
             conn.remote_info['vendor'] = 'juniper'
+            for line in response:
+                match = re.match(r'Model: (.*)', line, re.I)
+                if match is not None:
+                    conn.remote_info['model'] = match.group(1)
+                    break
             break
         match = re.match(r'^Cisco IOS XR', line, re.I)
         if match is not None:

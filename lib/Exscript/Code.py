@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
 from Scope        import Scope
+from Append       import Append
 from Assign       import Assign
 from Enter        import Enter
 from Extract      import Extract
@@ -23,7 +24,8 @@ from Loop         import Loop
 from Try          import Try
 
 varname_re = r'[a-zA-Z][\w_]+'
-keywords = ['as',
+keywords = ['append',
+            'as',
             'else',
             'end',
             'enter',
@@ -33,6 +35,7 @@ keywords = ['as',
             'into',
             'loop',
             'try',
+            'to',
             'until',
             'when',
             'while']
@@ -80,6 +83,8 @@ class Code(Scope):
                 break
             elif parser.next_if('whitespace') or parser.next_if('newline'):
                 pass
+            elif parser.current_is('keyword', 'append'):
+                self.children.append(Append(parser, self))
             elif parser.current_is('keyword', 'extract'):
                 self.children.append(Extract(parser, self))
             elif parser.current_is('keyword', 'if'):

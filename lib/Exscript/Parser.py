@@ -116,7 +116,7 @@ class Parser(object):
             if token is None:
                 error = 'Expected %s but got %s' % (type, cur_token)
             else:
-                error = 'Expected "%s" but got "%s"' % (token, cur_token)
+                error = 'Expected "%s" but got %s "%s"' % (token, cur_type, cur_token)
             sender.char = self.current_char
             sender.parent.syntax_error(sender, error)
         return 1

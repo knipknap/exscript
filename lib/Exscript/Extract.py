@@ -115,7 +115,7 @@ class Extract(Token):
             self.parent.define(**self.variables)
         else:
             for key in self.variables:
-                existing = self.parent.get('key')
+                existing = self.parent.get(key)
                 self.parent.define(**{key: existing + self.variables})
         return 1
 

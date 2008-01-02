@@ -563,7 +563,7 @@ class Telnet:
             #print "Search window: >>>%s<<<" % repr(search_window)
             for i in indices:
                 m = list[i].search(search_window)
-                if m:
+                if m is not None:
                     #print "Match End:", m.end()
                     #e    = search_window_size - m.end() - 1
                     e    = len(m.group())

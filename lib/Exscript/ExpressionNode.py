@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Token import Token
-from Term  import Term
+import Term
 
 class ExpressionNode(Token):
     def __init__(self, parser, scope, parent = None):
@@ -34,7 +34,7 @@ class ExpressionNode(Token):
         # The "not" operator requires special treatment because it is
         # positioned left of the term.
         if not parser.current_is('logical_operator', 'not'):
-            self.lft = Term(parser, scope)
+            self.lft = Term.Term(parser, scope)
 
             # The expression may end already (a single term is also an
             # expression).

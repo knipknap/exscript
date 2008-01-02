@@ -1,3 +1,11 @@
+2008-01-02 Samuel Abels <http://debain.org>
+
+	* exscript.py: Script may now also be used as a standard Python module.
+	* lib/Exscript/Append.py: Add new built-in modifier "append".
+	* lib/Exscript/stdlib/Device/model.py: New Exscript function "model()".
+	* lib/Exscript/TerminalConnection/*: Fix: Better error message on prompt
+	timeout.
+
 2007-10-20 Samuel Abels <http://debain.org>
 
 	* lib/TerminalConnection/telnetlib.py: Fixed a bug that the prompt match
