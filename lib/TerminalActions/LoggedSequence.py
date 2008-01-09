@@ -55,7 +55,7 @@ class LoggedSequence(Sequence):
 
     def _on_log_data_received(self, name, data):
         if name == 'notify':
-            self._log(self.logfile, self.logfile_lock_key, 'NOTIFICATION: %s' % data)
+            self._log(self.logfile, self.logfile_lock_key, 'NOTIFICATION: %s\n' % data)
         else:
             self._log(self.logfile, self.logfile_lock_key, data)
         self.emit(name, data)

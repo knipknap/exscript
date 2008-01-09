@@ -18,6 +18,7 @@ from Append       import Append
 from Assign       import Assign
 from Enter        import Enter
 from Extract      import Extract
+from Fail         import Fail
 from FunctionCall import FunctionCall
 from IfCondition  import IfCondition
 from Loop         import Loop
@@ -30,6 +31,7 @@ keywords = ['append',
             'end',
             'enter',
             'extract',
+            'fail',
             'from',
             'if',
             'into',
@@ -87,6 +89,8 @@ class Code(Scope):
                 self.children.append(Append(parser, self))
             elif parser.current_is('keyword', 'extract'):
                 self.children.append(Extract(parser, self))
+            elif parser.current_is('keyword', 'fail'):
+                self.children.append(Fail(parser, self))
             elif parser.current_is('keyword', 'if'):
                 self.children.append(IfCondition(parser, self))
             elif parser.current_is('keyword', 'loop'):

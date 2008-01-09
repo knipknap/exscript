@@ -1,3 +1,7 @@
+2008-01-09 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/Fail.py: New built-in keyword "fail".
+
 2008-01-02 Samuel Abels <http://debain.org>
 
 	* exscript.py: Script may now also be used as a standard Python module.
