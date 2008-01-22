@@ -57,17 +57,21 @@ class Transport(Base):
                        skey_re,
                        pass_re,
                        self.prompt_re]
-            which   = None
-            matches = None
+            which    = None
+            matches  = None
+            response = None
             try:
-                (which, matches, _) = self.tn.expect(prompt, self.timeout)
+                (which, matches, response) = self.tn.expect(prompt, self.timeout)
             except:
                 print 'Telnet.authenticate(): Error while waiting for prompt'
                 raise
 
             # No match.
             if which < 0:
-                raise TransportException("Timeout while waiting for prompt")
+                if response is None:
+                    response = ''
+                msg = "Timeout while waiting for prompt. Buffer: %s" % repr(response)
+                raise TransportException(msg)
 
             # Huawei welcome message.
             elif which == 0:

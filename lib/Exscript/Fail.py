@@ -40,7 +40,7 @@ class Fail(Token):
 
 
     def value(self):
-        if self.expression is None or not self.expression.value()[0]:
+        if self.expression is None or self.expression.value()[0]:
             self.parent.runtime_error(self, self.msg.value()[0])
         return 1
 

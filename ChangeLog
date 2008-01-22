@@ -1,3 +1,13 @@
+2008-01-22 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/Fail.py: Fix: Inverted logic.
+	* lib/Exscript/Execute.py, lib/Exscript/Extract.py, lib/Exscript/Parser.py,
+	exscript.py: Changed behavior of --no-prompt such that all prompts are now
+	ignored, not only the login prompt. Added --no-initial-prompt that mimics
+	the original behavior of --no-prompt.
+	* lib/Exscript/TerminalConnection/Telnet.py: Improved error message in debug
+	mode.
+
 2008-01-09 Samuel Abels <http://debain.org>
 
 	* lib/Exscript/Fail.py: New built-in keyword "fail".

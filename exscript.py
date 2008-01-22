@@ -63,6 +63,10 @@ def usage():
     print "                 Do not attempt to execute the exit or quit command at the end"
     print "                 of a script."
     print "      --no-prompt"
+    print "                 Do not wait for a prompt anywhere. Note that this will also"
+    print "                 cause Exscript to disable commands that require a prompt, such"
+    print "                 as 'extract'."
+    print "      --no-initial-prompt"
     print "                 Do not wait for a prompt after sending the password."
     print "  -p, --protocol STRING"
     print "                 Specify which protocol to use to connect to the remote host."
@@ -91,6 +95,7 @@ default_options = [
   ('protocol=',         'p:', 'telnet'),
   ('no-authentication', 'n',  False),
   ('no-prompt',         None, False),
+  ('no-initial-prompt', None, False),
   ('no-auto-logout',    None, False),
   ('verbose=',          'v:', 0),
   ('parser-verbose=',   'V:', 0),
@@ -243,11 +248,14 @@ def exscript(*args, **kwargs):
         {connection.send("exit\r", 0)}
     {end}'''
 
-    # Parse the exscript.
-    parser = Exscript.Parser(debug = options['parser-verbose'])
+    # Initialize the parser.
+    parser = Exscript.Parser(debug     = options['parser-verbose'],
+                             no_prompt = options['no-prompt'])
     parser.define(**defines[hostnames[0]])
     _, _, _, _, this_query = UrlParser.parse_url(hostnames[0])
     parser.define(**this_query)
+
+    # Parse the exscript.
     try:
         excode = parser.parse(exscript_content)
     except Exception, e:
@@ -312,12 +320,9 @@ def exscript(*args, **kwargs):
 
             #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
             # recompiling numerous times.
-            #parser = Exscript.Parser(debug = options['parser-verbose'])
-            #parser.define(**variables)
             excode = parser.parse(exscript_content)
             #excode = copy.deepcopy(excode)
             excode.init(**variables)
-            #del parser
 
             # One logfile per host.
             logfile       = None
@@ -348,7 +353,7 @@ def exscript(*args, **kwargs):
 
             # Build the sequence.
             echo = options['connections'] == 1 and options['no-echo'] == 0
-            wait = not options['no-prompt']
+            wait = not options['no-initial-prompt'] and not options['no-prompt']
             sequence.add(Connect(protocol, this_host, echo = echo))
             if not options['no-authentication']:
                 sequence.add(Authenticate(this_user, this_pass, wait))

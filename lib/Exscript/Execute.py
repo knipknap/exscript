@@ -19,8 +19,10 @@ from Token import Token, string_re
 class Execute(Token):
     def __init__(self, parser, parent, command):
         Token.__init__(self, 'Execute', parser)
-        self.parent = parent
-        self.string = command
+        self.parent    = parent
+        self.string    = command
+        self.no_prompt = parser.no_prompt
+
         # Make the debugger point to the beginning of the command.
         self.char = self.char - len(command) - 1
         self.mark_end(parser, self.char + len(command))
@@ -41,8 +43,12 @@ class Execute(Token):
         command = command.lstrip()
 
         # Execute the command.
-        conn.execute(command)
-        response = conn.response.split('\n')[1:]
+        if self.no_prompt:
+            conn.send(command + '\r')
+            response = ''
+        else:
+            conn.execute(command)
+            response = conn.response.split('\n')[1:]
 
         self.parent.define(_buffer  = response)
         self.parent.define(response = response)

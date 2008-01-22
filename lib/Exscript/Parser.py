@@ -26,7 +26,8 @@ class Parser(object):
         self.current_line = 1
         self.token_buffer = None
         self.grammar      = []
-        self.debug        = kwargs.get('debug', 0)
+        self.debug        = kwargs.get('debug',     0)
+        self.no_prompt    = kwargs.get('no_prompt', 0)
         self.variables    = {}
         self.stdlib       = {}
         self.load_module(stdlib)

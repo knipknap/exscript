@@ -28,6 +28,10 @@ class Extract(Token):
         self.append    = False
         self.source    = None
 
+        if parser.no_prompt: 
+            msg = "'extract' keyword does not work with --no-prompt"
+            parent.syntax_error(self, msg)
+
         # First expect a regular expression.
         parser.expect(self, 'keyword', 'extract')
         parser.expect(self, 'whitespace')
