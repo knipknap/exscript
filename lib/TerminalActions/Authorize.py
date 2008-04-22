@@ -47,7 +47,7 @@ class Authorize(Action):
         conn.set_on_data_received_cb(self._on_data_received)
         self.tacacs_lock(global_lock, global_context, local_context['user']).acquire()
         try:
-            conn.authorize(self.password, self.wait)
+            conn.authorize(self.password, wait = self.wait)
         except:
             self.tacacs_lock(global_lock, global_context, local_context['user']).release()
             conn.set_on_data_received_cb(None)

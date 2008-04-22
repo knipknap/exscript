@@ -22,6 +22,8 @@ class Loop(Token):
         Token.__init__(self, 'Loop', parser)
         self.during         = None
         self.until          = None
+        self.thefrom        = None
+        self.theto          = None
         self.list_variables = []
         self.iter_varnames  = []
 
@@ -29,7 +31,8 @@ class Loop(Token):
         parser.expect(self, 'keyword', 'loop')
         parser.expect(self, 'whitespace')
         if not parser.current_is('keyword', 'while') and \
-           not parser.current_is('keyword', 'until'):
+           not parser.current_is('keyword', 'until') and \
+           not parser.current_is('keyword', 'from'):
             self.list_variables = [Term(parser, scope)]
             parser.next_if('whitespace')
             while parser.next_if('comma'):
@@ -55,6 +58,15 @@ class Loop(Token):
                 self.iter_varnames.append(iter_varname)
                 parser.next_if('whitespace')
 
+        # Check if this is a "from ... to ..." loop.
+        if parser.next_if('keyword', 'from'):
+            parser.expect(self, 'whitespace')
+            self.thefrom = Expression(parser, scope)
+            parser.next_if('whitespace')
+            parser.expect(self, 'keyword', 'to')
+            self.theto = Expression(parser, scope)
+            parser.next_if('whitespace')
+        
         # Check if this is a "while" loop.
         if parser.next_if('keyword', 'while'):
             parser.expect(self, 'whitespace')
@@ -87,7 +99,7 @@ class Loop(Token):
 
 
     def value(self):
-        if len(self.list_variables) == 0:
+        if len(self.list_variables) == 0 and not self.thefrom:
             # If this is a "while" loop, iterate as long as the condition is True.
             if self.during is not None:
                 while self.during.value()[0]:
@@ -101,7 +113,12 @@ class Loop(Token):
                 return 1
 
         # Retrieve the lists from the list terms.
-        lists = [var.value() for var in self.list_variables]
+        if self.thefrom:
+            lists = [range(self.thefrom.value()[0], self.theto.value()[0])]
+            vars  = ['counter']
+        else:
+            lists = [var.value() for var in self.list_variables]
+            vars  = self.iter_varnames
         
         # Make sure that all lists have the same length.
         for list in lists:
@@ -113,7 +130,7 @@ class Loop(Token):
         for i in xrange(len(lists[0])):
             f = 0
             for list in lists:
-                self.block.define(**{self.iter_varnames[f]: [list[i]]})
+                self.block.define(**{vars[f]: [list[i]]})
                 f += 1
             if self.until is not None and self.until.value()[0]:
                 break

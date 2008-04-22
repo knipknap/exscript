@@ -28,7 +28,7 @@ def usage():
     print "  -A, --authorize2"
     print "                 Like -a, but uses the authentication password instead of"
     print "                 asking for a password to be entered."
-    print "  -c, --connections=NUM"
+    print "  -c, --connections NUM"
     print "                 Maximum number of concurrent connections."
     print "                 NUM is a number between 1 and 20, default is 1"
     print "      --csv-hosts FILE"
@@ -47,6 +47,8 @@ def usage():
     print "      --hosts FILE"
     print "                 Loads a list of hostnames from the given file (one host per"
     print "                 line)."
+    print "  -i, --non-interactive"
+    print "                 Do not ask for a username or password."
     print "  -l, --logdir DIR"
     print "                 Logs any communication into the directory with the given name."
     print "                 Each filename consists of the hostname with \"_log\" appended."
@@ -58,7 +60,7 @@ def usage():
     print "                 This is already the default behavior if the -c option was given"
     print "                 with a number greater than 1."
     print "  -n, --no-authentication"
-    print "                 When given, the authentication procedure is skipped."
+    print "                 When given, the authentication procedure is skipped. Implies -i."
     print "      --no-auto-logout"
     print "                 Do not attempt to execute the exit or quit command at the end"
     print "                 of a script."
@@ -72,6 +74,12 @@ def usage():
     print "                 Specify which protocol to use to connect to the remote host."
     print "                 STRING is one of: telnet ssh"
     print "                 The default protocol is telnet."
+    print "      --ssh-auto-verify"
+    print "                 Automatically confirms the 'Host key changed' SSH error "
+    print "                 message with 'yes'. Highly insecure and not recommended."
+    print "      --ssh-key FILE"
+    print "                 Specify a key file that is passed to the SSH client."
+    print "                 This is equivalent to using the -i parameter with ssh."
     print "  -v, --verbose NUM"
     print "                 Print out debug information about the network activity."
     print "                 NUM is a number between 0 (min) and 5 (max)"
@@ -91,6 +99,7 @@ default_options = [
   ('csv-hosts=',        None, None),
   ('define=',           'd:', default_defines),
   ('hosts=',            None, None),
+  ('non-interactive',   'i',  False),
   ('logdir=',           'l:', None),
   ('protocol=',         'p:', 'telnet'),
   ('no-authentication', 'n',  False),
@@ -99,6 +108,8 @@ default_options = [
   ('no-auto-logout',    None, False),
   ('verbose=',          'v:', 0),
   ('parser-verbose=',   'V:', 0),
+  ('ssh-auto-verify=',  None, False),
+  ('ssh-key=',          None, None),
   ('version',           None, False),
   ('help',              'h',  False)
 ]
@@ -266,7 +277,7 @@ def exscript(*args, **kwargs):
 
     # Read username and password.
     try:
-        if options['no-authentication']:
+        if options['non-interactive']:
             user     = None
             password = None
         else:
@@ -354,9 +365,13 @@ def exscript(*args, **kwargs):
             # Build the sequence.
             echo = options['connections'] == 1 and options['no-echo'] == 0
             wait = not options['no-initial-prompt'] and not options['no-prompt']
-            sequence.add(Connect(protocol, this_host, echo = echo))
-            if not options['no-authentication']:
-                sequence.add(Authenticate(this_user, this_pass, wait))
+            key  = options['ssh-key']
+            av   = options['ssh-auto-verify']
+            sequence.add(Connect(protocol, this_host, echo = echo, auto_verify = av))
+            if options['ssh-key'] is None and not options['no-authentication']:
+                sequence.add(Authenticate(this_user, password = this_pass, wait = wait))
+            elif not options['no-authentication']:
+                sequence.add(Authenticate(this_user, key_file = key,       wait = wait))
             if options['authorize']:
                 sequence.add(Authorize(password2, wait))
             if options['authorize2']:

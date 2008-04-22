@@ -45,7 +45,7 @@ class Transport(Base):
         return True
 
 
-    def authenticate(self, user, password, wait = True):
+    def authenticate(self, user, password, **kwargs):
         while 1:
             # Wait for the user prompt.
             #print 'Waiting for prompt'
@@ -102,7 +102,7 @@ class Transport(Base):
                 self.tn.expect([pass_re], self.timeout)
                 self.send(phrase + '\r')
                 self.dbg(1, "Password sent.")
-                if not wait:
+                if not kwargs.get('wait'):
                     self.dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -111,7 +111,7 @@ class Transport(Base):
             elif which == 6:
                 self.dbg(1, "Cleartext prompt received.")
                 self.send(password + '\r')
-                if not wait:
+                if not kwargs.get('wait'):
                     self.dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -129,7 +129,7 @@ class Transport(Base):
                 assert 0 # Not reached.
 
 
-    def authorize(self, password, wait = True):
+    def authorize(self, password, **kwargs):
         # Make sure that the device supports AAA.
         if self.remote_info['os'] != 'ios':
             return
@@ -137,7 +137,7 @@ class Transport(Base):
         self.send('enable\r')
 
         # The username should not be asked, so not passed.
-        return self.authenticate('', password, wait)
+        return self.authenticate('', password, **kwargs)
 
 
     def expect(self, prompt):

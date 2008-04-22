@@ -28,13 +28,16 @@ True  = 1
 False = 0
 
 escape_re = re.compile(r'(?:[\x00-\x09]|\x1b\[[^m]*m|\x1b\][^\x07]*\x07)')
+verify_re = re.compile(r'Host key verification failed.')
 
 class Transport(Base):
     def __init__(self, *args, **kwargs):
         Base.__init__(self, **kwargs)
-        self.conn     = None
-        self.debug    = kwargs.get('debug', 0)
-        self.hostname = None
+        self.conn        = None
+        self.debug       = kwargs.get('debug', 0)
+        self.keyfile     = kwargs.get('key_file')
+        self.auto_verify = kwargs.get('auto_verify', False)
+        self.hostname    = None
 
 
     def _remove_esc(self, response):
@@ -47,9 +50,21 @@ class Transport(Base):
         return True
 
 
-    def authenticate(self, user, password, wait = True):
-        self.conn = pexpect.spawn('ssh %s@%s' % (user, self.hostname))
+    def _spawn(self, user = None, keyfile = None):
+        opt = ''
+        if user is not None:
+            opt += ' -l %s' % user
+        if keyfile is not None:
+            opt += ' -i %s' % keyfile
+        cmd = '/usr/bin/env -i ssh%s %s' % (opt, self.hostname)
+        self.dbg(1, "Spawning SSH client: %s" % repr(cmd))
+        self.conn = pexpect.spawn(cmd)
         self.conn.setecho(self.echo)
+        self.dbg(1, "SSH client spawned.")
+
+
+    def authenticate(self, user, password, **kwargs):
+        self._spawn(user, kwargs.get('key_file'))
         while 1:
             # Wait for the user prompt.
             prompt  = [huawei_re,
@@ -59,6 +74,7 @@ class Transport(Base):
                        unix_user_re,
                        skey_re,
                        pass_re,
+                       verify_re,
                        self.prompt_re]
             #print 'Waiting for prompt:', self.conn.buffer, self.conn.before, self.conn.after
             try:
@@ -123,6 +139,12 @@ class Transport(Base):
 
             # Shell prompt.
             elif which == 7:
+                self.dbg(1, 'Key verification prompt received.')
+                if self.auto_verify:
+                    self.send('yes\r')
+                continue
+
+            elif which == 8:
                 self.dbg(1, 'Shell prompt received.')
                 self.dbg(1, 'Remote OS: %s' % self.remote_info['os'])
                 # Switch to script compatible output (where supported).
@@ -141,22 +163,37 @@ class Transport(Base):
     def expect(self, prompt):
         try:
             self.conn.expect(prompt)
+            self.response = None
             self.response = self._remove_esc(self.conn.before + self.conn.after)
         except pexpect.EOF:
-            self.response = self._remove_esc(self.conn.before)
+            if self.conn.before is not None:
+                self.response    = self._remove_esc(self.conn.before)
+                self.conn.before = None
 
-        if self.response is None:
+        if self.conn.exitstatus is not None and self.response is not None:
+            error = 'SSH client terminated with status %s' % self.conn.exitstatus
+            raise TransportException(error)
+        elif self.conn.exitstatus is not None:
+            error = 'SSH client terminated with status %s' % self.conn.exitstatus
+            raise TransportException(error)
+        elif self.response is None:
             error = 'Error while waiting for response from device'
             raise TransportException(error)
+
         self._receive_cb(self.response)
 
 
     def execute(self, command):
+        if self.conn is None:
+            self._spawn()
         self.conn.sendline(command)
+        self.dbg(1, "Command sent: %s" % repr(command))
         return self.expect_prompt()
 
 
     def send(self, data):
+        if self.conn is None:
+            self._spawn()
         self.conn.send(data)
 
 

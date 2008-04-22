@@ -70,7 +70,8 @@ prompts = [r'[sam123@home ~]$',
            r'FA/0/1/2/3>',
            r'FA/0/1/2/3(config)>',
            r'FA/0/1/2/3(config)#',
-           r'admin@s-x-a6.a.bc.de.fg:/#']
+           r'admin@s-x-a6.a.bc.de.fg:/# ',
+           r'admin@s-x-a6.a.bc.de.fg:/% ']
 for prompt in prompts:
     if not prompt_re.search('\n' + prompt):
         raise Exception("Prompt %s does not match exactly." % prompt)

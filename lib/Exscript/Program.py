@@ -13,11 +13,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import copy
-from Exscript import Exscript
-from Scope    import Scope
+from Exscript  import Exscript
+from Scope     import Scope
+from Trackable import Trackable
 
-class Program(Scope):
+class Program(Scope, Trackable):
     def __init__(self, parser, *args, **kwargs):
+        Trackable.__init__(self)
         Scope.__init__(self, 'Program', parser, None, **kwargs)
         self.init_variables = kwargs.get('variables', {})
         self.input          = parser.input

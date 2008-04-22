@@ -19,13 +19,13 @@ True  = 1
 False = 0
 
 class Authenticate(Action):
-    def __init__(self, user, password, wait = True):
-        assert user     is not None
-        assert password is not None
+    def __init__(self, user, **kwargs):
+        assert user is not None
         Action.__init__(self)
         self.user            = user
-        self.password        = password
-        self.wait            = wait
+        self.password        = kwargs.get('password', None)
+        self.wait            = kwargs.get('wait',     False)
+        self.key_file        = kwargs.get('key_file', None)
         self.lock_key_prefix = 'lock::authentication::tacacs::'
 
 
@@ -50,7 +50,9 @@ class Authenticate(Action):
         conn.set_on_data_received_cb(self._on_data_received)
         self.tacacs_lock(global_lock, global_context, self.user).acquire()
         try:
-            conn.authenticate(self.user, self.password, self.wait)
+            conn.authenticate(self.user, self.password,
+                              wait     = self.wait,
+                              key_file = self.key_file)
         except:
             self.tacacs_lock(global_lock, global_context, self.user).release()
             conn.set_on_data_received_cb(None)
