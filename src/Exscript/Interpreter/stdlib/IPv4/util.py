@@ -19,6 +19,8 @@ def _highest_bit(number):
     return math.sqrt(number)
 
 def ip2int(ip):
+    if ip == '255.255.255.255':
+        return 0xFFFFFFFFl
     return struct.unpack('L', socket.inet_aton(ip))[0]
 
 def int2ip(number):

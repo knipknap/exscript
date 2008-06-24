@@ -1,3 +1,9 @@
+2008-06-25 Samuel Abels <http://debain.org>
+
+	* lib/Exscript/stdlib/IPv4/util.py: Fix mask2pfxlen to work with
+	the 255.255.255.255 mask.
+	* exscript, src/Exscript/Exscript.py: Fix: Now works with Python 2.2 again.
+
 2008-06-23 Samuel Abels <http://debain.org>
 
 	* all-over: Add mask2pfxlen function to the stdlib.

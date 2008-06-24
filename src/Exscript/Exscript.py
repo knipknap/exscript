@@ -5,6 +5,9 @@ from SpiffWorkQueue  import WorkQueue
 from SpiffWorkQueue  import Sequence
 from TerminalActions import *
 
+True  = 1
+False = 0
+
 class Exscript(object):
     """
     This is a half-assed, poorly designed quickhack API for accessing all of 
@@ -15,6 +18,7 @@ class Exscript(object):
         self.parser         = Parser(**kwargs)
         self.workqueue      = WorkQueue()
         self.exscript       = None
+        self.exscript_code  = None
         self.hostnames      = []
         self.host_defines   = {}
         self.global_defines = {}
@@ -115,7 +119,7 @@ class Exscript(object):
         Loads the given Exscript code, using the given options.
         MUST be called before run() is called.
 
-        kwargs: parser-verbose: The verbosity level of the parser.
+        kwargs: verbose: The verbosity level of the parser.
                 no-prompt: Whether the compiled program should wait for a 
                            prompt each time after the Exscript sent a 
                            command to the remote host.
@@ -123,8 +127,10 @@ class Exscript(object):
         # Parse the exscript.
         self.parser.define(**self.global_defines)
         self.parser.define(**self.host_defines[self.hostnames[0]])
+        self.parser.define(hostname = self.hostnames[0])
         try:
-            self.exscript = self.parser.parse(exscript_content)
+            self.exscript      = self.parser.parse(exscript_content)
+	    self.exscript_code = exscript_content
         except Exception, e:
             if kwargs['verbose'] > 0:
                 raise
@@ -137,7 +143,7 @@ class Exscript(object):
         Loads the Exscript file with the given name, and calls load() to 
         process the code using the given options.
 
-        kwargs: parser-verbose: The verbosity level of the parser.
+        kwargs: verbose: The verbosity level of the parser.
                 no-prompt: Whether the compiled program should wait for a 
                            prompt each time after the Exscript sent a 
                            command to the remote host.
@@ -196,8 +202,8 @@ class Exscript(object):
 
             #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
             # recompiling numerous times.
-            #exscript = self.parser.parse(exscript_content)
-            exscript = copy.deepcopy(self.exscript)
+            exscript = self.parser.parse(self.exscript_code)
+            #exscript = copy.deepcopy(self.exscript)
             exscript.init(**variables)
 
             # One logfile per host.
