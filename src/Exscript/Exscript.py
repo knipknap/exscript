@@ -23,6 +23,7 @@ class Exscript(object):
         self.host_defines   = {}
         self.global_defines = {}
         self.logdir         = kwargs.get('logdir')
+        self.domain         = kwargs.get('domain', '')
 
 
     def add_hosts(self, hosts):
@@ -83,7 +84,7 @@ class Exscript(object):
             line         = re.sub(r'[\r\n]*$', '', line)
             values       = line.split('\t')
             hostname_url = values.pop(0).strip()
-            hostname     = UrlParser.parse_url(hostname)[3]
+            hostname     = UrlParser.parse_url(hostname_url)[3]
 
             # Add the hostname to our list.
             if hostname != last_hostname:
@@ -193,7 +194,10 @@ class Exscript(object):
              this_pass,
              this_host,
              this_query) = UrlParser.parse_url(hostname, default_protocol)
-            variables             = self.host_defines[hostname]
+            this_host += '.' + self.domain
+            variables = dict()
+            variables.update(self.global_defines)
+            variables.update(self.host_defines[hostname])
             variables['hostname'] = this_host
             variables.update(this_query)
             if this_user is None:

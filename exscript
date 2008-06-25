@@ -97,6 +97,7 @@ default_options = [
   ('csv-hosts=',        None, None),
   ('define=',           'd:', default_defines),
   ('hosts=',            None, None),
+  ('host-domain=',      None, ''),
   ('non-interactive',   'i',  False),
   ('logdir=',           'l:', None),
   ('protocol=',         'p:', 'telnet'),
@@ -147,7 +148,7 @@ def run(*args, **kwargs):
     except:
         usage()
         sys.exit(1)
-    exscript = Exscript()
+    exscript = Exscript(domain = options.get('host-domain'))
     exscript.add_hosts(hostnames)
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
@@ -198,6 +199,7 @@ def run(*args, **kwargs):
     {end}'''
 
     # Load the code into the exscript.
+    exscript.define(**options['define'])
     try:
         exscript.load(exscript_content,
                       verbose   = options['parser-verbose'],
