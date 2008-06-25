@@ -19,7 +19,7 @@ __version__ = '0.9.12'
 def usage():
     print "Exscript %s" % __version__
     print "Copyright (C) 2007 by Samuel Abels <http://debain.org>."
-    print "Syntax: ./exscript.py [options] exscript [hostname [hostname ...]]"
+    print "Syntax: exscript [options] exscript [hostname [hostname ...]]"
     print "  -a, --authorize"
     print "                 When given, authorization is performed on devices that"
     print "                 support AAA (by default, Exscript only authenticates)"
