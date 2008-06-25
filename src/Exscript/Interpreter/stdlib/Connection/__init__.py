@@ -1,4 +1,6 @@
-__all__ = ['set_error',
+__all__ = ['authenticate',
+           'authorize',
+           'set_error',
            'set_prompt',
            'set_timeout',
            'send',

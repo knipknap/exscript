@@ -5,6 +5,7 @@
 	* exscript: Fix logging.
 	* src/Exscript/Interpreter/stdlib/String/: New namespace for string 
 	functions.
+	* src/Exscript/Interpreter/stdlib/Connection/auth*.py: New.
 
 2008-06-24 Samuel Abels <http://debain.org>
 

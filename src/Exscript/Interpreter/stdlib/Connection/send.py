@@ -1,5 +1,3 @@
-signature = [('self', 'list', 'boolean')]
-
 def execute(scope, data, wait = None):
     conn = scope.get('_connection')
     for line in data:
