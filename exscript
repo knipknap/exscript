@@ -42,6 +42,9 @@ def usage():
     print "  -d, --define PAIR"
     print "                 Defines a variable that is passed to the script."
     print "                 PAIR has the following syntax: <STRING>=<STRING>."
+    print "      --default-domain STRING"
+    print "                 The IP domain name that is used if a given hostname has no "
+    print "                 domain appended."
     print "      --hosts FILE"
     print "                 Loads a list of hostnames from the given file (one host per"
     print "                 line)."
@@ -97,7 +100,7 @@ default_options = [
   ('csv-hosts=',        None, None),
   ('define=',           'd:', default_defines),
   ('hosts=',            None, None),
-  ('host-domain=',      None, ''),
+  ('default-domain=',   None, ''),
   ('non-interactive',   'i',  False),
   ('logdir=',           'l:', None),
   ('protocol=',         'p:', 'telnet'),
@@ -148,7 +151,7 @@ def run(*args, **kwargs):
     except:
         usage()
         sys.exit(1)
-    exscript = Exscript(domain = options.get('host-domain'),
+    exscript = Exscript(domain = options.get('default-domain'),
                         logdir = options.get('logdir'))
     exscript.add_hosts(hostnames)
 

@@ -194,7 +194,8 @@ class Exscript(object):
              this_pass,
              this_host,
              this_query) = UrlParser.parse_url(hostname, default_protocol)
-            this_host += '.' + self.domain
+            if not '.' in this_host:
+                this_host += '.' + self.domain
             variables = dict()
             variables.update(self.global_defines)
             variables.update(self.host_defines[hostname])
