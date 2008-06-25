@@ -2,6 +2,7 @@
 
 	* exscript, src/Exscript/Exscript.py: Fix: Passed in variable names were 
 	not correctly defined.
+	* exscript: Fix logging.
 
 2008-06-24 Samuel Abels <http://debain.org>
 

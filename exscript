@@ -148,7 +148,8 @@ def run(*args, **kwargs):
     except:
         usage()
         sys.exit(1)
-    exscript = Exscript(domain = options.get('host-domain'))
+    exscript = Exscript(domain = options.get('host-domain'),
+                        logdir = options.get('logdir'))
     exscript.add_hosts(hostnames)
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
