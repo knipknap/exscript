@@ -35,22 +35,19 @@ class IfCondition(Token):
             scope.syntax_error(self, error)
 
         # Body of the if block.
-        while parser.next_if('newline') or parser.next_if('whitespace'):
-            pass
+        parser.skip(['whitespace', 'newline'])
         self.if_block    = Exscript.Exscript(parser, scope)
         self.elif_blocks = []
         self.else_block  = None
 
         # If there is no "else" statement, just return.
-        while parser.next_if('newline') or parser.next_if('whitespace'):
-            pass
+        parser.skip(['whitespace', 'newline'])
         if not parser.next_if('keyword', 'else'):
             return
 
         # If the "else" statement is followed by an "if" (=elif),
         # read the next if condition recursively and return.
-        while parser.next_if('newline') or parser.next_if('whitespace'):
-            pass
+        parser.skip(['whitespace', 'newline'])
         if parser.current_is('keyword', 'if'):
             self.else_block = IfCondition(parser, scope)
             return

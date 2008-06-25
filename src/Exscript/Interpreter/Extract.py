@@ -70,8 +70,7 @@ class Extract(Token):
             parent.syntax_error(self, error)
 
         # Handle the "from" keyword.
-        while parser.next_if('whitespace'):
-            pass
+        parser.skip('whitespace')
         if parser.next_if('keyword', 'from'):
             parser.expect(self, 'whitespace')
             self.source = Term(parser, parent)

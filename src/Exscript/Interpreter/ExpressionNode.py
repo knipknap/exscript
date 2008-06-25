@@ -20,8 +20,7 @@ class ExpressionNode(Token):
         # Skip whitespace before initializing the token to make sure that self.char
         # points to the beginning of the expression (which makes for prettier error
         # messages).
-        while parser.next_if('whitespace') or parser.next_if('newline'):
-            pass
+        parser.skip(['whitespace', 'newline'])
 
         Token.__init__(self, 'ExpressionNode', parser)
         self.lft     = None
@@ -38,8 +37,7 @@ class ExpressionNode(Token):
 
             # The expression may end already (a single term is also an
             # expression).
-            while parser.next_if('whitespace') or parser.next_if('newline'):
-                pass
+            parser.skip(['whitespace', 'newline'])
             if not parser.current_is('arithmetic_operator') and \
                not parser.current_is('logical_operator') and \
                not parser.current_is('comparison'):

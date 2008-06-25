@@ -108,8 +108,7 @@ class Code(Scope):
                 break
             elif parser.next_if('keyword', 'end'):
                 parent.exit_request()
-                while parser.next_if('whitespace') or parser.next_if('newline'):
-                    pass
+                parser.skip(['whitespace', 'newline'])
                 break
             elif parser.current_is('open_function_call'):
                 self.children.append(FunctionCall(parser, self))

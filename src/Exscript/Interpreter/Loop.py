@@ -20,6 +20,7 @@ from Expression import Expression
 class Loop(Token):
     def __init__(self, parser, scope):
         Token.__init__(self, 'Loop', parser)
+        self.parent         = scope
         self.during         = None
         self.until          = None
         self.thefrom        = None
@@ -36,9 +37,9 @@ class Loop(Token):
             self.list_variables = [Term(parser, scope)]
             parser.next_if('whitespace')
             while parser.next_if('comma'):
-                parser.next_if('whitespace')
+                parser.skip(['whitespace', 'newline'])
                 self.list_variables.append(Term(parser, scope))
-                parser.next_if('whitespace')
+                parser.skip(['whitespace', 'newline'])
 
             # Expect the "as" keyword.
             parser.expect(self, 'keyword', 'as')
@@ -51,12 +52,12 @@ class Loop(Token):
             self.iter_varnames = [iter_varname]
             parser.next_if('whitespace')
             while parser.next_if('comma'):
-                parser.next_if('whitespace')
+                parser.skip(['whitespace', 'newline'])
                 (type, iter_varname) = parser.token()
                 parser.expect(self, 'varname')
                 scope.define(**{iter_varname: []})
                 self.iter_varnames.append(iter_varname)
-                parser.next_if('whitespace')
+                parser.skip(['whitespace', 'newline'])
 
         # Check if this is a "from ... to ..." loop.
         if parser.next_if('keyword', 'from'):
@@ -93,8 +94,7 @@ class Loop(Token):
             parent.syntax_error(self, error)
 
         # Body of the loop block.
-        while parser.next_if('newline') or parser.next_if('whitespace'):
-            pass
+        parser.skip(['whitespace', 'newline'])
         self.block = Exscript.Exscript(parser, scope)
 
 

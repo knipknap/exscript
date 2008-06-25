@@ -104,11 +104,25 @@ class Parser(object):
         self.token_buffer = None
 
 
-    def next_if(self, type, token = None):
-        if not self.current_is(type, token):
+    def next_if(self, types, token = None):
+        if token is not None:
+            if self.current_is(types, token):
+                self.next()
+                return 1
             return 0
-        self.next()
-        return 1
+
+        if type(types) != type([]):
+            types = [types]
+        for t in types:
+            if self.current_is(t, token):
+                self.next()
+                return 1
+        return 0
+
+
+    def skip(self, types, token = None):
+        while self.next_if(types, token):
+            pass
 
 
     def expect(self, sender, type, token = None):

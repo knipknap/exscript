@@ -29,8 +29,7 @@ class Try(Scope):
             parent.syntax_error(self, error)
 
         # Body of the ignore_errors block.
-        while parser.next_if('newline') or parser.next_if('whitespace'):
-            pass
+        parser.skip(['whitespace', 'newline'])
         self.block = Exscript.Exscript(parser, parent)
 
 

@@ -21,8 +21,7 @@ class Enter(Token):
         self.parent  = parent
 
         parser.expect(self, 'keyword', 'enter')
-        while parser.next_if('whitespace') or parser.next_if('newline'):
-            pass
+        parser.skip(['whitespace', 'newline'])
 
         self.execute = Execute(parser, parent, '')
 

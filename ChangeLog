@@ -6,6 +6,10 @@
 	automatically append a newline character.
 	* src/Exscript/Interpreter/Code.py, src/Exscript/Interpreter/Term.py: Add
 	support for bool types using the "true" and "false" keywords.
+	* src/Exscript/Interpreter/Loop.py: Allow for more relaxed whitespace
+	handling.
+	* src/Exscript/Interpreter/*.py: Cleanup the parser by adding a
+	parser.skip() method to replace useless while loops everywhere.
 
 2008-06-25 Samuel Abels <http://debain.org>
 

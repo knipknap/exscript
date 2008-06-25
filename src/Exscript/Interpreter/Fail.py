@@ -35,8 +35,7 @@ class Fail(Token):
 
         # End of expression.
         self.mark_end(parser)
-        while parser.next_if('whitespace') or parser.next_if('newline'):
-            pass
+        parser.skip(['whitespace', 'newline'])
 
 
     def value(self):
