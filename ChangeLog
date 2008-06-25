@@ -3,6 +3,8 @@
 	* exscript, src/Exscript/Exscript.py: Fix: Passed in variable names were 
 	not correctly defined.
 	* exscript: Fix logging.
+	* src/Exscript/Interpreter/stdlib/String/: New namespace for string 
+	functions.
 
 2008-06-24 Samuel Abels <http://debain.org>
 
