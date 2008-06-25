@@ -39,6 +39,10 @@ class Term(Token):
             self.term = String(parser, parent)
         elif parser.next_if('number'):
             self.term = Number(token)
+        elif parser.next_if('keyword', 'false'):
+            self.term = Number(0)
+        elif parser.next_if('keyword', 'true'):
+            self.term = Number(1)
         elif parser.current_is('regex_delimiter'):
             self.term = Regex(parser, parent)
         else:

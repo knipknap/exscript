@@ -4,4 +4,7 @@ __all__ = ['authenticate',
            'set_prompt',
            'set_timeout',
            'send',
+           'sendline',
+           'exec',
+           'execline',
            'wait_for']
