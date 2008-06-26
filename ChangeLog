@@ -10,6 +10,7 @@
 	handling.
 	* src/Exscript/Interpreter/*.py: Cleanup the parser by adding a
 	parser.skip() method to replace useless while loops everywhere.
+	* src/Exscript/Interpreter/stdlib/Connection/guess_os.py: New.
 
 2008-06-25 Samuel Abels <http://debain.org>
 

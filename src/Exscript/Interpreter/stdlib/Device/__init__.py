@@ -1,1 +1,1 @@
-__all__ = ['os', 'vendor', 'model']
+__all__ = ['os', 'guess_os', 'vendor', 'model']
