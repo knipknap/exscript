@@ -54,6 +54,9 @@ def usage():
     print "                 written to stdout."
     print "                 This is already the default behavior if the -c option was given"
     print "                 with a number greater than 1."
+    print "      --overwrite-logs"
+    print "                 Instructs Exscript to overwrite existing logfiles. The default"
+    print "                 is to append the output if a log already exists."
     print "  -n, --no-authentication"
     print "                 When given, the authentication procedure is skipped. Implies -i."
     print "      --no-auto-logout"
@@ -95,13 +98,14 @@ default_options = [
   ('default-domain=',   None, ''),
   ('non-interactive',   'i',  False),
   ('logdir=',           'l:', None),
-  ('protocol=',         'p:', 'telnet'),
   ('no-authentication', 'n',  False),
   ('no-prompt',         None, False),
   ('no-initial-prompt', None, False),
   ('no-auto-logout',    None, False),
+  ('overwrite-logs',    None, False),
   ('verbose=',          'v:', 0),
   ('parser-verbose=',   'V:', 0),
+  ('protocol=',         'p:', 'telnet'),
   ('ssh-auto-verify=',  None, False),
   ('ssh-key=',          None, None),
   ('version',           None, False),
@@ -137,6 +141,7 @@ def run(*args, **kwargs):
                         parser_verbose = options.get('parser-verbose'),
                         no_prompt      = options.get('no-prompt'),
                         domain         = options.get('default-domain'),
+                        overwrite_logs = options.get('overwrite-logs'),
                         logdir         = options.get('logdir'))
     exscript.add_hosts(hostnames)
 

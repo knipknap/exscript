@@ -34,7 +34,8 @@ class Exscript(object):
         self.global_defines = {}
         self.verbose        = kwargs.get('verbose')
         self.logdir         = kwargs.get('logdir')
-        self.domain         = kwargs.get('domain', '')
+        self.overwrite_logs = kwargs.get('overwrite_logs', False)
+        self.domain         = kwargs.get('domain',         '')
         self.parser         = Parser(debug     = kwargs.get('parser_verbose', 0),
                                      no_prompt = kwargs.get('no_prompt',      0))
 
@@ -233,9 +234,11 @@ class Exscript(object):
             else:
                 logfile       = os.path.join(self.logdir, this_host + '.log')
                 error_logfile = logfile + '.error'
+                overwrite     = self.overwrite_logs
                 sequence      = LoggedSequence(name          = this_host,
                                                logfile       = logfile,
-                                               error_logfile = error_logfile)
+                                               error_logfile = error_logfile,
+                                               overwrite_log = overwrite)
 
             # Choose the protocol.
             if this_proto == 'telnet':

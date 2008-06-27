@@ -21,45 +21,38 @@ False = 0
 class LoggedSequence(Sequence):
     def __init__(self, *args, **kwargs):
         Sequence.__init__(self, **kwargs)
-        lock_key_prefix             = 'lock::filesystem::'
-        self.logfile                = kwargs.get('logfile', None)
-        self.logfile_lock_key       = None
-        self.error_logfile          = kwargs.get('error_logfile', None)
-        self.error_logfile_lock_key = None
-        self.global_data            = None
-        if self.logfile is not None:
-            self.logfile_lock_key = lock_key_prefix + self.logfile
-        if self.error_logfile is not None:
-            self.error_logfile_lock_key = lock_key_prefix + self.error_logfile
+        self.logfile       = None
+        self.error_logfile = None
+        self.global_data   = None
+        if kwargs.get('overwrite_log'):
+            mode = 'w'
+        else:
+            mode = 'a'
+        if kwargs.has_key('logfile'):
+            self.logfile = open(kwargs.get('logfile'), mode)
+        if kwargs.has_key('error_logfile'):
+            self.error_logfile = open(kwargs.get('error_logfile'), mode)
         for action in self.actions:
             action.signal_connect('data_received', self._on_action_data_received)
             action.signal_connect('notify',        self._on_action_notify)
 
 
-    def _log(self, logfile_name, lock_key, data):
-        if logfile_name is None or lock_key is None:
+    def _log(self, logfile, data):
+        if logfile is None:
             return
-        logfile_lock = self.global_data.get(lock_key, None)
-        if logfile_lock is None:
-            logfile_lock = threading.Lock()
-            self.global_data[lock_key] = logfile_lock
-        logfile_lock.acquire()
         try:
-            logfile = open(logfile_name, 'a')
             logfile.write(data)
         except:
-            print 'Error while writing to logfile (%s)' % logfile_name
-            pass
-        logfile_lock.release()
+            print 'Error while writing to logfile (%s)' % logfile.name
 
 
     def _on_action_data_received(self, data):
-        self._log(self.logfile, self.logfile_lock_key, data)
+        self._log(self.logfile, data)
         self.signal_emit('data_received', data)
 
 
     def _on_action_notify(self, data):
-        self._log(self.logfile, self.logfile_lock_key, 'NOTIFICATION: %s\n' % data)
+        self._log(self.logfile, 'NOTIFICATION: %s\n' % data)
         self.signal_emit('notify', data)
 
 
@@ -80,6 +73,6 @@ class LoggedSequence(Sequence):
                 if not action.execute(global_lock, global_data, local_data):
                     return False
         except Exception, e:
-            self._log(self.error_logfile, self.error_logfile_lock_key, '%s\n' % e)
+            self._log(self.error_logfile, traceback.format_exc())
             raise
         return True
