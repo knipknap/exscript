@@ -3,8 +3,8 @@
 ## Date:        2007-06-04
 ## Description: Starts the Exscript interpreter to execute commands on a list 
 ##              of hosts.
-import os, getpass, re
-import sys
+import sys, os, getpass, re
+import termconnect
 sys.path.append('src')
 from Exscript        import Exscript
 from Exscript.FooLib import Interact
@@ -17,7 +17,7 @@ False = 0
 __version__ = '0.9.12'
 
 def usage():
-    print "Exscript %s" % __version__
+    print "Exscript", __version__, "with termconnect", termconnect.__version__
     print "Copyright (C) 2007 by Samuel Abels <http://debain.org>."
     print "Syntax: exscript [options] exscript [hostname [hostname ...]]"
     print "  -c, --connections NUM"
