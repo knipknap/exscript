@@ -4,7 +4,7 @@ import util
 signature = [('self', 'integer')]
 
 def execute(scope, force = None):
-    conn = scope.get('_connection')
+    conn = scope.get('__connection__')
     if force is None:
         util.update_host_info(scope, 0)
     elif force[0] == 1:

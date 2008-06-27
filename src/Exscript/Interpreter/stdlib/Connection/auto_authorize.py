@@ -1,5 +1,5 @@
 def execute(scope, password = [None]):
-    conn = scope.get('_connection')
+    conn = scope.get('__connection__')
     wq   = scope.get('__workqueue__')
     user = scope.get('__user__')
     lock = wq.get_data('lock::authentication::tacacs::%s' % user)

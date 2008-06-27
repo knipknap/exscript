@@ -7,7 +7,7 @@ def update_host_info(scope, force = 0):
         return
     scope.define(**{'_stdlib.device.have_remote_info': 1})
 
-    conn = scope.get('_connection')
+    conn = scope.get('__connection__')
     conn.execute('show version')
     response = conn.response.split('\n')[1:]
     for line in response:

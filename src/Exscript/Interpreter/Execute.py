@@ -33,10 +33,10 @@ class Execute(Token):
 
 
     def value(self):
-        if not self.parent.is_defined('_connection'):
-            error = 'Undefined variable "_connection"'
+        if not self.parent.is_defined('__connection__'):
+            error = 'Undefined variable "__connection__"'
             self.parent.runtime_error(self, error)
-        conn = self.parent.get('_connection')
+        conn = self.parent.get('__connection__')
 
         # Substitute variables in the command for values.
         command = string_re.sub(self.variable_sub_cb, self.string)
