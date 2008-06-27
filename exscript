@@ -127,7 +127,7 @@ def run(*args, **kwargs):
 
     # Show the version number, if requested.
     if options['version']:
-        print "Exscript %s" % __version__
+        print "Exscript", __version__, "with termconnect", termconnect.__version__
         sys.exit()
 
     # Extract the hostnames out of the command line arguments.
