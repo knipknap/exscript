@@ -10,6 +10,9 @@
 	src/Exscript/Exscript.py: Removed useless logfile locks. Added an overwrite 
 	option for logfiles.
 	* exscript, src/Exscript/Exscript.py: Support for selecting the ssh version.
+	* src/Exscript/Interpreter/stdlib/Connection/auto_authorize.py: New stdlib
+	function that attempts to automatically send the appropriate authorization
+	command to the remote host.
 
 2008-06-26 Samuel Abels <http://debain.org>
 
