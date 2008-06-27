@@ -246,7 +246,7 @@ class Exscript(object):
                                       globals(),
                                       locals(),
                                       'Telnet')
-            elif this_proto == 'ssh':
+            elif this_proto in ('ssh', 'ssh1', 'ssh2'):
                 protocol = __import__('termconnect.SSH',
                                       globals(),
                                       locals(),
@@ -264,7 +264,16 @@ class Exscript(object):
             authenticate = not kwargs.get('no-authentication', False)
             echo         = n_connections == 1 and not noecho
             wait         = not nip and not nop
-            sequence.add(Connect(protocol, this_host, echo = echo, auto_verify = av))
+            if this_proto == 'ssh1':
+                ssh_version = 1
+            elif this_proto == 'ssh2':
+                ssh_version = 2
+            else:
+                ssh_version = None # auto-select
+            protocol_args = dict(echo        = echo,
+                                 auto_verify = av,
+                                 ssh_version = ssh_version)
+            sequence.add(Connect(protocol, this_host, **protocol_args))
             if key is None and authenticate:
                 sequence.add(Authenticate(this_user, password = this_pass, wait = wait))
             elif authenticate:

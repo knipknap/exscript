@@ -9,6 +9,7 @@
 	* exscript, src/Exscript/TerminalActions/LoggedSequence.py,
 	src/Exscript/Exscript.py: Removed useless logfile locks. Added an overwrite 
 	option for logfiles.
+	* exscript, src/Exscript/Exscript.py: Support for selecting the ssh version.
 
 2008-06-26 Samuel Abels <http://debain.org>
 

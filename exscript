@@ -106,7 +106,7 @@ default_options = [
   ('verbose=',          'v:', 0),
   ('parser-verbose=',   'V:', 0),
   ('protocol=',         'p:', 'telnet'),
-  ('ssh-auto-verify=',  None, False),
+  ('ssh-auto-verify',   None, False),
   ('ssh-key=',          None, None),
   ('version',           None, False),
   ('help',              'h',  False)
