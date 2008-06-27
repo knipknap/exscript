@@ -22,11 +22,11 @@ class CommandScript(Action):
         assert exscript is not None
         Action.__init__(self)
         self.exscript = exscript
-        self.exscript.signal_connect('notify', self.emit)
+        self.exscript.signal_connect('notify', self.signal_emit)
 
 
     def _on_data_received(self, data, *args):
-        self.emit('data_received', data)
+        self.signal_emit('data_received', data)
 
 
     def execute(self, global_lock, global_data, local_data):
@@ -34,8 +34,8 @@ class CommandScript(Action):
         assert global_data is not None
         assert local_data  is not None
         local_data['transport'].set_on_data_received_cb(self._on_data_received)
-        conn = local_data['transport']
-        self.exscript.define(_connection = conn)
+        self.exscript.define(_connection = local_data['transport'])
+        self.exscript.define(__user__    = local_data['user'])
         self.exscript.execute()
         local_data['transport'].set_on_data_received_cb(None)
         return True

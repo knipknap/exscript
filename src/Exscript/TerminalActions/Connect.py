@@ -30,14 +30,14 @@ class Connect(Action):
 
 
     def _on_data_received(self, data, *args):
-        self.emit('data_received', data)
+        self.signal_emit('data_received', data)
 
 
     def execute(self, global_lock, global_data, local_data):
         assert global_lock is not None
         assert global_data is not None
         assert local_data  is not None
-        self.emit('notify', 'Connecting to %s' % self.hostname)
+        self.signal_emit('notify', 'Connecting to %s' % self.hostname)
         self.transport.debug = self.debug
         if not self.transport.connect(self.hostname):
             raise Exception('Connection failed.')

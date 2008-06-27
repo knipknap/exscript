@@ -15,15 +15,39 @@ class Exscript(object):
     don't count on API stability.
     """
     def __init__(self, **kwargs):
-        self.parser         = Parser(**kwargs)
+        """
+        Constructor.
+
+        kwargs: verbose: The verbosity level of the interpreter.
+                parser_verbose: The verbosity level of the parser.
+                domain: The default domain of the contacted hosts.
+                logdir: The directory into which the logs are written.
+                no_prompt: Whether the compiled program should wait for a 
+                           prompt each time after the Exscript sent a 
+                           command to the remote host.
+        """
         self.workqueue      = WorkQueue()
         self.exscript       = None
         self.exscript_code  = None
         self.hostnames      = []
         self.host_defines   = {}
         self.global_defines = {}
+        self.verbose        = kwargs.get('verbose')
         self.logdir         = kwargs.get('logdir')
         self.domain         = kwargs.get('domain', '')
+        self.parser         = Parser(debug     = kwargs.get('parser_verbose', 0),
+                                     no_prompt = kwargs.get('no_prompt',      0))
+
+        self.workqueue.signal_connect('job-started',   self._on_job_started)
+        self.workqueue.signal_connect('job-completed', self._on_job_completed)
+
+
+    def _on_job_started(self, job):
+        print job.getName(), 'started.'
+
+
+    def _on_job_completed(self, job):
+        print job.getName(), 'completed.'
 
 
     def add_hosts(self, hosts):
@@ -115,15 +139,10 @@ class Exscript(object):
         self.global_defines.update(kwargs)
 
 
-    def load(self, exscript_content, **kwargs):
+    def load(self, exscript_content):
         """
         Loads the given Exscript code, using the given options.
         MUST be called before run() is called.
-
-        kwargs: verbose: The verbosity level of the parser.
-                no-prompt: Whether the compiled program should wait for a 
-                           prompt each time after the Exscript sent a 
-                           command to the remote host.
         """
         # Parse the exscript.
         self.parser.define(**self.global_defines)
@@ -133,26 +152,21 @@ class Exscript(object):
             self.exscript      = self.parser.parse(exscript_content)
 	    self.exscript_code = exscript_content
         except Exception, e:
-            if kwargs['verbose'] > 0:
+            if self.verbose > 0:
                 raise
             print e
             sys.exit(1)
 
 
-    def load_from_file(self, filename, **kwargs):
+    def load_from_file(self, filename):
         """
         Loads the Exscript file with the given name, and calls load() to 
         process the code using the given options.
-
-        kwargs: verbose: The verbosity level of the parser.
-                no-prompt: Whether the compiled program should wait for a 
-                           prompt each time after the Exscript sent a 
-                           command to the remote host.
         """
         file = open(filename, 'r')
         exscript_content = file.read()
         file.close()
-        self.load(exscript_content, **kwargs)
+        self.load(exscript_content)
 
 
     def _run(self, **kwargs):
@@ -177,7 +191,6 @@ class Exscript(object):
         print 'Building sequence...'
         user      = kwargs.get('user')
         password  = kwargs.get('password')
-        password2 = kwargs.get('password2')
         for hostname in self.hostnames:
             # To save memory, limit the number of parsed (=in-memory) items.
             while self.workqueue.get_length() > n_connections * 2:
@@ -210,6 +223,7 @@ class Exscript(object):
             exscript = self.parser.parse(self.exscript_code)
             #exscript = copy.deepcopy(self.exscript)
             exscript.init(**variables)
+            exscript.define(__workqueue__ = self.workqueue)
 
             # One logfile per host.
             logfile       = None
@@ -245,7 +259,6 @@ class Exscript(object):
             nip          = kwargs.get('no-initial-prompt', False)
             nop          = kwargs.get('no-prompt',         False)
             authenticate = not kwargs.get('no-authentication', False)
-            authorize    = kwargs.get('authorize', False)
             echo         = n_connections == 1 and not noecho
             wait         = not nip and not nop
             sequence.add(Connect(protocol, this_host, echo = echo, auto_verify = av))
@@ -253,10 +266,6 @@ class Exscript(object):
                 sequence.add(Authenticate(this_user, password = this_pass, wait = wait))
             elif authenticate:
                 sequence.add(Authenticate(this_user, key_file = key,       wait = wait))
-            if authorize:
-                sequence.add(Authorize(password2, wait))
-            if kwargs.get('authorize2', False):
-                sequence.add(Authorize(this_pass, wait))
             sequence.add(CommandScript(exscript))
             sequence.add(Close())
             self.workqueue.enqueue(sequence)

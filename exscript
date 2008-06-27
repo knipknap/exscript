@@ -20,12 +20,6 @@ def usage():
     print "Exscript %s" % __version__
     print "Copyright (C) 2007 by Samuel Abels <http://debain.org>."
     print "Syntax: exscript [options] exscript [hostname [hostname ...]]"
-    print "  -a, --authorize"
-    print "                 When given, authorization is performed on devices that"
-    print "                 support AAA (by default, Exscript only authenticates)"
-    print "  -A, --authorize2"
-    print "                 Like -a, but uses the authentication password instead of"
-    print "                 asking for a password to be entered."
     print "  -c, --connections NUM"
     print "                 Maximum number of concurrent connections."
     print "                 NUM is a number between 1 and 20, default is 1"
@@ -93,8 +87,6 @@ def usage():
 # Define default options.
 default_defines = {'hostname': 'unknown'}
 default_options = [
-  ('authorize',         'a',  False),
-  ('authorize2',        'A',  False),
   ('no-echo',           None, False),
   ('connections=',      'c:', 1),
   ('csv-hosts=',        None, None),
@@ -134,25 +126,18 @@ def run(*args, **kwargs):
         print "Exscript %s" % __version__
         sys.exit()
 
-    # Check command line syntax.
-    if options['authorize'] and options['authorize2']:
-        print "Error: Can't use both, -a and -A switch."
-        sys.exit(1)
-    if options['no-authentication'] and options['authorize']:
-        print "Error: Can't use both, -n and -a switch."
-        sys.exit(1)
-    if options['no-authentication'] and options['authorize2']:
-        print "Error: Can't use both, -n and -A switch."
-        sys.exit(1)
-
+    # Extract the hostnames out of the command line arguments.
     try:
         filename  = args[0]
         hostnames = list(args[1:])
     except:
         usage()
         sys.exit(1)
-    exscript = Exscript(domain = options.get('default-domain'),
-                        logdir = options.get('logdir'))
+    exscript = Exscript(verbose        = options.get('verbose'),
+                        parser_verbose = options.get('parser-verbose'),
+                        no_prompt      = options.get('no-prompt'),
+                        domain         = options.get('default-domain'),
+                        logdir         = options.get('logdir'))
     exscript.add_hosts(hostnames)
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
@@ -205,9 +190,7 @@ def run(*args, **kwargs):
     # Load the code into the exscript.
     exscript.define(**options['define'])
     try:
-        exscript.load(exscript_content,
-                      verbose   = options['parser-verbose'],
-                      no_prompt = options['no-prompt'])
+        exscript.load(exscript_content)
     except Exception, e:
         if options['verbose'] > 0:
             raise
@@ -223,9 +206,6 @@ def run(*args, **kwargs):
             user, password      = Interact.get_login()
             options['user']     = user
             options['password'] = password
-        if options['authorize']:
-            msg = 'Please enter your authorization password: '
-            options['password2'] = getpass.getpass(msg)
     except:
         sys.exit(1)
 

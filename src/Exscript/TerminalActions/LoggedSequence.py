@@ -32,8 +32,8 @@ class LoggedSequence(Sequence):
         if self.error_logfile is not None:
             self.error_logfile_lock_key = lock_key_prefix + self.error_logfile
         for action in self.actions:
-            action.signal_connect('data_received', self._on_log_data_received)
-            action.signal_connect('notify',        self._on_log_data_received)
+            action.signal_connect('data_received', self._on_action_data_received)
+            action.signal_connect('notify',        self._on_action_notify)
 
 
     def _log(self, logfile_name, lock_key, data):
@@ -53,17 +53,19 @@ class LoggedSequence(Sequence):
         logfile_lock.release()
 
 
-    def _on_log_data_received(self, name, data):
-        if name == 'notify':
-            self._log(self.logfile, self.logfile_lock_key, 'NOTIFICATION: %s\n' % data)
-        else:
-            self._log(self.logfile, self.logfile_lock_key, data)
-        self.emit(name, data)
+    def _on_action_data_received(self, data):
+        self._log(self.logfile, self.logfile_lock_key, data)
+        self.signal_emit('data_received', data)
+
+
+    def _on_action_notify(self, data):
+        self._log(self.logfile, self.logfile_lock_key, 'NOTIFICATION: %s\n' % data)
+        self.signal_emit('notify', data)
 
 
     def add(self, action):
-        action.signal_connect('data_received', self._on_log_data_received)
-        action.signal_connect('notify',        self._on_log_data_received)
+        action.signal_connect('data_received', self._on_action_data_received)
+        action.signal_connect('notify',        self._on_action_notify)
         self.actions.append(action)
 
 

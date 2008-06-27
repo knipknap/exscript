@@ -30,7 +30,7 @@ class Authenticate(Action):
 
 
     def _on_data_received(self, data, *args):
-        self.emit('data_received', data)
+        self.signal_emit('data_received', data)
 
 
     def tacacs_lock(self, lock, data, user):

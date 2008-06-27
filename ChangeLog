@@ -1,3 +1,12 @@
+2008-06-27 Samuel Abels <http://debain.org>
+
+	* exscript, src/Exscript/Exscript.py: Fix several command line arguments
+	that were mistakenly ignored. Got rid of the -a and -A command line
+	arguments - this should now be done in the Exscript.
+	* src/Exscript/TerminalActions/*.py: Port to new SpiffWorkQueue API.
+	* src/Exscript/Interpreter/stdlib/Sys/tacacs_*.py: Add functions for
+	aquiring/releasing the global TACACS lock.
+
 2008-06-26 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/stdlib/Connection/*.py: Renamed send() to exec().

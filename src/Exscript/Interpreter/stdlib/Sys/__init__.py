@@ -1,1 +1,4 @@
-__all__ = ['message', 'wait']
+__all__ = ['message',
+           'tacacs_lock',
+           'tacacs_unlock',
+           'wait']
