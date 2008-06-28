@@ -16,6 +16,8 @@
 	* src/Exscript/FooLib/UrlParser.py, src/Exscript/TerminalActions/Connect.py,
 	src/Exscript/Exscript.py: Add support for specifying a port number using URL
 	style hostnames.
+	* exscript: Add the --sleep command line switch for waiting a period of time
+	before running the script.
 
 2008-06-27 Samuel Abels <http://debain.org>
 

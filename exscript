@@ -71,6 +71,9 @@ def usage():
     print "                 Specify which protocol to use to connect to the remote host."
     print "                 STRING is one of: telnet ssh"
     print "                 The default protocol is telnet."
+    print "      --sleep TIME"
+    print "                 Waits for the specified time before running the script."
+    print "                 TIME is a timespec as specified by the 'sleep' Unix command."
     print "      --ssh-auto-verify"
     print "                 Automatically confirms the 'Host key changed' SSH error "
     print "                 message with 'yes'. Highly insecure and not recommended."
@@ -105,6 +108,7 @@ default_options = [
   ('verbose=',          'v:', 0),
   ('parser-verbose=',   'V:', 0),
   ('protocol=',         'p:', 'telnet'),
+  ('sleep=',            None, ''),
   ('ssh-auto-verify',   None, False),
   ('ssh-key=',          None, None),
   ('version',           None, False),
@@ -221,6 +225,13 @@ def run(*args, **kwargs):
         str = match.group(1) or 'a value for "%s"' % key
         val = raw_input('Please enter %s: ' % str)
         options['define'][key] = val
+
+    # Wait until the specified time.
+    if options['sleep']:
+        print "Waiting for %s..." % options['sleep'],
+        sys.stdout.flush()
+        os.system('sleep %s' % options['sleep'])
+        print "time expired, starting script."
 
     exscript.run(**options)
 
