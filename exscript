@@ -9,7 +9,6 @@ sys.path.append('src')
 from Exscript        import Exscript
 from Exscript.FooLib import Interact
 from Exscript.FooLib import OptionParser
-from Exscript.FooLib import UrlParser
 
 True  = 1
 False = 0
@@ -213,6 +212,15 @@ def run(*args, **kwargs):
             options['password'] = password
     except:
         sys.exit(1)
+
+    # Ask for values of marked variables.
+    for key, val in options['define'].iteritems():
+        match = Exscript.bracket_expression_re.match(val)
+        if match is None:
+            continue
+        str = match.group(1) or 'a value for "%s"' % key
+        val = raw_input('Please enter %s: ' % str)
+        options['define'][key] = val
 
     exscript.run(**options)
 

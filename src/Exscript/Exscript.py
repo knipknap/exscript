@@ -14,6 +14,8 @@ class Exscript(object):
     Exscript's functions programmatically. One day it'll be cleaned up, so 
     don't count on API stability.
     """
+    bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
+
     def __init__(self, **kwargs):
         """
         Constructor.
@@ -51,14 +53,28 @@ class Exscript(object):
         print job.getName(), 'completed.'
 
 
+    def add_host(self, host):
+        """
+        Adds a single given host for executing the script later.
+        """
+        self.hostnames.append(host)
+        url = UrlParser.parse_url(host)
+        for key, val in url.vars.iteritems():
+            match = Exscript.bracket_expression_re.match(val[0])
+            if match is None:
+                continue
+            str = match.group(1) or 'a value for "%s"' % key
+            val = raw_input('Please enter %s: ' % str)
+            url.vars[key] = [val]
+        self.host_defines[host] = url.vars
+
+
     def add_hosts(self, hosts):
         """
         Adds the given list of hosts for executing the script later.
         """
-        self.hostnames += hosts
         for host in hosts:
-            query = UrlParser.parse_url(host)[4]
-            self.host_defines[host] = query
+            self.add_host(host)
 
 
     def add_hosts_from_file(self, filename):
@@ -109,7 +125,7 @@ class Exscript(object):
             line         = re.sub(r'[\r\n]*$', '', line)
             values       = line.split('\t')
             hostname_url = values.pop(0).strip()
-            hostname     = UrlParser.parse_url(hostname_url)[3]
+            hostname     = UrlParser.parse_url(hostname_url).hostname
 
             # Add the hostname to our list.
             if hostname != last_hostname:
@@ -190,8 +206,8 @@ class Exscript(object):
 
         # Build the action sequence.
         print 'Building sequence...'
-        user      = kwargs.get('user')
-        password  = kwargs.get('password')
+        user     = kwargs.get('user')
+        password = kwargs.get('password')
         for hostname in self.hostnames:
             # To save memory, limit the number of parsed (=in-memory) items.
             while self.workqueue.get_length() > n_connections * 2:
@@ -201,23 +217,24 @@ class Exscript(object):
             if kwargs.get('verbose', 0) > 0:
                 print 'Building sequence for %s.' % hostname
 
-            # Prepare variables that are passed to the exscript interpreter.
+            # Prepare variables that are passed to the Exscript interpreter.
             default_protocol = kwargs.get('protocol', 'telnet')
-            (this_proto,
-             this_user,
-             this_pass,
-             this_host,
-             this_query) = UrlParser.parse_url(hostname, default_protocol)
+            url              = UrlParser.parse_url(hostname, default_protocol)
+            this_proto       = url.protocol
+            this_user        = url.username
+            this_password    = url.password
+            this_host        = url.hostname
             if not '.' in this_host and len(self.domain) > 0:
                 this_host += '.' + self.domain
             variables = dict()
             variables.update(self.global_defines)
             variables.update(self.host_defines[hostname])
             variables['hostname'] = this_host
-            variables.update(this_query)
+            variables.update(url.vars)
             if this_user is None:
                 this_user = user
-                this_pass = password
+            if this_password is None:
+                this_password = password
 
             #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
             # recompiling numerous times.
@@ -275,9 +292,13 @@ class Exscript(object):
                                  ssh_version = ssh_version)
             sequence.add(Connect(protocol, this_host, **protocol_args))
             if key is None and authenticate:
-                sequence.add(Authenticate(this_user, password = this_pass, wait = wait))
+                sequence.add(Authenticate(this_user,
+                                          password = this_password,
+                                          wait     = wait))
             elif authenticate:
-                sequence.add(Authenticate(this_user, key_file = key,       wait = wait))
+                sequence.add(Authenticate(this_user,
+                                          key_file = key,
+                                          wait     = wait))
             sequence.add(CommandScript(exscript))
             sequence.add(Close())
             self.workqueue.enqueue(sequence)

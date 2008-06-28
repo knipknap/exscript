@@ -8,6 +8,15 @@ for i in range(256):
    _hextochr['%02x' % i] = chr(i)
    _hextochr['%02X' % i] = chr(i)
 
+class Url(object):
+    proto    = None
+    user     = None
+    password = None
+    hostname = None
+    port     = None
+    path     = None
+    vars     = None
+
 def parse_url(url, default_protocol = 'telnet'):
     # We substitute the protocol name by 'http' to support the usual http URL
     # scheme, because Python's urlparse does not support our protocols
@@ -24,15 +33,24 @@ def parse_url(url, default_protocol = 'telnet'):
     hostname   = netloc
     if netloc.find('@') >= 0:
         auth, hostname = netloc.split('@')
+
+    # Parse username and password.
     if auth != '':
         username = auth
-    if auth.find(':') >= 0:
-        username, password = auth.split(':')
-    return (protocol,
-            username,
-            password,
-            hostname or path,
-            urlparse_qs('http://dummy/?' + query))
+    auth = auth.split(':')
+    if len(auth) == 1:
+        username == auth[0]
+    elif len(auth) == 2:
+        username, password = auth
+
+    # Build the result.
+    result = Url()
+    result.protocol = protocol
+    result.username = username
+    result.password = password
+    result.hostname = hostname or path
+    result.vars     = urlparse_qs('http://dummy/?' + query)
+    return result
 
 
 def unquote(s):

@@ -2,6 +2,9 @@
 
 	* src/Exscript/Interpreter/ExpressionNode.py: Prioritize division and
 	multiplication over other arithmetic operators.
+	* src/Exscript/Exscript.py, exscript: Add support for interactive variables
+	by setting the variable value to a bracketed expression (such as {foo}).
+	* src/Exscript/FooLib/UrlParser.py: Cleanups.
 
 2008-06-27 Samuel Abels <http://debain.org>
 
