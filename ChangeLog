@@ -18,6 +18,7 @@
 	style hostnames.
 	* exscript: Add the --sleep command line switch for waiting a period of time
 	before running the script.
+	* src/Exscript/Exscript.py: Be less verbose by default.
 
 2008-06-27 Samuel Abels <http://debain.org>
 

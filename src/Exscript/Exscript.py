@@ -46,11 +46,19 @@ class Exscript(object):
 
 
     def _on_job_started(self, job):
-        print job.getName(), 'started.'
+        if self.workqueue.get_max_threads() > 1:
+            print job.getName(), 'started.'
 
 
     def _on_job_completed(self, job):
-        print job.getName(), 'completed.'
+        if self.workqueue.get_max_threads() > 1:
+            print job.getName(), 'completed.'
+
+
+    def _dbg(self, level, msg):
+        if level > self.verbose:
+            return
+        print msg
 
 
     def add_host(self, host):
@@ -200,12 +208,12 @@ class Exscript(object):
         self.workqueue.set_max_threads(n_connections)
         self.workqueue.set_debug(kwargs.get('verbose', 0))
 
-        print 'Starting engine...'
+        self._dbg(1, 'Starting engine...')
         self.workqueue.start()
-        print 'Engine running.'
+        self._dbg(1, 'Engine running.')
 
         # Build the action sequence.
-        print 'Building sequence...'
+        self._dbg(1, 'Building sequence...')
         user     = kwargs.get('user')
         password = kwargs.get('password')
         for hostname in self.hostnames:
@@ -214,8 +222,7 @@ class Exscript(object):
                 time.sleep(1)
                 gc.collect()
 
-            if kwargs.get('verbose', 0) > 0:
-                print 'Building sequence for %s.' % hostname
+            self._dbg(1, 'Building sequence for %s.' % hostname)
 
             # Prepare variables that are passed to the Exscript interpreter.
             default_protocol = kwargs.get('protocol', 'telnet')
@@ -306,12 +313,12 @@ class Exscript(object):
             self.workqueue.enqueue(sequence)
 
         # Wait until the engine is finished.
-        print 'All actions enqueued.'
+        self._dbg(1, 'All actions enqueued.')
         while self.workqueue.get_length() > 0:
             #print '%s jobs left, waiting.' % workqueue.get_length()
             time.sleep(1)
             gc.collect()
-        print 'Shutting down engine...'
+        self._dbg(1, 'Shutting down engine...')
 
 
     def run(self, **kwargs):
@@ -335,4 +342,4 @@ class Exscript(object):
             sys.exit(1)
 
         self.workqueue.shutdown()
-        print 'Engine shut down.'
+        self._dbg(1, 'Engine shut down.')
