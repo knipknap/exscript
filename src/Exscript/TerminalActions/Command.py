@@ -25,8 +25,8 @@ class Command(Action):
         self.wait    = wait
 
 
-    def _on_data_received(self, data, *args):
-        self.signal_emit('data_received', data)
+    def _on_data_received(self, *args):
+        self.signal_emit('data_received', *args)
 
 
     def execute(self, global_lock, global_data, local_data):

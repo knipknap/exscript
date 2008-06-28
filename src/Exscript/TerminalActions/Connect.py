@@ -19,7 +19,7 @@ True  = 1
 False = 0
 
 class Connect(Action):
-    def __init__(self, transport_module, hostname, *args, **kwargs):
+    def __init__(self, transport_module, hostname, **kwargs):
         assert transport_module is not None
         assert hostname         is not None
         Action.__init__(self)
@@ -30,8 +30,8 @@ class Connect(Action):
         self.transport             = transport_module.Transport(**kwargs)
 
 
-    def _on_data_received(self, data, *args):
-        self.signal_emit('data_received', data)
+    def _on_data_received(self, *args):
+        self.signal_emit('data_received', *args)
 
 
     def execute(self, global_lock, global_data, local_data):

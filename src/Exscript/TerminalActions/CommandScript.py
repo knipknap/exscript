@@ -18,15 +18,15 @@ True  = 1
 False = 0
 
 class CommandScript(Action):
-    def __init__(self, exscript, *args, **kwargs):
+    def __init__(self, exscript):
         assert exscript is not None
         Action.__init__(self)
         self.exscript = exscript
         self.exscript.signal_connect('notify', self.signal_emit)
 
 
-    def _on_data_received(self, data, *args):
-        self.signal_emit('data_received', data)
+    def _on_data_received(self, *args):
+        self.signal_emit('data_received', *args)
 
 
     def execute(self, global_lock, global_data, local_data):

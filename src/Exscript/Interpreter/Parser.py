@@ -18,7 +18,7 @@ import stdlib
 from Program import Program
 
 class Parser(object):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.input        = ''
         self.input_length = 0
         self.current_char = 0
@@ -57,7 +57,6 @@ class Parser(object):
             if not 'execute' in dir(item):
                 self.load_module(item)
                 continue
-            func_name = item_name + '.execute'
             item_name = item_name[item_name.index('.') + 1:].lower()
             if self.debug > 1:
                 print 'Loaded function', item_name
@@ -78,10 +77,10 @@ class Parser(object):
         if self.current_char >= self.input_length:
             self.token_buffer = ('EOF', '')
             return
-        for type, regex in self.grammar[-1]:
-            match = regex.match(self.input, self.current_char)
+        for token_type, token_regex in self.grammar[-1]:
+            match = token_regex.match(self.input, self.current_char)
             if match is not None:
-                self.token_buffer = (type, match.group(0))
+                self.token_buffer = (token_type, match.group(0))
                 #print "Match:", self.token_buffer
                 return
         end   = self.input.find('\n', self.current_char + 2)
@@ -177,9 +176,9 @@ class Parser(object):
 
 
     def parse_file(self, filename):
-        file   = open(filename)
-        string = file.read()
-        file.close()
+        fp     = open(filename)
+        string = fp.read()
+        fp.close()
         return self.parse(string)
 
 

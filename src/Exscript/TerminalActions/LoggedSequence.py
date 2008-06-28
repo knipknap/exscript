@@ -19,7 +19,7 @@ True  = 1
 False = 0
 
 class LoggedSequence(Sequence):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         Sequence.__init__(self, **kwargs)
         self.logfile        = None
         self.error_log_name = kwargs.get('error_logfile')
@@ -71,7 +71,7 @@ class LoggedSequence(Sequence):
                 action.debug = self.debug
                 if not action.execute(global_lock, global_data, local_data):
                     return False
-        except Exception, e:
+        except Exception:
             log = open(self.error_log_name, self.log_mode)
             traceback.print_exc(None, log)
             log.close()

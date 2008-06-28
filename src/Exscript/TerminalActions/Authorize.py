@@ -12,6 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+import threading
 from SpiffWorkQueue import Action
 
 True  = 1
@@ -26,8 +27,8 @@ class Authorize(Action):
         self.lock_key_prefix = 'lock::authentication::tacacs::'
 
 
-    def _on_data_received(self, data, *args):
-        self.signal_emit('data_received', data)
+    def _on_data_received(self, *args):
+        self.signal_emit('data_received', *args)
 
 
     def tacacs_lock(self, lock, data, user):

@@ -3,7 +3,7 @@
 ## Date:        2007-06-04
 ## Description: Starts the Exscript interpreter to execute commands on a list 
 ##              of hosts.
-import sys, os, getpass, re
+import sys, os, re
 import termconnect
 sys.path.append('src')
 from Exscript        import Exscript

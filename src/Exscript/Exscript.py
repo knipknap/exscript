@@ -1,4 +1,4 @@
-import sys, time, os, re, signal, gc, copy, socket, getpass
+import sys, time, os, re, signal, gc, copy
 from Interpreter     import Parser
 from FooLib          import UrlParser
 from SpiffWorkQueue  import WorkQueue
@@ -10,9 +10,9 @@ False = 0
 
 class Exscript(object):
     """
-    This is a half-assed, poorly designed quickhack API for accessing all of 
-    Exscript's functions programmatically. One day it'll be cleaned up, so 
-    don't count on API stability.
+    This is an API for accessing all of Exscript's functions programmatically.
+    This may still need some cleaning up, so don't count on API stability 
+    just yet.
     """
     bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
 
@@ -71,8 +71,8 @@ class Exscript(object):
             match = Exscript.bracket_expression_re.match(val[0])
             if match is None:
                 continue
-            str = match.group(1) or 'a value for "%s"' % key
-            val = raw_input('Please enter %s: ' % str)
+            string = match.group(1) or 'a value for "%s"' % key
+            val    = raw_input('Please enter %s: ' % string)
             url.vars[key] = [val]
         self.host_defines[host] = url.vars
 
@@ -92,16 +92,16 @@ class Exscript(object):
         # Open the file.
         if not os.path.exists(filename):
             raise IOError('No such file: %s' % filename)
-        file = open(filename, 'r')
+        file_handle = open(filename, 'r')
 
         # Read the hostnames.
-        for line in file:
+        for line in file_handle:
             hostname = line.strip()
             if hostname == '':
                 continue
             self.add_host(hostname)
 
-        file.close()
+        file_handle.close()
 
 
     def add_hosts_from_csv(self, filename):
@@ -112,10 +112,10 @@ class Exscript(object):
         # Open the file.
         if not os.path.exists(filename):
             raise IOError('No such file: %s' % filename)
-        file = open(filename, 'r')
+        file_handle = open(filename, 'r')
 
         # Read the header.
-        header = file.readline().rstrip()
+        header = file_handle.readline().rstrip()
         if re.search(r'^hostname\b', header) is None:
             msg  = 'Syntax error in CSV file header:'
             msg += ' File does not start with "hostname".'
@@ -129,7 +129,7 @@ class Exscript(object):
         
         # Walk through all lines and create a map that maps hostname to definitions.
         last_hostname = ''
-        for line in file:
+        for line in file_handle:
             line         = re.sub(r'[\r\n]*$', '', line)
             values       = line.split('\t')
             hostname_url = values.pop(0).strip()
@@ -153,7 +153,7 @@ class Exscript(object):
                 else:
                     self.host_defines[hostname][varname] = [value]
 
-        file.close()
+        file_handle.close()
 
 
     def define(self, **kwargs):
@@ -188,9 +188,9 @@ class Exscript(object):
         Loads the Exscript file with the given name, and calls load() to 
         process the code using the given options.
         """
-        file = open(filename, 'r')
-        exscript_content = file.read()
-        file.close()
+        file_handle = open(filename, 'r')
+        exscript_content = file_handle.read()
+        file_handle.close()
         self.load(exscript_content)
 
 

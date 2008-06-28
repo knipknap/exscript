@@ -29,8 +29,8 @@ class Authenticate(Action):
         self.lock_key_prefix = 'lock::authentication::tacacs::'
 
 
-    def _on_data_received(self, data, *args):
-        self.signal_emit('data_received', data)
+    def _on_data_received(self, *args):
+        self.signal_emit('data_received', *args)
 
 
     def tacacs_lock(self, lock, data, user):
