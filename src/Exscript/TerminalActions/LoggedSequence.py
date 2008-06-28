@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import threading
+import traceback
 from SpiffWorkQueue import Sequence
 
 True  = 1
@@ -21,17 +21,15 @@ False = 0
 class LoggedSequence(Sequence):
     def __init__(self, *args, **kwargs):
         Sequence.__init__(self, **kwargs)
-        self.logfile       = None
-        self.error_logfile = None
-        self.global_data   = None
+        self.logfile        = None
+        self.error_log_name = kwargs.get('error_logfile')
+        self.global_data    = None
         if kwargs.get('overwrite_log'):
-            mode = 'w'
+            self.log_mode = 'w'
         else:
-            mode = 'a'
+            self.log_mode = 'a'
         if kwargs.has_key('logfile'):
-            self.logfile = open(kwargs.get('logfile'), mode)
-        if kwargs.has_key('error_logfile'):
-            self.error_logfile = open(kwargs.get('error_logfile'), mode)
+            self.logfile = open(kwargs.get('logfile'), self.log_mode)
         for action in self.actions:
             action.signal_connect('data_received', self._on_action_data_received)
             action.signal_connect('notify',        self._on_action_notify)
@@ -42,6 +40,7 @@ class LoggedSequence(Sequence):
             return
         try:
             logfile.write(data)
+            logfile.flush()
         except:
             print 'Error while writing to logfile (%s)' % logfile.name
 
@@ -73,6 +72,8 @@ class LoggedSequence(Sequence):
                 if not action.execute(global_lock, global_data, local_data):
                     return False
         except Exception, e:
-            self._log(self.error_logfile, traceback.format_exc())
+            log = open(self.error_log_name, self.log_mode)
+            traceback.print_exc(None, log)
+            log.close()
             raise
         return True

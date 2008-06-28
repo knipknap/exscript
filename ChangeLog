@@ -5,6 +5,14 @@
 	* src/Exscript/Exscript.py, exscript: Add support for interactive variables
 	by setting the variable value to a bracketed expression (such as {foo}).
 	* src/Exscript/FooLib/UrlParser.py: Cleanups.
+	* src/Exscript/Exscript.py: Fix Python 2.3 compatibility.
+	* src/Exscript/FooLib/Interact.py: Fix: Asking a username now works when the
+	USER environment variable is not set.
+	* src/Exscript/Interpreter/stdlib/Connection/auto_authorize.py: Fix a
+	deadlock.
+	* src/Exscript/TerminalActions/LoggedSequence.py: Fix: Only create an error
+	log file if an error occured. Flush logfiles regularly. Log exceptions with
+	tracebacks.
 
 2008-06-27 Samuel Abels <http://debain.org>
 

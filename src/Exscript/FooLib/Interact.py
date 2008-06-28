@@ -26,7 +26,7 @@ def get_user():
         if user == '':
             user = env_user
     except:
-        user = raw_input('Please enter your user name: ' % user)
+        user = raw_input('Please enter your user name: ')
     return user
 
 

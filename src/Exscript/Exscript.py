@@ -91,7 +91,7 @@ class Exscript(object):
             hostname = line.strip()
             if hostname == '':
                 continue
-            self.add_hosts([hostname])
+            self.add_host(hostname)
 
         file.close()
 
@@ -130,7 +130,7 @@ class Exscript(object):
             # Add the hostname to our list.
             if hostname != last_hostname:
                 #print "Reading hostname", hostname, "from csv."
-                self.add_hosts([hostname_url])
+                self.add_host(hostname_url)
                 last_hostname = hostname
 
             # Define variables according to the definition.
@@ -287,9 +287,9 @@ class Exscript(object):
                 ssh_version = 2
             else:
                 ssh_version = None # auto-select
-            protocol_args = dict(echo        = echo,
-                                 auto_verify = av,
-                                 ssh_version = ssh_version)
+            protocol_args = {'echo':        echo,
+                             'auto_verify': av,
+                             'ssh_version': ssh_version}
             sequence.add(Connect(protocol, this_host, **protocol_args))
             if key is None and authenticate:
                 sequence.add(Authenticate(this_user,
