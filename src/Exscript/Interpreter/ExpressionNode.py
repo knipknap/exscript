@@ -59,6 +59,8 @@ class ExpressionNode(Token):
 
     def priority(self):
         if self.op is None:
+            return 7
+        elif self.op_type == 'arithmetic_operator' and self.op in ('*', '/'):
             return 6
         elif self.op_type == 'arithmetic_operator' and self.op != '.':
             return 5
