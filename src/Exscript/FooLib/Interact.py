@@ -22,11 +22,14 @@ def get_user():
     # Read username and password.
     try:
         env_user = getpass.getuser()
-        user     = raw_input('Please enter your user name [%s]: ' % env_user)
+    except:
+        env_user = ''
+    if env_user is None or env_user == '':
+        user = raw_input('Please enter your user name: ')
+    else:
+        user = raw_input('Please enter your user name [%s]: ' % env_user)
         if user == '':
             user = env_user
-    except:
-        user = raw_input('Please enter your user name: ')
     return user
 
 

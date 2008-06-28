@@ -24,6 +24,7 @@ class Connect(Action):
         assert hostname         is not None
         Action.__init__(self)
         self.hostname = hostname
+        self.port     = kwargs.get('port')
         kwargs['debug']            = self.debug
         kwargs['on_data_received'] = self._on_data_received
         self.transport             = transport_module.Transport(**kwargs)
@@ -39,7 +40,7 @@ class Connect(Action):
         assert local_data  is not None
         self.signal_emit('notify', 'Connecting to %s' % self.hostname)
         self.transport.debug = self.debug
-        if not self.transport.connect(self.hostname):
+        if not self.transport.connect(self.hostname, self.port):
             raise Exception('Connection failed.')
         local_data['hostname']  = self.hostname
         local_data['transport'] = self.transport

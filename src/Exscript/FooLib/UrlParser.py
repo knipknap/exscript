@@ -8,9 +8,19 @@ for i in range(256):
    _hextochr['%02x' % i] = chr(i)
    _hextochr['%02X' % i] = chr(i)
 
+well_known_ports = {
+    'ftp':    21,
+    'ssh':    22,
+    'telnet': 23,
+    'smtp':   25,
+    'http':   80,
+    'pop3':  110,
+    'imap':  143
+}
+
 class Url(object):
     proto    = None
-    user     = None
+    username = None
     password = None
     hostname = None
     port     = None
@@ -21,33 +31,34 @@ def parse_url(url, default_protocol = 'telnet'):
     # We substitute the protocol name by 'http' to support the usual http URL
     # scheme, because Python's urlparse does not support our protocols
     # directly.
-    protocol   = urlparse(url, default_protocol, 0)[0]
-    url        = 'http://' + re.sub('^' + protocol + ':(?://)?', '', url)
-    components = urlsplit(url, 'http', 0)
-    netloc     = components[1]
-    path       = components[2]
-    query      = components[3]
-    auth       = ''
-    username   = None
-    password   = None
-    hostname   = netloc
+    result          = Url()
+    result.protocol = urlparse(url, default_protocol, 0)[0]
+    result.port     = well_known_ports.get(result.protocol)
+    url             = 'http://' + re.sub('^' + result.protocol + ':(?://)?', '', url)
+    components      = urlsplit(url, 'http', 0)
+    netloc          = components[1]
+    path            = components[2]
+    query           = components[3]
+    auth            = ''
     if netloc.find('@') >= 0:
-        auth, hostname = netloc.split('@')
+        auth, netloc = netloc.split('@')
+
+    # Parse the hostname/port number.
+    netloc   = netloc.split(':')
+    hostname = netloc[0]
+    if len(netloc) == 2:
+        result.port = int(netloc[1])
 
     # Parse username and password.
     if auth != '':
-        username = auth
+        result.username = auth
     auth = auth.split(':')
     if len(auth) == 1:
-        username == auth[0]
+        result.username == auth[0]
     elif len(auth) == 2:
-        username, password = auth
+        result.username, result.password = auth
 
     # Build the result.
-    result = Url()
-    result.protocol = protocol
-    result.username = username
-    result.password = password
     result.hostname = hostname or path
     result.vars     = urlparse_qs('http://dummy/?' + query)
     return result

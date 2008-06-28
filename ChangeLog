@@ -13,6 +13,9 @@
 	* src/Exscript/TerminalActions/LoggedSequence.py: Fix: Only create an error
 	log file if an error occured. Flush logfiles regularly. Log exceptions with
 	tracebacks.
+	* src/Exscript/FooLib/UrlParser.py, src/Exscript/TerminalActions/Connect.py,
+	src/Exscript/Exscript.py: Add support for specifying a port number using URL
+	style hostnames.
 
 2008-06-27 Samuel Abels <http://debain.org>
 

@@ -290,6 +290,8 @@ class Exscript(object):
             protocol_args = {'echo':        echo,
                              'auto_verify': av,
                              'ssh_version': ssh_version}
+            if url.port is not None:
+                protocol_args['port'] = url.port
             sequence.add(Connect(protocol, this_host, **protocol_args))
             if key is None and authenticate:
                 sequence.add(Authenticate(this_user,
