@@ -12,7 +12,7 @@ fetch-svn:
 svn-install: fetch-svn
 	for DEP in $(DEPENDENCIES); do \
 		cd $(PACKAGE_NAME)-svn/$$DEP; \
-		python setup.py install --prefix /usr/local; \
+		python setup.py install --prefix $(PREFIX); \
 		cd -; \
 	done
 
