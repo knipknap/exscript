@@ -1,6 +1,10 @@
 2008-06-29 Samuel Abels <http://debain.org>
 
 	* Makefile: Add an installer that pulls dependencies from the repository.
+	* src/Exscript/Interpreter/Program.py,
+	src/Exscript/TerminalActions/CommandScript.py: Got rid of useless reference 
+	to Trackable.
+	* src/Exscript/Interpreter/Trackable.py: Removed useless file.
 
 2008-06-28 Samuel Abels <http://debain.org>
 

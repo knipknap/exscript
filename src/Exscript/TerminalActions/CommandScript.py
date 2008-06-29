@@ -22,7 +22,6 @@ class CommandScript(Action):
         assert exscript is not None
         Action.__init__(self)
         self.exscript = exscript
-        self.exscript.signal_connect('notify', self.signal_emit)
 
 
     def _on_data_received(self, *args):

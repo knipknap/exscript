@@ -15,11 +15,9 @@
 import copy
 from Exscript  import Exscript
 from Scope     import Scope
-from Trackable import Trackable
 
-class Program(Scope, Trackable):
+class Program(Scope):
     def __init__(self, parser, *args, **kwargs):
-        Trackable.__init__(self)
         Scope.__init__(self, 'Program', parser, None, **kwargs)
         self.init_variables = kwargs.get('variables', {})
         self.input          = parser.input
