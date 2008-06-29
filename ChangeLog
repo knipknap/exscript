@@ -1,3 +1,7 @@
+2008-06-29 Samuel Abels <http://debain.org>
+
+	* Makefile: Add an installer that pulls dependencies from the repository.
+
 2008-06-28 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/ExpressionNode.py: Prioritize division and

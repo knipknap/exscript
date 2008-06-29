@@ -1,0 +1,7 @@
+To install this package, run
+
+  sudo make install
+
+or alternatively
+
+  sudo python setup.py install --prefix /usr/local
