@@ -225,6 +225,7 @@ def run(*args, **kwargs):
         str = match.group(1) or 'a value for "%s"' % key
         val = raw_input('Please enter %s: ' % str)
         options['define'][key] = val
+    exscript.define(**options['define'])
 
     # Wait until the specified time.
     if options['sleep']:
