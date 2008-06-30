@@ -17,6 +17,9 @@ def execute(scope, password = [None]):
         else:
             lock.release()
             return # skip unsupported OSes
+    except TransportException:
+        lock.release()
+        return
     except:
         lock.release()
         raise
@@ -24,9 +27,6 @@ def execute(scope, password = [None]):
     # Send the login information.
     try:
         conn.authorize(password[0], wait = 1)
-    except TransportException:
-        lock.release()
-        return
     except:
         lock.release()
         raise
