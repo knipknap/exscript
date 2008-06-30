@@ -1,3 +1,5 @@
+from termconnect.Exception import TransportException
+
 def execute(scope, password = [None]):
     conn = scope.get('__connection__')
     wq   = scope.get('__workqueue__')
@@ -7,7 +9,7 @@ def execute(scope, password = [None]):
     # Send the authorization command.
     lock.acquire()
     try:
-        if conn.guess_os() in ('ios', 'ios-xr'):
+        if conn.guess_os() == 'ios':
             conn.send('enable\r')
         elif conn.guess_os() == 'junos':
             lock.release()
@@ -17,9 +19,17 @@ def execute(scope, password = [None]):
             return # skip unsupported OSes
     except:
         lock.release()
-        return
+        raise
 
     # Send the login information.
-    conn.authorize(password[0], wait = 1)
+    try:
+        conn.authorize(password[0], wait = 1)
+    except TransportException:
+        lock.release()
+        return
+    except:
+        lock.release()
+        raise
+
     lock.release()
     return 1

@@ -3,6 +3,7 @@ def execute(scope, data):
     response = []
     for line in data:
         conn.send(line)
-        response += conn.expect_prompt()
+        conn.expect_prompt()
+        response += conn.response.split('\n')[1:]
     scope.define(_buffer = response)
     return 1
