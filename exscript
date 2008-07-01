@@ -189,7 +189,7 @@ def run(*args, **kwargs):
     if not options['no-auto-logout']:
         exscript_content += r'''
     ## Exscript generated commands. ##
-    {if device.os(0) is "vrp"}
+    {if device.guess_os() is "vrp"}
         {connection.send("quit\r", 0)}
     {else}
         {connection.send("exit\r", 0)}

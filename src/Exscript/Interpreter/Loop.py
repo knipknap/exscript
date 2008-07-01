@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Exscript
+import Code
 from Token      import Token
 from Term       import Term
 from Expression import Expression
@@ -82,20 +82,15 @@ class Loop(Token):
         
         # End of statement.
         self.mark_end(parser)
-        parser.next_if('whitespace')
-        if not parser.next_if('close_curly_bracket'):
-            token = parser.token()
-            error = 'Unexpected %s at end of loop: %s' % token
-            parent.syntax_error(self, error)
 
         if len(self.iter_varnames) != len(self.list_variables):
             error = '%s lists, but only %s iterators in loop' % (len(self.iter_varnames),
                                                                  len(self.list_variables))
-            parent.syntax_error(self, error)
+            scope.syntax_error(self, error)
 
         # Body of the loop block.
         parser.skip(['whitespace', 'newline'])
-        self.block = Exscript.Exscript(parser, scope)
+        self.block = Code.Code(parser, scope)
 
 
     def value(self):

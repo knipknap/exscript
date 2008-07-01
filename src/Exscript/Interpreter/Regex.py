@@ -39,7 +39,7 @@ modifier_grammar = (
 
 modifier_grammar_c = []
 for type, regex in modifier_grammar:
-    modifier_grammar_c.append((type, re.compile(regex)))
+    modifier_grammar_c.append((type, re.compile(regex, re.M|re.S)))
 
 class Regex(Token):
     def __init__(self, parser, parent):

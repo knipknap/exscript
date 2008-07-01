@@ -42,8 +42,9 @@ class Exscript(Scope):
                 if buffer.strip() != '':
                     self.children.append(Execute(parser, self, buffer))
                     buffer = ''
-                code = Code(parser, self)
-                self.children.append(code)
+                if isinstance(parent, Code):
+                    break
+                self.children.append(Code(parser, self))
             elif parser.current_is('raw_data'):
                 if parser.token()[1].lstrip().startswith('#'):
                     while not parser.current_is('newline'):

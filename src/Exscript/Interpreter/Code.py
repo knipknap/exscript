@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
+import Exscript
 from Scope        import Scope
 from Append       import Append
 from Assign       import Assign
@@ -85,10 +86,11 @@ class Code(Scope):
         Scope.__init__(self, 'Code', parser, parent)
         parser.set_grammar(grammar_c)
         while 1:
+            parser.skip(['whitespace', 'newline'])
             if parser.next_if('close_curly_bracket'):
-                break
-            elif parser.next_if('whitespace') or parser.next_if('newline'):
-                pass
+                if isinstance(parent, Exscript.Exscript):
+                    break
+                self.children.append(Exscript.Exscript(parser, self))
             elif parser.current_is('keyword', 'append'):
                 self.children.append(Append(parser, self))
             elif parser.current_is('keyword', 'extract'):
@@ -106,10 +108,12 @@ class Code(Scope):
             elif parser.current_is('keyword', 'enter'):
                 self.children.append(Enter(parser, self))
             elif parser.current_is('keyword', 'else'):
-                parent.exit_request()
+                if not isinstance(parent, Code):
+                    parent.syntax_error(self, '"end" without a scope start')
                 break
             elif parser.next_if('keyword', 'end'):
-                parent.exit_request()
+                if not isinstance(parent, Code):
+                    parent.syntax_error(self, '"end" without a scope start')
                 parser.skip(['whitespace', 'newline'])
                 break
             elif parser.current_is('open_function_call'):

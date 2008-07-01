@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Exscript
+import Code
 from termconnect.Exception import TransportException
 from Scope                 import Scope
 
@@ -20,17 +20,10 @@ class Try(Scope):
     def __init__(self, parser, parent):
         Scope.__init__(self, 'Try', parser, parent)
 
-        # End of expression.
         parser.next_if('whitespace')
         parser.expect(self, 'keyword', 'try')
-        if not parser.next_if('close_curly_bracket'):
-            token = parser.token()
-            error = 'Unexpected %s at end of "try" keyword: %s' % token
-            parent.syntax_error(self, error)
-
-        # Body of the ignore_errors block.
         parser.skip(['whitespace', 'newline'])
-        self.block = Exscript.Exscript(parser, parent)
+        self.block = Code.Code(parser, parent)
 
 
     def value(self):

@@ -1,3 +1,11 @@
+2008-07-02 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Interpreter/*.py: Extremely improved the parser support for 
+	multi-line code snippets included between "{}" brackets. This also relaxes
+	whitespace rules in some places.
+	* test/whitespace.exscript: New test.
+	* exscript: Cleanups.
+
 2008-07-01 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/Code.py, src/Exscript/Interpreter/Term.py: Add

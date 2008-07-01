@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Exscript
+import Code
 from Token      import Token
 from Expression import Expression
 
@@ -27,16 +27,8 @@ class IfCondition(Token):
         self.expression = Expression(parser, scope)
         self.mark_end(parser)
 
-        # End of expression.
-        parser.next_if('whitespace')
-        if not parser.next_if('close_curly_bracket'):
-            token = parser.token()
-            error = 'Unexpected %s at end of if-condition: %s' % token
-            scope.syntax_error(self, error)
-
         # Body of the if block.
-        parser.skip(['whitespace', 'newline'])
-        self.if_block    = Exscript.Exscript(parser, scope)
+        self.if_block    = Code.Code(parser, scope)
         self.elif_blocks = []
         self.else_block  = None
 
@@ -53,8 +45,7 @@ class IfCondition(Token):
             return
 
         # There was no "elif", so we handle a normal "else" condition here.
-        parser.expect(self, 'close_curly_bracket')
-        self.else_block = Exscript.Exscript(parser, scope)
+        self.else_block = Code.Code(parser, scope)
 
 
     def value(self):
