@@ -1,3 +1,9 @@
+2008-07-01 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Interpreter/Code.py, src/Exscript/Interpreter/Term.py: Add
+	support for octal numbers using the 01234 format.
+	* src/Exscript/Interpreter/stdlib/File/*.py: Add chmod() function, cleanups.
+
 2008-06-30 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/Code.py, src/Exscript/Interpreter/Term.py: Add

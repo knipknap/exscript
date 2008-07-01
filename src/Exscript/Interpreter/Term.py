@@ -43,6 +43,8 @@ class Term(Token):
             self.term = Number(0)
         elif parser.next_if('keyword', 'true'):
             self.term = Number(1)
+        elif parser.next_if('octal_number'):
+            self.term = Number(int(token[1:], 8))
         elif parser.next_if('hex_number'):
             self.term = Number(int(token[2:], 16))
         elif parser.current_is('regex_delimiter'):

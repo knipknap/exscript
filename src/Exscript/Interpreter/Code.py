@@ -64,6 +64,7 @@ grammar = (
     ('whitespace',          r'[ \t]+'),
     ('keyword',             r'\b(?:' + '|'.join(keywords)  + r')\b'),
     ('assign',              r'='),
+    ('octal_number',        r'0\d+'),
     ('hex_number',          r'0x(?:\w\w)+'),
     ('comparison',          r'\b(?:' + '|'.join(operators) + r')\b'),
     ('arithmetic_operator', r'(?:\*|\+|-|/|\.)'),
