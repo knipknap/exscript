@@ -2,7 +2,7 @@ from termconnect.Exception import InvalidCommandException
 
 def execute(scope, password = [None]):
     conn = scope.get('__connection__')
-    wq   = scope.get('__workqueue__')
+    wq   = scope.get('__exscript__').workqueue
     user = scope.get('__user__')
     lock = wq.get_data('lock::authentication::tacacs::%s' % user)
 

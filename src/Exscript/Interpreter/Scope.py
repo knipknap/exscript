@@ -69,12 +69,26 @@ class Scope(Token):
         return 0
 
 
-    def get(self, name):
+    def get_vars(self):
+        """
+        Returns a complete list of all variables that are defined in this 
+        scope, including the variables of the parent.
+        """
+        if self.parent is None:
+            vars = {}
+            vars.update(self.variables)
+            return vars
+        vars = self.parent.get_vars()
+        vars.update(self.variables)
+        return vars
+
+
+    def get(self, name, default = None):
         if self.variables.has_key(name):
             return self.variables[name]
         if self.parent is None:
-            return None
-        return self.parent.get(name)
+            return default
+        return self.parent.get(name, default)
 
 
     def value(self):

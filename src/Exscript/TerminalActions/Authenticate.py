@@ -57,7 +57,8 @@ class Authenticate(Action):
             self.tacacs_lock(global_lock, global_data, self.user).release()
             conn.set_on_data_received_cb(None)
             raise
-        local_data['user'] = self.user
+        local_data['user']     = self.user
+        local_data['password'] = self.password
         self.tacacs_lock(global_lock, global_data, self.user).release()
         conn.set_on_data_received_cb(None)
         return True

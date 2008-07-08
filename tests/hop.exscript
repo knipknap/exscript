@@ -1,0 +1,6 @@
+{
+  connection.sendline("ssh sab@91.184.35.4")
+  connection.authorize()
+}
+ls -l
+exit

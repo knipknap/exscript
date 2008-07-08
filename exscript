@@ -182,6 +182,7 @@ def run(*args, **kwargs):
     # Read the Exscript.
     file = open(filename, 'r')
     exscript_content = file.read()
+    exscript.exscript_file = filename
     file.close()
 
     # Prepare the code that is executed after the user script has completed.

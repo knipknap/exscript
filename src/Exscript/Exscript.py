@@ -31,6 +31,7 @@ class Exscript(object):
         self.workqueue      = WorkQueue()
         self.exscript       = None
         self.exscript_code  = None
+        self.exscript_file  = None
         self.hostnames      = []
         self.host_defines   = {}
         self.global_defines = {}
@@ -164,6 +165,16 @@ class Exscript(object):
         self.global_defines.update(kwargs)
 
 
+    def define_host(self, hostname, **kwargs):
+        """
+        Defines the given variables such that they may be accessed from 
+        within the Exscript.
+        """
+        if not self.host_defines.has_key(hostname):
+            self.host_defines[hostname] = {}
+        self.host_defines[hostname].update(kwargs)
+
+
     def load(self, exscript_content):
         """
         Loads the given Exscript code, using the given options.
@@ -172,9 +183,10 @@ class Exscript(object):
         # Parse the exscript.
         self.parser.define(**self.global_defines)
         self.parser.define(**self.host_defines[self.hostnames[0]])
+        self.parser.define(__filename__ = self.exscript_file)
         self.parser.define(hostname = self.hostnames[0])
         try:
-            self.exscript      = self.parser.parse(exscript_content)
+            self.exscript = self.parser.parse(exscript_content)
 	    self.exscript_code = exscript_content
         except Exception, e:
             if self.verbose > 0:
@@ -189,9 +201,121 @@ class Exscript(object):
         process the code using the given options.
         """
         file_handle = open(filename, 'r')
-        exscript_content = file_handle.read()
+        self.exscript_file = filename
+        exscript_content   = file_handle.read()
         file_handle.close()
         self.load(exscript_content)
+
+
+    def _new_job(self, hostname, **kwargs):
+        """
+        Compiles the current exscript, and returns a new workqueue sequence 
+        for it that is initialized and has all the variables defined.
+        """
+        # Prepare variables that are passed to the Exscript interpreter.
+        user             = kwargs.get('user')
+        password         = kwargs.get('password')
+        default_protocol = kwargs.get('protocol', 'telnet')
+        url              = UrlParser.parse_url(hostname, default_protocol)
+        this_proto       = url.protocol
+        this_user        = url.username
+        this_password    = url.password
+        this_host        = url.hostname
+        if not '.' in this_host and len(self.domain) > 0:
+            this_host += '.' + self.domain
+        variables = dict()
+        variables.update(self.global_defines)
+        variables.update(self.host_defines[hostname])
+        variables['hostname'] = this_host
+        variables.update(url.vars)
+        if this_user is None:
+            this_user = user
+        if this_password is None:
+            this_password = password
+
+        #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
+        # recompiling numerous times.
+        self.parser.define(**variables)
+        for key, value in variables.iteritems():
+            print "DEF", key, value
+        if kwargs.has_key('filename'):
+            exscript = self.parser.parse_file(kwargs.get('filename'))
+        else:
+            exscript_code = kwargs.get('code', self.exscript_code)
+            exscript      = self.parser.parse(exscript_code)
+        #exscript = copy.deepcopy(self.exscript)
+        exscript.init(**variables)
+        exscript.define(__filename__ = self.exscript_file)
+        exscript.define(__exscript__ = self)
+
+        # One logfile per host.
+        logfile       = None
+        error_logfile = None
+        if self.logdir is None:
+            sequence = Sequence(name = this_host)
+        else:
+            logfile       = os.path.join(self.logdir, this_host + '.log')
+            error_logfile = logfile + '.error'
+            overwrite     = self.overwrite_logs
+            sequence      = LoggedSequence(name          = this_host,
+                                           logfile       = logfile,
+                                           error_logfile = error_logfile,
+                                           overwrite_log = overwrite)
+
+        # Choose the protocol.
+        if this_proto == 'telnet':
+            protocol = __import__('termconnect.Telnet',
+                                  globals(),
+                                  locals(),
+                                  'Telnet')
+        elif this_proto in ('ssh', 'ssh1', 'ssh2'):
+            protocol = __import__('termconnect.SSH',
+                                  globals(),
+                                  locals(),
+                                  'SSH')
+        else:
+            print 'Unsupported protocol %s' % this_proto
+            return None
+
+        # Build the sequence.
+        noecho       = kwargs.get('no-echo',           False)
+        key          = kwargs.get('ssh-key',           None)
+        av           = kwargs.get('ssh-auto-verify',   None)
+        nip          = kwargs.get('no-initial-prompt', False)
+        nop          = kwargs.get('no-prompt',         False)
+        authenticate = not kwargs.get('no-authentication', False)
+        echo         = kwargs.get('connections', 1) == 1 and not noecho
+        wait         = not nip and not nop
+        if this_proto == 'ssh1':
+            ssh_version = 1
+        elif this_proto == 'ssh2':
+            ssh_version = 2
+        else:
+            ssh_version = None # auto-select
+        protocol_args = {'echo':        echo,
+                         'auto_verify': av,
+                         'ssh_version': ssh_version}
+        if url.port is not None:
+            protocol_args['port'] = url.port
+        sequence.add(Connect(protocol, this_host, **protocol_args))
+        if key is None and authenticate:
+            sequence.add(Authenticate(this_user,
+                                      password = this_password,
+                                      wait     = wait))
+        elif authenticate:
+            sequence.add(Authenticate(this_user,
+                                      key_file = key,
+                                      wait     = wait))
+        sequence.add(CommandScript(exscript))
+        sequence.add(Close())
+
+        if kwargs.get('priority') == 'force':
+            self.workqueue.priority_enqueue(sequence, True)
+        elif kwargs.get('priority') == 'high':
+            self.workqueue.priority_enqueue(sequence)
+        else:
+            self.workqueue.enqueue(sequence)
+        return sequence
 
 
     def _run(self, **kwargs):
@@ -214,103 +338,14 @@ class Exscript(object):
 
         # Build the action sequence.
         self._dbg(1, 'Building sequence...')
-        user     = kwargs.get('user')
-        password = kwargs.get('password')
-        for hostname in self.hostnames:
+        for hostname in self.hostnames[:]:
             # To save memory, limit the number of parsed (=in-memory) items.
             while self.workqueue.get_length() > n_connections * 2:
                 time.sleep(1)
                 gc.collect()
 
             self._dbg(1, 'Building sequence for %s.' % hostname)
-
-            # Prepare variables that are passed to the Exscript interpreter.
-            default_protocol = kwargs.get('protocol', 'telnet')
-            url              = UrlParser.parse_url(hostname, default_protocol)
-            this_proto       = url.protocol
-            this_user        = url.username
-            this_password    = url.password
-            this_host        = url.hostname
-            if not '.' in this_host and len(self.domain) > 0:
-                this_host += '.' + self.domain
-            variables = dict()
-            variables.update(self.global_defines)
-            variables.update(self.host_defines[hostname])
-            variables['hostname'] = this_host
-            variables.update(url.vars)
-            if this_user is None:
-                this_user = user
-            if this_password is None:
-                this_password = password
-
-            #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
-            # recompiling numerous times.
-            exscript = self.parser.parse(self.exscript_code)
-            #exscript = copy.deepcopy(self.exscript)
-            exscript.init(**variables)
-            exscript.define(__workqueue__ = self.workqueue)
-
-            # One logfile per host.
-            logfile       = None
-            error_logfile = None
-            if self.logdir is None:
-                sequence = Sequence(name = this_host)
-            else:
-                logfile       = os.path.join(self.logdir, this_host + '.log')
-                error_logfile = logfile + '.error'
-                overwrite     = self.overwrite_logs
-                sequence      = LoggedSequence(name          = this_host,
-                                               logfile       = logfile,
-                                               error_logfile = error_logfile,
-                                               overwrite_log = overwrite)
-
-            # Choose the protocol.
-            if this_proto == 'telnet':
-                protocol = __import__('termconnect.Telnet',
-                                      globals(),
-                                      locals(),
-                                      'Telnet')
-            elif this_proto in ('ssh', 'ssh1', 'ssh2'):
-                protocol = __import__('termconnect.SSH',
-                                      globals(),
-                                      locals(),
-                                      'SSH')
-            else:
-                print 'Unsupported protocol %s' % this_proto
-                continue
-
-            # Build the sequence.
-            noecho       = kwargs.get('no-echo',           False)
-            key          = kwargs.get('ssh-key',           None)
-            av           = kwargs.get('ssh-auto-verify',   None)
-            nip          = kwargs.get('no-initial-prompt', False)
-            nop          = kwargs.get('no-prompt',         False)
-            authenticate = not kwargs.get('no-authentication', False)
-            echo         = n_connections == 1 and not noecho
-            wait         = not nip and not nop
-            if this_proto == 'ssh1':
-                ssh_version = 1
-            elif this_proto == 'ssh2':
-                ssh_version = 2
-            else:
-                ssh_version = None # auto-select
-            protocol_args = {'echo':        echo,
-                             'auto_verify': av,
-                             'ssh_version': ssh_version}
-            if url.port is not None:
-                protocol_args['port'] = url.port
-            sequence.add(Connect(protocol, this_host, **protocol_args))
-            if key is None and authenticate:
-                sequence.add(Authenticate(this_user,
-                                          password = this_password,
-                                          wait     = wait))
-            elif authenticate:
-                sequence.add(Authenticate(this_user,
-                                          key_file = key,
-                                          wait     = wait))
-            sequence.add(CommandScript(exscript))
-            sequence.add(Close())
-            self.workqueue.enqueue(sequence)
+            self._new_job(hostname, **kwargs)
 
         # Wait until the engine is finished.
         self._dbg(1, 'All actions enqueued.')

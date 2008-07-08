@@ -1,3 +1,17 @@
+2008-07-08 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Interpreter/stdlib/Sys/run.py, tests/hop.exscript, 
+	tests/subtemplate.exscript, tests/ls.exscript, exscript, 
+	src/Exscript/Exscript.py, src/Exscript/Interpreter/Scope.py, 
+	src/Exscript/Interpreter/stdlib/Connection/auto_authorize.py, 
+	src/Exscript/Interpreter/stdlib/Sys/__init__.py, 
+	src/Exscript/TerminalActions/Authenticate.py, 
+	src/Exscript/TerminalActions/CommandScript.py: It is now possible to 
+	start a new Job immediately even while the engine is already running and 
+	after the queue has been filled. Added new stdlib function run() to 
+	allow for doing just that from within an Exscript. Added sample Exscripts 
+	that make use of the new functionality.
+
 2008-07-02 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/*.py: Extremely improved the parser support for 

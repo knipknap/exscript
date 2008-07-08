@@ -1,5 +1,4 @@
 * Create a clean/complete API for the Exscript module.
 * Create tests.
 * Create an installer that builds a self-contained package and drags FooLib.
-* Make verbosity saner.
 * Try to make the "fail" keyword saner.
