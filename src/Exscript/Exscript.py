@@ -236,8 +236,6 @@ class Exscript(object):
         #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
         # recompiling numerous times.
         self.parser.define(**variables)
-        for key, value in variables.iteritems():
-            print "DEF", key, value
         if kwargs.has_key('filename'):
             exscript = self.parser.parse_file(kwargs.get('filename'))
         else:

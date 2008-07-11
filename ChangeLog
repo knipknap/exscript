@@ -1,3 +1,10 @@
+2008-07-11 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Interpreter/stdlib/Sys/tacacs_lock.py,
+	src/Exscript/Interpreter/stdlib/Sys/tacacs_unlock.py: Fix: Were completely
+	broken.
+	* src/Exscript/Exscript.py: Remove debug info.
+
 2008-07-08 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/stdlib/Sys/run.py, tests/hop.exscript, 
