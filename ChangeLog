@@ -1,3 +1,7 @@
+2008-07-14 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Interpreter/stdlib/File/rm.py: New stdlib function "rm".
+
 2008-07-11 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/stdlib/Sys/tacacs_lock.py,

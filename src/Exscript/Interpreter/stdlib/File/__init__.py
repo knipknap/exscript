@@ -1,1 +1,1 @@
-__all__ = ['chmod', 'clear', 'read', 'write']
+__all__ = ['chmod', 'clear', 'read', 'rm', 'write']
