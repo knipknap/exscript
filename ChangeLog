@@ -1,3 +1,8 @@
+2008-07-15 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Interpreter/stdlib/Connection/close.py: New stdlib function 
+	"close".
+
 2008-07-14 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/stdlib/File/rm.py: New stdlib function "rm".

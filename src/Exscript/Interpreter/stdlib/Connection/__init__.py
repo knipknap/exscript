@@ -1,6 +1,7 @@
 __all__ = ['authenticate',
            'authorize',
            'auto_authorize',
+           'close',
            'set_error',
            'set_prompt',
            'set_timeout',

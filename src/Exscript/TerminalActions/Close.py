@@ -18,8 +18,9 @@ True  = 1
 False = 0
 
 class Close(Action):
-    def __init__(self):
+    def __init__(self, force = False):
         Action.__init__(self)
+        self.force = force
 
 
     def _on_data_received(self, *args):
@@ -31,6 +32,6 @@ class Close(Action):
         assert global_data is not None
         assert local_data  is not None
         local_data['transport'].set_on_data_received_cb(self._on_data_received)
-        local_data['transport'].close()
+        local_data['transport'].close(self.force)
         local_data['transport'].set_on_data_received_cb(None)
         return True
