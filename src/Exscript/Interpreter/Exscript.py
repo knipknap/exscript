@@ -53,7 +53,13 @@ class Exscript(Scope):
                 buffer += parser.token()[1]
                 parser.next()
             elif parser.current_is('escaped_data'):
-                buffer += parser.token()[1][1]
+                token = parser.token()[1]
+                if token[1] == '$':
+                    # An escaped $ is handeled by the Execute() token, so
+                    # we do not strip the \ here.
+                    buffer += token
+                else:
+                    buffer += token[1]
                 parser.next()
             elif parser.next_if('newline'):
                 if buffer.strip() != '':

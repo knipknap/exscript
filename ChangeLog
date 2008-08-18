@@ -1,3 +1,7 @@
+2008-08-04 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Interpreter/*: Fix escaping in global scope.
+
 2008-07-15 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/stdlib/Connection/close.py: New stdlib function 
@@ -88,7 +92,7 @@
 	arguments - this should now be done in the Exscript.
 	* src/Exscript/TerminalActions/*.py: Port to new SpiffWorkQueue API.
 	* src/Exscript/Interpreter/stdlib/Sys/tacacs_*.py: Add functions for
-	aquiring/releasing the global TACACS lock.
+	acquiring/releasing the global TACACS lock.
 	* exscript, src/Exscript/TerminalActions/LoggedSequence.py,
 	src/Exscript/Exscript.py: Removed useless logfile locks. Added an overwrite 
 	option for logfiles.
@@ -153,11 +157,6 @@
 
 	* lib/Exscript/stdlib/IPv4/util.py: No longer throw a warning in Python >=
 	2.3.
-
-2008-03-19 Samuel Abels <http://debain.org>
-
-	* lib/Exscript/stdlib/*: Added the List and IPv4 namespaces, with several 
-	new functions.
 
 2008-03-19 Samuel Abels <http://debain.org>
 

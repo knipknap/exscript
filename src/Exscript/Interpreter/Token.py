@@ -13,22 +13,30 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-string_re = re.compile(r'(?<!\\)\$([a-z][\w_]+\b)', re.I)
+
+varname_re = re.compile(r'[a-z][\w_]*',       re.I)
+string_re  = re.compile(r'(\\?)\$([\w_]*\b)', re.I)
 
 class Token(object):
     def __init__(self, name, parser):
-        self.name  = name
-        self.line  = parser.current_line
-        self.char  = parser.current_char
-        self.end   = parser.current_char + 10
+        self.name = name
+        self.line = parser.current_line
+        self.char = parser.current_char
+        self.end  = parser.current_char + 10
         self.mark_end(parser, parser.current_char + 10)
 
 
     # Tokens that include variables in a string may use this callback to
     # make sure that the variable is already declared.
     def variable_test_cb(self, match):
-        varname = match.group(1)
-        value   = self.parent.get(varname)
+        escape  = match.group(1)
+        varname = match.group(2)
+        if escape == '\\':
+            return
+        if not varname_re.match(varname):
+            self.char = self.char + self.string.find('$' + varname)
+            self.parent.runtime_error(self, '%s is not a variable name' % varname)
+        value = self.parent.get(varname)
         if value is None:
             self.char = self.char + self.string.find('$' + varname)
             self.parent.generic_error(self, 'Undefined', 'Undefined variable %s' % varname)
@@ -41,8 +49,14 @@ class Token(object):
     # Tokens that include variables in a string may use this callback to
     # substitute the variable against its value.
     def variable_sub_cb(self, match):
-        varname = match.group(1)
-        value   = self.parent.get(varname)
+        escape  = match.group(1)
+        varname = match.group(2)
+        if escape == '\\':
+            return '$' + varname
+        if not varname_re.match(varname):
+            self.char = self.char + self.string.find('$' + varname)
+            self.parent.runtime_error(self, '%s is not a variable name' % varname)
+        value = self.parent.get(varname)
         if value is None:
             self.char = self.char + self.string.find('$' + varname)
             self.parent.runtime_error(self, 'Undefined variable %s' % varname)
