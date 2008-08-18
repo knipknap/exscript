@@ -1,5 +1,5 @@
 def execute(scope):
     conn = scope.get('__connection__')
-    conn.close(True)
+    conn.close(1)
     scope.define(_buffer = conn.response)
     return 1
