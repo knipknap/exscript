@@ -10,7 +10,7 @@ False = 0
 
 class Exscript(object):
     """
-    This is an API for accessing all of Exscript's functions programmatically.
+    API for accessing all of Exscript's functions programmatically.
     This may still need some cleaning up, so don't count on API stability 
     just yet.
     """
@@ -20,13 +20,15 @@ class Exscript(object):
         """
         Constructor.
 
-        kwargs: verbose: The verbosity level of the interpreter.
-                parser_verbose: The verbosity level of the parser.
-                domain: The default domain of the contacted hosts.
-                logdir: The directory into which the logs are written.
-                no_prompt: Whether the compiled program should wait for a 
-                           prompt each time after the Exscript sent a 
-                           command to the remote host.
+        @type  kwargs: dict
+        @param kwargs: The following options are supported:
+            - verbose: The verbosity level of the interpreter.
+            - parser_verbose: The verbosity level of the parser.
+            - domain: The default domain of the contacted hosts.
+            - logdir: The directory into which the logs are written.
+            - no_prompt: Whether the compiled program should wait for a 
+            prompt each time after the Exscript sent a command to the 
+            remote host.
         """
         self.workqueue      = WorkQueue()
         self.exscript       = None
@@ -65,6 +67,9 @@ class Exscript(object):
     def add_host(self, host):
         """
         Adds a single given host for executing the script later.
+
+        @type  host: string
+        @param host: A hostname or an IP address.
         """
         self.hostnames.append(host)
         url = UrlParser.parse_url(host)
@@ -81,6 +86,9 @@ class Exscript(object):
     def add_hosts(self, hosts):
         """
         Adds the given list of hosts for executing the script later.
+
+        @type  hosts: list[string]
+        @param hosts: A list of hostnames or IP addresses.
         """
         for host in hosts:
             self.add_host(host)
@@ -89,6 +97,9 @@ class Exscript(object):
     def add_hosts_from_file(self, filename):
         """
         Reads a list of hostnames from the file with the given name.
+
+        @type  filename: string
+        @param filename: A full filename.
         """
         # Open the file.
         if not os.path.exists(filename):
@@ -109,6 +120,9 @@ class Exscript(object):
         """
         Reads a list of hostnames and variables from the .csv file with the 
         given name.
+
+        @type  filename: string
+        @param filename: A full filename.
         """
         # Open the file.
         if not os.path.exists(filename):
@@ -161,6 +175,9 @@ class Exscript(object):
         """
         Defines the given variables such that they may be accessed from 
         within the Exscript.
+
+        @type  kwargs: dict
+        @param kwargs: Variables to make available to the Exscript.
         """
         self.global_defines.update(kwargs)
 
@@ -168,7 +185,13 @@ class Exscript(object):
     def define_host(self, hostname, **kwargs):
         """
         Defines the given variables such that they may be accessed from 
-        within the Exscript.
+        within the Exscript only while logged into the specified 
+        hostname.
+
+        @type  hostname: string
+        @param hostname: A hostname or an IP address.
+        @type  kwargs: dict
+        @param kwargs: Variables to make available to the Exscript.
         """
         if not self.host_defines.has_key(hostname):
             self.host_defines[hostname] = {}
@@ -178,7 +201,11 @@ class Exscript(object):
     def load(self, exscript_content):
         """
         Loads the given Exscript code, using the given options.
-        MUST be called before run() is called.
+        MUST be called before run() is called, either directly or through 
+        load_from_file().
+
+        @type  exscript_content: string
+        @param exscript_content: An exscript.
         """
         # Parse the exscript.
         self.parser.define(**self.global_defines)
@@ -199,6 +226,9 @@ class Exscript(object):
         """
         Loads the Exscript file with the given name, and calls load() to 
         process the code using the given options.
+
+        @type  filename: string
+        @param filename: A full filename.
         """
         file_handle = open(filename, 'r')
         self.exscript_file = filename
@@ -358,6 +388,9 @@ class Exscript(object):
         """
         Executes the currently loaded Exscript file on the currently added 
         hosts. Allows for interrupting with SIGINT.
+
+        @type  kwargs: dict
+        @param kwargs: Equivalent to Exscript's command line options.
         """
         # Make sure that we shut down properly even when SIGINT or SIGTERM is sent.
         def on_posix_signal(signum, frame):

@@ -1,3 +1,7 @@
+2008-09-05 Samuel Abels <http://debain.org>
+
+	* doc/, src/Exscript/Exscript.py: Add documentation.
+
 2008-08-04 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/*: Fix escaping in global scope.
