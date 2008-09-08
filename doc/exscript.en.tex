@@ -591,7 +591,7 @@ For example, the following function instructs \product to wait for 10 seconds:
 
 The following functions are currently provided: 
 
-TODO
+\input{stdlib.tex}
 
 
 \subsection{Exiting a Script}
@@ -758,17 +758,48 @@ for another ``[confirm]'' after executing line 5 and line 6.
 \subsection{A Command Is Sent Too Soon}
 
 This happens when a prompt was incorrectly detected in the response of a 
-remote host.
+remote host. For example, consider using the following script:
 
-TODO 
+\begin{lstlisting}
+show interface descriptions{extract /^(\S+\d)/ as interfaces}
+show diag summary
+\end{lstlisting}
+
+Using this script, the following conversation may take place:
+
+\begin{lstlisting}
+1. router> show interface descriptions
+2. Interface              Status         Protocol Description
+3. Lo0                    up             up       Description of my router>
+4. PO0/0                  admin down     down     
+5. Serial1/0              up             up       My WAN link
+6. router> 
+\end{lstlisting}
+
+Note that line 3 happens to contain the string ``Router>'', which looks like 
+a prompt when it really is just a description. So after receiving the ``>'' 
+character in line 3, Exscript believes that the router is asking for the 
+next command to be sent. So it immediately sends the next command (``show 
+diag summary'') to the router, even that the next prompt was not yet received.
+
+Note that this type of error may not immediately show, because the router may 
+actually accept the command even though it was sent before a prompt was sent. 
+It will lead to an offset however, and may lead to errors when trying to 
+capture the response. It may also lead to the script terminating too early.
+
+To fix this, make sure that the conversation with the remote host does 
+not include any strings that are incorrectly recognized as prompts. You can 
+do this by using the ``connection.set\_prompt(...)'' function as explained 
+in the sections above. 
 
 
 \subsection{The Connection Is Closed Too Soon}
 
 This is essentially the same problem as explained under ``A Command Is Sent 
-Too Soon''. When a prompt is incorrectly detected, the next command is 
-executed. When all commands were executed and the next prompt is received 
-(i.e. the end of the script was reached), the connection is closed.
+Too Soon''. Whenever a prompt is (correctly or incorrectly) detected, 
+the next command is send to the remote host.
+If all commands were already executed and the next prompt is received (i.e. 
+the end of the script was reached), the connection is closed.
 
 To fix this, make sure that the conversation with the remote host does 
 not include any strings that are incorrectly recognized as prompts. You can 
