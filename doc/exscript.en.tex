@@ -76,12 +76,12 @@ With \product you can automatically parallelize your connections, such that
 multiple sessions are opened at the same time. This can speed up the time 
 in which a specific command is propagated within your network.
 
-For example, imagine you want to execute the ``clear ip bgp * soft'' in 
+For example, imagine you want to execute the ``clear ip bgp * soft'' 
 command on twenty different Cisco routers. Start by creating a text file 
 with the following content: 
 
 \begin{lstlisting}
-clear ip bgp * soft in
+clear ip bgp * soft
 \end{lstlisting}
 
 Save this file as commands.exscript. Also, create a text file that contains 
@@ -104,7 +104,7 @@ exscript --hosts hosts.txt -c15 commands.exscript
 Note that the -c15 option causes \product to open a maximum of fifteen 
 connections at the same time. Once the first host out of these 15 is 
 completed, \product opens the connection to the next host, until the 
-``clear ip bgp * soft in'' command has been sent to all hosts. 
+``clear ip bgp * soft'' command has been sent to all hosts. 
 
 
 \subsection{Advanced Command Templates}
@@ -341,7 +341,7 @@ If the left operator returns TRUE, the right operator is not evaluated.
 \end{enumerate}
 
 
-\subsection{Using hexadecimal or octal numbers}
+\subsection{Using Hexadecimal Or Octal Numbers}
 
 \product also supports hexadecimal and octal numbers using the following 
 syntax: 
@@ -594,7 +594,7 @@ The following functions are currently provided:
 \input{stdlib.tex}
 
 
-\subsection{Exiting a Script}
+\subsection{Exiting A Script}
 
 \subsubsection{fail ``message''}
 
@@ -683,9 +683,15 @@ show ip int brief
 Generally, the following kinds of errors that may happen at runtime:
 
 \begin{enumerate}
-\item {\bf A script deadlocks.} In other words, \product sends no further commands even though the remote host is already waiting for a command. This generally happens when a prompt is not recognized. 
-\item {\bf A script executes a command before the remote host is ready.} This happens when a prompt was detected where none was really included in the response. 
-\item {\bf A script terminates before executing all commands.} This happens when two (or more) prompts were detected where only one was expected. 
+\item {\bf A script deadlocks.} In other words, \product sends no further 
+commands even though the remote host is already waiting for a command. 
+This generally happens when a prompt is not recognized. 
+\item {\bf A script executes a command before the remote host is ready.} 
+This happens when a prompt was detected where none was really included 
+in the response. 
+\item {\bf A script terminates before executing all commands.} This 
+happens when two (or more) prompts were detected where only one was 
+expected. 
 \end{enumerate}
 
 The following sections explain when these problems may happen and how to fix them. 

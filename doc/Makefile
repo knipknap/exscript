@@ -63,4 +63,4 @@ clean:
 	rm -f *.aux *.log *.out *.pdf *.toc # figures/*.png
 
 publish: handbook apidocs
-	scp -r handbook/* api/* kd10243@goliath.speedpartner.de:/home/kd10243/exscript.debain.org/static/docs/exscript/
+	scp -r handbook/* api/* kd10243@goliath.speedpartner.de:/home/kd10243/spiff.debain.org/static/docs/exscript/
