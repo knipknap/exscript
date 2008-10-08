@@ -42,7 +42,7 @@ class Extract(Token):
         if parser.next_if('keyword', 'as'):
             self.append = False
         elif parser.next_if('keyword', 'into'):
-            self.append = False
+            self.append = True
         else:
             (type, token) = parser.token()
             parent.syntax_error(self, 'Expected "as" or "into" but got %s' % token)
@@ -119,7 +119,7 @@ class Extract(Token):
         else:
             for key in self.variables:
                 existing = self.parent.get(key)
-                self.parent.define(**{key: existing + self.variables})
+                self.parent.define(**{key: existing + self.variables[key]})
         return 1
 
 

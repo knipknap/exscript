@@ -1,3 +1,9 @@
+2008-10-08 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Interpreter/Extract.py: Fix the "into" keyword.
+	* src/Exscript/Interpreter/stdlib/IPv4/in_network.py: Apply mask to both, 
+	network and ip address.
+
 2008-09-05 Samuel Abels <http://debain.org>
 
 	* doc/, src/Exscript/Exscript.py: Add documentation.
