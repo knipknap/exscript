@@ -226,7 +226,9 @@ def run(*args, **kwargs):
         str = match.group(1) or 'a value for "%s"' % key
         val = raw_input('Please enter %s: ' % str)
         options['define'][key] = val
-    trunner.define(**options['define'])
+
+    # Configure the template runner.
+    del options['hosts']
     trunner.set_options(**options)
 
     # Wait until the specified time.

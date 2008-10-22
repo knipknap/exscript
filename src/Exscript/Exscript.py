@@ -78,7 +78,7 @@ class Exscript(object):
         return self.workqueue.get_max_threads()
 
 
-    def _run(self, job):
+    def run_async(self, job):
         """
         Places and executes the given Job in the workqueue.
 
@@ -94,17 +94,11 @@ class Exscript(object):
         self._dbg(1, 'Building sequence...')
         job.run(self)
 
-        # Wait until the engine is finished.
-        self._dbg(1, 'All actions enqueued.')
-        while self.workqueue.get_length() > 0:
-            #print '%s jobs left, waiting.' % workqueue.get_length()
-            time.sleep(1)
-            gc.collect()
-
 
     def run(self, job):
         """
-        Places and executes the given Job in the workqueue.
+        Places and executes the given Job in the workqueue, and waits until 
+        all jobs are completed before returning.
         Allows for interrupting with SIGINT.
 
         @type  job: Job
@@ -116,15 +110,23 @@ class Exscript(object):
             print '************ SIGINT RECEIVED - SHUTTING DOWN! ************'
             raise KeyboardInterrupt
 
-        signal.signal(signal.SIGINT,  on_posix_signal)
-        signal.signal(signal.SIGTERM, on_posix_signal)
+        if self.workqueue.get_length() == 0:
+            signal.signal(signal.SIGINT,  on_posix_signal)
+            signal.signal(signal.SIGTERM, on_posix_signal)
 
         try:
-            self._run(job)
+            self.run_async(job)
         except KeyboardInterrupt:
             print 'Interrupt caught succcessfully.'
             print '%s unfinished jobs.' % self.workqueue.get_length()
             sys.exit(1)
+
+        # Wait until the engine is finished.
+        self._dbg(1, 'All actions enqueued.')
+        while self.workqueue.get_length() > 0:
+            #print '%s jobs left, waiting.' % workqueue.get_length()
+            time.sleep(1)
+            gc.collect()
 
         self._dbg(1, 'Shutting down engine...')
         self.workqueue.shutdown()

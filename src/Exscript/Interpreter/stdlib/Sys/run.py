@@ -24,7 +24,7 @@ def execute(scope, host, filename):
     runner.set_options(user     = user,
                        password = password,
                        filename = filename)
-    sequence = runner._get_sequence(hostname)
+    sequence = runner._get_sequence(exscript, hostname)
     exscript.workqueue.priority_enqueue(sequence, 1)
     while exscript.workqueue.in_queue(sequence):
         time.sleep(1)

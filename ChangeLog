@@ -1,3 +1,12 @@
+2008-10-21 Samuel Abels <http://debain.org>
+
+	* src/Exscript/TemplateRunner.py: Passing a hostname to 
+	TemplateRunner.__init__() is now unnecessary even if a template (or 
+	template file) is passed.
+	* src/Exscript/Interpreter/stdlib/Sys/run.py: Fix: Broken by last commit.
+	* src/Exscript/Exscript.py: Cleanups.
+	* exscript: Fix the --hosts argument.
+
 2008-10-10 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Exscript.py, src/Exscript/TemplateRunner.py, exscript,

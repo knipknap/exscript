@@ -232,11 +232,19 @@ class TemplateRunner(Job):
         @type  template: string
         @param template: An Exscript template.
         """
-        # Parse the exscript.
+        # Define variables.
+        if len(self.hostnames) == 0:
+            hostname     = 'unknown'
+            host_defines = {'hostname': 'unknown'}
+        else:
+            hostname     = self.hostnames[0]
+            host_defines = self.host_defines[self.hostnames[0]]
         self.parser.define(**self.global_defines)
-        self.parser.define(**self.host_defines[self.hostnames[0]])
+        self.parser.define(**host_defines)
         self.parser.define(__filename__ = self.file)
-        self.parser.define(hostname     = self.hostnames[0])
+        self.parser.define(hostname     = hostname)
+
+        # Parse the Exscript.
         try:
             self.compiled = self.parser.parse(template)
             self.code     = template
