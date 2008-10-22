@@ -19,41 +19,31 @@ True  = 1
 False = 0
 
 class Authorize(Action):
-    def __init__(self, password, wait = True):
+    def __init__(self, wait = True):
         assert password is not None
         Action.__init__(self)
-        self.password        = password
-        self.wait            = wait
-        self.lock_key_prefix = 'lock::authentication::tacacs::'
+        self.wait = wait
 
 
     def _on_data_received(self, *args):
         self.signal_emit('data_received', *args)
 
 
-    def tacacs_lock(self, lock, data, user):
-        lock.acquire()
-        key = self.lock_key_prefix + user
-        if not data.has_key(key):
-            data[key] = threading.Lock()
-        lock.release()
-        return data[key]
-
-
     def execute(self, global_lock, global_data, local_data):
         assert global_lock is not None
         assert global_data is not None
         assert local_data  is not None
-        conn = local_data['transport']
-        user = local_data['user']
+        conn    = local_data['transport']
+        account = local_data['account']
         conn.set_on_data_received_cb(self._on_data_received)
-        self.tacacs_lock(global_lock, global_data, user).acquire()
+        account.lock()
         try:
-            conn.authorize(self.password, wait = self.wait)
+            conn.authorize(account.get_authorization_password(),
+                           wait = self.wait)
         except:
-            self.tacacs_lock(global_lock, global_data, user).release()
+            account.unlock()
             conn.set_on_data_received_cb(None)
             raise
-        self.tacacs_lock(global_lock, global_data, user).release()
+        account.unlock()
         conn.set_on_data_received_cb(None)
         return True

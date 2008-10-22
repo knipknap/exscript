@@ -3,33 +3,32 @@ from termconnect.Exception import InvalidCommandException
 def execute(scope, password = [None]):
     conn = scope.get('__connection__')
     wq   = scope.get('__exscript__').workqueue
-    user = scope.get('__user__')
-    lock = wq.get_data('lock::authentication::tacacs::%s' % user)
+    accm = scope.get('__exscript__').account_manager
 
     # Send the authorization command.
-    lock.acquire()
+    account = accm.acquire_account()
     try:
         if conn.guess_os() == 'ios':
             conn.send('enable\r')
         elif conn.guess_os() == 'junos':
-            lock.release()
+            account.release()
             return # does not require authorization
         else:
-            lock.release()
+            account.release()
             return # skip unsupported OSes
     except:
-        lock.release()
+        account.release()
         raise
 
     # Send the login information.
     try:
         conn.authorize(password[0], wait = 1)
     except InvalidCommandException:
-        lock.release()
+        account.release()
         return
     except:
-        lock.release()
+        account.release()
         raise
 
-    lock.release()
+    account.release()
     return 1

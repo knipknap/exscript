@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, time, signal, gc, copy
 from FooLib         import UrlParser
+from AccountManager import AccountManager
 from SpiffWorkQueue import WorkQueue
 
 True  = 1
@@ -34,8 +35,9 @@ class Exscript(object):
             - verbose: The verbosity level of Exscript.
             - max_threads: The maximum number of concurrent threads, default 1
         """
-        self.workqueue = WorkQueue()
-        self.verbose   = kwargs.get('verbose')
+        self.workqueue       = WorkQueue()
+        self.account_manager = AccountManager()
+        self.verbose         = kwargs.get('verbose')
         self.set_max_threads(kwargs.get('max_threads', 1))
         self.workqueue.set_debug(kwargs.get('verbose', 0))
         self.workqueue.signal_connect('job-started',   self._on_job_started)
@@ -76,6 +78,13 @@ class Exscript(object):
         @return: The maximum number of connections.
         """
         return self.workqueue.get_max_threads()
+
+
+    def add_account(self, account):
+        """
+        Adds an account to the account pool.
+        """
+        self.account_manager.add_account(account)
 
 
     def run_async(self, job):

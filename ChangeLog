@@ -1,5 +1,9 @@
 2008-10-21 Samuel Abels <http://debain.org>
 
+	* all-over: Refactoring to support account pooling.
+
+2008-10-21 Samuel Abels <http://debain.org>
+
 	* src/Exscript/TemplateRunner.py: Passing a hostname to 
 	TemplateRunner.__init__() is now unnecessary even if a template (or 
 	template file) is passed.

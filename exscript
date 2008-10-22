@@ -6,7 +6,7 @@
 import sys, os, re
 import termconnect
 sys.path.append('src')
-from Exscript        import Exscript, TemplateRunner
+from Exscript        import Exscript, Account, TemplateRunner
 from Exscript.FooLib import Interact
 from Exscript.FooLib import OptionParser
 
@@ -180,9 +180,9 @@ def run(*args, **kwargs):
         sys.exit(1)
 
     # Read the Exscript.
-    file                 = open(filename, 'r')
-    trunner_content      = file.read()
-    trunner.trunner_file = filename
+    file            = open(filename, 'r')
+    trunner_content = file.read()
+    trunner.file    = filename
     file.close()
 
     # Prepare the code that is executed after the user script has completed.
@@ -212,9 +212,7 @@ def run(*args, **kwargs):
             user     = None
             password = None
         else:
-            user, password      = Interact.get_login()
-            options['user']     = user
-            options['password'] = password
+            user, password = Interact.get_login()
     except:
         sys.exit(1)
 
@@ -238,7 +236,10 @@ def run(*args, **kwargs):
         os.system('sleep %s' % options['sleep'])
         print "time expired, starting script."
 
-    exscript = Exscript(max_threads = options['connections'])
+    exscript = Exscript(verbose     = options['verbose'],
+                        max_threads = options['connections'])
+    exscript.add_account(Account(user, password,
+                                 ssh_key_file = options['ssh-key']))
     exscript.run(trunner)
 
 if __name__ == '__main__':

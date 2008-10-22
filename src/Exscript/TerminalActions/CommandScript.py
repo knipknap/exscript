@@ -33,9 +33,11 @@ class CommandScript(Action):
         assert global_data is not None
         assert local_data  is not None
         local_data['transport'].set_on_data_received_cb(self._on_data_received)
+        account = local_data['account']
+
         self.exscript.define(__connection__ = local_data['transport'])
-        self.exscript.define(__user__       = local_data['user'])
-        self.exscript.define(__password__   = local_data['password'])
+        self.exscript.define(__user__       = account.get_name())
+        self.exscript.define(__password__   = account.get_password())
         self.exscript.execute()
         local_data['transport'].set_on_data_received_cb(None)
         return True

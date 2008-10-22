@@ -1,6 +1,8 @@
-def execute(scope, user = [None], password = [None]):
-    wq   = scope.get('__exscript__').workqueue
-    user = scope.get('__user__')
-    lock = wq.get_data('lock::authentication::tacacs::%s' % user)
-    lock.acquire()
+def execute(scope, user = [None]):
+    accm = scope.get('__exscript__').account_manager
+    if user[0] is None:
+        account = scope.get('__account__')
+    else:
+        account = accm.get_account_from_name(user[0])
+    accm.acquire_account(account)
     return 1

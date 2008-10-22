@@ -17,6 +17,7 @@ from Job             import Job
 from Interpreter     import Parser
 from FooLib          import UrlParser
 from SpiffWorkQueue  import Sequence
+from Account         import Account
 from TerminalActions import *
 
 True  = 1
@@ -55,9 +56,22 @@ class TemplateRunner(Job):
         self.host_defines   = {}
         self.global_defines = {}
         self.options        = {}
+        self.accounts       = {}
+        self.verbose        = kwargs.get('verbose')
         self.parser         = Parser(debug     = kwargs.get('parser_verbose', 0),
                                      no_prompt = kwargs.get('no_prompt',      0))
         self.set_options(**kwargs)
+
+
+    def _get_account(self, user, password, password2 = None):
+        if user is None:
+            return None
+        account = self.accounts.get(user)
+        if account is not None:
+            return account
+        account = Account(user, password, password2)
+        self.accounts[user] = account
+        return account
 
 
     def set_options(self, **kwargs):
@@ -279,16 +293,17 @@ class TemplateRunner(Job):
             msg = 'An Exscript was not yet read using read_template().'
             raise Exception(msg)
 
-        # Prepare variables that are passed to the Exscript interpreter.
-        user             = self.options.get('user')
-        password         = self.options.get('password')
+        # Parse the URL-formatted hostname.
         default_protocol = self.options.get('protocol', 'telnet')
         url              = UrlParser.parse_url(hostname, default_protocol)
         this_proto       = url.protocol
         this_user        = url.username
         this_password    = url.password
+        this_account     = self._get_account(this_user, this_password)
         this_host        = url.hostname
-        domain           = self.options.get('domain', '')
+
+        # Pass variables to the Exscript interpreter.
+        domain = self.options.get('domain', '')
         if not '.' in this_host and len(domain) > 0:
             this_host += '.' + domain
         variables = dict()
@@ -296,14 +311,11 @@ class TemplateRunner(Job):
         variables.update(self.host_defines[hostname])
         variables['hostname'] = this_host
         variables.update(url.vars)
-        if this_user is None:
-            this_user = user
-        if this_password is None:
-            this_password = password
+        self.parser.define(**variables)
 
+        # Parse the Exscript template.
         #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
         # recompiling numerous times.
-        self.parser.define(**variables)
         if self.options.has_key('filename'):
             file     = self.options.get('filename')
             compiled = self.parser.parse_file(file)
@@ -348,7 +360,6 @@ class TemplateRunner(Job):
 
         # Build the sequence.
         noecho       = self.options.get('no-echo',           False)
-        key          = self.options.get('ssh-key',           None)
         av           = self.options.get('ssh-auto-verify',   None)
         nip          = self.options.get('no-initial-prompt', False)
         nop          = self.options.get('no-prompt',         False)
@@ -366,15 +377,12 @@ class TemplateRunner(Job):
                          'ssh_version': ssh_version}
         if url.port is not None:
             protocol_args['port'] = url.port
+
         sequence.add(Connect(protocol, this_host, **protocol_args))
-        if key is None and authenticate:
-            sequence.add(Authenticate(this_user,
-                                      password = this_password,
-                                      wait     = wait))
-        elif authenticate:
-            sequence.add(Authenticate(this_user,
-                                      key_file = key,
-                                      wait     = wait))
+        if authenticate:
+            sequence.add(Authenticate(exscript.account_manager,
+                                      this_account,
+                                      wait = wait))
         sequence.add(CommandScript(compiled))
         sequence.add(Close())
         sequence.signal_connect('completed',
