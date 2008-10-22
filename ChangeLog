@@ -1,3 +1,10 @@
+2008-10-10 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Exscript.py, src/Exscript/TemplateRunner.py, exscript,
+	src/Exscript/Interpreter/stdlib/Sys/run.py, src/Exscript/Job.py: Further
+	refactoring to allow for executing scripts that do not open a remote 
+	connection.
+
 2008-10-09 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Exscript.py, src/Exscript/TemplateRunner.py, exscript, 

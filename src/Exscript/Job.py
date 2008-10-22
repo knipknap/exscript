@@ -12,10 +12,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript       import Exscript
-from Job            import Job
-from TemplateRunner import TemplateRunner
 
-import inspect 
-__all__ = [name for name, obj in locals().items()
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+True  = 1
+False = 0
+
+class Job(object):
+    """
+    An abstract base for a worker executed by Exscript.
+    """
+    def __init__(self, **kwargs):
+        """
+        Constructor.
+
+        @type  kwargs: dict
+        @param kwargs: Ignored.
+        """
+        self.verbose = kwargs.get('verbose')
+
+
+    def _dbg(self, level, msg):
+        if level > self.verbose:
+            return
+        print msg
+
+
+    def run(self, exscript, **kwargs):
+        raise Exception("Not implemented")

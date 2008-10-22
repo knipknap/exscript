@@ -13,7 +13,7 @@ from Exscript.FooLib import OptionParser
 True  = 1
 False = 0
 
-__version__ = '0.9.12'
+__version__ = '0.9.13'
 
 def usage():
     print "Exscript", __version__, "with termconnect", termconnect.__version__
@@ -141,11 +141,11 @@ def run(*args, **kwargs):
         usage()
         sys.exit(1)
     trunner = TemplateRunner(verbose        = options.get('verbose'),
-                              parser_verbose = options.get('parser-verbose'),
-                              no_prompt      = options.get('no-prompt'),
-                              domain         = options.get('default-domain'),
-                              overwrite_logs = options.get('overwrite-logs'),
-                              logdir         = options.get('logdir'))
+                             parser_verbose = options.get('parser-verbose'),
+                             no_prompt      = options.get('no-prompt'),
+                             domain         = options.get('default-domain'),
+                             overwrite_logs = options.get('overwrite-logs'),
+                             logdir         = options.get('logdir'))
     trunner.add_hosts(hostnames)
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
@@ -180,13 +180,13 @@ def run(*args, **kwargs):
         sys.exit(1)
 
     # Read the Exscript.
-    file = open(filename, 'r')
-    trunner_content = file.read()
+    file                 = open(filename, 'r')
+    trunner_content      = file.read()
     trunner.trunner_file = filename
     file.close()
 
     # Prepare the code that is executed after the user script has completed.
-    #FIXME: Move into the library, then use load_from_file instead of load().
+    #FIXME: Move into the library, then use read_template_from_file instead of read_template().
     if not options['no-auto-logout']:
         trunner_content += r'''
     ## Exscript generated commands. ##
@@ -199,7 +199,7 @@ def run(*args, **kwargs):
     # Load the code into the trunner.
     trunner.define(**options['define'])
     try:
-        trunner.load(trunner_content)
+        trunner.read_template(trunner_content)
     except Exception, e:
         if options['verbose'] > 0:
             raise
@@ -227,6 +227,7 @@ def run(*args, **kwargs):
         val = raw_input('Please enter %s: ' % str)
         options['define'][key] = val
     trunner.define(**options['define'])
+    trunner.set_options(**options)
 
     # Wait until the specified time.
     if options['sleep']:
@@ -237,7 +238,7 @@ def run(*args, **kwargs):
 
     exscript = Exscript()
     exscript.set_max_threads(options['connections'])
-    exscript.run(trunner, **options)
+    exscript.run(trunner)
 
 if __name__ == '__main__':
     # Parse options.

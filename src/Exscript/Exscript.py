@@ -31,26 +31,15 @@ class Exscript(object):
 
         @type  kwargs: dict
         @param kwargs: The following options are supported:
-            - verbose: The verbosity level of the interpreter.
-            - parser_verbose: The verbosity level of the parser.
-            - domain: The default domain of the contacted hosts.
-            - logdir: The directory into which the logs are written.
-            - overwrite_logs: Whether existing logfiles are overwritten.
-            - no_prompt: Whether the compiled program should wait for a 
-            prompt each time after the Exscript sent a command to the 
-            remote host.
+            - verbose: The verbosity level of Exscript.
+            - max_threads: The maximum number of concurrent threads, default 1
         """
-        self.workqueue      = WorkQueue()
-        self.global_defines = {}
-        self.verbose        = kwargs.get('verbose')
-        self.parser_verbose = kwargs.get('parser_verbose')
-        self.domain         = kwargs.get('domain', '')
-        self.logdir         = kwargs.get('logdir')
-        self.no_prompt      = kwargs.get('no_prompt')
-        self.overwrite_logs = kwargs.get('overwrite_logs', False)
+        self.workqueue = WorkQueue()
+        self.verbose   = kwargs.get('verbose')
+        self.set_max_threads(kwargs.get('max_threads', 1))
+        self.workqueue.set_debug(kwargs.get('verbose', 0))
         self.workqueue.signal_connect('job-started',   self._on_job_started)
         self.workqueue.signal_connect('job-completed', self._on_job_completed)
-        self.workqueue.set_debug(kwargs.get('verbose', 0))
 
 
     def _on_job_started(self, job):
@@ -67,17 +56,6 @@ class Exscript(object):
         if level > self.verbose:
             return
         print msg
-
-
-    def define(self, **kwargs):
-        """
-        Defines the given variables such that they may be accessed from 
-        within the Exscript.
-
-        @type  kwargs: dict
-        @param kwargs: Variables to make available to the Exscript.
-        """
-        self.global_defines.update(kwargs)
 
 
     def set_max_threads(self, n_connections):
@@ -100,10 +78,12 @@ class Exscript(object):
         return self.workqueue.get_max_threads()
 
 
-    def _run(self, job, **kwargs):
+    def _run(self, job):
         """
-        Executes the currently loaded Exscript file on the currently added 
-        hosts.
+        Places and executes the given Job in the workqueue.
+
+        @type  job: Job
+        @param job: An instance of Job.
         """
         # Initialize the workqueue.
         self._dbg(1, 'Starting engine...')
@@ -112,8 +92,7 @@ class Exscript(object):
 
         # Build the action sequence.
         self._dbg(1, 'Building sequence...')
-        job.define(**self.global_defines)
-        job.run(self, **kwargs)
+        job.run(self)
 
         # Wait until the engine is finished.
         self._dbg(1, 'All actions enqueued.')
@@ -123,13 +102,13 @@ class Exscript(object):
             gc.collect()
 
 
-    def run(self, job, **kwargs):
+    def run(self, job):
         """
-        Executes the given Exscript on the currently added 
-        hosts. Allows for interrupting with SIGINT.
+        Places and executes the given Job in the workqueue.
+        Allows for interrupting with SIGINT.
 
-        @type  kwargs: dict
-        @param kwargs: Equivalent to Exscript's command line options.
+        @type  job: Job
+        @param job: An instance of Job.
         """
         # Make sure that we shut down properly even when SIGINT or SIGTERM is 
         # sent.
@@ -141,7 +120,7 @@ class Exscript(object):
         signal.signal(signal.SIGTERM, on_posix_signal)
 
         try:
-            self._run(job, **kwargs)
+            self._run(job)
         except KeyboardInterrupt:
             print 'Interrupt caught succcessfully.'
             print '%s unfinished jobs.' % self.workqueue.get_length()

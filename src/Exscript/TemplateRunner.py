@@ -12,21 +12,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, time, os, re, signal, gc, copy
+import sys, time, os, re, gc, copy
+from Job             import Job
 from Interpreter     import Parser
 from FooLib          import UrlParser
-from SpiffWorkQueue  import WorkQueue
 from SpiffWorkQueue  import Sequence
 from TerminalActions import *
 
 True  = 1
 False = 0
 
-class TemplateRunner(object):
+class TemplateRunner(Job):
     """
-    API for accessing all of Exscript's functions programmatically.
-    This may still need some cleaning up, so don't count on API stability 
-    just yet.
+    Opens and parses an exscript template and executes it on one or 
+    more hosts.
     """
     bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
 
@@ -36,6 +35,9 @@ class TemplateRunner(object):
 
         @type  kwargs: dict
         @param kwargs: The following options are supported:
+            - define: Global variables.
+            - template_file: The template file to be executed.
+            - template: The template to be executed.
             - verbose: The verbosity level of the interpreter.
             - parser_verbose: The verbosity level of the parser.
             - domain: The default domain of the contacted hosts.
@@ -45,24 +47,34 @@ class TemplateRunner(object):
             prompt each time after the Exscript sent a command to the 
             remote host.
         """
-        self.exscript       = None
-        self.exscript_code  = None
-        self.exscript_file  = None
+        Job.__init__(self, **kwargs)
+        self.compiled       = None
+        self.code           = None
+        self.file           = None
         self.hostnames      = []
         self.host_defines   = {}
         self.global_defines = {}
-        self.verbose        = kwargs.get('verbose')
-        self.logdir         = kwargs.get('logdir')
-        self.overwrite_logs = kwargs.get('overwrite_logs', False)
-        self.domain         = kwargs.get('domain',         '')
+        self.options        = {}
         self.parser         = Parser(debug     = kwargs.get('parser_verbose', 0),
                                      no_prompt = kwargs.get('no_prompt',      0))
+        self.set_options(**kwargs)
 
 
-    def _dbg(self, level, msg):
-        if level > self.verbose:
-            return
-        print msg
+    def set_options(self, **kwargs):
+        """
+        Set the given options of the template runner.
+        """
+        self.options.update(kwargs)
+        if self.options.get('define') is not None:
+            self.define(**self.options.get('define'))
+        if self.options.get('host') is not None:
+            self.add_host(self.options.get('host'))
+        if self.options.get('hosts') is not None:
+            self.add_hosts(self.options.get('hosts'))
+        if self.options.has_key('template'):
+            self.read_template(self.options.get('template'))
+        if self.options.has_key('template_file'):
+            self.read_template_from_file(self.options.get('template_file'))
 
 
     def add_host(self, host):
@@ -75,7 +87,7 @@ class TemplateRunner(object):
         self.hostnames.append(host)
         url = UrlParser.parse_url(host)
         for key, val in url.vars.iteritems():
-            match = Exscript.bracket_expression_re.match(val[0])
+            match = TemplateRunner.bracket_expression_re.match(val[0])
             if match is None:
                 continue
             string = match.group(1) or 'a value for "%s"' % key
@@ -142,7 +154,7 @@ class TemplateRunner(object):
             raise Exception(msg)
         varnames = header.split('\t')
         varnames.pop(0)
-        
+
         # Walk through all lines and create a map that maps hostname to definitions.
         last_hostname = ''
         for line in file_handle:
@@ -175,7 +187,7 @@ class TemplateRunner(object):
     def define(self, **kwargs):
         """
         Defines the given variables such that they may be accessed from 
-        within the Exscript.
+        within the Exscript template.
 
         @type  kwargs: dict
         @param kwargs: Variables to make available to the Exscript.
@@ -186,7 +198,7 @@ class TemplateRunner(object):
     def define_host(self, hostname, **kwargs):
         """
         Defines the given variables such that they may be accessed from 
-        within the Exscript only while logged into the specified 
+        within the Exscript template only while logged into the specified 
         hostname.
 
         @type  hostname: string
@@ -199,23 +211,23 @@ class TemplateRunner(object):
         self.host_defines[hostname].update(kwargs)
 
 
-    def load(self, exscript_content):
+    def read_template(self, template):
         """
-        Loads the given Exscript code, using the given options.
+        Reads the given Exscript template, using the given options.
         MUST be called before run() is called, either directly or through 
-        load_from_file().
+        read_template_from_file().
 
-        @type  exscript_content: string
-        @param exscript_content: An exscript.
+        @type  template: string
+        @param template: An Exscript template.
         """
         # Parse the exscript.
         self.parser.define(**self.global_defines)
         self.parser.define(**self.host_defines[self.hostnames[0]])
-        self.parser.define(__filename__ = self.exscript_file)
+        self.parser.define(__filename__ = self.file)
         self.parser.define(hostname     = self.hostnames[0])
         try:
-            self.exscript = self.parser.parse(exscript_content)
-            self.exscript_code = exscript_content
+            self.compiled = self.parser.parse(template)
+            self.code     = template
         except Exception, e:
             if self.verbose > 0:
                 raise
@@ -223,41 +235,42 @@ class TemplateRunner(object):
             sys.exit(1)
 
 
-    def load_from_file(self, filename):
+    def read_template_from_file(self, filename):
         """
-        Loads the Exscript file with the given name, and calls load() to 
-        process the code using the given options.
+        Loads the Exscript file with the given name, and calls 
+        read_template() to process the code using the given options.
 
         @type  filename: string
         @param filename: A full filename.
         """
-        file_handle        = open(filename, 'r')
-        self.exscript_file = filename
-        exscript_content   = file_handle.read()
+        file_handle = open(filename, 'r')
+        self.file   = filename
+        template    = file_handle.read()
         file_handle.close()
-        self.load(exscript_content)
+        self.read_template(template)
 
 
-    def _get_sequence(self, parent, hostname, **kwargs):
+    def _get_sequence(self, exscript, hostname):
         """
-        Compiles the current exscript, and returns a new workqueue sequence 
-        for it that is initialized and has all the variables defined.
+        Compiles the current Exscript template, and returns a new workqueue 
+        sequence for it that is initialized and has all the variables defined.
         """
-        if self.exscript is None:
-            msg = 'An Exscript was not yet loaded using load().'
+        if self.compiled is None:
+            msg = 'An Exscript was not yet read using read_template().'
             raise Exception(msg)
 
         # Prepare variables that are passed to the Exscript interpreter.
-        user             = kwargs.get('user')
-        password         = kwargs.get('password')
-        default_protocol = kwargs.get('protocol', 'telnet')
+        user             = self.options.get('user')
+        password         = self.options.get('password')
+        default_protocol = self.options.get('protocol', 'telnet')
         url              = UrlParser.parse_url(hostname, default_protocol)
         this_proto       = url.protocol
         this_user        = url.username
         this_password    = url.password
         this_host        = url.hostname
-        if not '.' in this_host and len(self.domain) > 0:
-            this_host += '.' + self.domain
+        domain           = self.options.get('domain', '')
+        if not '.' in this_host and len(domain) > 0:
+            this_host += '.' + domain
         variables = dict()
         variables.update(self.global_defines)
         variables.update(self.host_defines[hostname])
@@ -271,26 +284,28 @@ class TemplateRunner(object):
         #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
         # recompiling numerous times.
         self.parser.define(**variables)
-        if kwargs.has_key('filename'):
-            exscript = self.parser.parse_file(kwargs.get('filename'))
+        if self.options.has_key('filename'):
+            file     = self.options.get('filename')
+            compiled = self.parser.parse_file(file)
         else:
-            exscript_code = kwargs.get('code', self.exscript_code)
-            exscript      = self.parser.parse(exscript_code)
-        #exscript = copy.deepcopy(self.exscript)
-        exscript.init(**variables)
-        exscript.define(__filename__ = self.exscript_file)
-        exscript.define(__runner__   = self)
-        exscript.define(__exscript__ = parent)
+            code     = self.options.get('code', self.code)
+            compiled = self.parser.parse(code)
+        #compiled = copy.deepcopy(self.compiled)
+        compiled.init(**variables)
+        compiled.define(__filename__ = self.file)
+        compiled.define(__runner__   = self)
+        compiled.define(__exscript__ = exscript)
 
         # One logfile per host.
         logfile       = None
         error_logfile = None
-        if self.logdir is None:
+        if self.options['logdir'] is None:
             sequence = Sequence(name = this_host)
         else:
-            logfile       = os.path.join(self.logdir, this_host + '.log')
+            logfile       = os.path.join(self.options['logdir'],
+                                         this_host + '.log')
             error_logfile = logfile + '.error'
-            overwrite     = self.overwrite_logs
+            overwrite     = self.options.get('overwrite_logs', False)
             sequence      = LoggedSequence(name          = this_host,
                                            logfile       = logfile,
                                            error_logfile = error_logfile,
@@ -312,13 +327,13 @@ class TemplateRunner(object):
             return None
 
         # Build the sequence.
-        noecho       = kwargs.get('no-echo',           False)
-        key          = kwargs.get('ssh-key',           None)
-        av           = kwargs.get('ssh-auto-verify',   None)
-        nip          = kwargs.get('no-initial-prompt', False)
-        nop          = kwargs.get('no-prompt',         False)
-        authenticate = not kwargs.get('no-authentication', False)
-        echo         = parent.get_max_threads() == 1 and not noecho
+        noecho       = self.options.get('no-echo',           False)
+        key          = self.options.get('ssh-key',           None)
+        av           = self.options.get('ssh-auto-verify',   None)
+        nip          = self.options.get('no-initial-prompt', False)
+        nop          = self.options.get('no-prompt',         False)
+        authenticate = not self.options.get('no-authentication', False)
+        echo         = exscript.get_max_threads() == 1 and not noecho
         wait         = not nip and not nop
         if this_proto == 'ssh1':
             ssh_version = 1
@@ -340,20 +355,20 @@ class TemplateRunner(object):
             sequence.add(Authenticate(this_user,
                                       key_file = key,
                                       wait     = wait))
-        sequence.add(CommandScript(exscript))
+        sequence.add(CommandScript(compiled))
         sequence.add(Close())
         return sequence
 
 
-    def run(self, parent, **kwargs):
-        n_connections = parent.get_max_threads()
+    def run(self, exscript):
+        n_connections = exscript.get_max_threads()
 
         for hostname in self.hostnames[:]:
             # To save memory, limit the number of parsed (=in-memory) items.
-            while parent.workqueue.get_length() > n_connections * 2:
+            while exscript.workqueue.get_length() > n_connections * 2:
                 time.sleep(1)
                 gc.collect()
 
             self._dbg(1, 'Building sequence for %s.' % hostname)
-            sequence = self._get_sequence(parent, hostname, **kwargs)
-            parent.workqueue.enqueue(sequence)
+            sequence = self._get_sequence(exscript, hostname)
+            exscript.workqueue.enqueue(sequence)
