@@ -125,8 +125,8 @@ class AccountManager(object):
         while len(self.unlocked_accounts) == 0:
             self.unlock_cond.wait()
         account = self.unlocked_accounts[0]
+        del self.unlocked_accounts[0]
         account.acquire()
-        self.unlocked_accounts = self.unlocked_accounts[1:]
         self.unlock_cond.release()
         return account
 
