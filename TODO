@@ -1,4 +1,6 @@
 * Create a clean/complete API for the Exscript module.
+* Passing a hostname to TemplateRunner.__init__() should be unnecessary even 
+  if a template (or template file) is passed.
 * Create tests.
 * Create an installer that builds a self-contained package and drags FooLib.
 * Try to make the "fail" keyword saner.

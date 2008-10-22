@@ -4,6 +4,8 @@
 	src/Exscript/Interpreter/stdlib/Sys/run.py, src/Exscript/Job.py: Further
 	refactoring to allow for executing scripts that do not open a remote 
 	connection.
+	* src/Exscript/Interpreter/Scope.py, src/Exscript/TemplateRunner.py: Allow
+	for retrieving the variables from completed Exscript templates.
 
 2008-10-09 Samuel Abels <http://debain.org>
 

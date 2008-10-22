@@ -236,8 +236,7 @@ def run(*args, **kwargs):
         os.system('sleep %s' % options['sleep'])
         print "time expired, starting script."
 
-    exscript = Exscript()
-    exscript.set_max_threads(options['connections'])
+    exscript = Exscript(max_threads = options['connections'])
     exscript.run(trunner)
 
 if __name__ == '__main__':

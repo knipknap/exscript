@@ -71,7 +71,7 @@ class Scope(Token):
 
     def get_vars(self):
         """
-        Returns a complete list of all variables that are defined in this 
+        Returns a complete dict of all variables that are defined in this 
         scope, including the variables of the parent.
         """
         if self.parent is None:

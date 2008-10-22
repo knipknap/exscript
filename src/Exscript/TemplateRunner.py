@@ -211,6 +211,18 @@ class TemplateRunner(Job):
         self.host_defines[hostname].update(kwargs)
 
 
+    def get_host(self, hostname, varname):
+        """
+        Returns the value of the variables with the given name.
+
+        @type  hostname: string
+        @param hostname: A hostname.
+        @type  varname: string
+        @param varname: A variable name.
+        """
+        return self.host_defines[hostname][varname]
+
+
     def read_template(self, template):
         """
         Reads the given Exscript template, using the given options.
@@ -357,7 +369,18 @@ class TemplateRunner(Job):
                                       wait     = wait))
         sequence.add(CommandScript(compiled))
         sequence.add(Close())
+        sequence.signal_connect('completed',
+                                self._on_sequence_completed,
+                                hostname,
+                                compiled)
         return sequence
+
+
+    def _on_sequence_completed(self, sequence, hostname, compiled):
+        vars = compiled.get_vars()
+        if vars.has_key('hostname'):
+            del vars['hostname']
+        self.define_host(hostname, **vars)
 
 
     def run(self, exscript):
