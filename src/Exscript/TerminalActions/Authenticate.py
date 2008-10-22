@@ -23,7 +23,7 @@ class Authenticate(Action):
         Action.__init__(self)
         self.account_manager = account_manager
         self.account         = account
-        self.wait            = kwargs.get('wait',     False)
+        self.wait            = kwargs.get('wait', False)
 
 
     def _on_data_received(self, *args):

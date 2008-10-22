@@ -16,7 +16,7 @@ import threading
 
 class Account(object):
     """
-    This class manages available accounts.
+    This class represents a user account.
     """
 
     def __init__(self, name, password, password2 = None, **kwargs):
@@ -32,15 +32,15 @@ class Account(object):
 
 
     def _add_notify(self, manager):
+        """
+        Called when added into the manager.
+        """
         self.manager = manager
 
 
     def acquire(self):
         """
         Locks the account.
-
-        @rtype:  Account
-        @return: The locked account.
         """
         self.lock.acquire()
 
@@ -48,11 +48,9 @@ class Account(object):
     def release(self):
         """
         Unlocks the account.
-
-        @rtype:  Account
-        @return: The locked account.
         """
-        self.manager.release_account(self)
+        if self.manager is not None:
+            self.manager.release_account(self)
         self.lock.release()
 
 
