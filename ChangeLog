@@ -1,3 +1,9 @@
+2008-10-22 Samuel Abels <http://debain.org>
+
+	* exscript, src/Exscript/AccountManager.py,
+	src/Exscript/TerminalActions/Authenticate.py: Completed support for account
+	pooling using the --acount-pool command line switch.
+
 2008-10-21 Samuel Abels <http://debain.org>
 
 	* all-over: Refactoring to support account pooling.

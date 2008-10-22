@@ -52,7 +52,7 @@ class Authenticate(Action):
             conn.authenticate(account.get_name(),
                               account.get_password(),
                               wait     = self.wait,
-                              key_file = account.options['ssh_key_file'])
+                              key_file = account.options.get('ssh_key_file'))
         except:
             account.release()
             conn.set_on_data_received_cb(None)

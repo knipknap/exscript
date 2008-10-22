@@ -19,6 +19,11 @@ def usage():
     print "Exscript", __version__, "with termconnect", termconnect.__version__
     print "Copyright (C) 2007 by Samuel Abels <http://debain.org>."
     print "Syntax: exscript [options] exscript [hostname [hostname ...]]"
+    print "      --account-pool FILE"
+    print "                 Reads the user/password combination from the given file "
+    print "                 instead of prompting on the command line. The file may"
+    print "                 also contain more than one user/password combination, in"
+    print "                 which case the accounts are used round robin."
     print "  -c, --connections NUM"
     print "                 Maximum number of concurrent connections."
     print "                 NUM is a number between 1 and 20, default is 1"
@@ -93,6 +98,7 @@ def usage():
 default_defines = {'hostname': 'unknown'}
 default_options = [
   ('no-echo',           None, False),
+  ('account-pool=',     None, None),
   ('connections=',      'c:', 1),
   ('csv-hosts=',        None, None),
   ('define=',           'd:', default_defines),
@@ -206,15 +212,34 @@ def run(*args, **kwargs):
         print e
         sys.exit(1)
 
+    # Create Exscript.
+    exscript = Exscript(verbose     = options['verbose'],
+                        max_threads = options['connections'])
+    account_manager = exscript.account_manager
+
+    # Read the account pool file.
+    try:
+        if options['account-pool']:
+            account_manager.create_account_from_file(options['account-pool'])
+    except Exception, e:
+        print e
+        sys.exit(1)
+    if options['account-pool'] and account_manager.n_accounts() == 0:
+        msg = r'WARNING: No accounts found in account pool file (%s)!'
+        print msg % options['account-pool']
+
     # Read username and password.
     try:
-        if options['non-interactive']:
+        if options['non-interactive'] or account_manager.n_accounts() > 0:
             user     = None
             password = None
         else:
             user, password = Interact.get_login()
     except:
         sys.exit(1)
+    if user is not None:
+        account = Account(user, password, ssh_key_file = options['ssh-key'])
+        account_manager.add_account(account)
 
     # Ask for values of marked variables.
     for key, val in options['define'].iteritems():
@@ -236,10 +261,6 @@ def run(*args, **kwargs):
         os.system('sleep %s' % options['sleep'])
         print "time expired, starting script."
 
-    exscript = Exscript(verbose     = options['verbose'],
-                        max_threads = options['connections'])
-    exscript.add_account(Account(user, password,
-                                 ssh_key_file = options['ssh-key']))
     exscript.run(trunner)
 
 if __name__ == '__main__':

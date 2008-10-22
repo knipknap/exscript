@@ -13,7 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
-from Account import Account
+from ConfigParser import RawConfigParser
+from Account      import Account
 
 class AccountManager(object):
     """
@@ -50,17 +51,24 @@ class AccountManager(object):
         return account
 
 
-    def get_account_from_name(self, name):
+    def create_account_from_file(self, filename):
         """
-        Returns the account with the given name.
+        Reads a list of user/password combinations from the given file 
+        and creates an Account instance for each of them.
+        Returns a list of accounts.
 
-        @type  name: string
-        @param name: The name of the account.
+        @type  filename: string
+        @param filename: The name of the file containing the list of accounts.
+        @rtype:  list[Account]
+        @return: The newly added account instances.
         """
-        for account in self.accounts:
-            if account.get_name() == name:
-                return account
-        return None
+        accounts = []
+        parser   = RawConfigParser()
+        parser.read(filename)
+        for item in parser.items('account-pool'):
+            account = self.create_account(*item)
+            accounts.append(account)
+        return accounts
 
 
     def add_account(self, account):
@@ -76,6 +84,23 @@ class AccountManager(object):
         account._add_notify(self)
         self.unlock_cond.notify()
         self.unlock_cond.release()
+
+
+    def get_account_from_name(self, name):
+        """
+        Returns the account with the given name.
+
+        @type  name: string
+        @param name: The name of the account.
+        """
+        for account in self.accounts:
+            if account.get_name() == name:
+                return account
+        return None
+
+
+    def n_accounts(self):
+        return len(self.accounts)
 
 
     def _acquire_specific_account(self, account):
