@@ -1,3 +1,10 @@
+2008-10-09 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Exscript.py, src/Exscript/TemplateRunner.py, exscript, 
+	src/Exscript/Interpreter/stdlib/Sys/run.py: Major refactoring of the top
+	level API objects to allow for executing scripts that do not open a remote 
+	connection (future).
+
 2008-10-08 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/Extract.py: Fix the "into" keyword.

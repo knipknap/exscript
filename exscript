@@ -6,7 +6,7 @@
 import sys, os, re
 import termconnect
 sys.path.append('src')
-from Exscript        import Exscript
+from Exscript        import Exscript, TemplateRunner
 from Exscript.FooLib import Interact
 from Exscript.FooLib import OptionParser
 
@@ -140,18 +140,18 @@ def run(*args, **kwargs):
     except:
         usage()
         sys.exit(1)
-    exscript = Exscript(verbose        = options.get('verbose'),
-                        parser_verbose = options.get('parser-verbose'),
-                        no_prompt      = options.get('no-prompt'),
-                        domain         = options.get('default-domain'),
-                        overwrite_logs = options.get('overwrite-logs'),
-                        logdir         = options.get('logdir'))
-    exscript.add_hosts(hostnames)
+    trunner = TemplateRunner(verbose        = options.get('verbose'),
+                              parser_verbose = options.get('parser-verbose'),
+                              no_prompt      = options.get('no-prompt'),
+                              domain         = options.get('default-domain'),
+                              overwrite_logs = options.get('overwrite-logs'),
+                              logdir         = options.get('logdir'))
+    trunner.add_hosts(hostnames)
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
     if options.get('csv-hosts') is not None:
         try:
-            exscript.add_hosts_from_csv(options.get('csv-hosts'))
+            trunner.add_hosts_from_csv(options.get('csv-hosts'))
         except Exception, e:
             print e
             sys.exit(1)
@@ -159,7 +159,7 @@ def run(*args, **kwargs):
     # If a filename containing hostnames was given, read it.
     if options.get('hosts') is not None:
         try:
-            exscript.add_hosts_from_file(options.get('hosts'))
+            trunner.add_hosts_from_file(options.get('hosts'))
         except Exception, e:
             print e
             sys.exit(1)
@@ -175,20 +175,20 @@ def run(*args, **kwargs):
                 sys.exit(1)
 
     # Make sure that all mandatory options are present.
-    if len(exscript.hostnames) <= 0:
+    if len(trunner.hostnames) <= 0:
         usage()
         sys.exit(1)
 
     # Read the Exscript.
     file = open(filename, 'r')
-    exscript_content = file.read()
-    exscript.exscript_file = filename
+    trunner_content = file.read()
+    trunner.trunner_file = filename
     file.close()
 
     # Prepare the code that is executed after the user script has completed.
     #FIXME: Move into the library, then use load_from_file instead of load().
     if not options['no-auto-logout']:
-        exscript_content += r'''
+        trunner_content += r'''
     ## Exscript generated commands. ##
     {if device.guess_os() is "vrp"}
         {connection.send("quit\r", 0)}
@@ -196,10 +196,10 @@ def run(*args, **kwargs):
         {connection.send("exit\r", 0)}
     {end}'''
 
-    # Load the code into the exscript.
-    exscript.define(**options['define'])
+    # Load the code into the trunner.
+    trunner.define(**options['define'])
     try:
-        exscript.load(exscript_content)
+        trunner.load(trunner_content)
     except Exception, e:
         if options['verbose'] > 0:
             raise
@@ -220,13 +220,13 @@ def run(*args, **kwargs):
 
     # Ask for values of marked variables.
     for key, val in options['define'].iteritems():
-        match = Exscript.bracket_expression_re.match(val)
+        match = TemplateRunner.bracket_expression_re.match(val)
         if match is None:
             continue
         str = match.group(1) or 'a value for "%s"' % key
         val = raw_input('Please enter %s: ' % str)
         options['define'][key] = val
-    exscript.define(**options['define'])
+    trunner.define(**options['define'])
 
     # Wait until the specified time.
     if options['sleep']:
@@ -235,7 +235,9 @@ def run(*args, **kwargs):
         os.system('sleep %s' % options['sleep'])
         print "time expired, starting script."
 
-    exscript.run(**options)
+    exscript = Exscript()
+    exscript.set_max_threads(options['connections'])
+    exscript.run(trunner, **options)
 
 if __name__ == '__main__':
     # Parse options.
