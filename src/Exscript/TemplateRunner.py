@@ -344,7 +344,12 @@ class TemplateRunner(Job):
                                            overwrite_log = overwrite)
 
         # Choose the protocol.
-        if this_proto == 'telnet':
+        if this_proto == 'dummy':
+            protocol = __import__('termconnect.Dummy',
+                                  globals(),
+                                  locals(),
+                                  'Dummy')
+        elif this_proto == 'telnet':
             protocol = __import__('termconnect.Telnet',
                                   globals(),
                                   locals(),
@@ -355,7 +360,7 @@ class TemplateRunner(Job):
                                   locals(),
                                   'SSH')
         else:
-            print 'Unsupported protocol %s' % this_proto
+            print 'ERROR: Unsupported protocol %s.' % repr(this_proto)
             return None
 
         # Build the sequence.
@@ -410,4 +415,5 @@ class TemplateRunner(Job):
 
             self._dbg(1, 'Building sequence for %s.' % hostname)
             sequence = self._get_sequence(exscript, hostname)
-            exscript.workqueue.enqueue(sequence)
+            if sequence is not None:
+                exscript.workqueue.enqueue(sequence)
