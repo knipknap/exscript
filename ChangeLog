@@ -1,3 +1,8 @@
+2008-10-23 Samuel Abels <http://debain.org>
+
+	* src/Exscript/TerminalActions/Authenticate.py, src/Exscript/Account.py: Add
+	a 'login_done' signal to the Account class.
+
 2008-10-22 Samuel Abels <http://debain.org>
 
 	* exscript, src/Exscript/AccountManager.py,

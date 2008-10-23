@@ -13,8 +13,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
+from SpiffSignal import Trackable
 
-class Account(object):
+class Account(Trackable):
     """
     This class represents a user account.
     """
@@ -23,6 +24,7 @@ class Account(object):
         """
         Constructor.
         """
+        Trackable.__init__(self)
         self.manager                = None
         self.name                   = name
         self.password               = password
