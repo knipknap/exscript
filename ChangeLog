@@ -1,3 +1,9 @@
+2008-10-24 Samuel Abels <http://debain.org>
+
+	* src/Exscript/Account.py: Add 'release_before' signal.
+	* src/Exscript/TerminalActions/Authenticate.py: Emit 'login_done' signal 
+	on Authenticate class, no longer on the Account class.
+
 2008-10-23 Samuel Abels <http://debain.org>
 
 	* src/Exscript/TerminalActions/Authenticate.py, src/Exscript/Account.py: Add

@@ -57,7 +57,7 @@ class Authenticate(Action):
             account.release()
             conn.set_on_data_received_cb(None)
             raise
-        account.signal_emit('login_done', account, conn)
+        self.signal_emit('login_done', account, conn)
         local_data['account'] = account
         account.release()
         conn.set_on_data_received_cb(None)

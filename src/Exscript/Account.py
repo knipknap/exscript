@@ -53,6 +53,7 @@ class Account(Trackable):
         """
         if self.manager is not None:
             self.manager.release_account(self)
+        self.signal_emit('release_before', self)
         self.lock.release()
 
 
