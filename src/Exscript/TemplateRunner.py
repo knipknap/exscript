@@ -42,6 +42,7 @@ class TemplateRunner(Job):
             - verbose: The verbosity level of the interpreter.
             - parser_verbose: The verbosity level of the parser.
             - domain: The default domain of the contacted hosts.
+            - retry_login: The number of login retries, default 0.
             - logdir: The directory into which the logs are written.
             - overwrite_logs: Whether existing logfiles are overwritten.
             - no_prompt: Whether the compiled program should wait for a 
@@ -57,10 +58,34 @@ class TemplateRunner(Job):
         self.global_defines = {}
         self.options        = {}
         self.accounts       = {}
-        self.verbose        = kwargs.get('verbose')
-        self.parser         = Parser(debug     = kwargs.get('parser_verbose', 0),
-                                     no_prompt = kwargs.get('no_prompt',      0))
         self.set_options(**kwargs)
+
+
+    def set_options(self, **kwargs):
+        """
+        Set the given options of the template runner.
+        """
+        self.options.update(kwargs)
+        self.parser_verbose = kwargs.get('parser_verbose', 0)
+        self.no_prompt      = kwargs.get('no_prompt',      0)
+        self.verbose        = kwargs.get('verbose',        0)
+        self.retry_login    = kwargs.get('retry_login',    0)
+        self.parser         = self._get_parser()
+        if self.options.get('define') is not None:
+            self.define(**self.options.get('define'))
+        if self.options.get('host') is not None:
+            self.add_host(self.options.get('host'))
+        if self.options.get('hosts') is not None:
+            self.add_hosts(self.options.get('hosts'))
+        if self.options.has_key('template'):
+            self.read_template(self.options.get('template'))
+        if self.options.has_key('template_file'):
+            self.read_template_from_file(self.options.get('template_file'))
+
+
+    def _get_parser(self):
+        return Parser(debug     = self.parser_verbose,
+                      no_prompt = self.no_prompt)
 
 
     def _get_account(self, user, password, password2 = None):
@@ -72,23 +97,6 @@ class TemplateRunner(Job):
         account = Account(user, password, password2)
         self.accounts[user] = account
         return account
-
-
-    def set_options(self, **kwargs):
-        """
-        Set the given options of the template runner.
-        """
-        self.options.update(kwargs)
-        if self.options.get('define') is not None:
-            self.define(**self.options.get('define'))
-        if self.options.get('host') is not None:
-            self.add_host(self.options.get('host'))
-        if self.options.get('hosts') is not None:
-            self.add_hosts(self.options.get('hosts'))
-        if self.options.has_key('template'):
-            self.read_template(self.options.get('template'))
-        if self.options.has_key('template_file'):
-            self.read_template_from_file(self.options.get('template_file'))
 
 
     def add_host(self, host):
@@ -253,6 +261,8 @@ class TemplateRunner(Job):
         else:
             hostname     = self.hostnames[0]
             host_defines = self.host_defines[self.hostnames[0]]
+
+        # Assign to the parser.
         self.parser.define(**self.global_defines)
         self.parser.define(**host_defines)
         self.parser.define(__filename__ = self.file)
@@ -387,21 +397,46 @@ class TemplateRunner(Job):
         if authenticate:
             sequence.add(Authenticate(exscript.account_manager,
                                       this_account,
-                                      wait = wait))
+                                      wait  = wait))
         sequence.add(CommandScript(compiled))
         sequence.add(Close())
-        sequence.signal_connect('completed',
-                                self._on_sequence_completed,
+        sequence.signal_connect('aborted',
+                                self._on_sequence_aborted,
+                                exscript,
+                                hostname,
+                                compiled)
+        sequence.signal_connect('succeeded',
+                                self._on_sequence_succeeded,
                                 hostname,
                                 compiled)
         return sequence
 
 
-    def _on_sequence_completed(self, sequence, hostname, compiled):
+    def _copy_variables_from_thread(self, hostname, compiled):
         vars = compiled.get_vars()
         if vars.has_key('hostname'):
             del vars['hostname']
         self.define_host(hostname, **vars)
+
+
+    def _on_sequence_aborted(self,
+                             sequence,
+                             exception,
+                             exscript,
+                             hostname,
+                             compiled):
+        if sequence.retry == 0:
+            self._copy_variables_from_thread(hostname, compiled)
+            return
+        new_sequence       = self._get_sequence(exscript, hostname)
+        new_sequence.retry = sequence.retry - 1
+        retry              = self.retry_login - new_sequence.retry
+        new_sequence.name  = new_sequence.name + ' (retry %d)' % retry
+        exscript.workqueue.priority_enqueue(new_sequence)
+
+
+    def _on_sequence_succeeded(self, sequence, hostname, compiled):
+        self._copy_variables_from_thread(hostname, compiled)
 
 
     def run(self, exscript):
@@ -414,6 +449,7 @@ class TemplateRunner(Job):
                 gc.collect()
 
             self._dbg(1, 'Building sequence for %s.' % hostname)
-            sequence = self._get_sequence(exscript, hostname)
+            sequence       = self._get_sequence(exscript, hostname)
+            sequence.retry = self.retry_login
             if sequence is not None:
                 exscript.workqueue.enqueue(sequence)

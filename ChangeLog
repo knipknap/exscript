@@ -1,3 +1,8 @@
+2008-10-28 Samuel Abels <http://debain.org>
+
+	* exscript, src/Exscript/Exscript.py, src/Exscript/TemplateRunner.py: Add
+	--retry-login switch that allows for retrying the login procedure.
+
 2008-10-24 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Account.py: Add 'release_before' signal.

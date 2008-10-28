@@ -41,7 +41,8 @@ class Exscript(object):
         self.set_max_threads(kwargs.get('max_threads', 1))
         self.workqueue.set_debug(kwargs.get('verbose', 0))
         self.workqueue.signal_connect('job-started',   self._on_job_started)
-        self.workqueue.signal_connect('job-completed', self._on_job_completed)
+        self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
+        self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
 
 
     def _on_job_started(self, job):
@@ -49,9 +50,14 @@ class Exscript(object):
             print job.getName(), 'started.'
 
 
-    def _on_job_completed(self, job):
+    def _on_job_succeeded(self, job):
         if self.workqueue.get_max_threads() > 1:
-            print job.getName(), 'completed.'
+            print job.getName(), 'succeeded.'
+
+
+    def _on_job_aborted(self, job, e):
+        if self.workqueue.get_max_threads() > 1:
+            print job.getName(), 'aborted:', e
 
 
     def _dbg(self, level, msg):

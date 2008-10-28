@@ -76,6 +76,8 @@ def usage():
     print "                 Specify which protocol to use to connect to the remote host."
     print "                 STRING is one of: telnet ssh"
     print "                 The default protocol is telnet."
+    print "      --retry-login NUM"
+    print "                 Defines the number of retries on login failure. Default is 0."
     print "      --sleep TIME"
     print "                 Waits for the specified time before running the script."
     print "                 TIME is a timespec as specified by the 'sleep' Unix command."
@@ -114,6 +116,7 @@ default_options = [
   ('verbose=',          'v:', 0),
   ('parser-verbose=',   'V:', 0),
   ('protocol=',         'p:', 'telnet'),
+  ('retry-login=',      None, 0),
   ('sleep=',            None, ''),
   ('ssh-auto-verify',   None, False),
   ('ssh-key=',          None, None),
@@ -147,9 +150,8 @@ def run(*args, **kwargs):
         usage()
         sys.exit(1)
     trunner = TemplateRunner(verbose        = options.get('verbose'),
-                             parser_verbose = options.get('parser-verbose'),
-                             no_prompt      = options.get('no-prompt'),
                              domain         = options.get('default-domain'),
+                             retry_login    = options.get('retry-login'),
                              overwrite_logs = options.get('overwrite-logs'),
                              logdir         = options.get('logdir'))
     trunner.add_hosts(hostnames)
@@ -252,7 +254,10 @@ def run(*args, **kwargs):
 
     # Configure the template runner.
     del options['hosts']
-    trunner.set_options(**options)
+    trunner.set_options(retry_login    = options.get('retry-login'),
+                        parser_verbose = options.get('parser-verbose'),
+                        no_prompt      = options.get('no-prompt'),
+                        **options)
 
     # Wait until the specified time.
     if options['sleep']:
