@@ -37,6 +37,9 @@ class TemplateRunner(Job):
         @type  kwargs: dict
         @param kwargs: The following options are supported:
             - define: Global variables.
+            - host: Passed to add_host().
+            - hosts: Passed to add_hosts().
+            - define_hosts: Passed to define_hosts().
             - template_file: The template file to be executed.
             - template: The template to be executed.
             - verbose: The verbosity level of the interpreter.
@@ -73,6 +76,8 @@ class TemplateRunner(Job):
         self.parser         = self._get_parser()
         if self.options.get('define') is not None:
             self.define(**self.options.get('define'))
+        if self.options.get('define_hosts') is not None:
+            self.define_hosts(self.options.get('define_hosts'))
         if self.options.get('host') is not None:
             self.add_host(self.options.get('host'))
         if self.options.get('hosts') is not None:
@@ -229,8 +234,22 @@ class TemplateRunner(Job):
         @param kwargs: Variables to make available to the Exscript.
         """
         if not self.host_defines.has_key(hostname):
-            self.host_defines[hostname] = {}
+            self.add_host(hostname)
         self.host_defines[hostname].update(kwargs)
+
+
+    def define_hosts(self, hosts):
+        """
+        Convenience wrapper around define_host() handling multiple hosts.
+
+        Given a dictionary mapping hostnames to variables, this function 
+        calls define_host() for each hostname, passing the variables to it.
+
+        @type  hosts: dict
+        @param hosts: Maps hostnames to a dictionaries containing variables.
+        """
+        for host, vars in hosts.iteritems():
+            self.define_host(host, **vars)
 
 
     def get_host(self, hostname, varname):

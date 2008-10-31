@@ -1,3 +1,7 @@
+2008-10-29 Samuel Abels <http://debain.org>
+
+	* src/Exscript/TemplateRunner.py: Add define_hosts() method.
+
 2008-10-28 Samuel Abels <http://debain.org>
 
 	* exscript, src/Exscript/Exscript.py, src/Exscript/TemplateRunner.py: Add
