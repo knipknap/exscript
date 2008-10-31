@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-from Token import Token
+from Token import Token, string_re
 
 # Matches any opening parenthesis that is neither preceeded by a backslash
 # nor has a "?:" or "?<" appended.
@@ -75,10 +75,10 @@ class Regex(Token):
 
         # Collect modifiers.
         parser.set_grammar(modifier_grammar_c)
-        flags = 0
+        self.flags = 0
         while parser.current_is('modifier'):
             if parser.next_if('modifier', 'i'):
-                flags = flags | re.I
+                self.flags = self.flags | re.I
             else:
                 modifier = parser.token()[1]
                 error    = 'Invalid regular expression modifier "%s"' % modifier
@@ -88,7 +88,7 @@ class Regex(Token):
         # Compile the regular expression.
         self.pattern = regex
         try:
-            self.regex = re.compile(regex, flags)
+            re.compile(regex, self.flags)
         except Exception, e:
             error = 'Invalid regular expression %s: %s' % (repr(regex), e)
             parent.syntax_error(self, error)
@@ -100,7 +100,8 @@ class Regex(Token):
 
 
     def value(self):
-        return self.regex
+        pattern = string_re.sub(self.variable_sub_cb, self.pattern)
+        return re.compile(pattern, self.flags)
 
 
     def dump(self, indent = 0):
