@@ -43,6 +43,8 @@ def usage():
     print "      --default-domain STRING"
     print "                 The IP domain name that is used if a given hostname has no "
     print "                 domain appended."
+    print "  -e, --execute EXSCRIPT"
+    print "                 Interpretes the given string as the script."
     print "      --hosts FILE"
     print "                 Loads a list of hostnames from the given file (one host per"
     print "                 line)."
@@ -104,6 +106,7 @@ default_options = [
   ('connections=',      'c:', 1),
   ('csv-hosts=',        None, None),
   ('define=',           'd:', default_defines),
+  ('execute=',          'e:', None),
   ('hosts=',            None, None),
   ('default-domain=',   None, ''),
   ('non-interactive',   'i',  False),
@@ -154,7 +157,11 @@ def run(*args, **kwargs):
                              retry_login    = options.get('retry-login'),
                              overwrite_logs = options.get('overwrite-logs'),
                              logdir         = options.get('logdir'))
-    trunner.add_hosts(hostnames)
+    if options.get('execute') is not None:
+        trunner.add_host(filename)
+        trunner.add_hosts(hostnames)
+    else:
+        trunner.add_hosts(hostnames)
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
     if options.get('csv-hosts') is not None:
@@ -188,10 +195,13 @@ def run(*args, **kwargs):
         sys.exit(1)
 
     # Read the Exscript.
-    file            = open(filename, 'r')
-    trunner_content = file.read()
-    trunner.file    = filename
-    file.close()
+    if options.get('execute') is not None:
+        trunner_content = options.get('execute')
+    else:
+        file            = open(filename, 'r')
+        trunner_content = file.read()
+        trunner.file    = filename
+        file.close()
 
     # Prepare the code that is executed after the user script has completed.
     #FIXME: Move into the library, then use read_template_from_file instead of read_template().

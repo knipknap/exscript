@@ -1,3 +1,8 @@
+2008-11-04 Samuel Abels <http://debain.org>
+
+	* exscript: Add -e command line switch.
+	* src/Exscript/TemplateRunner.py: Ignore empty lines in CSV files.
+
 2008-10-30 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Interpreter/Regex.py: Allow for embedding variables in 

@@ -185,6 +185,9 @@ class TemplateRunner(Job):
         # Walk through all lines and create a map that maps hostname to definitions.
         last_hostname = ''
         for line in file_handle:
+            if line.strip() == '':
+                continue
+
             line         = re.sub(r'[\r\n]*$', '', line)
             values       = line.split('\t')
             hostname_url = values.pop(0).strip()
