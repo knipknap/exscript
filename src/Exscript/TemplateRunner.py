@@ -39,6 +39,8 @@ class TemplateRunner(Job):
             - define: Global variables.
             - host: Passed to add_host().
             - hosts: Passed to add_hosts().
+            - hosts_file: Passed to add_hosts_from_file().
+            - hosts_csv: Passed to add_hosts_from_csv().
             - define_hosts: Passed to define_hosts().
             - template_file: The template file to be executed.
             - template: The template to be executed.
@@ -82,6 +84,10 @@ class TemplateRunner(Job):
             self.add_host(self.options.get('host'))
         if self.options.get('hosts') is not None:
             self.add_hosts(self.options.get('hosts'))
+        if self.options.get('hosts_file') is not None:
+            self.add_hosts_from_file(self.options.get('hosts_file'))
+        if self.options.get('hosts_csv') is not None:
+            self.add_hosts_from_csv(self.options.get('hosts_csv'))
         if self.options.has_key('template'):
             self.read_template(self.options.get('template'))
         if self.options.has_key('template_file'):

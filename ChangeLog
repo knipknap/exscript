@@ -1,3 +1,7 @@
+2008-11-17 Samuel Abels <http://debain.org>
+
+	* src/Exscript/TemplateRunner.py: Add hosts_csv and hosts_file arguments.
+
 2008-11-04 Samuel Abels <http://debain.org>
 
 	* exscript: Add -e command line switch.
