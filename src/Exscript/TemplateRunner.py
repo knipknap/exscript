@@ -99,10 +99,13 @@ class TemplateRunner(Job):
                       no_prompt = self.no_prompt)
 
 
-    def _get_account(self, user, password, password2 = None):
+    def _get_account(self, exscript, user, password, password2 = None):
         if user is None:
             return None
         account = self.accounts.get(user)
+        if account is not None:
+            return account
+        account = exscript.account_manager.get_account_from_name(user)
         if account is not None:
             return account
         account = Account(user, password, password2)
@@ -337,7 +340,7 @@ class TemplateRunner(Job):
         this_proto       = url.protocol
         this_user        = url.username
         this_password    = url.password
-        this_account     = self._get_account(this_user, this_password)
+        this_account     = self._get_account(exscript, this_user, this_password)
         this_host        = url.hostname
 
         # Pass variables to the Exscript interpreter.
