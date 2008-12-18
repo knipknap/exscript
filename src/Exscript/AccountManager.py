@@ -13,8 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
-from ConfigParser import RawConfigParser
-from Account      import Account
+from Account import Account
 
 class AccountManager(object):
     """
@@ -63,7 +62,8 @@ class AccountManager(object):
         @return: The newly added account instances.
         """
         accounts = []
-        parser   = RawConfigParser()
+        cfgparser = __import__('ConfigParser', globals(), locals(), [''])
+        parser    = cfgparser.RawConfigParser()
         parser.read(filename)
         for item in parser.items('account-pool'):
             account = self.create_account(*item)
