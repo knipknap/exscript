@@ -94,6 +94,12 @@ class TemplateRunner(Job):
             self.read_template_from_file(self.options.get('template_file'))
 
 
+    def _dbg(self, level, msg):
+        if level > self.verbose:
+            return
+        print msg
+
+
     def _get_parser(self):
         return Parser(debug     = self.parser_verbose,
                       no_prompt = self.no_prompt)
@@ -459,10 +465,17 @@ class TemplateRunner(Job):
         if sequence.retry == 0:
             self._copy_variables_from_thread(hostname, compiled)
             return
+        self._dbg(1, 'Retrying %s' % hostname)
+        self._dbg(5, 'Retrying with code: %s' % repr(self.code))
         new_sequence       = self._get_sequence(exscript, hostname)
         new_sequence.retry = sequence.retry - 1
         retry              = self.retry_login - new_sequence.retry
         new_sequence.name  = new_sequence.name + ' (retry %d)' % retry
+        logfile            = '%s_retry%d.log' % (hostname, retry)
+        logfile            = os.path.join(self.options['logdir'], logfile)
+        error_logfile      = logfile + '.error'
+        new_sequence.set_logfile(logfile)
+        new_sequence.set_error_logfile(error_logfile)
         exscript.workqueue.priority_enqueue(new_sequence)
 
 

@@ -1,3 +1,9 @@
+2008-12-19 Samuel Abels <http://debain.org>
+
+	* src/Exscript/TemplateRunner.py,
+	src/Exscript/TerminalActions/LoggedSequence.py: Improved logfile handling,
+	create a new logfile for eacht retry.
+
 2008-11-17 Samuel Abels <http://debain.org>
 
 	* src/Exscript/TemplateRunner.py: Add hosts_csv and hosts_file arguments.
