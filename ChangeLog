@@ -3,6 +3,8 @@
 	* src/Exscript/TemplateRunner.py,
 	src/Exscript/TerminalActions/LoggedSequence.py: Improved logfile handling,
 	create a new logfile for eacht retry.
+	* src/Exscript/Interpreter/stdlib/File/exists.py,
+	src/Exscript/Interpreter/stdlib/File/mkdir.py: New stdlib functions.
 
 2008-11-17 Samuel Abels <http://debain.org>
 
