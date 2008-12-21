@@ -147,6 +147,58 @@ options are currently provided:
 \input{cliopt.tex}
 
 
+\subsection{Using Account Pooling}
+
+It is possible to provide an account pool from which Exscript takes a 
+user account whenever it needs to log into a remote host. Depending on 
+the authentification mechanism used in your network, you may significantly 
+increase the speed of parallel connections by using more than one account 
+in parallel. The following steps need to be taken to use the feature:
+
+\begin{enumerate}
+\item Create a file with the following format:
+
+\begin{lstlisting}
+[account-pool]
+user=password
+other_user=another_password
+somebody=yet_another_password
+\end{lstlisting}
+
+\item Save the file. It is assumed that you are aware of the security 
+implications of saving your login passwords in a text file.
+\item Start Exscript with the "--account-pool FILE" option. For example:
+
+\begin{lstlisting}
+exscript --account-pool /home/user/my_accounts my.exscript host4
+\end{lstlisting}
+\end{enumerate}
+
+
+\subsection{Using a CSV file as input}
+
+By providing the --csv-hosts option you may pass a list of hosts to 
+Exscript while at the same time providing a number of variables to 
+the script. The CSV file should have the following format: 
+
+\begin{lstlisting}
+hostname my_variable another_variable
+myhost value another_value
+yourhost hello world
+\end{lstlisting}
+
+Note that fields are separated using the tab character, and the first 
+line must start with the string "hostname" and is followed by a list of 
+column names.
+
+In the Exscript, you may then access the variables using those column names: 
+
+\begin{lstlisting}
+ls -l $my_variable
+touch $another_variable
+\end{lstlisting}
+
+
 \section{Language Syntax}
 \subsection{Sending Commands To The Remote Host}
 

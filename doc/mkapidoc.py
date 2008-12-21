@@ -4,7 +4,10 @@ import os, re, sys
 
 doc_dir  = 'api'
 doc_file = os.path.join(doc_dir, 'Exscript.py')
-files = ['../src/Exscript/Exscript.py'] # Order matters - can't resolve inheritance otherwise.
+files = ['../src/Exscript/Job.py',
+         '../src/Exscript/Exscript.py',
+         '../src/Exscript/TemplateRunner.py',
+         '../src/Exscript/Account.py'] # Order matters - can't resolve inheritance otherwise.
 classes = [os.path.splitext(os.path.basename(file))[0] for file in files]
 
 # Concatenate the content of all files into one file.
