@@ -1,6 +1,8 @@
 HANDBOOKS=en
 IN_BASENAME=exscript
 OUT_BASENAME=exscript
+PUBLISH_PATH=/home/sab/backups/code/www/spiff.debain.org/static/docs
+PUBLISH_HOST=root@debain.org
 
 all: handbook apidocs
 
@@ -63,4 +65,6 @@ clean:
 	rm -f *.aux *.log *.out *.pdf *.toc # figures/*.png
 
 publish: handbook apidocs
-	scp -r handbook/* api/* root@debain.org:/home/sab/backups/code/www/spiff.debain.org/static/docs/exscript/
+	ssh root@debain.org "mkdir -p $(PUBLISH_PATH)/$(OUT_BASENAME)"
+	scp -r handbook/* api/* $(PUBLISH_HOST):$(PUBLISH_PATH)/$(OUT_BASENAME)/
+	ssh root@debain.org "chown -R www-data:www-data $(PUBLISH_PATH)"
