@@ -2,6 +2,7 @@
 
 	* src/Exscript/Interpreter/stdlib/File/write.py: Add mode argument to the
 	file.write() function.
+	* src/Exscript/TemplateRunner.py: Fix: Synchronization issues on retry.
 	* Release 0.9.12
 
 2008-12-19 Samuel Abels <http://debain.org>

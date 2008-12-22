@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, time, os, re, gc, copy
+import sys, time, os, re, gc, copy, threading
 from Job             import Job
 from Interpreter     import Parser
 from FooLib          import UrlParser
@@ -63,6 +63,8 @@ class TemplateRunner(Job):
         self.global_defines = {}
         self.options        = {}
         self.accounts       = {}
+        self.parser         = None
+        self.parser_lock    = threading.Lock()
         self.set_options(**kwargs)
 
 
@@ -75,7 +77,9 @@ class TemplateRunner(Job):
         self.no_prompt      = kwargs.get('no_prompt',      0)
         self.verbose        = kwargs.get('verbose',        0)
         self.retry_login    = kwargs.get('retry_login',    0)
-        self.parser         = self._get_parser()
+        self.parser_lock.acquire()
+        self.parser = self._get_parser()
+        self.parser_lock.release()
         if self.options.get('define') is not None:
             self.define(**self.options.get('define'))
         if self.options.get('define_hosts') is not None:
@@ -300,6 +304,7 @@ class TemplateRunner(Job):
             host_defines = self.host_defines[self.hostnames[0]]
 
         # Assign to the parser.
+        self.parser_lock.acquire()
         self.parser.define(**self.global_defines)
         self.parser.define(**host_defines)
         self.parser.define(__filename__ = self.file)
@@ -310,10 +315,12 @@ class TemplateRunner(Job):
             self.compiled = self.parser.parse(template)
             self.code     = template
         except Exception, e:
+            self.parser_lock.release()
             if self.verbose > 0:
                 raise
             print e
             sys.exit(1)
+        self.parser_lock.release()
 
 
     def read_template_from_file(self, filename):
@@ -358,17 +365,28 @@ class TemplateRunner(Job):
         variables.update(self.host_defines[hostname])
         variables['hostname'] = this_host
         variables.update(url.vars)
+        self.parser_lock.acquire()
         self.parser.define(**variables)
 
         # Parse the Exscript template.
         #FIXME: In Python > 2.2 we can (hopefully) deep copy the object instead of
         # recompiling numerous times.
         if self.options.has_key('filename'):
-            file     = self.options.get('filename')
-            compiled = self.parser.parse_file(file)
+            file = self.options.get('filename')
+            try:
+                compiled = self.parser.parse_file(file)
+            except:
+                self.parser_lock.release()
+                raise
         else:
-            code     = self.options.get('code', self.code)
-            compiled = self.parser.parse(code)
+            code = self.options.get('code', self.code)
+            try:
+                compiled = self.parser.parse(code)
+            except:
+                self.parser_lock.release()
+                raise
+        self.parser_lock.release()
+
         #compiled = copy.deepcopy(self.compiled)
         compiled.init(**variables)
         compiled.define(__filename__ = self.file)
