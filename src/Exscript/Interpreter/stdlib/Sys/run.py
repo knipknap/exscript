@@ -25,8 +25,8 @@ def execute(scope, host, filename):
                        password = password,
                        filename = filename)
     sequence = runner._get_sequence(exscript, hostname)
-    exscript.workqueue.priority_enqueue(sequence, 1)
-    while exscript.workqueue.in_queue(sequence):
+    exscript._priority_enqueue_action(sequence, 1)
+    while not exscript._action_is_completed(sequence):
         time.sleep(1)
         continue
     return 1

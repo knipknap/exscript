@@ -35,9 +35,13 @@ class Exscript(object):
             - verbose: The verbosity level of Exscript.
             - max_threads: The maximum number of concurrent threads, default 1
         """
-        self.workqueue       = WorkQueue()
-        self.account_manager = AccountManager()
-        self.verbose         = kwargs.get('verbose')
+        self.workqueue         = WorkQueue()
+        self.account_manager   = AccountManager()
+        self.verbose           = kwargs.get('verbose')
+        self.completed         = 0
+        self.total             = 0
+        self.show_status_bar        = True
+        self.show_status_bar_length = 0
         self.set_max_threads(kwargs.get('max_threads', 1))
         self.workqueue.set_debug(kwargs.get('verbose', 0))
         self.workqueue.signal_connect('job-started',   self._on_job_started)
@@ -45,25 +49,77 @@ class Exscript(object):
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
 
 
-    def _on_job_started(self, job):
-        if self.workqueue.get_max_threads() > 1:
-            print job.getName(), 'started.'
+    def _del_status_bar(self):
+        if self.show_status_bar_length == 0:
+            return
+        sys.stdout.write('\b \b' * self.show_status_bar_length)
+        sys.stdout.flush()
+        self.show_status_bar_length = 0
 
 
-    def _on_job_succeeded(self, job):
-        if self.workqueue.get_max_threads() > 1:
-            print job.getName(), 'succeeded.'
+    def _print_status_bar(self):
+        if not self.show_status_bar:
+            return
+        if self.total == 0:
+            return
+        percent  = 100.0 / self.total * self.completed
+        progress = '%d/%d (%d%%)' % (self.completed, self.total, percent)
+        actions  = self.workqueue.get_running_actions()
+        running  = '|'.join([a.name for a in actions])
+        text     = 'In progress: [%s] %s' % (running, progress)
+        sys.stdout.write(text)
+        sys.stdout.flush()
+        self.show_status_bar_length = len(text)
 
 
-    def _on_job_aborted(self, job, e):
-        if self.workqueue.get_max_threads() > 1:
-            print job.getName(), 'aborted:', e
+    def _print(self, msg):
+        self._del_status_bar()
+        sys.stdout.write(msg + '\n')
+        self._print_status_bar()
 
 
     def _dbg(self, level, msg):
         if level > self.verbose:
             return
-        print msg
+        self._print(msg)
+
+
+    def _on_job_started(self, job):
+        if self.workqueue.get_max_threads() == 1:
+            return
+        if not self.show_status_bar:
+            self._print(job.getName() + ' started.')
+        else:
+            self._del_status_bar()
+            self._print_status_bar()
+
+
+    def _on_job_succeeded(self, job):
+        self.completed += 1
+        if self.workqueue.get_max_threads() == 1:
+            return
+        self._print(job.getName() + ' succeeded.')
+
+
+    def _on_job_aborted(self, job, e):
+        self.completed += 1
+        if self.workqueue.get_max_threads() == 1:
+            return
+        self._print(job.getName() + ' aborted: ' + str(e))
+
+
+    def _enqueue_action(self, action):
+        self.total += 1
+        self.workqueue.enqueue(action)
+
+
+    def _priority_enqueue_action(self, action, force = 0):
+        self.total += 1
+        self.workqueue.priority_enqueue(action, force)
+
+
+    def _action_is_completed(self, action):
+        return not self.workqueue.in_queue(action)
 
 
     def set_max_threads(self, n_connections):
@@ -133,7 +189,7 @@ class Exscript(object):
             self.run_async(job)
         except KeyboardInterrupt:
             print 'Interrupt caught succcessfully.'
-            print '%s unfinished jobs.' % self.workqueue.get_length()
+            print '%d unfinished jobs.' % (self.total - self.completed)
             sys.exit(1)
 
         # Wait until the engine is finished.
@@ -146,3 +202,4 @@ class Exscript(object):
         self._dbg(1, 'Shutting down engine...')
         self.workqueue.shutdown()
         self._dbg(1, 'Engine shut down.')
+        self._del_status_bar()

@@ -494,7 +494,7 @@ class TemplateRunner(Job):
         error_logfile      = logfile + '.error'
         new_sequence.set_logfile(logfile)
         new_sequence.set_error_logfile(error_logfile)
-        exscript.workqueue.priority_enqueue(new_sequence)
+        exscript._priority_enqueue_action(new_sequence)
 
 
     def _on_sequence_succeeded(self, sequence, hostname, compiled):
@@ -502,10 +502,16 @@ class TemplateRunner(Job):
 
 
     def run(self, exscript):
-        n_connections = exscript.get_max_threads()
+        n_connections   = exscript.get_max_threads()
+        hostnames       = self.hostnames[:]
+        exscript.total += len(hostnames)
 
-        for hostname in self.hostnames[:]:
+        for hostname in hostnames:
             # To save memory, limit the number of parsed (=in-memory) items.
+            # A side effect is that Exscript will no longer know the total
+            # number of jobs - to work around this, we first add the total
+            # ourselfs (see above), and then subtract one from the total 
+            # each time a new host is appended (see below).
             while exscript.workqueue.get_length() > n_connections * 2:
                 time.sleep(1)
                 gc.collect()
@@ -514,4 +520,5 @@ class TemplateRunner(Job):
             sequence       = self._get_sequence(exscript, hostname)
             sequence.retry = self.retry_login
             if sequence is not None:
-                exscript.workqueue.enqueue(sequence)
+                exscript._enqueue_action(sequence)
+                exscript.total -= 1

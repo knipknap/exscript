@@ -3,6 +3,6 @@ import sys
 signature = [('self', 'string')]
 
 def execute(scope, string):
-    sys.stdout.write(string[0] + '\n')
-    sys.stdout.flush()
+    exscript = scope.get('__exscript__')
+    exscript._print(string[0] + '\n')
     return 1
