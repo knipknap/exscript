@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 setup(name             = 'Exscript',
-      version          = '0.9.12',
+      version          = '0.9.13',
       description      = 'Script and template language for Telnet and SSH',
       long_description = \
 """
