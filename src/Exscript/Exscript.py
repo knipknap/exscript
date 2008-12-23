@@ -196,6 +196,8 @@ class Exscript(object):
         self._dbg(1, 'All actions enqueued.')
         while self.workqueue.get_length() > 0:
             #print '%s jobs left, waiting.' % workqueue.get_length()
+            self._del_status_bar()
+            self._print_status_bar()
             time.sleep(1)
             gc.collect()
 
