@@ -482,7 +482,7 @@ class TemplateRunner(Job):
                              compiled):
         if sequence.retry == 0:
             self._copy_variables_from_thread(hostname, compiled)
-            return
+            raise exception
         self._dbg(1, 'Retrying %s' % hostname)
         self._dbg(5, 'Retrying with code: %s' % repr(self.code))
         new_sequence       = self._get_sequence(exscript, hostname)
