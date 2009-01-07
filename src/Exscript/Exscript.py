@@ -60,6 +60,8 @@ class Exscript(object):
     def _print_status_bar(self):
         if not self.show_status_bar:
             return
+        if self.workqueue.get_max_threads() == 1:
+            return
         if self.total == 0:
             return
         percent  = 100.0 / self.total * self.completed
