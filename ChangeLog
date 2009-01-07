@@ -1,3 +1,7 @@
+2009-01-07 Samuel Abels <http://debain.org>
+
+	* Release 0.9.14.
+
 2008-12-23 Samuel Abels <http://debain.org>
 
 	* src/Exscript/Exscript.py, src/Exscript/TemplateRunner.py, 

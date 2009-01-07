@@ -15,24 +15,26 @@ that make it a lot easier to use and understand for non-developers.
 
 Installation
 -------------
-1. Install SpiffWorkQueue (http://code.google.com/p/spiff-workqueue/)
-2. Install python-crypto
-3. Install termconnect (http://code.google.com/p/termconnect/)
-4. Install Exscript. For example, do this as root:
+1. Install python-crypto
+2. Install SpiffSignal (http://code.google.com/p/spiff-signal/)
+3. Install SpiffWorkQueue (http://code.google.com/p/spiff-workqueue/)
+4. Install termconnect (http://code.google.com/p/termconnect/)
+5. Install Exscript. For example, do this as root:
     sudo python setup.py install --prefix /usr/local
 
 
 Links
 ------
-Documentation: http://code.google.com/p/exscript/wiki/Documentation
+Documentation: http://spiff.debain.org/static/docs/exscript/en/exscript.en.pdf
 Mailing List: http://groups.google.com/group/exscript/
 
 
 Dependencies
 -------------
 Python 2.2 or greater
+SpiffSignal
 SpiffWorkQueue
 termconnect
 Python-crypto
 Python-pexpect (optional, for SSH support) 
-ssh command line utility (optional, for ssh support)
+OpenSSH command line client (optional, for ssh support)
