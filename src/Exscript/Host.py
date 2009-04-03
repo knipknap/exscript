@@ -22,9 +22,9 @@ def is_ip(str):
     return False
 
 class Host(object):
-    def __init__(self, uri):
+    def __init__(self, uri, **kwargs):
         self.protocol = 'telnet'
-        self.vars     = {}
+        self.vars     = kwargs
         self.username = None
         self.password = None
         self.set_uri(uri) 
