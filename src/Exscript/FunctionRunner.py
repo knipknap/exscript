@@ -99,7 +99,10 @@ class FunctionRunner(Job):
         @type  uri: string
         @param uri: A hostname, IP address, or a URI.
         """
-        host = Host(uri)
+        if isinstance(uri, Host):
+            host = uri
+        else:
+            host = Host(uri)
         self.hosts.append(host)
 
         # Define host-specific variables.
@@ -206,7 +209,7 @@ class FunctionRunner(Job):
         # One logfile per host.
         logfile       = None
         error_logfile = None
-        if self.options['logdir'] is None:
+        if self.options.get('logdir') is None:
             sequence = Sequence(name = host.get_address())
         else:
             logfile       = os.path.join(self.options['logdir'],

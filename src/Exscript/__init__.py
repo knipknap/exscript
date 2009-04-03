@@ -14,7 +14,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Account        import Account
 from Exscript       import Exscript
+from Host           import Host
 from Job            import Job
+from FunctionRunner import FunctionRunner
 from TemplateRunner import TemplateRunner
 
 import inspect 
