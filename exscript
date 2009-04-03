@@ -190,7 +190,7 @@ def run(*args, **kwargs):
                 sys.exit(1)
 
     # Make sure that all mandatory options are present.
-    if len(trunner.hostnames) <= 0:
+    if len(trunner.host_list) <= 0:
         usage()
         sys.exit(1)
 

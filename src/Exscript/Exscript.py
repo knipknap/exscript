@@ -40,8 +40,8 @@ class Exscript(object):
         self.verbose           = kwargs.get('verbose')
         self.completed         = 0
         self.total             = 0
-        self.show_status_bar        = True
-        self.show_status_bar_length = 0
+        self.show_status_bar   = True
+        self.status_bar_length = 0
         self.set_max_threads(kwargs.get('max_threads', 1))
         self.workqueue.set_debug(kwargs.get('verbose', 0))
         self.workqueue.signal_connect('job-started',   self._on_job_started)
@@ -50,11 +50,11 @@ class Exscript(object):
 
 
     def _del_status_bar(self):
-        if self.show_status_bar_length == 0:
+        if self.status_bar_length == 0:
             return
-        sys.stdout.write('\b \b' * self.show_status_bar_length)
+        sys.stdout.write('\b \b' * self.status_bar_length)
         sys.stdout.flush()
-        self.show_status_bar_length = 0
+        self.status_bar_length = 0
 
 
     def _print_status_bar(self):
@@ -71,7 +71,7 @@ class Exscript(object):
         text     = 'In progress: [%s] %s' % (running, progress)
         sys.stdout.write(text)
         sys.stdout.flush()
-        self.show_status_bar_length = len(text)
+        self.status_bar_length = len(text)
 
 
     def _print(self, msg):

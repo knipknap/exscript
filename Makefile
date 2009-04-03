@@ -17,7 +17,7 @@ svn-environment:
 
 git-environment:
 	mkdir -p $(NAME)
-	cd spiff; for PKG in $(DEPENDS); do \
+	cd $(NAME); for PKG in $(DEPENDS); do \
 		git svn init http://$$PKG.googlecode.com/svn/trunk/ $$PKG; \
 		cd $$PKG; \
 		git svn fetch; \

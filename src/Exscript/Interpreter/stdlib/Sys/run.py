@@ -20,11 +20,13 @@ def execute(scope, host, filename):
             continue
         vars[key] = value
 
-    runner.define_host(hostname, **vars)
+    host = Host(hostname)
+    for key, value in vars.iteritems():
+        host.append(key, value)
     runner.set_options(user     = user,
                        password = password,
                        filename = filename)
-    sequence = runner._get_sequence(exscript, hostname)
+    sequence = runner._get_sequence(exscript, host)
     exscript._priority_enqueue_action(sequence, 1)
     while not exscript._action_is_completed(sequence):
         time.sleep(1)
