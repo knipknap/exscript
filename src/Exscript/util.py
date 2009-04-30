@@ -19,20 +19,23 @@ from Account        import Account
 from Host           import Host
 from FunctionRunner import FunctionRunner
 
+
 def _first_match(string, compiled):
-    match    = compiled.search(string)
-    if match is None and compiled.groups <= 1:
+    match = compiled.search(string)
+    if match is None and compiled.groups == 0:
         return None
     elif match is None:
         return [None for i in range(0, compiled.groups)]
-    elif compiled.groups <= 1:
-        return match.groups(0)[0]
+    elif compiled.groups == 0:
+        return string
+    elif compiled.groups == 1:
+        return match.groups(1)[0]
     else:
-        return [match.groups(i)[0] for i in range(0, compiled.groups)]
+        return [match.groups(i)[0] for i in range(1, compiled.groups + 1)]
 
 
-def first_match(string, regex):
-    return _first_match(string, re.compile(regex))
+def first_match(string, regex, flags = re.M):
+    return _first_match(string, re.compile(regex, flags))
 
 
 def any_match(string, regex):

@@ -12,6 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+import re
 from FooLib import UrlParser
 
 def is_ip(str):
@@ -107,14 +108,14 @@ class Host(object):
 
 
     def set(self, name, value):
-        self.vars[var] = value
+        self.vars[name] = value
 
 
     def append(self, name, value):
         if self.vars.has_key(name):
-            self.vars[var].append(value)
+            self.vars[name].append(value)
         else:
-            self.vars[var] = [value]
+            self.vars[name] = [value]
 
 
     def set_default(self, name, value):
