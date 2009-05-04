@@ -1,4 +1,5 @@
 import os.path, time
+from Exscript import Host
 
 def execute(scope, host, filename):
     user          = scope.get('__user__')
