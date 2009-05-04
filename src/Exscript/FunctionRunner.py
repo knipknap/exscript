@@ -20,6 +20,9 @@ from Host            import Host
 from Account         import Account
 from TerminalActions import *
 
+True  = 1
+False = 0
+
 class FunctionRunner(Job):
     bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
 
