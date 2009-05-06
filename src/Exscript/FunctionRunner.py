@@ -110,6 +110,8 @@ class FunctionRunner(Job):
 
         # Define host-specific variables.
         for key, val in host.vars.iteritems():
+            if not isinstance(val[0], str):
+                continue
             match = self.bracket_expression_re.match(val[0])
             if match is not None:
                 string = match.group(1) or 'a value for "%s"' % key

@@ -108,7 +108,7 @@ class Host(object):
 
 
     def set(self, name, value):
-        self.vars[name] = value
+        self.vars[name] = [value]
 
 
     def append(self, name, value):
@@ -120,7 +120,7 @@ class Host(object):
 
     def set_default(self, name, value):
         if not self.vars.has_key(name):
-            self.vars[name] = value
+            self.vars[name] = [value]
 
 
     def has_key(self, name):
