@@ -22,8 +22,9 @@ def execute(scope, host, filename):
         vars[key] = value
 
     host = Host(hostname)
-    for key, value in vars.iteritems():
-        host.append(key, value)
+    for key, value_list in vars.iteritems():
+        for value in value_list:
+            host.append(key, value)
     runner.set_options(user     = user,
                        password = password,
                        filename = filename)
