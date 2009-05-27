@@ -19,10 +19,9 @@ from Account        import Account
 from Host           import Host
 from FunctionRunner import FunctionRunner
 
-
 def _first_match(string, compiled):
     match = compiled.search(string)
-    if match is None and compiled.groups == 0:
+    if match is None and compiled.groups <= 1:
         return None
     elif match is None:
         return [None for i in range(0, compiled.groups)]
@@ -40,13 +39,19 @@ def first_match(string, regex, flags = re.M):
 
 def any_match(string, regex):
     compiled = re.compile(regex)
-    n_groups = compiled.groups
     results  = []
-    for line in string.split('\n'):
-        match = _first_match(line, compiled)
-        if match is None:
-            continue
-        results.append(match)
+    if compiled.groups <= 1:
+        for line in string.split('\n'):
+            match = _first_match(line, compiled)
+            if match is None:
+                continue
+            results.append(match)
+    else:
+        for line in string.split('\n'):
+            match = _first_match(line, compiled)
+            if match[0] is None:
+                continue
+            results.append(match)
     return results
 
 
@@ -55,14 +60,14 @@ def read_login():
     return Account(user, password)
 
 
-def run(users, hosts, func, *data):
+def run(users, hosts, func, *data, **kwargs):
     if isinstance(users, Account):
         users = [users]
     if isinstance(hosts, Host):
         hosts = [hosts]
 
-    exscript = Exscript()
-    job      = FunctionRunner(func, *data)
+    exscript = Exscript(**kwargs)
+    job      = FunctionRunner(func, *data, **kwargs)
     for user in users:
         exscript.add_account(user)
     for host in hosts:
@@ -70,13 +75,13 @@ def run(users, hosts, func, *data):
     exscript.run(job)
 
 
-def quickrun(hosts, func, *data):
-    return run(read_login(), hosts, func, *data)
+def quickrun(hosts, func, *data, **kwargs):
+    return run(read_login(), hosts, func, *data, **kwargs)
 
 
-def os_function_mapper(exscript, host, conn, map, *data):
+def os_function_mapper(exscript, host, conn, map, *data, **kwargs):
     os   = conn.guess_os()
     func = map.get(os)
     if func is None:
         raise Exception('No handler for %s found.' % os)
-    return func(exscript, host, conn, *data)
+    return func(exscript, host, conn, *data, **kwargs)
