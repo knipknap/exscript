@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import time, os, re, gc
+import util
 from Job             import Job
 from FuncJob         import FuncJob
 from SpiffWorkQueue  import Sequence
@@ -139,72 +140,18 @@ class FunctionRunner(Job):
         @type  filename: string
         @param filename: A full filename.
         """
-        # Open the file.
-        if not os.path.exists(filename):
-            raise IOError('No such file: %s' % filename)
-        file_handle = open(filename, 'r')
-
-        # Read the hostnames.
-        for line in file_handle:
-            hostname = line.strip()
-            if hostname == '':
-                continue
-            self.add_host(hostname)
-
-        file_handle.close()
+        self.add_hosts(util.get_hosts_from_file(filename))
 
 
     def add_hosts_from_csv(self, filename):
         """
-        Reads a list of hostnames and variables from the .csv file with the 
-        given name.
+        Reads a list of hostnames and variables from the .csv file with
+        the given name.
 
         @type  filename: string
         @param filename: A full filename.
         """
-        # Open the file.
-        if not os.path.exists(filename):
-            raise IOError('No such file: %s' % filename)
-        file_handle = open(filename, 'r')
-
-        # Read the header.
-        header = file_handle.readline().rstrip()
-        if re.search(r'^hostname\b', header) is None:
-            msg  = 'Syntax error in CSV file header:'
-            msg += ' File does not start with "hostname".'
-            raise Exception(msg)
-        if re.search(r'^hostname(?:\t[^\t]+)*$', header) is None:
-            msg  = 'Syntax error in CSV file header:'
-            msg += ' Make sure to separate columns by tabs.'
-            raise Exception(msg)
-        varnames = header.split('\t')
-        varnames.pop(0)
-
-        # Walk through all lines and create a map that maps hostname to definitions.
-        last_uri = ''
-        for line in file_handle:
-            if line.strip() == '':
-                continue
-
-            line   = re.sub(r'[\r\n]*$', '', line)
-            values = line.split('\t')
-            uri    = values.pop(0).strip()
-
-            # Add the hostname to our list.
-            if uri != last_uri:
-                #print "Reading hostname", hostname_url, "from csv."
-                host     = self.add_host(uri)
-                last_uri = uri
-
-            # Define variables according to the definition.
-            for i in range(0, len(varnames)):
-                try:
-                    value = values[i]
-                except:
-                    value = ''
-                host.append(varnames[i], value)
-
-        file_handle.close()
+        self.add_hosts(util.get_hosts_from_csv(filename))
 
 
     def _get_sequence(self, exscript, host):
@@ -259,7 +206,7 @@ class FunctionRunner(Job):
                              exscript,
                              host):
         if sequence.retry == 0:
-            raise exception
+            raise # exception
         self._dbg(1, 'Retrying %s' % host.get_address())
         new_sequence       = self._get_sequence(exscript, host)
         new_sequence.retry = sequence.retry - 1
