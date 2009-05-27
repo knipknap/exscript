@@ -21,10 +21,10 @@ def _highest_bit(number):
 def ip2int(ip):
     if ip == '255.255.255.255':
         return 0xFFFFFFFFl
-    return struct.unpack('L', socket.inet_aton(ip))[0]
+    return struct.unpack('!L', socket.inet_aton(ip))[0]
 
 def int2ip(number):
-    return socket.inet_ntoa(struct.pack('L', number))
+    return socket.inet_ntoa(struct.pack('!L', number))
 
 def pfxlen2mask(pfxlen):
     return 0xFFFFFFFFl << (32 - int(pfxlen))
