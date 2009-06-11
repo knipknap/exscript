@@ -168,3 +168,19 @@ def get_hosts_from_csv(filename):
 
     file_handle.close()
     return hosts
+
+
+def run_template(conn, template, **kwargs):
+    # Define default variables.
+    defaults = dict(__filename__   = template,
+                    __connection__ = conn,
+                    hostname       = conn.get_host())
+
+    # Init the parser and compile the template.
+    parser = Parser()
+    parser.define(defaults)
+    parser.define(**kwargs)
+    compiled = parser.parse_file(template)
+
+    # Run.
+    return compiled.execute()
