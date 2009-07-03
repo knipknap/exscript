@@ -60,9 +60,6 @@ def usage():
     print "                 written to stdout."
     print "                 This is already the default behavior if the -c option was given"
     print "                 with a number greater than 1."
-    print "      --overwrite-logs"
-    print "                 Instructs Exscript to overwrite existing logfiles. The default"
-    print "                 is to append the output if a log already exists."
     print "  -n, --no-authentication"
     print "                 When given, the authentication procedure is skipped. Implies -i."
     print "      --no-auto-logout"
@@ -74,6 +71,11 @@ def usage():
     print "                 as 'extract'."
     print "      --no-initial-prompt"
     print "                 Do not wait for a prompt after sending the password."
+    print "      --no-strip"
+    print "                 Do not strip the first line of each response."
+    print "      --overwrite-logs"
+    print "                 Instructs Exscript to overwrite existing logfiles. The default"
+    print "                 is to append the output if a log already exists."
     print "  -p, --protocol STRING"
     print "                 Specify which protocol to use to connect to the remote host."
     print "                 STRING is one of: telnet ssh"
@@ -123,6 +125,7 @@ default_options = [
   ('sleep=',            None, ''),
   ('ssh-auto-verify',   None, False),
   ('ssh-key=',          None, None),
+  ('no-strip',          None, False),
   ('version',           None, False),
   ('help',              'h',  False)
 ]
@@ -156,6 +159,7 @@ def run(*args, **kwargs):
                              domain         = options.get('default-domain'),
                              retry_login    = options.get('retry-login'),
                              overwrite_logs = options.get('overwrite-logs'),
+                             strip_command  = not options.get('no-strip'),
                              logdir         = options.get('logdir'))
     if options.get('execute') is not None:
         trunner.add_host(filename)
@@ -267,6 +271,7 @@ def run(*args, **kwargs):
     trunner.set_options(retry_login    = options.get('retry-login'),
                         parser_verbose = options.get('parser-verbose'),
                         no_prompt      = options.get('no-prompt'),
+                        strip_command  = not options.get('no-strip'),
                         **options)
 
     # Wait until the specified time.

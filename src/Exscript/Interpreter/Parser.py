@@ -19,17 +19,18 @@ from Program import Program
 
 class Parser(object):
     def __init__(self, **kwargs):
-        self.input        = ''
-        self.input_length = 0
-        self.current_char = 0
-        self.last_char    = 0
-        self.current_line = 1
-        self.token_buffer = None
-        self.grammar      = []
-        self.debug        = kwargs.get('debug',     0)
-        self.no_prompt    = kwargs.get('no_prompt', 0)
-        self.variables    = {}
-        self.stdlib       = {}
+        self.input         = ''
+        self.input_length  = 0
+        self.current_char  = 0
+        self.last_char     = 0
+        self.current_line  = 1
+        self.token_buffer  = None
+        self.grammar       = []
+        self.debug         = kwargs.get('debug',         0)
+        self.no_prompt     = kwargs.get('no_prompt',     0)
+        self.strip_command = kwargs.get('strip_command', 1)
+        self.variables     = {}
+        self.stdlib        = {}
         self.load_module(stdlib)
 
 

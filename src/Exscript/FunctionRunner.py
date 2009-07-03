@@ -43,9 +43,6 @@ class FunctionRunner(Job):
             - retry_login: The number of login retries, default 0.
             - logdir: The directory into which the logs are written.
             - overwrite_logs: Whether existing logfiles are overwritten.
-            - no_prompt: Whether the compiled program should wait for a 
-            prompt each time after the Exscript sent a command to the 
-            remote host.
         """
         Job.__init__(self, **kwargs)
         self.hosts       = []
@@ -81,9 +78,8 @@ class FunctionRunner(Job):
         Set the given options.
         """
         self.options.update(kwargs)
-        self.no_prompt      = kwargs.get('no_prompt',      0)
-        self.verbose        = kwargs.get('verbose',        0)
-        self.retry_login    = kwargs.get('retry_login',    0)
+        self.verbose     = kwargs.get('verbose',     0)
+        self.retry_login = kwargs.get('retry_login', 0)
         if self.options.get('define') is not None:
             self.define(**self.options.get('define'))
         if self.options.get('host') is not None:

@@ -33,6 +33,11 @@ class TemplateRunner(FunctionRunner):
         @type  kwargs: dict
         @param kwargs: In addition to the options supported by FunctionRunner,
                        the following options are provided:
+            - no_prompt: Whether the compiled program should wait for a 
+            prompt each time after the Exscript sent a command to the 
+            remote host.
+            - strip_command: Whether the first line of each response (which
+            typically contains the command) is stripped.
             - template_file: The template file to be executed.
             - template: The template to be executed.
             - parser_verbose: The verbosity level of the parser.
@@ -51,6 +56,8 @@ class TemplateRunner(FunctionRunner):
         Set the given options of the template runner.
         """
         FunctionRunner.set_options(self, **kwargs)
+        self.no_prompt      = kwargs.get('no_prompt',      0)
+        self.strip_command  = kwargs.get('strip_command',  1)
         self.parser_verbose = kwargs.get('parser_verbose', 0)
         self.parser_lock.acquire()
         self.parser = self._get_parser()
@@ -62,8 +69,9 @@ class TemplateRunner(FunctionRunner):
 
 
     def _get_parser(self):
-        return Parser(debug     = self.parser_verbose,
-                      no_prompt = self.no_prompt)
+        return Parser(debug         = self.parser_verbose,
+                      no_prompt     = self.no_prompt,
+                      strip_command = self.strip_command)
 
 
     def define(self, **kwargs):
