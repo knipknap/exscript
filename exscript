@@ -3,7 +3,7 @@
 ## Date:        2007-06-04
 ## Description: Starts the Exscript interpreter to execute commands on a list 
 ##              of hosts.
-import sys, os, re
+import sys, os, re, getpass
 import termconnect
 sys.path.append('src')
 from Exscript        import Exscript, Account, TemplateRunner
@@ -263,7 +263,10 @@ def run(*args, **kwargs):
         if match is None:
             continue
         str = match.group(1) or 'a value for "%s"' % key
-        val = raw_input('Please enter %s: ' % str)
+        if str.startswith('!'):
+            val = getpass.getpass('Please enter %s: ' % str[1:])
+        else:
+            val = raw_input('Please enter %s: ' % str)
         options['define'][key] = val
 
     # Configure the template runner.
