@@ -1,4 +1,5 @@
 __all__ = ['Connection',
+           'Crypt',
            'Device',
            'File',
            'IPv4',
