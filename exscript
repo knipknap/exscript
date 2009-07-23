@@ -13,11 +13,11 @@ from Exscript.FooLib import OptionParser
 True  = 1
 False = 0
 
-__version__ = '0.9.13'
+__version__ = '0.9.16'
 
 def usage():
     print "Exscript", __version__, "with termconnect", termconnect.__version__
-    print "Copyright (C) 2007 by Samuel Abels <http://debain.org>."
+    print "Copyright (C) 2007-2009 by Samuel Abels <http://debain.org>."
     print "Syntax: exscript [options] exscript [hostname [hostname ...]]"
     print "      --account-pool FILE"
     print "                 Reads the user/password combination from the given file "
