@@ -171,7 +171,7 @@ def get_hosts_from_csv(filename):
     return hosts
 
 
-def run_template(conn, template, **kwargs):
+def run_template(exscript, conn, template, **kwargs):
     # Define default variables.
     defaults = dict(__filename__ = template,
                     hostname     = conn.get_host())
@@ -181,6 +181,7 @@ def run_template(conn, template, **kwargs):
     parser.define(**defaults)
     parser.define(**kwargs)
     compiled = parser.parse_file(template)
+    compiled.define(__exscript__   = exscript)
     compiled.define(__connection__ = conn)
 
     # Run.
