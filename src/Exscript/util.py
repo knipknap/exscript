@@ -13,10 +13,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re, os
-from Exscript import Exscript
-from FooLib   import Interact
-from Account  import Account
-from Host     import Host
+from Exscript    import Exscript
+from Interpreter import Parser
+from FooLib      import Interact
+from Account     import Account
+from Host        import Host
 
 def _first_match(string, compiled):
     match = compiled.search(string)
@@ -172,15 +173,15 @@ def get_hosts_from_csv(filename):
 
 def run_template(conn, template, **kwargs):
     # Define default variables.
-    defaults = dict(__filename__   = template,
-                    __connection__ = conn,
-                    hostname       = conn.get_host())
+    defaults = dict(__filename__ = template,
+                    hostname     = conn.get_host())
 
     # Init the parser and compile the template.
     parser = Parser()
-    parser.define(defaults)
+    parser.define(**defaults)
     parser.define(**kwargs)
     compiled = parser.parse_file(template)
+    compiled.define(__connection__ = conn)
 
     # Run.
     return compiled.execute()

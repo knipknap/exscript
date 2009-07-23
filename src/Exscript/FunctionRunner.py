@@ -107,9 +107,13 @@ class FunctionRunner(Job):
 
         # Define host-specific variables.
         for key, val in host.vars.iteritems():
-            if not isinstance(val[0], str):
+            try:
+                val = val[0]
+            except:
+                val = None
+            if not isinstance(val, str):
                 continue
-            match = self.bracket_expression_re.match(val[0])
+            match = self.bracket_expression_re.match(val)
             if match is not None:
                 string = match.group(1) or 'a value for "%s"' % key
                 val    = [raw_input('Please enter %s: ' % string)]
