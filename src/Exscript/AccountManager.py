@@ -113,6 +113,7 @@ class AccountManager(object):
     def acquire_account(self, account = None):
         """
         Waits until an account becomes available, then locks and returns it.
+        If an account is not passed, the next available account is returned.
 
         @type  account: Account
         @param account: The account to be acquired, or None.
