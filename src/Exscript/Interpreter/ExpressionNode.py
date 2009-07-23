@@ -40,7 +40,8 @@ class ExpressionNode(Token):
             parser.skip(['whitespace', 'newline'])
             if not parser.current_is('arithmetic_operator') and \
                not parser.current_is('logical_operator') and \
-               not parser.current_is('comparison'):
+               not parser.current_is('comparison') and \
+               not parser.current_is('regex_delimiter'):
                 self.mark_end(parser)
                 return
 
@@ -48,7 +49,8 @@ class ExpressionNode(Token):
         (self.op_type, self.op) = parser.token()
         if not parser.next_if('arithmetic_operator') and \
            not parser.next_if('logical_operator') and \
-           not parser.next_if('comparison'):
+           not parser.next_if('comparison') and \
+           not parser.next_if('regex_delimiter'):
             self.mark_end(parser)
             scope.syntax_error(self, 'Expected operator but got %s' % self.op_type)
 
@@ -59,8 +61,12 @@ class ExpressionNode(Token):
 
     def priority(self):
         if self.op is None:
+            return 8
+        elif self.op_type == 'arithmetic_operator' and self.op == '%':
             return 7
-        elif self.op_type == 'arithmetic_operator' and self.op in ('*', '/'):
+        elif self.op_type == 'arithmetic_operator' and self.op == '*':
+            return 6
+        elif self.op_type == 'regex_delimiter':
             return 6
         elif self.op_type == 'arithmetic_operator' and self.op != '.':
             return 5
@@ -72,6 +78,8 @@ class ExpressionNode(Token):
             return 2
         elif self.op_type == 'logical_operator':
             return 1
+        else:
+            raise Exception('Invalid operator.')
 
 
     def value(self):
@@ -146,6 +154,8 @@ class ExpressionNode(Token):
             return [int(lft) * int(rgt)]
         elif self.op == '/':
             return [int(lft) / int(rgt)]
+        elif self.op == '%':
+            return [int(lft) % int(rgt)]
         elif self.op == '.':
             return [str(lft) + str(rgt)]
         elif self.op == '+':

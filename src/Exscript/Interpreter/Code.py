@@ -68,7 +68,7 @@ grammar = (
     ('octal_number',        r'0\d+'),
     ('hex_number',          r'0x(?:\w\w)+'),
     ('comparison',          r'\b(?:' + '|'.join(operators) + r')\b'),
-    ('arithmetic_operator', r'(?:\*|\+|-|/|\.)'),
+    ('arithmetic_operator', r'(?:\*|\+|-|%|\.)'),
     ('logical_operator',    r'\b(?:and|or|not)\b'),
     ('open_function_call',  varname_re + r'(?:\.' + varname_re + r')*\('),
     ('varname',             varname_re),
