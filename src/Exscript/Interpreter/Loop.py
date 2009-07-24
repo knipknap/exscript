@@ -59,6 +59,11 @@ class Loop(Token):
                 self.iter_varnames.append(iter_varname)
                 parser.skip(['whitespace', 'newline'])
 
+            if len(self.iter_varnames) != len(self.list_variables):
+                error = '%s lists, but only %s iterators in loop' % (len(self.iter_varnames),
+                                                                     len(self.list_variables))
+                scope.syntax_error(self, error)
+
         # Check if this is a "from ... to ..." loop.
         if parser.next_if('keyword', 'from'):
             parser.expect(self, 'whitespace')
@@ -67,6 +72,16 @@ class Loop(Token):
             parser.expect(self, 'keyword', 'to')
             self.theto = Expression(parser, scope)
             parser.next_if('whitespace')
+
+            if parser.next_if('keyword', 'as'):
+                parser.next_if('whitespace')
+                (type, iter_varname) = parser.token()
+                parser.expect(self, 'varname')
+                parser.next_if('whitespace')
+            else:
+                iter_varname = 'counter'
+            scope.define(**{iter_varname: []})
+            self.iter_varnames = [iter_varname]
         
         # Check if this is a "while" loop.
         if parser.next_if('keyword', 'while'):
@@ -82,11 +97,6 @@ class Loop(Token):
         
         # End of statement.
         self.mark_end(parser)
-
-        if len(self.iter_varnames) != len(self.list_variables):
-            error = '%s lists, but only %s iterators in loop' % (len(self.iter_varnames),
-                                                                 len(self.list_variables))
-            scope.syntax_error(self, error)
 
         # Body of the loop block.
         parser.skip(['whitespace', 'newline'])
@@ -110,10 +120,9 @@ class Loop(Token):
         # Retrieve the lists from the list terms.
         if self.thefrom:
             lists = [range(self.thefrom.value()[0], self.theto.value()[0])]
-            vars  = ['counter']
         else:
             lists = [var.value() for var in self.list_variables]
-            vars  = self.iter_varnames
+        vars  = self.iter_varnames
         
         # Make sure that all lists have the same length.
         for list in lists:
