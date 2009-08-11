@@ -95,8 +95,9 @@ class LoggedSequence(Sequence):
                 if not action.execute(global_lock, global_data, local_data):
                     return False
         except Exception:
-            log = open(self.error_logfile, self.error_logfile_mode)
-            traceback.print_exc(None, log)
-            log.close()
+            if self.error_logfile:
+                log = open(self.error_logfile, self.error_logfile_mode)
+                traceback.print_exc(None, log)
+                log.close()
             raise
         return True
