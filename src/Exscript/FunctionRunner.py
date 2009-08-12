@@ -212,11 +212,12 @@ class FunctionRunner(Job):
         new_sequence.retry = sequence.retry - 1
         retry              = self.retry_login - new_sequence.retry
         new_sequence.name  = new_sequence.name + ' (retry %d)' % retry
-        logfile            = '%s_retry%d.log' % (host.get_address(), retry)
-        logfile            = os.path.join(self.options['logdir'], logfile)
-        error_logfile      = logfile + '.error'
-        new_sequence.set_logfile(logfile)
-        new_sequence.set_error_logfile(error_logfile)
+        if self.options['logdir']:
+            logfile       = '%s_retry%d.log' % (host.get_address(), retry)
+            logfile       = os.path.join(self.options['logdir'], logfile)
+            error_logfile = logfile + '.error'
+            new_sequence.set_logfile(logfile)
+            new_sequence.set_error_logfile(error_logfile)
         exscript._priority_enqueue_action(new_sequence)
 
 
