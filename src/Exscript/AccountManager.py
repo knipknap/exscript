@@ -71,17 +71,20 @@ class AccountManager(object):
         return accounts
 
 
-    def add_account(self, account):
+    def add_account(self, accounts):
         """
-        Adds an account instance to the pool.
+        Adds one or more account instances to the pool.
 
-        @type  account: Account
-        @param account: The account to be added.
+        @type  accounts: Account|list[Account]
+        @param accounts: The account to be added.
         """
         self.unlock_cond.acquire()
-        self.accounts.append(account)
-        self.unlocked_accounts.append(account)
-        account._add_notify(self)
+        if isinstance(accounts, Account):
+            accounts = [accounts]
+        for account in accounts:
+            self.accounts.append(account)
+            self.unlocked_accounts.append(account)
+            account._add_notify(self)
         self.unlock_cond.notify()
         self.unlock_cond.release()
 
