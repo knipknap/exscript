@@ -113,6 +113,26 @@ def get_hosts_from_file(filename):
     return hosts
 
 
+def get_accounts_from_file(self, filename):
+    """
+    Reads a list of user/password combinations from the given file 
+    and creates an Account instance for each of them.
+    Returns a list of accounts.
+
+    @type  filename: string
+    @param filename: The name of the file containing the list of accounts.
+    @rtype:  list[Account]
+    @return: The newly added account instances.
+    """
+    accounts  = []
+    cfgparser = __import__('ConfigParser', globals(), locals(), [''])
+    parser    = cfgparser.RawConfigParser()
+    parser.read(filename)
+    for item in parser.items('account-pool'):
+        accounts.append(Account(*item))
+    return accounts
+
+
 def get_hosts_from_csv(filename):
     """
     Reads a list of hostnames and variables from the .csv file with the 
