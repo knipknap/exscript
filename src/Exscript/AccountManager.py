@@ -24,11 +24,11 @@ class AccountManager(object):
         """
         Constructor.
         """
-        if accounts is None:
-            accounts = []
-        self.accounts          = accounts[:]
-        self.unlocked_accounts = accounts[:]
+        self.accounts          = []
+        self.unlocked_accounts = []
         self.unlock_cond       = threading.Condition()
+        if accounts:
+            self.add_account(accounts)
 
 
     def create_account(self, name, password):

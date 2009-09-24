@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import re, os
+import re, os, base64
 from Exscript    import Exscript
 from Interpreter import Parser
 from FooLib      import Interact
@@ -113,7 +113,7 @@ def get_hosts_from_file(filename):
     return hosts
 
 
-def get_accounts_from_file(self, filename):
+def get_accounts_from_file(filename):
     """
     Reads a list of user/password combinations from the given file 
     and creates an Account instance for each of them.
@@ -128,8 +128,8 @@ def get_accounts_from_file(self, filename):
     cfgparser = __import__('ConfigParser', globals(), locals(), [''])
     parser    = cfgparser.RawConfigParser()
     parser.read(filename)
-    for item in parser.items('account-pool'):
-        accounts.append(Account(*item))
+    for user, password in parser.items('account-pool'):
+        accounts.append(Account(user, base64.decodestring(password)))
     return accounts
 
 
