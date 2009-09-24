@@ -31,46 +31,6 @@ class AccountManager(object):
             self.add_account(accounts)
 
 
-    def create_account(self, name, password):
-        """
-        Creates an instance of an account and adds it to the pool.
-
-        @type  name: string
-        @param name: The name of the account.
-        @type  password: string
-        @param password: The password of the account.
-        @rtype:  Account
-        @return: The newly added account instance.
-        """
-        account = self.get_account_from_name(name)
-        if account is not None:
-            return account
-        account = Account(name, password)
-        self.add_account(account)
-        return account
-
-
-    def create_account_from_file(self, filename):
-        """
-        Reads a list of user/password combinations from the given file 
-        and creates an Account instance for each of them.
-        Returns a list of accounts.
-
-        @type  filename: string
-        @param filename: The name of the file containing the list of accounts.
-        @rtype:  list[Account]
-        @return: The newly added account instances.
-        """
-        accounts = []
-        cfgparser = __import__('ConfigParser', globals(), locals(), [''])
-        parser    = cfgparser.RawConfigParser()
-        parser.read(filename)
-        for item in parser.items('account-pool'):
-            account = self.create_account(*item)
-            accounts.append(account)
-        return accounts
-
-
     def add_account(self, accounts):
         """
         Adds one or more account instances to the pool.

@@ -236,7 +236,8 @@ def run(*args, **kwargs):
     # Read the account pool file.
     try:
         if options['account-pool']:
-            account_manager.create_account_from_file(options['account-pool'])
+            accounts = util.get_accounts_from_file(options['account-pool'])
+            account_manager.add_account(accounts)
     except Exception, e:
         print e
         sys.exit(1)

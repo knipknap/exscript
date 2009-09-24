@@ -5,7 +5,7 @@ def suite():
     tests = ['testAccountManager']
     return unittest.TestSuite(map(AccountManagerTest, tests))
 
-from Exscript import AccountManager, Account
+from Exscript import AccountManager, Account, util
 
 class AccountManagerTest(unittest.TestCase):
     def testAccountManager(self):
@@ -17,14 +17,16 @@ class AccountManagerTest(unittest.TestCase):
         accm = AccountManager.AccountManager([account1])
         self.assert_(accm.n_accounts() == 1)
 
-        account2 = accm.create_account('account2', 'pass2')
+        account2 = Account('account2', 'pass2')
+        accm.add_account(account2)
         self.assert_(accm.n_accounts() == 2)
 
         account3 = Account('account3', 'pass3')
         accm.add_account(account3)
         self.assert_(accm.n_accounts() == 3)
 
-        accounts = accm.create_account_from_file('../account_pool.cfg')
+        accounts = util.get_accounts_from_file('../account_pool.cfg')
+        accm.add_account(accounts)
         self.assert_(len(accounts) == 3)
         self.assert_(accm.n_accounts() == 6)
 
