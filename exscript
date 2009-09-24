@@ -6,7 +6,7 @@
 import sys, os, re, getpass
 import termconnect
 sys.path.append('src')
-from Exscript        import Exscript, Account, TemplateRunner
+from Exscript        import Exscript, Account, TemplateRunner, util
 from Exscript.FooLib import Interact
 from Exscript.FooLib import OptionParser
 
