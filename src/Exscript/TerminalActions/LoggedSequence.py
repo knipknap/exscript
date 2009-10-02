@@ -79,6 +79,13 @@ class LoggedSequence(Sequence):
         self.signal_emit('notify', data)
 
 
+    def _log_exception(self, e):
+        if not self.error_logfile:
+            return
+        log = open(self.error_logfile, self.error_logfile_mode)
+        traceback.print_exc(e, log)
+        log.close()
+
     def add(self, action):
         action.signal_connect('data_received', self._on_action_data_received)
         action.signal_connect('notify',        self._on_action_notify)
@@ -94,10 +101,7 @@ class LoggedSequence(Sequence):
                 action.debug = self.debug
                 if not action.execute(global_lock, global_data, local_data):
                     return False
-        except Exception:
-            if self.error_logfile:
-                log = open(self.error_logfile, self.error_logfile_mode)
-                traceback.print_exc(None, log)
-                log.close()
+        except Exception, e:
+            self._log_exception(e)
             raise
         return True
