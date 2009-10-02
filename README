@@ -35,5 +35,5 @@ Mailing List: http://groups.google.com/group/exscript/
 * SpiffWorkQueue
 * termconnect
 * Python-crypto
-* Python-pexpect (optional, for SSH support) 
+* Python-pexpect (optional, for SSH support)
 * OpenSSH command line client (optional, for ssh support)
