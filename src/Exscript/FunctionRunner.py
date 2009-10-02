@@ -185,7 +185,7 @@ class FunctionRunner(Job):
         new_sequence.retry = sequence.retry - 1
         retry              = self.retry_login - new_sequence.retry
         new_sequence.name  = new_sequence.name + ' (retry %d)' % retry
-        if self.options['logdir']:
+        if self.options.get('logdir'):
             logfile       = '%s_retry%d.log' % (host.get_address(), retry)
             logfile       = os.path.join(self.options['logdir'], logfile)
             error_logfile = logfile + '.error'
