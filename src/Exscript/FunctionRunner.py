@@ -36,8 +36,6 @@ class FunctionRunner(Job):
             - define: Global variables.
             - host: Passed to add_host().
             - hosts: Passed to add_hosts().
-            - hosts_file: Passed to add_hosts_from_file().
-            - hosts_csv: Passed to add_hosts_from_csv().
             - verbose: The verbosity level of the interpreter.
             - domain: The default domain of the contacted hosts.
             - retry_login: The number of login retries, default 0.
@@ -86,10 +84,6 @@ class FunctionRunner(Job):
             self.add_host(self.options.get('host'))
         if self.options.get('hosts') is not None:
             self.add_hosts(self.options.get('hosts'))
-        if self.options.get('hosts_file') is not None:
-            self.add_hosts_from_file(self.options.get('hosts_file'))
-        if self.options.get('hosts_csv') is not None:
-            self.add_hosts_from_csv(self.options.get('hosts_csv'))
 
 
     def add_host(self, uri):
@@ -131,27 +125,6 @@ class FunctionRunner(Job):
         """
         for host in hosts:
             self.add_host(host)
-
-
-    def add_hosts_from_file(self, filename):
-        """
-        Reads a list of hostnames from the file with the given name.
-
-        @type  filename: string
-        @param filename: A full filename.
-        """
-        self.add_hosts(util.get_hosts_from_file(filename))
-
-
-    def add_hosts_from_csv(self, filename):
-        """
-        Reads a list of hostnames and variables from the .csv file with
-        the given name.
-
-        @type  filename: string
-        @param filename: A full filename.
-        """
-        self.add_hosts(util.get_hosts_from_csv(filename))
 
 
     def _get_sequence(self, exscript, host):

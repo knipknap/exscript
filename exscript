@@ -170,18 +170,20 @@ def run(*args, **kwargs):
     # If a filename containing hostnames AND VARIABLES was given, read it.
     if options.get('csv-hosts') is not None:
         try:
-            trunner.add_hosts_from_csv(options.get('csv-hosts'))
+            hosts = util.get_hosts_from_csv(options.get('csv-hosts'))
         except Exception, e:
             print e
             sys.exit(1)
+        trunner.add_hosts(hosts)
 
     # If a filename containing hostnames was given, read it.
     if options.get('hosts') is not None:
         try:
-            trunner.add_hosts_from_file(options.get('hosts'))
+            hosts = util.get_hosts_from_file(options.get('hosts'))
         except Exception, e:
             print e
             sys.exit(1)
+        trunner.add_hosts(hosts)
 
     # Create the log directory.
     if options.get('logdir') is not None:
