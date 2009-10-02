@@ -1,5 +1,5 @@
-Exscript
----------
+= Exscript =
+
 Exscript is a script and template language for automating network connections 
 over protocols such as Telnet or SSH. Exscript is targeted at non-developers 
 and developers alike.
@@ -13,28 +13,27 @@ Exscript is in some ways comparable to Expect, but has some unique features
 that make it a lot easier to use and understand for non-developers. 
 
 
-Installation
--------------
+= Installation =
+
 1. Install python-crypto
-2. Install SpiffSignal (http://code.google.com/p/spiff-signal/)
-3. Install SpiffWorkQueue (http://code.google.com/p/spiff-workqueue/)
-4. Install termconnect (http://code.google.com/p/termconnect/)
+2. Install [http://code.google.com/p/spiff-signal/ SpiffSignal]
+3. Install [http://code.google.com/p/spiff-workqueue/ SpiffWorkQueue]
+4. Install [http://code.google.com/p/termconnect/ termconnect]
 5. Install Exscript. For example, do this as root:
     sudo python setup.py install --prefix /usr/local
 
 
-Links
-------
-Documentation: http://spiff.debain.org/static/docs/exscript/en/exscript.en.pdf
+= Links =
+
 Mailing List: http://groups.google.com/group/exscript/
 
 
-Dependencies
--------------
-Python 2.2 or greater
-SpiffSignal
-SpiffWorkQueue
-termconnect
-Python-crypto
-Python-pexpect (optional, for SSH support) 
-OpenSSH command line client (optional, for ssh support)
+= Dependencies =
+
+* Python 2.2 or greater
+* SpiffSignal
+* SpiffWorkQueue
+* termconnect
+* Python-crypto
+* Python-pexpect (optional, for SSH support) 
+* OpenSSH command line client (optional, for ssh support)
