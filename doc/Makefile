@@ -1,7 +1,7 @@
 HANDBOOKS=en
 IN_BASENAME=exscript
 OUT_BASENAME=exscript
-PUBLISH_LOCAL_PATH=/var/www/docs/$(OUT_BASENAME)
+PUBLISH_LOCAL_PATH=/var/www/docs/projects/$(OUT_BASENAME)
 PUBLISH_PATH=/home/sab/backups/code/www/docs.debain.org/$(OUT_BASENAME)
 PUBLISH_HOST=root@debain.org
 
