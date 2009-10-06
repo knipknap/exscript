@@ -194,7 +194,7 @@ def get_hosts_from_csv(filename):
 def run_template(exscript, conn, template, **kwargs):
     # Define default variables.
     defaults = dict(__filename__ = template,
-                    hostname     = conn.get_host())
+                    hostname     = conn.get_address())
 
     # Init the parser and compile the template.
     parser = Parser()
