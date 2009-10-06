@@ -33,7 +33,6 @@ class FunctionRunner(Job):
 
         @type  kwargs: dict
         @param kwargs: The following options are supported:
-            - define: Global variables.
             - host: Passed to add_host().
             - hosts: Passed to add_hosts().
             - verbose: The verbosity level of the interpreter.
@@ -78,8 +77,6 @@ class FunctionRunner(Job):
         self.options.update(kwargs)
         self.verbose     = kwargs.get('verbose',     0)
         self.retry_login = kwargs.get('retry_login', 0)
-        if self.options.get('define') is not None:
-            self.define(**self.options.get('define'))
         if self.options.get('host') is not None:
             self.add_host(self.options.get('host'))
         if self.options.get('hosts') is not None:

@@ -62,6 +62,8 @@ class TemplateRunner(FunctionRunner):
         self.parser_lock.acquire()
         self.parser = self._get_parser()
         self.parser_lock.release()
+        if self.options.get('define') is not None:
+            self.define(**self.options.get('define'))
         if self.options.has_key('template'):
             self.read_template(self.options.get('template'))
         if self.options.has_key('template_file'):
