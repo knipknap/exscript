@@ -46,4 +46,4 @@ class FuncJob(Action):
             local_data['transport'].set_on_data_received_cb(None)
             raise
         local_data['transport'].set_on_data_received_cb(None)
-        return result
+        return True
