@@ -165,7 +165,7 @@ class FunctionRunner(Job):
                                       wait = wait))
 
         sequence.add(FuncJob(exscript, self.func, *self.data))
-        sequence.add(Close())
+        sequence.add(Close(True))
         sequence.signal_connect('aborted',
                                 self._on_sequence_aborted,
                                 exscript,
