@@ -43,6 +43,8 @@ def usage():
     print "      --default-domain STRING"
     print "                 The IP domain name that is used if a given hostname has no "
     print "                 domain appended."
+    print "      --delete-logs"
+    print "                 Delete logs of successful operations when done."
     print "  -e, --execute EXSCRIPT"
     print "                 Interpretes the given string as the script."
     print "      --hosts FILE"
@@ -108,6 +110,7 @@ default_options = [
   ('connections=',      'c:', 1),
   ('csv-hosts=',        None, None),
   ('define=',           'd:', default_defines),
+  ('delete-logs',       None, False),
   ('execute=',          'e:', None),
   ('hosts=',            None, None),
   ('default-domain=',   None, ''),
@@ -159,6 +162,7 @@ def run(*args, **kwargs):
                              domain         = options.get('default-domain'),
                              retry_login    = options.get('retry-login'),
                              overwrite_logs = options.get('overwrite-logs'),
+                             delete_logs    = options.get('delete-logs'),
                              strip_command  = not options.get('no-strip'),
                              logdir         = options.get('logdir'))
     if options.get('execute') is not None:

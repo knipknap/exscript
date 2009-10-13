@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import traceback
+import os, traceback
 from SpiffWorkQueue import Sequence
 
 True  = 1
@@ -24,6 +24,7 @@ class LoggedSequence(Sequence):
         self.logfile              = None
         self.logfile_mode         = 'a'
         self.logfile_handle       = None
+        self.logfile_delete       = kwargs.get('delete_log', False)
         self.error_logfile        = None
         self.error_logfile_mode   = 'a'
         self.error_logfile_handle = None
@@ -104,4 +105,6 @@ class LoggedSequence(Sequence):
         except Exception, e:
             self._log_exception(e)
             raise
+        if self.logfile and self.logfile_delete:
+            os.remove(self.logfile)
         return True

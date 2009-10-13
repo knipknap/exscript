@@ -40,6 +40,7 @@ class FunctionRunner(Job):
             - retry_login: The number of login retries, default 0.
             - logdir: The directory into which the logs are written.
             - overwrite_logs: Whether existing logfiles are overwritten.
+            - delete_logs: Whether successful logfiles are deleted.
         """
         Job.__init__(self, **kwargs)
         self.hosts       = []
@@ -138,9 +139,11 @@ class FunctionRunner(Job):
                                          host.get_address() + '.log')
             error_logfile = logfile + '.error'
             overwrite     = self.options.get('overwrite_logs', False)
+            delete_logs   = self.options.get('delete_logs',    False)
             sequence      = LoggedSequence(name          = host.get_address(),
                                            logfile       = logfile,
                                            error_logfile = error_logfile,
+                                           delete_log    = delete_logs,
                                            overwrite_log = overwrite)
 
         # Build the sequence.
