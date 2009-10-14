@@ -45,7 +45,7 @@ class Host(object):
 
     def set_address(self, address):
         if '.' in address and not is_ip(address):
-            self.address, self.domain = address.split('.')
+            self.address, self.domain = address.split('.', 1)
         else:
             self.address = address
             self.domain  = ''
