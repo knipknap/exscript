@@ -60,6 +60,13 @@ class Host(object):
         return self.address
 
 
+    def set_name(self, name):
+        """
+        Defines the name, excluding the domain part.
+        """
+        self.address = name
+
+
     def get_name(self):
         """
         Returns the name, excluding the domain part.
