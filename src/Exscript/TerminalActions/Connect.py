@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
-from Escript        import Connection
+from Exscript       import Connection
 from SpiffWorkQueue import Action
 
 True  = 1
@@ -30,7 +30,7 @@ class Connect(Action):
         self.signal_emit('data_received', *args)
 
     def execute(self, global_lock, global_data, local_data):
-        host = self.connection.host()
+        host = self.connection.get_host()
         self.signal_emit('notify', 'Connecting to %s' % host.get_address())
         self.connection.debug = self.debug
         self.connection.set_on_data_received_cb(None)

@@ -13,11 +13,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re, os, base64
-from termconnect import Transport
 from Exscript    import Exscript
 from Interpreter import Parser
 from FooLib      import Interact
 from Account     import Account
+from Connection  import Connection
 from Host        import Host
 
 def _first_match(string, compiled):
@@ -35,13 +35,13 @@ def _first_match(string, compiled):
 
 
 def first_match(string, regex, flags = re.M):
-    if isinstance(string, Transport.Transport):
+    if isinstance(string, Connection):
         string = string.response
     return _first_match(string, re.compile(regex, flags))
 
 
 def any_match(string, regex):
-    if isinstance(string, Transport.Transport):
+    if isinstance(string, Connection):
         string = string.response
     compiled = re.compile(regex)
     results  = []

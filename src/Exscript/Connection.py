@@ -22,10 +22,10 @@ protocol_map = {'dummy':  'Dummy',
 
 class Connection(object):
     def __init__(self, exscript, host, **kwargs):
-        self.exscript = exscript
-        self.host     = host
-        self.account  = None
-        module_name = protocol_map.get(host.get_protocol())
+        self.__dict__['exscript']  = exscript
+        self.__dict__['host']      = host
+        self.__dict__['account']   = None
+        module_name    = protocol_map.get(host.get_protocol())
         if module_name:
             protocol = __import__('termconnect.' + module_name,
                                   globals(),
@@ -45,12 +45,17 @@ class Connection(object):
         if host.get_tcp_port() is not None:
             kwargs['port'] = host.get_tcp_port()
 
-        self.transport = protocol.Transport(**kwargs)
+        self.__dict__['transport'] = protocol.Transport(**kwargs)
 
     def __setattr__(self, name, value):
-        return setattr(self.transport, name, value)
+        if name in self.__dict__:
+            self.__dict__['name'] = value
+        else:
+            setattr(self.transport, name, value)
 
     def __getattr__(self, name):
+        if name in self.__dict__:
+            return self.__dict__[name]
         return getattr(self.transport, name)
 
     def _on_otp_requested(self, key, seq, account):
@@ -71,7 +76,7 @@ class Connection(object):
                                                account)
         return account
 
-    def _release_account(self):
+    def _release_account(self, account = None):
         self.transport.set_on_otp_requested_cb(None)
         if account:
             account.release()
@@ -116,7 +121,7 @@ class Connection(object):
         self._release_account(account)
         return account
 
-    def authorize(self, account = None):
+    def authorize(self, account = None, wait = False):
         account  = self._acquire_account(account)
         key_file = account.options.get('ssh_key_file')
 
