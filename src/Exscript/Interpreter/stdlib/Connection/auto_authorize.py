@@ -1,8 +1,10 @@
 from termconnect.Exception import InvalidCommandException
 
+True  = 1
+False = 0
+
 def execute(scope, password = [None]):
     conn = scope.get('__connection__')
-    wq   = scope.get('__exscript__').workqueue
     accm = scope.get('__exscript__').account_manager
 
     # Send the authorization command.
@@ -22,7 +24,7 @@ def execute(scope, password = [None]):
 
     # Send the login information.
     try:
-        conn.authorize(password[0], wait = 1)
+        conn.authorize(account, wait = True, lock = False)
     except InvalidCommandException:
         account.release()
         return
@@ -31,4 +33,4 @@ def execute(scope, password = [None]):
         raise
 
     account.release()
-    return 1
+    return True

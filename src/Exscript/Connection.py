@@ -14,6 +14,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
 
+True  = 1
+False = 0
+
 protocol_map = {'dummy':  'Dummy',
                 'telnet': 'Telnet',
                 'ssh':    'SSH',
@@ -22,10 +25,14 @@ protocol_map = {'dummy':  'Dummy',
 
 class Connection(object):
     def __init__(self, exscript, host, **kwargs):
-        self.__dict__['exscript']  = exscript
-        self.__dict__['host']      = host
-        self.__dict__['account']   = None
-        module_name    = protocol_map.get(host.get_protocol())
+        # Since we override setattr below, we can't access our properties
+        # directly.
+        self.__dict__['exscript'] = exscript
+        self.__dict__['host']     = host
+        self.__dict__['account']  = None
+
+        # Find the Python module of the requested protocol.
+        module_name = protocol_map.get(host.get_protocol())
         if module_name:
             protocol = __import__('termconnect.' + module_name,
                                   globals(),
@@ -35,16 +42,17 @@ class Connection(object):
             name = repr(host.get_protocol())
             raise Exception('ERROR: Unsupported protocol %s.' % name)
 
+        # Define protocol specific options.
         if host.get_protocol() == 'ssh1':
             kwargs['ssh_version'] = 1
         elif host.get_protocol() == 'ssh2':
             kwargs['ssh_version'] = 2
         else:
             kwargs['ssh_version'] = None
-
         if host.get_tcp_port() is not None:
             kwargs['port'] = host.get_tcp_port()
 
+        # Create an instance of the protocol adapter.
         self.__dict__['transport'] = protocol.Transport(**kwargs)
 
     def __setattr__(self, name, value):
@@ -61,15 +69,19 @@ class Connection(object):
     def _on_otp_requested(self, key, seq, account):
         account.signal_emit('otp_requested', account, key, seq)
 
-    def _acquire_account(self, account = None):
+    def _acquire_account(self, account = None, lock = True):
         if account:
             if self.account:
                 raise Exception('Attempt to aquire two accounts.')
-            account.acquire()
+            if lock:
+                account.acquire()
         elif self.account:
             account = self.account
-            account.acquire()
+            if lock:
+                account.acquire()
         else:
+            if not lock:
+                raise Exception('Non-locking shared accounts unsupported.')
             account = self.get_account_manager().acquire_account()
         self.account = account
         self.transport.set_on_otp_requested_cb(self._on_otp_requested,
@@ -106,8 +118,8 @@ class Connection(object):
     def close(self, force = False):
         self.transport.close(force)
 
-    def authenticate(self, account = None, wait = False):
-        account  = self._acquire_account(account)
+    def authenticate(self, account = None, wait = False, lock = True):
+        account  = self._acquire_account(account, lock)
         key_file = account.options.get('ssh_key_file')
 
         try:
@@ -116,20 +128,24 @@ class Connection(object):
                                         wait     = wait,
                                         key_file = key_file)
         except:
-            self._release_account(account)
+            if lock:
+                self._release_account(account)
             raise
-        self._release_account(account)
+        if lock:
+            self._release_account(account)
         return account
 
-    def authorize(self, account = None, wait = False):
-        account  = self._acquire_account(account)
+    def authorize(self, account = None, wait = False, lock = True):
+        account  = self._acquire_account(account, lock)
         key_file = account.options.get('ssh_key_file')
 
         try:
             self.transport.authorize(account.get_authorization_password(),
                                      wait = wait)
         except:
-            self._release_account(account)
+            if lock:
+                self._release_account(account)
             raise
-        self._release_account(account)
+        if lock:
+            self._release_account(account)
         return account
