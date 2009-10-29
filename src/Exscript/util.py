@@ -208,7 +208,6 @@ def run_template(conn, template, **kwargs):
     compiled = parser.parse_file(template)
     compiled.define(**defaults)
     compiled.define(**kwargs)
-    compiled.define(__exscript__   = conn.get_exscript())
     compiled.define(__connection__ = conn)
 
     # Run.

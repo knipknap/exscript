@@ -139,7 +139,7 @@ class TemplateRunner(FunctionRunner):
         self.read_template(template)
 
 
-    def _run_template(self, exscript, host, conn):
+    def _run_template(self, conn):
         """
         Compiles the current Exscript template and executes it.
         """
@@ -150,8 +150,8 @@ class TemplateRunner(FunctionRunner):
         # Pass variables to the Exscript interpreter.
         variables = dict()
         variables.update(self.global_vars)
-        variables['hostname'] = host.get_address()
-        variables.update(host.vars)
+        variables['hostname'] = conn.get_host().get_address()
+        variables.update(conn.get_host().vars)
         self.parser_lock.acquire()
         self.parser.define(**variables)
 
@@ -178,7 +178,6 @@ class TemplateRunner(FunctionRunner):
         compiled.init(**variables)
         compiled.define(__filename__   = self.file)
         compiled.define(__runner__     = self)
-        compiled.define(__exscript__   = exscript)
         compiled.define(__connection__ = conn)
         compiled.execute()
         return True

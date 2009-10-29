@@ -2,7 +2,7 @@ import os.path, time
 from Exscript import Host
 
 def execute(scope, host, filename):
-    exscript      = scope.get('__exscript__')
+    exscript      = scope.get('__connection__').get_exscript()
     runner        = scope.get('__runner__')
     exscript_file = scope.get('__filename__') or ''
     exscript_dir  = os.path.dirname(exscript_file)
