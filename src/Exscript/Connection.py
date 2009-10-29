@@ -24,6 +24,12 @@ protocol_map = {'dummy':  'Dummy',
                 'ssh2':   'SSH'}
 
 class Connection(object):
+    """
+    This class is a decorator for termconnect.Transport objects that
+    adds thread safety by adding locking to the authenticate() and
+    authorize() functions.
+    It also provides access to the associated Exscript and Host instances.
+    """
     def __init__(self, exscript, host, **kwargs):
         # Since we override setattr below, we can't access our properties
         # directly.
@@ -114,9 +120,6 @@ class Connection(object):
                                       self.host.get_tcp_port()):
             raise Exception('Connection failed.')
 
-    def close(self, force = False):
-        self.transport.close(force)
-
     def authenticate(self, account = None, wait = False, lock = True):
         account  = self._acquire_account(account, lock)
         key_file = account.options.get('ssh_key_file')
@@ -137,10 +140,10 @@ class Connection(object):
     def authorize(self, account = None, wait = False, lock = True):
         account  = self._acquire_account(account, lock)
         key_file = account.options.get('ssh_key_file')
+        password = account.get_authorization_password()
 
         try:
-            self.transport.authorize(account.get_authorization_password(),
-                                     wait = wait)
+            self.transport.authorize(password, wait = wait)
         except:
             if lock:
                 self._release_account(account)
@@ -152,7 +155,7 @@ class Connection(object):
     def auto_authorize(self, account = None, wait = True, password = None):
         os       = self.guess_os()
         account  = self._acquire_account(account)
-        commands = {'ios': 'enable\r', 'junos': None}
+        commands = {'ios': 'enable\r', 'junos': None, 'ios_xr': None}
         command  = commands.get(os)
 
         if password is None:
