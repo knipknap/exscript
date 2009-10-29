@@ -2,8 +2,6 @@ import os.path, time
 from Exscript import Host
 
 def execute(scope, host, filename):
-    user          = scope.get('__user__')
-    password      = scope.get('__password__')
     exscript      = scope.get('__exscript__')
     runner        = scope.get('__runner__')
     exscript_file = scope.get('__filename__') or ''
@@ -25,9 +23,7 @@ def execute(scope, host, filename):
     for key, value_list in vars.iteritems():
         for value in value_list:
             host.append(key, value)
-    runner.set_options(user     = user,
-                       password = password,
-                       filename = filename)
+    runner.set_options(filename = filename)
     sequence = runner._get_sequence(exscript, host)
     exscript._priority_enqueue_action(sequence, 1)
     while not exscript._action_is_completed(sequence):

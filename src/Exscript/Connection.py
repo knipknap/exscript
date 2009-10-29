@@ -27,9 +27,9 @@ class Connection(object):
     def __init__(self, exscript, host, **kwargs):
         # Since we override setattr below, we can't access our properties
         # directly.
-        self.__dict__['exscript'] = exscript
-        self.__dict__['host']     = host
-        self.__dict__['account']  = None
+        self.__dict__['exscript']     = exscript
+        self.__dict__['host']         = host
+        self.__dict__['last_account'] = None
 
         # Find the Python module of the requested protocol.
         module_name = protocol_map.get(host.get_protocol())
@@ -56,13 +56,13 @@ class Connection(object):
         self.__dict__['transport'] = protocol.Transport(**kwargs)
 
     def __setattr__(self, name, value):
-        if name in self.__dict__:
-            self.__dict__['name'] = value
+        if name in self.__dict__.keys():
+            self.__dict__[name] = value
         else:
             setattr(self.transport, name, value)
 
     def __getattr__(self, name):
-        if name in self.__dict__:
+        if name in self.__dict__.keys():
             return self.__dict__[name]
         return getattr(self.transport, name)
 
@@ -70,31 +70,33 @@ class Connection(object):
         account.signal_emit('otp_requested', account, key, seq)
 
     def _acquire_account(self, account = None, lock = True):
-        if account:
-            if self.account:
-                raise Exception('Attempt to aquire two accounts.')
-            if lock:
-                account.acquire()
-        elif self.account:
-            account = self.account
-            if lock:
-                account.acquire()
-        else:
-            if not lock:
-                raise Exception('Non-locking shared accounts unsupported.')
+        if account and lock:
+            account.acquire()
+        elif account:
+            pass
+        elif self.last_account and lock:
+            account = self.last_account
+            account.acquire()
+        elif self.last_account:
+            account = self.last_account
+        elif lock:
             account = self.get_account_manager().acquire_account()
-        self.account = account
+        else:
+            raise Exception('Non-locking shared accounts unsupported.')
+        self.last_account = account
         self.transport.set_on_otp_requested_cb(self._on_otp_requested,
                                                account)
         return account
 
     def _release_account(self, account = None):
         self.transport.set_on_otp_requested_cb(None)
+        if account == self.last_account:
+            account = None
         if account:
             account.release()
-        elif self.account:
-            self.account.release()
-            self.account = None
+        elif self.last_account:
+            self.last_account.release()
+            self.last_account = None
         else:
             raise Exception('Attempt to relase a released account.')
 
@@ -103,9 +105,6 @@ class Connection(object):
 
     def get_account_manager(self):
         return self.exscript.account_manager
-
-    def get_account(self):
-        return self.account
 
     def get_host(self):
         return self.host
@@ -148,4 +147,23 @@ class Connection(object):
             raise
         if lock:
             self._release_account(account)
+        return account
+
+    def auto_authorize(self, account = None, wait = True, password = None):
+        os       = self.guess_os()
+        account  = self._acquire_account(account)
+        commands = {'ios': 'enable\r', 'junos': None}
+        command  = commands.get(os)
+
+        if password is None:
+            password = account.get_authorization_password()
+
+        try:
+            if command:
+                self.send(command)
+                self.transport.authorize(password, wait = wait)
+        except:
+            self._release_account(account)
+            raise
+        self._release_account(account)
         return account

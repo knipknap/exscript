@@ -29,13 +29,10 @@ class CommandScript(Action):
 
 
     def execute(self, global_lock, global_data, local_data):
-        conn    = local_data['connection']
-        account = conn.get_account()
+        conn = local_data['connection']
         conn.set_on_data_received_cb(self._on_data_received)
 
         self.exscript.define(__connection__ = conn)
-        self.exscript.define(__user__       = account.get_name())
-        self.exscript.define(__password__   = account.get_password())
 
         try:
             self.exscript.execute()

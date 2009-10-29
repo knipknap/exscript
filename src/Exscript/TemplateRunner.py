@@ -180,7 +180,5 @@ class TemplateRunner(FunctionRunner):
         compiled.define(__runner__     = self)
         compiled.define(__exscript__   = exscript)
         compiled.define(__connection__ = conn)
-        compiled.define(__user__       = host.get_username())
-        compiled.define(__password__   = host.get_password())
         compiled.execute()
         return True

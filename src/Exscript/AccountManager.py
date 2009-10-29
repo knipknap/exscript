@@ -71,6 +71,7 @@ class AccountManager(object):
         assert account in self.accounts
         account = account.acquire()
         self.unlock_cond.release()
+        return account
 
 
     def acquire_account(self, account = None):
