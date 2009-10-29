@@ -24,7 +24,7 @@ class Connect(Action):
         Action.__init__(self, **kwargs)
         kwargs['debug']            = self.debug
         kwargs['on_data_received'] = self._on_data_received
-        self.connection            = Connection(exscript, host)
+        self.connection            = Connection(exscript, host, **kwargs)
 
     def _on_data_received(self, *args):
         self.signal_emit('data_received', *args)
