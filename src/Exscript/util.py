@@ -86,12 +86,12 @@ def quickrun(hosts, func, *data, **kwargs):
     return run(read_login(), hosts, func, *data, **kwargs)
 
 
-def os_function_mapper(exscript, host, conn, map, *data, **kwargs):
+def os_function_mapper(conn, map, *data, **kwargs):
     os   = conn.guess_os()
     func = map.get(os)
     if func is None:
         raise Exception('No handler for %s found.' % os)
-    return func(exscript, host, conn, *data, **kwargs)
+    return func(conn, *data, **kwargs)
 
 
 def get_hosts_from_file(filename):
@@ -196,10 +196,10 @@ def get_hosts_from_csv(filename):
     return hosts
 
 
-def run_template(exscript, conn, template, **kwargs):
+def run_template(conn, template, **kwargs):
     # Define default variables.
     defaults = dict(__filename__ = template,
-                    hostname     = conn.get_host())
+                    hostname     = conn.transport.get_host())
 
     # Init the parser and compile the template.
     parser = Parser()
@@ -208,7 +208,7 @@ def run_template(exscript, conn, template, **kwargs):
     compiled = parser.parse_file(template)
     compiled.define(**defaults)
     compiled.define(**kwargs)
-    compiled.define(__exscript__   = exscript)
+    compiled.define(__exscript__   = conn.get_exscript())
     compiled.define(__connection__ = conn)
 
     # Run.

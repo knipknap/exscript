@@ -37,10 +37,7 @@ class FuncJob(Action):
         conn.set_on_data_received_cb(self._on_data_received)
 
         try:
-            result = self.func(self.exscript,
-                               conn.get_host(),
-                               conn,
-                               *self.data)
+            result = self.func(conn, *self.data)
         except:
             conn.set_on_data_received_cb(None)
             raise
