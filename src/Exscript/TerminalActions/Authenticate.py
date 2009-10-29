@@ -19,53 +19,23 @@ True  = 1
 False = 0
 
 class Authenticate(Action):
-    def __init__(self, account_manager, account = None, **kwargs):
+    def __init__(self, account = None, **kwargs):
         Action.__init__(self)
-        self.account_manager = account_manager
-        self.account         = account
-        self.wait            = kwargs.get('wait', False)
-
+        self.account = account
+        self.wait    = kwargs.get('wait', False)
 
     def _on_data_received(self, *args):
         self.signal_emit('data_received', *args)
 
-
-    def _on_otp_requested(self, key, seq, account):
-        account.signal_emit('otp_requested', account, key, seq)
-
-
-    def _acquire_account(self):
-        if self.account is None:
-            account = self.account_manager.acquire_account()
-        else:
-            account = self.account
-            account.acquire()
-        return account
-
-
     def execute(self, global_lock, global_data, local_data):
-        assert global_lock is not None
-        assert global_data is not None
-        assert local_data  is not None
-
-        account = self._acquire_account()
-        conn    = local_data['transport']
+        conn = local_data['connection']
         conn.set_on_data_received_cb(self._on_data_received)
-        conn.set_on_otp_requested_cb(self._on_otp_requested, account)
 
         try:
-            conn.authenticate(account.get_name(),
-                              account.get_password(),
-                              wait     = self.wait,
-                              key_file = account.options.get('ssh_key_file'))
+            account = conn.authenticate(self.account, self.wait)
         except:
-            account.release()
             conn.set_on_data_received_cb(None)
-            conn.set_on_otp_requested_cb(None)
             raise
         self.signal_emit('login_done', account, conn)
-        local_data['account'] = account
-        account.release()
         conn.set_on_data_received_cb(None)
-        conn.set_on_otp_requested_cb(None)
         return True

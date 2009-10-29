@@ -22,16 +22,11 @@ class Close(Action):
         Action.__init__(self)
         self.force = force
 
-
     def _on_data_received(self, *args):
         self.signal_emit('data_received', *args)
 
-
     def execute(self, global_lock, global_data, local_data):
-        assert global_lock is not None
-        assert global_data is not None
-        assert local_data  is not None
-        local_data['transport'].set_on_data_received_cb(self._on_data_received)
-        local_data['transport'].close(self.force)
-        local_data['transport'].set_on_data_received_cb(None)
+        local_data['connection'].set_on_data_received_cb(self._on_data_received)
+        local_data['connection'].close(self.force)
+        local_data['connection'].set_on_data_received_cb(None)
         return True

@@ -155,14 +155,12 @@ class FunctionRunner(Job):
         echo         = exscript.get_max_threads() == 1 and not noecho
         wait         = not nip and not nop
         protocol_args = {'echo': echo, 'auto_verify': av}
-        sequence.add(Connect(host, **protocol_args))
+        sequence.add(Connect(exscript, host, **protocol_args))
         if authenticate:
             account = self._get_account(exscript,
                                         host.get_username(),
                                         host.get_password())
-            sequence.add(Authenticate(exscript.account_manager,
-                                      account,
-                                      wait = wait))
+            sequence.add(Authenticate(account, wait = wait))
 
         sequence.add(FuncJob(exscript, self.func, *self.data))
         sequence.add(Close(True))

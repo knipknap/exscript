@@ -33,17 +33,16 @@ class FuncJob(Action):
 
 
     def execute(self, global_lock, global_data, local_data):
-        assert global_lock is not None
-        assert global_data is not None
-        assert local_data  is not None
-        local_data['transport'].set_on_data_received_cb(self._on_data_received)
+        conn = local_data['connection']
+        conn.set_on_data_received_cb(self._on_data_received)
+
         try:
             result = self.func(self.exscript,
-                               local_data['host'],
-                               local_data['transport'],
+                               conn.get_host(),
+                               conn,
                                *self.data)
         except:
-            local_data['transport'].set_on_data_received_cb(None)
+            conn.set_on_data_received_cb(None)
             raise
-        local_data['transport'].set_on_data_received_cb(None)
+        conn.set_on_data_received_cb(None)
         return True

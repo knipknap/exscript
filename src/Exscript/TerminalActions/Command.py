@@ -30,13 +30,10 @@ class Command(Action):
 
 
     def execute(self, global_lock, global_data, local_data):
-        assert global_lock is not None
-        assert global_data is not None
-        assert local_data  is not None
-        local_data['transport'].set_on_data_received_cb(self._on_data_received)
+        local_data['connection'].set_on_data_received_cb(self._on_data_received)
         if self.wait:
-            local_data['transport'].execute(self.command)
+            local_data['connection'].execute(self.command)
         else:
-            local_data['transport'].send(self.command + '\r')
-        local_data['transport'].set_on_data_received_cb(None)
+            local_data['connection'].send(self.command + '\r')
+        local_data['connection'].set_on_data_received_cb(None)
         return True

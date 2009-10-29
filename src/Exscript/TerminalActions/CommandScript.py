@@ -29,15 +29,18 @@ class CommandScript(Action):
 
 
     def execute(self, global_lock, global_data, local_data):
-        assert global_lock is not None
-        assert global_data is not None
-        assert local_data  is not None
-        local_data['transport'].set_on_data_received_cb(self._on_data_received)
-        account = local_data['account']
+        conn    = local_data['connection']
+        account = conn.get_account()
+        conn.set_on_data_received_cb(self._on_data_received)
 
-        self.exscript.define(__connection__ = local_data['transport'])
+        self.exscript.define(__connection__ = conn)
         self.exscript.define(__user__       = account.get_name())
         self.exscript.define(__password__   = account.get_password())
-        self.exscript.execute()
-        local_data['transport'].set_on_data_received_cb(None)
+
+        try:
+            self.exscript.execute()
+        except:
+            conn.set_on_data_received_cb(None)
+            raise
+        conn.set_on_data_received_cb(None)
         return True
