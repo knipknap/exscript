@@ -36,6 +36,5 @@ class Authenticate(Action):
         except:
             conn.set_on_data_received_cb(None)
             raise
-        self.signal_emit('login_done', account, conn)
         conn.set_on_data_received_cb(None)
         return True
