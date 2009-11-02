@@ -27,7 +27,7 @@ def run(users, hosts, func, *data, **kwargs):
     if isinstance(hosts, Host):
         hosts = [hosts]
 
-    exscript = Exscript.Exscript(**kwargs)
+    exscript = Exscript(**kwargs)
     job      = FunctionRunner.FunctionRunner(func, *data, **kwargs)
     for user in users:
         exscript.add_account(user)
