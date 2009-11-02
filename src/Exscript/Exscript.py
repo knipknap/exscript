@@ -18,7 +18,7 @@ from AccountManager import AccountManager
 from Connection     import Connection
 from FunctionAction import FunctionAction
 from SpiffWorkQueue import WorkQueue
-from util           import get_hosts_from_name
+from helpers        import get_hosts_from_name
 
 True  = 1
 False = 0
