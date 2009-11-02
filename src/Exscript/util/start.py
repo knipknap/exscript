@@ -12,6 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+import Exscript.FunctionRunner
 from Exscript.FooLib import Interact
 from Exscript        import Exscript, Account, Host
 
@@ -20,7 +21,6 @@ def read_login():
     return Account(user, password)
 
 def run(users, hosts, func, *data, **kwargs):
-    from FunctionRunner import FunctionRunner
 
     if isinstance(users, Account):
         users = [users]
@@ -28,7 +28,7 @@ def run(users, hosts, func, *data, **kwargs):
         hosts = [hosts]
 
     exscript = Exscript.Exscript(**kwargs)
-    job      = FunctionRunner(func, *data, **kwargs)
+    job      = FunctionRunner.FunctionRunner(func, *data, **kwargs)
     for user in users:
         exscript.add_account(user)
     for host in hosts:
