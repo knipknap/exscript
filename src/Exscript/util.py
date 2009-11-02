@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re, os, base64
-from Exscript    import Exscript
+import Exscript
 from Interpreter import Parser
 from FooLib      import Interact
 from Account     import Account
@@ -73,7 +73,7 @@ def run(users, hosts, func, *data, **kwargs):
     if isinstance(hosts, Host):
         hosts = [hosts]
 
-    exscript = Exscript(**kwargs)
+    exscript = Exscript.Exscript(**kwargs)
     job      = FunctionRunner(func, *data, **kwargs)
     for user in users:
         exscript.add_account(user)
@@ -92,6 +92,18 @@ def os_function_mapper(conn, map, *data, **kwargs):
     if func is None:
         raise Exception('No handler for %s found.' % os)
     return func(conn, *data, **kwargs)
+
+
+def get_host_from_name(host):
+    if isinstance(host, Host):
+        return host
+    return Host(host)
+
+
+def get_hosts_from_name(hosts):
+    if not hasattr(hosts, '__iter__'):
+        hosts = [hosts]
+    return [get_host_from_name(h) for h in hosts]
 
 
 def get_hosts_from_file(filename):
@@ -195,6 +207,20 @@ def get_hosts_from_csv(filename):
     file_handle.close()
     return hosts
 
+
+def connect(function):
+    def decorated(conn, *args, **kwargs):
+        conn.open()
+        function(conn, *args, **kwargs)
+    return decorated
+
+
+def autologin(function, wait = True):
+    def decorated(conn, *args, **kwargs):
+        conn.authenticate(wait = wait)
+        function(conn, *args, **kwargs)
+        conn.close(force = True)
+    return connect(decorated)
 
 def run_template(conn, template, **kwargs):
     # Define default variables.

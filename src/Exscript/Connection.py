@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
+from SpiffSignal import Trackable
 
 True  = 1
 False = 0
@@ -23,7 +24,7 @@ protocol_map = {'dummy':  'Dummy',
                 'ssh1':   'SSH',
                 'ssh2':   'SSH'}
 
-class Connection(object):
+class Connection(Trackable):
     """
     This class is a decorator for termconnect.Transport objects that
     adds thread safety by adding locking to the authenticate() and
@@ -31,6 +32,10 @@ class Connection(object):
     It also provides access to the associated Exscript and Host instances.
     """
     def __init__(self, exscript, host, **kwargs):
+        # Hack to keep Trackable happy even though we override __setattr__.
+        self.__dict__['slots'] = None
+        Trackable.__init__(self)
+
         # Since we override setattr below, we can't access our properties
         # directly.
         self.__dict__['exscript']     = exscript

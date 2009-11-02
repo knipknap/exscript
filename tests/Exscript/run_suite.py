@@ -1,8 +1,6 @@
 #!/usr/bin/python
-import os, sys, unittest
-modules = ['AccountTest',
-           'AccountManagerTest',
-           'JobTest']
+import os, sys, unittest, glob
+modules = [os.path.splitext(f)[0] for f in glob.glob('*Test.py')]
 
 # Parse CLI options.
 if len(sys.argv) == 1:

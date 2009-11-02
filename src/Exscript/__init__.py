@@ -15,6 +15,7 @@
 from Account        import Account
 from Connection     import Connection
 from Exscript       import Exscript
+from FunctionAction import FunctionAction
 from Host           import Host
 from Job            import Job
 from FunctionRunner import FunctionRunner

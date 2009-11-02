@@ -12,10 +12,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, os, re, time, signal, gc, copy
+import sys, os, re, time, signal, gc, copy, traceback
 from FooLib         import UrlParser
 from AccountManager import AccountManager
+from Connection     import Connection
+from FunctionAction import FunctionAction
 from SpiffWorkQueue import WorkQueue
+from util           import get_hosts_from_name
 
 True  = 1
 False = 0
@@ -151,6 +154,27 @@ class Exscript(object):
         self.account_manager.add_account(account)
 
 
+    def _catch_sigint_and_run(self, function, *data, **kwargs):
+        """
+        Makes sure that we shut down properly even when SIGINT or SIGTERM
+        is sent.
+        """
+        def on_posix_signal(signum, frame):
+            print '********** SIGINT RECEIVED - SHUTTING DOWN! **********'
+            raise KeyboardInterrupt
+
+        if self.workqueue.get_length() == 0:
+            signal.signal(signal.SIGINT,  on_posix_signal)
+            signal.signal(signal.SIGTERM, on_posix_signal)
+
+        try:
+            function(*data, **kwargs)
+        except KeyboardInterrupt:
+            print 'Interrupt caught succcessfully.'
+            print '%d unfinished jobs.' % (self.total - self.completed)
+            sys.exit(1)
+
+
     def run_async(self, job):
         """
         Places and executes the given Job in the workqueue.
@@ -177,33 +201,79 @@ class Exscript(object):
         @type  job: Job
         @param job: An instance of Job.
         """
-        # Make sure that we shut down properly even when SIGINT or SIGTERM is 
-        # sent.
-        def on_posix_signal(signum, frame):
-            print '************ SIGINT RECEIVED - SHUTTING DOWN! ************'
-            raise KeyboardInterrupt
-
-        if self.workqueue.get_length() == 0:
-            signal.signal(signal.SIGINT,  on_posix_signal)
-            signal.signal(signal.SIGTERM, on_posix_signal)
-
-        try:
-            self.run_async(job)
-        except KeyboardInterrupt:
-            print 'Interrupt caught succcessfully.'
-            print '%d unfinished jobs.' % (self.total - self.completed)
-            sys.exit(1)
-
-        # Wait until the engine is finished.
+        self._catch_sigint_and_run(self.run_async, job)
         self._dbg(1, 'All actions enqueued.')
+        self.shutdown()
+
+
+    def join(self):
+        self._dbg(1, 'Waiting for the engine to finish.')
         while self.workqueue.get_length() > 0:
-            #print '%s jobs left, waiting.' % workqueue.get_length()
+            #print '%s jobs left, waiting.' % self.workqueue.get_length()
             self._del_status_bar()
             self._print_status_bar()
             time.sleep(1)
             gc.collect()
 
+
+    def _on_action_aborted(self, action, exception, host):
+        if action.retries == 0:
+            raise # exception
+        self._dbg(1, 'Retrying %s' % host.get_address())
+        new_action         = self._get_action(exscript, host)
+        new_action.retries = action.retries - 1
+        retries            = self.retry_login - new_action.retries
+        new_action.name    = new_action.name + ' (retry %d)' % retries
+        if self.options.get('logdir'):
+            logfile       = '%s_retry%d.log' % (host.get_address(), retries)
+            logfile       = os.path.join(self.options['logdir'], logfile)
+            error_logfile = logfile + '.error'
+            new_action.set_logfile(logfile)
+            new_action.set_error_logfile(error_logfile)
+        exscript._priority_enqueue_action(new_action)
+
+
+    def shutdown(self, force = False):
+        if not force:
+            self.join()
+
         self._dbg(1, 'Shutting down engine...')
         self.workqueue.shutdown()
         self._dbg(1, 'Engine shut down.')
         self._del_status_bar()
+
+
+    def _start(self, hosts, function, *args, **kwargs):
+        n_connections = self.get_max_threads()
+        hosts         = get_hosts_from_name(hosts)
+        self.total   += len(hosts)
+        self.workqueue.start()
+
+        for host in hosts:
+            # To save memory, limit the number of parsed (=in-memory) items.
+            # A side effect is that we will no longer know the total
+            # number of jobs - to work around this, we first add the total
+            # ourselfs (see above), and then subtract one from the total
+            # each time a new host is appended (see below).
+            while self.workqueue.get_length() > n_connections * 2:
+                time.sleep(1)
+                gc.collect()
+
+            self._dbg(1, 'Building FunctionAction for %s.' % host.get_name())
+            conn   = Connection(self, host)
+            action = FunctionAction(function, conn, *args, **kwargs)
+            action.signal_connect('aborted',
+                                  self._on_action_aborted,
+                                  host)
+            self._enqueue_action(action)
+            self.total -= 1
+
+        self._dbg(1, 'All actions enqueued.')
+        self.shutdown()
+
+
+    def start(self, hosts, function, *args, **kwargs):
+        self._catch_sigint_and_run(self._start,
+                                   hosts,
+                                   function,
+                                   *args, **kwargs)
