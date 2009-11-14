@@ -61,4 +61,4 @@ class IfCondition(Token):
         self.if_block.dump(indent + 1)
         if self.else_block is not None:
             self.else_block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.', self.input
+        print (' ' * indent) + self.name, 'end.'

@@ -30,4 +30,4 @@ class Variable(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + 'Variable', self.varname, '.', self.input
+        print (' ' * indent) + 'Variable', self.varname, '.'

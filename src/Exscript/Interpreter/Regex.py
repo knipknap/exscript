@@ -104,4 +104,4 @@ class Regex(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.regex.pattern, self.input
+        print (' ' * indent) + self.name, self.regex.pattern

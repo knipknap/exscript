@@ -79,8 +79,7 @@ class Token(object):
     def mark_end(self, parser, char = None):
         if char is None:
             char = parser.current_char
-        self.end   = char
-        self.input = parser.input[self.char:self.end]
+        self.end = char
 
 
     def dump(self, indent = 0):

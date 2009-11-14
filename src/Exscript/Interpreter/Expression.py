@@ -77,4 +77,4 @@ class Expression(Token):
     def dump(self, indent = 0):
         print (' ' * indent) + self.name, 'start'
         self.root.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.', self.input
+        print (' ' * indent) + self.name, 'end.'

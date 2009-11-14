@@ -47,4 +47,4 @@ class Fail(Token):
         print (' ' * indent) + self.name, 'start'
         self.msg.dump(indent + 1)
         self.expression.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.', self.input
+        print (' ' * indent) + self.name, 'end.'

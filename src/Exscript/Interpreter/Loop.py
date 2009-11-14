@@ -151,4 +151,4 @@ class Loop(Token):
         if self.until is not None:
             self.until.dump(indent + 1)
         self.block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.', self.input
+        print (' ' * indent) + self.name, 'end.'

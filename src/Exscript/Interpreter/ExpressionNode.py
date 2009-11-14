@@ -170,4 +170,4 @@ class ExpressionNode(Token):
         print (' ' * (indent + 1)) + 'Operator', self.op
         if self.rgt is not None:
             self.rgt.dump(indent + 1)
-        print (' ' * indent) + self.name, self.op, 'end.', self.input
+        print (' ' * indent) + self.name, self.op, 'end.'

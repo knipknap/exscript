@@ -59,4 +59,4 @@ class Execute(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.string, self.input
+        print (' ' * indent) + self.name, self.string

@@ -63,5 +63,5 @@ class Term(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.input
+        print (' ' * indent) + self.name
         self.term.dump(indent + 1)

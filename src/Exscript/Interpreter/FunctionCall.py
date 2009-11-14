@@ -48,7 +48,7 @@ class FunctionCall(Token):
         print (' ' * indent) + self.name, self.funcname, 'start'
         for argument in self.arguments:
             argument.dump(indent + 1)
-        print (' ' * indent) + self.name, self.funcname, 'end.', self.input
+        print (' ' * indent) + self.name, self.funcname, 'end.'
 
 
     def value(self):

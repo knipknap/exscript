@@ -33,6 +33,14 @@ class Parser(object):
         self.stdlib        = {}
         self.load_module(stdlib)
 
+    def _get_line_position_from_char(self, char):
+        line_start = char
+        while line_start != 0:
+            if self.input[line_start - 1] == '\n':
+                break
+            line_start -= 1
+        line_end = self.input.find('\n', char)
+        return line_start, line_end
 
     def define(self, **kwargs):
         for key in kwargs:
