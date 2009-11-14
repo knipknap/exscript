@@ -17,13 +17,13 @@ from termconnect.Exception import TransportException
 from Scope                 import Scope
 
 class Try(Scope):
-    def __init__(self, parser, parent):
-        Scope.__init__(self, 'Try', parser, parent)
+    def __init__(self, lexer, parser, parent):
+        Scope.__init__(self, 'Try', lexer, parser, parent)
 
         parser.next_if('whitespace')
         parser.expect(self, 'keyword', 'try')
         parser.skip(['whitespace', 'newline'])
-        self.block = Code.Code(parser, parent)
+        self.block = Code.Code(lexer, parser, parent)
 
 
     def value(self):

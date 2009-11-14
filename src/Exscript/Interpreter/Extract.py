@@ -20,9 +20,8 @@ True  = 1
 False = 0
 
 class Extract(Token):
-    def __init__(self, parser, parent):
-        Token.__init__(self, 'Extract', parser)
-        self.parent    = parent
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Extract', lexer, parser, parent)
         self.varnames  = []
         self.variables = {}
         self.append    = False
@@ -35,7 +34,7 @@ class Extract(Token):
         # First expect a regular expression.
         parser.expect(self, 'keyword', 'extract')
         parser.expect(self, 'whitespace')
-        self.regex = Regex(parser, parent)
+        self.regex = Regex(lexer, parser, parent)
 
         # Expect "as" keyword.
         parser.expect(self, 'whitespace')
@@ -44,14 +43,14 @@ class Extract(Token):
         elif parser.next_if('keyword', 'into'):
             self.append = True
         else:
-            (type, token) = parser.token()
+            type, token = parser.token()
             parent.syntax_error(self, 'Expected "as" or "into" but got %s' % token)
 
         # Expect a list of variable names.
         while 1:
             # Variable name.
             parser.expect(self, 'whitespace')
-            (type, token) = parser.token()
+            type, token = parser.token()
             parser.expect(self, 'varname')
             if self.variables.has_key(token):
                 parent.syntax_error(self, 'Duplicate variable name %s')
@@ -73,7 +72,7 @@ class Extract(Token):
         parser.skip('whitespace')
         if parser.next_if('keyword', 'from'):
             parser.expect(self, 'whitespace')
-            self.source = Term(parser, parent)
+            self.source = Term(lexer, parser, parent)
         self.mark_end(parser)
 
 

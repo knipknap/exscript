@@ -27,11 +27,10 @@ for type, regex in grammar:
     grammar_c.append((type, re.compile(regex)))
 
 class String(Token):
-    def __init__(self, parser, parent):
-        Token.__init__(self, 'String', parser)
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'String', lexer, parser, parent)
         parser.set_grammar(grammar_c)
         parser.expect(self, 'string_delimiter')
-        self.parent = parent
         self.string = ''
         while 1:
             if parser.current_is('string_data'):

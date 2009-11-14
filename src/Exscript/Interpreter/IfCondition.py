@@ -17,18 +17,17 @@ from Token      import Token
 from Expression import Expression
 
 class IfCondition(Token):
-    def __init__(self, parser, scope):
-        Token.__init__(self, 'If-condition', parser)
-        self.parent = scope
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'If-condition', lexer, parser, parent)
 
         # Expect an expression.
         parser.expect(self, 'keyword', 'if')
         parser.expect(self, 'whitespace')
-        self.expression = Expression(parser, scope)
+        self.expression = Expression(lexer, parser, parent)
         self.mark_end(parser)
 
         # Body of the if block.
-        self.if_block    = Code.Code(parser, scope)
+        self.if_block    = Code.Code(lexer, parser, parent)
         self.elif_blocks = []
         self.else_block  = None
 
@@ -41,11 +40,11 @@ class IfCondition(Token):
         # read the next if condition recursively and return.
         parser.skip(['whitespace', 'newline'])
         if parser.current_is('keyword', 'if'):
-            self.else_block = IfCondition(parser, scope)
+            self.else_block = IfCondition(lexer, parser, parent)
             return
 
         # There was no "elif", so we handle a normal "else" condition here.
-        self.else_block = Code.Code(parser, scope)
+        self.else_block = Code.Code(lexer, parser, parent)
 
 
     def value(self):

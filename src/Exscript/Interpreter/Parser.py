@@ -170,7 +170,7 @@ class Parser(object):
         # by the user.
         variables = copy.deepcopy(self.variables)
         variables.update(self.stdlib)
-        compiled = Program(self, None, variables = variables)
+        compiled = Program(self, self, variables = variables)
         if self.debug > 3:
             compiled.dump()
         return compiled
@@ -191,6 +191,6 @@ if __name__ == "__main__":
         filename = sys.argv[1]
     else:
         sys.exit(1)
-    parser   = Parser()
+    parser   = Parser(debug = 5)
     compiled = parser.parse_file(filename)
     compiled.dump()

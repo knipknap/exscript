@@ -16,24 +16,23 @@ from Token import Token
 import Term
 
 class ExpressionNode(Token):
-    def __init__(self, parser, scope, parent = None):
+    def __init__(self, lexer, parser, parent, parent_node = None):
         # Skip whitespace before initializing the token to make sure that self.char
         # points to the beginning of the expression (which makes for prettier error
         # messages).
         parser.skip(['whitespace', 'newline'])
 
-        Token.__init__(self, 'ExpressionNode', parser)
-        self.lft     = None
-        self.rgt     = None
-        self.op      = None
-        self.op_type = None
-        self.scope   = scope
-        self.parent  = parent
+        Token.__init__(self, 'ExpressionNode', lexer, parser, parent)
+        self.lft         = None
+        self.rgt         = None
+        self.op          = None
+        self.op_type     = None
+        self.parent_node = parent_node
 
         # The "not" operator requires special treatment because it is
         # positioned left of the term.
         if not parser.current_is('logical_operator', 'not'):
-            self.lft = Term.Term(parser, scope)
+            self.lft = Term.Term(lexer, parser, parent)
 
             # The expression may end already (a single term is also an
             # expression).
@@ -52,10 +51,10 @@ class ExpressionNode(Token):
            not parser.next_if('comparison') and \
            not parser.next_if('regex_delimiter'):
             self.mark_end(parser)
-            scope.syntax_error(self, 'Expected operator but got %s' % self.op_type)
+            parent.syntax_error(self, 'Expected operator but got %s' % self.op_type)
 
         # Expect the second term.
-        self.rgt = ExpressionNode(parser, scope, self)
+        self.rgt = ExpressionNode(lexer, parser, parent, self)
         self.mark_end(parser)
 
 
@@ -109,11 +108,11 @@ class ExpressionNode(Token):
             try:
                 lft = int(lft)
             except:
-                self.scope.runtime_error(self.lft, error)
+                self.parent.runtime_error(self.lft, error)
             try:
                 rgt = int(rgt)
             except:
-                self.scope.runtime_error(self.rgt, error)
+                self.parent.runtime_error(self.rgt, error)
 
         # Two-term expressions.
         if self.op == 'is':
@@ -126,7 +125,7 @@ class ExpressionNode(Token):
                 regex.match(str(lft))
             except Exception, e:
                 error = 'Right hand operator is not a regular expression'
-                self.scope.runtime_error(self.rgt, error)
+                self.parent.runtime_error(self.rgt, error)
             for line in lft_lst:
                 if regex.search(str(line)):
                     return [1]

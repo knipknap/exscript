@@ -16,17 +16,16 @@ import Expression
 from Token import Token
 
 class Assign(Token):
-    def __init__(self, parser, parent):
-        Token.__init__(self, 'Assign', parser)
-        self.parent = parent
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Assign', lexer, parser, parent)
 
         # Extract the variable name.
-        (type, self.varname) = parser.token()
+        type, self.varname = parser.token()
         parser.expect(self, 'varname')
         parser.expect(self, 'whitespace')
         parser.expect(self, 'assign')
         parser.expect(self, 'whitespace')
-        self.expression = Expression.Expression(parser, parent)
+        self.expression = Expression.Expression(lexer, parser, parent)
         self.parent.define(**{self.varname: None})
 
 

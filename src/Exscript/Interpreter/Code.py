@@ -82,31 +82,31 @@ for type, regex in grammar:
     grammar_c.append((type, re.compile(regex)))
 
 class Code(Scope):
-    def __init__(self, parser, parent):
-        Scope.__init__(self, 'Code', parser, parent)
+    def __init__(self, lexer, parser, parent):
+        Scope.__init__(self, 'Code', lexer, parser, parent)
         parser.set_grammar(grammar_c)
         while 1:
             parser.skip(['whitespace', 'newline'])
             if parser.next_if('close_curly_bracket'):
                 if isinstance(parent, Exscript.Exscript):
                     break
-                self.children.append(Exscript.Exscript(parser, self))
+                self.children.append(Exscript.Exscript(lexer, parser, self))
             elif parser.current_is('keyword', 'append'):
-                self.children.append(Append(parser, self))
+                self.children.append(Append(lexer, parser, self))
             elif parser.current_is('keyword', 'extract'):
-                self.children.append(Extract(parser, self))
+                self.children.append(Extract(lexer, parser, self))
             elif parser.current_is('keyword', 'fail'):
-                self.children.append(Fail(parser, self))
+                self.children.append(Fail(lexer, parser, self))
             elif parser.current_is('keyword', 'if'):
-                self.children.append(IfCondition(parser, self))
+                self.children.append(IfCondition(lexer, parser, self))
             elif parser.current_is('keyword', 'loop'):
-                self.children.append(Loop(parser, self))
+                self.children.append(Loop(lexer, parser, self))
             elif parser.current_is('varname'):
-                self.children.append(Assign(parser, self))
+                self.children.append(Assign(lexer, parser, self))
             elif parser.current_is('keyword', 'try'):
-                self.children.append(Try(parser, self))
+                self.children.append(Try(lexer, parser, self))
             elif parser.current_is('keyword', 'enter'):
-                self.children.append(Enter(parser, self))
+                self.children.append(Enter(lexer, parser, self))
             elif parser.current_is('keyword', 'else'):
                 if not isinstance(parent, Code):
                     parent.syntax_error(self, '"end" without a scope start')
@@ -117,8 +117,8 @@ class Code(Scope):
                 parser.skip(['whitespace', 'newline'])
                 break
             elif parser.current_is('open_function_call'):
-                self.children.append(FunctionCall(parser, self))
+                self.children.append(FunctionCall(lexer, parser, self))
             else:
-                (type, token) = parser.token()
+                type, token = parser.token()
                 parent.syntax_error(self, 'Unexpected %s "%s"' % (type, token))
         parser.restore_grammar()

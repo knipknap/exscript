@@ -17,21 +17,20 @@ from Token      import Token
 from Expression import Expression
 
 class Fail(Token):
-    def __init__(self, parser, scope):
-        Token.__init__(self, 'Fail', parser)
-        self.parent     = scope
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Fail', lexer, parser, parent)
         self.expression = None
 
         # "fail" keyword.
         parser.expect(self, 'keyword', 'fail')
         parser.expect(self, 'whitespace')
-        self.msg = Expression(parser, scope)
+        self.msg = Expression(lexer, parser, parent)
 
         # 'If' keyword with an expression.
         #token = parser.token()
         if parser.next_if('keyword', 'if'):
             parser.expect(self, 'whitespace')
-            self.expression = Expression(parser, scope)
+            self.expression = Expression(lexer, parser, parent)
 
         # End of expression.
         self.mark_end(parser)

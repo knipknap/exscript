@@ -30,8 +30,8 @@ for type, regex in grammar:
     grammar_c.append((type, re.compile(regex)))
 
 class Exscript(Scope):
-    def __init__(self, parser, parent, *args, **kwargs):
-        Scope.__init__(self, 'Exscript', parser, parent, **kwargs)
+    def __init__(self, lexer, parser, parent, *args, **kwargs):
+        Scope.__init__(self, 'Exscript', lexer, parser, parent, **kwargs)
         parser.set_grammar(grammar_c)
         #print "Opening Scope:", parser.token()
         buffer = ''
@@ -40,11 +40,11 @@ class Exscript(Scope):
                 break
             elif parser.next_if('open_curly_bracket'):
                 if buffer.strip() != '':
-                    self.children.append(Execute(parser, self, buffer))
+                    self.children.append(Execute(lexer, parser, self, buffer))
                     buffer = ''
                 if isinstance(parent, Code):
                     break
-                self.children.append(Code(parser, self))
+                self.children.append(Code(lexer, parser, self))
             elif parser.current_is('raw_data'):
                 if parser.token()[1].lstrip().startswith('#'):
                     while not parser.current_is('newline'):
@@ -63,7 +63,7 @@ class Exscript(Scope):
                 parser.next()
             elif parser.next_if('newline'):
                 if buffer.strip() != '':
-                    self.children.append(Execute(parser, self, buffer))
+                    self.children.append(Execute(lexer, parser, self, buffer))
                     buffer = ''
             else:
                 type = parser.token()[0]

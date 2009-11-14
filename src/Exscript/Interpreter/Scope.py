@@ -15,11 +15,10 @@
 from Token import Token
 
 class Scope(Token):
-    def __init__(self, name, parser, parent = None, *args, **kwargs):
-        Token.__init__(self, name, parser)
+    def __init__(self, name, lexer, parser, parent = None, *args, **kwargs):
+        Token.__init__(self, name, lexer, parser, parent)
         self.variables      = kwargs.get('variables', {})
         self.children       = []
-        self.parent         = parent
         self.exit_requested = 0
         for key in self.variables:
             if key.find('.') < 0 and not key.startswith('_'):

@@ -20,23 +20,23 @@ from String       import String
 from Regex        import Regex
 
 class Term(Token):
-    def __init__(self, parser, parent):
-        Token.__init__(self, 'Term', parser)
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Term', lexer, parser, parent)
         self.term = None
         self.lft  = None
         self.rgt  = None
         self.op   = None
 
         # Expect a term.
-        (type, token) = parser.token()
+        type, token = parser.token()
         if parser.current_is('varname'):
             if not parent.is_defined(token):
                 parent.generic_error(self, 'Error', 'Undeclared variable %s' % token)
-            self.term = Variable(parser, parent)
+            self.term = Variable(lexer, parser, parent)
         elif parser.current_is('open_function_call'):
-            self.term = FunctionCall(parser, parent)
+            self.term = FunctionCall(lexer, parser, parent)
         elif parser.current_is('string_delimiter'):
-            self.term = String(parser, parent)
+            self.term = String(lexer, parser, parent)
         elif parser.next_if('number'):
             self.term = Number(token)
         elif parser.next_if('keyword', 'false'):
@@ -48,7 +48,7 @@ class Term(Token):
         elif parser.next_if('hex_number'):
             self.term = Number(int(token[2:], 16))
         elif parser.current_is('regex_delimiter'):
-            self.term = Regex(parser, parent)
+            self.term = Regex(lexer, parser, parent)
         else:
             parent.syntax_error(self, 'Expected term but got %s' % type)
         self.mark_end(parser)

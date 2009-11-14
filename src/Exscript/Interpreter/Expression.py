@@ -16,11 +16,11 @@ from Token import Token
 from ExpressionNode import ExpressionNode
 
 class Expression(Token):
-    def __init__(self, parser, scope):
-        Token.__init__(self, 'Expression', parser)
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Expression', lexer, parser, parent)
 
         # Parse the expression.
-        self.root = ExpressionNode(parser, scope)
+        self.root = ExpressionNode(lexer, parser, parent)
 
         # Reorder the tree according to the operator priorities.
         self.prioritize(self.root)
@@ -56,14 +56,14 @@ class Expression(Token):
         # Change the pointer of the parent of the root node.
         # If this was the root of the entire tree we need to change that as
         # well.
-        if root.parent is None:
+        if root.parent_node is None:
             self.root = current
-        elif root.parent.lft == root:
-            root.parent.lft = current
-        elif root.parent.rgt == root:
-            root.parent.rgt = current
+        elif root.parent_node.lft == root:
+            root.parent_node.lft = current
+        elif root.parent_node.rgt == root:
+            root.parent_node.rgt = current
 
-        root.parent = current
+        root.parent_node = current
 
         # Go ahead prioritizing the children.
         self.prioritize(current.lft, prio + 1)

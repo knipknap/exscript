@@ -42,9 +42,8 @@ for type, regex in modifier_grammar:
     modifier_grammar_c.append((type, re.compile(regex, re.M|re.S)))
 
 class Regex(Token):
-    def __init__(self, parser, parent):
-        Token.__init__(self, 'Regular Expression', parser)
-        self.parent   = parent
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Regular Expression', lexer, parser, parent)
         self.n_groups = 0
         parser.set_grammar(grammar_c)
 

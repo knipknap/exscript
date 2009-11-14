@@ -18,9 +18,8 @@ from Term       import Term
 from Expression import Expression
 
 class Loop(Token):
-    def __init__(self, parser, scope):
-        Token.__init__(self, 'Loop', parser)
-        self.parent         = scope
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Loop', lexer, parser, parent)
         self.during         = None
         self.until          = None
         self.thefrom        = None
@@ -34,11 +33,11 @@ class Loop(Token):
         if not parser.current_is('keyword', 'while') and \
            not parser.current_is('keyword', 'until') and \
            not parser.current_is('keyword', 'from'):
-            self.list_variables = [Term(parser, scope)]
+            self.list_variables = [Term(lexer, parser, parent)]
             parser.next_if('whitespace')
             while parser.next_if('comma'):
                 parser.skip(['whitespace', 'newline'])
-                self.list_variables.append(Term(parser, scope))
+                self.list_variables.append(Term(lexer, parser, parent))
                 parser.skip(['whitespace', 'newline'])
 
             # Expect the "as" keyword.
@@ -46,53 +45,53 @@ class Loop(Token):
 
             # The iterator variable.
             parser.next_if('whitespace')
-            (type, iter_varname) = parser.token()
+            type, iter_varname = parser.token()
             parser.expect(self, 'varname')
-            scope.define(**{iter_varname: []})
+            parent.define(**{iter_varname: []})
             self.iter_varnames = [iter_varname]
             parser.next_if('whitespace')
             while parser.next_if('comma'):
                 parser.skip(['whitespace', 'newline'])
-                (type, iter_varname) = parser.token()
+                type, iter_varname = parser.token()
                 parser.expect(self, 'varname')
-                scope.define(**{iter_varname: []})
+                parent.define(**{iter_varname: []})
                 self.iter_varnames.append(iter_varname)
                 parser.skip(['whitespace', 'newline'])
 
             if len(self.iter_varnames) != len(self.list_variables):
                 error = '%s lists, but only %s iterators in loop' % (len(self.iter_varnames),
                                                                      len(self.list_variables))
-                scope.syntax_error(self, error)
+                parent.syntax_error(self, error)
 
         # Check if this is a "from ... to ..." loop.
         if parser.next_if('keyword', 'from'):
             parser.expect(self, 'whitespace')
-            self.thefrom = Expression(parser, scope)
+            self.thefrom = Expression(lexer, parser, parent)
             parser.next_if('whitespace')
             parser.expect(self, 'keyword', 'to')
-            self.theto = Expression(parser, scope)
+            self.theto = Expression(lexer, parser, parent)
             parser.next_if('whitespace')
 
             if parser.next_if('keyword', 'as'):
                 parser.next_if('whitespace')
-                (type, iter_varname) = parser.token()
+                type, iter_varname = parser.token()
                 parser.expect(self, 'varname')
                 parser.next_if('whitespace')
             else:
                 iter_varname = 'counter'
-            scope.define(**{iter_varname: []})
+            parent.define(**{iter_varname: []})
             self.iter_varnames = [iter_varname]
         
         # Check if this is a "while" loop.
         if parser.next_if('keyword', 'while'):
             parser.expect(self, 'whitespace')
-            self.during = Expression(parser, scope)
+            self.during = Expression(lexer, parser, parent)
             parser.next_if('whitespace')
         
         # Check if this is an "until" loop.
         if parser.next_if('keyword', 'until'):
             parser.expect(self, 'whitespace')
-            self.until = Expression(parser, scope)
+            self.until = Expression(lexer, parser, parent)
             parser.next_if('whitespace')
         
         # End of statement.
@@ -100,7 +99,7 @@ class Loop(Token):
 
         # Body of the loop block.
         parser.skip(['whitespace', 'newline'])
-        self.block = Code.Code(parser, scope)
+        self.block = Code.Code(lexer, parser, parent)
 
 
     def value(self):

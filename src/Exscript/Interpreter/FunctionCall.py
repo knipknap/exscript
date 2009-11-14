@@ -17,14 +17,13 @@ from Token      import Token
 from Variable   import Variable
 
 class FunctionCall(Token):
-    def __init__(self, parser, parent):
-        Token.__init__(self, 'FunctionCall', parser)
-        self.parent    = parent
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'FunctionCall', lexer, parser, parent)
         self.funcname  = None
         self.arguments = []
 
         # Extract the function name.
-        (type, token) = parser.token()
+        type, token = parser.token()
         parser.expect(self, 'open_function_call')
         self.funcname = token[:-1]
         function      = self.parent.get(self.funcname)
@@ -32,12 +31,12 @@ class FunctionCall(Token):
             parent.syntax_error(self, 'Undefined function %s' % self.funcname)
 
         # Parse the argument list.
-        (type, token) = parser.token()
+        type, token = parser.token()
         while 1:
             if parser.next_if('close_bracket'):
                 break
-            self.arguments.append(Expression.Expression(parser, parent))
-            (type, token) = parser.token()
+            self.arguments.append(Expression.Expression(lexer, parser, parent))
+            type, token = parser.token()
             if not parser.next_if('comma') and not parser.current_is('close_bracket'):
                 error = 'Expected separator or argument list end but got %s' % type
                 parent.syntax_error(self, error)

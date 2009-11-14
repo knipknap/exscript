@@ -17,9 +17,8 @@ from Token import Token, string_re
 
 
 class Execute(Token):
-    def __init__(self, parser, parent, command):
-        Token.__init__(self, 'Execute', parser)
-        self.parent        = parent
+    def __init__(self, lexer, parser, parent, command):
+        Token.__init__(self, 'Execute', lexer, parser, parent)
         self.string        = command
         self.no_prompt     = parser.no_prompt
         self.strip_command = parser.strip_command

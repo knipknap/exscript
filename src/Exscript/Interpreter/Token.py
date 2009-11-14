@@ -18,11 +18,12 @@ varname_re = re.compile(r'[a-z][\w_]*',       re.I)
 string_re  = re.compile(r'(\\?)\$([\w_]*\b)', re.I)
 
 class Token(object):
-    def __init__(self, name, parser):
-        self.name = name
-        self.line = parser.current_line
-        self.char = parser.current_char
-        self.end  = parser.current_char + 10
+    def __init__(self, name, lexer, parser, parent = None):
+        self.parent = parent
+        self.name   = name
+        self.line   = parser.current_line
+        self.char   = parser.current_char
+        self.end    = parser.current_char + 10
         self.mark_end(parser, parser.current_char + 10)
 
 

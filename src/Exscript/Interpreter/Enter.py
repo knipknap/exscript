@@ -16,14 +16,13 @@ from Token   import Token
 from Execute import Execute
 
 class Enter(Token):
-    def __init__(self, parser, parent):
-        Token.__init__(self, 'Enter', parser)
-        self.parent  = parent
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Enter', lexer, parser, parent)
 
         parser.expect(self, 'keyword', 'enter')
         parser.skip(['whitespace', 'newline'])
 
-        self.execute = Execute(parser, parent, '')
+        self.execute = Execute(lexer, parser, parent, '')
 
 
     def value(self):

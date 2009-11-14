@@ -17,11 +17,11 @@ from Exscript  import Exscript
 from Scope     import Scope
 
 class Program(Scope):
-    def __init__(self, parser, *args, **kwargs):
-        Scope.__init__(self, 'Program', parser, None, **kwargs)
+    def __init__(self, lexer, parser, **kwargs):
+        Scope.__init__(self, 'Program', lexer, parser, None, **kwargs)
         self.init_variables = kwargs.get('variables', {})
         self.input          = parser.input
-        self.children.append(Exscript(parser, self))
+        self.children.append(Exscript(lexer, parser, self))
 
 
     def init(self, *args, **kwargs):

@@ -19,14 +19,13 @@ True  = 1
 False = 0
 
 class Append(Token):
-    def __init__(self, parser, parent):
-        Token.__init__(self, 'Append', parser)
-        self.parent = parent
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Append', lexer, parser, parent)
 
         # First expect an expression.
         parser.expect(self, 'keyword', 'append')
         parser.expect(self, 'whitespace')
-        self.expr = Term(parser, parent)
+        self.expr = Term(lexer, parser, parent)
 
         # Expect "to" keyword.
         parser.expect(self, 'whitespace')
@@ -34,7 +33,7 @@ class Append(Token):
 
         # Expect a variable name.
         parser.expect(self, 'whitespace')
-        (type, self.varname) = parser.token()
+        type, self.varname = parser.token()
         parser.expect(self, 'varname')
         self.parent.define(**{self.varname: []})
 
