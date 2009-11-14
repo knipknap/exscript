@@ -32,11 +32,11 @@ class Program(Scope):
             else:
                 self.init_variables[key] = [kwargs[key]]
 
-
-    def error(self, line, char, type, typename, error):
+    def error(self, char, type, typename, error):
         if type is None:
             type = Exception
-        start, end = self.lexer.get_line_position_from_char(char)
+        line       = self.lexer._get_line_number_from_char()
+        start, end = self.lexer._get_line_position_from_char(char)
         output  = self.lexer.input[start:end] + '\n'
         output += (' ' * (char - start)) + '^\n'
         output += '%s in line %s' % (error, line)
@@ -44,15 +44,15 @@ class Program(Scope):
 
 
     def syntax_error(self, sender, error):
-        self.error(sender.line, sender.char, None, 'Syntax error', error)
+        self.error(sender.char, None, 'Syntax error', error)
 
 
     def generic_error(self, sender, typename, error):
-        self.error(sender.line, sender.char, None, typename, error)
+        self.error(sender.char, None, typename, error)
 
 
     def exception(self, sender, type, typename, error):
-        self.error(sender.line, sender.char, type, typename, error)
+        self.error(sender.char, type, typename, error)
 
 
     def runtime_error(self, sender, error):

@@ -21,7 +21,6 @@ class Token(object):
     def __init__(self, name, lexer, parser, parent = None):
         self.parent = parent
         self.name   = name
-        self.line   = parser.current_line
         self.char   = parser.current_char
         self.end    = parser.current_char + 10
         self.mark_end(parser, parser.current_char + 10)

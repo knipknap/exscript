@@ -42,6 +42,9 @@ class Parser(object):
         line_end = self.input.find('\n', char)
         return line_start, line_end
 
+    def _get_line_number_from_char(self, char):
+        return self.lexer.input[:char].count('\n') + 1
+
     def define(self, **kwargs):
         for key in kwargs:
             if type(kwargs[key]) == type([]):
