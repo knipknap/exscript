@@ -37,7 +37,7 @@ class Append(Token):
         parser.expect(self, 'varname')
         self.parent.define(**{self.varname: []})
 
-        self.mark_end(parser)
+        self.mark_end()
 
 
     def value(self):

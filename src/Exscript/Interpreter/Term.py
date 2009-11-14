@@ -51,7 +51,7 @@ class Term(Token):
             self.term = Regex(lexer, parser, parent)
         else:
             parent.syntax_error(self, 'Expected term but got %s' % type)
-        self.mark_end(parser)
+        self.mark_end()
 
 
     def priority(self):

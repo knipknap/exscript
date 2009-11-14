@@ -13,19 +13,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
+import parselib
 
 varname_re = re.compile(r'[a-z][\w_]*',       re.I)
 string_re  = re.compile(r'(\\?)\$([\w_]*\b)', re.I)
 
-class Token(object):
-    def __init__(self, name, lexer, parser, parent = None):
-        self.parent = parent
-        self.name   = name
-        self.char   = parser.current_char
-        self.end    = parser.current_char + 10
-        self.mark_end(parser, parser.current_char + 10)
-
-
+class Token(parselib.Token):
     # Tokens that include variables in a string may use this callback to
     # make sure that the variable is already declared.
     def variable_test_cb(self, match):
@@ -34,14 +27,14 @@ class Token(object):
         if escape == '\\':
             return
         if not varname_re.match(varname):
-            self.char = self.char + self.string.find('$' + varname)
+            self.start = self.start + self.string.find('$' + varname)
             self.parent.runtime_error(self, '%s is not a variable name' % varname)
         value = self.parent.get(varname)
         if value is None:
-            self.char = self.char + self.string.find('$' + varname)
+            self.start = self.start + self.string.find('$' + varname)
             self.parent.generic_error(self, 'Undefined', 'Undefined variable %s' % varname)
         elif type(value) == type(self.variable_test_cb):
-            self.char = self.char + self.string.find('$' + varname)
+            self.start = self.start + self.string.find('$' + varname)
             self.parent.generic_error(self, 'Undefined', '%s is not a variable name' % varname)
         return match.group(0)
 
@@ -54,14 +47,14 @@ class Token(object):
         if escape == '\\':
             return '$' + varname
         if not varname_re.match(varname):
-            self.char = self.char + self.string.find('$' + varname)
+            self.start = self.start + self.string.find('$' + varname)
             self.parent.runtime_error(self, '%s is not a variable name' % varname)
         value = self.parent.get(varname)
         if value is None:
-            self.char = self.char + self.string.find('$' + varname)
+            self.start = self.start + self.string.find('$' + varname)
             self.parent.runtime_error(self, 'Undefined variable %s' % varname)
         elif type(value) == type(self.variable_test_cb):
-            self.char = self.char + self.string.find('$' + varname)
+            self.start = self.start + self.string.find('$' + varname)
             self.parent.runtime_error(self, '%s is not a variable name' % varname)
         elif type(value) == type([]):
             if len(value) > 0:
@@ -73,13 +66,3 @@ class Token(object):
 
     def value(self):
         raise Exception, "Abstract method, not implemented" #FIXME: Mark abstract
-
-
-    def mark_end(self, parser, char = None):
-        if char is None:
-            char = parser.current_char
-        self.end = char
-
-
-    def dump(self, indent = 0):
-        print (' ' * indent) + self.name

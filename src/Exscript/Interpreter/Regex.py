@@ -63,12 +63,12 @@ class Regex(Token):
             elif parser.next_if('regex_delimiter'):
                 break
             elif parser.next_if('newline'):
-                self.char = self.char + len(regex)
-                error     = 'Unexpected end of regular expression'
+                self.start = self.start + len(regex)
+                error      = 'Unexpected end of regular expression'
                 parent.syntax_error(self, error)
             else:
-                char      = parser.token()[1]
-                self.char = self.char + len(regex)
+                char       = parser.token()[1]
+                self.start = self.start + len(regex)
                 error     = 'Invalid char "%s" in regular expression' % char
                 parent.syntax_error(self, error)
 
@@ -95,7 +95,7 @@ class Regex(Token):
         # Count the number of groups in the expression.
         self.n_groups = len(bracket_re.findall(regex))
         parser.restore_grammar()
-        self.mark_end(parser)
+        self.mark_end()
 
 
     def value(self):

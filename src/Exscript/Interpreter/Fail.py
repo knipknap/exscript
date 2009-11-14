@@ -33,7 +33,7 @@ class Fail(Token):
             self.expression = Expression(lexer, parser, parent)
 
         # End of expression.
-        self.mark_end(parser)
+        self.mark_end()
         parser.skip(['whitespace', 'newline'])
 
 

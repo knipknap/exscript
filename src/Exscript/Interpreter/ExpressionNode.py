@@ -17,7 +17,7 @@ import Term
 
 class ExpressionNode(Token):
     def __init__(self, lexer, parser, parent, parent_node = None):
-        # Skip whitespace before initializing the token to make sure that self.char
+        # Skip whitespace before initializing the token to make sure that self.start
         # points to the beginning of the expression (which makes for prettier error
         # messages).
         parser.skip(['whitespace', 'newline'])
@@ -41,7 +41,7 @@ class ExpressionNode(Token):
                not parser.current_is('logical_operator') and \
                not parser.current_is('comparison') and \
                not parser.current_is('regex_delimiter'):
-                self.mark_end(parser)
+                self.mark_end()
                 return
 
         # Expect the operator.
@@ -50,12 +50,12 @@ class ExpressionNode(Token):
            not parser.next_if('logical_operator') and \
            not parser.next_if('comparison') and \
            not parser.next_if('regex_delimiter'):
-            self.mark_end(parser)
+            self.mark_end()
             parent.syntax_error(self, 'Expected operator but got %s' % self.op_type)
 
         # Expect the second term.
         self.rgt = ExpressionNode(lexer, parser, parent, self)
-        self.mark_end(parser)
+        self.mark_end()
 
 
     def priority(self):

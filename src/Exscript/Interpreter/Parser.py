@@ -143,7 +143,7 @@ class Parser(object):
                 error = 'Expected %s but got %s' % (type, cur_token)
             else:
                 error = 'Expected "%s" but got %s "%s"' % (token, cur_type, cur_token)
-            sender.char = self.current_char
+            sender.start = self.current_char
             sender.parent.syntax_error(sender, error)
         return 1
 

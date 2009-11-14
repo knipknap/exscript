@@ -24,7 +24,7 @@ class IfCondition(Token):
         parser.expect(self, 'keyword', 'if')
         parser.expect(self, 'whitespace')
         self.expression = Expression(lexer, parser, parent)
-        self.mark_end(parser)
+        self.mark_end()
 
         # Body of the if block.
         self.if_block    = Code.Code(lexer, parser, parent)

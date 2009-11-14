@@ -44,15 +44,15 @@ class Program(Scope):
 
 
     def syntax_error(self, sender, error):
-        self.error(sender.char, None, 'Syntax error', error)
+        self.error(sender.start, None, 'Syntax error', error)
 
 
     def generic_error(self, sender, typename, error):
-        self.error(sender.char, None, typename, error)
+        self.error(sender.start, None, typename, error)
 
 
     def exception(self, sender, type, typename, error):
-        self.error(sender.char, type, typename, error)
+        self.error(sender.start, type, typename, error)
 
 
     def runtime_error(self, sender, error):

@@ -95,7 +95,7 @@ class Loop(Token):
             parser.next_if('whitespace')
         
         # End of statement.
-        self.mark_end(parser)
+        self.mark_end()
 
         # Body of the loop block.
         parser.skip(['whitespace', 'newline'])

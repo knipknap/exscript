@@ -41,7 +41,7 @@ class FunctionCall(Token):
                 error = 'Expected separator or argument list end but got %s' % type
                 parent.syntax_error(self, error)
 
-        self.mark_end(parser)
+        self.mark_end()
 
 
     def dump(self, indent = 0):

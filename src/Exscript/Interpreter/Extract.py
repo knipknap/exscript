@@ -73,7 +73,7 @@ class Extract(Token):
         if parser.next_if('keyword', 'from'):
             parser.expect(self, 'whitespace')
             self.source = Term(lexer, parser, parent)
-        self.mark_end(parser)
+        self.mark_end()
 
 
     def extract(self):

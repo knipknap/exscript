@@ -24,7 +24,7 @@ class Expression(Token):
 
         # Reorder the tree according to the operator priorities.
         self.prioritize(self.root)
-        self.mark_end(parser)
+        self.mark_end()
 
 
     def prioritize(self, start, prio = 1):

@@ -24,8 +24,8 @@ class Execute(Token):
         self.strip_command = parser.strip_command
 
         # Make the debugger point to the beginning of the command.
-        self.char = self.char - len(command) - 1
-        self.mark_end(parser, self.char + len(command))
+        self.start -= len(command) - 1
+        self.mark_end(self.start + len(command))
 
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, command)
