@@ -13,8 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import Expression
-from Token      import Token
-from Variable   import Variable
+from parselib import Token
+from Variable import Variable
 
 class FunctionCall(Token):
     def __init__(self, lexer, parser, parent):
