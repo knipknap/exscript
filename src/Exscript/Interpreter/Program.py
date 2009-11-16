@@ -19,6 +19,7 @@ from Scope     import Scope
 class Program(Scope):
     def __init__(self, lexer, parser, variables, **kwargs):
         Scope.__init__(self, 'Program', lexer, parser, None, **kwargs)
+        self.variables      = variables
         self.init_variables = variables
         self.children.append(Exscript(lexer, parser, self))
 
