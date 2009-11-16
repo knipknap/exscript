@@ -32,33 +32,33 @@ class Extract(Token):
             parent.syntax_error(self, msg)
 
         # First expect a regular expression.
-        parser.expect(self, 'keyword', 'extract')
-        parser.expect(self, 'whitespace')
+        lexer.expect(self, 'keyword', 'extract')
+        lexer.expect(self, 'whitespace')
         self.regex = Regex(lexer, parser, parent)
 
         # Expect "as" keyword.
-        parser.expect(self, 'whitespace')
-        if parser.next_if('keyword', 'as'):
+        lexer.expect(self, 'whitespace')
+        if lexer.next_if('keyword', 'as'):
             self.append = False
-        elif parser.next_if('keyword', 'into'):
+        elif lexer.next_if('keyword', 'into'):
             self.append = True
         else:
-            type, token = parser.token()
+            type, token = lexer.token()
             parent.syntax_error(self, 'Expected "as" or "into" but got %s' % token)
 
         # Expect a list of variable names.
         while 1:
             # Variable name.
-            parser.expect(self, 'whitespace')
-            type, token = parser.token()
-            parser.expect(self, 'varname')
+            lexer.expect(self, 'whitespace')
+            type, token = lexer.token()
+            lexer.expect(self, 'varname')
             if self.variables.has_key(token):
                 parent.syntax_error(self, 'Duplicate variable name %s')
             self.varnames.append(token)
             self.variables[token] = []
 
             # Comma.
-            if parser.next_if('comma'):
+            if lexer.next_if('comma'):
                 continue
             break
         self.parent.define(**self.variables)
@@ -69,9 +69,9 @@ class Extract(Token):
             parent.syntax_error(self, error)
 
         # Handle the "from" keyword.
-        parser.skip('whitespace')
-        if parser.next_if('keyword', 'from'):
-            parser.expect(self, 'whitespace')
+        lexer.skip('whitespace')
+        if lexer.next_if('keyword', 'from'):
+            lexer.expect(self, 'whitespace')
             self.source = Term(lexer, parser, parent)
         self.mark_end()
 

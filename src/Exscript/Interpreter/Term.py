@@ -28,26 +28,26 @@ class Term(Token):
         self.op   = None
 
         # Expect a term.
-        type, token = parser.token()
-        if parser.current_is('varname'):
+        type, token = lexer.token()
+        if lexer.current_is('varname'):
             if not parent.is_defined(token):
                 parent.generic_error(self, 'Error', 'Undeclared variable %s' % token)
             self.term = Variable(lexer, parser, parent)
-        elif parser.current_is('open_function_call'):
+        elif lexer.current_is('open_function_call'):
             self.term = FunctionCall(lexer, parser, parent)
-        elif parser.current_is('string_delimiter'):
+        elif lexer.current_is('string_delimiter'):
             self.term = String(lexer, parser, parent)
-        elif parser.next_if('number'):
+        elif lexer.next_if('number'):
             self.term = Number(token)
-        elif parser.next_if('keyword', 'false'):
+        elif lexer.next_if('keyword', 'false'):
             self.term = Number(0)
-        elif parser.next_if('keyword', 'true'):
+        elif lexer.next_if('keyword', 'true'):
             self.term = Number(1)
-        elif parser.next_if('octal_number'):
+        elif lexer.next_if('octal_number'):
             self.term = Number(int(token[1:], 8))
-        elif parser.next_if('hex_number'):
+        elif lexer.next_if('hex_number'):
             self.term = Number(int(token[2:], 16))
-        elif parser.current_is('regex_delimiter'):
+        elif lexer.current_is('regex_delimiter'):
             self.term = Regex(lexer, parser, parent)
         else:
             parent.syntax_error(self, 'Expected term but got %s' % type)

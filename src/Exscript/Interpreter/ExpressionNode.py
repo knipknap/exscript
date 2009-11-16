@@ -20,7 +20,7 @@ class ExpressionNode(Token):
         # Skip whitespace before initializing the token to make sure that self.start
         # points to the beginning of the expression (which makes for prettier error
         # messages).
-        parser.skip(['whitespace', 'newline'])
+        lexer.skip(['whitespace', 'newline'])
 
         Token.__init__(self, 'ExpressionNode', lexer, parser, parent)
         self.lft         = None
@@ -31,25 +31,25 @@ class ExpressionNode(Token):
 
         # The "not" operator requires special treatment because it is
         # positioned left of the term.
-        if not parser.current_is('logical_operator', 'not'):
+        if not lexer.current_is('logical_operator', 'not'):
             self.lft = Term.Term(lexer, parser, parent)
 
             # The expression may end already (a single term is also an
             # expression).
-            parser.skip(['whitespace', 'newline'])
-            if not parser.current_is('arithmetic_operator') and \
-               not parser.current_is('logical_operator') and \
-               not parser.current_is('comparison') and \
-               not parser.current_is('regex_delimiter'):
+            lexer.skip(['whitespace', 'newline'])
+            if not lexer.current_is('arithmetic_operator') and \
+               not lexer.current_is('logical_operator') and \
+               not lexer.current_is('comparison') and \
+               not lexer.current_is('regex_delimiter'):
                 self.mark_end()
                 return
 
         # Expect the operator.
-        (self.op_type, self.op) = parser.token()
-        if not parser.next_if('arithmetic_operator') and \
-           not parser.next_if('logical_operator') and \
-           not parser.next_if('comparison') and \
-           not parser.next_if('regex_delimiter'):
+        self.op_type, self.op = lexer.token()
+        if not lexer.next_if('arithmetic_operator') and \
+           not lexer.next_if('logical_operator') and \
+           not lexer.next_if('comparison') and \
+           not lexer.next_if('regex_delimiter'):
             self.mark_end()
             parent.syntax_error(self, 'Expected operator but got %s' % self.op_type)
 

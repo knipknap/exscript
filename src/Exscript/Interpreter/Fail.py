@@ -22,19 +22,19 @@ class Fail(Token):
         self.expression = None
 
         # "fail" keyword.
-        parser.expect(self, 'keyword', 'fail')
-        parser.expect(self, 'whitespace')
+        lexer.expect(self, 'keyword', 'fail')
+        lexer.expect(self, 'whitespace')
         self.msg = Expression(lexer, parser, parent)
 
         # 'If' keyword with an expression.
-        #token = parser.token()
-        if parser.next_if('keyword', 'if'):
-            parser.expect(self, 'whitespace')
+        #token = lexer.token()
+        if lexer.next_if('keyword', 'if'):
+            lexer.expect(self, 'whitespace')
             self.expression = Expression(lexer, parser, parent)
 
         # End of expression.
         self.mark_end()
-        parser.skip(['whitespace', 'newline'])
+        lexer.skip(['whitespace', 'newline'])
 
 
     def value(self):

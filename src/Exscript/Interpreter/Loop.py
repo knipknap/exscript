@@ -28,35 +28,35 @@ class Loop(Token):
         self.iter_varnames  = []
 
         # Expect one ore more lists.
-        parser.expect(self, 'keyword', 'loop')
-        parser.expect(self, 'whitespace')
-        if not parser.current_is('keyword', 'while') and \
-           not parser.current_is('keyword', 'until') and \
-           not parser.current_is('keyword', 'from'):
+        lexer.expect(self, 'keyword', 'loop')
+        lexer.expect(self, 'whitespace')
+        if not lexer.current_is('keyword', 'while') and \
+           not lexer.current_is('keyword', 'until') and \
+           not lexer.current_is('keyword', 'from'):
             self.list_variables = [Term(lexer, parser, parent)]
-            parser.next_if('whitespace')
-            while parser.next_if('comma'):
-                parser.skip(['whitespace', 'newline'])
+            lexer.next_if('whitespace')
+            while lexer.next_if('comma'):
+                lexer.skip(['whitespace', 'newline'])
                 self.list_variables.append(Term(lexer, parser, parent))
-                parser.skip(['whitespace', 'newline'])
+                lexer.skip(['whitespace', 'newline'])
 
             # Expect the "as" keyword.
-            parser.expect(self, 'keyword', 'as')
+            lexer.expect(self, 'keyword', 'as')
 
             # The iterator variable.
-            parser.next_if('whitespace')
-            type, iter_varname = parser.token()
-            parser.expect(self, 'varname')
+            lexer.next_if('whitespace')
+            type, iter_varname = lexer.token()
+            lexer.expect(self, 'varname')
             parent.define(**{iter_varname: []})
             self.iter_varnames = [iter_varname]
-            parser.next_if('whitespace')
-            while parser.next_if('comma'):
-                parser.skip(['whitespace', 'newline'])
-                type, iter_varname = parser.token()
-                parser.expect(self, 'varname')
+            lexer.next_if('whitespace')
+            while lexer.next_if('comma'):
+                lexer.skip(['whitespace', 'newline'])
+                type, iter_varname = lexer.token()
+                lexer.expect(self, 'varname')
                 parent.define(**{iter_varname: []})
                 self.iter_varnames.append(iter_varname)
-                parser.skip(['whitespace', 'newline'])
+                lexer.skip(['whitespace', 'newline'])
 
             if len(self.iter_varnames) != len(self.list_variables):
                 error = '%s lists, but only %s iterators in loop' % (len(self.iter_varnames),
@@ -64,41 +64,41 @@ class Loop(Token):
                 parent.syntax_error(self, error)
 
         # Check if this is a "from ... to ..." loop.
-        if parser.next_if('keyword', 'from'):
-            parser.expect(self, 'whitespace')
+        if lexer.next_if('keyword', 'from'):
+            lexer.expect(self, 'whitespace')
             self.thefrom = Expression(lexer, parser, parent)
-            parser.next_if('whitespace')
-            parser.expect(self, 'keyword', 'to')
+            lexer.next_if('whitespace')
+            lexer.expect(self, 'keyword', 'to')
             self.theto = Expression(lexer, parser, parent)
-            parser.next_if('whitespace')
+            lexer.next_if('whitespace')
 
-            if parser.next_if('keyword', 'as'):
-                parser.next_if('whitespace')
-                type, iter_varname = parser.token()
-                parser.expect(self, 'varname')
-                parser.next_if('whitespace')
+            if lexer.next_if('keyword', 'as'):
+                lexer.next_if('whitespace')
+                type, iter_varname = lexer.token()
+                lexer.expect(self, 'varname')
+                lexer.next_if('whitespace')
             else:
                 iter_varname = 'counter'
             parent.define(**{iter_varname: []})
             self.iter_varnames = [iter_varname]
         
         # Check if this is a "while" loop.
-        if parser.next_if('keyword', 'while'):
-            parser.expect(self, 'whitespace')
+        if lexer.next_if('keyword', 'while'):
+            lexer.expect(self, 'whitespace')
             self.during = Expression(lexer, parser, parent)
-            parser.next_if('whitespace')
+            lexer.next_if('whitespace')
         
         # Check if this is an "until" loop.
-        if parser.next_if('keyword', 'until'):
-            parser.expect(self, 'whitespace')
+        if lexer.next_if('keyword', 'until'):
+            lexer.expect(self, 'whitespace')
             self.until = Expression(lexer, parser, parent)
-            parser.next_if('whitespace')
+            lexer.next_if('whitespace')
         
         # End of statement.
         self.mark_end()
 
         # Body of the loop block.
-        parser.skip(['whitespace', 'newline'])
+        lexer.skip(['whitespace', 'newline'])
         self.block = Code.Code(lexer, parser, parent)
 
 

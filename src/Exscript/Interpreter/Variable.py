@@ -17,8 +17,8 @@ from Token import Token
 class Variable(Token):
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'Variable', lexer, parser, parent)
-        type, self.varname = parser.token()
-        parser.expect(self, 'varname')
+        type, self.varname = lexer.token()
+        lexer.expect(self, 'varname')
         self.mark_end()
 
 

@@ -20,9 +20,9 @@ class Try(Scope):
     def __init__(self, lexer, parser, parent):
         Scope.__init__(self, 'Try', lexer, parser, parent)
 
-        parser.next_if('whitespace')
-        parser.expect(self, 'keyword', 'try')
-        parser.skip(['whitespace', 'newline'])
+        lexer.next_if('whitespace')
+        lexer.expect(self, 'keyword', 'try')
+        lexer.skip(['whitespace', 'newline'])
         self.block = Code.Code(lexer, parser, parent)
 
 

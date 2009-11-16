@@ -21,8 +21,8 @@ class IfCondition(Token):
         Token.__init__(self, 'If-condition', lexer, parser, parent)
 
         # Expect an expression.
-        parser.expect(self, 'keyword', 'if')
-        parser.expect(self, 'whitespace')
+        lexer.expect(self, 'keyword', 'if')
+        lexer.expect(self, 'whitespace')
         self.expression = Expression(lexer, parser, parent)
         self.mark_end()
 
@@ -32,14 +32,14 @@ class IfCondition(Token):
         self.else_block  = None
 
         # If there is no "else" statement, just return.
-        parser.skip(['whitespace', 'newline'])
-        if not parser.next_if('keyword', 'else'):
+        lexer.skip(['whitespace', 'newline'])
+        if not lexer.next_if('keyword', 'else'):
             return
 
         # If the "else" statement is followed by an "if" (=elif),
         # read the next if condition recursively and return.
-        parser.skip(['whitespace', 'newline'])
-        if parser.current_is('keyword', 'if'):
+        lexer.skip(['whitespace', 'newline'])
+        if lexer.current_is('keyword', 'if'):
             self.else_block = IfCondition(lexer, parser, parent)
             return
 

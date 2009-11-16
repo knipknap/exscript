@@ -20,11 +20,11 @@ class Assign(Token):
         Token.__init__(self, 'Assign', lexer, parser, parent)
 
         # Extract the variable name.
-        type, self.varname = parser.token()
-        parser.expect(self, 'varname')
-        parser.expect(self, 'whitespace')
-        parser.expect(self, 'assign')
-        parser.expect(self, 'whitespace')
+        type, self.varname = lexer.token()
+        lexer.expect(self, 'varname')
+        lexer.expect(self, 'whitespace')
+        lexer.expect(self, 'assign')
+        lexer.expect(self, 'whitespace')
         self.expression = Expression.Expression(lexer, parser, parent)
         self.parent.define(**{self.varname: None})
 

@@ -19,8 +19,8 @@ class Enter(Token):
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'Enter', lexer, parser, parent)
 
-        parser.expect(self, 'keyword', 'enter')
-        parser.skip(['whitespace', 'newline'])
+        lexer.expect(self, 'keyword', 'enter')
+        lexer.skip(['whitespace', 'newline'])
 
         self.execute = Execute(lexer, parser, parent, '')
 

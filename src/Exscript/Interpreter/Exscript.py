@@ -32,43 +32,43 @@ for type, regex in grammar:
 class Exscript(Scope):
     def __init__(self, lexer, parser, parent, *args, **kwargs):
         Scope.__init__(self, 'Exscript', lexer, parser, parent, **kwargs)
-        parser.set_grammar(grammar_c)
-        #print "Opening Scope:", parser.token()
+        lexer.set_grammar(grammar_c)
+        #print "Opening Scope:", lexer.token()
         buffer = ''
         while 1:
-            if self.exit_requested or parser.current_is('EOF'):
+            if self.exit_requested or lexer.current_is('EOF'):
                 break
-            elif parser.next_if('open_curly_bracket'):
+            elif lexer.next_if('open_curly_bracket'):
                 if buffer.strip() != '':
                     self.children.append(Execute(lexer, parser, self, buffer))
                     buffer = ''
                 if isinstance(parent, Code):
                     break
                 self.children.append(Code(lexer, parser, self))
-            elif parser.current_is('raw_data'):
-                if parser.token()[1].lstrip().startswith('#'):
-                    while not parser.current_is('newline'):
-                        parser.next()
+            elif lexer.current_is('raw_data'):
+                if lexer.token()[1].lstrip().startswith('#'):
+                    while not lexer.current_is('newline'):
+                        lexer.next()
                     continue
-                buffer += parser.token()[1]
-                parser.next()
-            elif parser.current_is('escaped_data'):
-                token = parser.token()[1]
+                buffer += lexer.token()[1]
+                lexer.next()
+            elif lexer.current_is('escaped_data'):
+                token = lexer.token()[1]
                 if token[1] == '$':
                     # An escaped $ is handeled by the Execute() token, so
                     # we do not strip the \ here.
                     buffer += token
                 else:
                     buffer += token[1]
-                parser.next()
-            elif parser.next_if('newline'):
+                lexer.next()
+            elif lexer.next_if('newline'):
                 if buffer.strip() != '':
                     self.children.append(Execute(lexer, parser, self, buffer))
                     buffer = ''
             else:
-                type = parser.token()[0]
+                type = lexer.token()[0]
                 parent.syntax_error(self, 'Unexpected %s' % type)
-        parser.restore_grammar()
+        lexer.restore_grammar()
 
 
     def execute(self):

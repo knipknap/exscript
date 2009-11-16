@@ -45,44 +45,44 @@ class Regex(Token):
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'Regular Expression', lexer, parser, parent)
         self.n_groups = 0
-        parser.set_grammar(grammar_c)
+        lexer.set_grammar(grammar_c)
 
         # Collect the regular expression.
-        parser.expect(self, 'regex_delimiter')
+        lexer.expect(self, 'regex_delimiter')
         regex = ''
         while 1:
-            if parser.current_is('regex_data'):
-                regex += parser.token()[1]
-                parser.next()
-            elif parser.current_is('escaped_bracket'):
-                regex += parser.token()[1][1]
-                parser.next()
-            elif parser.current_is('escaped_data'):
-                regex += parser.token()[1]
-                parser.next()
-            elif parser.next_if('regex_delimiter'):
+            if lexer.current_is('regex_data'):
+                regex += lexer.token()[1]
+                lexer.next()
+            elif lexer.current_is('escaped_bracket'):
+                regex += lexer.token()[1][1]
+                lexer.next()
+            elif lexer.current_is('escaped_data'):
+                regex += lexer.token()[1]
+                lexer.next()
+            elif lexer.next_if('regex_delimiter'):
                 break
-            elif parser.next_if('newline'):
+            elif lexer.next_if('newline'):
                 self.start = self.start + len(regex)
                 error      = 'Unexpected end of regular expression'
                 parent.syntax_error(self, error)
             else:
-                char       = parser.token()[1]
+                char       = lexer.token()[1]
                 self.start = self.start + len(regex)
                 error     = 'Invalid char "%s" in regular expression' % char
                 parent.syntax_error(self, error)
 
         # Collect modifiers.
-        parser.set_grammar(modifier_grammar_c)
+        lexer.set_grammar(modifier_grammar_c)
         self.flags = 0
-        while parser.current_is('modifier'):
-            if parser.next_if('modifier', 'i'):
+        while lexer.current_is('modifier'):
+            if lexer.next_if('modifier', 'i'):
                 self.flags = self.flags | re.I
             else:
-                modifier = parser.token()[1]
+                modifier = lexer.token()[1]
                 error    = 'Invalid regular expression modifier "%s"' % modifier
                 parent.syntax_error(self, error)
-        parser.restore_grammar()
+        lexer.restore_grammar()
 
         # Compile the regular expression.
         self.pattern = regex
@@ -94,7 +94,7 @@ class Regex(Token):
 
         # Count the number of groups in the expression.
         self.n_groups = len(bracket_re.findall(regex))
-        parser.restore_grammar()
+        lexer.restore_grammar()
         self.mark_end()
 
 

@@ -23,21 +23,21 @@ class FunctionCall(Token):
         self.arguments = []
 
         # Extract the function name.
-        type, token = parser.token()
-        parser.expect(self, 'open_function_call')
+        type, token = lexer.token()
+        lexer.expect(self, 'open_function_call')
         self.funcname = token[:-1]
         function      = self.parent.get(self.funcname)
         if function is None:
             parent.syntax_error(self, 'Undefined function %s' % self.funcname)
 
         # Parse the argument list.
-        type, token = parser.token()
+        type, token = lexer.token()
         while 1:
-            if parser.next_if('close_bracket'):
+            if lexer.next_if('close_bracket'):
                 break
             self.arguments.append(Expression.Expression(lexer, parser, parent))
-            type, token = parser.token()
-            if not parser.next_if('comma') and not parser.current_is('close_bracket'):
+            type, token = lexer.token()
+            if not lexer.next_if('comma') and not lexer.current_is('close_bracket'):
                 error = 'Expected separator or argument list end but got %s' % type
                 parent.syntax_error(self, error)
 

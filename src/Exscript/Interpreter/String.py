@@ -29,30 +29,30 @@ for type, regex in grammar:
 class String(Token):
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'String', lexer, parser, parent)
-        parser.set_grammar(grammar_c)
-        parser.expect(self, 'string_delimiter')
+        lexer.set_grammar(grammar_c)
+        lexer.expect(self, 'string_delimiter')
         self.string = ''
         while 1:
-            if parser.current_is('string_data'):
-                self.string += parser.token()[1]
-                parser.next()
-            elif parser.current_is('escaped_data'):
-                char = parser.token()[1][1]
+            if lexer.current_is('string_data'):
+                self.string += lexer.token()[1]
+                lexer.next()
+            elif lexer.current_is('escaped_data'):
+                char = lexer.token()[1][1]
                 if char == 'n':
                     self.string += '\n'
                 elif char == 'r':
                     self.string += '\r'
                 else:
                     self.string += char
-                parser.next()
-            elif parser.next_if('string_delimiter'):
+                lexer.next()
+            elif lexer.next_if('string_delimiter'):
                 break
             else:
-                type = parser.token()[0]
+                type = lexer.token()[0]
                 parent.syntax_error(self, 'Expected string but got %s' % type)
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, self.string)
-        parser.restore_grammar()
+        lexer.restore_grammar()
         self.mark_end()
 
 
