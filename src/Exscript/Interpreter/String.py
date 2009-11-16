@@ -15,12 +15,11 @@
 import re
 from Token import Token, string_re
 
-grammar = (
+grammar = [
     ('string_data',      r'\\\$'),
     ('escaped_data',     r'\\.'),
     ('string_data',      r'[^\r\n"\\]+'),
-    ('string_delimiter', r'"'),
-)
+]
 
 grammar_c = []
 for type, regex in grammar:
@@ -29,7 +28,15 @@ for type, regex in grammar:
 class String(Token):
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'String', lexer, parser, parent)
-        lexer.set_grammar(grammar_c)
+
+        # Add the delimiting character to the grammar.
+        tok_type, delimiter = lexer.token()
+        delimiter_re        = re.compile(delimiter)
+        grammar_with_delim  = grammar_c[:]
+        grammar_with_delim.append(('string_delimiter', delimiter_re))
+        lexer.set_grammar(grammar_with_delim)
+
+        # Begin parsing the string.
         lexer.expect(self, 'string_delimiter')
         self.string = ''
         while 1:
