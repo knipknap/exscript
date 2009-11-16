@@ -178,6 +178,8 @@ def run(*args, **kwargs):
         except Exception, e:
             print e
             sys.exit(1)
+        if not hosts:
+            print 'Warning: %s is empty.' % options.get('csv-hosts')
         trunner.add_hosts(hosts)
 
     # If a filename containing hostnames was given, read it.
@@ -187,6 +189,8 @@ def run(*args, **kwargs):
         except Exception, e:
             print e
             sys.exit(1)
+        if not hosts:
+            print 'Warning: %s is empty.' % options.get('hosts')
         trunner.add_hosts(hosts)
 
     # Create the log directory.
