@@ -17,9 +17,9 @@ from Exscript  import Exscript
 from Scope     import Scope
 
 class Program(Scope):
-    def __init__(self, lexer, parser, **kwargs):
+    def __init__(self, lexer, parser, variables, **kwargs):
         Scope.__init__(self, 'Program', lexer, parser, None, **kwargs)
-        self.init_variables = kwargs.get('variables', {})
+        self.init_variables = variables
         self.children.append(Exscript(lexer, parser, self))
 
 
@@ -35,7 +35,7 @@ class Program(Scope):
     def error(self, char, type, typename, error):
         if type is None:
             type = Exception
-        line       = self.lexer._get_line_number_from_char()
+        line       = self.lexer._get_line_number_from_char(char)
         start, end = self.lexer._get_line_position_from_char(char)
         output  = self.lexer.input[start:end] + '\n'
         output += (' ' * (char - start)) + '^\n'

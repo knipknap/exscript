@@ -15,35 +15,17 @@
 import copy
 import types
 import stdlib
-from Program import Program
+from parselib import Lexer
+from Program  import Program
 
 class Parser(object):
     def __init__(self, **kwargs):
-        self.input         = ''
-        self.input_length  = 0
-        self.current_char  = 0
-        self.last_char     = 0
-        self.current_line  = 1
-        self.token_buffer  = None
-        self.grammar       = []
-        self.debug         = kwargs.get('debug',         0)
         self.no_prompt     = kwargs.get('no_prompt',     0)
         self.strip_command = kwargs.get('strip_command', 1)
+        self.debug         = kwargs.get('debug',         0)
         self.variables     = {}
         self.stdlib        = {}
         self.load_module(stdlib)
-
-    def _get_line_position_from_char(self, char):
-        line_start = char
-        while line_start != 0:
-            if self.input[line_start - 1] == '\n':
-                break
-            line_start -= 1
-        line_end = self.input.find('\n', char)
-        return line_start, line_end
-
-    def _get_line_number_from_char(self, char):
-        return self.lexer.input[:char].count('\n') + 1
 
     def define(self, **kwargs):
         for key in kwargs:
@@ -52,10 +34,8 @@ class Parser(object):
             else:
                 self.variables[key] = [kwargs[key]]
 
-
     def define_function(self, **kwargs):
         self.variables.update(kwargs)
-
 
     def load_module(self, module):
         if self.debug > 0:
@@ -74,125 +54,18 @@ class Parser(object):
                 print 'Loaded function', item_name
             self.stdlib[item_name] = item.__dict__['execute']
 
-
-    def set_grammar(self, grammar):
-        self.grammar.append(grammar)
-        self.token_buffer = None
-
-
-    def restore_grammar(self):
-        self.grammar.pop()
-        self.token_buffer = None
-
-
-    def match(self):
-        if self.current_char >= self.input_length:
-            self.token_buffer = ('EOF', '')
-            return
-        for token_type, token_regex in self.grammar[-1]:
-            match = token_regex.match(self.input, self.current_char)
-            if match is not None:
-                self.token_buffer = (token_type, match.group(0))
-                #print "Match:", self.token_buffer
-                return
-        end   = self.input.find('\n', self.current_char + 2)
-        error = 'Invalid syntax: %s' % repr(self.input[self.current_char:end])
-        self.syntax_error(error)
-
-
-    def syntax_error(self, error):
-        raise Exception, error
-
-
-    def next(self):
-        #print "Old:", repr(self.input[self.current_char:])
-        self.last_char     = self.current_char
-        self.current_char += len(self.token_buffer[1])
-        #print "New:", repr(self.input[self.current_char:])
-        if self.token_buffer[0] == 'newline':
-            self.current_line += 1
-            #print "Line:", self.current_line
-        self.token_buffer = None
-
-
-    def next_if(self, types, token = None):
-        if token is not None:
-            if self.current_is(types, token):
-                self.next()
-                return 1
-            return 0
-
-        if type(types) != type([]):
-            types = [types]
-        for t in types:
-            if self.current_is(t, token):
-                self.next()
-                return 1
-        return 0
-
-
-    def skip(self, types, token = None):
-        while self.next_if(types, token):
-            pass
-
-
-    def expect(self, sender, type, token = None):
-        (cur_type, cur_token) = self.token()
-        if not self.next_if(type, token):
-            if token is None:
-                error = 'Expected %s but got %s' % (type, cur_token)
-            else:
-                error = 'Expected "%s" but got %s "%s"' % (token, cur_type, cur_token)
-            sender.start = self.current_char
-            sender.parent.syntax_error(sender, error)
-        return 1
-
-
-    def current_is(self, type, token = None):
-        if self.token_buffer is None:
-            self.match()
-        if self.token_buffer[0] != type:
-            return 0
-        if token is None:
-            return 1
-        if self.token_buffer[1] == token:
-            return 1
-        return 0
-
-
-    def token(self):
-        if self.token_buffer is None:
-            self.match()
-        return self.token_buffer
-
-
     def parse(self, string):
-        # Re-initialize variables, so that the same parser instance may be used multiple
-        # times.
-        self.input        = string
-        self.input_length = len(string)
-        self.current_char = 0
-        self.last_char    = 0
-        self.current_line = 0
-        self.token_buffer = None
-        self.grammar      = []
-
-        # Define the standard library now, in order to prevent it from being overwritten
-        # by the user.
         variables = copy.deepcopy(self.variables)
         variables.update(self.stdlib)
-        compiled = Program(self, self, variables = variables)
-        if self.debug > 3:
-            compiled.dump()
-        return compiled
-
+        lexer = Lexer(Program, self, variables, debug = self.debug)
+        return lexer.parse(string)
 
     def parse_file(self, filename):
-        fp     = open(filename)
-        string = fp.read()
+        self.filename = filename
+        fp            = open(filename)
+        string        = fp.read()
         fp.close()
         return self.parse(string)
-
 
 if __name__ == "__main__":
     import sys
