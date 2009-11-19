@@ -59,7 +59,13 @@ def parse_url(url, default_protocol = 'telnet'):
         result.username, result.password = auth
 
     # Build the result.
-    result.hostname = hostname or path
+    if not hostname and '/' in path:
+        result.hostname = None
+    elif not hostname:
+        result.hostname = path
+    else:
+        result.hostname = hostname
+    result.path     = path
     result.vars     = urlparse_qs('http://dummy/?' + query)
     return result
 

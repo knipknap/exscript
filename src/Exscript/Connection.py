@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import threading
+import threading, os.path
 from SpiffSignal import Trackable
 
 True  = 1
@@ -48,7 +48,13 @@ class Connection(Trackable):
             kwargs['port'] = host.get_tcp_port()
 
         # Create an instance of the protocol adapter.
-        self.__dict__['transport'] = protocol(**kwargs)
+        transport = protocol(**kwargs)
+        self.__dict__['transport'] = transport
+        if host.get_protocol() == 'pseudo':
+            filename = host.get_address()
+            hostname = os.path.basename(filename)
+            host.set_name(hostname)
+            transport.load_command_handler_from_file(filename)
 
     def __setattr__(self, name, value):
         if name in self.__dict__.keys():

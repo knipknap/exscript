@@ -32,10 +32,12 @@ class Host(object):
 
 
     def set_uri(self, uri):
-        uri = UrlParser.parse_url(uri, self.protocol)
+        uri      = UrlParser.parse_url(uri, self.protocol)
+        hostname = uri.hostname or ''
+        address  = uri.path and hostname + uri.path or hostname
         self.set_protocol(uri.protocol)
         self.set_tcp_port(uri.port)
-        self.set_address(uri.hostname)
+        self.set_address(address)
         self.set_username(uri.username)
         self.set_password(uri.password)
 

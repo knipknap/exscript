@@ -47,6 +47,7 @@ class Exscript(object):
         self.status_bar_length = 0
         self.protocol_map      = {'dummy':  'Dummy',
                                   'telnet': 'Telnet',
+                                  'pseudo': 'Dummy',
                                   'ssh':    'SSH',
                                   'ssh1':   'SSH',
                                   'ssh2':   'SSH'}
