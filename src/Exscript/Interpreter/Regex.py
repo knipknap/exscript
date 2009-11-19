@@ -53,10 +53,6 @@ class Regex(String):
             error = 'Invalid regular expression %s: %s' % (repr(self.string), e)
             parent.syntax_error(self, error)
 
-        # Count the number of groups in the expression.
-        lexer.restore_grammar()
-        self.mark_end()
-
 
     def value(self):
         pattern = String.value(self)[0]
