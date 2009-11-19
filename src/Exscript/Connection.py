@@ -18,12 +18,6 @@ from SpiffSignal import Trackable
 True  = 1
 False = 0
 
-protocol_map = {'dummy':  'Dummy',
-                'telnet': 'Telnet',
-                'ssh':    'SSH',
-                'ssh1':   'SSH',
-                'ssh2':   'SSH'}
-
 class Connection(Trackable):
     """
     This class is a decorator for termconnect.Transport objects that
@@ -42,18 +36,8 @@ class Connection(Trackable):
         self.__dict__['host']         = host
         self.__dict__['last_account'] = None
 
-        # Find the Python module of the requested protocol.
-        module_name = protocol_map.get(host.get_protocol())
-        if module_name:
-            protocol = __import__('termconnect.' + module_name,
-                                  globals(),
-                                  locals(),
-                                  module_name)
-        else:
-            name = repr(host.get_protocol())
-            raise Exception('ERROR: Unsupported protocol %s.' % name)
-
         # Define protocol specific options.
+        protocol = exscript._get_protocol_from_name(host.get_protocol())
         if host.get_protocol() == 'ssh1':
             kwargs['ssh_version'] = 1
         elif host.get_protocol() == 'ssh2':
@@ -64,7 +48,7 @@ class Connection(Trackable):
             kwargs['port'] = host.get_tcp_port()
 
         # Create an instance of the protocol adapter.
-        self.__dict__['transport'] = protocol.Transport(**kwargs)
+        self.__dict__['transport'] = protocol(**kwargs)
 
     def __setattr__(self, name, value):
         if name in self.__dict__.keys():

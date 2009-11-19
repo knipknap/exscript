@@ -45,6 +45,11 @@ class Exscript(object):
         self.total             = 0
         self.show_status_bar   = True
         self.status_bar_length = 0
+        self.protocol_map      = {'dummy':  'Dummy',
+                                  'telnet': 'Telnet',
+                                  'ssh':    'SSH',
+                                  'ssh1':   'SSH',
+                                  'ssh2':   'SSH'}
         self.set_max_threads(kwargs.get('max_threads', 1))
         self.workqueue.set_debug(kwargs.get('verbose', 0))
         self.workqueue.signal_connect('job-started',   self._on_job_started)
@@ -125,6 +130,37 @@ class Exscript(object):
 
     def _action_is_completed(self, action):
         return not self.workqueue.in_queue(action)
+
+
+    def _get_protocol_from_name(self, name):
+        """
+        Returns the protocol adapter with the given name.
+        """
+        module = self.protocol_map.get(name)
+        if not module:
+            raise Exception('ERROR: Unsupported protocol "%s".' % name)
+        elif not isinstance(module, str):
+            return module
+        return __import__('termconnect.' + module,
+                          globals(),
+                          locals(),
+                          module).Transport
+
+
+    def add_protocol(self, name, theclass):
+        """
+        Registers a new protocol in addition to the built-in
+        'ssh', 'telnet', and 'dummy' adapters.
+        The given adapter must implement the same interface as
+        termconnect.Transport. Note that you need to pass a class,
+        not an instance.
+
+        @type  name: str
+        @param name: The protocol name
+        @type  theclass: termconnect.Transport
+        @param theclass: The class that handles the protocol.
+        """
+        self.protocol_map[name] = theclass
 
 
     def set_max_threads(self, n_connections):
