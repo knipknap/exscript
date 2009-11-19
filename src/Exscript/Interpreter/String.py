@@ -83,7 +83,7 @@ class String(Token):
         if value is None:
             self.start = self.start + self.string.find('$' + varname)
             self.parent.generic_error(self, 'Undefined', 'Undefined variable %s' % varname)
-        elif type(value) == type(self.variable_test_cb):
+        elif hasattr(value, 'func_name'):
             self.start = self.start + self.string.find('$' + varname)
             self.parent.generic_error(self, 'Undefined', '%s is not a variable name' % varname)
         return match.group(0)
@@ -103,10 +103,10 @@ class String(Token):
         if value is None:
             self.start = self.start + self.string.find('$' + varname)
             self.parent.runtime_error(self, 'Undefined variable %s' % varname)
-        elif type(value) == type(self.variable_test_cb):
+        elif hasattr(value, 'func_name'):
             self.start = self.start + self.string.find('$' + varname)
             self.parent.runtime_error(self, '%s is not a variable name' % varname)
-        elif type(value) == type([]):
+        elif isinstance(value, list):
             if len(value) > 0:
                 value = '\n'.join([str(v) for v in value])
             else:
