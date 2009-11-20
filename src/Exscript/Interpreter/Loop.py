@@ -61,7 +61,7 @@ class Loop(Token):
             if len(self.iter_varnames) != len(self.list_variables):
                 error = '%s lists, but only %s iterators in loop' % (len(self.iter_varnames),
                                                                      len(self.list_variables))
-                parent.syntax_error(self, error)
+                lexer.syntax_error(error, self)
 
         # Check if this is a "from ... to ..." loop.
         if lexer.next_if('keyword', 'from'):
@@ -127,7 +127,7 @@ class Loop(Token):
         for list in lists:
             if len(list) != len(lists[0]):
                 msg = 'All list variables must have the same length'
-                self.runtime_error(self, msg)
+                self.lexer.runtime_error(msg, self)
 
         # Iterate.
         for i in xrange(len(lists[0])):
