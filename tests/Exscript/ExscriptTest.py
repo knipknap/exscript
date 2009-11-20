@@ -7,44 +7,9 @@ def suite():
 
 from termconnect.Dummy import Transport
 from Exscript          import Exscript, Connection, Account
+from Exscript.util     import run_template
 
-show_diag = """
-SLOT 0  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC connector
-  MAIN: type 79,  800-19733-08 rev A0
-        Deviation: 0
-        HW config: 0x01    SW key: 00-00-00
-  PCA:  73-7614-07 rev A0 ver 1
-        Design Release 1.0  S/N SAL1026SSZX
-  MBUS: Embedded Agent
-        Test hist: 0x00    RMA#: 00-00-00    RMA hist: 0x00
-  DIAG: Test count: 0x00000000    Test results: 0x00000000
-  FRU:  Linecard/Module: 16OC3X/POS-IR-LC-B=
-        Processor Memory: MEM-LC-ISE-1024=
-        Packet Memory: MEM-LC1-PKT-512=(Non-Replaceable)
-  L3 Engine: 3 - ISE OC48 (2.5 Gbps)
-  MBUS Agent Software version 2.68 (RAM) (ROM version is 3.66)
-  ROM Monitor version 18.0
-  Fabric Downloader version used 7.1 (ROM version is 7.1)
-  Primary clock is CSC 1
-  Board is analyzed 
-  Board State is Line Card Enabled (IOS  RUN )
-  Insertion time: 00:00:30 (36w1d ago)
-  Processor Memory size: 1073741824 bytes
-  TX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
-  RX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
-  0 crashes since restart
-"""
-
-class IOSDummy(Transport):
-    def __init__(self, *args, **kwargs):
-        Transport.__init__(self, *args, **kwargs)
-        self.add_command_handler('show diag .*', self.show_diag)
-
-    def show_diag(self, data):
-        match    = re.search(r'(\d+)[\r\n]', data)
-        slot     = str(match.group()[0])
-        response = show_diag.replace('SLOT 0', 'SLOT ' + slot)
-        return response.strip() + '\ntesthost> '
+test_dir = '../templates'
 
 def count_calls(conn, data, **kwargs):
     # Warning: Assertions raised in this function happen in a subprocess!
@@ -52,12 +17,34 @@ def count_calls(conn, data, **kwargs):
     assert isinstance(conn, Connection)
     data['n_calls'] += 1
 
-def ios_dummy_cb(conn, data, **kwargs):
+class Log(object):
+    data = ''
+    def collect(self, data):
+        self.data += data
+        return data
+
+def ios_dummy_cb(conn, **kwargs):
     # Warning: Assertions raised in this function happen in a subprocess!
-    count_calls(conn, data, **kwargs)
-    conn.execute('show diag 0')
-    assert conn.response.strip() == 'show diag 0\r\n' + show_diag.strip()
-    conn.execute('show diag 10')
+    log       = Log()
+    test_name = conn.get_host().get_name()
+    template  = os.path.join(test_dir, test_name, 'test.exscript')
+    expected  = os.path.join(test_dir, test_name, 'expected')
+    conn.set_on_data_received_cb(log.collect)
+    conn.open()
+    conn.authenticate(wait = True)
+    run_template(conn, template, slot = 10)
+    #open(expected, 'w').write(log.data)
+    assert log.data == open(expected).read()
+
+class IOSDummy(Transport):
+    def __init__(self, *args, **kwargs):
+        #kwargs['echo'] = True
+        Transport.__init__(self, *args, **kwargs)
+
+    def connect(self, test_name, *args, **kwargs):
+        filename = os.path.join(test_dir, test_name, 'pseudodev.py')
+        self.load_command_handler_from_file(filename)
+        return Transport.connect(self, test_name, *args, **kwargs)
 
 class ExscriptTest(unittest.TestCase):
     def setUp(self):
@@ -80,9 +67,8 @@ class ExscriptTest(unittest.TestCase):
         self.assert_(data['n_calls'] == 4)
 
     def testIOSDummy(self):
-        data     = {'n_calls': 0}
-        protocol = IOSDummy()
-        self.exscript.start('ios:dummy1', ios_dummy_cb, data, testarg = 1)
+        for test in os.listdir(test_dir):
+            self.exscript.start('ios:' + test, ios_dummy_cb)
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

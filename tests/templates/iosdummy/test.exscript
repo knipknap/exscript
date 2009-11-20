@@ -1,0 +1,11 @@
+show diag $slot{
+  extract /Linecard\/Module:\s+(\S+)/ as type
+  extract /^  (.+) memory size: (\d+), bytes/ as memtypes, memsizes
+}
+show ip int brie{extract /^(Giga\S+)/ as interfaces}
+{loop interfaces as interface}
+  show interface $interface
+  {if interface matches /\/2/}
+    ! yes
+  {end}
+{end}
