@@ -19,7 +19,6 @@ varname_re = re.compile(r'[a-z][\w_]*',       re.I)
 string_re  = re.compile(r'(\\?)\$([\w_]*\b)', re.I)
 
 grammar = [
-    ('string_data',  r'\\\$'),
     ('escaped_data', r'\\.'),
 ]
 
@@ -35,7 +34,7 @@ class String(Token):
         tok_type, delimiter = lexer.token()
         escaped_delimiter   = '\\' + delimiter
         data                = r'[^\r\n\\' + escaped_delimiter + ']'
-        delimiter_re        = re.compile(delimiter)
+        delimiter_re        = re.compile(escaped_delimiter)
         data_re             = re.compile(data)
         grammar_with_delim  = grammar_c[:]
         grammar_with_delim.append(('string_data',      data_re))
@@ -50,13 +49,7 @@ class String(Token):
                 self.string += lexer.token()[1]
                 lexer.next()
             elif lexer.current_is('escaped_data'):
-                char = lexer.token()[1][1]
-                if char == 'n':
-                    self.string += '\n'
-                elif char == 'r':
-                    self.string += '\r'
-                else:
-                    self.string += char
+                self.string += self._escape(lexer.token()[1])
                 lexer.next()
             elif lexer.next_if('string_delimiter'):
                 break
@@ -68,6 +61,14 @@ class String(Token):
         string_re.sub(self.variable_test_cb, self.string)
         lexer.restore_grammar()
         self.mark_end()
+
+    def _escape(self, token):
+        char = token[1]
+        if char == 'n':
+            return '\n'
+        elif char == 'r':
+            return '\r'
+        return char
 
     # Tokens that include variables in a string may use this callback to
     # make sure that the variable is already declared.

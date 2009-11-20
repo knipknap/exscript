@@ -30,6 +30,7 @@ for type, regex in modifier_grammar:
 
 class Regex(String):
     def __init__(self, lexer, parser, parent):
+        self.delimiter = lexer.token()[1]
         # String parser collects the regex.
         String.__init__(self, lexer, parser, parent)
         self.n_groups = len(bracket_re.findall(self.string))
@@ -53,6 +54,11 @@ class Regex(String):
             error = 'Invalid regular expression %s: %s' % (repr(self.string), e)
             parent.syntax_error(self, error)
 
+    def _escape(self, token):
+        char = token[1]
+        if char == self.delimiter:
+            return char
+        return token
 
     def value(self):
         pattern = String.value(self)[0]
