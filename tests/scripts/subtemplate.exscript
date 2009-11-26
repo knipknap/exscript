@@ -1,4 +1,0 @@
-ls -1
-{
-  sys.run("ssh://spserv12", "ls.exscript")
-}

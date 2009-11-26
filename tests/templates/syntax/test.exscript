@@ -1,0 +1,129 @@
+###########################
+# if/else constructs.
+###########################
+{if 0}
+  {fail "ERROR"}
+{else}
+  ! Good
+{end}
+
+{if 0}
+  {fail "IF ERROR"}
+{else if 1}
+  ! Else if works
+{else}
+  {fail "ELSE ERROR"}
+{end}
+
+{if 0}
+  {fail "IF ERROR"}
+{else if 0}
+  {fail "ELSE IF ERROR"}
+{else}
+  ! Else works
+{end}
+
+{if 0}
+  {fail "IF ERROR"}
+{else if 0}
+  {fail "ELSE IF ERROR"}
+{else if 1}
+  ! Else if works
+{else}
+  {fail "ELSE ERROR"}
+{end}
+
+###########################
+# arithmetics
+###########################
+{res = 5 * 4}
+! 5 * 4 = $res
+
+{res = 20 / 4}
+! 20 / 4 = $res
+
+{res = 10 % 3}
+! 10 % 3 = $res
+
+###########################
+# string ops
+###########################
+{if "POS1/0" is "POS1/0"}
+  ! "POS1/0" is "POS1/0" - works
+{else}
+  {fail "Error"}
+{end}
+
+{if "POS1/0" is not "POS2/0"}
+  ! "POS1/0" is not "POS2/0" - works
+{else}
+  {fail "Error"}
+{end}
+
+ls -1{extract /([^\r\n]+)/ as string}
+{if string is "hello"}
+  ! string is "hello" - works
+{else}
+  {fail "Error: $string"}
+{end}
+{if string is string}
+  ! string is string - works
+{else}
+  {fail "Error: $string"}
+{end}
+
+###########################
+# operator priority
+###########################
+{if 5 * 4 is 20 and not 1 is 0}
+  !Integer comparison "5 * 4 is 20 and not 1 is 0" works
+{else}
+  {fail "Error"}
+{end}
+{if 5 * 4 is 22 or 5 * 4 is 20}
+  !Integer comparison "5 * 4 is 22 or 5 * 4 is 20" works
+{else}
+  {fail "Error"}
+{end}
+{if 5 * 4 is not 5 * 5}
+  !Integer comparison "5 * 4 is not 5 * 5" works
+{else}
+  {fail "Error"}
+{end}
+{if 5 * 4 is 20 and 30 is 10 * 3}
+  !Integer comparison "5 * 4 is 20 and 30 is 10 * 3" works
+{else}
+  {fail "Error"}
+{end}
+{if 20 is 5 * 4 and 30 is 10 * 3 and not 0}
+  !Integer comparison "20 is 5 * 4 and 30 is 10 * 3 and not 0" works
+{else}
+  {fail "Error"}
+{end}
+{if 1 + 2 * 4 + 1 is 10 and 30 is 10 * 3 and 1}
+  !1 + 2 * 4 + 1 is 10 and 30 is 10 * 3 and 1 works
+{else}
+  {fail "Error"}
+{end}
+{if    40   is  5 * 4 * 2
+   and 30   is 10 * 3
+   and 1200 is 40 * 30
+   and 1
+   and "test" is "test"
+   and not 1234 is not 1234}
+  !Mixed comparison 1 works
+{else}
+  {fail "Error"}
+{end}
+
+###########################
+# loops
+###########################
+ls -1 {extract /^(\S+)/ as filenames}
+ls -1 {extract /^(\S+)/ as filenames2}
+{loop filenames,
+      filenames2
+   as filename,
+      filename2}
+  ls -l $filename
+{end}

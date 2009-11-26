@@ -1,0 +1,37 @@
+Username: sab
+Password: 
+syntax:0> ! Good
+syntax:0> ! Else if works
+syntax:0> ! Else works
+syntax:0> ! Else if works
+syntax:0> ! 5 * 4 = 20
+syntax:0> ! 20 / 4 = 5
+syntax:0> ! 10 % 3 = 1
+syntax:0> ! "POS1/0" is "POS1/0" - works
+syntax:0> ! "POS1/0" is not "POS2/0" - works
+syntax:0> ls -1
+
+hello
+testme
+syntax:0> ! string is "hello" - works
+syntax:0> ! string is string - works
+syntax:0> !Integer comparison "5 * 4 is 20 and not 1 is 0" works
+syntax:0> !Integer comparison "5 * 4 is 22 or 5 * 4 is 20" works
+syntax:0> !Integer comparison "5 * 4 is not 5 * 5" works
+syntax:0> !Integer comparison "5 * 4 is 20 and 30 is 10 * 3" works
+syntax:0> !Integer comparison "20 is 5 * 4 and 30 is 10 * 3 and not 0" works
+syntax:0> !1 + 2 * 4 + 1 is 10 and 30 is 10 * 3 and 1 works
+syntax:0> !Mixed comparison 1 works
+syntax:0> ls -1 
+
+hello
+testme
+syntax:0> ls -1 
+
+hello
+testme
+syntax:0> ls -l hello
+ls -l hello
+syntax:0> ls -l testme
+ls -l testme
+syntax:0> 

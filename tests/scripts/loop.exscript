@@ -1,8 +1,0 @@
-ls -1 {extract /^(\S+)/ as filenames}
-ls -1 {extract /^(\S+)/ as filenames2}
-{loop filenames,
-      filenames2
-   as filename,
-      filename2}
-  ls -l $filename
-{end}
