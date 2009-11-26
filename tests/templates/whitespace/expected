@@ -8,4 +8,6 @@ whitespace:0> ls -1
 
 hello
 testme
+whitespace:0> ! Iteration: hello/hello
+whitespace:0> ! Iteration: testme/testme
 whitespace:0> 

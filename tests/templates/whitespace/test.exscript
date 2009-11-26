@@ -4,9 +4,9 @@ ls -1
   extract /^(\S+)/ as filenames2
   loop filenames,
        filenames2 as filename,
-                     filename2
-    sys.message("Iteration: $filename/$filename2")
-  end
+                     filename2}
+    ! Iteration: $filename/$filename2
+  {end
   loop filenames as filename
     if filename matches /^M/
       msg = "Filename starts with " . "M"
