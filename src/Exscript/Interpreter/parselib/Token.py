@@ -94,6 +94,9 @@ class Token(object):
         """
         return Token.Iterator(self)
 
+    def add(self, child):
+        self.children.append(child)
+
     def get_children(self):
         return self.children
 

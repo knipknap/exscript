@@ -40,11 +40,11 @@ class Exscript(Scope):
                 break
             elif lexer.next_if('open_curly_bracket'):
                 if buffer.strip() != '':
-                    self.children.append(Execute(lexer, parser, self, buffer))
+                    self.add(Execute(lexer, parser, self, buffer))
                     buffer = ''
                 if isinstance(parent, Code):
                     break
-                self.children.append(Code(lexer, parser, self))
+                self.add(Code(lexer, parser, self))
             elif lexer.current_is('raw_data'):
                 if lexer.token()[1].lstrip().startswith('#'):
                     while not lexer.current_is('newline'):
@@ -63,7 +63,7 @@ class Exscript(Scope):
                 lexer.next()
             elif lexer.next_if('newline'):
                 if buffer.strip() != '':
-                    self.children.append(Execute(lexer, parser, self, buffer))
+                    self.add(Execute(lexer, parser, self, buffer))
                     buffer = ''
             else:
                 type = lexer.token()[0]

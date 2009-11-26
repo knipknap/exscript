@@ -21,7 +21,7 @@ class Program(Scope):
         Scope.__init__(self, 'Program', lexer, parser, None, **kwargs)
         self.variables      = variables
         self.init_variables = variables
-        self.children.append(Exscript(lexer, parser, self))
+        self.add(Exscript(lexer, parser, self))
 
 
     def init(self, *args, **kwargs):

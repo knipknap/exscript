@@ -90,23 +90,23 @@ class Code(Scope):
             if lexer.next_if('close_curly_bracket'):
                 if isinstance(parent, Exscript.Exscript):
                     break
-                self.children.append(Exscript.Exscript(lexer, parser, self))
+                self.add(Exscript.Exscript(lexer, parser, self))
             elif lexer.current_is('keyword', 'append'):
-                self.children.append(Append(lexer, parser, self))
+                self.add(Append(lexer, parser, self))
             elif lexer.current_is('keyword', 'extract'):
-                self.children.append(Extract(lexer, parser, self))
+                self.add(Extract(lexer, parser, self))
             elif lexer.current_is('keyword', 'fail'):
-                self.children.append(Fail(lexer, parser, self))
+                self.add(Fail(lexer, parser, self))
             elif lexer.current_is('keyword', 'if'):
-                self.children.append(IfCondition(lexer, parser, self))
+                self.add(IfCondition(lexer, parser, self))
             elif lexer.current_is('keyword', 'loop'):
-                self.children.append(Loop(lexer, parser, self))
+                self.add(Loop(lexer, parser, self))
             elif lexer.current_is('varname'):
-                self.children.append(Assign(lexer, parser, self))
+                self.add(Assign(lexer, parser, self))
             elif lexer.current_is('keyword', 'try'):
-                self.children.append(Try(lexer, parser, self))
+                self.add(Try(lexer, parser, self))
             elif lexer.current_is('keyword', 'enter'):
-                self.children.append(Enter(lexer, parser, self))
+                self.add(Enter(lexer, parser, self))
             elif lexer.current_is('keyword', 'else'):
                 if not isinstance(parent, Code):
                     parent.syntax_error(self, '"end" without a scope start')
@@ -117,7 +117,7 @@ class Code(Scope):
                 lexer.skip(['whitespace', 'newline'])
                 break
             elif lexer.current_is('open_function_call'):
-                self.children.append(FunctionCall(lexer, parser, self))
+                self.add(FunctionCall(lexer, parser, self))
             else:
                 type, token = lexer.token()
                 parent.syntax_error(self, 'Unexpected %s "%s"' % (type, token))
