@@ -18,8 +18,6 @@ from Exscript       import Exscript
 from FunctionAction import FunctionAction
 from Host           import Host
 from Job            import Job
-from FunctionRunner import FunctionRunner
-from TemplateRunner import TemplateRunner
 
 import inspect 
 __all__ = [name for name, obj in locals().items()

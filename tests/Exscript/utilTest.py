@@ -2,7 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 def suite():
-    tests = ['testMatch', 'testDecorators']
+    tests = ['testMatch', 'testDecorators', 'testStart']
     return unittest.TestSuite(map(utilTest, tests))
 
 from ExscriptTest import ExscriptTest, count_calls
@@ -26,13 +26,23 @@ class utilTest(ExscriptTest):
 
         data  = {'n_calls': 0}
         hosts = 'dummy:localhost'
-        self.exscript.start(hosts, connect(count_calls), data, testarg = 1)
+        self.exscript.run(hosts, connect(count_calls), data, testarg = 1)
         self.exscript.shutdown()
         self.assert_(data['n_calls'] == 1)
 
-        self.exscript.start(hosts, autologin(count_calls), data, testarg = 1)
+        self.exscript.run(hosts, autologin(count_calls), data, testarg = 1)
         self.exscript.shutdown()
         self.assert_(data['n_calls'] == 2)
+
+    def testStart(self):
+        from Exscript            import Account
+        from Exscript.util.start import run
+
+        data    = {'n_calls': 0}
+        hosts   = 'dummy:localhost'
+        account = Account('test', 'test')
+        run(account, hosts, count_calls, data, testarg = 1)
+        self.assert_(data['n_calls'] == 1)
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

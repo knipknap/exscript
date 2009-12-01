@@ -56,7 +56,7 @@ class Scope(Token):
                 self.variables[key] = [kwargs[key]]
 
 
-    def define_function(self, **kwargs):
+    def define_object(self, **kwargs):
         self.variables.update(kwargs)
 
 

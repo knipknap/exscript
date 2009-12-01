@@ -38,20 +38,42 @@ def autologin(function, wait = True):
         conn.close(force = True)
     return connect(decorated)
 
-def run_template(conn, template, **kwargs):
-    # Define default variables.
-    defaults = dict(__filename__ = template,
-                    hostname     = conn.transport.get_host())
+def _builtin_vars(conn = None, filename = 'undefined'):
+    hostname = conn and conn.get_host().get_address() or 'undefined'
+    builtin  = dict(__filename__   = [filename],
+                    __hostname__   = [hostname],
+                    __connection__ = conn)
+    return builtin
 
+def _compile_template(template, parser_kwargs, **kwargs):
     # Init the parser and compile the template.
-    parser = Parser()
-    parser.define(**defaults)
-    parser.define(**kwargs)
-    parser.define_function(**stdlib.functions)
-    compiled = parser.parse_file(template)
-    compiled.define(**defaults)
-    compiled.define(**kwargs)
-    compiled.define(__connection__ = conn)
+    parser = Parser(**parser_kwargs)
+    parser.define_object(**kwargs)
+    parser.define_object(**stdlib.functions)
+    return parser.parse(template)
 
-    # Run.
+def test_template(template, **kwargs):
+    kwargs.update(_builtin_vars())
+    return _compile_template(template, {}, **kwargs)
+
+def _run_tmpl(conn, template, parser_kwargs, **kwargs):
+    compiled = _compile_template(template, parser_kwargs, **kwargs)
     return compiled.execute()
+
+def run_template_string(conn, string, strip_command = True, **kwargs):
+    kwargs.update(_builtin_vars(conn))
+    return _run_tmpl(conn, string, {'strip_command': strip_command}, **kwargs)
+
+def paste_template_string(conn, string, **kwargs):
+    kwargs.update(_builtin_vars(conn))
+    return _run_tmpl(conn, string, {'no_prompt': True}, **kwargs)
+
+def run_template(conn, filename, strip_command = True, **kwargs):
+    kwargs.update(_builtin_vars(conn, filename))
+    template = open(filename, 'r').read()
+    return _run_tmpl(conn, template, {'strip_command': strip_command}, **kwargs)
+
+def paste_template(conn, filename, **kwargs):
+    kwargs.update(_builtin_vars(conn, filename))
+    template = open(filename, 'r').read()
+    return _run_tmpl(conn, template, {'no_prompt': True}, **kwargs)

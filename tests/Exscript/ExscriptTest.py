@@ -57,18 +57,18 @@ class ExscriptTest(unittest.TestCase):
     def testStart(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
-        self.exscript.start(hosts,    count_calls, data, testarg = 1)
-        self.exscript.start('dummy3', count_calls, data, testarg = 1)
+        self.exscript.run(hosts,    count_calls, data, testarg = 1)
+        self.exscript.run('dummy3', count_calls, data, testarg = 1)
         self.exscript.shutdown()
         self.assert_(data['n_calls'] == 3)
 
-        self.exscript.start('dummy4', count_calls, data, testarg = 1)
+        self.exscript.run('dummy4', count_calls, data, testarg = 1)
         self.exscript.shutdown()
         self.assert_(data['n_calls'] == 4)
 
     def testIOSDummy(self):
         for test in os.listdir(test_dir):
-            self.exscript.start('ios:' + test, ios_dummy_cb)
+            self.exscript.run('ios:' + test, ios_dummy_cb)
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

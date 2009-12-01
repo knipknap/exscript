@@ -13,25 +13,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.FooLib import Interact
-from Exscript        import Exscript, Account, Host, FunctionRunner
+from Exscript        import Exscript, Account, Host
 
 def read_login():
     user, password = Interact.get_login()
     return Account(user, password)
 
 def run(users, hosts, func, *data, **kwargs):
-    if isinstance(users, Account):
-        users = [users]
-    if isinstance(hosts, Host):
-        hosts = [hosts]
-
     exscript = Exscript(**kwargs)
-    job      = FunctionRunner(func, *data, **kwargs)
-    for user in users:
-        exscript.add_account(user)
-    for host in hosts:
-        job.add_host(host)
-    exscript.run(job)
+    exscript.add_account(users)
+    exscript.run(hosts, func, *data, **kwargs)
 
 def quickrun(hosts, func, *data, **kwargs):
     return run(read_login(), hosts, func, *data, **kwargs)

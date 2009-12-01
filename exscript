@@ -6,9 +6,13 @@
 import sys, os, re, getpass
 import termconnect
 sys.path.append('src')
-from Exscript        import Exscript, Account, TemplateRunner, util
-from Exscript.FooLib import Interact
-from Exscript.FooLib import OptionParser
+from Exscript                 import Exscript, Account, Host, util
+from Exscript.FooLib          import Interact
+from Exscript.FooLib          import OptionParser
+from Exscript.util.decorators import autologin, \
+                                     test_template, \
+                                     paste_template_string, \
+                                     run_template_string
 
 True  = 1
 False = 0
@@ -82,8 +86,12 @@ def usage():
     print "                 Specify which protocol to use to connect to the remote host."
     print "                 STRING is one of: telnet ssh"
     print "                 The default protocol is telnet."
+    print "      --retry NUM"
+    print "                 Defines the number of retries per host on failure. Default"
+    print "                 is 0."
     print "      --retry-login NUM"
-    print "                 Defines the number of retries on login failure. Default is 0."
+    print "                 Defines the number of retries per host on login failure."
+    print "                 Default is 0."
     print "      --sleep TIME"
     print "                 Waits for the specified time before running the script."
     print "                 TIME is a timespec as specified by the 'sleep' Unix command."
@@ -103,13 +111,12 @@ def usage():
     print "  -h, --help     Prints this help."
 
 # Define default options.
-default_defines = {'hostname': 'unknown'}
 default_options = [
   ('no-echo',           None, False),
   ('account-pool=',     None, None),
   ('connections=',      'c:', 1),
   ('csv-hosts=',        None, None),
-  ('define=',           'd:', default_defines),
+  ('define=',           'd:', {}),
   ('delete-logs',       None, False),
   ('execute=',          'e:', None),
   ('hosts=',            None, None),
@@ -124,6 +131,7 @@ default_options = [
   ('verbose=',          'v:', 0),
   ('parser-verbose=',   'V:', 0),
   ('protocol=',         'p:', 'telnet'),
+  ('retry=',            None, 0),
   ('retry-login=',      None, 0),
   ('sleep=',            None, ''),
   ('ssh-auto-verify',   None, False),
@@ -133,13 +141,37 @@ default_options = [
   ('help',              'h',  False)
 ]
 
+bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
+
+def expand_bracket(value_name, value):
+    match = bracket_expression_re.match(value)
+    if match is None:
+        return value
+    prompt = match.group(1) or 'a value for "%s"' % value_name
+    if prompt.startswith('!'):
+        value = getpass.getpass('Please enter %s: ' % prompt[1:])
+    else:
+        value = raw_input('Please enter %s: ' % prompt)
+    return value
+
+def expand_host_variables(host):
+    # Define host-specific variables.
+    for key, val in host.vars.iteritems():
+        try:
+            val = val[0]
+        except:
+            val = None
+        if not isinstance(val, str):
+            continue
+        val = expand_bracket(key, val)
+        host.define(key, [val])
+
 def run(*args, **kwargs):
     options = {}
     for option, short_option, value in default_options:
         option = re.sub(r'=$', '', option)
         options[option] = value
     options.update(kwargs)
-    options['define'].update(default_defines)
 
     # Show the help, if requested.
     if options['help']:
@@ -153,45 +185,35 @@ def run(*args, **kwargs):
 
     # Extract the hostnames out of the command line arguments.
     try:
-        filename  = args[0]
-        hostnames = list(args[1:])
+        filename = args[0]
+        hosts    = [Host(h) for h in list(args[1:])]
     except:
         usage()
         sys.exit(1)
-    trunner = TemplateRunner(verbose        = options.get('verbose'),
-                             domain         = options.get('default-domain'),
-                             retry_login    = options.get('retry-login'),
-                             overwrite_logs = options.get('overwrite-logs'),
-                             delete_logs    = options.get('delete-logs'),
-                             strip_command  = not options.get('no-strip'),
-                             logdir         = options.get('logdir'))
     if options.get('execute') is not None:
-        trunner.add_host(filename)
-        trunner.add_hosts(hostnames)
-    else:
-        trunner.add_hosts(hostnames)
+        hosts.append(Host(filename))
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
     if options.get('csv-hosts') is not None:
         try:
-            hosts = util.get_hosts_from_csv(options.get('csv-hosts'))
+            csv_hosts = util.get_hosts_from_csv(options.get('csv-hosts'))
         except Exception, e:
             print e
             sys.exit(1)
-        if not hosts:
+        if not csv_hosts:
             print 'Warning: %s is empty.' % options.get('csv-hosts')
-        trunner.add_hosts(hosts)
+        hosts += csv_hosts
 
     # If a filename containing hostnames was given, read it.
     if options.get('hosts') is not None:
         try:
-            hosts = util.get_hosts_from_file(options.get('hosts'))
+            txt_hosts = util.get_hosts_from_file(options.get('hosts'))
         except Exception, e:
             print e
             sys.exit(1)
-        if not hosts:
+        if not txt_hosts:
             print 'Warning: %s is empty.' % options.get('hosts')
-        trunner.add_hosts(hosts)
+        hosts += txt_hosts
 
     # Create the log directory.
     if options.get('logdir') is not None:
@@ -204,23 +226,22 @@ def run(*args, **kwargs):
                 sys.exit(1)
 
     # Make sure that all mandatory options are present.
-    if len(trunner.hosts) <= 0:
+    if not hosts:
         usage()
         sys.exit(1)
 
     # Read the Exscript.
     if options.get('execute') is not None:
-        trunner_content = options.get('execute')
+        script_content = options.get('execute')
     else:
-        file            = open(filename, 'r')
-        trunner_content = file.read()
-        trunner.file    = filename
+        file           = open(filename, 'r')
+        script_content = file.read()
         file.close()
 
     # Prepare the code that is executed after the user script has completed.
     #FIXME: Move into the library, then use read_template_from_file instead of read_template().
     if not options['no-auto-logout']:
-        trunner_content += r'''
+        script_content += r'''
     ## Exscript generated commands. ##
     {if device.guess_os() is "vrp"}
         {connection.send("quit\r", 0)}
@@ -228,10 +249,9 @@ def run(*args, **kwargs):
         {connection.send("exit\r", 0)}
     {end}'''
 
-    # Load the code into the trunner.
-    trunner.define(**options['define'])
+    # Test whether the template compiles.
     try:
-        trunner.read_template(trunner_content)
+        test_template(script_content, **options.get('define'))
     except Exception, e:
         if options['verbose'] > 0:
             raise
@@ -239,8 +259,19 @@ def run(*args, **kwargs):
         sys.exit(1)
 
     # Create Exscript.
-    exscript = Exscript(verbose     = options['verbose'],
-                        max_threads = options['connections'])
+    protocol_args = {
+        'echo':        not options.get('no-echo'),
+        'auto_verify': not options.get('ssh-auto-verify')
+    }
+    exscript = Exscript(domain         = options.get('default-domain'),
+                        verbose        = options.get('verbose'),
+                        max_threads    = options.get('connections'),
+                        retries        = options.get('retry'),
+                        login_retries  = options.get('retry-login'),
+                        logdir         = options.get('logdir'),
+                        overwrite_logs = options.get('overwrite-logs'),
+                        delete_logs    = options.get('delete-logs'),
+                        protocol_args  = protocol_args)
     account_manager = exscript.account_manager
 
     # Read the account pool file.
@@ -269,24 +300,20 @@ def run(*args, **kwargs):
         account_manager.add_account(account)
 
     # Ask for values of marked variables.
+    for host in hosts:
+        expand_host_variables(host)
     for key, val in options['define'].iteritems():
-        match = TemplateRunner.bracket_expression_re.match(val)
-        if match is None:
-            continue
-        str = match.group(1) or 'a value for "%s"' % key
-        if str.startswith('!'):
-            val = getpass.getpass('Please enter %s: ' % str[1:])
-        else:
-            val = raw_input('Please enter %s: ' % str)
-        options['define'][key] = val
+        options['define'][key] = expand_bracket(key, val)
 
-    # Configure the template runner.
-    del options['hosts']
-    trunner.set_options(retry_login    = options.get('retry-login'),
-                        parser_verbose = options.get('parser-verbose'),
-                        no_prompt      = options.get('no-prompt'),
-                        strip_command  = not options.get('no-strip'),
-                        **options)
+    # Choose the template processing type.
+    if options.get('no-prompt'):
+        function = paste_template_string
+    else:
+        function = run_template_string
+    if not options.get('no-authentication'):
+        nip      = options.get('no-initial-prompt')
+        nop      = options.get('no-prompt')
+        function = autologin(function, not nip and not nop)
 
     # Wait until the specified time.
     if options['sleep']:
@@ -295,7 +322,13 @@ def run(*args, **kwargs):
         os.system('sleep %s' % options['sleep'])
         print "time expired, starting script."
 
-    exscript.run(trunner)
+    # Run the template.
+    tmpl_vars = options.get('define')
+    if options.get('no-prompt'):
+        exscript.run(hosts, function, script_content, **tmpl_vars)
+    else:
+        strip = not options.get('no-strip')
+        exscript.run(hosts, function, script_content, strip, **tmpl_vars)
 
 if __name__ == '__main__':
     # Parse options.

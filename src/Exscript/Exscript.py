@@ -35,12 +35,26 @@ class Exscript(object):
 
         @type  kwargs: dict
         @param kwargs: The following options are supported:
+            - domain: The default domain of the contacted hosts.
             - verbose: The verbosity level of Exscript.
             - max_threads: The maximum number of concurrent threads, default 1
+            - retries: The number of retries, default 0.
+            - login_retries: The number of login retries, default 0.
+            - logdir: The directory into which the logs are written.
+            - overwrite_logs: Whether existing logfiles are overwritten.
+            - delete_logs: Whether successful logfiles are deleted.
+            - protocol_args: dict, passed to the protocol adapter as kwargs
         """
         self.workqueue         = WorkQueue()
         self.account_manager   = AccountManager()
+        self.domain            = kwargs.get('domain')
         self.verbose           = kwargs.get('verbose')
+        self.logdir            = kwargs.get('logdir')
+        self.overwrite_logs    = kwargs.get('overwrite_logs')
+        self.delete_logs       = kwargs.get('delete_logs')
+        self.retries           = kwargs.get('retries')
+        self.login_retries     = kwargs.get('login_retries')
+        self.protocol_args     = kwargs.get('protocol_args')
         self.completed         = 0
         self.total             = 0
         self.show_status_bar   = True
@@ -212,37 +226,6 @@ class Exscript(object):
             sys.exit(1)
 
 
-    def run_async(self, job):
-        """
-        Places and executes the given Job in the workqueue.
-
-        @type  job: Job
-        @param job: An instance of Job.
-        """
-        # Initialize the workqueue.
-        self._dbg(1, 'Starting engine...')
-        self.workqueue.start()
-        self._dbg(1, 'Engine running.')
-
-        # Build the action sequence.
-        self._dbg(1, 'Building sequence...')
-        job.run(self)
-
-
-    def run(self, job):
-        """
-        Places and executes the given Job in the workqueue, and waits until 
-        all jobs are completed before returning.
-        Allows for interrupting with SIGINT.
-
-        @type  job: Job
-        @param job: An instance of Job.
-        """
-        self._catch_sigint_and_run(self.run_async, job)
-        self._dbg(1, 'All actions enqueued.')
-        self.shutdown()
-
-
     def join(self):
         self._dbg(1, 'Waiting for the engine to finish.')
         while self.workqueue.get_length() > 0:
@@ -251,23 +234,6 @@ class Exscript(object):
             self._print_status_bar()
             time.sleep(1)
             gc.collect()
-
-
-    def _on_action_aborted(self, action, exception, host):
-        if action.retries == 0:
-            raise # exception
-        self._dbg(1, 'Retrying %s' % host.get_address())
-        new_action         = self._get_action(exscript, host)
-        new_action.retries = action.retries - 1
-        retries            = self.retry_login - new_action.retries
-        new_action.name    = new_action.name + ' (retry %d)' % retries
-        if self.options.get('logdir'):
-            logfile       = '%s_retry%d.log' % (host.get_address(), retries)
-            logfile       = os.path.join(self.options['logdir'], logfile)
-            error_logfile = logfile + '.error'
-            new_action.set_logfile(logfile)
-            new_action.set_error_logfile(error_logfile)
-        exscript._priority_enqueue_action(new_action)
 
 
     def shutdown(self, force = False):
@@ -280,7 +246,7 @@ class Exscript(object):
         self._del_status_bar()
 
 
-    def _start(self, hosts, function, *args, **kwargs):
+    def _run(self, hosts, function, *args, **kwargs):
         n_connections = self.get_max_threads()
         hosts         = get_hosts_from_name(hosts)
         self.total   += len(hosts)
@@ -296,12 +262,25 @@ class Exscript(object):
                 time.sleep(1)
                 gc.collect()
 
+            # Create the connection. If we are multi threaded, disable echoing
+            # of the conversation to stdout.
+            if not host.get_domain():
+                host.set_domain(self.domain)
+            pargs         = self.protocol_args.copy()
+            pargs['echo'] = self.get_max_threads() == 1 and pargs.get('echo')
+            conn          = Connection(self, host, **pargs)
+
+            # Build an object that represents the actual task.
             self._dbg(1, 'Building FunctionAction for %s.' % host.get_name())
-            conn   = Connection(self, host)
             action = FunctionAction(function, conn, *args, **kwargs)
-            action.signal_connect('aborted',
-                                  self._on_action_aborted,
-                                  host)
+            action.set_times(self.retries + 1)
+            action.set_login_retries(self.login_retries + 1)
+            action.set_logdir(self.logdir)
+            action.set_log_options(overwrite = self.overwrite_logs,
+                                   delete    = self.delete_logs)
+            action.set_error_log_options(overwrite = self.overwrite_logs)
+
+            # Done. Enqueue this.
             self._enqueue_action(action)
             self.total -= 1
 
@@ -309,8 +288,8 @@ class Exscript(object):
         self.shutdown()
 
 
-    def start(self, hosts, function, *args, **kwargs):
-        self._catch_sigint_and_run(self._start,
+    def run(self, hosts, function, *args, **kwargs):
+        self._catch_sigint_and_run(self._run,
                                    hosts,
                                    function,
                                    *args, **kwargs)
