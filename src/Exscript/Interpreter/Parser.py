@@ -14,7 +14,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import copy
 import types
-import stdlib
 from parselib import Lexer
 from Program  import Program
 
@@ -24,8 +23,6 @@ class Parser(object):
         self.strip_command = kwargs.get('strip_command', 1)
         self.debug         = kwargs.get('debug',         0)
         self.variables     = {}
-        self.stdlib        = {}
-        self.load_module(stdlib)
 
     def define(self, **kwargs):
         for key in kwargs:
@@ -37,27 +34,9 @@ class Parser(object):
     def define_function(self, **kwargs):
         self.variables.update(kwargs)
 
-    def load_module(self, module):
-        if self.debug > 0:
-            print 'Loading module', module.__name__
-        for name in module.__dict__['__all__']:
-            if name.startswith('_'):
-                continue
-            mod_name  = '.'.join(module.__name__.split('.')[2:])
-            item_name = mod_name + '.' + name
-            item      = __import__(item_name, globals(), locals(), [mod_name])
-            if not 'execute' in dir(item):
-                self.load_module(item)
-                continue
-            item_name = item_name[item_name.index('.') + 1:].lower()
-            if self.debug > 1:
-                print 'Loaded function', item_name
-            self.stdlib[item_name] = item.__dict__['execute']
-
     def parse(self, string):
         variables = copy.deepcopy(self.variables)
-        variables.update(self.stdlib)
-        lexer = Lexer(Program, self, variables, debug = self.debug)
+        lexer     = Lexer(Program, self, variables, debug = self.debug)
         return lexer.parse(string)
 
     def parse_file(self, filename):

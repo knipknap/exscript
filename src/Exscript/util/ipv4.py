@@ -39,7 +39,7 @@ def parse_prefix(prefix, default_mask = 24):
     else:
         network = prefix
         pfxlen  = default_mask
-    return (ip2int(network), int(pfxlen))
+    return ip2int(network), int(pfxlen)
 
 def remote_ip(local_ip):
     local_ip = ip2int(local_ip)

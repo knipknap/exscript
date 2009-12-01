@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re, os, base64
 import Exscript
+from Exscript             import stdlib
 from Exscript.Interpreter import Parser
 from Exscript.FooLib      import Interact
 
@@ -46,6 +47,7 @@ def run_template(conn, template, **kwargs):
     parser = Parser()
     parser.define(**defaults)
     parser.define(**kwargs)
+    parser.define_function(**stdlib.functions)
     compiled = parser.parse_file(template)
     compiled.define(**defaults)
     compiled.define(**kwargs)
