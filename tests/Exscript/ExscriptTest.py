@@ -5,9 +5,9 @@ def suite():
     tests = ['testStart', 'testIOSDummy']
     return unittest.TestSuite(map(ExscriptTest, tests))
 
-from termconnect.Dummy import Transport
-from Exscript          import Exscript, Connection, Account
-from Exscript.util     import run_template
+from termconnect.Dummy        import Transport
+from Exscript                 import Exscript, Connection, Account
+from Exscript.util.decorators import run_template
 
 test_dir = '../templates'
 

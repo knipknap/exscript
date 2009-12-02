@@ -13,14 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# Imports for backward compatibility.
-from decorators import os_function_mapper, run_template
-from match      import first_match, any_match
-from start      import read_login, run, quickrun
-from file       import get_accounts_from_file, \
-                       get_hosts_from_file, \
-                       get_hosts_from_csv
-
 import inspect
 __all__ = [name for name, obj in locals().items()
            if not (name.startswith('_') or inspect.ismodule(obj))]

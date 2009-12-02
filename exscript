@@ -1,14 +1,27 @@
 #!/usr/bin/env python
-## Author:      Samuel Abels
-## Date:        2007-06-04
-## Description: Starts the Exscript interpreter to execute commands on a list 
-##              of hosts.
+# Copyright (C) 2007 Samuel Abels, http://debain.org
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, getpass
 import termconnect
 sys.path.append('src')
-from Exscript                 import Exscript, Account, Host, util
+from Exscript                 import Exscript, Account, Host
 from Exscript.FooLib          import Interact
 from Exscript.FooLib          import OptionParser
+from Exscript.util.file       import get_accounts_from_file, \
+                                     get_hosts_from_file, \
+                                     get_hosts_from_csv
 from Exscript.util.decorators import autologin, \
                                      test_template, \
                                      paste_template_string, \
@@ -196,7 +209,7 @@ def run(*args, **kwargs):
     # If a filename containing hostnames AND VARIABLES was given, read it.
     if options.get('csv-hosts') is not None:
         try:
-            csv_hosts = util.get_hosts_from_csv(options.get('csv-hosts'))
+            csv_hosts = get_hosts_from_csv(options.get('csv-hosts'))
         except Exception, e:
             print e
             sys.exit(1)
@@ -207,7 +220,7 @@ def run(*args, **kwargs):
     # If a filename containing hostnames was given, read it.
     if options.get('hosts') is not None:
         try:
-            txt_hosts = util.get_hosts_from_file(options.get('hosts'))
+            txt_hosts = get_hosts_from_file(options.get('hosts'))
         except Exception, e:
             print e
             sys.exit(1)
@@ -277,7 +290,7 @@ def run(*args, **kwargs):
     # Read the account pool file.
     try:
         if options['account-pool']:
-            accounts = util.get_accounts_from_file(options['account-pool'])
+            accounts = get_accounts_from_file(options['account-pool'])
             account_manager.add_account(accounts)
     except Exception, e:
         print e
