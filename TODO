@@ -1,6 +1,3 @@
-* stdlib should not be part of the interpreter; move stdlib functions to
-  the util module and pass them to the parser instead.
 * Add more tests.
-* Get rid of TemplateRunner and FunctionRunner.
 * "make dist" should pull dependencies.
 * Make the "fail" keyword saner.
