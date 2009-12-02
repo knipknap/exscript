@@ -13,7 +13,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 def new(scope):
+    """
+    Returns a new, empty list.
+
+    @rtype:  string
+    @return: The model of the remote device.
+    """
     return []
 
 def unique(scope, source):
+    """
+    Returns a copy of the given list in which all duplicates are removed
+    such that one of each item remains in the list.
+
+    @type  source: string
+    @param source: A list of strings.
+    @rtype:  string
+    @return: The cleaned up list of strings.
+    """
     return list(set(source)) #old python version: dict(map(lambda a: (a,1), source)).keys()

@@ -18,22 +18,48 @@ True  = 1
 False = 0
 
 def message(scope, string):
+    """
+    Writes the given string to stdout.
+
+    @type  string: string
+    @param string: A string, or a list of strings.
+    """
     exscript = scope.get('__connection__').get_exscript()
     exscript._print(string[0] + '\n')
     return True
 
 def tacacs_lock(scope, user):
+    """
+    Acquire an exclusive lock on the account of the user with the given
+    name.
+
+    @type  user: string
+    @param user: A username.
+    """
     accm    = scope.get('__connection__').get_account_manager()
     account = accm.get_account_from_name(user[0])
     accm.acquire_account(account)
     return True
 
 def tacacs_unlock(scope, user):
+    """
+    Release the exclusive lock on the account of the user with the given
+    name.
+
+    @type  user: string
+    @param user: A username.
+    """
     accm    = scope.get('__connection__').get_account_manager()
     account = accm.get_account_from_name(user[0])
     account.release()
     return True
 
 def wait(scope, seconds):
+    """
+    Waits for the given number of seconds.
+
+    @type  seconds: int
+    @param seconds: The wait time in seconds.
+    """
     time.sleep(int(seconds[0]))
     return True

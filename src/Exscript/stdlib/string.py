@@ -13,4 +13,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 def replace(scope, strings, source, dest):
+    """
+    Returns a copy of the given string (or list of strings) in which all
+    occurrences of the given source are replaced by the given dest.
+
+    @type  strings: string
+    @param strings: A string, or a list of strings.
+    @type  source: string
+    @param source: What to replace.
+    @type  dest: string
+    @param dest: What to replace it with.
+    @rtype:  string
+    @return: The resulting string, or list of strings.
+    """
     return [s.replace(source[0], dest[0]) for s in strings]
