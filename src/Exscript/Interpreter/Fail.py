@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.parselib import Token
 from Expression        import Expression
+from Exception         import FailException
 
 class Fail(Token):
     def __init__(self, lexer, parser, parent):
@@ -38,7 +39,7 @@ class Fail(Token):
 
     def value(self):
         if self.expression is None or self.expression.value()[0]:
-            self.parent.runtime_error(self, self.msg.value()[0])
+            raise FailException(self.msg.value()[0])
         return 1
 
 

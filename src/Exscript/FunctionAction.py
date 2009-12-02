@@ -15,6 +15,7 @@
 import os, traceback
 from SpiffWorkQueue        import Action
 from termconnect.Exception import LoginFailure
+from Interpreter           import FailException
 
 True  = 1
 False = 0
@@ -132,6 +133,9 @@ class FunctionAction(Action):
                 self._log_exception(e)
                 self.login_retry += 1
                 continue
+            except FailException, e:
+                self._log_exception(e)
+                return
             except Exception, e:
                 self._log_exception(e)
                 self.retry += 1
