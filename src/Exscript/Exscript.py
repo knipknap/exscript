@@ -200,7 +200,11 @@ class Exscript(object):
 
     def add_account(self, account):
         """
-        Adds an account to the account pool.
+        Adds the given account to the account pool that Exscript uses to
+        log into hosts.
+
+        @type  account: Account
+        @param account: The account that is added.
         """
         self.account_manager.add_account(account)
 
@@ -227,6 +231,9 @@ class Exscript(object):
 
 
     def join(self):
+        """
+        Waits until all jobs are completed.
+        """
         self._dbg(1, 'Waiting for the engine to finish.')
         while self.workqueue.get_length() > 0:
             #print '%s jobs left, waiting.' % self.workqueue.get_length()
@@ -237,6 +244,14 @@ class Exscript(object):
 
 
     def shutdown(self, force = False):
+        """
+        Stop executing any further jobs. If the force argument is True,
+        the function does not wait until any queued jobs are completed but
+        stops immediately.
+
+        @type  force: bool
+        @param force: Whether to wait until all jobs were processed.
+        """
         if not force:
             self.join()
 
@@ -289,6 +304,17 @@ class Exscript(object):
 
 
     def run(self, hosts, function, *args, **kwargs):
+        """
+        Add the given function to a queue, and call it once for each host
+        according to the threading options.
+
+        @type  hosts: string|list(string)|Host|list(Host)
+        @param hosts: A hostname or Host object, or a list of them.
+        @type  args: list
+        @param args: These args are passed to the given function.
+        @type  kwargs: dict
+        @param kwargs: These kwargs are passed to the given function.
+        """
         self._catch_sigint_and_run(self._run,
                                    hosts,
                                    function,
