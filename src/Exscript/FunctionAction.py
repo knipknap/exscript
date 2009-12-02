@@ -15,7 +15,7 @@
 import os, traceback
 from SpiffWorkQueue        import Action
 from termconnect.Exception import LoginFailure
-from Interpreter           import FailException
+from Interpreter.Exception import FailException
 
 True  = 1
 False = 0
