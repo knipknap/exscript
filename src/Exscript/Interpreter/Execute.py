@@ -29,7 +29,7 @@ class Execute(String):
 
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, command)
-        self.parent.define(response = [])
+        self.parent.define(__response__ = [])
 
 
     def value(self):
@@ -53,8 +53,7 @@ class Execute(String):
         if self.strip_command:
             response = response[1:]
 
-        self.parent.define(_buffer  = response)
-        self.parent.define(response = response)
+        self.parent.define(__response__ = response)
         return 1
 
 

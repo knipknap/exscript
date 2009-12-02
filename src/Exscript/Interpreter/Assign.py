@@ -25,6 +25,11 @@ class Assign(Token):
         lexer.expect(self, 'whitespace')
         lexer.expect(self, 'assign')
         lexer.expect(self, 'whitespace')
+
+        if self.varname.startswith('__'):
+            msg = 'Assignment to internal variable ' + self.varname
+            lexer.syntax_error(msg, self)
+
         self.expression = Expression.Expression(lexer, parser, parent)
         self.parent.define(**{self.varname: None})
 

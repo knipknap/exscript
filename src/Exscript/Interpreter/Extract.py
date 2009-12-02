@@ -83,7 +83,7 @@ class Extract(Token):
             self.variables[varname] = []
 
         if self.source is None:
-            buffer = self.parent.get('_buffer')
+            buffer = self.parent.get('__response__')
         else:
             buffer = self.source.value()
         #print "Buffer contains", buffer

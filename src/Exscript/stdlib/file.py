@@ -39,7 +39,7 @@ def read(scope, filename):
     file  = open(filename[0], 'r')
     lines = file.readlines()
     file.close()
-    scope.define(_buffer = lines)
+    scope.define(__response__ = lines)
     return lines
 
 def rm(scope, filenames):

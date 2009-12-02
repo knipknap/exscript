@@ -25,7 +25,7 @@ from IfCondition  import IfCondition
 from Loop         import Loop
 from Try          import Try
 
-varname_re = r'[a-zA-Z][\w_]*'
+varname_re = r'(?:__)?[a-zA-Z][\w_]*)(?:__)?'
 keywords = ['append',
             'as',
             'else',

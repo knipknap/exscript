@@ -74,7 +74,7 @@ def close(scope):
     """
     conn = scope.get('__connection__')
     conn.close(1)
-    scope.define(_buffer = conn.response)
+    scope.define(__response__ = conn.response)
     return True
 
 def exec_(scope, data):
@@ -96,7 +96,7 @@ def exec_(scope, data):
         conn.send(line)
         conn.expect_prompt()
         response += conn.response.split('\n')[1:]
-    scope.define(_buffer = response)
+    scope.define(__response__ = response)
     return True
 
 def execline(scope, data):
@@ -112,7 +112,7 @@ def execline(scope, data):
     for line in data:
         conn.execute(line)
         response += conn.response.split('\n')[1:]
-    scope.define(_buffer = response)
+    scope.define(__response__ = response)
     return True
 
 def send(scope, data):
@@ -150,7 +150,7 @@ def wait_for(scope, prompt):
     """
     conn = scope.get('__connection__')
     conn.expect(prompt)
-    scope.define(_buffer = conn.response)
+    scope.define(__response__ = conn.response)
     return True
 
 def set_prompt(scope, prompt = None):
