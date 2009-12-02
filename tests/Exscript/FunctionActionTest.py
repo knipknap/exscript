@@ -5,17 +5,19 @@ def suite():
     tests = ['testFunctionAction']
     return unittest.TestSuite(map(FunctionActionTest, tests))
 
-from Exscript import FunctionAction
+from Exscript import Exscript, FunctionAction, Connection, Host
 
-def do_nothing(data, **kwargs):
+def do_nothing(conn, data, **kwargs):
     if not kwargs.has_key('test_kwarg'):
         raise Exception('test_kwarg was not passed!')
     data['n_calls'] += 1
 
 class FunctionActionTest(unittest.TestCase):
     def testFunctionAction(self):
-        data   = {'n_calls': 0}
-        action = FunctionAction(do_nothing, data, test_kwarg = 1)
+        exscript = Exscript()
+        conn     = Connection(exscript, Host('dummy'))
+        data     = {'n_calls': 0}
+        action   = FunctionAction(do_nothing, conn, data, test_kwarg = 1)
         action.execute(None, None, None)
         self.assert_(data['n_calls'] == 1)
 
