@@ -54,10 +54,30 @@ def _update_host_info(scope, force = False):
 # public api
 ###############################################################
 def guess_os(scope):
+    """
+    Guesses the operating system of the connected host.
+
+    The recognition is based on the past conversation that has happened
+    on the host; Exscript looks for known patterns and maps them to specific
+    operating systems.
+
+    @rtype:  string
+    @return: The operating system.
+    """
     conn = scope.get('__connection__')
     return [conn.guess_os()]
 
 def model(scope, force = None):
+    """
+    Guesses the model of the connected host by executing one or more commands.
+    If force is True, the commands are re-issued even if the result is still
+    cached from a previous call.
+
+    @type  force: bool
+    @param force: Whether to ignore the cache.
+    @rtype:  string
+    @return: The model of the remote device.
+    """
     conn = scope.get('__connection__')
     if force is None:
         _update_host_info(scope, False)
@@ -66,6 +86,16 @@ def model(scope, force = None):
     return [conn.remote_info['model']]
 
 def os(scope, force = None):
+    """
+    Guesses the operating system of the connected host by executing one or more
+    commands. If force is True, the commands are re-issued even if the result
+    is still cached from a previous call.
+
+    @type  force: bool
+    @param force: Whether to ignore the cache.
+    @rtype:  string
+    @return: The operating system of the remote device.
+    """
     conn = scope.get('__connection__')
     if force is None:
         _update_host_info(scope, False)
@@ -74,6 +104,16 @@ def os(scope, force = None):
     return [conn.remote_info['os']]
 
 def vendor(scope, force = None):
+    """
+    Guesses the vendor of the connected host by executing one or more
+    commands. If force is True, the commands are re-issued even if the result
+    is still cached from a previous call.
+
+    @type  force: bool
+    @param force: Whether to ignore the cache.
+    @rtype:  string
+    @return: The vendor of the remote device.
+    """
     conn = scope.get('__connection__')
     if force is None:
         _update_host_info(scope, False)

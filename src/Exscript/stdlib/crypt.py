@@ -15,6 +15,20 @@
 import termconnect
 
 def otp(scope, password, seed, seqs):
+    """
+    Calculates a one-time password hash using the given password, seed, and
+    sequence number and returns it.
+    Uses the md4/sixword algorithm as supported by TACACS+ servers.
+
+    @type  password: string
+    @param password: A password.
+    @type  seed: string
+    @param seed: A username.
+    @type  seqs: int
+    @param seqs: A sequence number, or a list of sequence numbers.
+    @rtype:  string
+    @return: A hash, or a list of hashes.
+    """
     return [termconnect.otp.generate(password[0],
                                      seed[0],
                                      int(seq),
