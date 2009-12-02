@@ -50,11 +50,11 @@ class Exscript(object):
         self.domain            = kwargs.get('domain')
         self.verbose           = kwargs.get('verbose')
         self.logdir            = kwargs.get('logdir')
-        self.overwrite_logs    = kwargs.get('overwrite_logs')
-        self.delete_logs       = kwargs.get('delete_logs')
-        self.retries           = kwargs.get('retries')
-        self.login_retries     = kwargs.get('login_retries')
-        self.protocol_args     = kwargs.get('protocol_args')
+        self.overwrite_logs    = kwargs.get('overwrite_logs', False)
+        self.delete_logs       = kwargs.get('delete_logs',    False)
+        self.retries           = kwargs.get('retries',        0)
+        self.login_retries     = kwargs.get('login_retries',  0)
+        self.protocol_args     = kwargs.get('protocol_args',  {})
         self.completed         = 0
         self.total             = 0
         self.show_status_bar   = True
