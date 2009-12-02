@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-import Exscript
+import Template
 from Scope        import Scope
 from Append       import Append
 from Assign       import Assign
@@ -88,7 +88,7 @@ class Code(Scope):
         while 1:
             lexer.skip(['whitespace', 'newline'])
             if lexer.next_if('close_curly_bracket'):
-                if isinstance(parent, Exscript.Exscript):
+                if isinstance(parent, Template.Template):
                     break
                 self.add(Exscript.Exscript(lexer, parser, self))
             elif lexer.current_is('keyword', 'append'):

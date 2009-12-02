@@ -29,9 +29,9 @@ grammar_c = []
 for type, regex in grammar:
     grammar_c.append((type, re.compile(regex)))
 
-class Exscript(Scope):
+class Template(Scope):
     def __init__(self, lexer, parser, parent, *args, **kwargs):
-        Scope.__init__(self, 'Exscript', lexer, parser, parent, **kwargs)
+        Scope.__init__(self, 'Template', lexer, parser, parent, **kwargs)
         lexer.set_grammar(grammar_c)
         #print "Opening Scope:", lexer.token()
         buffer = ''

@@ -12,9 +12,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Exscript
-from parselib   import Token
-from Expression import Expression
+from Exscript.parselib import Token
+from Expression        import Expression
 
 class Fail(Token):
     def __init__(self, lexer, parser, parent):

@@ -13,7 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re, os, base64
-import Exscript
 from Exscript             import stdlib
 from Exscript.Interpreter import Parser
 from Exscript.FooLib      import Interact

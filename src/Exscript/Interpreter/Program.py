@@ -13,15 +13,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import copy
-from Exscript  import Exscript
-from Scope     import Scope
+from Template import Template
+from Scope    import Scope
 
 class Program(Scope):
     def __init__(self, lexer, parser, variables, **kwargs):
         Scope.__init__(self, 'Program', lexer, parser, None, **kwargs)
         self.variables      = variables
         self.init_variables = variables
-        self.add(Exscript(lexer, parser, self))
+        self.add(Template(lexer, parser, self))
 
 
     def init(self, *args, **kwargs):
@@ -41,7 +41,7 @@ class Program(Scope):
         output  = self.lexer.input[start:end] + '\n'
         output += (' ' * (char - start)) + '^\n'
         output += '%s in line %s' % (error, line)
-        raise type, 'Exscript: ' + typename  + ':\n' + output + '\n'
+        raise type, 'Template: ' + typename  + ':\n' + output + '\n'
 
 
     def syntax_error(self, sender, error):

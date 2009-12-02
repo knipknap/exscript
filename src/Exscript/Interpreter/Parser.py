@@ -14,8 +14,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import copy
 import types
-from parselib import Lexer
-from Program  import Program
+from Exscript.parselib import Lexer
+from Program           import Program
 
 class Parser(object):
     def __init__(self, **kwargs):
