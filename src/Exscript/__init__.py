@@ -17,7 +17,6 @@ from Connection     import Connection
 from Exscript       import Exscript
 from FunctionAction import FunctionAction
 from Host           import Host
-from Job            import Job
 
 import inspect 
 __all__ = [name for name, obj in locals().items()
