@@ -87,9 +87,9 @@ def model(scope, force = None):
 
 def os(scope, force = None):
     """
-    Guesses the operating system of the connected host by executing one or more
-    commands. If force is True, the commands are re-issued even if the result
-    is still cached from a previous call.
+    Guesses the operating system of the connected host by executing one or
+    more commands. If force is True, the commands are re-issued even if the
+    result is still cached from a previous call.
 
     @type  force: bool
     @param force: Whether to ignore the cache.
