@@ -29,22 +29,6 @@ class Scope(Token):
         self.exit_requested = 1
 
 
-    def syntax_error(self, sender, error):
-        self.parent.syntax_error(sender, error)
-
-
-    def generic_error(self, sender, typename, error):
-        self.parent.generic_error(sender, typename, error)
-
-
-    def exception(self, sender, type, typename, error):
-        self.parent.exception(sender, type, typename, error)
-
-
-    def runtime_error(self, sender, error):
-        self.parent.runtime_error(sender, error)
-
-
     def define(self, **kwargs):
         if self.parent is not None:
             return self.parent.define(**kwargs)

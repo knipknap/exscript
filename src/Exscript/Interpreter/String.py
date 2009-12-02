@@ -55,7 +55,7 @@ class String(Token):
                 break
             else:
                 type = lexer.token()[0]
-                parent.syntax_error(self, 'Expected string but got %s' % type)
+                lexer.syntax_error('Expected string but got %s' % type, self)
 
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, self.string)
@@ -70,49 +70,45 @@ class String(Token):
             return '\r'
         return char
 
-    # Tokens that include variables in a string may use this callback to
-    # make sure that the variable is already declared.
-    def variable_test_cb(self, match):
-        escape  = match.group(1)
-        varname = match.group(2)
-        if escape == '\\':
-            return
-        if not varname_re.match(varname):
-            self.start = self.start + self.string.find('$' + varname)
-            self.parent.runtime_error(self, '%s is not a variable name' % varname)
-        value = self.parent.get(varname)
-        if value is None:
-            self.start = self.start + self.string.find('$' + varname)
-            self.parent.generic_error(self, 'Undefined', 'Undefined variable %s' % varname)
-        elif hasattr(value, 'func_name'):
-            self.start = self.start + self.string.find('$' + varname)
-            self.parent.generic_error(self, 'Undefined', '%s is not a variable name' % varname)
-        return match.group(0)
-
+    def _variable_error(self, field, msg):
+        self.start += self.data.find(field)
+        self.end    = self.start + len(field)
+        self.lexer.runtime_error(msg, self)
 
     # Tokens that include variables in a string may use this callback to
     # substitute the variable against its value.
     def variable_sub_cb(self, match):
+        field   = match.group(0)
         escape  = match.group(1)
         varname = match.group(2)
+        value   = self.parent.get(varname)
+
+        # Check the variable name syntax.
         if escape == '\\':
-            return '$' + varname
+            return field
         if not varname_re.match(varname):
-            self.start = self.start + self.string.find('$' + varname)
-            self.parent.runtime_error(self, '%s is not a variable name' % varname)
-        value = self.parent.get(varname)
+            msg = '%s is not a variable name' % repr(varname)
+            self._variable_error(field, msg)
+
+        # Check the variable value.
         if value is None:
-            self.start = self.start + self.string.find('$' + varname)
-            self.parent.runtime_error(self, 'Undefined variable %s' % varname)
+            msg = 'Undefined variable %s' % repr(varname)
+            self._variable_error(field, msg)
         elif hasattr(value, 'func_name'):
-            self.start = self.start + self.string.find('$' + varname)
-            self.parent.runtime_error(self, '%s is not a variable name' % varname)
+            msg = '%s is a function, not a variable name' % repr(varname)
+            self._variable_error(field, msg)
         elif isinstance(value, list):
             if len(value) > 0:
                 value = '\n'.join([str(v) for v in value])
             else:
                 value = ''
         return value
+
+    # Tokens that include variables in a string may use this callback to
+    # make sure that the variable is already declared.
+    def variable_test_cb(self, match):
+        self.variable_sub_cb(match)
+        return match.group(0)
 
     def value(self):
         return [string_re.sub(self.variable_sub_cb, self.string)]

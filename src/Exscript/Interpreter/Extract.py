@@ -29,7 +29,7 @@ class Extract(Token):
 
         if parser.no_prompt: 
             msg = "'extract' keyword does not work with --no-prompt"
-            parent.syntax_error(self, msg)
+            lexer.syntax_error(msg, self)
 
         # First expect a regular expression.
         lexer.expect(self, 'keyword', 'extract')
@@ -44,7 +44,8 @@ class Extract(Token):
             self.append = True
         else:
             type, token = lexer.token()
-            parent.syntax_error(self, 'Expected "as" or "into" but got %s' % token)
+            msg         = 'Expected "as" or "into" but got %s' % token
+            lexer.syntax_error(msg, self)
 
         # Expect a list of variable names.
         while 1:
@@ -53,7 +54,7 @@ class Extract(Token):
             type, token = lexer.token()
             lexer.expect(self, 'varname')
             if self.variables.has_key(token):
-                parent.syntax_error(self, 'Duplicate variable name %s')
+                lexer.syntax_error('Duplicate variable name %s', self)
             self.varnames.append(token)
             self.variables[token] = []
 
@@ -66,7 +67,7 @@ class Extract(Token):
         if len(self.varnames) != self.regex.n_groups:
             count = (len(self.varnames), self.regex.n_groups)
             error = '%s variables, but regex has %s groups' % count
-            parent.syntax_error(self, error)
+            lexer.syntax_error(error, self)
 
         # Handle the "from" keyword.
         lexer.skip('whitespace')
@@ -107,7 +108,7 @@ class Extract(Token):
                     # groups in it than the number of variables.
                     msg  = 'Extract: %s variables, but regular expression' % i
                     msg += '\ncontains only %s groups.' % (i - 1)
-                    self.parent.runtime_error(self, msg)
+                    self.lexer.runtime_error(msg, self)
                 self.variables[varname].append(value)
 
 

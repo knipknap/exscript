@@ -23,7 +23,6 @@ class Program(Scope):
         self.init_variables = variables
         self.add(Template(lexer, parser, self))
 
-
     def init(self, *args, **kwargs):
         for key in kwargs:
             if key.find('.') >= 0 or key.startswith('_'):
@@ -32,33 +31,6 @@ class Program(Scope):
                 self.init_variables[key] = kwargs[key]
             else:
                 self.init_variables[key] = [kwargs[key]]
-
-    def error(self, char, type, typename, error):
-        if type is None:
-            type = Exception
-        line       = self.lexer._get_line_number_from_char(char)
-        start, end = self.lexer._get_line_position_from_char(char)
-        output  = self.lexer.input[start:end] + '\n'
-        output += (' ' * (char - start)) + '^\n'
-        output += '%s in line %s' % (error, line)
-        raise type, 'Template: ' + typename  + ':\n' + output + '\n'
-
-
-    def syntax_error(self, sender, error):
-        self.error(sender.start, None, 'Syntax error', error)
-
-
-    def generic_error(self, sender, typename, error):
-        self.error(sender.start, None, typename, error)
-
-
-    def exception(self, sender, type, typename, error):
-        self.error(sender.start, type, typename, error)
-
-
-    def runtime_error(self, sender, error):
-        self.generic_error(sender, 'Runtime error', error)
-
 
     def execute(self, *args, **kwargs):
         self.variables = copy.copy(self.init_variables)

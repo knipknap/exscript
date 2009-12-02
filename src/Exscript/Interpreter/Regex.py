@@ -44,7 +44,7 @@ class Regex(String):
             else:
                 modifier = lexer.token()[1]
                 error    = 'Invalid regular expression modifier "%s"' % modifier
-                parent.syntax_error(self, error)
+                lexer.syntax_error(error, self)
         lexer.restore_grammar()
 
         # Compile the regular expression.
@@ -52,7 +52,7 @@ class Regex(String):
             re.compile(self.string, self.flags)
         except Exception, e:
             error = 'Invalid regular expression %s: %s' % (repr(self.string), e)
-            parent.syntax_error(self, error)
+            lexer.syntax_error(error, self)
 
     def _escape(self, token):
         char = token[1]

@@ -25,7 +25,7 @@ class Variable(Token):
     def value(self):
         val = self.parent.get(self.varname)
         if val is None:
-             self.parent.runtime_error(self, 'Undefined variable %s' % name)
+             self.lexer.runtime_error('Undefined variable %s' % name, self)
         return val
 
 

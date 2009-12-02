@@ -28,7 +28,7 @@ class FunctionCall(Token):
         self.funcname = token[:-1]
         function      = self.parent.get(self.funcname)
         if function is None:
-            parent.syntax_error(self, 'Undefined function %s' % self.funcname)
+            lexer.syntax_error('Undefined function %s' % self.funcname, self)
 
         # Parse the argument list.
         type, token = lexer.token()
@@ -39,7 +39,7 @@ class FunctionCall(Token):
             type, token = lexer.token()
             if not lexer.next_if('comma') and not lexer.current_is('close_bracket'):
                 error = 'Expected separator or argument list end but got %s' % type
-                parent.syntax_error(self, error)
+                lexer.syntax_error(error, self)
 
         self.mark_end()
 
@@ -55,5 +55,5 @@ class FunctionCall(Token):
         argument_values = [arg.value() for arg in self.arguments]
         function        = self.parent.get(self.funcname)
         if function is None:
-            self.parent.runtime_error(self, 'Undefined function %s' % self.funcname)
+            self.lexer.runtime_error('Undefined function %s' % self.funcname, self)
         return function(self.parent, *argument_values)

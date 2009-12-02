@@ -109,16 +109,16 @@ class Code(Scope):
                 self.add(Enter(lexer, parser, self))
             elif lexer.current_is('keyword', 'else'):
                 if not isinstance(parent, Code):
-                    parent.syntax_error(self, '"end" without a scope start')
+                    lexer.syntax_error('"end" without a scope start', self)
                 break
             elif lexer.next_if('keyword', 'end'):
                 if not isinstance(parent, Code):
-                    parent.syntax_error(self, '"end" without a scope start')
+                    lexer.syntax_error('"end" without a scope start', self)
                 lexer.skip(['whitespace', 'newline'])
                 break
             elif lexer.current_is('open_function_call'):
                 self.add(FunctionCall(lexer, parser, self))
             else:
                 type, token = lexer.token()
-                parent.syntax_error(self, 'Unexpected %s "%s"' % (type, token))
+                lexer.syntax_error('Unexpected %s "%s"' % (type, token), self)
         lexer.restore_grammar()

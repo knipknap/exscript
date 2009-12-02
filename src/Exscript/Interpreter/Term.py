@@ -31,7 +31,7 @@ class Term(Token):
         type, token = lexer.token()
         if lexer.current_is('varname'):
             if not parent.is_defined(token):
-                parent.generic_error(self, 'Error', 'Undeclared variable %s' % token)
+                lexer.error('Undeclared variable %s' % token, self)
             self.term = Variable(lexer, parser, parent)
         elif lexer.current_is('open_function_call'):
             self.term = FunctionCall(lexer, parser, parent)
@@ -50,7 +50,7 @@ class Term(Token):
         elif lexer.current_is('regex_delimiter'):
             self.term = Regex(lexer, parser, parent)
         else:
-            parent.syntax_error(self, 'Expected term but got %s' % type)
+            lexer.syntax_error('Expected term but got %s' % type, self)
         self.mark_end()
 
 

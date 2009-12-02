@@ -51,7 +51,8 @@ class ExpressionNode(Token):
            not lexer.next_if('comparison') and \
            not lexer.next_if('regex_delimiter'):
             self.mark_end()
-            parent.syntax_error(self, 'Expected operator but got %s' % self.op_type)
+            msg = 'Expected operator but got %s' % self.op_type
+            lexer.syntax_error(msg, self)
 
         # Expect the second term.
         self.rgt = ExpressionNode(lexer, parser, parent, self)
@@ -108,11 +109,11 @@ class ExpressionNode(Token):
             try:
                 lft = int(lft)
             except:
-                self.parent.runtime_error(self.lft, error)
+                self.lexer.runtime_error(error, self.lft)
             try:
                 rgt = int(rgt)
             except:
-                self.parent.runtime_error(self.rgt, error)
+                self.lexer.runtime_error(error, self.rgt)
 
         # Two-term expressions.
         if self.op == 'is':
@@ -125,7 +126,7 @@ class ExpressionNode(Token):
                 regex.match(str(lft))
             except Exception, e:
                 error = 'Right hand operator is not a regular expression'
-                self.parent.runtime_error(self.rgt, error)
+                self.lexer.runtime_error(error, self.rgt)
             for line in lft_lst:
                 if regex.search(str(line)):
                     return [1]

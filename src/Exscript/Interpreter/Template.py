@@ -67,7 +67,7 @@ class Template(Scope):
                     buffer = ''
             else:
                 type = lexer.token()[0]
-                parent.syntax_error(self, 'Unexpected %s' % type)
+                lexer.syntax_error('Unexpected %s' % type, self)
         lexer.restore_grammar()
 
 

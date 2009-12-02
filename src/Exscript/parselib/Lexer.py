@@ -94,6 +94,9 @@ class Lexer(object):
         output += '%s in %s:%s' % (error, self.filename, line_number)
         raise Exception('\n' + error_type + ':\n' + output)
 
+    def error(self, error, sender = None):
+        self._error('Error', error, sender)
+
     def syntax_error(self, error, sender = None):
         self._error('Syntax error', error, sender)
 

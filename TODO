@@ -1,3 +1,2 @@
-* Get rid of Scope.*_error() methods.
 * Add more tests.
 * "make dist" should pull dependencies.
