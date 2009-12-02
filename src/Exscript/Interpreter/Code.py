@@ -90,7 +90,7 @@ class Code(Scope):
             if lexer.next_if('close_curly_bracket'):
                 if isinstance(parent, Template.Template):
                     break
-                self.add(Exscript.Exscript(lexer, parser, self))
+                self.add(Template.Template(lexer, parser, self))
             elif lexer.current_is('keyword', 'append'):
                 self.add(Append(lexer, parser, self))
             elif lexer.current_is('keyword', 'extract'):
