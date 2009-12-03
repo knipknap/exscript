@@ -23,6 +23,21 @@ class Account(Trackable):
     def __init__(self, name, password, password2 = None, **kwargs):
         """
         Constructor.
+
+        The authorization password is only required on hosts that
+        separate the authentication from the authorization procedure.
+        If an authorization password is not given, it defaults to the
+        same value as the authentication password.
+
+        @type  name: string
+        @param name: A username.
+        @type  password: string
+        @param password: The authentication password.
+        @type  password2: string
+        @param password2: The authorization password, if required.
+        @type  kwargs: dict
+        @param kwargs: The following options are supported:
+            - ssh_key_file: the key file that is used (SSH only).
         """
         Trackable.__init__(self)
         self.manager                = None

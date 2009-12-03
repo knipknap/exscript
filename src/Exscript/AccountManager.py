@@ -23,6 +23,9 @@ class AccountManager(object):
     def __init__(self, accounts = None):
         """
         Constructor.
+
+        @type  accounts: Account|list[Account]
+        @param accounts: Passed to add_account()
         """
         self.accounts          = []
         self.unlocked_accounts = []
@@ -63,6 +66,9 @@ class AccountManager(object):
 
 
     def n_accounts(self):
+        """
+        Returns the number of accounts that are currently in the pool.
+        """
         return len(self.accounts)
 
 
