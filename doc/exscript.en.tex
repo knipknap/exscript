@@ -165,6 +165,9 @@ other_user=another_password
 somebody=yet_another_password
 \end{lstlisting}
 
+Note that the password needs to be base64 encrypted, just putting plain
+passwords there will NOT work.
+
 \item Save the file. It is assumed that you are aware of the security 
 implications of saving your login passwords in a text file.
 \item Start Exscript with the "--account-pool FILE" option. For example:
@@ -669,7 +672,7 @@ interface:
 \begin{lstlisting}
 show ip int brie {
   extract /^(POS)\S+/ as pos_interfaces
-  fail "No POS-Interface found!" if "POS" not in pos_interfaces
+  fail "No POS interface found!" if "POS" not in pos_interfaces
 }
 \end{lstlisting}
 
