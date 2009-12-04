@@ -36,7 +36,7 @@ def run(users, hosts, func, *args, **kwargs):
     exscript.add_account(users)
     exscript.run(hosts, func, *args, **kwargs)
 
-def quickrun(hosts, func, *data, **kwargs):
+def quickrun(hosts, func, *args, **kwargs):
     """
     A wrapper around run() that creates the account by asking the user
     for entering his login information.
@@ -50,4 +50,4 @@ def quickrun(hosts, func, *data, **kwargs):
     @type  kwargs: dict
     @param kwargs: Passed on to the callback.
     """
-    run(read_login(), hosts, func, *data, **kwargs)
+    run(read_login(), hosts, func, *args, **kwargs)
