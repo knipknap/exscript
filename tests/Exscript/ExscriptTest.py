@@ -5,9 +5,9 @@ def suite():
     tests = ['testStart', 'testIOSDummy']
     return unittest.TestSuite(map(ExscriptTest, tests))
 
-from termconnect.Dummy        import Transport
-from Exscript                 import Exscript, Connection, Account
-from Exscript.util.decorators import run_template
+from termconnect.Dummy import Transport
+from Exscript          import Exscript, Connection, Account
+from Exscript.util     import template
 
 test_dir = '../templates'
 
@@ -27,12 +27,12 @@ def ios_dummy_cb(conn, **kwargs):
     # Warning: Assertions raised in this function happen in a subprocess!
     log       = Log()
     test_name = conn.get_host().get_name()
-    template  = os.path.join(test_dir, test_name, 'test.exscript')
+    tmpl      = os.path.join(test_dir, test_name, 'test.exscript')
     expected  = os.path.join(test_dir, test_name, 'expected')
     conn.set_on_data_received_cb(log.collect)
     conn.open()
     conn.authenticate(wait = True)
-    run_template(conn, template, slot = 10)
+    template.eval(conn, tmpl, slot = 10)
     #open(expected, 'w').write(log.data)
     assert log.data == open(expected).read()
 

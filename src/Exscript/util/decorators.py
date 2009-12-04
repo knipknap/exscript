@@ -12,10 +12,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import re, os, base64
-from Exscript             import stdlib
-from Exscript.Interpreter import Parser
-from Exscript.FooLib      import Interact
 
 def os_function_mapper(conn, map, *args, **kwargs):
     """
@@ -99,43 +95,3 @@ def autologin(function, wait = True):
         function(conn, *args, **kwargs)
         conn.close(force = True)
     return connect(decorated)
-
-def _builtin_vars(conn = None, filename = 'undefined'):
-    hostname = conn and conn.get_host().get_address() or 'undefined'
-    builtin  = dict(__filename__   = [filename],
-                    __hostname__   = [hostname],
-                    __connection__ = conn)
-    return builtin
-
-def _compile_template(template, parser_kwargs, **kwargs):
-    # Init the parser and compile the template.
-    parser = Parser(**parser_kwargs)
-    parser.define_object(**kwargs)
-    parser.define_object(**stdlib.functions)
-    return parser.parse(template)
-
-def test_template(template, **kwargs):
-    kwargs.update(_builtin_vars())
-    return _compile_template(template, {}, **kwargs)
-
-def _run_tmpl(conn, template, parser_kwargs, **kwargs):
-    compiled = _compile_template(template, parser_kwargs, **kwargs)
-    return compiled.execute()
-
-def run_template_string(conn, string, strip_command = True, **kwargs):
-    kwargs.update(_builtin_vars(conn))
-    return _run_tmpl(conn, string, {'strip_command': strip_command}, **kwargs)
-
-def paste_template_string(conn, string, **kwargs):
-    kwargs.update(_builtin_vars(conn))
-    return _run_tmpl(conn, string, {'no_prompt': True}, **kwargs)
-
-def run_template(conn, filename, strip_command = True, **kwargs):
-    kwargs.update(_builtin_vars(conn, filename))
-    template = open(filename, 'r').read()
-    return _run_tmpl(conn, template, {'strip_command': strip_command}, **kwargs)
-
-def paste_template(conn, filename, **kwargs):
-    kwargs.update(_builtin_vars(conn, filename))
-    template = open(filename, 'r').read()
-    return _run_tmpl(conn, template, {'no_prompt': True}, **kwargs)
