@@ -67,7 +67,7 @@ def eval(conn, string, strip_command = True, **kwargs):
 
     if strip_command is True, the first line of each response that is
     received after any command sent by the template is stripped. For
-    example, consider the following template:
+    example, consider the following template::
 
         ls -1{extract /(\S+)/ as filenames}
         {loop filenames as filename}
@@ -75,7 +75,7 @@ def eval(conn, string, strip_command = True, **kwargs):
         {end}
 
     If strip_command is False, the response, (and hence, the `filenames'
-    variable) contains the following:
+    variable) contains the following::
 
         ls -1
         myfile

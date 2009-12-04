@@ -12,14 +12,28 @@ class utilTest(ExscriptTest):
         from Exscript            import Connection
         from Exscript.util.match import first_match, any_match
 
-        test = '''hello
-        world
-        hello world'''
-        result = first_match(test, r'(he)llo')
-        self.assert_(result == 'he', result)
 
-        result = any_match(test, r'(ello).*')
-        self.assert_(result == ['ello', 'ello'], result)
+        # Test "first_match".
+        string = 'my test'
+        self.assert_(first_match(string, r'aaa') is None)
+        self.assert_(first_match(string, r'\S+') == 'my test')
+        self.assert_(first_match(string, r'(aaa)') is None)
+        self.assert_(first_match(string, r'(\S+)') == 'my')
+        self.assert_(first_match(string, r'(aaa) (\S+)') == (None, None))
+        self.assert_(first_match(string, r'(\S+) (\S+)') == ('my', 'test'))
+
+        multi_line = 'hello\nworld\nhello world'
+        self.assert_(first_match(multi_line, r'(he)llo') == 'he')
+
+        # Test "any_match".
+        string = 'one uno\ntwo due'
+        self.assert_(any_match(string, r'aaa')   == [])
+        self.assert_(any_match(string, r'\S+')   == ['one uno', 'two due'])
+        self.assert_(any_match(string, r'(aaa)') == [])
+        self.assert_(any_match(string, r'(\S+)') == ['one', 'two'])
+        self.assert_(any_match(string, r'(aaa) (\S+)') == [])
+        expected = [('one', 'uno'), ('two', 'due')]
+        self.assert_(any_match(string, r'(\S+) (\S+)') == expected)
 
     def testDecorators(self):
         from Exscript.util.decorators import connect, autologin

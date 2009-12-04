@@ -20,22 +20,98 @@ def _first_match(string, compiled):
     if match is None and compiled.groups <= 1:
         return None
     elif match is None:
-        return [None for i in range(0, compiled.groups)]
+        return tuple(None for i in range(0, compiled.groups))
     elif compiled.groups == 0:
         return string
     elif compiled.groups == 1:
         return match.groups(1)[0]
     else:
-        return [match.groups(i)[0] for i in range(1, compiled.groups + 1)]
-
+        return match.groups(0)
 
 def first_match(string, regex, flags = re.M):
+    """
+    Matches the given string against the given regex.
+
+      - If no match is found and the regular expression has zero or one
+      groups, this function returns None.
+
+      - If no match is found and the regular expression has more than one
+      group, this function returns a tuple of None. The number of elements
+      in the tuple equals the number of groups in the regular expression.
+
+      - If a match is found and the regular expression has no groups,
+      the entire string is returned.
+
+      - If a match is found and the regular expression has one group,
+      the matching string from the group is returned.
+
+      - If a match is found and the regular expression has multiple groups,
+      a tuple containing the matching strings from the groups is returned.
+
+    This behavior ensures that the following assignments can never fail::
+
+       foo   = 'my test'
+       match = first_match(foo, r'aaa')         # Returns None
+       match = first_match(foo, r'\S+')         # Returns 'my test'
+       match = first_match(foo, r'(aaa)')       # Returns None
+       match = first_match(foo, r'(\S+)')       # Returns 'my'
+       match = first_match(foo, r'(aaa) (\S+)') # Returns (None, None)
+       match = first_match(foo, r'(\S+) (\S+)') # Returns ('my', 'foo')
+
+    @type  string: string|Connection
+    @param string: The string that is matched, or a Connection object.
+    @type  regex: string
+    @param regex: A regular expression.
+    @rtype:  string|tuple
+    @return: A match, or a tuple of matches.
+    """
     if isinstance(string, Connection):
         string = string.response
     return _first_match(string, re.compile(regex, flags))
 
-
 def any_match(string, regex):
+    """
+    Matches the given string against the given regex.
+
+      - If no match is found, this function returns an empty list.
+
+      - If a match is found and the regular expression has no groups,
+      a list of matching lines returned.
+
+      - If a match is found and the regular expression has one group,
+      a list of matching strings is returned.
+
+      - If a match is found and the regular expression has multiple groups,
+      a list containing tuples of matching strings is returned.
+
+    This behavior ensures that the following can never fail::
+
+        foo = '1 uno\\n2 due'
+        for m in any_match(foo, r'aaa'):         # Returns []
+            print m
+
+        for m in any_match(foo, r'\S+'):         # Returns ['1 uno', '2 due']
+            print m
+
+        for m in any_match(foo, r'(aaa)'):       # Returns []
+            print m
+
+        for m in any_match(foo, r'(\S+)'):       # Returns ['1', '2']
+            print m
+
+        for one, two in any_match(foo, r'(aaa) (\S+)'): # Returns []
+            print m
+
+        for one, two in any_match(foo, r'(\S+) (\S+)'): # Returns [('1', 'uno'), ('2', 'due')]
+            print m
+
+    @type  string: string|Connection
+    @param string: The string that is matched, or a Connection object.
+    @type  regex: string
+    @param regex: A regular expression.
+    @rtype:  list[string|tuple]
+    @return: A list of strings, or a list of tuples.
+    """
     if isinstance(string, Connection):
         string = string.response
     compiled = re.compile(regex)

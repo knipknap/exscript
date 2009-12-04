@@ -19,7 +19,7 @@ def os_function_mapper(conn, map, *args, **kwargs):
     conn.guess_os() function to determine the operating system
     that is running on the connected host.
     It then uses the given map to look up a function name that corresponds
-    to the operating system, and calls it. Example:
+    to the operating system, and calls it. Example::
 
         def ios(conn):
             pass # Do something.
@@ -54,7 +54,7 @@ def os_function_mapper(conn, map, *args, **kwargs):
 def connect(function):
     """
     Wraps the given function such that the connection is opened before
-    calling it. Example:
+    calling it. Example::
 
         def my_func(conn):
             pass # Do something.
@@ -77,7 +77,7 @@ def autologin(function, wait = True):
         - the connection is opened, and
         - the user is logged in
 
-    before calling calling it. Example:
+    before calling calling it. Example::
 
         def my_func(conn):
             pass # Do something.

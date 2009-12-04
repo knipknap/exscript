@@ -40,7 +40,7 @@ def in_network(scope, prefixes, destination, default_pfxlen = [24]):
     needle = ipv4.ip2int(destination[0])
     for prefix in prefixes:
         network, pfxlen = ipv4.parse_prefix(prefix, default_pfxlen[0])
-        mask            = ipv4.pfxlen2mask(pfxlen)
+        mask            = ipv4.pfxlen2mask_int(pfxlen)
         if needle & mask == network & mask:
             return [True]
     return [False]
@@ -94,7 +94,7 @@ def pfxmask(scope, ips, pfxlen):
     @rtype:  string
     @return: The mask(s) that result(s) from converting the prefix length.
     """
-    mask = ipv4.pfxlen2mask(pfxlen[0])
+    mask = ipv4.pfxlen2mask_int(pfxlen[0])
     return [ipv4.int2ip(ipv4.ip2int(ip) & mask) for ip in ips]
 
 def remote_ip(scope, local_ips):
