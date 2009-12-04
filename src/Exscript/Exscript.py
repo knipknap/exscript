@@ -25,10 +25,9 @@ False = 0
 
 class Exscript(object):
     """
-    API for accessing all of Exscript's functions programmatically.
-    This may still need some cleaning up, so don't count on API stability 
-    just yet.
+    The heart of Exscript. It manages accounts, connections, and threads.
     """
+
     def __init__(self, **kwargs):
         """
         Constructor.
