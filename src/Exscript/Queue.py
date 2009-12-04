@@ -155,10 +155,10 @@ class Queue(object):
             raise Exception('ERROR: Unsupported protocol "%s".' % name)
         elif not isinstance(module, str):
             return module
-        return __import__('termconnect.' + module,
+        return __import__('protocols.' + module,
                           globals(),
                           locals(),
-                          module).Transport
+                          module).__dict__[module]
 
 
     def add_protocol(self, name, theclass):
@@ -166,12 +166,12 @@ class Queue(object):
         Registers a new protocol in addition to the built-in
         'ssh', 'telnet', and 'dummy' adapters.
         The given adapter must implement the same interface as
-        termconnect.Transport. Note that you need to pass a class,
+        protocols.Transport. Note that you need to pass a class,
         not an instance.
 
         @type  name: str
         @param name: The protocol name
-        @type  theclass: termconnect.Transport
+        @type  theclass: protocols.Transport
         @param theclass: The class that handles the protocol.
         """
         self.protocol_map[name] = theclass

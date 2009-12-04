@@ -22,7 +22,7 @@ that make it a lot easier to use and understand for non-developers.
       package_dir      = {'': 'src'},
       packages         = [p for p in find_packages('src')],
       scripts          = ['exscript'],
-      install_requires = ['termconnect'],
+      install_requires = [],
       keywords         = 'exscript telnet ssh automate automation library',
       url              = 'http://code.google.com/p/exscript/',
       classifiers      = [

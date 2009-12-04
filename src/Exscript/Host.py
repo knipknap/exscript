@@ -160,7 +160,7 @@ class Host(object):
               information on how the virtual device shall respond to
               commands. For more information please refer to the
               documentation of
-              termconnect.Dummy.load_command_handler_from_file().
+              protocols.Dummy.load_command_handler_from_file().
 
         @type  protocol: string
         @param protocol: The protocol name.

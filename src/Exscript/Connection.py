@@ -20,12 +20,12 @@ False = 0
 
 class Connection(Trackable):
     """
-    This class is a decorator for termconnect.Transport objects that
+    This class is a decorator for protocols.Transport objects that
     adds thread safety by adding locking to the authenticate() and
     authorize() functions.
     It also provides access to the associated Exscript and Host instances.
 
-    For complete documentation, please refer to the termconnect.Transport
+    For complete documentation, please refer to the protocols.Transport
     documentation.
     """
 
@@ -172,8 +172,8 @@ class Connection(Trackable):
 
     def authenticate(self, account = None, wait = False, lock = True):
         """
-        Like termconnect.Transport, but makes sure to lock/release the
-        account while it is used.
+        Like protocols.Transport.authenticate(), but makes sure to
+        lock/release the account while it is used.
         If an account is not given, one is acquired from the account
         manager.
         Returns the account that was used to log in.

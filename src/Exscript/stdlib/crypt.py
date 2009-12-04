@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import termconnect
+from Exscript import protocols
 
 def otp(scope, password, seed, seqs):
     """
@@ -29,9 +29,9 @@ def otp(scope, password, seed, seqs):
     @rtype:  string
     @return: A hash, or a list of hashes.
     """
-    return [termconnect.otp.generate(password[0],
-                                     seed[0],
-                                     int(seq),
-                                     1,
-                                     'md4',
-                                     'sixword')[0] for seq in seqs]
+    return [protocols.otp.generate(password[0],
+                                   seed[0],
+                                   int(seq),
+                                   1,
+                                   'md4',
+                                   'sixword')[0] for seq in seqs]

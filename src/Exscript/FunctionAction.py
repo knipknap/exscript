@@ -14,7 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, traceback
 from SpiffWorkQueue        import Action
-from termconnect.Exception import LoginFailure
+from protocols.Exception   import LoginFailure
 from Interpreter.Exception import FailException
 
 True  = 1

@@ -5,9 +5,9 @@ def suite():
     tests = ['testStart', 'testIOSDummy']
     return unittest.TestSuite(map(QueueTest, tests))
 
-from termconnect.Dummy import Transport
-from Exscript          import Queue, Connection, Account
-from Exscript.util     import template
+from Exscript           import Queue, Connection, Account
+from Exscript.util      import template
+from Exscript.protocols import Dummy
 
 test_dir = '../templates'
 
@@ -36,21 +36,21 @@ def ios_dummy_cb(conn, **kwargs):
     #open(expected, 'w').write(log.data)
     assert log.data == open(expected).read()
 
-class IOSDummy(Transport):
+class IOSDummy(Dummy):
     def __init__(self, *args, **kwargs):
         #kwargs['echo'] = True
-        Transport.__init__(self, *args, **kwargs)
+        Dummy.__init__(self, *args, **kwargs)
 
     def connect(self, test_name, *args, **kwargs):
         filename = os.path.join(test_dir, test_name, 'pseudodev.py')
         self.load_command_handler_from_file(filename)
-        return Transport.connect(self, test_name, *args, **kwargs)
+        return Dummy.connect(self, test_name, *args, **kwargs)
 
 class QueueTest(unittest.TestCase):
     def setUp(self):
         user          = os.environ.get('USER')
         account       = Account(user, '')
-        self.exscript = Queue()
+        self.exscript = Queue(verbose = 0)
         self.exscript.add_account(account)
         self.exscript.add_protocol('ios', IOSDummy)
 

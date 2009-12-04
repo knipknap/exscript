@@ -7,7 +7,7 @@ DISTDIR=/pub/code/releases/$(NAME)
 ###################################################################
 # Project-specific targets.
 ###################################################################
-DEPENDS=termconnect spiff-signal spiff-workqueue exscript
+DEPENDS=spiff-signal spiff-workqueue exscript
 
 svn-environment:
 	mkdir -p $(NAME)
