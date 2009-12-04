@@ -644,9 +644,7 @@ For example, the following function instructs \product to wait for 10 seconds:
 {sys.wait(10)}
 \end{lstlisting}
 
-The following functions are currently provided: 
-
-\input{stdlib.tex}
+For a list of supported functions please refer to appendix \ref{stdlib}.
 
 
 \subsection{Exiting A Script}
@@ -866,4 +864,12 @@ To fix this, make sure that the conversation with the remote host does
 not include any strings that are incorrectly recognized as prompts. You can 
 do this by using the ``connection.set\_prompt(...)'' function as explained 
 in the sections above. 
+
+
+\begin{appendix}
+\section{The Standard Library}
+\label{stdlib}
+\input{stdlib.tex}
+\end{appendix}
+
 \end{document}

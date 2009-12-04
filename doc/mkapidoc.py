@@ -2,33 +2,27 @@
 # Generates the API documentation.
 import os, re, sys
 
+project  = 'Exscript'
+base_dir = os.path.join('..', 'src', project)
 doc_dir  = 'api'
-doc_file = os.path.join(doc_dir, 'Exscript.py')
-files    = ['../src/Exscript/Job.py',
-            '../src/Exscript/Exscript.py',
-            '../src/Exscript/TemplateRunner.py',
-            '../src/Exscript/Account.py'] # Order matters - can't resolve inheritance otherwise.
-classes  = [os.path.splitext(os.path.basename(file))[0] for file in files]
-classes  = ['(?:Exscript.)?' + cl for cl in classes]
 
-# Concatenate the content of all files into one file.
+# Create the documentation directory.
 if not os.path.exists(doc_dir):
     os.makedirs(doc_dir)
-remove_re = re.compile(r'^from (' + '|'.join(classes) + r') * import .*')
-fp_out    = open(doc_file, 'w')
-for file in files:
-    fp_in = open(file, 'r')
-    for line in fp_in:
-        if not remove_re.match(line):
-            fp_out.write(line)
-    fp_in.close()
-fp_out.close()
 
-os.system('epydoc ' + ' '.join(['--html',
-                                '--parse-only',
+# Generate the API documentation.
+os.system('epydoc ' + ' '.join(['--name', project,
+                                '--exclude Exscript.Interpreter',
+                                '--exclude Exscript.helpers',
+                                '--exclude Exscript.FunctionAction',
+                                '--exclude Exscript.FooLib',
+                                '--exclude Exscript.AccountManager',
+                                '--exclude Exscript.stdlib',
+                                '--html',
                                 '--no-private',
                                 '--no-source',
                                 '--no-frames',
-                                '--inheritance=grouped',
+                                '--inheritance=included',
                                 '-v',
-                                '-o %s' % doc_dir, doc_file]))
+                                '-o %s' % doc_dir,
+                                base_dir]))

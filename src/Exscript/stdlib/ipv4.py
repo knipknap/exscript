@@ -28,8 +28,8 @@ def in_network(scope, prefixes, destination, default_pfxlen = [24]):
     If a list of prefixes is passed, this function returns True only if
     the given destination is in ANY of the given prefixes.
 
-    @type  prefix: string
-    @param prefix: A prefix, or a list of IP prefixes.
+    @type  prefixes: string
+    @param prefixes: A prefix, or a list of IP prefixes.
     @type  destination: string
     @param destination: An IP address.
     @type  default_pfxlen: int
