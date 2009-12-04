@@ -23,7 +23,7 @@ from helpers        import get_hosts_from_name
 True  = 1
 False = 0
 
-class Exscript(object):
+class Queue(object):
     """
     The heart of Exscript. It manages accounts, connections, and threads.
     """
@@ -35,7 +35,7 @@ class Exscript(object):
         @type  kwargs: dict
         @param kwargs: The following options are supported:
             - domain: The default domain of the contacted hosts.
-            - verbose: The verbosity level of Exscript.
+            - verbose: The verbosity level.
             - max_threads: The maximum number of concurrent threads, default 1
             - retries: The number of retries, default 0.
             - login_retries: The number of login retries, default 0.

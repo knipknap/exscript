@@ -3,10 +3,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 def suite():
     tests = ['testStart', 'testIOSDummy']
-    return unittest.TestSuite(map(ExscriptTest, tests))
+    return unittest.TestSuite(map(QueueTest, tests))
 
 from termconnect.Dummy import Transport
-from Exscript          import Exscript, Connection, Account
+from Exscript          import Queue, Connection, Account
 from Exscript.util     import template
 
 test_dir = '../templates'
@@ -46,11 +46,11 @@ class IOSDummy(Transport):
         self.load_command_handler_from_file(filename)
         return Transport.connect(self, test_name, *args, **kwargs)
 
-class ExscriptTest(unittest.TestCase):
+class QueueTest(unittest.TestCase):
     def setUp(self):
         user          = os.environ.get('USER')
         account       = Account(user, '')
-        self.exscript = Exscript()
+        self.exscript = Queue()
         self.exscript.add_account(account)
         self.exscript.add_protocol('ios', IOSDummy)
 

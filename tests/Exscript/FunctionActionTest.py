@@ -5,7 +5,7 @@ def suite():
     tests = ['testFunctionAction']
     return unittest.TestSuite(map(FunctionActionTest, tests))
 
-from Exscript                import Exscript, Connection, Host
+from Exscript                import Queue, Connection, Host
 from Exscript.FunctionAction import FunctionAction
 
 def do_nothing(conn, data, **kwargs):
@@ -15,7 +15,7 @@ def do_nothing(conn, data, **kwargs):
 
 class FunctionActionTest(unittest.TestCase):
     def testFunctionAction(self):
-        exscript = Exscript()
+        exscript = Queue()
         conn     = Connection(exscript, Host('dummy'))
         data     = {'n_calls': 0}
         action   = FunctionAction(do_nothing, conn, data, test_kwarg = 1)

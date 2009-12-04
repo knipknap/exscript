@@ -12,13 +12,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript import Exscript
+from Exscript import Queue
 from interact import read_login
 
 def run(users, hosts, func, *args, **kwargs):
     """
-    Convenience function that creates an Exscript instance, adds
-    the given accounts, and call Exscript.run() with the given
+    Convenience function that creates an Exscript.Queue instance, adds
+    the given accounts, and call Queue.run() with the given
     hosts and function as an argument.
 
     @type  users: Account|list[Account]
@@ -32,7 +32,7 @@ def run(users, hosts, func, *args, **kwargs):
     @type  kwargs: dict
     @param kwargs: Passed on to the callback.
     """
-    exscript = Exscript(**kwargs)
+    exscript = Queue(**kwargs)
     exscript.add_account(users)
     exscript.run(hosts, func, *args, **kwargs)
 

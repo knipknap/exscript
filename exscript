@@ -16,7 +16,7 @@
 import sys, os, re, getpass
 import termconnect
 sys.path.append('src')
-from Exscript                 import Exscript, Account, Host
+from Exscript                 import Queue, Account, Host
 from Exscript.FooLib          import Interact
 from Exscript.FooLib          import OptionParser
 from Exscript.util            import template
@@ -274,15 +274,15 @@ def run(*args, **kwargs):
         'echo':        not options.get('no-echo'),
         'auto_verify': not options.get('ssh-auto-verify')
     }
-    exscript = Exscript(domain         = options.get('default-domain'),
-                        verbose        = options.get('verbose'),
-                        max_threads    = options.get('connections'),
-                        retries        = options.get('retry'),
-                        login_retries  = options.get('retry-login'),
-                        logdir         = options.get('logdir'),
-                        overwrite_logs = options.get('overwrite-logs'),
-                        delete_logs    = options.get('delete-logs'),
-                        protocol_args  = protocol_args)
+    exscript = Queue(domain         = options.get('default-domain'),
+                     verbose        = options.get('verbose'),
+                     max_threads    = options.get('connections'),
+                     retries        = options.get('retry'),
+                     login_retries  = options.get('retry-login'),
+                     logdir         = options.get('logdir'),
+                     overwrite_logs = options.get('overwrite-logs'),
+                     delete_logs    = options.get('delete-logs'),
+                     protocol_args  = protocol_args)
     account_manager = exscript.account_manager
 
     # Read the account pool file.

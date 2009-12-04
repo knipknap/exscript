@@ -5,13 +5,12 @@ def suite():
     tests = ['testMatch', 'testDecorators', 'testStart']
     return unittest.TestSuite(map(utilTest, tests))
 
-from ExscriptTest import ExscriptTest, count_calls
+from QueueTest import QueueTest, count_calls
 
-class utilTest(ExscriptTest):
+class utilTest(QueueTest):
     def testMatch(self):
         from Exscript            import Connection
         from Exscript.util.match import first_match, any_match
-
 
         # Test "first_match".
         string = 'my test'
