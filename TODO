@@ -1,4 +1,5 @@
 * Add API docs for Exscript.protocols.
+* Add a recursive test target.
 * Cleanup Exscript.protocols.Exceptions.
 * Port to Python's OptionParser.
 * Get rid of FooLib.OptionParser.
