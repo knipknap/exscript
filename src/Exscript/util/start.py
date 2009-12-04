@@ -12,17 +12,42 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript.FooLib import Interact
-from Exscript        import Exscript, Account, Host
+from Exscript import Exscript
+from interact import read_login
 
-def read_login():
-    user, password = Interact.get_login()
-    return Account(user, password)
+def run(users, hosts, func, *args, **kwargs):
+    """
+    Convenience function that creates an Exscript instance, adds
+    the given accounts, and call Exscript.run() with the given
+    hosts and function as an argument.
 
-def run(users, hosts, func, *data, **kwargs):
+    @type  users: Account|list[Account]
+    @param users: The account(s) to use for logging in.
+    @type  hosts: Host|list[Host]
+    @param hosts: A list of Host objects.
+    @type  func: function
+    @param func: The callback function.
+    @type  args: list
+    @param args: Passed on to the callback.
+    @type  kwargs: dict
+    @param kwargs: Passed on to the callback.
+    """
     exscript = Exscript(**kwargs)
     exscript.add_account(users)
-    exscript.run(hosts, func, *data, **kwargs)
+    exscript.run(hosts, func, *args, **kwargs)
 
 def quickrun(hosts, func, *data, **kwargs):
-    return run(read_login(), hosts, func, *data, **kwargs)
+    """
+    A wrapper around run() that creates the account by asking the user
+    for entering his login information.
+
+    @type  hosts: Host|list[Host]
+    @param hosts: A list of Host objects.
+    @type  func: function
+    @param func: The callback function.
+    @type  args: list
+    @param args: Passed on to the callback.
+    @type  kwargs: dict
+    @param kwargs: Passed on to the callback.
+    """
+    run(read_login(), hosts, func, *data, **kwargs)
