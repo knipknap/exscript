@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, getpass
 sys.path.append('src')
-from Exscript                import Queue, Account, Host
+from Exscript                import Queue, Account, Host, __version__
 from Exscript.FooLib         import OptionParser
 from Exscript.util           import template
 from Exscript.util.interact  import get_login
@@ -26,8 +26,6 @@ from Exscript.util.decorator import autologin
 
 True  = 1
 False = 0
-
-__version__ = '1.9.1'
 
 def usage():
     print "Exscript", __version__

@@ -3,8 +3,6 @@ Release critical
 * Cleanup Exscript.protocols.Exceptions.
 * Can Exscript.protocols.Transport have a Python stream interface?
 * Add API docs for Exscript.protocols.Exceptions.
-* Use this automated version numbering scheme:
-  http://michaelandlaura.org.uk/~michael/blog/index.php?id=379
 
 Other
 -----

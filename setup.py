@@ -1,6 +1,14 @@
+import sys, os
 from setuptools import setup, find_packages
+
+# Import the file that contains the version number.
+src_dir = os.path.join(os.path.dirname(__file__), 'src')
+sys.path.insert(0, src_dir)
+from Exscript.version import __version__
+
+# Run the setup.
 setup(name             = 'Exscript',
-      version          = '0.9.16',
+      version          = __version__,
       description      = 'Script and template language for Telnet and SSH',
       long_description = \
 """
@@ -20,10 +28,17 @@ that make it a lot easier to use and understand for non-developers.
       author_email     = 'cheeseshop.python.org@debain.org',
       license          = 'GPLv2',
       package_dir      = {'': 'src'},
-      packages         = [p for p in find_packages('src')],
+      packages         = [p for p in find_packages(src_dir)],
       scripts          = ['exscript'],
       install_requires = [],
-      keywords         = 'exscript telnet ssh automate automation library',
+      keywords         = ' '.join('exscript',
+                                  'telnet',
+                                  'ssh',
+                                  'network',
+                                  'networking',
+                                  'automate',
+                                  'automation',
+                                  'library'),
       url              = 'http://code.google.com/p/exscript/',
       classifiers      = [
         'Development Status :: 5 - Production/Stable',
