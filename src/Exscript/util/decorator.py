@@ -13,6 +13,24 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+def bind_args(function, *args, **kwargs):
+    """
+    Wraps the given function such that when it is called, the given arguments
+    are passed in addition to the connection argument.
+
+    @type  function: function
+    @param function: The function that's ought to be wrapped.
+    @type  args: list
+    @param args: Passed on to the called function.
+    @type  kwargs: dict
+    @param kwargs: Passed on to the called function.
+    @rtype:  function
+    @return: The wrapped function.
+    """
+    def decorated(conn):
+        function(conn, *args, **kwargs)
+    return decorated
+
 def os_function_mapper(conn, map, *args, **kwargs):
     """
     When called with an open connection, this function uses the
@@ -72,7 +90,7 @@ def connect(function):
 
 def autologin(function, wait = True):
     """
-    Wraps the given function such that
+    Wraps the given function such that...
 
         - the connection is opened, and
         - the user is logged in

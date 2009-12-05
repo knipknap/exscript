@@ -35,15 +35,16 @@ class utilTest(QueueTest):
         self.assert_(any_match(string, r'(\S+) (\S+)') == expected)
 
     def testDecorators(self):
-        from Exscript.util.decorator import connect, autologin
+        from Exscript.util.decorator import bind_args, connect, autologin
 
-        data  = {'n_calls': 0}
-        hosts = 'dummy:localhost'
-        self.exscript.run(hosts, connect(count_calls), data, testarg = 1)
+        data     = {'n_calls': 0}
+        hosts    = 'dummy:localhost'
+        callback = bind_args(count_calls, data, testarg = 1)
+        self.exscript.run(hosts, connect(callback))
         self.exscript.shutdown()
         self.assert_(data['n_calls'] == 1)
 
-        self.exscript.run(hosts, autologin(count_calls), data, testarg = 1)
+        self.exscript.run(hosts, autologin(callback))
         self.exscript.shutdown()
         self.assert_(data['n_calls'] == 2)
 
