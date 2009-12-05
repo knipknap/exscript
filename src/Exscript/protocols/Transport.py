@@ -148,10 +148,26 @@ class Transport(object):
 
 
     def __copy__(self):
+        """
+        Overwritten to return the very same object instead of copying the
+        stream, because copying a network connection is impossible.
+
+        @rtype:  Transport
+        @return: self
+        """
         return self
 
 
     def __deepcopy__(self, memo):
+        """
+        Overwritten to return the very same object instead of copying the
+        stream, because copying a network connection is impossible.
+
+        @type  memo: object
+        @param memo: Please refer to Python's standard library documentation.
+        @rtype:  Transport
+        @return: self
+        """
         return self
 
 
