@@ -138,11 +138,7 @@ class Transport(object):
         self.on_otp_requested_args = kwargs.get('on_otp_requested_args', ())
         self.last_tacacs_key_id    = None
         self.response              = None
-        self.remote_info           = {
-          'vendor':    'unknown',
-          'model':     'unknown',
-          'os':        'unknown'
-        }
+        self.remote_os             = 'unknown'
         if self.logfile is not None:
             self.log = open(kwargs['logfile'], 'a')
 
@@ -451,16 +447,4 @@ class Transport(object):
         @rtype:  string
         @return: A string to help identify the remote operating system.
         """
-        return self.remote_info.get('os')
-
-
-    def guess_vendor(self):
-        """
-        Returns an identifer that specifies the vendor of the remote host.
-        The information is obtained in the same way as guess_os(), so there 
-        is no guarantee that this will always work.
-
-        @rtype:  string
-        @return: A string to help identify the vendor of the remote host.
-        """
-        return self.remote_info.get('vendor')
+        return self.remote_os

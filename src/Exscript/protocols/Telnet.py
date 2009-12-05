@@ -81,8 +81,7 @@ class Telnet(Transport):
             # Huawei welcome message.
             elif which == 0:
                 self._dbg(1, "Huawei router detected.")
-                self.remote_info['os']     = 'vrp'
-                self.remote_info['vendor'] = 'huawei'
+                self.remote_os = 'vrp'
 
             # Login error detected.
             elif which == 1:
@@ -91,9 +90,8 @@ class Telnet(Transport):
             # User name prompt.
             elif which <= 4:
                 self._dbg(1, "Username prompt %s received." % which)
-                if self.remote_info['os'] == 'unknown':
-                    self.remote_info['os']     = ('ios',   'junos',   'shell')[which - 2]
-                    self.remote_info['vendor'] = ('cisco', 'juniper', 'unix')[which - 2]
+                if self.remote_os == 'unknown':
+                    self.remote_os = ('ios', 'junos', 'shell')[which - 2]
                 self.send(user + '\r')
                 continue
 
@@ -127,7 +125,7 @@ class Telnet(Transport):
             elif which == 7:
                 self._dbg(1, 'Shell prompt received.')
                 self._examine_prompt(matches.group(0))
-                self._dbg(1, 'Remote OS: %s' % self.remote_info['os'])
+                self._dbg(1, 'Remote OS: %s' % self.remote_os)
                 break
 
             else:
@@ -141,8 +139,7 @@ class Telnet(Transport):
 
     def _examine_prompt(self, prompt):
         if iosxr_prompt_re.search(prompt):
-            self.remote_info['os']     = 'ios_xr'
-            self.remote_info['vendor'] = 'cisco'
+            self.remote_os = 'ios_xr'
 
 
     def send(self, data):

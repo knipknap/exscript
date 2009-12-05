@@ -1,8 +1,8 @@
 Release critical
 ----------------
+* Cleanup Exscript.protocols API (exec/execline/send/sendline?).
 * Cleanup Exscript.protocols.Exceptions.
 * Can Exscript.protocols.Transport have a Python stream interface?
-* Get rid of the model and vendor detection.
 * Add API docs for Exscript.protocols.Exceptions.
 * Move SpiffWorkQueue to Exscript.workqueue.
 * Use this automated version numbering scheme:
@@ -13,6 +13,8 @@ Release critical
 
 Other
 -----
+* Try to move the remote_os detection into a stream monitor, instead of
+  hard wiring it into the authentication procedure.
 * Add a recursive test target.
 * Port to Python's OptionParser.
 * Get rid of FooLib.OptionParser.

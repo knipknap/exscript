@@ -212,8 +212,7 @@ class Dummy(Transport):
             # Huawei welcome message.
             elif which == 0:
                 self._dbg(1, "Huawei router detected.")
-                self.remote_info['os']     = 'vrp'
-                self.remote_info['vendor'] = 'huawei'
+                self.remote_os = 'vrp'
 
             # Login error detected.
             elif which == 1:
@@ -222,9 +221,8 @@ class Dummy(Transport):
             # User name prompt.
             elif which <= 4:
                 self._dbg(1, "Username prompt %s received." % which)
-                if self.remote_info['os'] == 'unknown':
-                    self.remote_info['os']     = ('ios',   'junos',   'shell')[which - 2]
-                    self.remote_info['vendor'] = ('cisco', 'juniper', 'unix')[which - 2]
+                if self.remote_os == 'unknown':
+                    self.remote_os = ('ios', 'junos', 'shell')[which - 2]
                 self.send(user + '\r')
                 if self.login_type == self.LOGIN_TYPE_USERONLY \
                   and not kwargs.get('wait'):
@@ -260,7 +258,7 @@ class Dummy(Transport):
             # Shell prompt.
             elif which == 7:
                 self._dbg(1, 'Shell prompt received.')
-                self._dbg(1, 'Remote OS: %s' % self.remote_info['os'])
+                self._dbg(1, 'Remote OS: %s' % self.remote_os)
                 break
 
             else:
