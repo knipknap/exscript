@@ -9,7 +9,7 @@ DISTDIR=/pub/code/releases/$(NAME)
 ###################################################################
 clean:
 	find . -name "*.pyc" -o -name "*.pyo" | xargs -n1 rm -f
-	rm -Rf build
+	rm -Rf build src/*.egg-info
 
 dist-clean: clean
 	rm -Rf dist $(PACKAGE)*
