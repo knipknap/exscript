@@ -1,16 +1,21 @@
 = Exscript =
 
-Exscript is a script and template language for automating network connections 
-over protocols such as Telnet or SSH. Exscript is targeted at non-developers 
-and developers alike.
+Exscript is a Python module and a template processor for automating network 
+connections over protocols such as Telnet or SSH. We attempt to create the 
+best possible set of tools for working with Telnet and SSH.
 
-Exscript is often used to automate sessions with routers from Cisco, Juniper, 
-Huawei, or others. Are you an administrator who often configures machines 
+Exscript is also an excellent and much more powerful Net::Telnet replacement, 
+so we welcome all you Perl developers!
+
+Exscript may be used to automate sessions with routers from Cisco, Juniper, 
+OneIP, Huawei, or any others. If you want to configures machines 
 running Linux/Unix, IOS, IOS-XR, JunOS, VRP, or any other operating system 
-that can be used with a terminal? Then Exscript is for you!
+that can be used with a terminal, Exscript should be just what you are 
+looking for.
 
-Exscript is in some ways comparable to Expect, but has some unique features 
-that make it a lot easier to use and understand for non-developers. 
+The Exscript template language is also in some ways comparable to Expect, 
+but has some unique features that make it a lot easier to use and understand 
+for non-developers.
 
 
 = Installation =

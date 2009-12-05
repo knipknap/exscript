@@ -24,6 +24,9 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
+# If the --reset switch was given, reset the version number to 'DEVELOPMENT'.
+[ "$1" = "--reset" ] && VERSION='DEVELOPMENT'
+
 # If there is no version file, we are already done.
 echo Version is $VERSION
 [ ! -r $VERSION_FILE ] && exit 0
