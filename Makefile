@@ -5,26 +5,6 @@ PREFIX=/usr/local/
 DISTDIR=/pub/code/releases/$(NAME)
 
 ###################################################################
-# Project-specific targets.
-###################################################################
-DEPENDS=spiff-signal spiff-workqueue exscript
-
-svn-environment:
-	mkdir -p $(NAME)
-	cd $(NAME); for PKG in $(DEPENDS); do \
-		svn checkout http://$$PKG.googlecode.com/svn/trunk/ $$PKG; \
-	done
-
-git-environment:
-	mkdir -p $(NAME)
-	cd $(NAME); for PKG in $(DEPENDS); do \
-		git svn init http://$$PKG.googlecode.com/svn/trunk/ $$PKG; \
-		cd $$PKG; \
-		git svn fetch; \
-		cd -; \
-	done
-
-###################################################################
 # Standard targets.
 ###################################################################
 clean:
