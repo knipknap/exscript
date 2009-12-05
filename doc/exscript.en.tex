@@ -996,11 +996,11 @@ This should be mostly self explaining. By using some of Exscript's
 shortcuts you may make this even simpler:
 
 \begin{lstlisting}
-from Exscript.util.file       import get_hosts_from_file
-from Exscript.util.match      import any_match
-from Exscript.util.template   import eval_file
-from Exscript.util.start      import quickrun
-from Exscript.util.decorators import autologin
+from Exscript.util.file      import get_hosts_from_file
+from Exscript.util.match     import any_match
+from Exscript.util.template  import eval_file
+from Exscript.util.start     import quickrun
+from Exscript.util.decorator import autologin
 
 def do_something(conn):
     conn.execute('show ip int brie')

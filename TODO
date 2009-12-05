@@ -1,11 +1,23 @@
-* Add API docs for Exscript.protocols.
-* Add a recursive test target.
+Release critical
+----------------
 * Cleanup Exscript.protocols.Exceptions.
+* Can Exscript.protocols.Transport have a Python stream interface?
+* Get rid of the model and vendor detection.
+* Add API docs for Exscript.protocols.Exceptions.
+* Move SpiffWorkQueue to Exscript.workqueue.
+* Use this automated version numbering scheme:
+  http://michaelandlaura.org.uk/~michael/blog/index.php?id=379
+* Add util.decorator.marshal(func, *data, **kwargs).
+* In util.start, use marshallers to bind args to the function,
+  and use the args und kwargs to init the queue instead.
+
+Other
+-----
+* Add a recursive test target.
 * Port to Python's OptionParser.
 * Get rid of FooLib.OptionParser.
 * Move utilTest to a new utils subdir (similar to protocols).
 * Move Exscript.protocols.otp to Exscript.util.
 * Move Exscript.FooLib to Exscript.util.
-* Move SpiffWorkQueue to Exscript.workqueue.
 * Add more tests.
 * "make dist" should pull dependencies.
