@@ -5,9 +5,6 @@ Release critical
 * Add API docs for Exscript.protocols.Exceptions.
 * Use this automated version numbering scheme:
   http://michaelandlaura.org.uk/~michael/blog/index.php?id=379
-* Add util.decorator.marshal(func, *data, **kwargs).
-* In util.start, use marshallers to bind args to the function,
-  and use the args und kwargs to init the queue instead.
 
 Other
 -----

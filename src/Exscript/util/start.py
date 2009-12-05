@@ -15,11 +15,22 @@
 from Exscript import Queue
 from interact import read_login
 
-def run(users, hosts, func, *args, **kwargs):
+def run(users, hosts, func, **kwargs):
     """
     Convenience function that creates an Exscript.Queue instance, adds
-    the given accounts, and call Queue.run() with the given
+    the given accounts, and calls Queue.run() with the given
     hosts and function as an argument.
+
+    If you also want to pass arguments to the given function, you may use
+    util.decorator.bind_args() like this::
+
+      def my_callback(conn, my_arg, **kwargs):
+          print my_arg, kwargs.get('foo')
+
+      run(account,
+          host,
+          bind_args(my_callback, 'hello', foo = 'world'),
+          max_threads = 10)
 
     @type  users: Account|list[Account]
     @param users: The account(s) to use for logging in.
@@ -27,16 +38,14 @@ def run(users, hosts, func, *args, **kwargs):
     @param hosts: A list of Host objects.
     @type  func: function
     @param func: The callback function.
-    @type  args: list
-    @param args: Passed on to the callback.
     @type  kwargs: dict
-    @param kwargs: Passed on to the callback.
+    @param kwargs: Passed to the Exscript.Queue constructor.
     """
-    exscript = Queue(**kwargs)
+    exscript = Queue(*args, **kwargs)
     exscript.add_account(users)
-    exscript.run(hosts, func, *args, **kwargs)
+    exscript.run(hosts, func)
 
-def quickrun(hosts, func, *args, **kwargs):
+def quickrun(hosts, func, **kwargs):
     """
     A wrapper around run() that creates the account by asking the user
     for entering his login information.
@@ -45,9 +54,7 @@ def quickrun(hosts, func, *args, **kwargs):
     @param hosts: A list of Host objects.
     @type  func: function
     @param func: The callback function.
-    @type  args: list
-    @param args: Passed on to the callback.
     @type  kwargs: dict
-    @param kwargs: Passed on to the callback.
+    @param kwargs: Passed to the Exscript.Queue constructor.
     """
-    run(read_login(), hosts, func, *args, **kwargs)
+    run(read_login(), hosts, func, **kwargs)
