@@ -1,10 +1,8 @@
 Release critical
 ----------------
-* Cleanup Exscript.protocols API (exec/execline/send/sendline?).
 * Cleanup Exscript.protocols.Exceptions.
 * Can Exscript.protocols.Transport have a Python stream interface?
 * Add API docs for Exscript.protocols.Exceptions.
-* Move SpiffWorkQueue to Exscript.workqueue.
 * Use this automated version numbering scheme:
   http://michaelandlaura.org.uk/~michael/blog/index.php?id=379
 * Add util.decorator.marshal(func, *data, **kwargs).

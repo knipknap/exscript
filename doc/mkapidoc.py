@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Generates the API documentation.
+# Generates the *public* API documentation.
+# Remember to hide your private parts, people!
 import os, re, sys
 
 project  = 'Exscript'
@@ -17,6 +18,7 @@ os.system('epydoc ' + ' '.join(['--name', project,
                                 '--exclude Exscript.FunctionAction',
                                 '--exclude Exscript.FooLib',
                                 '--exclude Exscript.AccountManager',
+                                '--exclude Exscript.workqueue',
                                 '--exclude Exscript.stdlib',
                                 '--exclude Exscript.protocols.AbstractMethod',
                                 '--exclude Exscript.protocols.telnetlib',

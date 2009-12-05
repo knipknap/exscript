@@ -17,7 +17,7 @@ from FooLib         import UrlParser
 from AccountManager import AccountManager
 from Connection     import Connection
 from FunctionAction import FunctionAction
-from SpiffWorkQueue import WorkQueue
+from workqueue      import WorkQueue
 from helpers        import get_hosts_from_name
 
 True  = 1

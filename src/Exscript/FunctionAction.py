@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, traceback
-from SpiffWorkQueue        import Action
+from workqueue             import Action
 from protocols.Exception   import LoginFailure
 from Interpreter.Exception import FailException
 
@@ -22,7 +22,8 @@ False = 0
 
 class FunctionAction(Action):
     """
-    An action that does nothing but call the associated function.
+    An action that calls the associated function and implements retry and
+    logging.
     """
     def __init__(self, function, conn, *args, **kwargs):
         """

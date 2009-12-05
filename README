@@ -17,8 +17,7 @@ that make it a lot easier to use and understand for non-developers.
 
 1. Install python-crypto
 2. Install [http://code.google.com/p/spiff-signal/ SpiffSignal]
-3. Install [http://code.google.com/p/spiff-workqueue/ SpiffWorkQueue]
-4. Install Exscript. For example, do this as root:
+3. Install Exscript. For example, do this as root:
     sudo python setup.py install --prefix /usr/local
 
 
@@ -31,7 +30,6 @@ Mailing List: http://groups.google.com/group/exscript/
 
 * Python 2.2 or greater
 * SpiffSignal
-* SpiffWorkQueue
 * Python-crypto
 * Python-pexpect (optional, for SSH support)
 * OpenSSH command line client (optional, for ssh support)
