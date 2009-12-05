@@ -984,7 +984,7 @@ def do_something(conn):
     conn.authenticate()
     conn.execute('show ip int brie')
     ge_interfaces = any_match(conn, r'(Gigabit\S+)')
-    eval_file('mytemplate.exscript', interfaces = ge_interfaces)
+    eval_file(conn, 'mytemplate.exscript', interfaces = ge_interfaces)
 
 hosts    = get_hosts_from_file('hostlist.txt')
 exscript = Queue(max_threads = 5)
@@ -1005,7 +1005,7 @@ from Exscript.util.decorator import autologin
 def do_something(conn):
     conn.execute('show ip int brie')
     ge_interfaces = any_match(conn, r'(Gigabit\S+)')
-    eval_file('mytemplate.exscript', interfaces = ge_interfaces)
+    eval_file(conn, 'mytemplate.exscript', interfaces = ge_interfaces)
 
 quickrun(get_hosts_from_file('hostlist.txt'), autologin(do_something)) 
 \end{lstlisting}
