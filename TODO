@@ -1,3 +1,6 @@
+* Add a quite mode, in which only errors are written to stdout.
+* Use the quite mode in tests.
+* Warn for untested methods.
 * Check whether merging workqueue.Action and workqueue.Job makes sense.
 * Add a workqueue method for putting jobs to sleep until another job is
   completed, and use that in sys.run() and Queue.wait_for() instead of

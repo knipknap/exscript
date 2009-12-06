@@ -28,7 +28,7 @@ def bind_args(function, *args, **kwargs):
     @return: The wrapped function.
     """
     def decorated(conn):
-        function(conn, *args, **kwargs)
+        return function(conn, *args, **kwargs)
     return decorated
 
 def os_function_mapper(conn, map, *args, **kwargs):
@@ -85,7 +85,7 @@ def connect(function):
     """
     def decorated(conn, *args, **kwargs):
         conn.open()
-        function(conn, *args, **kwargs)
+        return function(conn, *args, **kwargs)
     return decorated
 
 def autologin(function, wait = True):
@@ -110,6 +110,7 @@ def autologin(function, wait = True):
     """
     def decorated(conn, *args, **kwargs):
         conn.authenticate(wait = wait)
-        function(conn, *args, **kwargs)
+        result = function(conn, *args, **kwargs)
         conn.close(force = True)
+        return result
     return connect(decorated)

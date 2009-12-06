@@ -1,0 +1,64 @@
+import sys, unittest, re, os.path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
+
+def suite():
+    tests = ['testBindArgs',
+             'testOsFunctionMapper',
+             'testConnect',
+             'testAutologin']
+    return unittest.TestSuite(map(decoratorTest, tests))
+
+import Exscript
+
+class FakeConnection(object):
+    def open(self):
+        self.open = True
+
+    def authenticate(self, wait):
+        self.authenticated = True
+        self.auth_waited   = wait
+
+    def close(self, force):
+        self.open         = False
+        self.close_forced = force
+
+class decoratorTest(unittest.TestCase):
+    def bind_cb(self, conn, bound_arg1, bound_arg2, **kwargs):
+        self.assert_(isinstance(conn, FakeConnection))
+        self.assert_(bound_arg1 == 'one', bound_arg1)
+        self.assert_(bound_arg2 == 'two', bound_arg2)
+        self.assert_(kwargs.get('three') == 3, kwargs.get('three'))
+        return 123
+
+    def testBindArgs(self):
+        from Exscript.util.decorator import bind_args
+        bound  = bind_args(self.bind_cb, 'one', 'two', three = 3)
+        result = bound(FakeConnection())
+        self.assert_(result == 123, result)
+
+    def testOsFunctionMapper(self):
+        pass #FIXME
+
+    def connect_cb(self, conn, *args, **kwargs):
+        self.assert_(conn.open == True)
+        return self.bind_cb(conn, *args, **kwargs)
+
+    def testConnect(self):
+        from Exscript.util.decorator import connect
+        bound  = connect(self.connect_cb)
+        result = bound(FakeConnection(), 'one', 'two', three = 3)
+        self.assert_(result == 123, result)
+
+    def autologin_cb(self, conn, *args, **kwargs):
+        self.assert_(conn.authenticated == True)
+        self.assert_(conn.auth_waited == False)
+        return self.connect_cb(conn, *args, **kwargs)
+
+    def testAutologin(self):
+        from Exscript.util.decorator import autologin
+        bound  = autologin(self.autologin_cb, False)
+        result = bound(FakeConnection(), 'one', 'two', three = 3)
+        self.assert_(result == 123, result)
+
+if __name__ == '__main__':
+    unittest.TextTestRunner(verbosity = 2).run(suite())
