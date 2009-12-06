@@ -15,8 +15,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, getpass
 sys.path.append('src')
+from optparse                import OptionParser, Option, OptionValueError
 from Exscript                import Queue, Account, Host, __version__
-from Exscript.FooLib         import OptionParser
 from Exscript.util           import template
 from Exscript.util.interact  import get_login
 from Exscript.util.file      import get_accounts_from_file, \
@@ -26,128 +26,6 @@ from Exscript.util.decorator import autologin
 
 True  = 1
 False = 0
-
-def usage():
-    print "Exscript", __version__
-    print "Copyright (C) 2007-2009 by Samuel Abels <http://debain.org>."
-    print "Syntax: exscript [options] exscript [hostname [hostname ...]]"
-    print "      --account-pool FILE"
-    print "                 Reads the user/password combination from the given file "
-    print "                 instead of prompting on the command line. The file may"
-    print "                 also contain more than one user/password combination, in"
-    print "                 which case the accounts are used round robin."
-    print "  -c, --connections NUM"
-    print "                 Maximum number of concurrent connections."
-    print "                 NUM is a number between 1 and 20, default is 1"
-    print "      --csv-hosts FILE"
-    print "                 Loads a list of hostnames and definitions from the given file."
-    print "                 The first line of the file must have the column headers in the"
-    print "                 following syntax:"
-    print "                    hostname [variable] [variable] ..."
-    print "                 where the fields are separated by tabs, \"hostname\" is the"
-    print "                 keyword \"hostname\" and \"variable\" is a unique name under"
-    print "                 which the column is accessed in the script."
-    print "                 The following lines contain the hostname in the first column,"
-    print "                 and the values of the variables in the following columns."
-    print "  -d, --define PAIR"
-    print "                 Defines a variable that is passed to the script."
-    print "                 PAIR has the following syntax: <STRING>=<STRING>."
-    print "      --default-domain STRING"
-    print "                 The IP domain name that is used if a given hostname has no "
-    print "                 domain appended."
-    print "      --delete-logs"
-    print "                 Delete logs of successful operations when done."
-    print "  -e, --execute EXSCRIPT"
-    print "                 Interpretes the given string as the script."
-    print "      --hosts FILE"
-    print "                 Loads a list of hostnames from the given file (one host per"
-    print "                 line)."
-    print "  -i, --non-interactive"
-    print "                 Do not ask for a username or password."
-    print "  -l, --logdir DIR"
-    print "                 Logs any communication into the directory with the given name."
-    print "                 Each filename consists of the hostname with \"_log\" appended."
-    print "                 Errors are written to a separate file, where the filename"
-    print "                 consists of the hostname with \".log.error\" appended."
-    print "      --no-echo"
-    print "                 Turns off the echo, such that the network activity is no longer"
-    print "                 written to stdout."
-    print "                 This is already the default behavior if the -c option was given"
-    print "                 with a number greater than 1."
-    print "  -n, --no-authentication"
-    print "                 When given, the authentication procedure is skipped. Implies -i."
-    print "      --no-auto-logout"
-    print "                 Do not attempt to execute the exit or quit command at the end"
-    print "                 of a script."
-    print "      --no-prompt"
-    print "                 Do not wait for a prompt anywhere. Note that this will also"
-    print "                 cause Exscript to disable commands that require a prompt, such"
-    print "                 as 'extract'."
-    print "      --no-initial-prompt"
-    print "                 Do not wait for a prompt after sending the password."
-    print "      --no-strip"
-    print "                 Do not strip the first line of each response."
-    print "      --overwrite-logs"
-    print "                 Instructs Exscript to overwrite existing logfiles. The default"
-    print "                 is to append the output if a log already exists."
-    print "  -p, --protocol STRING"
-    print "                 Specify which protocol to use to connect to the remote host."
-    print "                 STRING is one of: telnet ssh"
-    print "                 The default protocol is telnet."
-    print "      --retry NUM"
-    print "                 Defines the number of retries per host on failure. Default"
-    print "                 is 0."
-    print "      --retry-login NUM"
-    print "                 Defines the number of retries per host on login failure."
-    print "                 Default is 0."
-    print "      --sleep TIME"
-    print "                 Waits for the specified time before running the script."
-    print "                 TIME is a timespec as specified by the 'sleep' Unix command."
-    print "      --ssh-auto-verify"
-    print "                 Automatically confirms the 'Host key changed' SSH error "
-    print "                 message with 'yes'. Highly insecure and not recommended."
-    print "      --ssh-key FILE"
-    print "                 Specify a key file that is passed to the SSH client."
-    print "                 This is equivalent to using the -i parameter with ssh."
-    print "  -v, --verbose NUM"
-    print "                 Print out debug information about the network activity."
-    print "                 NUM is a number between 0 (min) and 5 (max)"
-    print "  -V, --parser-verbose NUM"
-    print "                 Print out debug information about the Exscript parser."
-    print "                 NUM is a number between 0 (min) and 5 (max)"
-    print "      --version  Prints the version number."
-    print "  -h, --help     Prints this help."
-
-# Define default options.
-default_options = [
-  ('no-echo',           None, False),
-  ('account-pool=',     None, None),
-  ('connections=',      'c:', 1),
-  ('csv-hosts=',        None, None),
-  ('define=',           'd:', {}),
-  ('delete-logs',       None, False),
-  ('execute=',          'e:', None),
-  ('hosts=',            None, None),
-  ('default-domain=',   None, ''),
-  ('non-interactive',   'i',  False),
-  ('logdir=',           'l:', None),
-  ('no-authentication', 'n',  False),
-  ('no-prompt',         None, False),
-  ('no-initial-prompt', None, False),
-  ('no-auto-logout',    None, False),
-  ('overwrite-logs',    None, False),
-  ('verbose=',          'v:', 0),
-  ('parser-verbose=',   'V:', 0),
-  ('protocol=',         'p:', 'telnet'),
-  ('retry=',            None, 0),
-  ('retry-login=',      None, 0),
-  ('sleep=',            None, ''),
-  ('ssh-auto-verify',   None, False),
-  ('ssh-key=',          None, None),
-  ('no-strip',          None, False),
-  ('version',           None, False),
-  ('help',              'h',  False)
-]
 
 bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
 
@@ -174,73 +52,56 @@ def expand_host_variables(host):
         val = expand_bracket(key, val)
         host.set(key, [val])
 
-def run(*args, **kwargs):
-    options = {}
-    for option, short_option, value in default_options:
-        option = re.sub(r'=$', '', option)
-        options[option] = value
-    options.update(kwargs)
-
-    # Show the help, if requested.
-    if options['help']:
-        usage()
-        sys.exit()
-
-    # Show the version number, if requested.
-    if options['version']:
-        print "Exscript", __version__
-        sys.exit()
+def run():
+    # Parse options.
+    options, args = parser.parse_args(sys.argv)
+    args.pop(0)
 
     # Extract the hostnames out of the command line arguments.
     try:
         filename = args[0]
         hosts    = [Host(h) for h in list(args[1:])]
     except:
-        usage()
-        sys.exit(1)
-    if options.get('execute') is not None:
+        parser.error('Missing filename')
+    if options.execute:
         hosts.append(Host(filename))
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
-    if options.get('csv-hosts') is not None:
+    if options.csv_hosts:
         try:
-            csv_hosts = get_hosts_from_csv(options.get('csv-hosts'))
+            csv_hosts = get_hosts_from_csv(options.csv_hosts)
         except Exception, e:
-            print e
-            sys.exit(1)
+            parser.error(str(e))
         if not csv_hosts:
-            print 'Warning: %s is empty.' % options.get('csv-hosts')
+            print 'Warning: %s is empty.' % options.csv_hosts
         hosts += csv_hosts
 
     # If a filename containing hostnames was given, read it.
-    if options.get('hosts') is not None:
+    if options.hosts:
         try:
-            txt_hosts = get_hosts_from_file(options.get('hosts'))
+            txt_hosts = get_hosts_from_file(options.hosts)
         except Exception, e:
-            print e
-            sys.exit(1)
+            parser.error(str(e))
         if not txt_hosts:
-            print 'Warning: %s is empty.' % options.get('hosts')
+            print 'Warning: %s is empty.' % options.hosts
         hosts += txt_hosts
 
     # Create the log directory.
-    if options.get('logdir') is not None:
-        if not os.path.exists(options.get('logdir')):
-            print 'Creating log directory (%s)...' % options.get('logdir')
+    if options.logdir:
+        if not os.path.exists(options.logdir):
+            print 'Creating log directory (%s)...' % options.logdir
             try:
-                os.makedirs(options.get('logdir'))
-            except:
-                print 'Error: Unable to create directory %s.' % options.get('logdir')
-                sys.exit(1)
+                os.makedirs(options.logdir)
+            except Exception, e:
+                parser.error(str(e))
 
     # Make sure that all mandatory options are present.
     if not hosts:
-        usage()
-        sys.exit(1)
+        parser.error('No hosts to connect to')
 
     # Read the Exscript.
-    if options.get('execute') is not None:
-        script_content = options.get('execute')
+    if options.execute:
+        script_content = options.execute
     else:
         file           = open(filename, 'r')
         script_content = file.read()
@@ -248,102 +109,360 @@ def run(*args, **kwargs):
 
     # Prepare the code that is executed after the user script has completed.
     #FIXME: Move into the library, then use read_template_from_file instead of read_template().
-    if not options['no-auto-logout']:
+    if not options.no_auto_logout:
         script_content += r'''
     ## Exscript generated commands. ##
     {if device.guess_os() is "vrp"}
-        {connection.send("quit\r", 0)}
+        {connection.sendline("quit")}
     {else}
-        {connection.send("exit\r", 0)}
+        {connection.sendline("exit")}
     {end}'''
 
     # Test whether the template compiles.
     try:
-        template.test(script_content, **options.get('define'))
+        template.test(script_content, **options.define)
     except Exception, e:
-        if options['verbose'] > 0:
+        if options.parser_verbose > 0:
             raise
-        print e
-        sys.exit(1)
+        parser.error(str(e))
 
     # Create Exscript.
     protocol_args = {
-        'echo':        not options.get('no-echo'),
-        'auto_verify': not options.get('ssh-auto-verify')
+        'echo':        not options.no_echo,
+        'auto_verify': not options.ssh_auto_verify
     }
-    exscript = Queue(domain         = options.get('default-domain'),
-                     verbose        = options.get('verbose'),
-                     max_threads    = options.get('connections'),
-                     retries        = options.get('retry'),
-                     login_retries  = options.get('retry-login'),
-                     logdir         = options.get('logdir'),
-                     overwrite_logs = options.get('overwrite-logs'),
-                     delete_logs    = options.get('delete-logs'),
+    exscript = Queue(domain         = options.default_domain,
+                     verbose        = options.verbose,
+                     max_threads    = options.connections,
+                     retries        = options.retry,
+                     login_retries  = options.retry_login,
+                     logdir         = options.logdir,
+                     overwrite_logs = options.overwrite_logs,
+                     delete_logs    = options.delete_logs,
                      protocol_args  = protocol_args)
     account_manager = exscript.account_manager
 
     # Read the account pool file.
     try:
-        if options['account-pool']:
-            accounts = get_accounts_from_file(options['account-pool'])
+        if options.account_pool:
+            accounts = get_accounts_from_file(options.account_pool)
             account_manager.add_account(accounts)
     except Exception, e:
-        print e
-        sys.exit(1)
-    if options['account-pool'] and account_manager.n_accounts() == 0:
+        parser.error(str(e))
+    if options.account_pool and account_manager.n_accounts() == 0:
         msg = r'WARNING: No accounts found in account pool file (%s)!'
-        print msg % options['account-pool']
+        print msg % options.account_pool
 
     # Read username and password.
     try:
-        if options['non-interactive'] or account_manager.n_accounts() > 0:
+        if options.non_interactive or account_manager.n_accounts() > 0:
             user     = None
             password = None
         else:
             user, password = get_login()
-    except:
+    except KeyboardInterrupt:
         sys.exit(1)
     if user is not None:
-        account = Account(user, password, ssh_key_file = options['ssh-key'])
+        account = Account(user, password, ssh_key_file = options.ssh_key)
         account_manager.add_account(account)
 
     # Ask for values of marked variables.
     for host in hosts:
         expand_host_variables(host)
-    for key, val in options['define'].iteritems():
-        options['define'][key] = expand_bracket(key, val)
+    for key, val in options.define.iteritems():
+        options.define[key] = expand_bracket(key, val)
 
     # Choose the template processing type.
-    if options.get('no-prompt'):
+    if options.no_prompt:
         function = template.paste
     else:
         function = template.eval
-    if not options.get('no-authentication'):
-        nip      = options.get('no-initial-prompt')
-        nop      = options.get('no-prompt')
+    if not options.no_authentication:
+        nip      = options.no_initial_prompt
+        nop      = options.no_prompt
         function = autologin(function, not nip and not nop)
 
     # Wait until the specified time.
-    if options['sleep']:
-        print "Waiting for %s..." % options['sleep'],
+    if options.sleep:
+        print "Waiting for %s..." % options.sleep,
         sys.stdout.flush()
-        os.system('sleep %s' % options['sleep'])
+        os.system('sleep %s' % options.sleep)
         print "time expired, starting script."
 
     # Run the template.
-    tmpl_vars = options.get('define')
-    if options.get('no-prompt'):
+    tmpl_vars = options.define
+    if options.no_prompt:
         exscript.run(hosts, function, script_content, **tmpl_vars)
     else:
-        strip = not options.get('no-strip')
+        strip = not options.no_strip
         exscript.run(hosts, function, script_content, strip, **tmpl_vars)
 
-if __name__ == '__main__':
-    # Parse options.
-    try:
-        options, args = OptionParser.parse_options(sys.argv, default_options)
-    except:
-        usage()
-        sys.exit(1)
+# Define command line option value types.
+def check_assignment(option, opt, value):
+    if not re.match(r'\S+=\S+', value):
+        raise OptionValueError('option %s: invalid value: %r' % (opt, value))
+    return value
 
-    run(*args, **options)
+def check_protocol(option, opt, value):
+    if value not in Queue.built_in_protocols:
+        raise OptionValueError('option %s: invalid value: %r' % (opt, value))
+    return value
+
+class AssignmentOption(Option):
+    # Define a new 'assignment' type for the '--define' command line option.
+    TYPES                      = Option.TYPES + ('assignment', 'protocol')
+    TYPE_CHECKER               = Option.TYPE_CHECKER.copy()
+    TYPE_CHECKER['assignment'] = check_assignment
+    TYPE_CHECKER['protocol']   = check_protocol
+
+    # Define a new store action that parses 'assignment' values.
+    ACTIONS              = Option.ACTIONS + ('store_dict',)
+    STORE_ACTIONS        = Option.STORE_ACTIONS + ('store_dict',)
+    TYPED_ACTIONS        = Option.TYPED_ACTIONS + ('store_dict',)
+    ALWAYS_TYPED_ACTIONS = Option.ALWAYS_TYPED_ACTIONS + ('store_dict',)
+
+    def take_action(self, action, dest, opt, value, values, parser):
+        if action == "store_dict":
+            left, right = value.split("=")
+            values.ensure_value(dest, {})[left] = right
+            return
+        Option.take_action(self,
+                           action,
+                           dest,
+                           opt,
+                           value,
+                           values,
+                           parser)
+
+# Define the command line syntax.
+usage  = '%prog [options] filename [hostname [hostname ...]]'
+usage += '\nCopyright (C) 2007-2009 by Samuel Abels.'
+parser = OptionParser(usage        = usage,
+                      version      = __version__,
+                      option_class = AssignmentOption)
+
+parser.add_option('--account-pool',
+                  dest    = 'account_pool',
+                  metavar = 'FILE',
+                  help    = '''
+Reads the user/password combination from the given file
+instead of prompting on the command line. The file may
+also contain more than one user/password combination, in
+which case the accounts are used round robin.
+'''.strip())
+
+parser.add_option('--connections', '-c',
+                  dest    = 'connections',
+                  type    = 'int',
+                  metavar = 'NUM',
+                  default = 1,
+                  help    = '''
+Maximum number of concurrent connections.
+NUM is a number between 1 and 20, default is 1.
+'''.strip())
+
+parser.add_option('--csv-hosts',
+                  dest    = 'csv_hosts',
+                  metavar = 'FILE',
+                  help    = '''
+Loads a list of hostnames and definitions from the given file.
+The first line of the file must have the column headers in the
+following syntax: "hostname [variable] [variable] ...", where
+the fields are separated by tabs, "hostname" is the keyword
+"hostname" and "variable" is a unique name under which the
+column is accessed in the script.
+The following lines contain the hostname in the first column,
+and the values of the variables in the following columns.
+'''.strip())
+
+parser.add_option('--define', '-d',
+                  dest    = 'define',
+                  type    = 'assignment',
+                  action  = 'store_dict',
+                  default = {},
+                  metavar = 'PAIR',
+                  help    = '''
+Defines a variable that is passed to the script.
+PAIR has the following syntax: STRING=STRING.
+'''.strip())
+
+parser.add_option('--default-domain',
+                  dest    = 'default_domain',
+                  metavar = 'STRING',
+                  default = '',
+                  help    = '''
+The IP domain name that is used if a given hostname has no domain appended.
+'''.strip())
+
+parser.add_option('--delete-logs',
+                  dest    = 'delete_logs',
+                  action  = 'store_true',
+                  default = False,
+                  help    = 'Delete logs of successful operations when done.')
+
+parser.add_option('--execute', '-e',
+                  dest    = 'execute',
+                  metavar = 'EXSCRIPT',
+                  help    = 'Interprets the given string as the script.')
+
+parser.add_option('--hosts',
+                  dest    = 'hosts',
+                  metavar = 'FILE',
+                  help    = '''
+Loads a list of hostnames from the given file (one host per line).
+'''.strip())
+
+parser.add_option('--non-interactive', '-i',
+                  dest    = 'non_interactive',
+                  action  = 'store_true',
+                  default = False,
+                  help    = 'Do not ask for a username or password.')
+
+parser.add_option('--logdir', '-l',
+                  dest    = 'logdir',
+                  metavar = 'DIR',
+                  help    = '''
+Logs any communication into the directory with the given name.
+Each filename consists of the hostname with "_log" appended.
+Errors are written to a separate file, where the filename
+consists of the hostname with ".log.error" appended.
+'''.strip())
+
+parser.add_option('--no-echo',
+                  dest    = 'no_echo',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Turns off the echo, such that the network activity is no longer
+written to stdout.
+This is already the default behavior if the -c option was given
+with a number greater than 1.
+'''.strip())
+
+parser.add_option('--no-authentication', '-n',
+                  dest    = 'no_authentication',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+When given, the authentication procedure is skipped. Implies -i.
+'''.strip())
+
+parser.add_option('--no-auto-logout',
+                  dest    = 'no_auto_logout',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Do not attempt to execute the exit or quit command at the end of a script.
+'''.strip())
+
+parser.add_option('--no-prompt',
+                  dest    = 'no_prompt',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Do not wait for a prompt anywhere. Note that this will also
+cause Exscript to disable commands that require a prompt, such
+as "extract".
+'''.strip())
+
+parser.add_option('--no-initial-prompt',
+                  dest    = 'no_initial_prompt',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Do not wait for a prompt after sending the password.
+'''.strip())
+
+parser.add_option('--no-strip',
+                  dest    = 'no_strip',
+                  action  = 'store_true',
+                  default = False,
+                  help    = 'Do not strip the first line of each response.')
+
+parser.add_option('--overwrite-logs',
+                  dest    = 'overwrite_logs',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Instructs Exscript to overwrite existing logfiles. The default
+is to append the output if a log already exists.
+'''.strip())
+
+parser.add_option('--protocol', '-p',
+                  dest    = 'protocol',
+                  type    = 'protocol',
+                  metavar = 'STRING',
+                  default = 'telnet',
+                  help    = '''
+Specify which protocol to use to connect to the remote host.
+Allowed values for STRING include: %s.
+The default protocol is telnet.
+'''.strip() % ', '.join(sorted(Queue.built_in_protocols)))
+
+parser.add_option('--retry',
+                  dest    = 'retry',
+                  type    = 'int',
+                  metavar = 'NUM',
+                  default = 0,
+                  help    = '''
+Defines the number of retries per host on failure. Default is 0.
+'''.strip())
+
+parser.add_option('--retry-login',
+                  dest    = 'retry_login',
+                  type    = 'int',
+                  metavar = 'NUM',
+                  default = 0,
+                  help    = '''
+Defines the number of retries per host on login failure. Default is 0.
+'''.strip())
+
+parser.add_option('--sleep',
+                  dest    = 'sleep',
+                  metavar = 'TIME',
+                  default = '',
+                  help    = '''
+Waits for the specified time before running the script.
+TIME is a timespec as specified by the 'sleep' Unix command.
+'''.strip())
+
+parser.add_option('--ssh-auto-verify',
+                  dest    = 'ssh_auto_verify',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Automatically confirms the 'Host key changed' SSH error 
+message with 'yes'. Highly insecure and not recommended.
+'''.strip())
+
+parser.add_option('--ssh-key',
+                  dest    = 'ssh_key',
+                  metavar = 'FILE',
+                  help    = '''
+Specify a key file that is passed to the SSH client.
+This is equivalent to using the "-i" parameter of the
+openssh command line client.
+'''.strip())
+
+parser.add_option('--verbose', '-v',
+                  dest    = 'verbose',
+                  type    = 'int',
+                  metavar = 'NUM',
+                  default = 0,
+                  help    = '''
+Print out debug information about the network activity.
+NUM is a number between 0 (min) and 5 (max)
+'''.strip())
+
+parser.add_option('--parser-verbose', '-V',
+                  dest    = 'parser_verbose',
+                  type    = 'int',
+                  metavar = 'NUM',
+                  default = 0,
+                  help    = '''
+Print out debug information about the Exscript template parser.
+NUM is a number between 0 (min) and 5 (max)
+'''.strip())
+
+if __name__ == '__main__':
+    run()

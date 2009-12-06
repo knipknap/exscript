@@ -27,6 +27,12 @@ class Queue(object):
     """
     The heart of Exscript. It manages accounts, connections, and threads.
     """
+    built_in_protocols = {'dummy':  'Dummy',
+                          'telnet': 'Telnet',
+                          'pseudo': 'Dummy',
+                          'ssh':    'SSH',
+                          'ssh1':   'SSH',
+                          'ssh2':   'SSH'}
 
     def __init__(self, **kwargs):
         """
@@ -58,12 +64,7 @@ class Queue(object):
         self.total             = 0
         self.show_status_bar   = True
         self.status_bar_length = 0
-        self.protocol_map      = {'dummy':  'Dummy',
-                                  'telnet': 'Telnet',
-                                  'pseudo': 'Dummy',
-                                  'ssh':    'SSH',
-                                  'ssh1':   'SSH',
-                                  'ssh2':   'SSH'}
+        self.protocol_map      = self.built_in_protocols.copy()
         self.set_max_threads(kwargs.get('max_threads', 1))
         self.workqueue.set_debug(kwargs.get('verbose', 0))
         self.workqueue.signal_connect('job-started',   self._on_job_started)

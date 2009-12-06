@@ -10,7 +10,6 @@ Other
 * Try to move the remote_os detection into a stream monitor, instead of
   hard wiring it into the authentication procedure.
 * Add a recursive test target.
-* Port to Python's OptionParser.
 * Get rid of FooLib.OptionParser.
 * Move utilTest to a new utils subdir (similar to protocols).
 * Move Exscript.protocols.otp to Exscript.util.

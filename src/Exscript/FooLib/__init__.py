@@ -1,5 +1,3 @@
-__all__ = ['OptionParser',
-           'UrlParser']
+__all__ = ['UrlParser']
 
-from OptionParser import *
-from UrlParser    import *
+from UrlParser import *
