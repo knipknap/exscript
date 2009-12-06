@@ -1,14 +1,7 @@
-Release critical
-----------------
-* Can Exscript.protocols.Transport have a Python stream interface?
-
-Other
------
 * Add a public Queue method for checking whether a job is still running.
 * Add a public method Queue.priority_run(), and migrate stdlib.sys.run() to it.
 * Try to move the remote_os detection into a stream monitor, instead of
   hard wiring it into the authentication procedure.
-* Add a recursive test target.
 * Move utilTest to a new utils subdir (similar to protocols).
 * Move Exscript.protocols.otp to Exscript.util.
 * Move test from util.url to tests/Exscript/util/.
