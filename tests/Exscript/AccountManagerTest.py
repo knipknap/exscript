@@ -1,10 +1,6 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-def suite():
-    tests = ['testAccountManager']
-    return unittest.TestSuite(map(AccountManagerTest, tests))
-
 from Exscript           import AccountManager, Account
 from Exscript.util.file import get_accounts_from_file
 
@@ -55,5 +51,7 @@ class AccountManagerTest(unittest.TestCase):
         for account in acquired.itervalues():
             account.release()
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(AccountManagerTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

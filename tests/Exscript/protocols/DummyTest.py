@@ -1,16 +1,12 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-def suite():
-    tests = ['testDummy', 'testPseudoDev']
-    return unittest.TestSuite(map(DummyTest, tests))
-
 from TransportTest      import TransportTest
 from Exscript.protocols import Dummy
 
 class DummyTest(TransportTest):
     def testDummy(self):
-        self.testTransport(Dummy)
+        self.checkTransport(Dummy)
 
         # Test simple instance with banner.
         transport = Dummy(banner = 'blah')
@@ -102,8 +98,11 @@ class DummyTest(TransportTest):
         transport.close()
 
     def testPseudoDev(self):
+        testdir   = os.path.join(os.path.dirname(__file__), '..', '..')
+        dirname   = os.path.join(testdir, 'templates', 'iosdummy')
+        filename  = os.path.join(dirname, 'pseudodev.py')
         transport = Dummy(banner = 'blah', strict = True)
-        transport.load_command_handler_from_file('../../templates/iosdummy/pseudodev.py')
+        transport.load_command_handler_from_file(filename)
         transport.connect('testhost')
         transport.authenticate('user', 'password')
         transport.execute('show version')
@@ -117,5 +116,7 @@ class DummyTest(TransportTest):
         self.assertRaises(Exception, transport.execute, 'show something')
         transport.close()
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(DummyTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

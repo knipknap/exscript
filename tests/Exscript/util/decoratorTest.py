@@ -1,13 +1,6 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-def suite():
-    tests = ['testBindArgs',
-             'testOsFunctionMapper',
-             'testConnect',
-             'testAutologin']
-    return unittest.TestSuite(map(decoratorTest, tests))
-
 import Exscript
 
 class FakeConnection(object):
@@ -60,5 +53,7 @@ class decoratorTest(unittest.TestCase):
         result = bound(FakeConnection(), 'one', 'two', three = 3)
         self.assert_(result == 123, result)
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(decoratorTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

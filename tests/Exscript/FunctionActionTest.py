@@ -1,10 +1,6 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-def suite():
-    tests = ['testFunctionAction']
-    return unittest.TestSuite(map(FunctionActionTest, tests))
-
 from Exscript                import Queue, Host
 from Exscript.Connection     import Connection
 from Exscript.FunctionAction import FunctionAction
@@ -23,5 +19,7 @@ class FunctionActionTest(unittest.TestCase):
         action.execute(None, None, None)
         self.assert_(data['n_calls'] == 1)
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(FunctionActionTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

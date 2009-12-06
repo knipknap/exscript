@@ -1,10 +1,6 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-def suite():
-    tests = ['testStart', 'testIOSDummy']
-    return unittest.TestSuite(map(QueueTest, tests))
-
 from Exscript            import Queue, Account
 from Exscript.Connection import Connection
 from Exscript.util       import template
@@ -75,5 +71,7 @@ class QueueTest(unittest.TestCase):
         for test in os.listdir(test_dir):
             self.exscript.run('ios:' + test, ios_dummy_cb)
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(QueueTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

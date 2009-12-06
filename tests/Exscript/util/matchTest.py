@@ -1,10 +1,6 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-def suite():
-    tests = ['testFirstMatch', 'testAnyMatch']
-    return unittest.TestSuite(map(matchTest, tests))
-
 class matchTest(unittest.TestCase):
     def testFirstMatch(self):
         from Exscript.util.match import first_match
@@ -32,5 +28,7 @@ class matchTest(unittest.TestCase):
         expected = [('one', 'uno'), ('two', 'due')]
         self.assert_(any_match(string, r'(\S+) (\S+)') == expected)
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(matchTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

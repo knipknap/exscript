@@ -1,10 +1,6 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-def suite():
-    tests = ['testRun', 'testQuickrun']
-    return unittest.TestSuite(map(startTest, tests))
-
 class startTest(unittest.TestCase):
     def setUp(self):
         from Exscript                import Account
@@ -45,5 +41,7 @@ class startTest(unittest.TestCase):
     def testQuickrun(self):
         pass # can't really be tested, as it is user interactive
 
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(startTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())
