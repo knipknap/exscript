@@ -54,6 +54,46 @@ def tacacs_unlock(scope, user):
     account.release()
     return True
 
+def run(scope, hostnames, filename):
+    """
+    Runs the template file with the given name on the host with the given
+    hostname. If the filename is not absolute, it is relative to the path
+    of the script that makes the call.
+    Any variables that are defined in the current scope of the calling
+    script are also passed to the template.
+
+    @type  hostnames: string
+    @param hostnames: A hostname, or a list of hostnames.
+    @type  filename: string
+    @param filename: The name of the Exscript file to be executed.
+    """
+    # The filename is relative to the file that makes the call.
+    exscript_file = scope.get('__filename__') or ''
+    exscript_dir  = os.path.dirname(exscript_file)
+    filename      = os.path.join(exscript_dir, filename[0])
+
+    # Copy the variables from the current scope into new host objects.
+    vars  = scope.get_public_vars()
+    hosts = []
+    for hostname in hostnames:
+        host = Host(hostname)
+        for key, value_list in vars.iteritems():
+             for value in value_list:
+                 host.append(key, value)
+        hosts.append(host)
+
+    # Enqueue the new jobs.
+    strip    = scope.parser.strip_command
+    job      = bind_args(eval_file, filename, strip_command)
+    exscript = scope.get('__connection__').get_exscript()
+    actions  = exscript._priority_run(hosts, autologin(job))
+
+    # Wait until all jobs are completed.
+    while not exscript._action_is_completed(actions):
+        time.sleep(1)
+        continue
+    return True
+
 def wait(scope, seconds):
     """
     Waits for the given number of seconds.

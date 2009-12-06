@@ -143,7 +143,16 @@ class Queue(object):
 
 
     def _action_is_completed(self, action):
-        return not self.workqueue.in_queue(action)
+        """
+        Returns True if all of the given actions are completed, True
+        otherwise.
+        """
+        if not isinstance(action, list):
+            action = [action]
+        for current in action:
+            if self.workqueue.in_queue(action):
+                return False
+        return True
 
 
     def _get_protocol_from_name(self, name):
@@ -260,6 +269,44 @@ class Queue(object):
         self._del_status_bar()
 
 
+    def _run1(self, host, function, prioritize, *args, **kwargs):
+        # To save memory, limit the number of parsed (=in-memory) items.
+        # A side effect is that we will no longer know the total
+        # number of jobs - to work around this, we first add the total
+        # ourselfs (see above), and then subtract one from the total
+        # each time a new host is appended (see below).
+        n_connections = self.get_max_threads()
+        while self.workqueue.get_length() > n_connections * 2:
+            time.sleep(1)
+            gc.collect()
+
+        # Create the connection. If we are multi threaded, disable echoing
+        # of the conversation to stdout.
+        if not host.get_domain():
+            host.set_domain(self.domain)
+        pargs         = self.protocol_args.copy()
+        pargs['echo'] = n_connections == 1 and pargs.get('echo')
+        conn          = Connection(self, host, **pargs)
+
+        # Build an object that represents the actual task.
+        self._dbg(1, 'Building FunctionAction for %s.' % host.get_name())
+        action = FunctionAction(function, conn, *args, **kwargs)
+        action.set_times(self.retries + 1)
+        action.set_login_retries(self.login_retries + 1)
+        action.set_logdir(self.logdir)
+        action.set_log_options(overwrite = self.overwrite_logs,
+                               delete    = self.delete_logs)
+        action.set_error_log_options(overwrite = self.overwrite_logs)
+
+        # Done. Enqueue this.
+        if prioritize:
+            self._priority_enqueue_action(action)
+        else:
+            self._enqueue_action(action)
+        self.total -= 1
+        return action
+
+
     def _run(self, hosts, function, *args, **kwargs):
         n_connections = self.get_max_threads()
         hosts         = get_hosts_from_name(hosts)
@@ -267,39 +314,17 @@ class Queue(object):
         self.workqueue.start()
 
         for host in hosts:
-            # To save memory, limit the number of parsed (=in-memory) items.
-            # A side effect is that we will no longer know the total
-            # number of jobs - to work around this, we first add the total
-            # ourselfs (see above), and then subtract one from the total
-            # each time a new host is appended (see below).
-            while self.workqueue.get_length() > n_connections * 2:
-                time.sleep(1)
-                gc.collect()
-
-            # Create the connection. If we are multi threaded, disable echoing
-            # of the conversation to stdout.
-            if not host.get_domain():
-                host.set_domain(self.domain)
-            pargs         = self.protocol_args.copy()
-            pargs['echo'] = self.get_max_threads() == 1 and pargs.get('echo')
-            conn          = Connection(self, host, **pargs)
-
-            # Build an object that represents the actual task.
-            self._dbg(1, 'Building FunctionAction for %s.' % host.get_name())
-            action = FunctionAction(function, conn, *args, **kwargs)
-            action.set_times(self.retries + 1)
-            action.set_login_retries(self.login_retries + 1)
-            action.set_logdir(self.logdir)
-            action.set_log_options(overwrite = self.overwrite_logs,
-                                   delete    = self.delete_logs)
-            action.set_error_log_options(overwrite = self.overwrite_logs)
-
-            # Done. Enqueue this.
-            self._enqueue_action(action)
-            self.total -= 1
+            self._run1(host, function, False, *args, **kwargs)
 
         self._dbg(1, 'All actions enqueued.')
         self.shutdown()
+
+
+    def _priority_run(self, hosts, function, *args, **kwargs):
+        actions = []
+        for host in hosts:
+            actions.append(self._run1(host, function, True, *args, **kwargs))
+        return actions
 
 
     def run(self, hosts, function, *args, **kwargs):

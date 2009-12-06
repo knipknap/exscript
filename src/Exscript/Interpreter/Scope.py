@@ -66,6 +66,14 @@ class Scope(Token):
         return vars
 
 
+    def get_public_vars(self):
+        """
+        Like get_vars(), but does not include any private variables.
+        """
+        vars = self.get_vars()
+        return dict(k for k in vars.iteritems() if not k[0].startswith('_'))
+
+
     def get(self, name, default = None):
         if self.variables.has_key(name):
             return self.variables[name]

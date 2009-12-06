@@ -74,7 +74,7 @@ class Host(object):
         self.set_password(uri.password)
 
         for key, val in uri.vars.iteritems():
-            host.define(key, val)
+            self.append(key, val)
 
 
     def set_address(self, address):
@@ -241,20 +241,18 @@ class Host(object):
     def set(self, name, value):
         """
         Stores the given variable/value in the object for later retrieval.
-        Note that all values are automatically converted into lists, as
-        in Exscript templates any variables are lists.
 
         @type  name: string
         @param name: The name of the variable.
         @type  value: object
         @param value: The value of the variable.
         """
-        self.vars[name] = [value]
+        self.vars[name] = value
 
 
     def append(self, name, value):
         """
-        Appends the given value to the variable with the given name.
+        Appends the given value to the list variable with the given name.
 
         @type  name: string
         @param name: The name of the variable.
@@ -278,7 +276,7 @@ class Host(object):
         @param value: The value of the variable.
         """
         if not self.vars.has_key(name):
-            self.vars[name] = [value]
+            self.vars[name] = value
 
 
     def has_key(self, name):

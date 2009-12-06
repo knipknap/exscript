@@ -172,7 +172,7 @@ def expand_host_variables(host):
         if not isinstance(val, str):
             continue
         val = expand_bracket(key, val)
-        host.define(key, [val])
+        host.set(key, [val])
 
 def run(*args, **kwargs):
     options = {}

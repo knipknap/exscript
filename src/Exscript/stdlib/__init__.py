@@ -58,5 +58,6 @@ functions = {
     'sys.message':               mysys.message,
     'sys.tacacs_lock':           mysys.tacacs_lock,
     'sys.tacacs_unlock':         mysys.tacacs_unlock,
+    'sys.run':                   mysys.run,
     'sys.wait':                  mysys.wait,
 }
