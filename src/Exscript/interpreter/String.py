@@ -102,7 +102,7 @@ class String(Token):
                 value = '\n'.join([str(v) for v in value])
             else:
                 value = ''
-        return value
+        return str(value)
 
     # Tokens that include variables in a string may use this callback to
     # make sure that the variable is already declared.
