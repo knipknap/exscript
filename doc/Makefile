@@ -66,7 +66,7 @@ apidocs:
 
 clean:
 	rm -Rf api handbook latex stdlib
-	rm -f *.aux *.log *.out *.pdf *.toc # figures/*.png
+	rm -f *.aux *.log *.out *.pdf *.toc version.tex figures/*.png
 
 publish-local: handbook apidocs
 	mkdir -p $(PUBLISH_LOCAL_PATH)

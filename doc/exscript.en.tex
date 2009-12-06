@@ -934,7 +934,8 @@ conn.execute("ls -l")
 print "The host said:", repr(conn.response)
 \end{lstlisting}
 
-\section{Emulating A Remote Device}
+
+\subsubsection{Emulating A Remote Device}
 
 \product also provides a dummy protocol adapter for testing 
 purposes. It emulates a remote host and may be used in place of the Telnet 
@@ -971,9 +972,10 @@ be either a string or a function.
 
 The more powerful and recommended way of using Exscript is by using 
 \product.Queue.
-Consider to following simple example:
+Consider the following simple example:
 
 \begin{lstlisting}
+from Exscript               import Queue
 from Exscript.util.file     import get_hosts_from_file
 from Exscript.util.match    import any_match
 from Exscript.util.interact import read_login
