@@ -1,9 +1,7 @@
 Release critical
 ----------------
 * Add a test for stdlib.sys.run().
-* Cleanup Exscript.protocols.Exceptions.
 * Can Exscript.protocols.Transport have a Python stream interface?
-* Add API docs for Exscript.protocols.Exceptions.
 
 Other
 -----

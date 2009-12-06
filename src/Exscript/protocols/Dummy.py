@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, re, exceptions, otp
-from Exception import TransportException
+from Exception import TransportException, LoginFailure
 from Transport import Transport, \
                       cisco_user_re,     \
                       junos_user_re,     \
@@ -216,7 +216,7 @@ class Dummy(Transport):
 
             # Login error detected.
             elif which == 1:
-                raise TransportException("Login failed")
+                raise LoginFailure("Login failed")
 
             # User name prompt.
             elif which <= 4:
