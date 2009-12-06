@@ -12,21 +12,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript.util import crypt
+from otp import generate
 
-def otp(scope, password, seed, seqs):
+def otp(password, seed, sequence):
     """
     Calculates a one-time password hash using the given password, seed, and
     sequence number and returns it.
-    Uses the md4/sixword algorithm as supported by TACACS+ servers.
+    Uses the MD4/sixword algorithm as supported by TACACS+ servers.
 
     @type  password: string
     @param password: A password.
     @type  seed: string
     @param seed: A username.
     @type  seqs: int
-    @param seqs: A sequence number, or a list of sequence numbers.
+    @param seqs: A sequence number.
     @rtype:  string
     @return: A hash, or a list of hashes.
     """
-    return [crypt.otp(password[0], seed[0], int(seq))[0] for seq in seqs]
+    return generate(password, seed, seq, 1, 'md4', 'sixword')[0]

@@ -1,4 +1,4 @@
-# Copyright (C) 2007 Samuel Abels, http://debain.org
+# Copyright (C) 2007-2009 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2, as
@@ -12,16 +12,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, re, exceptions, otp
-from Exception import TransportException, LoginFailure
-from Transport import Transport, \
-                      cisco_user_re,     \
-                      junos_user_re,     \
-                      unix_user_re,      \
-                      pass_re,           \
-                      skey_re,           \
-                      huawei_re,         \
-                      login_fail_re
+import os, re
+from Exscript.util.crypt import otp
+from Exception           import TransportException, LoginFailure
+from Transport           import Transport,         \
+                                cisco_user_re,     \
+                                junos_user_re,     \
+                                unix_user_re,      \
+                                iosxr_prompt_re,   \
+                                pass_re,           \
+                                skey_re,           \
+                                huawei_re,         \
+                                login_fail_re
 
 True  = 1
 False = 0
@@ -237,7 +239,7 @@ class Dummy(Transport):
                 seed = matches.group(2)
                 self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
-                phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
+                phrase = otp(password, seed, seq)
                 self._expect_any([pass_re])
                 self.send(phrase + '\r')
                 self._dbg(1, "Password sent.")
@@ -258,6 +260,7 @@ class Dummy(Transport):
             # Shell prompt.
             elif which == 7:
                 self._dbg(1, 'Shell prompt received.')
+                self._examine_prompt(matches.group(0))
                 self._dbg(1, 'Remote OS: %s' % self.remote_os)
                 break
 
@@ -268,6 +271,11 @@ class Dummy(Transport):
     def _authorize_hook(self, password, **kwargs):
         # The username should not be asked, so not passed.
         return self._authenticate_hook('', password, **kwargs)
+
+
+    def _examine_prompt(self, prompt):
+        if iosxr_prompt_re.search(prompt):
+            self.remote_os = 'ios_xr'
 
 
     def send(self, data):
@@ -300,17 +308,21 @@ class Dummy(Transport):
             if res is None:
                 self._dbg(2, "No prompt match")
                 raise Exception('no match')
-            result, _, self.response = res
-            if _ is not None:
-                self._dbg(2, "Got a prompt, match was %s" % repr(_.group()))
-            self._dbg(5, "Response was %s" % repr(self.buffer))
+            result, match, self.response = res
         except:
             print 'Error while waiting for %s' % repr(prompt.pattern)
             raise
 
+        if match:
+            self._dbg(2, "Got a prompt, match was %s" % repr(match.group()))
+            self._examine_prompt(match.group(0))
+        self._dbg(5, "Response was %s" % repr(self.buffer))
+
         if result == -1 or self.buffer is None:
             error = 'Error while waiting for response from device'
             raise TransportException(error)
+
+        self._examine_prompt(match.group(0))
 
 
     def close(self, force = False):

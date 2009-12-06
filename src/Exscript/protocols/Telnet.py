@@ -12,18 +12,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, re, exceptions, otp
+import os, re
 import telnetlib
-from Exception import TransportException, LoginFailure
-from Transport import Transport, \
-                      cisco_user_re,     \
-                      junos_user_re,     \
-                      unix_user_re,      \
-                      iosxr_prompt_re,   \
-                      pass_re,           \
-                      skey_re,           \
-                      huawei_re,         \
-                      login_fail_re
+from Exscript.util.crypt import otp
+from Exception           import TransportException, LoginFailure
+from Transport           import Transport,         \
+                                cisco_user_re,     \
+                                junos_user_re,     \
+                                unix_user_re,      \
+                                iosxr_prompt_re,   \
+                                pass_re,           \
+                                skey_re,           \
+                                huawei_re,         \
+                                login_fail_re
 
 True  = 1
 False = 0
@@ -103,7 +104,7 @@ class Telnet(Transport):
                 self._otp_cb(seq, seed)
                 self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
-                phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
+                phrase = otp(password, seed, seq)
                 self.tn.expect([pass_re], self.timeout)
                 self.send(phrase + '\r')
                 self._dbg(1, "Password sent.")

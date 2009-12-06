@@ -1,4 +1,4 @@
-# Copyright (C) 2007 Samuel Abels, http://debain.org
+# Copyright (C) 2007-2009 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2, as
@@ -12,18 +12,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, time, re, otp
+import os, re
 import pexpect
-from Exception import TransportException, LoginFailure
-from Transport import Transport, \
-                      cisco_user_re,     \
-                      junos_user_re,     \
-                      unix_user_re,      \
-                      iosxr_prompt_re,   \
-                      pass_re,           \
-                      skey_re,           \
-                      huawei_re,         \
-                      login_fail_re
+from Exscript.util.crypt import otp
+from Exception           import TransportException, LoginFailure
+from Transport           import Transport,         \
+                                cisco_user_re,     \
+                                junos_user_re,     \
+                                unix_user_re,      \
+                                iosxr_prompt_re,   \
+                                pass_re,           \
+                                skey_re,           \
+                                huawei_re,         \
+                                login_fail_re
 
 True  = 1
 False = 0
@@ -134,7 +135,7 @@ class SSH(Transport):
                 self._otp_cb(seq, seed)
                 self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
-                phrase = otp.generate(password, seed, seq, 1, 'md4', 'sixword')[0]
+                phrase = otp(password, seed, seq)
                 self.conn.expect(pass_re, self.timeout)
                 response      = self.conn.before + self.conn.after
                 self.response = self._remove_esc(response)
