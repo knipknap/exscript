@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-from FooLib import UrlParser
+from util.url import parse_url
 
 def is_ip(str):
     if re.compile('\d+\.\d+\.\d+\.\d+').match(str):
@@ -64,7 +64,7 @@ class Host(object):
         @type  uri: string
         @param uri: An URL formatted hostname.
         """
-        uri      = UrlParser.parse_url(uri, self.protocol)
+        uri      = parse_url(uri, self.protocol)
         hostname = uri.hostname or ''
         address  = uri.path and hostname + uri.path or hostname
         self.set_protocol(uri.protocol)

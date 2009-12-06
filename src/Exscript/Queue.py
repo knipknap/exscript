@@ -13,7 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, time, signal, gc, copy, traceback
-from FooLib         import UrlParser
 from AccountManager import AccountManager
 from Connection     import Connection
 from FunctionAction import FunctionAction
