@@ -7,15 +7,21 @@ DISTDIR=/pub/code/releases/$(NAME)
 ###################################################################
 # Standard targets.
 ###################################################################
+.PHONY : clean
 clean:
 	find . -name "*.pyc" -o -name "*.pyo" | xargs -n1 rm -f
 	rm -Rf build src/*.egg-info
+	cd doc; make clean
 
+.PHONY : dist-clean
 dist-clean: clean
 	rm -Rf dist $(PACKAGE)*
 
+.PHONY : doc
 doc:
+	./version.sh
 	cd doc; make
+	./version.sh --reset
 
 install:
 	python setup.py install --prefix $(PREFIX)
@@ -23,9 +29,13 @@ install:
 uninstall:
 	# Sorry, Python's distutils support no such action yet.
 
+.PHONY : tests
 tests:
-	cd tests/$(NAME); \
-		[ -e run_suite.* ] && ./run_suite.* || [ ! -e run_suite.* ]
+	find tests -name run_suite.py | while read i; do \
+		cd `dirname $$i`; \
+		./`basename $$i`; \
+		cd -; \
+	done
 
 ###################################################################
 # Package builders.
@@ -57,5 +67,8 @@ dist-publish: dist
 		mv $$i $(DISTDIR)/`basename $$i | tr '[:upper:]' '[:lower:]'`; \
 	done
 
+.PHONY : doc-publish
 doc-publish:
+	./version.sh
 	cd doc; make publish
+	./version.sh --reset
