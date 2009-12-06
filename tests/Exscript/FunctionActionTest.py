@@ -5,7 +5,8 @@ def suite():
     tests = ['testFunctionAction']
     return unittest.TestSuite(map(FunctionActionTest, tests))
 
-from Exscript                import Queue, Connection, Host
+from Exscript                import Queue, Host
+from Exscript.Connection     import Connection
 from Exscript.FunctionAction import FunctionAction
 
 def do_nothing(conn, data, **kwargs):

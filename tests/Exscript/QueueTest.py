@@ -5,9 +5,10 @@ def suite():
     tests = ['testStart', 'testIOSDummy']
     return unittest.TestSuite(map(QueueTest, tests))
 
-from Exscript           import Queue, Connection, Account
-from Exscript.util      import template
-from Exscript.protocols import Dummy
+from Exscript            import Queue, Account
+from Exscript.Connection import Connection
+from Exscript.util       import template
+from Exscript.protocols  import Dummy
 
 test_dir = '../templates'
 

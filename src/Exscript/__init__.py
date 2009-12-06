@@ -12,11 +12,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from version    import __version__
-from Account    import Account
-from Connection import Connection
-from Queue      import Queue
-from Host       import Host
+from version import __version__
+from Account import Account
+from Queue   import Queue
+from Host    import Host
 
 import inspect 
 __all__ = [name for name, obj in locals().items()
