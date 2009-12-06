@@ -49,13 +49,15 @@ class utilTest(QueueTest):
         self.assert_(data['n_calls'] == 2)
 
     def testStart(self):
-        from Exscript            import Account
-        from Exscript.util.start import run
+        from Exscript                import Account
+        from Exscript.util.start     import run
+        from Exscript.util.decorator import bind_args
 
-        data    = {'n_calls': 0}
-        hosts   = 'dummy:localhost'
-        account = Account('test', 'test')
-        run(account, hosts, count_calls, data, testarg = 1)
+        data     = {'n_calls': 0}
+        hosts    = 'dummy:localhost'
+        callback = bind_args(count_calls, data, testarg = 1)
+        account  = Account('test', 'test')
+        run(account, hosts, callback)
         self.assert_(data['n_calls'] == 1)
 
 if __name__ == '__main__':

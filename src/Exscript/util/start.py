@@ -41,7 +41,7 @@ def run(users, hosts, func, **kwargs):
     @type  kwargs: dict
     @param kwargs: Passed to the Exscript.Queue constructor.
     """
-    exscript = Queue(*args, **kwargs)
+    exscript = Queue(**kwargs)
     exscript.add_account(users)
     exscript.run(hosts, func)
 
