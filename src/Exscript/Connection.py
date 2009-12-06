@@ -23,19 +23,19 @@ class Connection(Trackable):
     This class is a decorator for protocols.Transport objects that
     adds thread safety by adding locking to the authenticate() and
     authorize() functions.
-    It also provides access to the associated Exscript and Host instances.
+    It also provides access to the associated Queue and Host instances.
 
     For complete documentation, please refer to the protocols.Transport
     documentation.
     """
 
-    def __init__(self, exscript, host, **kwargs):
+    def __init__(self, queue, host, **kwargs):
         """
         Do not call directly; Exscript creates the connection for you and
-        passes it to the function that is invoked by Exscript.run().
+        passes it to the function that is invoked by Queue.run().
 
-        @type  exscript: Exscript
-        @param exscript: The associated Exscript instance.
+        @type  queue: Queue
+        @param queue: The associated Queue instance.
         @type  host: Host
         @param host: The host on which the job is executed.
         @type  kwargs: dict
@@ -48,12 +48,12 @@ class Connection(Trackable):
 
         # Since we override setattr below, we can't access our properties
         # directly.
-        self.__dict__['exscript']     = exscript
+        self.__dict__['queue']        = queue
         self.__dict__['host']         = host
         self.__dict__['last_account'] = None
 
         # Define protocol specific options.
-        protocol = exscript._get_protocol_from_name(host.get_protocol())
+        protocol = queue._get_protocol_from_name(host.get_protocol())
         if host.get_protocol() == 'ssh1':
             kwargs['ssh_version'] = 1
         elif host.get_protocol() == 'ssh2':
@@ -135,14 +135,14 @@ class Connection(Trackable):
         else:
             raise Exception('Attempt to relase a released account.')
 
-    def get_exscript(self):
+    def get_queue(self):
         """
-        Returns the associated Exscript instance.
+        Returns the associated Queue instance.
 
-        @rtype:  Exscript
-        @return: The associated Exscript instance.
+        @rtype:  Queue
+        @return: The associated Queue instance.
         """
-        return self.exscript
+        return self.queue
 
     def get_account_manager(self):
         """
@@ -151,7 +151,7 @@ class Connection(Trackable):
         @rtype:  AccountManager
         @return: The associated account manager.
         """
-        return self.exscript.account_manager
+        return self.queue.account_manager
 
     def get_host(self):
         """

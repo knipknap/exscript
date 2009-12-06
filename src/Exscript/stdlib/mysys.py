@@ -24,7 +24,7 @@ def message(scope, string):
     @type  string: string
     @param string: A string, or a list of strings.
     """
-    exscript = scope.get('__connection__').get_exscript()
+    exscript = scope.get('__connection__').get_queue()
     exscript._print(string[0] + '\n')
     return True
 
@@ -85,7 +85,7 @@ def run(scope, hostnames, filename):
     # Enqueue the new jobs.
     strip    = scope.parser.strip_command
     job      = bind_args(eval_file, filename, strip_command)
-    exscript = scope.get('__connection__').get_exscript()
+    exscript = scope.get('__connection__').get_queue()
     actions  = exscript._priority_run(hosts, autologin(job))
 
     # Wait until all jobs are completed.
