@@ -23,8 +23,9 @@ class Execute(String):
         self.no_prompt     = parser.no_prompt
         self.strip_command = parser.strip_command
 
+        # The lexer has parsed the command, including a newline.
         # Make the debugger point to the beginning of the command.
-        self.start -= len(command) - 1
+        self.start -= len(command) + 1
         self.mark_end(self.start + len(command))
 
         # Make sure that any variables specified in the command are declared.

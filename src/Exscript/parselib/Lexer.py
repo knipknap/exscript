@@ -142,7 +142,7 @@ class Lexer(object):
             error = 'Expected %s but got %s (%s)'
             error = error % (type, cur_type, repr(cur_token))
         # In this case we do not point to the token that raised the error,
-        # but to the actual position of the parser.
+        # but to the actual position of the lexer.
         sender.start = self.current_char
         sender.end   = self.current_char + 1
         self.syntax_error(error, sender)
@@ -163,26 +163,23 @@ class Lexer(object):
             self.match()
         return self.token_buffer
 
-    def parse(self, string):
-        # Re-initialize, so that the same parser instance may be used multiple
+    def parse(self, string, filename = None):
+        # Re-initialize, so that the same lexer instance may be used multiple
         # times.
+        self.filename     = filename
         self.input        = string
         self.input_length = len(string)
         self.current_char = 0
         self.last_char    = 0
         self.token_buffer = None
         self.grammar      = []
-
-        # Define the standard library now, in order to prevent it from being overwritten
-        # by the user.
-        compiled  = self.parser_cls(self, *self.parser_cls_args)
+        compiled          = self.parser_cls(self, *self.parser_cls_args)
         if self.debug > 3:
             compiled.dump()
         return compiled
 
     def parse_file(self, filename):
-        self.filename = filename
-        fp            = open(filename)
-        string        = fp.read()
+        fp     = open(filename)
+        string = fp.read()
         fp.close()
-        return self.parse(string)
+        return self.parse(string, filename)

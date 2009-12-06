@@ -34,17 +34,16 @@ class Parser(object):
     def define_object(self, **kwargs):
         self.variables.update(kwargs)
 
-    def parse(self, string):
+    def parse(self, string, filename = None):
         variables = copy.deepcopy(self.variables)
         lexer     = Lexer(Program, self, variables, debug = self.debug)
-        return lexer.parse(string)
+        return lexer.parse(string, filename)
 
     def parse_file(self, filename):
-        self.filename = filename
-        fp            = open(filename)
-        string        = fp.read()
+        fp     = open(filename)
+        string = fp.read()
         fp.close()
-        return self.parse(string)
+        return self.parse(string, filename)
 
 if __name__ == "__main__":
     import sys

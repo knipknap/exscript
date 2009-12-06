@@ -20,6 +20,8 @@ def _builtin_vars(conn = None, filename = 'undefined'):
     builtin  = dict(__filename__   = [filename],
                     __hostname__   = [hostname],
                     __connection__ = conn)
+    if conn:
+        builtin.update(conn.get_host().vars)
     return builtin
 
 def _compile(template, parser_kwargs, **kwargs):
@@ -27,7 +29,7 @@ def _compile(template, parser_kwargs, **kwargs):
     parser = Parser(**parser_kwargs)
     parser.define_object(**kwargs)
     parser.define_object(**stdlib.functions)
-    return parser.parse(template)
+    return parser.parse(template, kwargs.get('__filename__')[0])
 
 def _run(conn, template, parser_kwargs, **kwargs):
     compiled = _compile(template, parser_kwargs, **kwargs)

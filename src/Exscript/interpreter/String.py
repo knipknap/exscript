@@ -59,8 +59,8 @@ class String(Token):
 
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, self.string)
-        lexer.restore_grammar()
         self.mark_end()
+        lexer.restore_grammar()
 
     def _escape(self, token):
         char = token[1]
@@ -71,7 +71,7 @@ class String(Token):
         return char
 
     def _variable_error(self, field, msg):
-        self.start += self.data.find(field)
+        self.start += self.string.find(field)
         self.end    = self.start + len(field)
         self.lexer.runtime_error(msg, self)
 
