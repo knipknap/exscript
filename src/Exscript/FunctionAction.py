@@ -15,7 +15,7 @@
 import os, traceback
 from workqueue             import Action
 from protocols.Exception   import LoginFailure
-from Interpreter.Exception import FailException
+from interpreter.Exception import FailException
 
 True  = 1
 False = 0

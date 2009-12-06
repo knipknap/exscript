@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript             import stdlib
-from Exscript.Interpreter import Parser
+from Exscript.interpreter import Parser
 
 def _builtin_vars(conn = None, filename = 'undefined'):
     hostname = conn and conn.get_host().get_address() or 'undefined'
