@@ -42,12 +42,8 @@ class Job(threading.Thread):
                                 self.local_data)
         except Exception, e:
             self.exception = e
-            if self.debug:
-                name = self.action.name or 'no name'
-                print 'Job "%s" (%s) failed: %s' % (self.getName(), name, e)
-                traceback.print_exc()
-        if self.exception is not None:
-            self.action.signal_emit('aborted', self.action, e)
-        else:
-            self.action.signal_emit('succeeded', self.action)
+            self.action.signal_emit('aborted',   self.action, e)
+            self.action.signal_emit('completed', self.action)
+            raise
+        self.action.signal_emit('succeeded', self.action)
         self.action.signal_emit('completed', self.action)
