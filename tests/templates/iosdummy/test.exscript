@@ -2,6 +2,9 @@ show diag $slot{
   extract /Linecard\/Module:\s+(\S+)/ as type
   extract /^  (.+) memory size: (\d+), bytes/ as memtypes, memsizes
 }
+
+{sys.run("dummy:subdummy", "subtest.exscript")}
+
 show ip int brie{extract /^(Giga\S+)/ as interfaces}
 {loop interfaces as interface}
   show interface $interface

@@ -32,8 +32,13 @@ def ios_dummy_cb(conn, **kwargs):
     conn.set_on_data_received_cb(log.collect)
     conn.open()
     conn.authenticate(wait = True)
-    template.eval(conn, tmpl, slot = 10)
+    template.eval_file(conn, tmpl, slot = 10)
     #open(expected, 'w').write(log.data)
+    if log.data != open(expected).read():
+        print
+        print "Expected:", log.data
+        print "---------------------------------------------"
+        print "Got:", open(expected).read()
     assert log.data == open(expected).read()
 
 class IOSDummy(Dummy):
@@ -48,9 +53,8 @@ class IOSDummy(Dummy):
 
 class QueueTest(unittest.TestCase):
     def setUp(self):
-        user          = os.environ.get('USER')
-        account       = Account(user, '')
-        self.exscript = Queue(verbose = 0)
+        account       = Account('sab', '')
+        self.exscript = Queue(verbose = 0, max_threads = 1)
         self.exscript.add_account(account)
         self.exscript.add_protocol('ios', IOSDummy)
 

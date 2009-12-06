@@ -12,6 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+from copy import deepcopy
 from Exscript.parselib import Token
 
 class Scope(Token):
@@ -66,12 +67,14 @@ class Scope(Token):
         return vars
 
 
-    def get_public_vars(self):
+    def copy_public_vars(self):
         """
-        Like get_vars(), but does not include any private variables.
+        Like get_vars(), but does not include any private variables and
+        deep copies each variable.
         """
         vars = self.get_vars()
-        return dict(k for k in vars.iteritems() if not k[0].startswith('_'))
+        vars = dict(k for k in vars.iteritems() if not k[0].startswith('_'))
+        return deepcopy(vars)
 
 
     def get(self, name, default = None):

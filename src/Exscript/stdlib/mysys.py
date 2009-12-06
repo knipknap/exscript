@@ -12,7 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import time
+import time, os
+from Exscript                import Host, util
+from Exscript.util.decorator import bind_args, autologin
 
 True  = 1
 False = 0
@@ -69,22 +71,18 @@ def run(scope, hostnames, filename):
     """
     # The filename is relative to the file that makes the call.
     exscript_file = scope.get('__filename__') or ''
-    exscript_dir  = os.path.dirname(exscript_file)
+    exscript_dir  = os.path.dirname(exscript_file[0])
     filename      = os.path.join(exscript_dir, filename[0])
 
     # Copy the variables from the current scope into new host objects.
-    vars  = scope.get_public_vars()
     hosts = []
     for hostname in hostnames:
-        host = Host(hostname)
-        for key, value_list in vars.iteritems():
-             for value in value_list:
-                 host.append(key, value)
+        host = Host(hostname, **scope.copy_public_vars())
         hosts.append(host)
 
     # Enqueue the new jobs.
     strip    = scope.parser.strip_command
-    job      = bind_args(eval_file, filename, strip_command)
+    job      = bind_args(util.template.eval_file, filename, strip)
     exscript = scope.get('__connection__').get_queue()
     actions  = exscript._priority_run(hosts, autologin(job))
 
