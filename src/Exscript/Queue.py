@@ -137,22 +137,9 @@ class Queue(object):
         self.workqueue.enqueue(action)
 
 
-    def _priority_enqueue_action(self, action, force = 0):
+    def _priority_enqueue_action(self, action, force = False):
         self.total += 1
         self.workqueue.priority_enqueue(action, force)
-
-
-    def _action_is_completed(self, action):
-        """
-        Returns True if all of the given actions are completed, True
-        otherwise.
-        """
-        if not isinstance(action, list):
-            action = [action]
-        for current in action:
-            if self.workqueue.in_queue(action):
-                return False
-        return True
 
 
     def _get_protocol_from_name(self, name):
@@ -217,25 +204,35 @@ class Queue(object):
         self.account_manager.add_account(account)
 
 
-    def _catch_sigint_and_run(self, function, *data, **kwargs):
+    def task_is_completed(self, task):
         """
-        Makes sure that we shut down properly even when SIGINT or SIGTERM
-        is sent.
+        Returns True if the given task is completed, False otherwise. The task
+        is an object as returned by the Queue.run() method.
+
+        @type  task: object
+        @param task: The object that was returned by Queue.run().
+        @rtype:  bool
+        @return: Whether the task is completed.
         """
-        def on_posix_signal(signum, frame):
-            print '********** SIGINT RECEIVED - SHUTTING DOWN! **********'
-            raise KeyboardInterrupt
+        if not isinstance(task, list):
+            task = [task]
+        for action in task:
+            if self.workqueue.in_queue(action):
+                return False
+        return True
 
-        if self.workqueue.get_length() == 0:
-            signal.signal(signal.SIGINT,  on_posix_signal)
-            signal.signal(signal.SIGTERM, on_posix_signal)
 
-        try:
-            function(*data, **kwargs)
-        except KeyboardInterrupt:
-            print 'Interrupt caught succcessfully.'
-            print '%d unfinished jobs.' % (self.total - self.completed)
-            sys.exit(1)
+    def wait_for(self, task):
+        """
+        Waits until the given task is completed. The task is an object as
+        returned by the Queue.run() method.
+
+        @type  task: object
+        @param task: The object that was returned by Queue.run().
+        """
+        self._dbg(1, 'Waiting for the task to finish.')
+        while not self.task_is_completed(task):
+            time.sleep(1)
 
 
     def join(self):
@@ -269,16 +266,38 @@ class Queue(object):
         self._del_status_bar()
 
 
-    def _run1(self, host, function, prioritize, *args, **kwargs):
+    def _catch_sigint_and_run(self, function, *data, **kwargs):
+        """
+        Makes sure that we shut down properly even when SIGINT or SIGTERM
+        is sent.
+        """
+        def on_posix_signal(signum, frame):
+            print '********** SIGINT RECEIVED - SHUTTING DOWN! **********'
+            raise KeyboardInterrupt
+
+        if self.workqueue.get_length() == 0:
+            signal.signal(signal.SIGINT,  on_posix_signal)
+            signal.signal(signal.SIGTERM, on_posix_signal)
+
+        try:
+            function(*data, **kwargs)
+        except KeyboardInterrupt:
+            print 'Interrupt caught succcessfully.'
+            print '%d unfinished jobs.' % (self.total - self.completed)
+            sys.exit(1)
+
+
+    def _run1(self, host, function, prioritize, force, *args, **kwargs):
         # To save memory, limit the number of parsed (=in-memory) items.
         # A side effect is that we will no longer know the total
         # number of jobs - to work around this, we first add the total
         # ourselfs (see above), and then subtract one from the total
         # each time a new host is appended (see below).
         n_connections = self.get_max_threads()
-        while self.workqueue.get_length() > n_connections * 2:
-            time.sleep(1)
-            gc.collect()
+        if not force:
+            while self.workqueue.get_length() > n_connections * 2:
+                time.sleep(1)
+                gc.collect()
 
         # Create the connection. If we are multi threaded, disable echoing
         # of the conversation to stdout.
@@ -300,7 +319,7 @@ class Queue(object):
 
         # Done. Enqueue this.
         if prioritize:
-            self._priority_enqueue_action(action)
+            self._priority_enqueue_action(action, force)
         else:
             self._enqueue_action(action)
         self.total -= 1
@@ -308,22 +327,17 @@ class Queue(object):
 
 
     def _run(self, hosts, function, *args, **kwargs):
-        n_connections = self.get_max_threads()
-        hosts         = get_hosts_from_name(hosts)
-        self.total   += len(hosts)
+        hosts       = get_hosts_from_name(hosts)
+        self.total += len(hosts)
         self.workqueue.start()
 
+        actions = []
         for host in hosts:
-            self._run1(host, function, False, *args, **kwargs)
+            action = self._run1(host, function, False, False, *args, **kwargs)
+            actions.append(action)
 
         self._dbg(1, 'All actions enqueued.')
         self.shutdown()
-
-
-    def _priority_run(self, hosts, function, *args, **kwargs):
-        actions = []
-        for host in hosts:
-            actions.append(self._run1(host, function, True, *args, **kwargs))
         return actions
 
 
@@ -332,14 +346,76 @@ class Queue(object):
         Add the given function to a queue, and call it once for each host
         according to the threading options.
 
+        Returns an object that represents the queued task, and that may be
+        passed to is_completed() to check the status.
+
         @type  hosts: string|list(string)|Host|list(Host)
         @param hosts: A hostname or Host object, or a list of them.
+        @type  function: function
+        @param function: The function to execute.
         @type  args: list
         @param args: These args are passed to the given function.
         @type  kwargs: dict
         @param kwargs: These kwargs are passed to the given function.
+        @rtype:  object
+        @return: An object representing the task.
         """
-        self._catch_sigint_and_run(self._run,
-                                   hosts,
-                                   function,
-                                   *args, **kwargs)
+        return self._catch_sigint_and_run(self._run,
+                                          hosts,
+                                          function,
+                                          *args, **kwargs)
+
+
+    def priority_run(self, hosts, function, *args, **kwargs):
+        """
+        Like run(), but adds the task to the front of the queue. If force is
+
+        @type  hosts: string|list(string)|Host|list(Host)
+        @param hosts: A hostname or Host object, or a list of them.
+        @type  function: function
+        @param function: The function to execute.
+        @type  args: list
+        @param args: These args are passed to the given function.
+        @type  kwargs: dict
+        @param kwargs: These kwargs are passed to the given function.
+        @rtype:  object
+        @return: An object representing the task.
+        """
+        hosts       = get_hosts_from_name(hosts)
+        self.total += len(hosts)
+
+        actions = []
+        for host in hosts:
+            action = self._run1(host, function, True, False, *args, **kwargs)
+            actions.append(action)
+
+        self._dbg(1, 'All prioritized actions enqueued.')
+        return actions
+
+
+    def force_run(self, hosts, function, *args, **kwargs):
+        """
+        Like priority_run(), but starts the task immediately even if that
+        max_threads is exceeded.
+
+        @type  hosts: string|list(string)|Host|list(Host)
+        @param hosts: A hostname or Host object, or a list of them.
+        @type  function: function
+        @param function: The function to execute.
+        @type  args: list
+        @param args: These args are passed to the given function.
+        @type  kwargs: dict
+        @param kwargs: These kwargs are passed to the given function.
+        @rtype:  object
+        @return: An object representing the task.
+        """
+        hosts       = get_hosts_from_name(hosts)
+        self.total += len(hosts)
+
+        actions = []
+        for host in hosts:
+            action = self._run1(host, function, True, True, *args, **kwargs)
+            actions.append(action)
+
+        self._dbg(1, 'All forced actions enqueued.')
+        return actions

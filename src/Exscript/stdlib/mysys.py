@@ -81,15 +81,11 @@ def run(scope, hostnames, filename):
         hosts.append(host)
 
     # Enqueue the new jobs.
-    strip    = scope.parser.strip_command
-    job      = bind_args(util.template.eval_file, filename, strip)
-    exscript = scope.get('__connection__').get_queue()
-    actions  = exscript._priority_run(hosts, autologin(job))
-
-    # Wait until all jobs are completed.
-    while not exscript._action_is_completed(actions):
-        time.sleep(1)
-        continue
+    strip = scope.parser.strip_command
+    job   = bind_args(util.template.eval_file, filename, strip)
+    queue = scope.get('__connection__').get_queue()
+    task  = queue.force_run(hosts, autologin(job))
+    queue.wait_for(task)
     return True
 
 def wait(scope, seconds):
