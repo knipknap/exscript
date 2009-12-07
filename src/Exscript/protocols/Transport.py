@@ -266,7 +266,7 @@ class Transport(object):
         return self.prompt_re
 
 
-    def set_error(self, error = None):
+    def set_error_prompt(self, error = None):
         """
         Defines a pattern that is used to monitor the response of the
         connected host. If the pattern matches (any time the expect() or

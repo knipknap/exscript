@@ -185,7 +185,7 @@ def set_error(scope, error_re = None):
     @param error_re: The error pattern.
     """
     conn = scope.get('__connection__')
-    conn.set_error(error_re)
+    conn.set_error_prompt(error_re)
     return True
 
 def set_timeout(scope, timeout):
