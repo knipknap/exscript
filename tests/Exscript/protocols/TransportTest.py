@@ -2,7 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from ConfigParser                 import RawConfigParser
-from Exscript.protocols.Transport import Transport
+from Exscript.protocols.Transport import Transport, prompt_re
 
 class TransportTest(unittest.TestCase):
     """
@@ -20,6 +20,34 @@ class TransportTest(unittest.TestCase):
         self.user     = cfg.get('testhost', 'user')
         self.password = cfg.get('testhost', 'password')
         self.createTransport()
+
+    def testPrompts(self):
+        prompts = [r'[sam123@home ~]$',
+                   r'[MyHost-A1]',
+                   r'<MyHost-A1>',
+                   r'sam@knip:~/Code/exscript$',
+                   r'sam@MyHost-X123>',
+                   r'sam@MyHost-X123#',
+                   r'MyHost-ABC-CDE123>',
+                   r'MyHost-A1#',
+                   r'S-ABC#',
+                   r'0123456-1-1-abc#',
+                   r'0123456-1-1-a>',
+                   r'MyHost-A1(config)#',
+                   r'MyHost-A1(config)>',
+                   r'RP/0/RP0/CPU0:A-BC2#',
+                   r'FA/0/1/2/3>',
+                   r'FA/0/1/2/3(config)>',
+                   r'FA/0/1/2/3(config)#',
+                   r'admin@s-x-a6.a.bc.de.fg:/# ',
+                   r'admin@s-x-a6.a.bc.de.fg:/% ']
+        for prompt in prompts:
+            if not prompt_re.search('\n' + prompt):
+                self.fail('Prompt %s does not match exactly.' % prompt)
+            if not prompt_re.search('this is a test\r\n' + prompt):
+                self.fail('Prompt %s does not match.' % prompt)
+            if prompt_re.search('some text ' + prompt):
+                self.fail('Prompt %s matches incorrectly.' % prompt)
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Transport))

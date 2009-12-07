@@ -69,34 +69,6 @@ login_fail_re = re.compile(newline      \
                          + r'[^\r\n]*'  \
                          + r'(?:' + '|'.join(login_fail) + r')', flags)
 
-# Test the prompt types. FIXME: Move into a unit test.
-prompts = [r'[sam123@home ~]$',
-           r'[MyHost-A1]',
-           r'<MyHost-A1>',
-           r'sam@knip:~/Code/exscript$',
-           r'sam@MyHost-X123>',
-           r'sam@MyHost-X123#',
-           r'MyHost-ABC-CDE123>',
-           r'MyHost-A1#',
-           r'S-ABC#',
-           r'0123456-1-1-abc#',
-           r'0123456-1-1-a>',
-           r'MyHost-A1(config)#',
-           r'MyHost-A1(config)>',
-           r'RP/0/RP0/CPU0:A-BC2#',
-           r'FA/0/1/2/3>',
-           r'FA/0/1/2/3(config)>',
-           r'FA/0/1/2/3(config)#',
-           r'admin@s-x-a6.a.bc.de.fg:/# ',
-           r'admin@s-x-a6.a.bc.de.fg:/% ']
-for prompt in prompts:
-    if not prompt_re.search('\n' + prompt):
-        raise Exception("Prompt %s does not match exactly." % prompt)
-    if not prompt_re.search('this is a test\r\n' + prompt):
-        raise Exception("Prompt %s does not match." % prompt)
-    if prompt_re.search('some text ' + prompt):
-        raise Exception("Prompt %s matches incorrectly." % prompt)
-
 class Transport(object):
     """
     This is the base class for all protocols; it defines the common portions 
