@@ -234,7 +234,7 @@ class Queue(object):
         """
         self._dbg(2, 'Waiting for the task to finish.')
         while not self.task_is_completed(task):
-            time.sleep(1)
+            time.sleep(.1)
 
 
     def join(self):
@@ -246,7 +246,7 @@ class Queue(object):
             #print '%s jobs left, waiting.' % self.workqueue.get_length()
             self._del_status_bar()
             self._print_status_bar()
-            time.sleep(1)
+            time.sleep(.1)
             gc.collect()
 
 
@@ -298,7 +298,7 @@ class Queue(object):
         n_connections = self.get_max_threads()
         if not force:
             while self.workqueue.get_length() > n_connections * 2:
-                time.sleep(1)
+                time.sleep(.1)
                 gc.collect()
 
         # Create the connection. If we are multi threaded, disable echoing

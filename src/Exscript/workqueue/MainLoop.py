@@ -126,7 +126,7 @@ class MainLoop(Trackable, threading.Thread):
             gc.collect()
 
             if self.paused:
-                time.sleep(1)
+                time.sleep(.1)
                 continue
 
             # If there are any actions to be force_started, run them now.
@@ -137,12 +137,12 @@ class MainLoop(Trackable, threading.Thread):
             # Wait until we have less than the maximum number of threads.
             # Don't bother looking if the queue is empty.
             if len(self.queue) <= 0 or self.paused:
-                time.sleep(1)
+                time.sleep(.1)
                 continue
 
             if len(self.running_jobs) >= self.max_threads:
                 #print 'Maximum number of threads running, waiting...'
-                time.sleep(1)
+                time.sleep(.1)
                 continue
 
             # Take the next action and start it in a new thread.
