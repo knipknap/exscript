@@ -1,4 +1,8 @@
-* Replace Connection instances in the tests by FakeConnection objects.
+* Implement HostTest.
+* Implement ConnectionTest.
+* Merge tests from SpiffWorkqueue to tests/Exscript/workqueue/.
+* Add tests for remaining util modules.
+* Is there a sane way to test stdlib?
 * Warn for untested methods.
 * Check whether merging workqueue.Action and workqueue.Job makes sense.
 * Add a workqueue method for putting jobs to sleep until another job is
@@ -7,5 +11,3 @@
 * Check for places where polling is used, and get rid of it.
 * Try to move the remote_os detection into a stream monitor, instead of
   hard wiring it into the authentication procedure.
-* Add more tests.
-* "make dist" should pull dependencies.

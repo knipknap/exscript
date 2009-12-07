@@ -3,75 +3,112 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from Exscript                import Queue, Account
 from Exscript.Connection     import Connection
-from Exscript.util           import template
 from Exscript.protocols      import Dummy
 from Exscript.util.decorator import bind_args
 
-test_dir = '../templates'
-
 def count_calls(conn, data, **kwargs):
-    # Warning: Assertions raised in this function happen in a subprocess!
     assert kwargs.has_key('testarg')
     assert isinstance(conn, Connection)
     data['n_calls'] += 1
 
-class Log(object):
-    data = ''
-    def collect(self, data):
-        self.data += data
-        return data
+def spawn_subtask(conn, data, **kwargs):
+    count_calls(conn, data, **kwargs)
+    func  = bind_args(count_calls, data, testarg = 1)
+    queue = conn.get_queue()
+    task  = queue.priority_run('subtask', func)
+    queue.wait_for(task)
 
-def ios_dummy_cb(conn, **kwargs):
-    # Warning: Assertions raised in this function happen in a subprocess!
-    log       = Log()
-    test_name = conn.get_host().get_name()
-    tmpl      = os.path.join(test_dir, test_name, 'test.exscript')
-    expected  = os.path.join(test_dir, test_name, 'expected')
-    conn.signal_connect('data_received', log.collect)
-    conn.open()
-    conn.authenticate(wait = True)
-    template.eval_file(conn, tmpl, slot = 10)
-    #open(expected, 'w').write(log.data)
-    if log.data != open(expected).read():
-        print
-        print "Got:", log.data
-        print "---------------------------------------------"
-        print "Expected:", open(expected).read()
-    assert log.data == open(expected).read()
+def do_nothing(conn):
+    pass
 
-class IOSDummy(Dummy):
+class IntentionalError(Exception):
+    pass
+
+class ErrorProtocol(Dummy):
     def __init__(self, *args, **kwargs):
-        #kwargs['echo'] = True
-        Dummy.__init__(self, *args, **kwargs)
-
-    def connect(self, test_name, *args, **kwargs):
-        filename = os.path.join(test_dir, test_name, 'pseudodev.py')
-        self.load_command_handler_from_file(filename)
-        return Dummy.connect(self, test_name, *args, **kwargs)
+        raise IntentionalError('broken protocol')
 
 class QueueTest(unittest.TestCase):
     def setUp(self):
-        account       = Account('sab', '')
-        self.exscript = Queue(verbose = 0, max_threads = 1)
-        self.exscript.add_account(account)
-        self.exscript.add_protocol('ios', IOSDummy)
+        self.queue = Queue(verbose = 0, max_threads = 1)
 
-    def testStart(self):
+    def testConstructor(self):
+        queue = Queue()
+
+    def testAddProtocol(self):
+        self.queue.add_protocol('error', ErrorProtocol)
+        host = 'error:test'
+        self.assertRaises(IntentionalError, self.queue.run, host, object)
+
+    def testSetMaxThreads(self):
+        self.assertEqual(1, self.queue.get_max_threads())
+        self.queue.set_max_threads(2)
+        self.assertEqual(2, self.queue.get_max_threads())
+
+    def testGetMaxThreads(self):
+        pass # Already tested in testSetMaxThreads().
+
+    def testAddAccount(self):
+        self.assertEqual(0, self.queue.account_manager.n_accounts())
+        account = Account('user', 'test')
+        self.queue.add_account(account)
+        self.assertEqual(1, self.queue.account_manager.n_accounts())
+
+    def startTask(self):
+        self.testAddAccount()
+        hosts = ['dummy1', 'dummy2']
+        return self.queue.run(hosts, do_nothing)
+
+    def testTaskIsCompleted(self):
+        task = self.startTask()
+        while not self.queue.task_is_completed(task):
+            time.sleep(.3)
+
+    def testWaitFor(self):
+        task = self.startTask()
+        self.queue.wait_for(task)
+        self.assert_(self.queue.task_is_completed(task))
+
+    def testJoin(self):
+        task = self.startTask()
+        self.queue.join()
+        self.assert_(self.queue.task_is_completed(task))
+
+    def testShutdown(self):
+        task = self.startTask()
+        self.queue.shutdown()
+        self.assert_(self.queue.task_is_completed(task))
+
+    def testRun(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
         func  = bind_args(count_calls, data, testarg = 1)
-        self.exscript.run(hosts,    func)
-        self.exscript.run('dummy3', func)
-        self.exscript.shutdown()
+        self.queue.run(hosts,    func)
+        self.queue.run('dummy3', func)
+        self.queue.shutdown()
         self.assert_(data['n_calls'] == 3)
 
-        self.exscript.run('dummy4', func)
-        self.exscript.shutdown()
+        self.queue.run('dummy4', func)
+        self.queue.shutdown()
         self.assert_(data['n_calls'] == 4)
 
-    def testIOSDummy(self):
-        for test in os.listdir(test_dir):
-            self.exscript.run('ios:' + test, ios_dummy_cb)
+    def testPriorityRun(self):
+        data  = {'n_calls': 0}
+        hosts = ['dummy1', 'dummy2']
+        func  = bind_args(spawn_subtask, data, testarg = 1)
+
+        # Since the job (consisting of two connections) spawns a subtask,
+        # we need at least two threads. But both subtasks could be waiting
+        # for one of the parent tasks to complete, so we need at least
+        # *three* threads.
+        self.queue.set_max_threads(3)
+        self.queue.run(hosts, func)
+        self.queue.shutdown()
+        self.assertEqual(4, data['n_calls'])
+
+        self.queue.run('dummy4', func)
+        self.queue.shutdown()
+        self.assertEqual(6, data['n_calls'])
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(QueueTest)
