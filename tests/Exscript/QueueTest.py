@@ -26,16 +26,16 @@ def ios_dummy_cb(conn, **kwargs):
     test_name = conn.get_host().get_name()
     tmpl      = os.path.join(test_dir, test_name, 'test.exscript')
     expected  = os.path.join(test_dir, test_name, 'expected')
-    conn.set_on_data_received_cb(log.collect)
+    conn.signal_connect('data_received', log.collect)
     conn.open()
     conn.authenticate(wait = True)
     template.eval_file(conn, tmpl, slot = 10)
     #open(expected, 'w').write(log.data)
     if log.data != open(expected).read():
         print
-        print "Expected:", log.data
+        print "Got:", log.data
         print "---------------------------------------------"
-        print "Got:", open(expected).read()
+        print "Expected:", open(expected).read()
     assert log.data == open(expected).read()
 
 class IOSDummy(Dummy):

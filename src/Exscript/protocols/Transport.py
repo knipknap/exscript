@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import string, re, sys
+from SpiffSignal    import Trackable
 from AbstractMethod import AbstractMethod
 from Exception      import TransportException, InvalidCommandException
 
@@ -69,7 +70,7 @@ login_fail_re = re.compile(newline      \
                          + r'[^\r\n]*'  \
                          + r'(?:' + '|'.join(login_fail) + r')', flags)
 
-class Transport(object):
+class Transport(Trackable):
     """
     This is the base class for all protocols; it defines the common portions 
     of the API.
@@ -77,8 +78,16 @@ class Transport(object):
 
     def __init__(self, **kwargs):
         """
-        Constructor. kwargs may include:
+        Constructor.
+        The following signals are provided:
 
+          - data_received: Sent whenever a packet was received from the
+          connected host.
+          - otp_requested: Sent whenever the connected host requested a
+          one-time-password to be entered.
+
+        @type  kwargs: dict
+        @param kwargs: The following arguments are supported:
           - echo: Whether to echo the device response to the terminal. The 
           default is False.
           - debug: An integer between 0 (no debugging) and 5 (very verbose 
@@ -87,30 +96,21 @@ class Transport(object):
           - timeout: See set_timeout(). The default value is 30.
           - logfile: A file into which a log of the conversation with the 
           device is dumped.
-          - on_data_received: See set_on_data_received_cb().
-          - on_data_received_args: The *args argument for 
-          set_on_data_received_cb().
-          - on_otp_requested: See set_on_otp_requested_cb().
-          - on_otp_requested_args: The *args argument for 
-          set_on_otp_requested_cb().
         """
-        self.prompt_re             = prompt_re
-        self.error_re              = error_re
-        self.host                  = kwargs.get('host',     None)
-        self.user                  = kwargs.get('user',     '')
-        self.password              = kwargs.get('password', '')
-        self.echo                  = kwargs.get('echo',     0)
-        self.debug                 = kwargs.get('debug',    0)
-        self.timeout               = kwargs.get('timeout',  30)
-        self.logfile               = kwargs.get('logfile',  None)
-        self.log                   = None
-        self.on_data_received_cb   = kwargs.get('on_data_received',      None)
-        self.on_data_received_args = kwargs.get('on_data_received_args', ())
-        self.on_otp_requested      = kwargs.get('on_otp_requested',      None)
-        self.on_otp_requested_args = kwargs.get('on_otp_requested_args', ())
-        self.last_tacacs_key_id    = None
-        self.response              = None
-        self.remote_os             = 'unknown'
+        Trackable.__init__(self)
+        self.prompt_re          = prompt_re
+        self.error_re           = error_re
+        self.host               = kwargs.get('host',     None)
+        self.user               = kwargs.get('user',     '')
+        self.password           = kwargs.get('password', '')
+        self.echo               = kwargs.get('echo',     0)
+        self.debug              = kwargs.get('debug',    0)
+        self.timeout            = kwargs.get('timeout',  30)
+        self.logfile            = kwargs.get('logfile',  None)
+        self.log                = None
+        self.last_tacacs_key_id = None
+        self.response           = None
+        self.remote_os          = 'unknown'
         if self.logfile is not None:
             self.log = open(kwargs['logfile'], 'a')
 
@@ -147,8 +147,7 @@ class Transport(object):
             sys.stdout.flush()
         if self.log is not None:
             self.log.write(text)
-        if self.on_data_received_cb is not None:
-            self.on_data_received_cb(data, *self.on_data_received_args)
+        self.signal_emit('data_received', data)
         return data
 
 
@@ -163,45 +162,8 @@ class Transport(object):
         return False
 
 
-    def set_on_data_received_cb(self, func, *args):
-        """
-        Defines a function that is called whenever data was received from the 
-        remote host. The function is passed the following arguments:
-
-          - The data that was retrieved.
-          - Any additional arguments passed to set_on_data_received_cb().
-
-        @type  func: object
-        @param func: The function that is called.
-        @type  args: list
-        @param args: Any additional arguments, passed to func().
-        """
-        self.on_data_received_cb   = func
-        self.on_data_received_args = args
-
-
     def _otp_cb(self, seq, seed):
-        if self.on_otp_requested is not None:
-            self.on_otp_requested(seq, seed, *self.on_otp_requested_args)
-
-
-    def set_on_otp_requested_cb(self, func, *args):
-        """
-        Defines a function that is called whenever the remote host
-        requested that a one time password is entered.
-        The function is passed the following arguments:
-
-          - The key number that was requested.
-          - The seed (cryptographic salt) that was requested.
-          - Any additional arguments passed to set_on_data_received_cb().
-
-        @type  func: object
-        @param func: The function that is called.
-        @type  args: list
-        @param args: Any additional arguments, passed to func().
-        """
-        self.on_otp_requested      = func
-        self.on_otp_requested_args = args
+        self.signal_emit('otp_requested', seq, seed)
 
 
     def _dbg(self, level, msg):

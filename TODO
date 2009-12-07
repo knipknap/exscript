@@ -1,4 +1,3 @@
-* Port protocols.Transport to SpiffSignal.
 * Get rid of *args, **kwargs in callback connectors such as
   Transport.set*cb(), Queue.*run(), and decorators.
 * Replace Connection instances in the tests by FakeConnection objects.

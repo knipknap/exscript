@@ -13,12 +13,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading, os.path
-from SpiffSignal import Trackable
 
 True  = 1
 False = 0
 
-class Connection(Trackable):
+class Connection(object):
     """
     This class is a decorator for protocols.Transport objects that
     adds thread safety by adding locking to the authenticate() and
@@ -42,10 +41,6 @@ class Connection(Trackable):
         @param kwargs: For a list of supported options please check the
                        protocol adapter API documentation.
         """
-        # Hack to keep Trackable happy even though we override __setattr__.
-        self.__dict__['slots'] = None
-        Trackable.__init__(self)
-
         # Since we override setattr below, we can't access our properties
         # directly.
         self.__dict__['queue']        = queue
@@ -144,12 +139,14 @@ class Connection(Trackable):
         else:
             raise Exception('Non-locking shared accounts unsupported.')
         self.last_account = account
-        self.transport.set_on_otp_requested_cb(self._on_otp_requested,
-                                               account)
+        self.transport.signal_connect('otp_requested',
+                                      self._on_otp_requested,
+                                      account)
         return account
 
     def _release_account(self, account = None):
-        self.transport.set_on_otp_requested_cb(None)
+        self.transport.signal_disconnect('otp_requested',
+                                         self._on_otp_requested)
         if account == self.last_account:
             account = None
         if account:

@@ -54,7 +54,7 @@ class FunctionAction(Action):
         self.error_logfile        = None
         self.error_logfile_mode   = 'a'
         self.name                 = conn.get_host().get_address()
-        self.conn.set_on_data_received_cb(self._log)
+        self.conn.signal_connect('data_received', self._log)
 
     def get_name(self):
         return self.name + ' (retry %d)' % self.retry

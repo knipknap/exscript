@@ -61,12 +61,6 @@ class TransportTest(unittest.TestCase):
     def testIsDummy(self):
         self.assert_(self.transport.is_dummy() == False)
 
-    def testSetOnDataReceivedCb(self):
-        self.transport.set_on_data_received_cb(object)
-
-    def testSetOnOtpRequestedCb(self):
-        self.transport.set_on_otp_requested_cb(object)
-
     def testSetPrompt(self):
         initial_regex = self.transport.get_prompt()
         self.assert_(hasattr(initial_regex, 'groups'))
