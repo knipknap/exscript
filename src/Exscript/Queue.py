@@ -42,8 +42,8 @@ class Queue(object):
             - domain: The default domain of the contacted hosts.
             - verbose: The verbosity level, default 1.
             - max_threads: The maximum number of concurrent threads, default 1
-            - retries: The number of retries, default 0.
-            - login_retries: The number of login retries, default 0.
+            - times: The number of attempts on failure, default 1.
+            - login_times: The number of login attempts, default 1.
             - logdir: The directory into which the logs are written.
             - overwrite_logs: Whether existing logfiles are overwritten.
             - delete_logs: Whether successful logfiles are deleted.
@@ -56,8 +56,8 @@ class Queue(object):
         self.logdir            = kwargs.get('logdir')
         self.overwrite_logs    = kwargs.get('overwrite_logs', False)
         self.delete_logs       = kwargs.get('delete_logs',    False)
-        self.retries           = kwargs.get('retries',        0)
-        self.login_retries     = kwargs.get('login_retries',  0)
+        self.times             = kwargs.get('times',          1)
+        self.login_times       = kwargs.get('login_times',    1)
         self.protocol_args     = kwargs.get('protocol_args',  {})
         self.completed         = 0
         self.total             = 0
@@ -312,8 +312,8 @@ class Queue(object):
         # Build an object that represents the actual task.
         self._dbg(2, 'Building FunctionAction for %s.' % host.get_name())
         action = FunctionAction(function, conn)
-        action.set_times(self.retries + 1)
-        action.set_login_retries(self.login_retries + 1)
+        action.set_times(self.times)
+        action.set_login_times(self.login_times)
         action.set_logdir(self.logdir)
         action.set_log_options(overwrite = self.overwrite_logs,
                                delete    = self.delete_logs)

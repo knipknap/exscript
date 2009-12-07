@@ -25,7 +25,7 @@ class FunctionAction(Action):
     An action that calls the associated function and implements retry and
     logging.
     """
-    def __init__(self, function, conn, *args, **kwargs):
+    def __init__(self, function, conn):
         """
         Constructor.
 
@@ -33,16 +33,10 @@ class FunctionAction(Action):
         @param function: Called when the Action is executed.
         @type  conn: Connection
         @param conn: The assoviated connection.
-        @type  args: list
-        @param args: Passed to function() when the Action is executed.
-        @type  kwargs: dict
-        @param kwargs: Passed to function() when the Action is executed.
         """
-        Action.__init__(self, **kwargs)
+        Action.__init__(self)
         self.function             = function
         self.conn                 = conn
-        self.args                 = args
-        self.kwargs               = kwargs
         self.times                = 1
         self.login_times          = 1
         self.retry                = 0
@@ -62,9 +56,9 @@ class FunctionAction(Action):
     def set_times(self, times):
         self.times = int(times)
 
-    def set_login_retries(self, times):
+    def set_login_times(self, times):
         """
-        The number of times that a failed login is repeated.
+        The number of login attempts.
         """
         self.login_times = int(times)
 
@@ -129,7 +123,7 @@ class FunctionAction(Action):
         while self.retry < self.times and self.login_retry < self.login_times:
             # Execute the user-provided function.
             try:
-                self.function(self.conn, *self.args, **self.kwargs)
+                self.function(self.conn)
             except LoginFailure, e:
                 self._log_exception(e)
                 self.login_retry += 1
