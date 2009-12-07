@@ -33,14 +33,14 @@ class WorkQueue(Trackable):
                  max_threads: Number of concurrent connections (default is 1).
         """
         Trackable.__init__(self)
-        self.kwargs = kwargs
+        self.debug       = kwargs.get('debug',       0)
+        self.max_threads = kwargs.get('max_threads', 1)
         self._init()
 
     def _init(self):
         self.main_loop       = MainLoop()
-        self.main_loop.debug = self.kwargs.get('debug', 0)
-        if self.kwargs.has_key('max_threads'):
-            self.main_loop.set_max_threads(self.kwargs['max_threads'])
+        self.main_loop.debug = self.debug
+        self.main_loop.set_max_threads(self.max_threads)
         self.main_loop.signal_connect('job-started',   self._on_job_started)
         self.main_loop.signal_connect('job-succeeded', self._on_job_succeeded)
         self.main_loop.signal_connect('job-aborted',   self._on_job_aborted)
@@ -116,6 +116,7 @@ class WorkQueue(Trackable):
         @type  debug: int
         @param debug: The debug level.
         """
+        self.debug           = debug
         self.main_loop.debug = debug
 
     def get_max_threads(self):
@@ -135,6 +136,7 @@ class WorkQueue(Trackable):
         @param max_threads: The number of threads.
         """
         assert max_threads is not None
+        self.max_threads = max_threads
         self.main_loop.set_max_threads(max_threads)
 
     def enqueue(self, action):
@@ -159,15 +161,19 @@ class WorkQueue(Trackable):
         """
         self.main_loop.priority_enqueue(action, force_start)
 
-    def start(self):
+    def unpause(self):
         """
-        Start the execution of enqueued actions. This method is asynchronous.
+        Restart the execution of enqueued actions after pausing them.
+        This method is the opposite of pause().
+        This method is asynchronous.
         """
         self.main_loop.resume()
 
-    def stop(self):
+    def pause(self):
         """
-        Stop the execution of enqueued actions. This method is asynchronous.
+        Stop the execution of enqueued actions.
+        Executing may later be resumed by calling unpause().
+        This method is asynchronous.
         """
         self.main_loop.pause()
 
@@ -176,6 +182,9 @@ class WorkQueue(Trackable):
         Stop the execution of enqueued actions, and terminate any running
         actions. This method is synchronous and returns as soon as all actions
         are terminated (i.e. all threads are stopped).
+
+        Once all actions are terminated, the queue is emptied and paused,
+        so you may fill it with new actions.
         """
         self.main_loop.shutdown()
         self.main_loop.join()

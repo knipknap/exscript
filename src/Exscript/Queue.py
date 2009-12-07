@@ -69,6 +69,7 @@ class Queue(object):
         self.workqueue.signal_connect('job-started',   self._on_job_started)
         self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
+        self.workqueue.unpause()
 
 
     def _del_status_bar(self):
@@ -256,6 +257,9 @@ class Queue(object):
         the function does not wait until any queued jobs are completed but
         stops immediately.
 
+        After emptying the queue it is restarted, so you may still call run()
+        after using this method.
+
         @type  force: bool
         @param force: Whether to wait until all jobs were processed.
         """
@@ -265,6 +269,7 @@ class Queue(object):
         self._dbg(2, 'Shutting down engine...')
         self.workqueue.shutdown()
         self._dbg(2, 'Engine shut down.')
+        self.workqueue.unpause()
         self._del_status_bar()
 
 
@@ -331,7 +336,6 @@ class Queue(object):
     def _run(self, hosts, function):
         hosts       = get_hosts_from_name(hosts)
         self.total += len(hosts)
-        self.workqueue.start()
 
         actions = []
         for host in hosts:
@@ -339,7 +343,6 @@ class Queue(object):
             actions.append(action)
 
         self._dbg(2, 'All actions enqueued.')
-        self.shutdown()
         return actions
 
 
