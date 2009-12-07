@@ -22,7 +22,7 @@ from Exscript.util.interact  import get_login
 from Exscript.util.file      import get_accounts_from_file, \
                                     get_hosts_from_file, \
                                     get_hosts_from_csv
-from Exscript.util.decorator import autologin
+from Exscript.util.decorator import autologin, bind_args
 
 True  = 1
 False = 0
@@ -173,10 +173,14 @@ def run():
         options.define[key] = expand_bracket(key, val)
 
     # Choose the template processing type.
+    tmpl_vars = options.define
     if options.no_prompt:
-        function = template.paste
+        function = bind_args(template.paste, script_content, **tmpl_vars)
     else:
-        function = template.eval
+        strip    = not options.no_strip
+        function = bind_args(template.eval, script_content, strip, **tmpl_vars)
+
+    # Wrap the template processor such that the login procedure is automated.
     if not options.no_authentication:
         nip      = options.no_initial_prompt
         nop      = options.no_prompt
@@ -190,12 +194,7 @@ def run():
         print "time expired, starting script."
 
     # Run the template.
-    tmpl_vars = options.define
-    if options.no_prompt:
-        exscript.run(hosts, function, script_content, **tmpl_vars)
-    else:
-        strip = not options.no_strip
-        exscript.run(hosts, function, script_content, strip, **tmpl_vars)
+    exscript.run(hosts, function)
 
 # Define command line option value types.
 def check_assignment(option, opt, value):

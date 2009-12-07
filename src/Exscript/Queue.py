@@ -287,7 +287,7 @@ class Queue(object):
             sys.exit(1)
 
 
-    def _run1(self, host, function, prioritize, force, *args, **kwargs):
+    def _run1(self, host, function, prioritize, force):
         # To save memory, limit the number of parsed (=in-memory) items.
         # A side effect is that we will no longer know the total
         # number of jobs - to work around this, we first add the total
@@ -309,7 +309,7 @@ class Queue(object):
 
         # Build an object that represents the actual task.
         self._dbg(1, 'Building FunctionAction for %s.' % host.get_name())
-        action = FunctionAction(function, conn, *args, **kwargs)
+        action = FunctionAction(function, conn)
         action.set_times(self.retries + 1)
         action.set_login_retries(self.login_retries + 1)
         action.set_logdir(self.logdir)
@@ -326,14 +326,14 @@ class Queue(object):
         return action
 
 
-    def _run(self, hosts, function, *args, **kwargs):
+    def _run(self, hosts, function):
         hosts       = get_hosts_from_name(hosts)
         self.total += len(hosts)
         self.workqueue.start()
 
         actions = []
         for host in hosts:
-            action = self._run1(host, function, False, False, *args, **kwargs)
+            action = self._run1(host, function, False, False)
             actions.append(action)
 
         self._dbg(1, 'All actions enqueued.')
@@ -341,10 +341,12 @@ class Queue(object):
         return actions
 
 
-    def run(self, hosts, function, *args, **kwargs):
+    def run(self, hosts, function):
         """
         Add the given function to a queue, and call it once for each host
         according to the threading options.
+        Use decorators.bind_args() if you also want to pass additional
+        arguments to the callback function.
 
         Returns an object that represents the queued task, and that may be
         passed to is_completed() to check the status.
@@ -353,31 +355,20 @@ class Queue(object):
         @param hosts: A hostname or Host object, or a list of them.
         @type  function: function
         @param function: The function to execute.
-        @type  args: list
-        @param args: These args are passed to the given function.
-        @type  kwargs: dict
-        @param kwargs: These kwargs are passed to the given function.
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._catch_sigint_and_run(self._run,
-                                          hosts,
-                                          function,
-                                          *args, **kwargs)
+        return self._catch_sigint_and_run(self._run, hosts, function)
 
 
-    def priority_run(self, hosts, function, *args, **kwargs):
+    def priority_run(self, hosts, function):
         """
-        Like run(), but adds the task to the front of the queue. If force is
+        Like run(), but adds the task to the front of the queue.
 
         @type  hosts: string|list(string)|Host|list(Host)
         @param hosts: A hostname or Host object, or a list of them.
         @type  function: function
         @param function: The function to execute.
-        @type  args: list
-        @param args: These args are passed to the given function.
-        @type  kwargs: dict
-        @param kwargs: These kwargs are passed to the given function.
         @rtype:  object
         @return: An object representing the task.
         """
@@ -386,14 +377,14 @@ class Queue(object):
 
         actions = []
         for host in hosts:
-            action = self._run1(host, function, True, False, *args, **kwargs)
+            action = self._run1(host, function, True, False)
             actions.append(action)
 
         self._dbg(1, 'All prioritized actions enqueued.')
         return actions
 
 
-    def force_run(self, hosts, function, *args, **kwargs):
+    def force_run(self, hosts, function):
         """
         Like priority_run(), but starts the task immediately even if that
         max_threads is exceeded.
@@ -402,10 +393,6 @@ class Queue(object):
         @param hosts: A hostname or Host object, or a list of them.
         @type  function: function
         @param function: The function to execute.
-        @type  args: list
-        @param args: These args are passed to the given function.
-        @type  kwargs: dict
-        @param kwargs: These kwargs are passed to the given function.
         @rtype:  object
         @return: An object representing the task.
         """
@@ -414,7 +401,7 @@ class Queue(object):
 
         actions = []
         for host in hosts:
-            action = self._run1(host, function, True, True, *args, **kwargs)
+            action = self._run1(host, function, True, True)
             actions.append(action)
 
         self._dbg(1, 'All forced actions enqueued.')
