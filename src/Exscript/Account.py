@@ -48,16 +48,18 @@ class Account(Trackable):
         self.lock                   = threading.Lock()
 
 
-    def _add_notify(self, manager):
-        """
-        Called when added into the manager.
-        """
-        self.manager = manager
-
-
     def acquire(self):
         """
         Locks the account.
+        """
+        self.signal_emit('acquire_before', self)
+        self.lock.acquire()
+        self.signal_emit('acquired', self)
+
+
+    def _acquire(self):
+        """
+        Like acquire(), but omits sending the signal.
         """
         self.lock.acquire()
 
@@ -66,10 +68,9 @@ class Account(Trackable):
         """
         Unlocks the account.
         """
-        if self.manager is not None:
-            self.manager.release_account(self)
         self.signal_emit('release_before', self)
         self.lock.release()
+        self.signal_emit('released', self)
 
 
     def get_name(self):

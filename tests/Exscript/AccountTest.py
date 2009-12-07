@@ -4,20 +4,40 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from Exscript import Account
 
 class AccountTest(unittest.TestCase):
-    def testAccount(self):
-        name      = 'account name'
-        password1 = 'test1'
-        password2 = 'test2'
-        account   = Account(name, password1, password2, myoption = True)
-        self.assert_(account.get_name()                   == name)
-        self.assert_(account.get_password()               == password1)
-        self.assert_(account.get_authorization_password() == password2)
-        self.assert_(account.options.get('myoption')      == True)
-        self.assert_(account.options.get('foo') is None)
-        account.acquire()
-        account.release()
-        account.acquire()
-        account.release()
+    def setUp(self):
+        self.user      = 'testuser'
+        self.password1 = 'test1'
+        self.password2 = 'test2'
+        self.account   = Account(self.user, self.password1, self.password2)
+
+    def testConstructor(self):
+        account = Account(self.user, self.password1, myoption = True)
+        self.assertEqual(True, account.options.get('myoption'))
+        self.assertEqual(account.get_password(),
+                         account.get_authorization_password())
+
+        account = Account(self.user, self.password1, self.password2)
+        self.failIfEqual(account.get_password(),
+                         account.get_authorization_password())
+
+    def testAcquire(self):
+        self.account.acquire()
+        self.account.release()
+        self.account.acquire()
+        self.account.release()
+
+    def testRelease(self):
+        self.assertRaises(Exception, self.account.release)
+
+    def testGetName(self):
+        self.assertEqual(self.user, self.account.get_name())
+
+    def testGetPassword(self):
+        self.assertEqual(self.password1, self.account.get_password())
+
+    def testGetAuthorizationPassword(self):
+        self.assertEqual(self.password2,
+                         self.account.get_authorization_password())
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountTest)

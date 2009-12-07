@@ -34,6 +34,22 @@ class AccountManager(object):
             self.add_account(accounts)
 
 
+    def _on_account_acquire_before(self, account):
+        self.unlock_cond.acquire()
+        assert account in self.accounts
+        assert account in self.unlocked_accounts
+        self.unlocked_accounts.remove(account)
+        self.unlock_cond.release()
+        return account
+
+    def _on_account_released(self, account):
+        self.unlock_cond.acquire()
+        assert account in self.accounts
+        assert account not in self.unlocked_accounts
+        self.unlocked_accounts.append(account)
+        self.unlock_cond.release()
+        return account
+
     def add_account(self, accounts):
         """
         Adds one or more account instances to the pool.
@@ -45,9 +61,11 @@ class AccountManager(object):
         if isinstance(accounts, Account):
             accounts = [accounts]
         for account in accounts:
+            account.signal_connect('acquire_before',
+                                   self._on_account_acquire_before)
+            account.signal_connect('released', self._on_account_released)
             self.accounts.append(account)
             self.unlocked_accounts.append(account)
-            account._add_notify(self)
         self.unlock_cond.notify()
         self.unlock_cond.release()
 
@@ -73,11 +91,8 @@ class AccountManager(object):
 
 
     def _acquire_specific_account(self, account):
-        self.unlock_cond.acquire()
         assert account in self.accounts
         account = account.acquire()
-        self.unlock_cond.release()
-        return account
 
 
     def acquire_account(self, account = None):
@@ -90,14 +105,13 @@ class AccountManager(object):
         @rtype:  Account
         @return: The account to be added.
         """
-        if account is not None:
+        if account:
             return self._acquire_specific_account(account)
         self.unlock_cond.acquire()
         while len(self.unlocked_accounts) == 0:
             self.unlock_cond.wait()
-        account = self.unlocked_accounts[0]
-        del self.unlocked_accounts[0]
-        account.acquire()
+        account = self.unlocked_accounts.pop(0)
+        account._acquire()
         self.unlock_cond.release()
         return account
 
@@ -109,8 +123,4 @@ class AccountManager(object):
         @type  account: Account
         @param account: The account to be unlocked.
         """
-        self.unlock_cond.acquire()
-        assert account in self.accounts
-        self.unlocked_accounts.append(account)
-        self.unlock_cond.notify()
-        self.unlock_cond.release()
+        account.release()
