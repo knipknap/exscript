@@ -40,14 +40,14 @@ class Queue(object):
         @type  kwargs: dict
         @param kwargs: The following options are supported:
             - domain: The default domain of the contacted hosts.
-            - verbose: The verbosity level.
+            - verbose: The verbosity level, default 1.
             - max_threads: The maximum number of concurrent threads, default 1
             - retries: The number of retries, default 0.
             - login_retries: The number of login retries, default 0.
             - logdir: The directory into which the logs are written.
             - overwrite_logs: Whether existing logfiles are overwritten.
             - delete_logs: Whether successful logfiles are deleted.
-            - protocol_args: dict, passed to the protocol adapter as kwargs
+            - protocol_args: dict, passed to the protocol adapter as kwargs.
         """
         self.workqueue         = WorkQueue()
         self.account_manager   = AccountManager()
@@ -65,7 +65,7 @@ class Queue(object):
         self.status_bar_length = 0
         self.protocol_map      = self.built_in_protocols.copy()
         self.set_max_threads(kwargs.get('max_threads', 1))
-        self.workqueue.set_debug(kwargs.get('verbose', 0))
+        self.workqueue.set_debug(max(0, kwargs.get('verbose', 1) - 1))
         self.workqueue.signal_connect('job-started',   self._on_job_started)
         self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
@@ -80,6 +80,8 @@ class Queue(object):
 
 
     def _print_status_bar(self):
+        if self.verbose == 0:
+            return
         if not self.show_status_bar:
             return
         if self.workqueue.get_max_threads() == 1:
@@ -112,7 +114,7 @@ class Queue(object):
         if self.workqueue.get_max_threads() == 1:
             return
         if not self.show_status_bar:
-            self._print(job.getName() + ' started.')
+            self._dbg(1, job.getName() + ' started.')
         else:
             self._del_status_bar()
             self._print_status_bar()
@@ -122,14 +124,14 @@ class Queue(object):
         self.completed += 1
         if self.workqueue.get_max_threads() == 1:
             return
-        self._print(job.getName() + ' succeeded.')
+        self._dbg(1, job.getName() + ' succeeded.')
 
 
     def _on_job_aborted(self, job, e):
         self.completed += 1
         if self.workqueue.get_max_threads() == 1:
             return
-        self._print(job.getName() + ' aborted: ' + str(e))
+        self._dbg(0, job.getName() + ' aborted: ' + str(e))
 
 
     def _enqueue_action(self, action):
@@ -230,7 +232,7 @@ class Queue(object):
         @type  task: object
         @param task: The object that was returned by Queue.run().
         """
-        self._dbg(1, 'Waiting for the task to finish.')
+        self._dbg(2, 'Waiting for the task to finish.')
         while not self.task_is_completed(task):
             time.sleep(1)
 
@@ -239,7 +241,7 @@ class Queue(object):
         """
         Waits until all jobs are completed.
         """
-        self._dbg(1, 'Waiting for the engine to finish.')
+        self._dbg(2, 'Waiting for the engine to finish.')
         while self.workqueue.get_length() > 0:
             #print '%s jobs left, waiting.' % self.workqueue.get_length()
             self._del_status_bar()
@@ -260,9 +262,9 @@ class Queue(object):
         if not force:
             self.join()
 
-        self._dbg(1, 'Shutting down engine...')
+        self._dbg(2, 'Shutting down engine...')
         self.workqueue.shutdown()
-        self._dbg(1, 'Engine shut down.')
+        self._dbg(2, 'Engine shut down.')
         self._del_status_bar()
 
 
@@ -308,7 +310,7 @@ class Queue(object):
         conn          = Connection(self, host, **pargs)
 
         # Build an object that represents the actual task.
-        self._dbg(1, 'Building FunctionAction for %s.' % host.get_name())
+        self._dbg(2, 'Building FunctionAction for %s.' % host.get_name())
         action = FunctionAction(function, conn)
         action.set_times(self.retries + 1)
         action.set_login_retries(self.login_retries + 1)
@@ -336,7 +338,7 @@ class Queue(object):
             action = self._run1(host, function, False, False)
             actions.append(action)
 
-        self._dbg(1, 'All actions enqueued.')
+        self._dbg(2, 'All actions enqueued.')
         self.shutdown()
         return actions
 
@@ -380,7 +382,7 @@ class Queue(object):
             action = self._run1(host, function, True, False)
             actions.append(action)
 
-        self._dbg(1, 'All prioritized actions enqueued.')
+        self._dbg(2, 'All prioritized actions enqueued.')
         return actions
 
 
@@ -404,5 +406,5 @@ class Queue(object):
             action = self._run1(host, function, True, True)
             actions.append(action)
 
-        self._dbg(1, 'All forced actions enqueued.')
+        self._dbg(2, 'All forced actions enqueued.')
         return actions
