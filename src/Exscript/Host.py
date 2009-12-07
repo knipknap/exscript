@@ -13,14 +13,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-from util.url import parse_url
+from util.ipv4 import is_ip as is_ipv4_ip
+from util.url  import parse_url
 
-def is_ip(str):
-    if re.compile('\d+\.\d+\.\d+\.\d+').match(str):
-        return True
-    if ':' in str:   # IPv6
-        return True
-    return False
+def is_ip(string):
+    # Adds IPv6 support.
+    return ':' in string or is_ipv4_ip(string)
 
 class Host(object):
     """

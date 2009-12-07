@@ -18,6 +18,17 @@ def _highest_bit(number):
     number += 1
     return math.sqrt(number)
 
+def is_ip(string):
+    """
+    Returns True if the given string is an IPv4 address, False otherwise.
+
+    @type  string: string
+    @param string: Any string.
+    @rtype:  bool
+    @return: True if the string is an IP address, False otherwise.
+    """
+    return re.match(r'\d+\.\d+\.\d+\.\d+', string) and True or False
+
 def ip2int(ip):
     """
     Converts the given IP address to a 4 byte integer value.
