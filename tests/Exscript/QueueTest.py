@@ -1,10 +1,11 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript            import Queue, Account
-from Exscript.Connection import Connection
-from Exscript.util       import template
-from Exscript.protocols  import Dummy
+from Exscript                import Queue, Account
+from Exscript.Connection     import Connection
+from Exscript.util           import template
+from Exscript.protocols      import Dummy
+from Exscript.util.decorator import bind_args
 
 test_dir = '../templates'
 
@@ -58,12 +59,13 @@ class QueueTest(unittest.TestCase):
     def testStart(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
-        self.exscript.run(hosts,    count_calls, data, testarg = 1)
-        self.exscript.run('dummy3', count_calls, data, testarg = 1)
+        func  = bind_args(count_calls, data, testarg = 1)
+        self.exscript.run(hosts,    func)
+        self.exscript.run('dummy3', func)
         self.exscript.shutdown()
         self.assert_(data['n_calls'] == 3)
 
-        self.exscript.run('dummy4', count_calls, data, testarg = 1)
+        self.exscript.run('dummy4', func)
         self.exscript.shutdown()
         self.assert_(data['n_calls'] == 4)
 
