@@ -1,4 +1,4 @@
-import socket, struct, math
+import socket, struct, math, re
 
 def _least_bit(number):
     for n in range(0, 31):
