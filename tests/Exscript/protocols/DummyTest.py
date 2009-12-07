@@ -5,9 +5,16 @@ from TransportTest      import TransportTest
 from Exscript.protocols import Dummy
 
 class DummyTest(TransportTest):
-    def testDummy(self):
-        self.checkTransport(Dummy)
+    def createTransport(self):
+        self.transport = Dummy(echo = 0)
 
+    def testConstructor(self):
+        self.assert_(isinstance(self.transport, Dummy))
+
+    def testIsDummy(self):
+        self.assert_(self.transport.is_dummy())
+
+    def testDummy(self):
         # Test simple instance with banner.
         transport = Dummy(banner = 'blah')
         transport.connect('testhost')

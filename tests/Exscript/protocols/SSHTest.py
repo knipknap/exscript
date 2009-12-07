@@ -5,8 +5,11 @@ from TransportTest      import TransportTest
 from Exscript.protocols import SSH
 
 class SSHTest(TransportTest):
-    def testSSH(self):
-        self.checkTransport(SSH)
+    def createTransport(self):
+        self.transport = SSH(echo = 0)
+
+    def testConstructor(self):
+        self.assert_(isinstance(self.transport, SSH))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(SSHTest)

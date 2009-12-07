@@ -5,8 +5,11 @@ from TransportTest      import TransportTest
 from Exscript.protocols import Telnet
 
 class TelnetTest(TransportTest):
-    def testTelnet(self):
-        self.checkTransport(Telnet)
+    def createTransport(self):
+        self.transport = Telnet(echo = 0)
+
+    def testConstructor(self):
+        self.assert_(isinstance(self.transport, Telnet))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TelnetTest)

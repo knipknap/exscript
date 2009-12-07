@@ -1,36 +1,171 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
+from ConfigParser                 import RawConfigParser
+from Exscript.protocols.Transport import Transport
+
 class TransportTest(unittest.TestCase):
     """
     Since protocols.Transport is abstract, this test is only a base class
     for other protocols. It does not do anything fancy on its own.
     """
-    def testTransport(self):
-        from Exscript.protocols.Transport import Transport
-        transport = Transport()
+    def createTransport(self):
+        self.transport = Transport(echo = 0)
 
-    def checkTransport(self, transport_cls):
-        transport = transport_cls(echo = 0)
-        self.assert_(transport.response is None)
-        transport.connect('localhost')
-        self.assert_(transport.response is None)
+    def setUp(self):
+        cfgfile = os.path.join(os.path.dirname(__file__), '..', 'unit_test.cfg')
+        cfg     = RawConfigParser()
+        cfg.read(cfgfile)
+        self.host     = cfg.get('testhost', 'hostname')
+        self.user     = cfg.get('testhost', 'user')
+        self.password = cfg.get('testhost', 'password')
+        self.createTransport()
 
-        transport.authenticate('test', 'test', wait = True)
-        self.assert_(transport.response is not None)
-        self.assert_(len(transport.response) > 0)
+    def testConstructor(self):
+        self.assert_(isinstance(self.transport, Transport))
 
-        transport.execute('ls')
-        self.assert_(transport.response is not None)
-        self.assert_(transport.response.startswith('ls'))
+    def testCopy(self):
+        self.assert_(self.transport == self.transport.__copy__())
 
-        transport.send('exit\r')
-        self.assert_(transport.response is not None)
-        self.assert_(transport.response.startswith('ls'))
+    def testDeepcopy(self):
+        self.assert_(self.transport == self.transport.__deepcopy__({}))
 
-        transport.close()
-        self.assert_(transport.response is not None)
-        self.assert_(len(transport.response) > 0)
+    def testIsDummy(self):
+        self.assert_(self.transport.is_dummy() == False)
+
+    def testSetOnDataReceivedCb(self):
+        self.transport.set_on_data_received_cb(object)
+
+    def testSetOnOtpRequestedCb(self):
+        self.transport.set_on_otp_requested_cb(object)
+
+    def testSetPrompt(self):
+        initial_regex = self.transport.get_prompt()
+        self.assert_(hasattr(initial_regex, 'groups'))
+
+        my_re = re.compile(r'test>')
+        self.transport.set_prompt(my_re)
+        regex = self.transport.get_prompt()
+        self.assert_(hasattr(regex, 'groups'))
+        self.assert_(regex == my_re)
+
+        self.transport.set_prompt()
+        regex = self.transport.get_prompt()
+        self.assert_(hasattr(regex, 'groups'))
+        self.assert_(regex == initial_regex)
+
+    def testGetPrompt(self):
+        pass # Already tested in testSetPrompt()
+
+    def testSetError(self):
+        initial_regex = self.transport.get_error_prompt()
+        self.assert_(hasattr(initial_regex, 'groups'))
+
+        my_re = re.compile(r'% error')
+        self.transport.set_error_prompt(my_re)
+        regex = self.transport.get_error_prompt()
+        self.assert_(hasattr(regex, 'groups'))
+        self.assert_(regex == my_re)
+
+        self.transport.set_error_prompt()
+        regex = self.transport.get_error_prompt()
+        self.assert_(hasattr(regex, 'groups'))
+        self.assert_(regex == initial_regex)
+
+    def testGetErrorPrompt(self):
+        pass # Already tested in testSetError()
+
+    def testSetTimeout(self):
+        self.assert_(self.transport.get_timeout() == 30)
+        self.transport.set_timeout(60)
+        self.assert_(self.transport.get_timeout() == 60)
+
+    def testGetTimeout(self):
+        pass # Already tested in testSetTimeout()
+
+    def testConnect(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.connect)
+            return
+        self.assert_(self.transport.response is None)
+        self.transport.connect(self.host)
+        self.assert_(self.transport.response is None)
+        self.assert_(self.transport.get_host() == self.host)
+
+    def testAuthenticate(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.authenticate, 'test')
+            return
+        self.transport.connect(self.host)
+        self.transport.authenticate(self.user, self.password, wait = True)
+        self.assert_(self.transport.response is not None)
+        self.assert_(len(self.transport.response) > 0)
+
+    def testAuthorize(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.authorize)
+            return
+        self.transport.connect(self.host)
+        self.transport.authenticate(self.user, self.password, wait = False)
+        response = self.transport.response
+        self.transport.authorize(self.user)
+        self.assert_(self.transport.response != response)
+        self.assert_(len(self.transport.response) > 0)
+
+    def testSend(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.send, 'ls')
+            return
+        self.transport.connect(self.host)
+        self.transport.authenticate(self.user, self.password, wait = True)
+        self.transport.execute('ls')
+
+        self.transport.send('df\r')
+        self.assert_(self.transport.response is not None)
+        self.assert_(self.transport.response.startswith('ls'))
+
+        self.transport.send('exit\r')
+        self.assert_(self.transport.response is not None)
+        self.assert_(self.transport.response.startswith('ls'))
+
+    def testExecute(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.execute, 'ls')
+            return
+        self.transport.connect(self.host)
+        self.transport.authenticate(self.user, self.password, wait = True)
+        self.transport.execute('ls')
+        self.assert_(self.transport.response is not None)
+        self.assert_(self.transport.response.startswith('ls'))
+
+    def testExpect(self):
+        pass #FIXME
+
+    def testExpectPrompt(self):
+        pass #FIXME
+
+    def testGetHost(self):
+        self.assert_(self.transport.get_host() is None)
+        if self.transport.__class__ == Transport:
+            return
+        self.transport.connect(self.host)
+        self.assert_(self.transport.get_host() == self.host)
+
+    def testClose(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.close)
+            return
+        self.transport.connect(self.host)
+        self.transport.close(True)
+
+    def testGuessOs(self):
+        pass #FIXME
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TransportTest)
