@@ -255,10 +255,21 @@ class Transport(object):
             self.prompt_re = prompt
 
 
+    def get_prompt(self):
+        """
+        Returns the regular expression that is matched against the host
+        response when calling the expect_prompt() method.
+
+        @rtype:  regex
+        @return: A regular expression.
+        """
+        return self.prompt_re
+
+
     def set_error(self, error = None):
         """
-        Defines a pattern that is used to monitor the response of the remote 
-        host. If the pattern matches (any time the expect() or 
+        Defines a pattern that is used to monitor the response of the
+        connected host. If the pattern matches (any time the expect() or
         expect_prompt() methods are used), an error is raised.
 
         @type  error: RegEx
@@ -270,6 +281,17 @@ class Transport(object):
             self.error_re = error
 
 
+    def get_error_prompt(self):
+        """
+        Returns the regular expression that is used to monitor the response
+        of the connected host for errors.
+
+        @rtype:  regex
+        @return: A regular expression.
+        """
+        return self.error_re
+
+
     def set_timeout(self, timeout):
         """
         Defines the maximum time that the adapter waits before a call to 
@@ -278,7 +300,17 @@ class Transport(object):
         @type  timeout: int
         @param timeout: The maximum time in seconds.
         """
-        self.timeout = timeout
+        self.timeout = int(timeout)
+
+
+    def get_timeout(self):
+        """
+        Returns the current timeout in seconds.
+
+        @rtype:  int
+        @return: The timeout in seconds.
+        """
+        return self.timeout
 
 
     def connect(self, hostname = None, port = None):
