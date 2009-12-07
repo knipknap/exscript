@@ -1,3 +1,4 @@
+* Replace Connection instances in the tests by FakeConnection objects.
 * Add a quite mode, in which only errors are written to stdout.
 * Use the quite mode in tests.
 * Warn for untested methods.
@@ -8,8 +9,6 @@
 * Check for places where polling is used, and get rid of it.
 * Try to move the remote_os detection into a stream monitor, instead of
   hard wiring it into the authentication procedure.
-* Move utilTest to a new utils subdir (similar to protocols).
-* Move test from util.url to tests/Exscript/util/.
 * Move test from protocols.Transport to tests/Exscript/protocols/.
 * Add more tests.
 * "make dist" should pull dependencies.

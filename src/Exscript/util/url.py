@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import re
+import re, urllib
 from urlparse import urlparse, urlsplit
 
 _hextochr = dict()
@@ -107,13 +107,36 @@ class Url(object):
     """
     Represents a URL.
     """
-    proto    = None
+    protocol = None
     username = None
     password = None
     hostname = None
     port     = None
     path     = None
     vars     = None
+
+    def __str__(self):
+        url = ''
+        if self.protocol:
+            url += self.protocol + '://'
+        if self.username is not None:
+            url += self.username
+            if self.password:
+                url += ':' + self.password
+            url += '@'
+        url += self.hostname
+        if self.port:
+            url += ':' + str(self.port)
+        if self.path:
+            url += '/' + self.path
+
+        if self.vars:
+            pairs = []
+            for key, values in self.vars.iteritems():
+                for value in values:
+                    pairs.append((key, value))
+            url += '?' + urllib.urlencode(pairs)
+        return url
 
 def parse_url(url, default_protocol = 'telnet'):
     """
@@ -140,8 +163,8 @@ def parse_url(url, default_protocol = 'telnet'):
     result          = Url()
     result.protocol = urlparse(url, default_protocol, 0)[0]
     result.port     = well_known_ports.get(result.protocol)
-    url             = 'http://' + re.sub('^' + result.protocol + ':(?://)?', '', url)
-    components      = urlsplit(url, 'http', 0)
+    uri             = 'http://' + re.sub('^' + result.protocol + ':(?://)?', '', url)
+    components      = urlsplit(uri, 'http', 0)
     netloc          = components[1]
     path            = components[2]
     query           = components[3]
@@ -174,31 +197,3 @@ def parse_url(url, default_protocol = 'telnet'):
     result.path = path
     result.vars = _urlparse_qs('http://dummy/?' + query)
     return result
-
-if __name__ == '__main__':
-    import unittest
-    
-    class ParseUrlTest(unittest.TestCase):
-        def runTest(self):
-            urls = ['testhost',
-                    'testhost?myvar=testvalue',
-                    'user@testhost',
-                    'user@testhost?myvar=testvalue',
-                    'user:mypass@testhost',
-                    'user:mypass@testhost?myvar=testvalue',
-                    'ssh:testhost',
-                    'ssh:testhost?myvar=testvalue',
-                    'ssh://testhost',
-                    'ssh://testhost?myvar=testvalue',
-                    'ssh://user@testhost',
-                    'ssh://user@testhost?myvar=testvalue',
-                    'ssh://user:password@testhost',
-                    'ssh://user:password@testhost?myvar=testvalue',
-                    'ssh://user:password@testhost',
-                    'ssh://user:password@testhost?myvar=testvalue&myvar2=test%202',
-                    'ssh://user:password@testhost?myvar=testvalue&amp;myvar2=test%202']
-            for url in urls:
-                print '%s:\n%s' % (url, parse_url(url))
-
-    test = ParseUrlTest()
-    test.runTest()
