@@ -1,4 +1,3 @@
-* Implement HostTest.
 * Implement ConnectionTest.
 * Merge tests from SpiffWorkqueue to tests/Exscript/workqueue/.
 * Add tests for remaining util modules.
