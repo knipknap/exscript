@@ -1,10 +1,61 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
+import base64
 import Exscript.util.file
+from tempfile import NamedTemporaryFile
+
+account_pool = [('user1', 'password1'),
+                ('user2', 'password2'),
+                ('user3', 'password3'),
+                ('user4', 'password4')]
+
+hosts          = ['localhost', '1.2.3.4', 'ssh://test', 'ssh1://another:23']
+expected_hosts = ['localhost', '1.2.3.4', 'test',       'another']
 
 class fileTest(unittest.TestCase):
     CORRELATE = Exscript.util.file
+
+    def setUp(self):
+        data  = '[account-pool]\n'
+        data += 'user1='   + base64.encodestring('password1') + '\n'
+        data += 'user2:'   + base64.encodestring('password2') + '\n'
+        data += 'user3 = ' + base64.encodestring('password3') + '\n'
+        data += 'user4 : ' + base64.encodestring('password4') + '\n'
+        self.account_file = NamedTemporaryFile()
+        self.account_file.write(data)
+        self.account_file.flush()
+
+        self.host_file = NamedTemporaryFile()
+        self.host_file.write('\n'.join(hosts))
+        self.host_file.flush()
+
+        self.csv_host_file = NamedTemporaryFile()
+        self.csv_host_file.write('hostname	test\n')
+        self.csv_host_file.write('\n'.join(h + '	blah' for h in hosts))
+        self.csv_host_file.flush()
+
+    def tearDown(self):
+        self.account_file.close()
+
+    def testGetAccountsFromFile(self):
+        from Exscript.util.file import get_accounts_from_file
+        accounts = get_accounts_from_file(self.account_file.name)
+        result   = [(a.get_name(), a.get_password()) for a in accounts]
+        self.assertEqual(sorted(account_pool), sorted(result))
+
+    def testGetHostsFromFile(self):
+        from Exscript.util.file import get_hosts_from_file
+        result = get_hosts_from_file(self.host_file.name)
+        self.assertEqual([h.get_name() for h in result], expected_hosts)
+
+    def testGetHostsFromCsv(self):
+        from Exscript.util.file import get_hosts_from_csv
+        result    = get_hosts_from_csv(self.csv_host_file.name)
+        hostnames = [h.get_name() for h in result]
+        testvars  = [h.get('test')[0] for h in result]
+        self.assertEqual(hostnames, expected_hosts)
+        self.assertEqual(testvars, ['blah' for h in result])
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(fileTest)
