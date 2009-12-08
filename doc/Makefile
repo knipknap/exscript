@@ -2,8 +2,6 @@ HANDBOOKS=en
 IN_BASENAME=exscript
 OUT_BASENAME=exscript
 PUBLISH_LOCAL_PATH=/var/www/docs/projects/$(OUT_BASENAME)
-PUBLISH_PATH=/home/sab/backups/code/www/docs.debain.org/$(OUT_BASENAME)
-PUBLISH_HOST=root@debain.org
 
 all: handbook apidocs
 
@@ -65,7 +63,7 @@ apidocs:
 	python mkapidoc.py
 
 clean:
-	rm -Rf api handbook latex stdlib
+	rm -Rf api handbook latex stdlib cloned_repo
 	rm -f *.aux *.log *.out *.pdf *.toc version.tex figures/*.png
 
 publish-local: handbook apidocs
@@ -74,8 +72,17 @@ publish-local: handbook apidocs
 	chmod -R o-w,g+w,a+rX $(PUBLISH_LOCAL_PATH) 2>/dev/null
 	make clean
 
-publish: handbook apidocs
-	ssh root@debain.org "mkdir -p $(PUBLISH_PATH)"
-	rsync -azr handbook/* api/* $(PUBLISH_HOST):$(PUBLISH_PATH)/
-	ssh $(PUBLISH_HOST) "chown -R www-data:www-data $(PUBLISH_PATH)/"
+publish: apidocs
+	# Create a temporary copy of this repository.
+	# Switch it to the HTML repository branch and delete the old docs,
+	# then install the new ones in the right directory.
+	git clone .. cloned_repo
+	cd cloned_repo \
+	&& git checkout -b gh-pages remotes/origin/gh-pages \
+	&& rm -Rf api/ \
+	&& mv ../api/ . \
+	&& git add api \
+	&& git commit -am "Update API docs (automatically by doc/Makefile)." \
+	&& git push
+	git push github gh-pages
 	make clean
