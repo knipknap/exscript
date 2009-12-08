@@ -162,26 +162,24 @@ class MainLoop(Trackable, threading.Thread):
         gc.collect()
 
     def run(self):
+        self.condition.acquire()
         while not self.shutdown_now:
-            self.condition.acquire()
             self._update_running_jobs()
-            self.condition.notify()
 
             # If there are any actions to be force_started, run them now.
             for action in self.force_start:
                 self._start_action(action)
             self.force_start = []
+            self.condition.notify()
 
             # Don't bother looking if the queue is empty.
             if len(self.queue) <= 0 or self.paused:
                 self.condition.wait()
-                self.condition.release()
                 continue
 
             # Wait until we have less than the maximum number of threads.
             if len(self.running_jobs) >= self.max_threads:
                 self.condition.wait()
-                self.condition.release()
                 continue
             self.condition.release()
 
@@ -189,6 +187,7 @@ class MainLoop(Trackable, threading.Thread):
             action = self.queue[0]
             self._start_action(action)
             self.queue.remove(action)
+            self.condition.acquire()
 
             if len(self.queue) <= 0:
                 self._dbg(2, 'No more pending actions in the queue.')
