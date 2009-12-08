@@ -31,11 +31,7 @@ uninstall:
 
 .PHONY : tests
 tests:
-	find tests -name run_suite.py | while read i; do \
-		cd `dirname $$i`; \
-		./`basename $$i`; \
-		cd -; \
-	done
+	cd tests/Exscript/; ./run_suite.py 1
 
 ###################################################################
 # Package builders.
