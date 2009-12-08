@@ -24,9 +24,9 @@ def otp(password, seed, sequence):
     @param password: A password.
     @type  seed: string
     @param seed: A username.
-    @type  seqs: int
-    @param seqs: A sequence number.
+    @type  sequence: int
+    @param sequence: A sequence number.
     @rtype:  string
-    @return: A hash, or a list of hashes.
+    @return: A hash.
     """
-    return generate(password, seed, seq, 1, 'md4', 'sixword')[0]
+    return generate(password, seed, sequence, 1, 'md4', 'sixword')[0]
