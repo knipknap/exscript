@@ -67,6 +67,9 @@ class FunctionAction(Action):
         self.logfile       = None
         self.error_logfile = None
 
+    def get_logdir(self):
+        return self.logdir
+
     def set_log_options(self, overwrite = False, delete = False):
         """
         overwrite: Whether to overwrite existing logfiles.

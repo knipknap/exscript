@@ -46,6 +46,14 @@ class ConnectionTest(DummyTest):
         self.assert_(self.transport.response != response)
         self.assert_(len(self.transport.response) > 0)
 
+    def testAuthoAuthorize(self):
+        self.transport.open()
+        self.transport.authenticate()
+        response = self.transport.response
+        self.transport.auto_authorize()
+        self.assert_(self.transport.response != response)
+        self.assert_(len(self.transport.response) > 0)
+
     ################################################################
     # Everything below tests methods that are available because
     # Connection proxies the calls to a protocols.Transport object.
@@ -70,6 +78,13 @@ class ConnectionTest(DummyTest):
         self.transport.execute('ls')
         self.assert_(self.transport.response is not None)
         self.assert_(self.transport.response.startswith('ls'))
+
+    def testGuessOs(self):
+        self.assertEqual('unknown', self.transport.guess_os())
+        self.transport.open()
+        self.assertEqual('unknown', self.transport.guess_os())
+        self.transport.authenticate(wait = True)
+        self.assertEqual('ios', self.transport.guess_os())
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ConnectionTest)

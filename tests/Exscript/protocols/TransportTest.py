@@ -167,13 +167,6 @@ class TransportTest(unittest.TestCase):
         self.assert_(self.transport.response is not None)
         self.assert_(self.transport.response.startswith('ls'))
 
-    def testGetHost(self):
-        self.assert_(self.transport.get_host() is None)
-        if self.transport.__class__ == Transport:
-            return
-        self.transport.connect(self.host)
-        self.assert_(self.transport.get_host() == self.host)
-
     def testClose(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
@@ -181,6 +174,24 @@ class TransportTest(unittest.TestCase):
             return
         self.transport.connect(self.host)
         self.transport.close(True)
+
+    def testGetHost(self):
+        self.assert_(self.transport.get_host() is None)
+        if self.transport.__class__ == Transport:
+            return
+        self.transport.connect(self.host)
+        self.assert_(self.transport.get_host() == self.host)
+
+    def testGuessOs(self):
+        self.assertEqual('unknown', self.transport.guess_os())
+        # Other tests can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.close)
+            return
+        self.transport.connect(self.host)
+        self.assertEqual('unknown', self.transport.guess_os())
+        self.transport.authenticate(self.user, self.password, wait = True)
+        self.assertEqual('shell', self.transport.guess_os())
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TransportTest)

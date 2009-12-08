@@ -84,6 +84,14 @@ class FunctionActionTest(unittest.TestCase):
         self.assertRaises(LoginFailure, action.execute, None, None, None)
         self.assertEqual(3, data['n_calls'])
 
+    def testSetLogdir(self):
+        self.assertEqual(self.count_action.get_logdir(), None)
+        self.count_action.set_logdir('testme')
+        self.assertEqual(self.count_action.get_logdir(), 'testme')
+
+    def testGetLogdir(self):
+        pass # Tested in testSetLogdir().
+
     def testExecute(self):
         pass # Tested in testSetLoginTimes().
 

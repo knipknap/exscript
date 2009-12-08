@@ -16,6 +16,14 @@ class DummyTest(TransportTest):
     def testIsDummy(self):
         self.assert_(self.transport.is_dummy())
 
+    def testGuessOs(self):
+        self.assertEqual('unknown', self.transport.guess_os())
+        self.transport.connect(self.host)
+        self.assertEqual('unknown', self.transport.guess_os())
+        self.transport.authenticate(self.user, self.password, wait = True)
+        self.assertEqual('ios', self.transport.guess_os())
+        #FIXME: test other operating systems.
+
     def testDummy(self):
         # Test simple instance with banner.
         transport = Dummy(banner = 'blah')
