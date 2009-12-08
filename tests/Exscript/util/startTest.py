@@ -22,20 +22,20 @@ class startTest(unittest.TestCase):
         from Exscript.util.start import run
 
         # Run on zero hosts.
-        run(self.account, [], self.callback)
+        run(self.account, [], self.callback, verbose = 0)
         self.assert_(self.data['n_calls'] == 0)
 
         # Run on one host.
-        run(self.account, 'dummy:localhost', self.callback)
+        run(self.account, 'dummy:localhost', self.callback, verbose = 0)
         self.assert_(self.data['n_calls'] == 1)
 
         # Run on multiple hosts.
         hosts = ['dummy:host1', 'dummy:host2']
-        run(self.account, hosts, self.callback)
+        run(self.account, hosts, self.callback, verbose = 0)
         self.assert_(self.data['n_calls'] == 3)
 
         # Run on multiple hosts with multiple threads.
-        run(self.account, hosts, self.callback, max_threads = 2)
+        run(self.account, hosts, self.callback, max_threads = 2, verbose = 0)
         self.assert_(self.data['n_calls'] == 5)
 
     def testQuickrun(self):
