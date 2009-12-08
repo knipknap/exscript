@@ -1,5 +1,4 @@
 * Implement ConnectionTest.
-* Merge tests from SpiffWorkqueue to tests/Exscript/workqueue/.
 * Add tests for remaining util modules.
 * Is there a sane way to test stdlib?
 * Warn for untested methods.
