@@ -25,6 +25,8 @@ def fail_calls(conn, data, exception):
     raise exception('intentional error')
 
 class FunctionActionTest(unittest.TestCase):
+    CORRELATE = FunctionAction
+
     def setUp(self):
         self.data         = {'n_calls': 0}
         self.count_cb     = bind_args(count_calls, self.data)
@@ -81,12 +83,6 @@ class FunctionActionTest(unittest.TestCase):
         action.set_login_times(3)
         self.assertRaises(LoginFailure, action.execute, None, None, None)
         self.assertEqual(3, data['n_calls'])
-
-    def testSetLogOptions(self):
-        pass #FIXME
-
-    def testSetErrorLogOptions(self):
-        pass #FIXME
 
     def testExecute(self):
         pass # Tested in testSetLoginTimes().

@@ -25,6 +25,8 @@ class TestAction(Action):
         return True
 
 class ActionTest(unittest.TestCase):
+    CORRELATE = Action
+
     def setUp(self):
         pass
 

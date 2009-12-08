@@ -5,6 +5,8 @@ from TransportTest      import TransportTest
 from Exscript.protocols import Telnet
 
 class TelnetTest(TransportTest):
+    CORRELATE = Telnet
+
     def createTransport(self):
         self.transport = Telnet(echo = 0)
 

@@ -6,6 +6,8 @@ from Exscript.AccountManager import AccountManager
 from Exscript.util.file      import get_accounts_from_file
 
 class AccountManagerTest(unittest.TestCase):
+    CORRELATE = AccountManager
+
     def setUp(self):
         self.user1     = 'testuser1'
         self.password1 = 'test1'

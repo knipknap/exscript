@@ -1,7 +1,11 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
+import Exscript.util.start
+
 class startTest(unittest.TestCase):
+    CORRELATE = Exscript.util.start
+
     def setUp(self):
         from Exscript                import Account
         from Exscript.util.decorator import bind_args

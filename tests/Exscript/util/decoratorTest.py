@@ -16,6 +16,8 @@ class FakeConnection(object):
         self.close_forced = force
 
 class decoratorTest(unittest.TestCase):
+    CORRELATE = Exscript.util.decorator
+
     def bind_cb(self, conn, bound_arg1, bound_arg2, **kwargs):
         self.assert_(isinstance(conn, FakeConnection))
         self.assert_(bound_arg1 == 'one', bound_arg1)
@@ -28,9 +30,6 @@ class decoratorTest(unittest.TestCase):
         bound  = bind_args(self.bind_cb, 'one', 'two', three = 3)
         result = bound(FakeConnection())
         self.assert_(result == 123, result)
-
-    def testOsFunctionMapper(self):
-        pass #FIXME
 
     def connect_cb(self, conn, *args, **kwargs):
         self.assert_(conn.open == True)

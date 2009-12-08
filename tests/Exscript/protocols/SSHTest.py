@@ -5,6 +5,8 @@ from TransportTest      import TransportTest
 from Exscript.protocols import SSH
 
 class SSHTest(TransportTest):
+    CORRELATE = SSH
+
     def createTransport(self):
         self.transport = SSH(echo = 0)
 

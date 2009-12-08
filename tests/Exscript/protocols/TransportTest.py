@@ -9,6 +9,8 @@ class TransportTest(unittest.TestCase):
     Since protocols.Transport is abstract, this test is only a base class
     for other protocols. It does not do anything fancy on its own.
     """
+    CORRELATE = Transport
+
     def createTransport(self):
         self.transport = Transport(echo = 0)
 
@@ -79,7 +81,7 @@ class TransportTest(unittest.TestCase):
     def testGetPrompt(self):
         pass # Already tested in testSetPrompt()
 
-    def testSetError(self):
+    def testSetErrorPrompt(self):
         initial_regex = self.transport.get_error_prompt()
         self.assert_(hasattr(initial_regex, 'groups'))
 
@@ -95,7 +97,7 @@ class TransportTest(unittest.TestCase):
         self.assert_(regex == initial_regex)
 
     def testGetErrorPrompt(self):
-        pass # Already tested in testSetError()
+        pass # Already tested in testSetErrorPrompt()
 
     def testSetTimeout(self):
         self.assert_(self.transport.get_timeout() == 30)
@@ -165,12 +167,6 @@ class TransportTest(unittest.TestCase):
         self.assert_(self.transport.response is not None)
         self.assert_(self.transport.response.startswith('ls'))
 
-    def testExpect(self):
-        pass #FIXME
-
-    def testExpectPrompt(self):
-        pass #FIXME
-
     def testGetHost(self):
         self.assert_(self.transport.get_host() is None)
         if self.transport.__class__ == Transport:
@@ -185,9 +181,6 @@ class TransportTest(unittest.TestCase):
             return
         self.transport.connect(self.host)
         self.transport.close(True)
-
-    def testGuessOs(self):
-        pass #FIXME
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TransportTest)

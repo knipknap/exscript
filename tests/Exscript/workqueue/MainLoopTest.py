@@ -5,6 +5,8 @@ from Exscript.workqueue import Job, Action, MainLoop
 from ActionTest         import TestAction
 
 class MainLoopTest(unittest.TestCase):
+    CORRELATE = MainLoop
+
     def setUp(self):
         pass
 

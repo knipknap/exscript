@@ -4,6 +4,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from Exscript import Account
 
 class AccountTest(unittest.TestCase):
+    CORRELATE = Account
+
     def setUp(self):
         self.user      = 'testuser'
         self.password1 = 'test1'

@@ -5,6 +5,8 @@ from TransportTest      import TransportTest
 from Exscript.protocols import Dummy
 
 class DummyTest(TransportTest):
+    CORRELATE = Dummy
+
     def createTransport(self):
         self.transport = Dummy(echo = 0)
 

@@ -29,6 +29,8 @@ class ErrorProtocol(Dummy):
         raise IntentionalError('broken protocol')
 
 class QueueTest(unittest.TestCase):
+    CORRELATE = Queue
+
     def setUp(self):
         self.queue = Queue(verbose = 0, max_threads = 1)
 

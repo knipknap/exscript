@@ -6,6 +6,8 @@ from Exscript.util.url import parse_url
 from util.urlTest      import urls
 
 class HostTest(unittest.TestCase):
+    CORRELATE = Host
+
     def setUp(self):
         self.host = Host('localhost', testarg = 1)
 

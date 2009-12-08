@@ -1,6 +1,8 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
+import Exscript.util.url
+
 urls = [
     ('testhost',
      'telnet://testhost:23'),
@@ -39,6 +41,8 @@ urls = [
 ]
 
 class urlTest(unittest.TestCase):
+    CORRELATE = Exscript.util.url
+
     def testParseUrl(self):
         from Exscript.util.url import parse_url, Url
 

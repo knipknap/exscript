@@ -7,6 +7,8 @@ from Exscript.Connection     import Connection
 from protocols.DummyTest     import DummyTest
 
 class ConnectionTest(DummyTest):
+    CORRELATE = Connection
+
     def createTransport(self):
         self.queue     = Queue()
         self.host      = Host('dummy:localhost')

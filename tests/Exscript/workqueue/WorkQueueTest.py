@@ -5,6 +5,8 @@ from Exscript.workqueue import WorkQueue, Action, Sequence
 from ActionTest         import TestAction
 
 class WorkQueueTest(unittest.TestCase):
+    CORRELATE = WorkQueue
+
     def setUp(self):
         pass
 
