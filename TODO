@@ -1,4 +1,3 @@
-* Implement ConnectionTest.
 * Add tests for remaining util modules.
 * Is there a sane way to test stdlib?
 * Warn for untested methods.
