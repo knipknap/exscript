@@ -141,6 +141,8 @@ class Telnet(Transport):
     def _examine_prompt(self, prompt):
         if iosxr_prompt_re.search(prompt):
             self.remote_os = 'ios_xr'
+        elif self.remote_os == 'unknown':
+            self.remote_os = 'shell'
 
 
     def send(self, data):
