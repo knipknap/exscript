@@ -24,11 +24,9 @@ class TestAction(Action):
             lock.release()
         return True
 
-
 class ActionTest(unittest.TestCase):
     def setUp(self):
         pass
-
 
     def testExecute(self):
         global_ctx = {'sum': 0, 'randsum': 0}

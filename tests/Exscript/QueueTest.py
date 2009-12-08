@@ -62,7 +62,7 @@ class QueueTest(unittest.TestCase):
     def testTaskIsCompleted(self):
         task = self.startTask()
         while not self.queue.task_is_completed(task):
-            time.sleep(.3)
+            time.sleep(.1)
 
     def testWaitFor(self):
         task = self.startTask()

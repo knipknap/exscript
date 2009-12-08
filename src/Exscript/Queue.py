@@ -243,12 +243,10 @@ class Queue(object):
         Waits until all jobs are completed.
         """
         self._dbg(2, 'Waiting for the engine to finish.')
-        while self.workqueue.get_length() > 0:
-            #print '%s jobs left, waiting.' % self.workqueue.get_length()
-            self._del_status_bar()
-            self._print_status_bar()
-            time.sleep(.1)
-            gc.collect()
+        self.workqueue.wait_until_done()
+        self._del_status_bar()
+        self._print_status_bar()
+        gc.collect()
 
 
     def shutdown(self, force = False):

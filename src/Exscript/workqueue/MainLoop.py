@@ -31,6 +31,7 @@ class MainLoop(Trackable, threading.Thread):
         self.max_threads      = 1
         self.global_data      = {}
         self.global_data_lock = threading.Lock()
+        self.condition        = threading.Condition()
         self.debug            = 0
         self.setDaemon(1)
 
@@ -43,7 +44,10 @@ class MainLoop(Trackable, threading.Thread):
 
     def set_max_threads(self, max_threads):
         assert max_threads is not None
+        self.condition.acquire()
         self.max_threads = max_threads
+        self.condition.notify()
+        self.condition.release()
 
     def define_data(self, name, value):
         self.global_data_lock.acquire()
@@ -57,25 +61,46 @@ class MainLoop(Trackable, threading.Thread):
         return data
 
     def enqueue(self, action):
+        self.condition.acquire()
         self.queue.append(action)
+        self.condition.notify()
+        self.condition.release()
 
     def priority_enqueue(self, action, force_start = False):
+        self.condition.acquire()
         if force_start:
             self.force_start.append(action)
         else:
             self.queue.insert(0, action)
+        self.condition.notify()
+        self.condition.release()
 
     def pause(self):
+        self.condition.acquire()
         self.paused = True
+        self.condition.notify()
+        self.condition.release()
 
     def resume(self):
+        self.condition.acquire()
         self.paused = False
+        self.condition.notify()
+        self.condition.release()
 
     def is_paused(self):
         return self.paused
 
+    def wait_until_done(self):
+        self.condition.acquire()
+        while self.get_queue_length() > 0:
+            self.condition.wait()
+        self.condition.release()
+
     def shutdown(self):
+        self.condition.acquire()
         self.shutdown_now = True
+        self.condition.notify()
+        self.condition.release()
         for job in self.running_jobs:
             job.join()
             self._dbg(1, 'Job "%s" finished' % job.getName())
@@ -96,54 +121,69 @@ class MainLoop(Trackable, threading.Thread):
         return len(self.queue) + len(self.running_jobs)
 
     def _start_action(self, action):
-        job = Job(self.global_data_lock,
+        job = Job(self.condition,
+                  self.global_data_lock,
                   self.global_data,
                   action,
                   debug = self.debug)
         self.running_jobs.append(job)
         job.start()
         self._dbg(1, 'Job "%s" started.' % job.getName())
-        self.signal_emit('job-started', job)
+        try:
+            self.signal_emit('job-started', job)
+        except:
+            pass
+
+    def _on_job_completed(self, job):
+        try:
+            if job.exception:
+                self._dbg(1, 'Job "%s" aborted.' % job.getName())
+                self.signal_emit('job-aborted', job, job.exception)
+            else:
+                self._dbg(1, 'Job "%s" succeeded.' % job.getName())
+                self.signal_emit('job-succeeded', job)
+        except:
+            pass
+        try:
+            self.signal_emit('job-completed', job)
+        except:
+            pass
+
+    def _update_running_jobs(self):
+        running_jobs = []
+        for job in self.running_jobs:
+            if job.is_alive():
+                running_jobs.append(job)
+                continue
+            self._on_job_completed(job)
+            job.join()
+            del job
+        self.running_jobs = running_jobs[:]
+        gc.collect()
 
     def run(self):
         while not self.shutdown_now:
-            # Join any finished threads.
-            running_jobs = []
-            for job in self.running_jobs:
-                if job.isAlive():
-                    running_jobs.append(job)
-                    continue
-                if job.exception:
-                    self._dbg(1, 'Job "%s" aborted.' % job.getName())
-                    self.signal_emit('job-aborted', job, job.exception)
-                else:
-                    self._dbg(1, 'Job "%s" succeeded.' % job.getName())
-                    self.signal_emit('job-succeeded', job)
-                self.signal_emit('job-completed', job)
-                job.join()
-                del job
-            self.running_jobs = running_jobs[:]
-            gc.collect()
-
-            if self.paused:
-                time.sleep(.1)
-                continue
+            self.condition.acquire()
+            self._update_running_jobs()
+            self.condition.notify()
 
             # If there are any actions to be force_started, run them now.
             for action in self.force_start:
                 self._start_action(action)
             self.force_start = []
 
-            # Wait until we have less than the maximum number of threads.
             # Don't bother looking if the queue is empty.
             if len(self.queue) <= 0 or self.paused:
-                time.sleep(.1)
+                self.condition.wait()
+                self.condition.release()
                 continue
 
+            # Wait until we have less than the maximum number of threads.
             if len(self.running_jobs) >= self.max_threads:
-                #print 'Maximum number of threads running, waiting...'
-                time.sleep(.1)
+                self.condition.wait()
+                self.condition.release()
                 continue
+            self.condition.release()
 
             # Take the next action and start it in a new thread.
             action = self.queue[0]

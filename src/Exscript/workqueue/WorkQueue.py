@@ -177,6 +177,12 @@ class WorkQueue(Trackable):
         """
         self.main_loop.pause()
 
+    def wait_until_done(self):
+        """
+        Waits until the queue is empty without using any polling.
+        """
+        self.main_loop.wait_until_done()
+
     def shutdown(self):
         """
         Stop the execution of enqueued actions, and terminate any running

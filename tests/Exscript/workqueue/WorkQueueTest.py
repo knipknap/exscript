@@ -21,8 +21,7 @@ class WorkQueueTest(unittest.TestCase):
         self.assertEqual(111, queue.get_length())
 
         queue.unpause()
-        while queue.get_length() > 0:
-            time.sleep(.1)
+        queue.wait_until_done()
         queue.pause()
         self.assertEqual(0,   queue.get_length())
         self.assertEqual(333, queue.main_loop.global_data['sum'])

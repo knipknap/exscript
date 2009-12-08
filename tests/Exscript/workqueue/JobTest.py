@@ -9,10 +9,12 @@ class JobTest(unittest.TestCase):
         pass
 
     def testJobInit(self):
+        condition   = threading.Condition()
         global_lock = threading.Lock()
         global_ctx  = {}
         action      = TestAction()
-        job         = Job.Job(global_lock,
+        job         = Job.Job(condition,
+                              global_lock,
                               global_ctx,
                               action,
                               debug = 1)
@@ -20,10 +22,12 @@ class JobTest(unittest.TestCase):
         self.assert_(job.action == action)
 
     def testJobRun(self):
+        condition   = threading.Condition()
         global_lock = threading.Lock()
         global_ctx  = {'sum': 0, 'randsum': 0}
         action      = TestAction()
-        job         = Job.Job(global_lock,
+        job         = Job.Job(condition,
+                              global_lock,
                               global_ctx,
                               action)
 
