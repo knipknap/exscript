@@ -13,6 +13,7 @@ if not os.path.exists(doc_dir):
 
 # Generate the API documentation.
 os.system('epydoc ' + ' '.join(['--name', project,
+                                '--exclude Exscript.version',
                                 '--exclude Exscript.interpreter',
                                 '--exclude Exscript.helpers',
                                 '--exclude Exscript.FunctionAction',
