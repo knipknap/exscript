@@ -15,10 +15,10 @@
 import socket, struct, math, re
 
 def _least_bit(number):
-    for n in range(0, 31):
+    for n in range(0, 32):
         if number & (0x00000001l << n) != 0:
-            return n + 1
-    return 0
+            return n
+    return 32
 
 def _highest_bit(number):
     if number == 0:
@@ -65,6 +65,7 @@ def int2ip(number):
     @rtype:  string
     @return: The IP address.
     """
+    number &= 0xFFFFFFFF
     return socket.inet_ntoa(struct.pack('!L', number))
 
 def pfxlen2mask_int(pfxlen):
@@ -87,7 +88,7 @@ def pfxlen2mask(pfxlen):
     @rtype:  string
     @return: The mask.
     """
-    return int2ip(pfxlen2mask(pfxlen))
+    return int2ip(pfxlen2mask_int(pfxlen))
 
 def mask2pfxlen(mask):
     """
@@ -98,8 +99,7 @@ def mask2pfxlen(mask):
     @rtype:  long
     @return: The mask, as a long value.
     """
-    mask_int = ip2int(mask)
-    return 33 - _least_bit(mask_int)
+    return 32 - _least_bit(ip2int(mask))
 
 def parse_prefix(prefix, default_length = 24):
     """
@@ -119,7 +119,7 @@ def parse_prefix(prefix, default_length = 24):
     else:
         network = prefix
         pfxlen  = default_length
-    return ip2int(network), int(pfxlen)
+    return network, int(pfxlen)
 
 def remote_ip(local_ip):
     """
@@ -134,5 +134,5 @@ def remote_ip(local_ip):
     @return: The other IP address of the link address pair.
     """
     local_ip = ip2int(local_ip)
-    network  = local_ip & pfxlen2mask(30)
+    network  = local_ip & pfxlen2mask_int(30)
     return int2ip(network + 3 - (local_ip - network))

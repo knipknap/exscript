@@ -24,7 +24,8 @@ def correlate_class(theclass):
             continue
 
         # Format the function names.
-        testname   = re.sub(r'_(\w)', uppercase, name)
+        testname   = re.sub(r'_(\w)',  uppercase, name)
+        testname   = re.sub(r'(\d\w)', uppercase, testname)
         testname   = 'test' + re.sub(r'^(\w)', uppercase, testname)
         testmethod = theclass.__name__ + '.' + testname
         method     = theclass.CORRELATE.__name__ + '.' + name

@@ -41,7 +41,7 @@ def in_network(scope, prefixes, destination, default_pfxlen = [24]):
     for prefix in prefixes:
         network, pfxlen = ipv4.parse_prefix(prefix, default_pfxlen[0])
         mask            = ipv4.pfxlen2mask_int(pfxlen)
-        if needle & mask == network & mask:
+        if needle & mask == ipv4.ip2int(network) & mask:
             return [True]
     return [False]
 
