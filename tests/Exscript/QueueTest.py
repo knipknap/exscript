@@ -1,6 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
+import time
 from Exscript                import Queue, Account
 from Exscript.Connection     import Connection
 from Exscript.protocols      import Dummy
