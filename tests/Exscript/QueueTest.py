@@ -1,7 +1,8 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-import time
+import shutil, time
+from tempfile                import mkdtemp
 from Exscript                import Queue, Account
 from Exscript.Connection     import Connection
 from Exscript.protocols      import Dummy
@@ -33,7 +34,13 @@ class QueueTest(unittest.TestCase):
     CORRELATE = Queue
 
     def setUp(self):
-        self.queue = Queue(verbose = 0, max_threads = 1)
+        self.tempdir = mkdtemp()
+        self.queue   = Queue(verbose     = 0,
+                             max_threads = 1,
+                             logdir      = self.tempdir)
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
 
     def testConstructor(self):
         queue = Queue()
@@ -41,7 +48,10 @@ class QueueTest(unittest.TestCase):
     def testAddProtocol(self):
         self.queue.add_protocol('error', ErrorProtocol)
         host = 'error:test'
-        self.assertRaises(IntentionalError, self.queue.run, host, object)
+        # Since the exception happens in a child thread, it should not affect
+        # the queue.
+        self.queue.run(host, object)
+        self.queue.join()
 
     def testSetMaxThreads(self):
         self.assertEqual(1, self.queue.get_max_threads())
@@ -60,27 +70,33 @@ class QueueTest(unittest.TestCase):
     def startTask(self):
         self.testAddAccount()
         hosts = ['dummy1', 'dummy2']
-        return self.queue.run(hosts, do_nothing)
+        task  = self.queue.run(hosts, do_nothing)
+        self.assert_(task is not None)
+        return task
 
     def testTaskIsCompleted(self):
         task = self.startTask()
         while not self.queue.task_is_completed(task):
             time.sleep(.1)
+        self.assert_(self.queue.is_completed())
 
     def testWaitFor(self):
         task = self.startTask()
         self.queue.wait_for(task)
         self.assert_(self.queue.task_is_completed(task))
+        self.assert_(self.queue.is_completed())
 
     def testJoin(self):
         task = self.startTask()
         self.queue.join()
         self.assert_(self.queue.task_is_completed(task))
+        self.assert_(self.queue.is_completed())
 
     def testShutdown(self):
         task = self.startTask()
         self.queue.shutdown()
         self.assert_(self.queue.task_is_completed(task))
+        self.assert_(self.queue.is_completed())
 
     def testRun(self):
         data  = {'n_calls': 0}
@@ -112,6 +128,17 @@ class QueueTest(unittest.TestCase):
         self.queue.run('dummy4', func)
         self.queue.shutdown()
         self.assertEqual(6, data['n_calls'])
+
+    #FIXME: Not a method test; this should probably be elsewhere.
+    def testLogging(self):
+        self.testTaskIsCompleted()
+        logfiles = os.listdir(self.tempdir)
+        self.assertEqual(2, len(logfiles))
+        self.assert_('dummy1' in logfiles)
+        self.assert_('dummy2' in logfiles)
+        for file in logfiles:
+            content = open(os.path.join(self.tempdir, file)).read()
+            self.assert_('SUCCEEDED' in content)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(QueueTest)

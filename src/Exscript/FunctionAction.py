@@ -14,6 +14,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, traceback
 from workqueue             import Action
+from Log                   import Log
+from Logfile               import Logfile
+from Connection            import Connection
 from protocols.Exception   import LoginFailure
 from interpreter.Exception import FailException
 
@@ -25,7 +28,7 @@ class FunctionAction(Action):
     An action that calls the associated function and implements retry and
     logging.
     """
-    def __init__(self, function, conn):
+    def __init__(self, queue, function, host, **conn_args):
         """
         Constructor.
 
@@ -35,20 +38,18 @@ class FunctionAction(Action):
         @param conn: The assoviated connection.
         """
         Action.__init__(self)
-        self.function             = function
-        self.conn                 = conn
-        self.times                = 1
-        self.login_times          = 1
-        self.retry                = 0
-        self.login_retry          = 0
-        self.logdir               = None
-        self.logfile              = None
-        self.logfile_mode         = 'a'
-        self.logfile_delete       = False
-        self.error_logfile        = None
-        self.error_logfile_mode   = 'a'
-        self.name                 = conn.get_host().get_address()
-        self.conn.signal_connect('data_received', self._log)
+        self.queue          = queue
+        self.function       = function
+        self.host           = host
+        self.conn_args      = conn_args
+        self.times          = 1
+        self.login_times    = 1
+        self.retry          = 0
+        self.login_retry    = 0
+        self.logdir         = None
+        self.logfile_mode   = 'a'
+        self.logfile_delete = False
+        self.name           = host.get_address()
 
     def get_name(self):
         return self.name + ' (retry %d)' % self.retry
@@ -63,9 +64,7 @@ class FunctionAction(Action):
         self.login_times = int(times)
 
     def set_logdir(self, logdir):
-        self.logdir        = logdir
-        self.logfile       = None
-        self.error_logfile = None
+        self.logdir = logdir
 
     def get_logdir(self):
         return self.logdir
@@ -75,19 +74,8 @@ class FunctionAction(Action):
         overwrite: Whether to overwrite existing logfiles.
         delete: Whether to delete the logfile on success.
         """
-        if self.logfile:
-            raise Exception('must be called before the logfile is opened.')
         self.logfile_mode   = overwrite and 'w' or 'a'
         self.logfile_delete = delete
-
-    def set_error_log_options(self, overwrite = False):
-        """
-        overwrite: Whether to overwrite existing logfiles.
-        delete: Whether to delete the logfile on success.
-        """
-        if self.error_logfile:
-            raise Exception('must be called before the logfile is opened.')
-        self.error_logfile_mode = overwrite and 'w' or 'a'
 
     def _get_logfile_name(self, prefix = '', suffix = ''):
         if not self.logdir:
@@ -98,51 +86,35 @@ class FunctionAction(Action):
             logfile = '%s_retry%d.log' % (self.name, self.retry)
         return os.path.join(self.logdir, prefix + logfile + suffix)
 
-    def _log(self, data):
-        filename = self._get_logfile_name()
-        if filename is None:
-            return
-
-        # Open the file.
-        if self.logfile is None:
-            self.logfile = open(filename, self.logfile_mode)
-
-        # Write the data.
-        try:
-            self.logfile.write(data)
-            self.logfile.flush()
-        except Exception, e:
-            print 'Error writing to logfile (%s): %s' % (filename, e)
-
-    def _log_exception(self, e):
-        filename = self._get_logfile_name(suffix = '.error')
-        if filename is None:
-            return
-        log = open(filename, self.error_logfile_mode)
-        traceback.print_exc(e, log)
-        log.close()
-
     def execute(self, global_lock, global_data, local_data):
         while self.retry < self.times and self.login_retry < self.login_times:
+            # Prepare the logfile.
+            filename = self._get_logfile_name()
+            if filename:
+                log = Logfile(filename, self.logfile_mode, self.logfile_delete)
+            else:
+                log = Log()
+
+            # Create a new connection.
+            conn = Connection(self.queue, self.host, **self.conn_args)
+            log.started(conn)
+
             # Execute the user-provided function.
             try:
-                self.function(self.conn)
+                self.function(conn)
             except LoginFailure, e:
-                self._log_exception(e)
+                log.aborted(e)
                 self.login_retry += 1
                 continue
             except FailException, e:
-                self._log_exception(e)
+                log.aborted(e)
                 return
             except Exception, e:
-                self._log_exception(e)
+                log.aborted(e)
                 self.retry += 1
                 continue
 
-            # Delete the logfile on success.
-            filename = self._get_logfile_name()
-            if filename and self.logfile_delete:
-                os.remove(filename)
+            log.succeeded()
             return
 
         # Ending up here the function finally failed.

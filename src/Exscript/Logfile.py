@@ -18,24 +18,38 @@ from Log import Log
 class Logfile(Log):
     def __init__(self, filename, mode = 'a', delete = False):
         Log.__init__(self)
-        self.filename = filename
-        self.mode     = mode
-        self.delete   = delete
-        self.do_log   = True
+        self.filename  = filename
+        self.errorname = filename + '.error'
+        self.mode      = mode
+        self.delete    = delete
+        self.do_log    = True
 
-    def __str__(self):
-        return open(self.filename, 'r').read()
-
-    def _write(self, *data):
+    def _write_file(self, filename, *data):
+        Log._write(self, *data)
         if not self.do_log:
             return
         try:
-            file = open(self.filename, self.mode)
+            file = open(filename, self.mode)
             file.write(' '.join(data))
             file.flush()
         except Exception, e:
-            print 'Error writing to %s: %s' % (self.filename, e)
+            print 'Error writing to %s: %s' % (filename, e)
             self.do_log = False
+
+    def _write(self, *data):
+        return self._write_file(self.filename, *data)
+
+    def _write_error(self, *data):
+        return self._write_file(self.errorname, *data)
+
+    def started(self, conn):
+        self._write('')  # Creates the file.
+        self.conn = conn
+        self.conn.signal_connect('data_received', self._write)
+
+    def aborted(self, exception):
+        self._write('ABORTED:', str(exception), '\n')
+        self._write_error(traceback.format_exc(exception))
 
     def succeeded(self):
         if self.delete:

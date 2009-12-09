@@ -22,17 +22,20 @@ class Log(object):
     def __str__(self):
         return self.data
 
+    def __len__(self):
+        return len(str(self))
+
     def _write(self, *data):
         self.data += ' '.join(data)
 
     def started(self, conn):
+        self._write('STARTED\n')
         self.conn = conn
-        self._write("STARTED:", self.conn.get_host().get_name())
         self.conn.signal_connect('data_received', self._write)
 
     def aborted(self, exception):
-        self._write("ABORTED:", self.conn.get_host().get_name())
+        self._write('ABORTED:\n')
         self._write(traceback.format_exc(exception))
 
     def succeeded(self):
-        self._write("SUCCEEDED:", self.conn.get_host().get_name())
+        self._write('SUCCEEDED\n')

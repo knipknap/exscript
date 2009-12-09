@@ -14,7 +14,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, time, signal, gc, copy, traceback
 from AccountManager import AccountManager
-from Connection     import Connection
 from FunctionAction import FunctionAction
 from workqueue      import WorkQueue
 from util.cast      import to_hosts
@@ -322,17 +321,15 @@ class Queue(object):
             host.set_domain(self.domain)
         pargs         = self.protocol_args.copy()
         pargs['echo'] = n_connections == 1 and pargs.get('echo')
-        conn          = Connection(self, host, **pargs)
 
         # Build an object that represents the actual task.
         self._dbg(2, 'Building FunctionAction for %s.' % host.get_name())
-        action = FunctionAction(function, conn)
+        action = FunctionAction(self, function, host, **pargs)
         action.set_times(self.times)
         action.set_login_times(self.login_times)
         action.set_logdir(self.logdir)
         action.set_log_options(overwrite = self.overwrite_logs,
                                delete    = self.delete_logs)
-        action.set_error_log_options(overwrite = self.overwrite_logs)
 
         # Done. Enqueue this.
         if prioritize:
