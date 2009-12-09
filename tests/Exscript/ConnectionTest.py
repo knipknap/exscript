@@ -46,7 +46,7 @@ class ConnectionTest(DummyTest):
         self.assert_(self.transport.response != response)
         self.assert_(len(self.transport.response) > 0)
 
-    def testAuthoAuthorize(self):
+    def testAutoAuthorize(self):
         self.transport.open()
         self.transport.authenticate()
         response = self.transport.response
