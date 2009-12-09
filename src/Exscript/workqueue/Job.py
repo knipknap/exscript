@@ -36,11 +36,6 @@ class Job(threading.Thread):
         self.completed = True
         self.condition.notify()
         self.condition.release()
-        if exception:
-            self.action.signal_emit('aborted', self.action, e)
-        else:
-            self.action.signal_emit('succeeded', self.action)
-        self.action.signal_emit('completed', self.action)
 
     def run(self):
         """
@@ -55,7 +50,7 @@ class Job(threading.Thread):
                                 self.local_data)
         except Exception, e:
             self._completed(e)
-            raise
+            return
         self._completed()
 
     def is_alive(self):
