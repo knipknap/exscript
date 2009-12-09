@@ -217,6 +217,7 @@ class Queue(object):
         @rtype:  bool
         @return: Whether the task is completed.
         """
+        assert task is not None
         if not isinstance(task, list):
             task = [task]
         for action in task:
@@ -236,6 +237,17 @@ class Queue(object):
         self._dbg(2, 'Waiting for the task to finish.')
         while not self.task_is_completed(task):
             time.sleep(.1)
+
+
+    def is_completed(self):
+        """
+        Returns True if the task is completed, False otherwise.
+        In other words, this methods returns True if the queue is empty.
+
+        @rtype:  bool
+        @return: Whether all tasks are completed.
+        """
+        return self.workqueue.get_length() == 0
 
 
     def join(self):
@@ -285,7 +297,7 @@ class Queue(object):
             signal.signal(signal.SIGTERM, on_posix_signal)
 
         try:
-            function(*data, **kwargs)
+            return function(*data, **kwargs)
         except KeyboardInterrupt:
             print 'Interrupt caught succcessfully.'
             print '%d unfinished jobs.' % (self.total - self.completed)
