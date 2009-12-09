@@ -302,6 +302,8 @@ class Dummy(Transport):
 
 
     def expect(self, prompt):
+        if not hasattr(prompt, 'match'):
+            raise TypeError('prompt must be a compiled regular expression.')
         # Wait for a prompt.
         try:
             res = self._expect_any([prompt])

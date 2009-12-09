@@ -6,6 +6,9 @@ from Exscript.AccountManager import AccountManager
 from Exscript.Connection     import Connection
 from protocols.DummyTest     import DummyTest
 
+# Connection proxies the calls to a protocols.Transport object,
+# so we can inherit from TransportTest here and have most of the
+# tests working.
 class ConnectionTest(DummyTest):
     CORRELATE = Connection
 
@@ -15,6 +18,12 @@ class ConnectionTest(DummyTest):
         self.transport = Connection(self.queue, self.host, echo = 0)
         self.account   = Account('user', 'test')
         self.queue.add_account(self.account)
+
+    def doAuthenticate(self, wait = True):
+        # This is overwritten do make the tests that are inherited from
+        # DummyTest happy.
+        self.transport.open()
+        self.transport.authenticate(wait = wait)
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Connection))
@@ -32,52 +41,19 @@ class ConnectionTest(DummyTest):
     def testOpen(self):
         self.transport.open()
 
-    def testAuthenticate(self):
-        self.transport.open()
-        self.transport.authenticate()
-        self.assert_(self.transport.response is not None)
-        self.assert_(len(self.transport.response) > 0)
-
     def testAuthorize(self):
-        self.transport.open()
-        self.transport.authenticate()
+        self.doAuthenticate(wait = False)
         response = self.transport.response
         self.transport.authorize()
         self.assert_(self.transport.response != response)
         self.assert_(len(self.transport.response) > 0)
 
     def testAutoAuthorize(self):
-        self.transport.open()
-        self.transport.authenticate()
+        self.doAuthenticate()
         response = self.transport.response
         self.transport.auto_authorize()
         self.assert_(self.transport.response != response)
         self.assert_(len(self.transport.response) > 0)
-
-    ################################################################
-    # Everything below tests methods that are available because
-    # Connection proxies the calls to a protocols.Transport object.
-    # (That's also the reason why we inherit from TransportTest.)
-    ################################################################
-    def testSend(self):
-        self.transport.open()
-        self.transport.authenticate(wait = True)
-        self.transport.execute('ls')
-
-        self.transport.send('df\r')
-        self.assert_(self.transport.response is not None)
-        self.assert_(self.transport.response.startswith('ls'))
-
-        self.transport.send('exit\r')
-        self.assert_(self.transport.response is not None)
-        self.assert_(self.transport.response.startswith('ls'))
-
-    def testExecute(self):
-        self.transport.open()
-        self.transport.authenticate(wait = True)
-        self.transport.execute('ls')
-        self.assert_(self.transport.response is not None)
-        self.assert_(self.transport.response.startswith('ls'))
 
     def testGuessOs(self):
         self.assertEqual('unknown', self.transport.guess_os())

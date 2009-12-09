@@ -86,6 +86,14 @@ class QueueTest(unittest.TestCase):
         self.assert_(self.queue.task_is_completed(task))
         self.assert_(self.queue.is_completed())
 
+    def testIsCompleted(self):
+        self.assert_(self.queue.is_completed())
+        task = self.startTask()
+        self.failIf(self.queue.is_completed())
+        self.queue.wait_for(task)
+        self.assert_(self.queue.task_is_completed(task))
+        self.assert_(self.queue.is_completed())
+
     def testJoin(self):
         task = self.startTask()
         self.queue.join()

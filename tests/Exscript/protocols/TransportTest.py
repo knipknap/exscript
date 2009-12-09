@@ -14,6 +14,10 @@ class TransportTest(unittest.TestCase):
     def createTransport(self):
         self.transport = Transport(echo = 0)
 
+    def doAuthenticate(self, wait = True):
+        self.transport.connect(self.host)
+        self.transport.authenticate(self.user, self.password, wait = wait)
+
     def setUp(self):
         cfgfile = os.path.join(os.path.dirname(__file__), '..', 'unit_test.cfg')
         cfg     = RawConfigParser()
@@ -122,8 +126,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.authenticate, 'test')
             return
-        self.transport.connect(self.host)
-        self.transport.authenticate(self.user, self.password, wait = True)
+        self.doAuthenticate()
         self.assert_(self.transport.response is not None)
         self.assert_(len(self.transport.response) > 0)
 
@@ -132,8 +135,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.authorize)
             return
-        self.transport.connect(self.host)
-        self.transport.authenticate(self.user, self.password, wait = False)
+        self.doAuthenticate(wait = False)
         response = self.transport.response
         self.transport.authorize(self.user)
         self.assert_(self.transport.response != response)
@@ -144,8 +146,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.send, 'ls')
             return
-        self.transport.connect(self.host)
-        self.transport.authenticate(self.user, self.password, wait = True)
+        self.doAuthenticate()
         self.transport.execute('ls')
 
         self.transport.send('df\r')
@@ -161,11 +162,34 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.execute, 'ls')
             return
-        self.transport.connect(self.host)
-        self.transport.authenticate(self.user, self.password, wait = True)
+        self.doAuthenticate()
         self.transport.execute('ls')
         self.assert_(self.transport.response is not None)
         self.assert_(self.transport.response.startswith('ls'))
+
+    def testExpect(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.expect, 'ls')
+            return
+        self.doAuthenticate()
+        oldresponse = self.transport.response
+        self.transport.send('ls\r')
+        self.assertEqual(oldresponse, self.transport.response)
+        self.transport.expect(re.compile(r'[\r\n]'))
+        self.failIfEqual(oldresponse, self.transport.response)
+
+    def testExpectPrompt(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.expect, 'ls')
+            return
+        self.doAuthenticate()
+        oldresponse = self.transport.response
+        self.transport.send('ls\r')
+        self.assertEqual(oldresponse, self.transport.response)
+        self.transport.expect_prompt()
+        self.failIfEqual(oldresponse, self.transport.response)
 
     def testClose(self):
         # Test can not work on the abstract base.
