@@ -12,13 +12,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from version import __version__
-from Account import Account
-from Queue   import Queue
-from Host    import Host
-from Log     import Log
-from Logfile import Logfile
+import os, traceback
 
-import inspect 
-__all__ = [name for name, obj in locals().items()
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+class Log(object):
+    def __init__(self):
+        self.data = ''
+        self.conn = None
+
+    def __str__(self):
+        return self.data
+
+    def _write(self, *data):
+        self.data += ' '.join(data)
+
+    def started(self, conn):
+        self.conn = conn
+        self._write("STARTED:", self.conn.get_host().get_name())
+        self.conn.signal_connect('data_received', self._write)
+
+    def aborted(self, exception):
+        self._write("ABORTED:", self.conn.get_host().get_name())
+        self._write(traceback.format_exc(exception))
+
+    def succeeded(self):
+        self._write("SUCCEEDED:", self.conn.get_host().get_name())
