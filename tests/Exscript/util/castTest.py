@@ -2,7 +2,9 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import Exscript.util.cast
-from Exscript import Host, Log, Logfile
+from Exscript         import Host
+from Exscript.Log     import Log
+from Exscript.Logfile import Logfile
 
 class castTest(unittest.TestCase):
     CORRELATE = Exscript.util.cast

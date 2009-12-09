@@ -16,8 +16,6 @@ from version import __version__
 from Account import Account
 from Queue   import Queue
 from Host    import Host
-from Log     import Log
-from Logfile import Logfile
 
 import inspect 
 __all__ = [name for name, obj in locals().items()

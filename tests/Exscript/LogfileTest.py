@@ -1,10 +1,10 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from tempfile import mkdtemp
-from shutil   import rmtree
-from LogTest  import LogTest, FakeConnection
-from Exscript import Logfile
+from tempfile         import mkdtemp
+from shutil           import rmtree
+from LogTest          import LogTest, FakeConnection
+from Exscript.Logfile import Logfile
 
 class LogfileTest(LogTest):
     CORRELATE = Logfile
