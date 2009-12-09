@@ -35,7 +35,7 @@ class FunctionActionTest(unittest.TestCase):
         action = FunctionAction(Queue(), self.count_cb, FakeHost())
 
     def testGetName(self):
-        self.assert_(self.count_action.get_name().startswith('testaddress'))
+        self.assertEqual(self.count_action.get_name(), 'testaddress')
 
     def testSetTimes(self):
         # Run once.
@@ -60,8 +60,10 @@ class FunctionActionTest(unittest.TestCase):
         data     = {'n_calls' : 0}
         callback = bind_args(fail_calls, data, LoginFailure)
         action   = FunctionAction(Queue(), callback, FakeHost())
+        self.assertEqual(0, action.n_failures())
         self.assertRaises(LoginFailure, action.execute, None, None, None)
         self.assertEqual(1, data['n_calls'])
+        self.assertEqual(1, action.n_failures())
 
         # Run *three* times.
         data     = {'n_calls' : 0}
@@ -71,6 +73,7 @@ class FunctionActionTest(unittest.TestCase):
         action.set_login_times(3)
         self.assertRaises(LoginFailure, action.execute, None, None, None)
         self.assertEqual(3, data['n_calls'])
+        self.assertEqual(3, action.n_failures())
 
         # Should also run three times.
         data     = {'n_calls' : 0}
@@ -80,14 +83,10 @@ class FunctionActionTest(unittest.TestCase):
         action.set_login_times(3)
         self.assertRaises(LoginFailure, action.execute, None, None, None)
         self.assertEqual(3, data['n_calls'])
+        self.assertEqual(3, action.n_failures())
 
-    def testSetLogdir(self):
-        self.assertEqual(self.count_action.get_logdir(), None)
-        self.count_action.set_logdir('testme')
-        self.assertEqual(self.count_action.get_logdir(), 'testme')
-
-    def testGetLogdir(self):
-        pass # Tested in testSetLogdir().
+    def testNFailures(self):
+        pass # Tested in testSetLoginTimes().
 
     def testExecute(self):
         pass # Tested in testSetLoginTimes().

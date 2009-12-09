@@ -15,6 +15,7 @@
 import sys, os, re, time, signal, gc, copy, traceback
 from AccountManager import AccountManager
 from FunctionAction import FunctionAction
+from QueueLogger    import QueueLogger
 from workqueue      import WorkQueue
 from util.cast      import to_hosts
 
@@ -52,9 +53,7 @@ class Queue(object):
         self.account_manager   = AccountManager()
         self.domain            = kwargs.get('domain')
         self.verbose           = kwargs.get('verbose')
-        self.logdir            = kwargs.get('logdir')
-        self.overwrite_logs    = kwargs.get('overwrite_logs', False)
-        self.delete_logs       = kwargs.get('delete_logs',    False)
+        self.listeners         = []
         self.times             = kwargs.get('times',          1)
         self.login_times       = kwargs.get('login_times',    1)
         self.protocol_args     = kwargs.get('protocol_args',  {})
@@ -69,6 +68,14 @@ class Queue(object):
         self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
         self.workqueue.unpause()
+
+        # Enable logging.
+        if kwargs.has_key('logdir'):
+            overwrite = kwargs.get('overwrite_logs', False)
+            delete    = kwargs.get('delete_logs',    False)
+            mode      = overwrite and 'w' or 'a'
+            logger    = QueueLogger(kwargs.get('logdir'), mode, delete)
+            self.listeners.append(logger)
 
 
     def _del_status_bar(self):
@@ -307,7 +314,7 @@ class Queue(object):
         # To save memory, limit the number of parsed (=in-memory) items.
         # A side effect is that we will no longer know the total
         # number of jobs - to work around this, we first add the total
-        # ourselfs (see above), and then subtract one from the total
+        # ourselfes (see above), and then subtract one from the total
         # each time a new host is appended (see below).
         n_connections = self.get_max_threads()
         if not force:
@@ -327,9 +334,8 @@ class Queue(object):
         action = FunctionAction(self, function, host, **pargs)
         action.set_times(self.times)
         action.set_login_times(self.login_times)
-        action.set_logdir(self.logdir)
-        action.set_log_options(overwrite = self.overwrite_logs,
-                               delete    = self.delete_logs)
+        for listener in self.listeners:
+            listener._action_enqueued(action)
 
         # Done. Enqueue this.
         if prioritize:

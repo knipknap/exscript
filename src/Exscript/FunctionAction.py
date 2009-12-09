@@ -44,15 +44,12 @@ class FunctionAction(Action):
         self.conn_args      = conn_args
         self.times          = 1
         self.login_times    = 1
-        self.retry          = 0
-        self.login_retry    = 0
-        self.logdir         = None
-        self.logfile_mode   = 'a'
-        self.logfile_delete = False
+        self.failures       = 0
+        self.login_failures = 0
         self.name           = host.get_address()
 
     def get_name(self):
-        return self.name + ' (retry %d)' % self.retry
+        return self.name
 
     def set_times(self, times):
         self.times = int(times)
@@ -63,58 +60,36 @@ class FunctionAction(Action):
         """
         self.login_times = int(times)
 
-    def set_logdir(self, logdir):
-        self.logdir = logdir
-
-    def get_logdir(self):
-        return self.logdir
-
-    def set_log_options(self, overwrite = False, delete = False):
-        """
-        overwrite: Whether to overwrite existing logfiles.
-        delete: Whether to delete the logfile on success.
-        """
-        self.logfile_mode   = overwrite and 'w' or 'a'
-        self.logfile_delete = delete
-
-    def _get_logfile_name(self, prefix = '', suffix = ''):
-        if not self.logdir:
-            return None
-        if self.retry == 0:
-            logfile = self.name
-        else:
-            logfile = '%s_retry%d.log' % (self.name, self.retry)
-        return os.path.join(self.logdir, prefix + logfile + suffix)
+    def n_failures(self):
+        return self.failures + self.login_failures
 
     def execute(self, global_lock, global_data, local_data):
-        while self.retry < self.times and self.login_retry < self.login_times:
-            # Prepare the logfile.
-            filename = self._get_logfile_name()
-            if filename:
-                log = Logfile(filename, self.logfile_mode, self.logfile_delete)
-            else:
-                log = Log()
-
+        while self.failures < self.times \
+          and self.login_failures < self.login_times:
             # Create a new connection.
             conn = Connection(self.queue, self.host, **self.conn_args)
-            log.started(conn)
+            self.signal_emit('started', self, conn)
 
             # Execute the user-provided function.
             try:
                 self.function(conn)
             except LoginFailure, e:
-                log.aborted(e)
-                self.login_retry += 1
+                self.signal_emit('aborted', self, e)
+                self.login_failures += 1
                 continue
             except FailException, e:
-                log.aborted(e)
+                # This exception is raised if a user used the "fail"
+                # keyword in a template; this should always cause the action
+                # to fail, without retry.
+                self.signal_emit('aborted', self, e)
+                self.failures += 1
                 return
             except Exception, e:
-                log.aborted(e)
-                self.retry += 1
+                self.signal_emit('aborted', self, e)
+                self.failures += 1
                 continue
 
-            log.succeeded()
+            self.signal_emit('succeeded', self)
             return
 
         # Ending up here the function finally failed.
