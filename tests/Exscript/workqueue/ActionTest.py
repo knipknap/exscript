@@ -41,19 +41,23 @@ class TestAction(Action):
 class ActionTest(unittest.TestCase):
     CORRELATE = Action
 
-    def setUp(self):
-        pass
+    def testConstructor(self):
+        action = Action()
+        self.assertEqual(None, action.name)
+        self.assertEqual(0,    action.debug)
+
+        action = Action(name = 'test', debug = 1)
+        self.assertEqual('test', action.name)
+        self.assertEqual(1,      action.debug)
 
     def testExecute(self):
-        action = Action(name = 'test', debug = 1)
-        self.assert_(action.name  == 'test')
-        self.assert_(action.debug == 1)
+        action = Action()
         self.assertRaises(Exception, action.execute)
 
         data   = {'sum': 0, 'randsum': 0}
         action = TestAction(threading.Lock(), data)
-        self.assert_(action.name  == 'action 1', action.name)
-        self.assert_(action.debug == 0)
+        self.assertEqual(action.name, 'action 1')
+        self.assertEqual(action.debug, 0)
         action.execute()
 
 def suite():
