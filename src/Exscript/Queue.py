@@ -17,7 +17,7 @@ from AccountManager import AccountManager
 from Connection     import Connection
 from FunctionAction import FunctionAction
 from workqueue      import WorkQueue
-from helpers        import get_hosts_from_name
+from util.cast      import to_hosts
 
 True  = 1
 False = 0
@@ -332,7 +332,7 @@ class Queue(object):
 
 
     def _run(self, hosts, function):
-        hosts       = get_hosts_from_name(hosts)
+        hosts       = to_hosts(hosts)
         self.total += len(hosts)
 
         actions = []
@@ -375,7 +375,7 @@ class Queue(object):
         @rtype:  object
         @return: An object representing the task.
         """
-        hosts       = get_hosts_from_name(hosts)
+        hosts       = to_hosts(hosts)
         self.total += len(hosts)
 
         actions = []
@@ -399,7 +399,7 @@ class Queue(object):
         @rtype:  object
         @return: An object representing the task.
         """
-        hosts       = get_hosts_from_name(hosts)
+        hosts       = to_hosts(hosts)
         self.total += len(hosts)
 
         actions = []

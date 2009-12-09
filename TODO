@@ -6,3 +6,4 @@
 * Check for places where polling is used, and get rid of it.
 * Try to move the remote_os detection into a stream monitor, instead of
   hard wiring it into the authentication procedure.
+* Can we port the SSH adapter to paramiko?

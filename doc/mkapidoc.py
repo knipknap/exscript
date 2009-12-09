@@ -15,7 +15,6 @@ if not os.path.exists(doc_dir):
 os.system('epydoc ' + ' '.join(['--name', project,
                                 '--exclude Exscript.version',
                                 '--exclude Exscript.interpreter',
-                                '--exclude Exscript.helpers',
                                 '--exclude Exscript.FunctionAction',
                                 '--exclude Exscript.AccountManager',
                                 '--exclude Exscript.workqueue',

@@ -12,14 +12,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Host import Host
+from Exscript.Host import Host
 
-def get_host_from_name(host):
+def to_host(host):
+    """
+    Given a string or a Host object, this function returns a Host object.
+
+    @type  host: string|Host
+    @param host: A hostname (may be URL formatted) or a Host object.
+    @rtype:  Host
+    @return: The Host object.
+    """
     if isinstance(host, Host):
         return host
     return Host(host)
 
-def get_hosts_from_name(hosts):
+def to_hosts(hosts):
+    """
+    Given a string or a Host object, or a list of strings or Host objects,
+    this function returns a list of Host objects.
+
+    @type  host: string|Host|list(string)|list(Host)
+    @param host: One or more hosts or hostnames.
+    @rtype:  list[Host]
+    @return: A list of Host objects.
+    """
     if not hasattr(hosts, '__iter__'):
         hosts = [hosts]
-    return [get_host_from_name(h) for h in hosts]
+    return [to_host(h) for h in hosts]
