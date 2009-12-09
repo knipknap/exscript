@@ -33,8 +33,8 @@ class QueueLogger(QueueListener):
         logfile = action.get_name()
         retries = action.n_failures()
         if retries > 0:
-            logfile += '_retry%d.log' % retries
-        return os.path.join(self.logdir, logfile)
+            logfile += '_retry%d' % retries
+        return os.path.join(self.logdir, logfile + '.log')
 
     def _on_action_started(self, action, conn):
         filename = self._get_logfile_name(action)

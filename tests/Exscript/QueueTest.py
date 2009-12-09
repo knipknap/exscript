@@ -142,8 +142,8 @@ class QueueTest(unittest.TestCase):
         self.testTaskIsCompleted()
         logfiles = os.listdir(self.tempdir)
         self.assertEqual(2, len(logfiles))
-        self.assert_('dummy1' in logfiles)
-        self.assert_('dummy2' in logfiles)
+        self.assert_('dummy1.log' in logfiles)
+        self.assert_('dummy2.log' in logfiles)
         for file in logfiles:
             content = open(os.path.join(self.tempdir, file)).read()
             self.assert_('SUCCEEDED' in content)
