@@ -23,7 +23,7 @@ from interpreter.Exception import FailException
 True  = 1
 False = 0
 
-class FunctionAction(Action):
+class HostAction(Action):
     """
     An action that calls the associated function and implements retry and
     logging.

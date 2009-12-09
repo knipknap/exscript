@@ -1,4 +1,5 @@
 * Add missing tests as reported by the test suite.
+* Implement tests for QueueListener and QueueLogger.
 * Is there a sane way to test stdlib?
 * Check whether merging workqueue.Action and workqueue.Job makes sense.
 * Add a workqueue method for putting jobs to sleep until another job is

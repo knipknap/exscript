@@ -14,7 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, time, signal, gc, copy, traceback
 from AccountManager import AccountManager
-from FunctionAction import FunctionAction
+from HostAction     import HostAction
 from QueueLogger    import QueueLogger
 from workqueue      import WorkQueue
 from util.cast      import to_hosts
@@ -330,8 +330,8 @@ class Queue(object):
         pargs['echo'] = n_connections == 1 and pargs.get('echo')
 
         # Build an object that represents the actual task.
-        self._dbg(2, 'Building FunctionAction for %s.' % host.get_name())
-        action = FunctionAction(self, function, host, **pargs)
+        self._dbg(2, 'Building HostAction for %s.' % host.get_name())
+        action = HostAction(self, function, host, **pargs)
         action.set_times(self.times)
         action.set_login_times(self.login_times)
         for listener in self.listeners:
