@@ -39,20 +39,12 @@ class HostActionTest(unittest.TestCase):
 
     def testSetTimes(self):
         # Run once.
-        self.assertRaises(IntentionalError,
-                          self.fail_action.execute,
-                          None,
-                          None,
-                          None)
+        self.assertRaises(IntentionalError, self.fail_action.execute)
         self.assertEqual(1, self.data['n_calls'])
 
         # Run four more times.
         self.fail_action.set_times(4)
-        self.assertRaises(IntentionalError,
-                          self.fail_action.execute,
-                          None,
-                          None,
-                          None)
+        self.assertRaises(IntentionalError, self.fail_action.execute)
         self.assertEqual(4, self.data['n_calls'])
 
     def testSetLoginTimes(self):
@@ -61,7 +53,7 @@ class HostActionTest(unittest.TestCase):
         callback = bind_args(fail_calls, data, LoginFailure)
         action   = HostAction(Queue(), callback, FakeHost())
         self.assertEqual(0, action.n_failures())
-        self.assertRaises(LoginFailure, action.execute, None, None, None)
+        self.assertRaises(LoginFailure, action.execute)
         self.assertEqual(1, data['n_calls'])
         self.assertEqual(1, action.n_failures())
 
@@ -71,7 +63,7 @@ class HostActionTest(unittest.TestCase):
         action   = HostAction(Queue(), callback, FakeHost())
         action.set_times(10)
         action.set_login_times(3)
-        self.assertRaises(LoginFailure, action.execute, None, None, None)
+        self.assertRaises(LoginFailure, action.execute)
         self.assertEqual(3, data['n_calls'])
         self.assertEqual(3, action.n_failures())
 
@@ -81,7 +73,7 @@ class HostActionTest(unittest.TestCase):
         action   = HostAction(Queue(), callback, FakeHost())
         action.set_times(1)
         action.set_login_times(3)
-        self.assertRaises(LoginFailure, action.execute, None, None, None)
+        self.assertRaises(LoginFailure, action.execute)
         self.assertEqual(3, data['n_calls'])
         self.assertEqual(3, action.n_failures())
 

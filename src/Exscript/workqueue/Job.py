@@ -15,19 +15,14 @@
 import threading, traceback
 
 class Job(threading.Thread):
-    def __init__(self, condition, lock, global_data, action, **kwargs):
+    def __init__(self, condition, action, **kwargs):
         threading.Thread.__init__(self)
-        self.condition        = condition
-        self.global_data_lock = lock
-        self.global_data      = global_data
-        self.local_data       = {}
-        self.action           = action
-        self.logfile          = None
-        self.logfile_lock     = None
-        self.debug            = kwargs.get('debug', 0)
-        self.action.debug     = self.debug
-        self.exception        = None
-        self.completed        = False
+        self.condition    = condition
+        self.action       = action
+        self.debug        = kwargs.get('debug', 0)
+        self.action.debug = self.debug
+        self.exception    = None
+        self.completed    = False
         self.setName(self.action.name)
 
     def _completed(self, exception = None):
@@ -36,6 +31,8 @@ class Job(threading.Thread):
         self.completed = True
         self.condition.notify()
         self.condition.release()
+        if exception and self.debug > 0:
+            raise
 
     def run(self):
         """
@@ -45,9 +42,7 @@ class Job(threading.Thread):
         if self.debug:
             print "Job running: %s" % self.getName()
         try:
-            self.action.execute(self.global_data_lock,
-                                self.global_data,
-                                self.local_data)
+            self.action.execute()
         except Exception, e:
             self._completed(e)
             return

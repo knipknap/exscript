@@ -23,16 +23,14 @@ class MainLoop(Trackable, threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         Trackable.__init__(self)
-        self.queue            = []
-        self.force_start      = []
-        self.running_jobs     = []
-        self.paused           = True
-        self.shutdown_now     = False
-        self.max_threads      = 1
-        self.global_data      = {}
-        self.global_data_lock = threading.Lock()
-        self.condition        = threading.Condition()
-        self.debug            = 0
+        self.queue        = []
+        self.force_start  = []
+        self.running_jobs = []
+        self.paused       = True
+        self.shutdown_now = False
+        self.max_threads  = 1
+        self.condition    = threading.Condition()
+        self.debug        = 0
         self.setDaemon(1)
 
     def _dbg(self, level, msg):
@@ -48,17 +46,6 @@ class MainLoop(Trackable, threading.Thread):
         self.max_threads = max_threads
         self.condition.notify()
         self.condition.release()
-
-    def define_data(self, name, value):
-        self.global_data_lock.acquire()
-        self.global_data[name] = value
-        self.global_data_lock.release()
-
-    def get_data(self, name):
-        self.global_data_lock.acquire()
-        data = self.global_data[name]
-        self.global_data_lock.release()
-        return data
 
     def enqueue(self, action):
         self.condition.acquire()
@@ -121,11 +108,7 @@ class MainLoop(Trackable, threading.Thread):
         return len(self.queue) + len(self.running_jobs)
 
     def _start_action(self, action):
-        job = Job(self.condition,
-                  self.global_data_lock,
-                  self.global_data,
-                  action,
-                  debug = self.debug)
+        job = Job(self.condition, action, debug = self.debug)
         self.running_jobs.append(job)
         job.start()
         self._dbg(1, 'Job "%s" started.' % job.getName())

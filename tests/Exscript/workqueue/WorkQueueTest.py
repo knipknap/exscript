@@ -8,16 +8,22 @@ class WorkQueueTest(unittest.TestCase):
     CORRELATE = WorkQueue
 
     def setUp(self):
-        pass
+        self.wq = WorkQueue()
+
+    def testConstructor(self):
+        self.assertEqual(1, self.wq.get_max_threads())
+        self.assertEqual(0, self.wq.debug)
 
     def testWorkQueue(self):
         queue = WorkQueue()
         queue.set_max_threads(50)
 
+        lock = threading.Lock()
+        data = {}
         for i in range(111):
-            actions  = [TestAction(),
-                        TestAction(),
-                        TestAction()]
+            actions  = [TestAction(lock, data),
+                        TestAction(lock, data),
+                        TestAction(lock, data)]
             sequence = Sequence(actions = actions)
             queue.enqueue(sequence)
         self.assertEqual(111, queue.get_length())
@@ -26,10 +32,9 @@ class WorkQueueTest(unittest.TestCase):
         queue.wait_until_done()
         queue.pause()
         self.assertEqual(0,   queue.get_length())
-        self.assertEqual(333, queue.main_loop.global_data['sum'])
+        self.assertEqual(333, data['sum'])
         queue.shutdown()
         self.assertEqual(0, queue.get_length())
-        self.failIf(queue.main_loop.global_data.has_key('sum'))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(WorkQueueTest)

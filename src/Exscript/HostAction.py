@@ -63,7 +63,7 @@ class HostAction(Action):
     def n_failures(self):
         return self.failures + self.login_failures
 
-    def execute(self, global_lock, global_data, local_data):
+    def execute(self):
         while self.failures < self.times \
           and self.login_failures < self.login_times:
             # Create a new connection.

@@ -11,15 +11,15 @@ class MainLoopTest(unittest.TestCase):
         pass
 
     def testMainLoop(self):
-        global_lock = threading.Lock()
-        global_ctx  = {'sum': 0, 'randsum': 0}
-        ml          = MainLoop.MainLoop()
+        lock = threading.Lock()
+        data = {'sum': 0, 'randsum': 0}
+        ml   = MainLoop.MainLoop()
 
         for i in range(12345):
-            action = TestAction()
+            action = TestAction(lock, data)
             ml.enqueue(action)
 
-        self.assert_(global_ctx['sum'] == 0)
+        self.assertEqual(0, data['sum'])
 
         # Note: Further testing is done in WorkQueueTest.py
 

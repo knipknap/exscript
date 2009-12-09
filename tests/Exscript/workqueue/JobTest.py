@@ -8,31 +8,18 @@ class JobTest(unittest.TestCase):
     CORRELATE = Job
 
     def setUp(self):
-        pass
+        self.condition = threading.Condition()
+        self.lock      = threading.Lock()
+        self.data      = {}
+        self.action    = TestAction(self.lock, self.data)
 
-    def testJobInit(self):
-        condition   = threading.Condition()
-        global_lock = threading.Lock()
-        global_ctx  = {}
-        action      = TestAction()
-        job         = Job.Job(condition,
-                              global_lock,
-                              global_ctx,
-                              action,
-                              debug = 1)
-        self.assert_(job.debug  == 1)
-        self.assert_(job.action == action)
+    def testConstructor(self):
+        job = Job.Job(self.condition, self.action, debug = 1)
+        self.assertEqual(1,           job.debug)
+        self.assertEqual(self.action, job.action)
 
-    def testJobRun(self):
-        condition   = threading.Condition()
-        global_lock = threading.Lock()
-        global_ctx  = {'sum': 0, 'randsum': 0}
-        action      = TestAction()
-        job         = Job.Job(condition,
-                              global_lock,
-                              global_ctx,
-                              action)
-
+    def testRun(self):
+        job = Job.Job(self.condition, self.action)
         job.start()
         while job.isAlive():
             pass

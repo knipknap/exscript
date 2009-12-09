@@ -85,30 +85,6 @@ class WorkQueue(Trackable):
         """
         self.signal_emit('job-completed', job)
 
-    def define_data(self, name, value):
-        """
-        Defines a variable in the globally accessable data, such that every 
-        running job may access it.
-
-        @type  name: str
-        @param name: The name of the variable to be defined.
-        @type  value: object
-        @param value: The value that is assigned to the variable.
-        """
-        self.main_loop.define_data(name, value)
-
-    def get_data(self, name):
-        """
-        Returns the value of the variable with the given name from the global 
-        data.
-
-        @type  name: str
-        @param name: The name of the variable to be defined.
-        @rtype:  object
-        @return: The value of the variable.
-        """
-        return self.main_loop.get_data(name)
-
     def set_debug(self, debug = 1):
         """
         Set the debug level.

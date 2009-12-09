@@ -48,22 +48,9 @@ class Sequence(Action):
         self.actions.append(action)
 
 
-    def execute(self, global_lock, global_data, local_data):
-        """
-        When overwritten, make sure to call the original implementation 
-        using Sequence.execute(*args).
-
-        @type  global_lock: threading.lock
-        @param global_lock: Must be acquired when accessing global_data.
-        @type  global_data: dict
-        @param global_data: Data that is shared by all threads in the queue.
-        @type  local_data: dict
-        @param local_data: A dictionary for storing thread-local data.
-        """
-        assert local_data  is not None
-        assert global_data is not None
+    def execute(self):
         for action in self.actions:
             action.debug = self.debug
-            if not action.execute(global_lock, global_data, local_data):
+            if not action.execute():
                 return False
         return True

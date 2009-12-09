@@ -12,7 +12,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from SpiffSignal import Trackable
+from SpiffSignal             import Trackable
+from Exscript.AbstractMethod import AbstractMethod
 
 True  = 1
 False = 0
@@ -36,16 +37,8 @@ class Action(Trackable):
         self.debug = kwargs.get('debug', 0)
         self.name  = kwargs.get('name',  None)
 
-
-    def execute(self, global_lock, global_data, local_data):
+    def execute(self):
         """
         This method should be overwritten and made to do the actual work.
-
-        @type  global_lock: threading.lock
-        @param global_lock: Must be acquired when accessing global_data.
-        @type  global_data: dict
-        @param global_data: Data that is shared by all threads in the queue.
-        @type  local_data: dict
-        @param local_data: A dictionary for storing thread-local data.
         """
-        raise Exception('Not implemented')
+        raise AbstractMethod()
