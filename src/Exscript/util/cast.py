@@ -36,8 +36,8 @@ def to_hosts(hosts):
     Given a string or a Host object, or a list of strings or Host objects,
     this function returns a list of Host objects.
 
-    @type  host: string|Host|list(string)|list(Host)
-    @param host: One or more hosts or hostnames.
+    @type  hosts: string|Host|list(string)|list(Host)
+    @param hosts: One or more hosts or hostnames.
     @rtype:  list[Host]
     @return: A list of Host objects.
     """
@@ -66,8 +66,8 @@ def to_logs(logs):
     Given a string or a Log object, or a list of strings or Log objects,
     this function returns a list of Log objects.
 
-    @type  log: string|Log|list(string)|list(Log)
-    @param log: One or more logs or logfile names.
+    @type  logs: string|Log|list(string)|list(Log)
+    @param logs: One or more logs or logfile names.
     @rtype:  list[Log]
     @return: A list of Log objects.
     """
