@@ -116,7 +116,9 @@ class MainLoop(Trackable, threading.Thread):
 
     def get_queue_length(self):
         #print "Queue length:", len(self.queue)
-        return len(self.queue) + len(self.running_jobs)
+        return len(self.queue) \
+             + len(self.force_start) \
+             + len(self.running_jobs)
 
     def _start_action(self, action):
         job = Job(self.condition, action, debug = self.debug)
