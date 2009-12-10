@@ -1,4 +1,4 @@
-* Add tests for StreamAnalyzer and OsGuesser.
+* Add tests for OsGuesser.
 * Add missing tests as reported by the test suite.
 * Is there a sane way to test stdlib?
 * Check whether merging workqueue.Action and workqueue.Job makes sense.

@@ -66,20 +66,6 @@ class StreamAnalyzer(object):
             return value
         return None
 
-    def authenticated(self):
-        """
-        Called by the transport when the authentication procedure is
-        complete.
-        """
-        self.authenticated = True
-
-    def authorized(self):
-        """
-        Called by the transport when the authorization procedure is
-        complete.
-        """
-        self.authorized = True
-
     def data_received(self, data):
         """
         Called by the transport whenever new data was received from the
@@ -89,7 +75,7 @@ class StreamAnalyzer(object):
 
     def response_received(self):
         """
-        Like data_received(), but is only call when a response is
+        Like data_received(), but is only called when a response is
         complete (in other words, once a prompt has matched).
         """
         pass
