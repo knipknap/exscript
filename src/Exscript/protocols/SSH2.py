@@ -12,17 +12,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, re, time, select
+import time, select
 from Exscript.external import paramiko
 from Exception         import TransportException, LoginFailure
 from Transport         import Transport
 
 True  = 1
 False = 0
-
-fingerprint = r'\:'.join([r'\w\w'] * 16)
-verify_re   = re.compile(r'\b' + fingerprint + r'\b.*\byes.*', re.I|re.S|re.M)
-escape_re   = re.compile(r'(?:[\x00-\x09]|\x1b\[[^m]*m|\x1b\][^\x07]*\x07)')
 
 class SSH2(Transport):
     """
@@ -38,11 +34,6 @@ class SSH2(Transport):
         self.keyfile     = kwargs.get('key_file')
         self.auto_verify = kwargs.get('auto_verify', False)
         self.port        = None
-
-
-    def _remove_esc(self, response):
-        #print "PRE:", repr(response)
-        return escape_re.sub('', response)
 
 
     def _connect_hook(self, hostname, port):
@@ -139,7 +130,7 @@ class SSH2(Transport):
 
             #print "Match End:", match.end()
             end           = len(match.group())
-            self.response = self._remove_esc(self.buffer[:-end])
+            self.response = self.buffer[:-end]
             self.buffer   = search_window[match.end():]
             #print "END:", end, repr(self.response), repr(self.buffer)
             break
