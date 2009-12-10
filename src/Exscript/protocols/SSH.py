@@ -16,14 +16,10 @@ import os, re
 import pexpect
 from Exscript.util.crypt import otp
 from Exception           import TransportException, LoginFailure
-from Transport           import Transport,         \
-                                cisco_user_re,     \
-                                junos_user_re,     \
-                                unix_user_re,      \
-                                iosxr_prompt_re,   \
-                                pass_re,           \
-                                skey_re,           \
-                                huawei_re,         \
+from Transport           import Transport,    \
+                                user_re,      \
+                                pass_re,      \
+                                skey_re,      \
                                 login_fail_re
 
 True  = 1
@@ -84,11 +80,8 @@ class SSH(Transport):
         self._spawn(user, kwargs.get('key_file'))
         while 1:
             # Wait for the user prompt.
-            prompt  = [huawei_re,
-                       login_fail_re,
-                       cisco_user_re,
-                       junos_user_re,
-                       unix_user_re,
+            prompt  = [login_fail_re,
+                       user_re,
                        skey_re,
                        pass_re,
                        verify_re,
@@ -110,25 +103,18 @@ class SSH(Transport):
             if which < 0:
                 raise TransportException("Timeout while waiting for prompt")
 
-            # Huawei welcome message.
-            elif which == 0:
-                self._dbg(1, "Huawei router detected.")
-                self.remote_os = 'vrp'
-
             # Login error detected.
-            elif which == 1:
+            elif which == 0:
                 raise LoginFailure("Login failed")
 
             # User name prompt.
-            elif which <= 4:
+            elif which <= 1:
                 self._dbg(1, "Username prompt %s received." % which)
-                if self.remote_os == 'unknown':
-                    self.remote_os = ('ios', 'junos', 'shell')[which - 2]
                 self.send(user + '\r')
                 continue
 
             # s/key prompt.
-            elif which == 5:
+            elif which == 2:
                 self._dbg(1, "S/Key prompt received.")
                 seq  = int(self.conn.match.group(1))
                 seed = self.conn.match.group(2)
@@ -148,7 +134,7 @@ class SSH(Transport):
                 continue
             
             # Cleartext password prompt.
-            elif which == 6:
+            elif which == 3:
                 self._dbg(1, "Cleartext prompt received.")
                 self.send(password + '\r')
                 if not kwargs.get('wait'):
@@ -156,17 +142,16 @@ class SSH(Transport):
                     break
                 continue
 
-            # Shell prompt.
-            elif which == 7:
+            # SSH key verification.
+            elif which == 4:
                 self._dbg(1, 'Key verification prompt received.')
                 if self.auto_verify:
                     self.send('yes\r')
                 continue
 
-            elif which == 8:
+            # Shell prompt.
+            elif which == 5:
                 self._dbg(1, 'Shell prompt received.')
-                self._examine_prompt(self.conn.match.group(0))
-                self._dbg(1, 'Remote OS: %s' % self.remote_os)
                 break
 
             else:
@@ -175,13 +160,6 @@ class SSH(Transport):
 
     def _authorize_hook(self, password, **kwargs):
         return self._authenticate_hook('', password, **kwargs)
-
-
-    def _examine_prompt(self, prompt):
-        if iosxr_prompt_re.search(prompt):
-            self.remote_os = 'ios_xr'
-        elif self.remote_os == 'unknown':
-            self.remote_os = 'shell'
 
 
     def send(self, data):
@@ -200,7 +178,7 @@ class SSH(Transport):
         return self.expect_prompt()
 
 
-    def expect(self, prompt):
+    def _expect_hook(self, prompt):
         try:
             self.conn.expect(prompt, self.timeout)
             self.response += self._remove_esc(self.conn.before + self.conn.after)
@@ -219,7 +197,6 @@ class SSH(Transport):
             error = 'Error while waiting for response from device'
             raise TransportException(error)
 
-        self._examine_prompt(self.conn.match.group(0))
         self._receive_cb(self.response)
 
 

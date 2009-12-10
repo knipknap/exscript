@@ -19,7 +19,7 @@ class DummyTest(TransportTest):
     def testGuessOs(self):
         self.assertEqual('unknown', self.transport.guess_os())
         self.transport.connect(self.host)
-        self.assertEqual('unknown', self.transport.guess_os())
+        self.assertEqual('ios', self.transport.guess_os())
         self.transport.authenticate(self.user, self.password, wait = True)
         self.assertEqual('ios', self.transport.guess_os())
         #FIXME: test other operating systems.

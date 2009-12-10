@@ -54,7 +54,7 @@ class ConnectionTest(DummyTest):
     def testGuessOs(self):
         self.assertEqual('unknown', self.transport.guess_os())
         self.transport.open()
-        self.assertEqual('unknown', self.transport.guess_os())
+        self.assertEqual('ios', self.transport.guess_os())
         self.transport.authenticate(wait = True)
         self.assertEqual('ios', self.transport.guess_os())
 

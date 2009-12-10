@@ -16,14 +16,10 @@ import os, re
 import telnetlib
 from Exscript.util.crypt import otp
 from Exception           import TransportException, LoginFailure
-from Transport           import Transport,         \
-                                cisco_user_re,     \
-                                junos_user_re,     \
-                                unix_user_re,      \
-                                iosxr_prompt_re,   \
-                                pass_re,           \
-                                skey_re,           \
-                                huawei_re,         \
+from Transport           import Transport,    \
+                                user_re,      \
+                                pass_re,      \
+                                skey_re,      \
                                 login_fail_re
 
 True  = 1
@@ -55,11 +51,8 @@ class Telnet(Transport):
         while 1:
             # Wait for the user prompt.
             #print 'Waiting for prompt'
-            prompt  = [huawei_re,
-                       login_fail_re,
-                       cisco_user_re,
-                       junos_user_re,
-                       unix_user_re,
+            prompt  = [login_fail_re,
+                       user_re,
                        skey_re,
                        pass_re,
                        self.prompt_re]
@@ -79,25 +72,18 @@ class Telnet(Transport):
                 msg = "Timeout while waiting for prompt. Buffer: %s" % repr(self.response)
                 raise TransportException(msg)
 
-            # Huawei welcome message.
-            elif which == 0:
-                self._dbg(1, "Huawei router detected.")
-                self.remote_os = 'vrp'
-
             # Login error detected.
-            elif which == 1:
+            elif which == 0:
                 raise LoginFailure("Login failed")
 
             # User name prompt.
-            elif which <= 4:
+            elif which == 1:
                 self._dbg(1, "Username prompt %s received." % which)
-                if self.remote_os == 'unknown':
-                    self.remote_os = ('ios', 'junos', 'shell')[which - 2]
                 self.send(user + '\r')
                 continue
 
             # s/key prompt.
-            elif which == 5:
+            elif which == 2:
                 self._dbg(1, "S/Key prompt received.")
                 seq  = int(matches.group(1))
                 seed = matches.group(2)
@@ -114,7 +100,7 @@ class Telnet(Transport):
                 continue
             
             # Cleartext password prompt.
-            elif which == 6:
+            elif which == 3:
                 self._dbg(1, "Cleartext password prompt received.")
                 self.send(password + '\r')
                 if not kwargs.get('wait'):
@@ -123,10 +109,8 @@ class Telnet(Transport):
                 continue
 
             # Shell prompt.
-            elif which == 7:
+            elif which == 4:
                 self._dbg(1, 'Shell prompt received.')
-                self._examine_prompt(matches.group(0))
-                self._dbg(1, 'Remote OS: %s' % self.remote_os)
                 break
 
             else:
@@ -136,13 +120,6 @@ class Telnet(Transport):
     def _authorize_hook(self, password, **kwargs):
         # The username should not be asked, so not passed.
         return self._authenticate_hook('', password, **kwargs)
-
-
-    def _examine_prompt(self, prompt):
-        if iosxr_prompt_re.search(prompt):
-            self.remote_os = 'ios_xr'
-        elif self.remote_os == 'unknown':
-            self.remote_os = 'shell'
 
 
     def send(self, data):
@@ -160,7 +137,7 @@ class Telnet(Transport):
         return self.expect_prompt()
 
 
-    def expect(self, prompt):
+    def _expect_hook(self, prompt):
         # Wait for a prompt.
         self.response = None
         try:
@@ -172,7 +149,6 @@ class Telnet(Transport):
 
         if match:
             self._dbg(2, "Got a prompt, match was %s" % repr(match.group()))
-            self._examine_prompt(match.group(0))
 
         self._dbg(5, "Response was %s" % repr(self.response))
 

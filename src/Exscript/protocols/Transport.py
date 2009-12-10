@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import string, re, sys
+from OsGuesser               import OsGuesser
 from SpiffSignal             import Trackable
 from Exscript.AbstractMethod import AbstractMethod
 from Exception               import TransportException, \
@@ -44,29 +45,25 @@ prompt_re     = re.compile(prompt_start                 \
                          + r'(?:\(' + filename + '\))?' \
                          + r'\]?'                       \
                          + r'[#>%\$\]] ?$', flags)
-iosxr_prompt_re = re.compile(r'RP/\d+/\w+/CPU\d+:[^#]+[#>] ?$', flags)
 
-huawei_re     = re.compile(r'huawei',               flags)
-cisco_user_re = re.compile(r'user ?name: *$',       flags)
-junos_user_re = re.compile(newline + r'login: *?$', flags)
-unix_user_re  = re.compile(r'(user|login): *$',     flags)
-pass_re       = re.compile(r'password:? *$',        flags)
-skey_re       = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
-errors        = [r'error',
-                 r'invalid',
-                 r'incomplete',
-                 r'unrecognized',
-                 r'unknown command',
-                 r'connection timed out',
-                 r'[^\r\n]+ not found']
-error_re      = re.compile(r'^%?\s*(?:' + '|'.join(errors) + r')', flags)
-login_fail    = [r'bad secrets',
-                 r'denied',
-                 r'invalid',
-                 r'too short',
-                 r'incorrect',
-                 r'connection timed out',
-                 r'failed']
+user_re    = re.compile(r'(user ?name|user|login): *$', flags)
+pass_re    = re.compile(r'password:? *$',               flags)
+skey_re    = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
+errors     = [r'error',
+              r'invalid',
+              r'incomplete',
+              r'unrecognized',
+              r'unknown command',
+              r'connection timed out',
+              r'[^\r\n]+ not found']
+error_re   = re.compile(r'^%?\s*(?:' + '|'.join(errors) + r')', flags)
+login_fail = [r'bad secrets',
+              r'denied',
+              r'invalid',
+              r'too short',
+              r'incorrect',
+              r'connection timed out',
+              r'failed']
 login_fail_re = re.compile(newline      \
                          + r'[^\r\n]*'  \
                          + r'(?:' + '|'.join(login_fail) + r')', flags)
@@ -99,6 +96,7 @@ class Transport(Trackable):
           device is dumped.
         """
         Trackable.__init__(self)
+        self.os_guesser         = OsGuesser(self)
         self.authorized         = False
         self.authenticated      = False
         self.prompt_re          = prompt_re
@@ -113,7 +111,6 @@ class Transport(Trackable):
         self.log                = None
         self.last_tacacs_key_id = None
         self.response           = None
-        self.remote_os          = 'unknown'
         if self.logfile is not None:
             self.log = open(kwargs['logfile'], 'a')
 
@@ -150,6 +147,7 @@ class Transport(Trackable):
             sys.stdout.flush()
         if self.log is not None:
             self.log.write(text)
+        self.os_guesser.data_received(data)
         self.signal_emit('data_received', data)
         return data
 
@@ -383,7 +381,8 @@ class Transport(Trackable):
         @type  prompt: RegEx
         @param prompt: A regular expression.
         """
-        AbstractMethod()
+        self._expect_hook(prompt)
+        self.os_guesser.response_received()
 
 
     def expect_prompt(self):
@@ -440,4 +439,4 @@ class Transport(Trackable):
         @rtype:  string
         @return: A string to help identify the remote operating system.
         """
-        return self.remote_os
+        return self.os_guesser.get('os')
