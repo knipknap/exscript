@@ -1,11 +1,11 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from SpiffSignal                  import Trackable
-from Exscript                     import Queue, Host
-from Exscript.HostAction          import HostAction
-from Exscript.util.decorator      import bind_args
-from Exscript.protocols.Exception import LoginFailure
+from Exscript.external.SpiffSignal import Trackable
+from Exscript                      import Queue, Host
+from Exscript.HostAction           import HostAction
+from Exscript.util.decorator       import bind_args
+from Exscript.protocols.Exception  import LoginFailure
 
 class FakeHost(Host):
     def __init__(self):

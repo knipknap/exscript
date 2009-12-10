@@ -13,11 +13,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import string, re, sys
-from OsGuesser               import OsGuesser
-from SpiffSignal             import Trackable
-from Exscript.AbstractMethod import AbstractMethod
-from Exception               import TransportException, \
-                                    InvalidCommandException
+from OsGuesser                     import OsGuesser
+from Exscript.external.SpiffSignal import Trackable
+from Exscript.AbstractMethod       import AbstractMethod
+from Exception                     import TransportException, \
+                                          InvalidCommandException
 
 True  = 1 
 False = 0 

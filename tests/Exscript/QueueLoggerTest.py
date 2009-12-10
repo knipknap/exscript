@@ -1,10 +1,10 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from tempfile             import mkdtemp
-from shutil               import rmtree
-from SpiffSignal          import Trackable
-from Exscript.QueueLogger import QueueLogger
+from tempfile                      import mkdtemp
+from shutil                        import rmtree
+from Exscript.external.SpiffSignal import Trackable
+from Exscript.QueueLogger          import QueueLogger
 
 class FakeAction(Trackable):
     failures = 0

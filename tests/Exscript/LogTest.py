@@ -1,9 +1,9 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from SpiffSignal  import Trackable
-from Exscript.Log import Log
-from Exscript     import Host
+from Exscript.external.SpiffSignal import Trackable
+from Exscript.Log                  import Log
+from Exscript                      import Host
 
 class FakeConnection(Trackable):
     def get_host(self):

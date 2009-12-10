@@ -3,3 +3,4 @@
 * Is there a sane way to test stdlib?
 * Check whether merging workqueue.Action and workqueue.Job makes sense.
 * Can we port the SSH adapter to paramiko?
+* Add demo scripts, auto-test them, pull them into the handbook.

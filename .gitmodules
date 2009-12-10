@@ -1,0 +1,3 @@
+[submodule "src/Exscript/external/SpiffSignal.git"]
+	path = src/Exscript/external/SpiffSignal.git
+	url = git@github.com:knipknap/SpiffSignal.git

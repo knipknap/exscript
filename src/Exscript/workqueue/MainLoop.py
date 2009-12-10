@@ -13,8 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading, time, gc
-from SpiffSignal import Trackable
-from Job         import Job
+from Exscript.external.SpiffSignal import Trackable
+from Job                           import Job
 
 True  = 1
 False = 0

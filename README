@@ -21,8 +21,7 @@ for non-developers.
 = Installation =
 
 1. Install python-crypto
-2. Install [http://code.google.com/p/spiff-signal/ SpiffSignal]
-3. Install Exscript. For example, do this as root:
+2. Install Exscript. For example, do this as root:
     sudo python setup.py install --prefix /usr/local
 
 
@@ -34,7 +33,6 @@ Mailing List: http://groups.google.com/group/exscript/
 = Dependencies =
 
 * Python 2.2 or greater
-* SpiffSignal
 * Python-crypto
 * Python-pexpect (optional, for SSH support)
 * OpenSSH command line client (optional, for ssh support)
