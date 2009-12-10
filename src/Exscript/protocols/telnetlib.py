@@ -527,6 +527,15 @@ class Telnet:
             else:
                 sys.stdout.flush()
 
+    def _wait_for_data(self, timeout):
+        end = time.time() + timeout
+        while True:
+            readable, writeable, excp = select.select([self.sock], [], [], 1)
+            if readable:
+                return True
+            if time.time() > end:
+                return False
+
     def expect(self, list, timeout=None):
         """Read until one from a list of a regular expressions matches.
 
@@ -577,13 +586,7 @@ class Telnet:
             if self.eof:
                 break
             if timeout is not None:
-                # This is a workaround for the problem with select() below.
-                seconds = 0
-                while not self.sock_avail() and seconds < timeout:
-                    time.sleep(.1)
-                    seconds += .1
-                if seconds >= timeout:
-                    break
+                self._wait_for_data(timeout) # Workaround for the problem with select() below.
                 # The following will sometimes lock even if data is available
                 # and I have no idea why. Do NOT reverse this unless you are sure
                 # that you found the reason. The error is rare, but it does happen.
