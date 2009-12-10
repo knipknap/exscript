@@ -85,7 +85,7 @@ class MainLoop(Trackable, threading.Thread):
 
     def wait_for_activity(self):
         self.condition.acquire()
-        self.condition.wait()
+        self.condition.wait(.2)
         self.condition.release()
 
     def wait_until_done(self):
@@ -175,10 +175,8 @@ class MainLoop(Trackable, threading.Thread):
             if len(self.running_jobs) >= self.max_threads:
                 self.condition.wait()
                 continue
-            self.condition.release()
 
             # Take the next action and start it in a new thread.
-            self.condition.acquire()
             action = self.queue.pop(0)
             self._start_action(action)
             self.condition.release()

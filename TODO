@@ -1,8 +1,6 @@
 * Add missing tests as reported by the test suite.
 * Is there a sane way to test stdlib?
 * Check whether merging workqueue.Action and workqueue.Job makes sense.
-* Add a workqueue method for putting jobs to sleep until another job is
-  completed, and use that in Queue.wait_for().
 * Try to move the remote_os detection into a stream monitor, instead of
   hard wiring it into the authentication procedure.
 * Can we port the SSH adapter to paramiko?
