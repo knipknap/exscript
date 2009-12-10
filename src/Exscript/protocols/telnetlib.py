@@ -586,7 +586,8 @@ class Telnet:
             if self.eof:
                 break
             if timeout is not None:
-                self._wait_for_data(timeout) # Workaround for the problem with select() below.
+                if not self._wait_for_data(timeout): # Workaround for the problem with select() below.
+                    break
                 # The following will sometimes lock even if data is available
                 # and I have no idea why. Do NOT reverse this unless you are sure
                 # that you found the reason. The error is rare, but it does happen.
