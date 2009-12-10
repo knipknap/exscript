@@ -149,7 +149,7 @@ class TransportTest(unittest.TestCase):
         self.doAuthenticate(wait = False)
         response = self.transport.response
         self.doAuthorize()
-        self.assert_(self.transport.response != response)
+        self.failIfEqual(self.transport.response, response)
         self.assert_(len(self.transport.response) > 0)
 
     def testIsAuthorized(self):

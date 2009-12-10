@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Telnet import Telnet
 from SSH    import SSH
+from SSH2   import SSH2
 from Dummy  import Dummy
 
 import inspect 

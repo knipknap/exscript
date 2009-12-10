@@ -29,9 +29,9 @@ class Queue(object):
     built_in_protocols = {'dummy':  'Dummy',
                           'telnet': 'Telnet',
                           'pseudo': 'Dummy',
-                          'ssh':    'SSH',
+                          'ssh':    'SSH2',
                           'ssh1':   'SSH',
-                          'ssh2':   'SSH'}
+                          'ssh2':   'SSH2'}
 
     def __init__(self, **kwargs):
         """
@@ -70,7 +70,7 @@ class Queue(object):
         self.workqueue.unpause()
 
         # Enable logging.
-        if kwargs.has_key('logdir'):
+        if kwargs.get('logdir'):
             overwrite = kwargs.get('overwrite_logs', False)
             delete    = kwargs.get('delete_logs',    False)
             mode      = overwrite and 'w' or 'a'
