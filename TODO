@@ -1,4 +1,3 @@
-* Move otp from util to external.
 * Add tests for StreamAnalyzer and OsGuesser.
 * Add missing tests as reported by the test suite.
 * Is there a sane way to test stdlib?
