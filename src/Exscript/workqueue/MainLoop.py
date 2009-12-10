@@ -44,13 +44,13 @@ class MainLoop(Trackable, threading.Thread):
         assert max_threads is not None
         self.condition.acquire()
         self.max_threads = max_threads
-        self.condition.notify()
+        self.condition.notify_all()
         self.condition.release()
 
     def enqueue(self, action):
         self.condition.acquire()
         self.queue.append(action)
-        self.condition.notify()
+        self.condition.notify_all()
         self.condition.release()
 
     def priority_enqueue(self, action, force_start = False):
@@ -59,23 +59,34 @@ class MainLoop(Trackable, threading.Thread):
             self.force_start.append(action)
         else:
             self.queue.insert(0, action)
-        self.condition.notify()
+        self.condition.notify_all()
         self.condition.release()
 
     def pause(self):
         self.condition.acquire()
         self.paused = True
-        self.condition.notify()
+        self.condition.notify_all()
         self.condition.release()
 
     def resume(self):
         self.condition.acquire()
         self.paused = False
-        self.condition.notify()
+        self.condition.notify_all()
         self.condition.release()
 
     def is_paused(self):
         return self.paused
+
+    def wait_for(self, action):
+        self.condition.acquire()
+        while self.in_queue(action):
+            self.condition.wait()
+        self.condition.release()
+
+    def wait_for_activity(self):
+        self.condition.acquire()
+        self.condition.wait()
+        self.condition.release()
 
     def wait_until_done(self):
         self.condition.acquire()
@@ -86,7 +97,7 @@ class MainLoop(Trackable, threading.Thread):
     def shutdown(self):
         self.condition.acquire()
         self.shutdown_now = True
-        self.condition.notify()
+        self.condition.notify_all()
         self.condition.release()
         for job in self.running_jobs:
             job.join()
@@ -153,7 +164,7 @@ class MainLoop(Trackable, threading.Thread):
             for action in self.force_start:
                 self._start_action(action)
             self.force_start = []
-            self.condition.notify()
+            self.condition.notify_all()
 
             # Don't bother looking if the queue is empty.
             if len(self.queue) <= 0 or self.paused:
@@ -167,11 +178,13 @@ class MainLoop(Trackable, threading.Thread):
             self.condition.release()
 
             # Take the next action and start it in a new thread.
-            action = self.queue[0]
-            self._start_action(action)
-            self.queue.remove(action)
             self.condition.acquire()
+            action = self.queue.pop(0)
+            self._start_action(action)
+            self.condition.release()
 
             if len(self.queue) <= 0:
                 self._dbg(2, 'No more pending actions in the queue.')
+            self.condition.acquire()
+        self.condition.release()
         self._dbg(2, 'Main loop terminated.')

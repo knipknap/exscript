@@ -241,8 +241,11 @@ class Queue(object):
         @param task: The object that was returned by Queue.run().
         """
         self._dbg(2, 'Waiting for the task to finish.')
-        while not self.task_is_completed(task):
-            time.sleep(.1)
+        assert task is not None
+        if not isinstance(task, list):
+            task = [task]
+        for action in task:
+            self.workqueue.wait_for(action)
 
 
     def is_completed(self):
@@ -319,8 +322,8 @@ class Queue(object):
         n_connections = self.get_max_threads()
         if not force:
             while self.workqueue.get_length() > n_connections * 2:
-                time.sleep(.1)
                 gc.collect()
+                self.workqueue.wait_for_activity()
 
         # Create the connection. If we are multi threaded, disable echoing
         # of the conversation to stdout.

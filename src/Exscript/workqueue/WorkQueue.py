@@ -153,9 +153,26 @@ class WorkQueue(Trackable):
         """
         self.main_loop.pause()
 
+    def wait_for(self, action):
+        """
+        Waits until the given action is completed.
+
+        @type  action: Action
+        @param action: The action that is executed.
+        """
+        self.main_loop.wait_for(action)
+
+    def wait_for_activity(self):
+        """
+        Waits until any change has happened, such as a job as completed
+        or a new job was enqueued. This method can be useful for avoiding
+        polling.
+        """
+        self.main_loop.wait_for_activity()
+
     def wait_until_done(self):
         """
-        Waits until the queue is empty without using any polling.
+        Waits until the queue is empty.
         """
         self.main_loop.wait_until_done()
 

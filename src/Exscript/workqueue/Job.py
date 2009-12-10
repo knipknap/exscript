@@ -29,7 +29,7 @@ class Job(threading.Thread):
         self.condition.acquire()
         self.exception = exception
         self.completed = True
-        self.condition.notify()
+        self.condition.notify_all()
         self.condition.release()
         if exception and self.debug > 0:
             raise

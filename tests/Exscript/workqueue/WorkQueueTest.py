@@ -70,6 +70,30 @@ class WorkQueueTest(unittest.TestCase):
     def testPause(self):
         pass # See testEnqueue()
 
+    def testWaitFor(self):
+        actions = [Action(), Action(), Action(), Action()]
+        for action in actions:
+            self.wq.enqueue(action)
+        self.assertEqual(4, self.wq.get_length())
+        self.wq.unpause()
+        self.wq.wait_for(actions[0])
+        self.assert_(self.wq.get_length() < 4)
+        for action in actions:
+            self.wq.wait_for(action)
+        self.assertEqual(0, self.wq.get_length())
+
+    def testWaitForActivity(self):
+        action1 = Action()
+        action2 = Action()
+        action3 = Action()
+        self.wq.enqueue(action1)
+        self.wq.enqueue(action2)
+        self.wq.enqueue(action3)
+        self.wq.unpause()
+        while not self.wq.get_length() == 0:
+            self.wq.wait_for_activity()
+        self.assertEqual(0, self.wq.get_length())
+
     def testUnpause(self):
         pass # See testEnqueue()
 
