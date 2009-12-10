@@ -18,6 +18,9 @@ class TransportTest(unittest.TestCase):
         self.transport.connect(self.host)
         self.transport.authenticate(self.user, self.password, wait = wait)
 
+    def doAuthorize(self):
+        self.transport.authorize(self.user)
+
     def setUp(self):
         cfgfile = os.path.join(os.path.dirname(__file__), '..', 'unit_test.cfg')
         cfg     = RawConfigParser()
@@ -130,6 +133,14 @@ class TransportTest(unittest.TestCase):
         self.assert_(self.transport.response is not None)
         self.assert_(len(self.transport.response) > 0)
 
+    def testIsAuthenticated(self):
+        self.failIf(self.transport.is_authenticated())
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            return
+        self.doAuthenticate()
+        self.assert_(self.transport.is_authenticated())
+
     def testAuthorize(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
@@ -137,9 +148,19 @@ class TransportTest(unittest.TestCase):
             return
         self.doAuthenticate(wait = False)
         response = self.transport.response
-        self.transport.authorize(self.user)
+        self.doAuthorize()
         self.assert_(self.transport.response != response)
         self.assert_(len(self.transport.response) > 0)
+
+    def testIsAuthorized(self):
+        self.failIf(self.transport.is_authorized())
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            return
+        self.doAuthenticate(wait = False)
+        self.failIf(self.transport.is_authorized())
+        self.doAuthorize()
+        self.assert_(self.transport.is_authorized())
 
     def testSend(self):
         # Test can not work on the abstract base.

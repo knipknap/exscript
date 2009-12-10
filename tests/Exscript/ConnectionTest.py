@@ -25,6 +25,9 @@ class ConnectionTest(DummyTest):
         self.transport.open()
         self.transport.authenticate(wait = wait)
 
+    def doAuthorize(self):
+        self.transport.authorize()
+
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Connection))
 
@@ -40,13 +43,6 @@ class ConnectionTest(DummyTest):
 
     def testOpen(self):
         self.transport.open()
-
-    def testAuthorize(self):
-        self.doAuthenticate(wait = False)
-        response = self.transport.response
-        self.transport.authorize()
-        self.assert_(self.transport.response != response)
-        self.assert_(len(self.transport.response) > 0)
 
     def testAutoAuthorize(self):
         self.doAuthenticate()

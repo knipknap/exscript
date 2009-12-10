@@ -99,6 +99,8 @@ class Transport(Trackable):
           device is dumped.
         """
         Trackable.__init__(self)
+        self.authorized         = False
+        self.authenticated      = False
         self.prompt_re          = prompt_re
         self.error_re           = error_re
         self.host               = kwargs.get('host',     None)
@@ -289,6 +291,18 @@ class Transport(Trackable):
 
         self._dbg(1, "Attempting to authenticate %s." % user)
         self._authenticate_hook(user, password, **kwargs)
+        self.authenticated = True
+
+
+    def is_authenticated(self):
+        """
+        Returns True if the authentication procedure was completed, False
+        otherwise.
+
+        @rtype:  bool
+        @return: Whether the authentication was completed.
+        """
+        return self.authenticated
 
 
     def authorize(self, password = None, **kwargs):
@@ -313,6 +327,18 @@ class Transport(Trackable):
 
         self._dbg(1, "Attempting to authorize.")
         self._authorize_hook(password, **kwargs)
+        self.authorized = True
+
+
+    def is_authorized(self):
+        """
+        Returns True if the authentication procedure was completed, False
+        otherwise.
+
+        @rtype:  bool
+        @return: Whether the authorization was completed.
+        """
+        return self.authorized
 
 
     def send(self, data):
