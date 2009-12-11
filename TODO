@@ -1,5 +1,4 @@
-* Add tests for OsGuesser.
+* Add real life login responses to the OsGuesser test.
 * Add missing tests as reported by the test suite.
 * Is there a sane way to test stdlib?
-* Check whether merging workqueue.Action and workqueue.Job makes sense.
 * Add demo scripts, auto-test them, pull them into the handbook.
