@@ -19,9 +19,7 @@ dist-clean: clean
 
 .PHONY : doc
 doc:
-	./version.sh
 	cd doc; make
-	./version.sh --reset
 
 install:
 	python setup.py install --prefix $(PREFIX)
@@ -65,6 +63,4 @@ dist-publish: dist
 
 .PHONY : doc-publish
 doc-publish:
-	./version.sh
 	cd doc; make publish
-	./version.sh --reset
