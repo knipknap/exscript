@@ -19,7 +19,7 @@ from HostAction      import HostAction
 from QueueLogger     import QueueLogger
 from QueueFileLogger import QueueFileLogger
 from workqueue       import WorkQueue
-from util.cast       import to_hosts
+from util.cast       import to_list, to_hosts
 
 True  = 1
 False = 0
@@ -232,9 +232,7 @@ class Queue(Trackable):
         @return: Whether the task is completed.
         """
         assert task is not None
-        if not isinstance(task, list):
-            task = [task]
-        for action in task:
+        for action in to_list(task):
             if self.workqueue.in_queue(action):
                 return False
         return True
@@ -250,9 +248,7 @@ class Queue(Trackable):
         """
         self._dbg(2, 'Waiting for the task to finish.')
         assert task is not None
-        if not isinstance(task, list):
-            task = [task]
-        for action in task:
+        for action in to_list(task):
             self.workqueue.wait_for(action)
 
 

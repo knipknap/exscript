@@ -151,7 +151,7 @@ class Dummy(Transport):
         if not commands:
             raise Exception(filename + ' has no variable named "commands"')
         elif not hasattr(commands, '__iter__'):
-            raise Exception(filename + ': "commands" has invalid type')
+            raise Exception(filename + ': "commands" is not iterable')
         for key, handler in commands:
             handler = self._create_autoprompt_handler(handler)
             self.add_command_handler(key, handler)

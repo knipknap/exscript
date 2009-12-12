@@ -9,6 +9,13 @@ from Exscript.Logfile import Logfile
 class castTest(unittest.TestCase):
     CORRELATE = Exscript.util.cast
 
+    def testToList(self):
+        from Exscript.util.cast import to_list
+        self.assertEqual(to_list(None),     [None])
+        self.assertEqual(to_list([]),       [])
+        self.assertEqual(to_list('test'),   ['test'])
+        self.assertEqual(to_list(['test']), ['test'])
+
     def testToHost(self):
         from Exscript.util.cast import to_host
         self.assert_(isinstance(to_host('localhost'),       Host))

@@ -16,6 +16,33 @@ from Exscript.Host    import Host
 from Exscript.Log     import Log
 from Exscript.Logfile import Logfile
 
+def to_list(item):
+    """
+    If the given item is iterable, this function returns the given item.
+    If the item is not iterable, this function returns a list with only the
+    item in it.
+
+    @type  item: object
+    @param item: Any object.
+    @rtype:  list
+    @return: A list with the item in it.
+    """
+    if hasattr(item, '__iter__'):
+        return item
+    return [item]
+
+def to_hosts(hosts):
+    """
+    Given a string or a Host object, or a list of strings or Host objects,
+    this function returns a list of Host objects.
+
+    @type  hosts: string|Host|list(string)|list(Host)
+    @param hosts: One or more hosts or hostnames.
+    @rtype:  list[Host]
+    @return: A list of Host objects.
+    """
+    return [to_host(h) for h in to_list(hosts)]
+
 def to_host(host):
     """
     Given a string or a Host object, this function returns a Host object.
@@ -41,9 +68,7 @@ def to_hosts(hosts):
     @rtype:  list[Host]
     @return: A list of Host objects.
     """
-    if not hasattr(hosts, '__iter__'):
-        hosts = [hosts]
-    return [to_host(h) for h in hosts]
+    return [to_host(h) for h in to_list(hosts)]
 
 def to_log(log):
     """
@@ -71,6 +96,4 @@ def to_logs(logs):
     @rtype:  list[Log]
     @return: A list of Log objects.
     """
-    if not hasattr(logs, '__iter__'):
-        logs = [logs]
-    return [to_log(h) for h in logs]
+    return [to_log(h) for h in to_list(logs)]
