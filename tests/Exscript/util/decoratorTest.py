@@ -4,6 +4,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 import Exscript.util.decorator
 
 class FakeConnection(object):
+    def __init__(self, os = None):
+        self.os = os
+
     def open(self):
         self.open = True
 
@@ -14,6 +17,9 @@ class FakeConnection(object):
     def close(self, force):
         self.open         = False
         self.close_forced = force
+
+    def guess_os(self):
+        return self.os
 
 class decoratorTest(unittest.TestCase):
     CORRELATE = Exscript.util.decorator
@@ -30,6 +36,23 @@ class decoratorTest(unittest.TestCase):
         bound  = bind_args(self.bind_cb, 'one', 'two', three = 3)
         result = bound(FakeConnection())
         self.assert_(result == 123, result)
+
+    def ios_cb(self, conn):
+        return 'hello ios'
+
+    def junos_cb(self, conn):
+        return 'hello junos'
+
+    def testOsFunctionMapper(self):
+        from Exscript.util.decorator import os_function_mapper
+        cb_map = {'ios': self.ios_cb, 'junos': self.junos_cb}
+        result = os_function_mapper(FakeConnection(os = 'ios'), cb_map)
+        self.assertEqual(result, 'hello ios')
+
+        result = os_function_mapper(FakeConnection(os = 'junos'), cb_map)
+        self.assertEqual(result, 'hello junos')
+
+        self.assertRaises(Exception, os_function_mapper, FakeConnection(), cb_map)
 
     def connect_cb(self, conn, *args, **kwargs):
         self.assert_(conn.open == True)
