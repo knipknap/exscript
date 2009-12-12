@@ -7,8 +7,10 @@ from Exscript.external.SpiffSignal import Trackable
 from Exscript.QueueFileLogger      import QueueFileLogger
 from QueueLoggerTest               import QueueLoggerTest, \
                                           FakeAction,      \
-                                          FakeConnection,  \
-                                          FakeError
+                                          FakeConnection
+
+class FakeError(Exception):
+    pass
 
 class QueueFileLoggerTest(QueueLoggerTest):
     CORRELATE = QueueFileLogger

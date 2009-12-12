@@ -6,6 +6,7 @@ from shutil                        import rmtree
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.Log                  import Log
 from Exscript.QueueLogger          import QueueLogger
+from LogTest                       import FakeConnection
 
 class FakeAction(Trackable):
     failures = 0
@@ -16,13 +17,6 @@ class FakeAction(Trackable):
     def n_failures(self):
         return self.failures
 
-class FakeConnection(Trackable):
-    pass
-
-class FakeError(Exception):
-    def __init__(self):
-        Exception.__init__(self, 'fake error')
-
 class QueueLoggerTest(unittest.TestCase):
     CORRELATE = QueueLogger
 
@@ -31,6 +25,27 @@ class QueueLoggerTest(unittest.TestCase):
 
     def testConstructor(self):
         logger = QueueLogger()
+
+    def testGetLoggedActions(self):
+        self.assertEqual(self.logger.get_logged_actions(), [])
+
+        action = FakeAction()
+        conn   = FakeConnection()
+        self.logger._action_enqueued(action)
+        self.assertEqual(len(self.logger.get_logged_actions()), 0)
+        self.assertEqual(self.logger.get_logged_actions(), [])
+
+        action.signal_emit('started', action, conn)
+        self.assertEqual(len(self.logger.get_logged_actions()), 1)
+        self.assertEqual(self.logger.get_logged_actions(), [action])
+
+        conn.signal_emit('data_received', 'hello world')
+        self.assertEqual(len(self.logger.get_logged_actions()), 1)
+        self.assertEqual(self.logger.get_logged_actions(), [action])
+
+        action.signal_emit('succeeded', action)
+        self.assertEqual(len(self.logger.get_logged_actions()), 1)
+        self.assertEqual(self.logger.get_logged_actions(), [action])
 
     def testGetLogs(self):
         self.assertEqual(self.logger.get_logs(), {})
@@ -55,46 +70,6 @@ class QueueLoggerTest(unittest.TestCase):
         self.assertEqual(len(self.logger.get_logs()), 1)
         self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
         self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
-
-    def testGetAbortedLogs(self):
-        self.assertEqual(self.logger.get_aborted_logs(), [])
-
-        action = FakeAction()
-        conn   = FakeConnection()
-        self.logger._action_enqueued(action)
-        self.assertEqual(self.logger.get_aborted_logs(), [])
-
-        action.signal_emit('started', action, conn)
-        self.assertEqual(self.logger.get_aborted_logs(), [])
-
-        conn.signal_emit('data_received', 'hello world')
-        self.assertEqual(self.logger.get_aborted_logs(), [])
-
-        try:
-            raise FakeError()
-        except Exception, e:
-            pass
-        action.signal_emit('aborted', action, e)
-        self.assertEqual(len(self.logger.get_aborted_logs()), 1)
-        self.assert_(isinstance(self.logger.get_aborted_logs()[0], Log))
-
-    def testGetSucceededLogs(self):
-        self.assertEqual(self.logger.get_succeeded_logs(), [])
-
-        action = FakeAction()
-        conn   = FakeConnection()
-        self.logger._action_enqueued(action)
-        self.assertEqual(self.logger.get_succeeded_logs(), [])
-
-        action.signal_emit('started', action, conn)
-        self.assertEqual(self.logger.get_succeeded_logs(), [])
-
-        conn.signal_emit('data_received', 'hello world')
-        self.assertEqual(self.logger.get_succeeded_logs(), [])
-
-        action.signal_emit('succeeded', action)
-        self.assertEqual(len(self.logger.get_succeeded_logs()), 1)
-        self.assert_(isinstance(self.logger.get_succeeded_logs()[0], Log))
 
     def testActionEnqueued(self):
         action = FakeAction()

@@ -1,4 +1,7 @@
-* Add util.report for formatting logs in a human readable way.
+* Turn the Queue into a Trackable, and port QueueListener to that.
+* Add util.cast.to_list().
+* Better names for Log, Logfile, QueueLogger, QueueFileLogger?
+* Add more log formattings to util.report.
 * Add real life login responses to the OsGuesser test.
 * Add missing tests as reported by the test suite.
 * Is there a sane way to test stdlib?

@@ -1,16 +1,9 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript.external.SpiffSignal import Trackable
-from Exscript.Log                  import Log
-from Exscript                      import Host
-
-class FakeConnection(Trackable):
-    def get_host(self):
-        return Host('fake')
-
-class FakeException(Exception):
-    pass
+from Exscript.Log    import Log
+from Exscript        import Host
+from util.reportTest import FakeConnection, FakeError
 
 class LogTest(unittest.TestCase):
     CORRELATE = Log
@@ -26,10 +19,15 @@ class LogTest(unittest.TestCase):
         self.log.started(FakeConnection())
         self.assertEqual(self.log.get_error(), None)
         try:
-            raise FakeException()
-        except FakeException, e:
+            raise FakeError()
+        except FakeError, e:
             self.log.aborted(e)
-        self.assert_('FakeException' in self.log.get_error())
+        self.assert_('FakeError' in self.log.get_error())
+
+    def testGetHost(self):
+        self.assertEqual(self.log.get_host(), None)
+        self.log.started(FakeConnection())
+        self.assert_(isinstance(self.log.get_host(), Host))
 
     def testStarted(self):
         self.assertEqual('', str(self.log))
@@ -40,11 +38,11 @@ class LogTest(unittest.TestCase):
         self.testStarted()
         before = str(self.log)
         try:
-            raise FakeException()
-        except FakeException, e:
+            raise FakeError()
+        except FakeError, e:
             self.log.aborted(e)
         self.assert_(str(self.log).startswith(before))
-        self.assert_('FakeException' in str(self.log), str(self.log))
+        self.assert_('FakeError' in str(self.log), str(self.log))
 
     def testSucceeded(self):
         self.testStarted()
@@ -52,6 +50,26 @@ class LogTest(unittest.TestCase):
         self.log.succeeded()
         self.assert_(str(self.log).startswith(before))
         self.assert_(len(self.log) > len(before))
+
+    def testHasAborted(self):
+        self.failIf(self.log.has_aborted())
+        self.testAborted()
+        self.assert_(self.log.has_aborted())
+
+    def testHasAborted2(self):
+        self.failIf(self.log.has_aborted())
+        self.testSucceeded()
+        self.failIf(self.log.has_aborted())
+
+    def testHasEnded(self):
+        self.failIf(self.log.has_ended())
+        self.testAborted()
+        self.assert_(self.log.has_ended())
+
+    def testHasEnded2(self):
+        self.failIf(self.log.has_ended())
+        self.testSucceeded()
+        self.assert_(self.log.has_ended())
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LogTest)

@@ -23,25 +23,27 @@ class QueueLogger(QueueListener):
     """
 
     def __init__(self):
-        self.logs      = {}
-        self.aborted   = []
-        self.succeeded = []
+        self.actions = []
+        self.logs    = {}
+        self.done    = []
+
+    def get_logged_actions(self):
+        """
+        Returns a list of all completed (aborted or succeeded) actions, in
+        the order in which they were started.
+        """
+        return self.actions
 
     def get_logs(self, action = None):
         if action:
             return self.logs.get(action, [])
         return self.logs
 
-    def get_aborted_logs(self):
-        return self.aborted
-
-    def get_succeeded_logs(self):
-        return self.succeeded
-
     def _add_log(self, action, log):
         if action in self.logs:
             self.logs[action].append(log)
         else:
+            self.actions.append(action)
             self.logs[action] = [log]
 
     def _get_log(self, action):
@@ -54,12 +56,12 @@ class QueueLogger(QueueListener):
 
     def _on_action_aborted(self, action, e):
         log = self._get_log(action)
-        self.aborted.append(log)
+        self.done.append(action)
         log.aborted(e)
 
     def _on_action_succeeded(self, action):
         log = self._get_log(action)
-        self.succeeded.append(log)
+        self.done.append(action)
         log.succeeded()
 
     def _action_enqueued(self, action):

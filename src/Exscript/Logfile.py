@@ -55,7 +55,9 @@ class Logfile(Log):
         self.conn.signal_connect('data_received', self._write)
 
     def aborted(self, exception):
-        self.error = traceback.format_exc(exception)
+        self.traceback = traceback.format_exc(exception)
+        self.exception = exception
+        self.ended     = True
         self._write('ABORTED:', str(exception), '\n')
         self._write_error(traceback.format_exc(exception))
 
