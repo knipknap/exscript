@@ -13,6 +13,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+def _underline(text, line = '-'):
+    return [text, line * len(text)]
+
+def _get_action_name(action, retry = 0):
+    if retry == 0:
+        return action.get_name()
+    return action.get_name() + ' (retry %d)' % retry
+
+def _get_successful_logs_from_action(logger, action):
+    return [l for l in logger.get_logs(action) if not l.has_aborted()]
+
+def _get_failed_logs_from_action(logger, action):
+    return [l for l in logger.get_logs(action) if l.has_aborted()]
+
+def _get_successful_actions(logger):
+    return [a for a in logger.get_logged_actions() \
+            if _get_successful_logs_from_action(logger, a)]
+
+def _get_error_actions(logger):
+    return [a for a in logger.get_logged_actions() \
+            if not _get_successful_logs_from_action(logger, a)]
+
 def summarize(logger):
     """
     Creates a short summary on the actions that were logged by the given
@@ -32,3 +54,49 @@ def summarize(logger):
                 name += ' (retry %d)' % n
             summary.append(name + ': ' + status)
     return '\n'.join(summary)
+
+def format(logger,
+           show_successful = True,
+           show_errors     = True,
+           show_traceback  = True):
+    """
+    Prints a report of the actions that were logged by the given QueueLogger.
+    The report contains a list of successful actions, as well as the full
+    error message on failed actions.
+
+    @type  logger: QueueLogger
+    @param logger: The logger that recorded what happened in the queue.
+    @rtype:  string
+    @return: A string summarizing the status of every performed task.
+    """
+    output = []
+
+    # Print failed actions.
+    errors = _get_error_actions(logger)
+    if show_errors and errors:
+        output += _underline('Failed actions:')
+        for action in errors:
+            for n, log in enumerate(logger.get_logs(action)):
+                name = _get_action_name(action, n)
+                if show_traceback:
+                    output.append(name + ':')
+                    output.append(log.get_error())
+                else:
+                    output.append(name + ': ' + log.get_error(False))
+        output.append('')
+
+    # Print successful actions.
+    if show_successful:
+        output += _underline('Successful actions:')
+        for action in _get_successful_actions(logger):
+            n_errors = len(_get_failed_logs_from_action(logger, action))
+            if n_errors == 0:
+                status = ''
+            elif n_errors == 1:
+                status = ' (required one retry)'
+            else:
+                status = ' (required %d retries)' % n_errors
+            output.append(_get_action_name(action) + status)
+        output.append('')
+
+    return '\n'.join(output).strip()

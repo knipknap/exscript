@@ -67,6 +67,28 @@ class reportTest(unittest.TestCase):
         self.createAbortedLog()
         self.assertEqual(summarize(self.logger), 'fake1: ok\nfake2: FakeError')
 
+    def testFormat(self):
+        from Exscript.util.report import format
+        self.createSucceededLog()
+        self.createAbortedLog()
+        self.createSucceededLog()
+        file     = os.path.splitext(__file__)[0]
+        expected = '''
+Failed actions:
+---------------
+fake2:
+Traceback (most recent call last):
+  File "%s.py", line 55, in createAbortedLog
+    raise FakeError()
+FakeError
+
+
+Successful actions:
+-------------------
+fake1
+fake3'''.strip() % file
+        self.assertEqual(format(self.logger), expected)
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(reportTest)
 if __name__ == '__main__':
