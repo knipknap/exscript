@@ -71,7 +71,7 @@ def load_suite(files):
         correlate_module(module)
     if correlated:
         sys.stderr.write('Error: Untested methods found.\n')
-        #sys.exit(1)
+        sys.exit(1)
     return unittest.TestSuite(all_suites)
 
 def suite():

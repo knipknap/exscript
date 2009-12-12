@@ -1,5 +1,4 @@
 * Better names for Log, Logfile, QueueLogger, QueueFileLogger?
 * Add real life login responses to the OsGuesser test.
-* Add missing tests as reported by the test suite.
 * Is there a sane way to test stdlib?
 * Add demo scripts, auto-test them, pull them into the handbook.

@@ -130,6 +130,27 @@ class WorkQueueTest(unittest.TestCase):
         self.failIf(self.wq.in_queue(action1))
         self.failIf(self.wq.in_queue(action2))
 
+    def testInProgress(self):
+        this = self
+        class TestAction(Action):
+            def execute():
+                this.assert_(this.wq.in_progress(self))
+        action = TestAction()
+        self.wq.enqueue(action)
+        self.wq.shutdown()
+        this.failIf(self.wq.in_progress(action))
+
+    def testGetRunningActions(self):
+        this = self
+        class TestAction(Action):
+            def execute():
+                this.assertEqual(this.wq.get_running_actions(), [self])
+        action = TestAction()
+        self.assertEqual(self.wq.get_running_actions(), [])
+        self.wq.enqueue(action)
+        self.wq.shutdown()
+        self.assertEqual(self.wq.get_running_actions(), [])
+
     def testGetLength(self):
         pass # See testEnqueue()
 
