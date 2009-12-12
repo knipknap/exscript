@@ -21,6 +21,16 @@ class LogTest(unittest.TestCase):
     def testConstructor(self):
         self.assertEqual('', str(self.log))
 
+    def testGetError(self):
+        self.assertEqual(self.log.get_error(), None)
+        self.log.started(FakeConnection())
+        self.assertEqual(self.log.get_error(), None)
+        try:
+            raise FakeException()
+        except FakeException, e:
+            self.log.aborted(e)
+        self.assert_('FakeException' in self.log.get_error())
+
     def testStarted(self):
         self.assertEqual('', str(self.log))
         self.log.started(FakeConnection())

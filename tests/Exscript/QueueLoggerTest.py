@@ -4,6 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from tempfile                      import mkdtemp
 from shutil                        import rmtree
 from Exscript.external.SpiffSignal import Trackable
+from Exscript.Log                  import Log
 from Exscript.QueueLogger          import QueueLogger
 
 class FakeAction(Trackable):
@@ -26,75 +27,79 @@ class QueueLoggerTest(unittest.TestCase):
     CORRELATE = QueueLogger
 
     def setUp(self):
-        self.tempdir = mkdtemp()
-        self.logdir  = os.path.join(self.tempdir, 'non-existent')
-        self.logger  = QueueLogger(self.logdir)
-
-    def tearDown(self):
-        rmtree(self.tempdir)
+        self.logger = QueueLogger()
 
     def testConstructor(self):
-        self.assert_(os.path.isdir(self.tempdir))
-        logger = QueueLogger(self.logdir)
+        logger = QueueLogger()
 
-    def testActionEnqueued(self):
-        action  = FakeAction()
-        conn    = FakeConnection()
-        logfile = os.path.join(self.logdir, 'fake.log')
-        errfile = logfile + '.error'
+    def testGetLogs(self):
+        self.assertEqual(self.logger.get_logs(), {})
+
+        action = FakeAction()
+        conn   = FakeConnection()
         self.logger._action_enqueued(action)
-        self.failIf(os.path.exists(logfile))
-        self.failIf(os.path.exists(errfile))
+        self.assertEqual(self.logger.get_logs(), {})
+        self.assertEqual(self.logger.get_logs(action), [])
 
-        # Test "started".
         action.signal_emit('started', action, conn)
-        self.assert_(os.path.isfile(logfile))
-        self.failIf(os.path.exists(errfile))
-        content = open(logfile).read()
-        self.assertEqual(content, '')
+        self.assertEqual(len(self.logger.get_logs()), 1)
+        self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
+        self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
 
-        # Test traffic on the connection.
         conn.signal_emit('data_received', 'hello world')
-        self.assert_(os.path.isfile(logfile))
-        self.failIf(os.path.exists(errfile))
-        content = open(logfile).read()
-        self.assertEqual(content, 'hello world')
+        self.assertEqual(len(self.logger.get_logs()), 1)
+        self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
+        self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
 
-        # Test "aborted".
+        action.signal_emit('succeeded', action)
+        self.assertEqual(len(self.logger.get_logs()), 1)
+        self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
+        self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
+
+    def testGetAbortedLogs(self):
+        self.assertEqual(self.logger.get_aborted_logs(), [])
+
+        action = FakeAction()
+        conn   = FakeConnection()
+        self.logger._action_enqueued(action)
+        self.assertEqual(self.logger.get_aborted_logs(), [])
+
+        action.signal_emit('started', action, conn)
+        self.assertEqual(self.logger.get_aborted_logs(), [])
+
+        conn.signal_emit('data_received', 'hello world')
+        self.assertEqual(self.logger.get_aborted_logs(), [])
+
         try:
             raise FakeError()
         except Exception, e:
             pass
         action.signal_emit('aborted', action, e)
-        self.assert_(os.path.isfile(logfile))
-        self.assert_(os.path.isfile(errfile))
-        content = open(errfile).read()
-        self.assert_('FakeError' in content)
+        self.assertEqual(len(self.logger.get_aborted_logs()), 1)
+        self.assert_(isinstance(self.logger.get_aborted_logs()[0], Log))
 
-        # Repeat all of the above, with failures = 1.
-        # Test "started".
-        action.failures = 1
-        logfile         = os.path.join(self.logdir, 'fake_retry1.log')
-        errfile         = logfile + '.error'
-        self.failIf(os.path.exists(logfile))
-        self.failIf(os.path.exists(errfile))
+    def testGetSucceededLogs(self):
+        self.assertEqual(self.logger.get_succeeded_logs(), [])
+
+        action = FakeAction()
+        conn   = FakeConnection()
+        self.logger._action_enqueued(action)
+        self.assertEqual(self.logger.get_succeeded_logs(), [])
+
         action.signal_emit('started', action, conn)
-        self.assert_(os.path.isfile(logfile))
-        self.failIf(os.path.exists(errfile))
-        content = open(logfile).read()
-        self.assertEqual(content, '')
+        self.assertEqual(self.logger.get_succeeded_logs(), [])
 
-        # Test traffic on the connection.
         conn.signal_emit('data_received', 'hello world')
-        self.assert_(os.path.isfile(logfile))
-        self.failIf(os.path.exists(errfile))
-        content = open(logfile).read()
-        self.assertEqual(content, 'hello world')
+        self.assertEqual(self.logger.get_succeeded_logs(), [])
 
-        # Test "succeeded".
         action.signal_emit('succeeded', action)
-        self.assert_(os.path.isfile(logfile))
-        self.failIf(os.path.exists(errfile))
+        self.assertEqual(len(self.logger.get_succeeded_logs()), 1)
+        self.assert_(isinstance(self.logger.get_succeeded_logs()[0], Log))
+
+    def testActionEnqueued(self):
+        action = FakeAction()
+        conn   = FakeConnection()
+        self.logger._action_enqueued(action)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(QueueLoggerTest)

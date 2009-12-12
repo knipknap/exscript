@@ -13,11 +13,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, time, signal, gc, copy, traceback
-from AccountManager import AccountManager
-from HostAction     import HostAction
-from QueueLogger    import QueueLogger
-from workqueue      import WorkQueue
-from util.cast      import to_hosts
+from AccountManager  import AccountManager
+from HostAction      import HostAction
+from QueueLogger     import QueueLogger
+from QueueFileLogger import QueueFileLogger
+from workqueue       import WorkQueue
+from util.cast       import to_hosts
 
 True  = 1
 False = 0
@@ -45,6 +46,7 @@ class Queue(object):
             - times: The number of attempts on failure, default 1.
             - login_times: The number of login attempts, default 1.
             - logdir: The directory into which the logs are written.
+            - do_log: Whether to keep a log of everything in memory.
             - overwrite_logs: Whether existing logfiles are overwritten.
             - delete_logs: Whether successful logfiles are deleted.
             - protocol_args: dict, passed to the protocol adapter as kwargs.
@@ -64,18 +66,25 @@ class Queue(object):
         self.protocol_map      = self.built_in_protocols.copy()
         self.set_max_threads(kwargs.get('max_threads', 1))
         self.workqueue.set_debug(max(0, kwargs.get('verbose', 1) - 1))
+
+        # Enable logging.
+        if kwargs.get('logdir'):
+            overwrite   = kwargs.get('overwrite_logs', False)
+            delete      = kwargs.get('delete_logs',    False)
+            mode        = overwrite and 'w' or 'a'
+            self.logger = QueueFileLogger(kwargs.get('logdir'), mode, delete)
+            self.listeners.append(self.logger)
+        elif kwargs.get('do_log'):
+            self.logger = QueueLogger()
+            self.listeners.append(self.logger)
+        else:
+            self.logger = None
+
+        # Listen to what the workqueue is doing.
         self.workqueue.signal_connect('job-started',   self._on_job_started)
         self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
         self.workqueue.unpause()
-
-        # Enable logging.
-        if kwargs.get('logdir'):
-            overwrite = kwargs.get('overwrite_logs', False)
-            delete    = kwargs.get('delete_logs',    False)
-            mode      = overwrite and 'w' or 'a'
-            logger    = QueueLogger(kwargs.get('logdir'), mode, delete)
-            self.listeners.append(logger)
 
 
     def _del_status_bar(self):

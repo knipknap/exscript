@@ -24,8 +24,15 @@ class Logfile(Log):
         self.delete    = delete
         self.do_log    = True
 
+    def __str__(self):
+        data = ''
+        if os.path.isfile(self.filename):
+            data += open(self.filename, 'r').read()
+        if os.path.isfile(self.errorname):
+            data += open(self.errorname, 'r').read()
+        return data
+
     def _write_file(self, filename, *data):
-        Log._write(self, *data)
         if not self.do_log:
             return
         try:
@@ -48,6 +55,7 @@ class Logfile(Log):
         self.conn.signal_connect('data_received', self._write)
 
     def aborted(self, exception):
+        self.error = traceback.format_exc(exception)
         self._write('ABORTED:', str(exception), '\n')
         self._write_error(traceback.format_exc(exception))
 

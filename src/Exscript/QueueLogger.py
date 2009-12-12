@@ -13,41 +13,53 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, traceback
-from Logfile       import Logfile
+from Log           import Log
 from QueueListener import QueueListener
 
 class QueueLogger(QueueListener):
     """
     A QueueListener that implements logging for the queue.
+    Logs are kept in memory, and not written to the disk.
     """
 
-    def __init__(self, logdir, mode = 'a', delete = False):
-        self.logdir = logdir
-        self.mode   = mode
-        self.delete = delete
-        self.logs   = {}
-        if not os.path.exists(self.logdir):
-            os.mkdir(self.logdir)
+    def __init__(self):
+        self.logs      = {}
+        self.aborted   = []
+        self.succeeded = []
 
-    def _get_logfile_name(self, action):
-        logfile = action.get_name()
-        retries = action.n_failures()
-        if retries > 0:
-            logfile += '_retry%d' % retries
-        return os.path.join(self.logdir, logfile + '.log')
+    def get_logs(self, action = None):
+        if action:
+            return self.logs.get(action, [])
+        return self.logs
+
+    def get_aborted_logs(self):
+        return self.aborted
+
+    def get_succeeded_logs(self):
+        return self.succeeded
+
+    def _add_log(self, action, log):
+        if action in self.logs:
+            self.logs[action].append(log)
+        else:
+            self.logs[action] = [log]
+
+    def _get_log(self, action):
+        return self.logs[action][-1]
 
     def _on_action_started(self, action, conn):
-        filename = self._get_logfile_name(action)
-        log      = Logfile(filename, self.mode, self.delete)
+        log = Log()
         log.started(conn)
-        self.logs[action] = log
+        self._add_log(action, log)
 
     def _on_action_aborted(self, action, e):
-        log = self.logs.pop(action)
+        log = self._get_log(action)
+        self.aborted.append(log)
         log.aborted(e)
 
     def _on_action_succeeded(self, action):
-        log = self.logs.pop(action)
+        log = self._get_log(action)
+        self.succeeded.append(log)
         log.succeeded()
 
     def _action_enqueued(self, action):

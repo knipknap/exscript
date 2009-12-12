@@ -16,8 +16,9 @@ import os, traceback
 
 class Log(object):
     def __init__(self):
-        self.data = ''
-        self.conn = None
+        self.data  = ''
+        self.conn  = None
+        self.error = None
 
     def __str__(self):
         return self.data
@@ -28,12 +29,16 @@ class Log(object):
     def _write(self, *data):
         self.data += ' '.join(data)
 
+    def get_error(self):
+        return self.error
+
     def started(self, conn):
         self._write('STARTED\n')
         self.conn = conn
         self.conn.signal_connect('data_received', self._write)
 
     def aborted(self, exception):
+        self.error = traceback.format_exc(exception)
         self._write('ABORTED:\n')
         self._write(traceback.format_exc(exception))
 
