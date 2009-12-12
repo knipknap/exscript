@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, time, signal, gc, copy, traceback
+from SpiffSignal     import Trackable
 from AccountManager  import AccountManager
 from HostAction      import HostAction
 from QueueLogger     import QueueLogger
@@ -23,7 +24,7 @@ from util.cast       import to_hosts
 True  = 1
 False = 0
 
-class Queue(object):
+class Queue(Trackable):
     """
     The heart of Exscript. It manages accounts, connections, and threads.
     """
@@ -51,11 +52,11 @@ class Queue(object):
             - delete_logs: Whether successful logfiles are deleted.
             - protocol_args: dict, passed to the protocol adapter as kwargs.
         """
+        Trackable.__init__(self)
         self.workqueue         = WorkQueue()
         self.account_manager   = AccountManager()
         self.domain            = kwargs.get('domain')
         self.verbose           = kwargs.get('verbose')
-        self.listeners         = []
         self.times             = kwargs.get('times',          1)
         self.login_times       = kwargs.get('login_times',    1)
         self.protocol_args     = kwargs.get('protocol_args',  {})
@@ -72,11 +73,9 @@ class Queue(object):
             overwrite   = kwargs.get('overwrite_logs', False)
             delete      = kwargs.get('delete_logs',    False)
             mode        = overwrite and 'w' or 'a'
-            self.logger = QueueFileLogger(kwargs.get('logdir'), mode, delete)
-            self.listeners.append(self.logger)
+            self.logger = QueueFileLogger(self, kwargs.get('logdir'), mode, delete)
         elif kwargs.get('do_log'):
-            self.logger = QueueLogger()
-            self.listeners.append(self.logger)
+            self.logger = QueueLogger(self)
         else:
             self.logger = None
 
@@ -346,8 +345,7 @@ class Queue(object):
         action = HostAction(self, function, host, **pargs)
         action.set_times(self.times)
         action.set_login_times(self.login_times)
-        for listener in self.listeners:
-            listener._action_enqueued(action)
+        self.signal_emit('action_enqueued', action)
 
         # Done. Enqueue this.
         if prioritize:

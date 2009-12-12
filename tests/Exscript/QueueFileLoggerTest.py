@@ -5,6 +5,7 @@ from tempfile                      import mkdtemp
 from shutil                        import rmtree
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.QueueFileLogger      import QueueFileLogger
+from util.reportTest               import FakeQueue
 from QueueLoggerTest               import QueueLoggerTest, \
                                           FakeAction,      \
                                           FakeConnection
@@ -18,14 +19,14 @@ class QueueFileLoggerTest(QueueLoggerTest):
     def setUp(self):
         self.tempdir = mkdtemp()
         self.logdir  = os.path.join(self.tempdir, 'non-existent')
-        self.logger  = QueueFileLogger(self.logdir)
+        self.logger  = QueueFileLogger(FakeQueue(), self.logdir)
 
     def tearDown(self):
         rmtree(self.tempdir)
 
     def testConstructor(self):
         self.assert_(os.path.isdir(self.tempdir))
-        logger = QueueFileLogger(self.logdir)
+        logger = QueueFileLogger(FakeQueue(), self.logdir)
 
     def testActionEnqueued(self):
         action  = FakeAction()

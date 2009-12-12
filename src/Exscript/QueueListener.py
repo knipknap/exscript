@@ -21,6 +21,10 @@ class QueueListener(object):
     Exscript.Queue.
     It may be used to implement logging, or any other type of reporting.
     """
+    def __init__(self, queue):
+        self.queue = queue
+        self.queue.signal_connect('action_enqueued', self._action_enqueued)
+
     def _action_enqueued(self, action):
         """
         Automatically called by the associated queue.

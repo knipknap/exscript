@@ -1,4 +1,3 @@
-* Turn the Queue into a Trackable, and port QueueListener to that.
 * Add util.cast.to_list().
 * Better names for Log, Logfile, QueueLogger, QueueFileLogger?
 * Add more log formattings to util.report.

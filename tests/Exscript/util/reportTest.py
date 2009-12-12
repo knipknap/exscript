@@ -6,6 +6,9 @@ from Exscript                      import Host
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.QueueLogger          import QueueLogger
 
+class FakeQueue(Trackable):
+    pass
+
 class FakeAction(Trackable):
     failures = 0
     def __init__(self, name = 'fake'):
@@ -33,7 +36,7 @@ class reportTest(unittest.TestCase):
     CORRELATE = Exscript.util.report
 
     def setUp(self):
-        self.logger    = QueueLogger()
+        self.logger    = QueueLogger(FakeQueue())
         self.n_actions = 0
 
     def createLog(self):

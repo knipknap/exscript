@@ -7,6 +7,7 @@ from Exscript.external.SpiffSignal import Trackable
 from Exscript.Log                  import Log
 from Exscript.QueueLogger          import QueueLogger
 from LogTest                       import FakeConnection
+from util.reportTest               import FakeQueue
 
 class FakeAction(Trackable):
     failures = 0
@@ -21,10 +22,10 @@ class QueueLoggerTest(unittest.TestCase):
     CORRELATE = QueueLogger
 
     def setUp(self):
-        self.logger = QueueLogger()
+        self.logger = QueueLogger(FakeQueue())
 
     def testConstructor(self):
-        logger = QueueLogger()
+        logger = QueueLogger(FakeQueue())
 
     def testGetLoggedActions(self):
         self.assertEqual(self.logger.get_logged_actions(), [])

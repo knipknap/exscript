@@ -22,7 +22,8 @@ class QueueLogger(QueueListener):
     Logs are kept in memory, and not written to the disk.
     """
 
-    def __init__(self):
+    def __init__(self, queue):
+        QueueListener.__init__(self, queue)
         self.actions = []
         self.logs    = {}
         self.done    = []

@@ -21,8 +21,8 @@ class QueueFileLogger(QueueLogger):
     A QueueLogger that stores logs into files.
     """
 
-    def __init__(self, logdir, mode = 'a', delete = False):
-        QueueLogger.__init__(self)
+    def __init__(self, queue, logdir, mode = 'a', delete = False):
+        QueueLogger.__init__(self, queue)
         self.logdir = logdir
         self.mode   = mode
         self.delete = delete
