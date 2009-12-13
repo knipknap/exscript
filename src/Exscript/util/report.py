@@ -27,6 +27,33 @@ def _get_successful_logs_from_action(logger, action):
 def _get_failed_logs_from_action(logger, action):
     return [l for l in logger.get_logs(action) if l.has_aborted()]
 
+def status(logger):
+    """
+    Creates a one-line summary on the actions that were logged by the given
+    Logger.
+
+    @type  logger: Logger
+    @param logger: The logger that recorded what happened in the queue.
+    @rtype:  string
+    @return: A string summarizing the status.
+    """
+    total     = len(logger.get_logged_actions())
+    failed    = len(logger.get_failed_actions())
+    succeeded = total - failed
+    if total == 0:
+        return 'No actions done'
+    elif total == 1 and succeeded == 1:
+        return 'One action done (succeeded)'
+    elif total == 1 and succeeded == 0:
+        return 'One action done (failed)'
+    elif total == succeeded:
+        return '%d actions total (all succeeded)' % total
+    elif succeeded == 0:
+        return '%d actions total (all failed)' % total
+    else:
+        msg = '%d actions total (%d failed, %d succeeded)'
+        return msg % (total, failed, succeeded)
+
 def summarize(logger):
     """
     Creates a short summary on the actions that were logged by the given

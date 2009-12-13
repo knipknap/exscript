@@ -61,6 +61,20 @@ class reportTest(unittest.TestCase):
         action = self.createLog()
         action.signal_emit('succeeded', action)
 
+    def testStatus(self):
+        from Exscript.util.report import status
+        self.createSucceededLog()
+        expect = 'One action done (succeeded)'
+        self.assertEqual(status(self.logger), expect)
+
+        self.createSucceededLog()
+        expect = '2 actions total (all succeeded)'
+        self.assertEqual(status(self.logger), expect)
+
+        self.createAbortedLog()
+        expect = '3 actions total (1 failed, 2 succeeded)'
+        self.assertEqual(status(self.logger), expect)
+
     def testSummarize(self):
         from Exscript.util.report import summarize
         self.createSucceededLog()
