@@ -24,7 +24,7 @@ def get_accounts_from_file(filename):
     @type  filename: string
     @param filename: The name of the file containing the list of accounts.
     @rtype:  list[Account]
-    @return: The newly added account instances.
+    @return: The newly created account instances.
     """
     accounts  = []
     cfgparser = __import__('ConfigParser', globals(), locals(), [''])
@@ -41,6 +41,8 @@ def get_hosts_from_file(filename):
 
     @type  filename: string
     @param filename: A full filename.
+    @rtype:  list[Host]
+    @return: The newly created host instances.
     """
     # Open the file.
     if not os.path.exists(filename):
@@ -66,6 +68,8 @@ def get_hosts_from_csv(filename):
 
     @type  filename: string
     @param filename: A full filename.
+    @rtype:  list[Host]
+    @return: The newly created host instances.
     """
     # Open the file.
     if not os.path.exists(filename):
