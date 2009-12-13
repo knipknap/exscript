@@ -29,4 +29,4 @@ def otp(scope, password, seed, seqs):
     @rtype:  string
     @return: A hash, or a list of hashes.
     """
-    return [crypt.otp(password[0], seed[0], int(seq))[0] for seq in seqs]
+    return [crypt.otp(password[0], seed[0], int(seq)) for seq in seqs]
