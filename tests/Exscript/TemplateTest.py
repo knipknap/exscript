@@ -1,9 +1,10 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript           import Queue, Account
-from Exscript.util      import template
-from Exscript.protocols import Dummy
+from Exscript                import Queue, Account
+from Exscript.util           import template
+from Exscript.util.decorator import bind_args
+from Exscript.protocols      import Dummy
 
 test_dir = '../templates'
 
@@ -13,10 +14,10 @@ class Log(object):
         self.data += data
         return data
 
-def ios_dummy_cb(conn):
+def ios_dummy_cb(conn, template_test):
     # Warning: Assertions raised in this function happen in a subprocess!
     log       = Log()
-    test_name = conn.get_host().get_name()
+    test_name = conn.get_host().get_address()
     tmpl      = os.path.join(test_dir, test_name, 'test.exscript')
     expected  = os.path.join(test_dir, test_name, 'expected')
     conn.signal_connect('data_received', log.collect)
@@ -29,7 +30,7 @@ def ios_dummy_cb(conn):
         print "Got:", log.data
         print "---------------------------------------------"
         print "Expected:", open(expected).read()
-    assert log.data == open(expected).read()
+    template_test.assertEqual(log.data, open(expected).read())
 
 class IOSDummy(Dummy):
     def __init__(self, *args, **kwargs):
@@ -44,14 +45,23 @@ class IOSDummy(Dummy):
 class TemplateTest(unittest.TestCase):
     def setUp(self):
         account    = Account('sab', '')
-        self.queue = Queue(verbose = 0, max_threads = 1)
+        self.queue = Queue(verbose = 0, max_threads = 1, do_log = 1)
         self.queue.add_protocol('ios', IOSDummy)
         self.queue.add_account(account)
 
-    def testTemplates(self):
-        for test in os.listdir(test_dir):
-            self.queue.run('ios:' + test, ios_dummy_cb)
+    def tearDown(self):
         self.queue.shutdown()
+
+    def testTemplates(self):
+        callback = bind_args(ios_dummy_cb, self)
+        for test in os.listdir(test_dir):
+            self.queue.run('ios:' + test, callback)
+        self.queue.shutdown()
+
+        # Unfortunately, unittest.TestCase does not fail if self.assert()
+        # was called from a subthread, so this is our workaround...
+        failed = self.queue.logger.get_failed_actions()
+        self.assert_(not failed)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TemplateTest)

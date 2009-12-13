@@ -28,14 +28,14 @@ class IntentionalError(Exception):
 
 class ErrorProtocol(Dummy):
     def __init__(self, *args, **kwargs):
-        raise IntentionalError('broken protocol')
+        raise IntentionalError('intentionally broken')
 
 class QueueTest(unittest.TestCase):
     CORRELATE = Queue
 
     def setUp(self):
         self.tempdir = mkdtemp()
-        self.queue   = Queue(verbose     = 0,
+        self.queue   = Queue(verbose     = -1,
                              max_threads = 1,
                              logdir      = self.tempdir)
 

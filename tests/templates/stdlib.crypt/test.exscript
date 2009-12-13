@@ -1,0 +1,4 @@
+{
+  hash = crypt.otp("password", "abc123", 9999)
+  fail "crypt.otp" if hash is not "ACTA AMMO CAR WEB BIN YAP"
+}
