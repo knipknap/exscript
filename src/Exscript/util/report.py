@@ -27,14 +27,6 @@ def _get_successful_logs_from_action(logger, action):
 def _get_failed_logs_from_action(logger, action):
     return [l for l in logger.get_logs(action) if l.has_aborted()]
 
-def _get_successful_actions(logger):
-    return [a for a in logger.get_logged_actions() \
-            if _get_successful_logs_from_action(logger, a)]
-
-def _get_error_actions(logger):
-    return [a for a in logger.get_logged_actions() \
-            if not _get_successful_logs_from_action(logger, a)]
-
 def summarize(logger):
     """
     Creates a short summary on the actions that were logged by the given
@@ -72,7 +64,7 @@ def format(logger,
     output = []
 
     # Print failed actions.
-    errors = _get_error_actions(logger)
+    errors = logger.get_failed_actions()
     if show_errors and errors:
         output += _underline('Failed actions:')
         for action in errors:
@@ -88,7 +80,7 @@ def format(logger,
     # Print successful actions.
     if show_successful:
         output += _underline('Successful actions:')
-        for action in _get_successful_actions(logger):
+        for action in logger.get_successful_actions():
             n_errors = len(_get_failed_logs_from_action(logger, action))
             if n_errors == 0:
                 status = ''
