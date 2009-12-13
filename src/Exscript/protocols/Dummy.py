@@ -148,7 +148,7 @@ class Dummy(Transport):
         vars = {}
         execfile(filename, vars)
         commands = vars.get('commands')
-        if not commands:
+        if commands is None:
             raise Exception(filename + ' has no variable named "commands"')
         elif not hasattr(commands, '__iter__'):
             raise Exception(filename + ': "commands" is not iterable')

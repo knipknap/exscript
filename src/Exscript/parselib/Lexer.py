@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import copy, types
+from Exception import LexerException, SyntaxError, RuntimeError
 
 class Lexer(object):
     def __init__(self, parser_cls, *args, **kwargs):
@@ -80,7 +81,7 @@ class Lexer(object):
 
     def _error(self, error_type, error, sender = None):
         if not sender:
-            raise Exception('\n' + error_type + ':\n' + error)
+            raise Exception('\n' + error_type.name + ':\n' + error)
         start, end  = self._get_line_position_from_char(sender.end)
         line_number = self._get_line_number_from_char(sender.end)
         line        = self._get_line(line_number)
@@ -92,16 +93,16 @@ class Lexer(object):
         else:
             output += (' ' * offset) + "'" + ('-' * (token_len - 2)) + "'\n"
         output += '%s in %s:%s' % (error, self.filename, line_number)
-        raise Exception('\n' + error_type + ':\n' + output)
+        raise Exception('\n' + error_type.name + ':\n' + output)
 
     def error(self, error, sender = None):
-        self._error('Error', error, sender)
+        self._error(LexerException, error, sender)
 
     def syntax_error(self, error, sender = None):
-        self._error('Syntax error', error, sender)
+        self._error(SyntaxError, error, sender)
 
     def runtime_error(self, error, sender = None):
-        self._error('Runtime error', error, sender)
+        self._error(RuntimeError, error, sender)
 
     def forward(self, chars = 1):
         self.last_char     = self.current_char

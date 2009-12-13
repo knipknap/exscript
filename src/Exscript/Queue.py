@@ -83,7 +83,6 @@ class Queue(Trackable):
         self.workqueue.signal_connect('job-started',   self._on_job_started)
         self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
-        self.workqueue.unpause()
 
 
     def _del_status_bar(self):
@@ -144,9 +143,9 @@ class Queue(Trackable):
 
     def _on_job_aborted(self, job, e):
         self.completed += 1
+        self._dbg(0, job.getName() + ' aborted: ' + str(e))
         if self.workqueue.get_max_threads() == 1:
             return
-        self._dbg(0, job.getName() + ' aborted: ' + str(e))
 
 
     def _enqueue_action(self, action):
@@ -292,7 +291,6 @@ class Queue(Trackable):
         self._dbg(2, 'Shutting down engine...')
         self.workqueue.shutdown()
         self._dbg(2, 'Engine shut down.')
-        self.workqueue.unpause()
         self._del_status_bar()
 
 
@@ -355,6 +353,7 @@ class Queue(Trackable):
     def _run(self, hosts, function):
         hosts       = to_hosts(hosts)
         self.total += len(hosts)
+        self.workqueue.unpause()
 
         actions = []
         for host in hosts:
@@ -398,6 +397,7 @@ class Queue(Trackable):
         """
         hosts       = to_hosts(hosts)
         self.total += len(hosts)
+        self.workqueue.unpause()
 
         actions = []
         for host in hosts:
@@ -422,6 +422,7 @@ class Queue(Trackable):
         """
         hosts       = to_hosts(hosts)
         self.total += len(hosts)
+        self.workqueue.unpause()
 
         actions = []
         for host in hosts:

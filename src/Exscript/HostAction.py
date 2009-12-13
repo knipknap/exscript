@@ -18,6 +18,7 @@ from Log                   import Log
 from Logfile               import Logfile
 from Connection            import Connection
 from protocols.Exception   import LoginFailure
+from parselib.Exception    import SyntaxError
 from interpreter.Exception import FailException
 
 True  = 1
@@ -77,7 +78,7 @@ class HostAction(Action):
                 self.signal_emit('aborted', self, e)
                 self.login_failures += 1
                 continue
-            except FailException, e:
+            except (FailException, SyntaxError), e:
                 # This exception is raised if a user used the "fail"
                 # keyword in a template; this should always cause the action
                 # to fail, without retry.
