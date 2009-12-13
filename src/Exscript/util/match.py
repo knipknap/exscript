@@ -62,6 +62,8 @@ def first_match(string, regex, flags = re.M):
     @param string: The string that is matched, or a Connection object.
     @type  regex: string
     @param regex: A regular expression.
+    @type  flags: int
+    @param flags: The flags for compiling the regex; e.g. re.I
     @rtype:  string|tuple
     @return: A match, or a tuple of matches.
     """
@@ -69,7 +71,7 @@ def first_match(string, regex, flags = re.M):
         string = string.response
     return _first_match(string, re.compile(regex, flags))
 
-def any_match(string, regex):
+def any_match(string, regex, flags = re.M):
     """
     Matches the given string against the given regex.
 
@@ -109,12 +111,14 @@ def any_match(string, regex):
     @param string: The string that is matched, or a Connection object.
     @type  regex: string
     @param regex: A regular expression.
+    @type  flags: int
+    @param flags: The flags for compiling the regex; e.g. re.I
     @rtype:  list[string|tuple]
     @return: A list of strings, or a list of tuples.
     """
     if isinstance(string, Connection):
         string = string.response
-    compiled = re.compile(regex)
+    compiled = re.compile(regex, flags)
     results  = []
     if compiled.groups <= 1:
         for line in string.split('\n'):
