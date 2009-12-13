@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 import Exscript.util.report
 from Exscript                      import Host
 from Exscript.external.SpiffSignal import Trackable
-from Exscript.QueueLogger          import QueueLogger
+from Exscript.Logger               import Logger
 
 class FakeQueue(Trackable):
     pass
@@ -36,7 +36,7 @@ class reportTest(unittest.TestCase):
     CORRELATE = Exscript.util.report
 
     def setUp(self):
-        self.logger    = QueueLogger(FakeQueue())
+        self.logger    = Logger(FakeQueue())
         self.n_actions = 0
 
     def createLog(self):

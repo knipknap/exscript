@@ -13,16 +13,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, traceback
-from Logfile     import Logfile
-from QueueLogger import QueueLogger
+from Logfile import Logfile
+from Logger  import Logger
 
-class QueueFileLogger(QueueLogger):
+class FileLogger(Logger):
     """
-    A QueueLogger that stores logs into files.
+    A Logger that stores logs into files.
     """
 
     def __init__(self, queue, logdir, mode = 'a', delete = False):
-        QueueLogger.__init__(self, queue)
+        Logger.__init__(self, queue)
         self.logdir = logdir
         self.mode   = mode
         self.delete = delete

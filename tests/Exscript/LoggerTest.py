@@ -5,7 +5,7 @@ from tempfile                      import mkdtemp
 from shutil                        import rmtree
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.Log                  import Log
-from Exscript.QueueLogger          import QueueLogger
+from Exscript.Logger               import Logger
 from LogTest                       import FakeConnection, FakeError
 from util.reportTest               import FakeQueue
 
@@ -18,14 +18,14 @@ class FakeAction(Trackable):
     def n_failures(self):
         return self.failures
 
-class QueueLoggerTest(unittest.TestCase):
-    CORRELATE = QueueLogger
+class LoggerTest(unittest.TestCase):
+    CORRELATE = Logger
 
     def setUp(self):
-        self.logger = QueueLogger(FakeQueue())
+        self.logger = Logger(FakeQueue())
 
     def testConstructor(self):
-        logger = QueueLogger(FakeQueue())
+        logger = Logger(FakeQueue())
 
     def testGetLoggedActions(self):
         self.assertEqual(self.logger.get_logged_actions(), [])
@@ -119,6 +119,6 @@ class QueueLoggerTest(unittest.TestCase):
         self.logger._action_enqueued(action)
 
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(QueueLoggerTest)
+    return unittest.TestLoader().loadTestsFromTestCase(LoggerTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

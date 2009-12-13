@@ -16,7 +16,7 @@ import os, traceback
 from Log           import Log
 from QueueListener import QueueListener
 
-class QueueLogger(QueueListener):
+class Logger(QueueListener):
     """
     A QueueListener that implements logging for the queue.
     Logs are kept in memory, and not written to the disk.

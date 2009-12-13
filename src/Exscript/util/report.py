@@ -30,9 +30,9 @@ def _get_failed_logs_from_action(logger, action):
 def summarize(logger):
     """
     Creates a short summary on the actions that were logged by the given
-    QueueLogger.
+    Logger.
 
-    @type  logger: QueueLogger
+    @type  logger: Logger
     @param logger: The logger that recorded what happened in the queue.
     @rtype:  string
     @return: A string summarizing the status of every performed task.
@@ -52,11 +52,11 @@ def format(logger,
            show_errors     = True,
            show_traceback  = True):
     """
-    Prints a report of the actions that were logged by the given QueueLogger.
+    Prints a report of the actions that were logged by the given Logger.
     The report contains a list of successful actions, as well as the full
     error message on failed actions.
 
-    @type  logger: QueueLogger
+    @type  logger: Logger
     @param logger: The logger that recorded what happened in the queue.
     @rtype:  string
     @return: A string summarizing the status of every performed task.

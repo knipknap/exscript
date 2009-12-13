@@ -4,29 +4,29 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from tempfile                      import mkdtemp
 from shutil                        import rmtree
 from Exscript.external.SpiffSignal import Trackable
-from Exscript.QueueFileLogger      import QueueFileLogger
+from Exscript.FileLogger           import FileLogger
 from util.reportTest               import FakeQueue
-from QueueLoggerTest               import QueueLoggerTest, \
+from LoggerTest                    import LoggerTest, \
                                           FakeAction,      \
                                           FakeConnection
 
 class FakeError(Exception):
     pass
 
-class QueueFileLoggerTest(QueueLoggerTest):
-    CORRELATE = QueueFileLogger
+class FileLoggerTest(LoggerTest):
+    CORRELATE = FileLogger
 
     def setUp(self):
         self.tempdir = mkdtemp()
         self.logdir  = os.path.join(self.tempdir, 'non-existent')
-        self.logger  = QueueFileLogger(FakeQueue(), self.logdir)
+        self.logger  = FileLogger(FakeQueue(), self.logdir)
 
     def tearDown(self):
         rmtree(self.tempdir)
 
     def testConstructor(self):
         self.assert_(os.path.isdir(self.tempdir))
-        logger = QueueFileLogger(FakeQueue(), self.logdir)
+        logger = FileLogger(FakeQueue(), self.logdir)
 
     def testActionEnqueued(self):
         action  = FakeAction()
@@ -88,6 +88,6 @@ class QueueFileLoggerTest(QueueLoggerTest):
         self.failIf(os.path.exists(errfile))
 
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(QueueFileLoggerTest)
+    return unittest.TestLoader().loadTestsFromTestCase(FileLoggerTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

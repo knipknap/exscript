@@ -1,7 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript                import Queue, Account
+from Exscript                import Queue, Account, Logger
 from Exscript.util           import template
 from Exscript.util.decorator import bind_args
 from Exscript.protocols      import Dummy
@@ -44,8 +44,9 @@ class IOSDummy(Dummy):
 
 class TemplateTest(unittest.TestCase):
     def setUp(self):
-        account    = Account('sab', '')
-        self.queue = Queue(verbose = 0, max_threads = 1, do_log = 1)
+        account     = Account('sab', '')
+        self.queue  = Queue(verbose = 0, max_threads = 1)
+        self.logger = Logger(self.queue)
         self.queue.add_protocol('ios', IOSDummy)
         self.queue.add_account(account)
 
@@ -60,7 +61,7 @@ class TemplateTest(unittest.TestCase):
 
         # Unfortunately, unittest.TestCase does not fail if self.assert()
         # was called from a subthread, so this is our workaround...
-        failed = self.queue.logger.get_failed_actions()
+        failed = self.logger.get_failed_actions()
         self.assert_(not failed)
 
 def suite():

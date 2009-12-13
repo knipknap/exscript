@@ -13,13 +13,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, time, signal, gc, copy, traceback
-from SpiffSignal     import Trackable
-from AccountManager  import AccountManager
-from HostAction      import HostAction
-from QueueLogger     import QueueLogger
-from QueueFileLogger import QueueFileLogger
-from workqueue       import WorkQueue
-from util.cast       import to_list, to_hosts
+from SpiffSignal    import Trackable
+from AccountManager import AccountManager
+from HostAction     import HostAction
+from FileLogger     import FileLogger
+from workqueue      import WorkQueue
+from util.cast      import to_list, to_hosts
 
 True  = 1
 False = 0
@@ -47,7 +46,6 @@ class Queue(Trackable):
             - times: The number of attempts on failure, default 1.
             - login_times: The number of login attempts, default 1.
             - logdir: The directory into which the logs are written.
-            - do_log: Whether to keep a log of everything in memory.
             - overwrite_logs: Whether existing logfiles are overwritten.
             - delete_logs: Whether successful logfiles are deleted.
             - protocol_args: dict, passed to the protocol adapter as kwargs.
@@ -73,9 +71,7 @@ class Queue(Trackable):
             overwrite   = kwargs.get('overwrite_logs', False)
             delete      = kwargs.get('delete_logs',    False)
             mode        = overwrite and 'w' or 'a'
-            self.logger = QueueFileLogger(self, kwargs.get('logdir'), mode, delete)
-        elif kwargs.get('do_log'):
-            self.logger = QueueLogger(self)
+            self.logger = FileLogger(self, kwargs.get('logdir'), mode, delete)
         else:
             self.logger = None
 
