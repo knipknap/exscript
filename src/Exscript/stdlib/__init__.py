@@ -14,7 +14,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import connection
 import crypt
-import device
 import file
 import ipv4
 import list
@@ -28,6 +27,7 @@ functions = {
     'connection.close':          connection.close,
     'connection.exec':           connection.exec_,
     'connection.execline':       connection.execline,
+    'connection.guess_os':       connection.guess_os,
     'connection.send':           connection.send,
     'connection.sendline':       connection.sendline,
     'connection.set_error':      connection.set_error,
@@ -35,10 +35,6 @@ functions = {
     'connection.set_timeout':    connection.set_timeout,
     'connection.wait_for':       connection.wait_for,
     'crypt.otp':                 crypt.otp,
-    'device.guess_os':           device.guess_os,
-    'device.model':              device.model,
-    'device.os':                 device.os,
-    'device.vendor':             device.vendor,
     'file.chmod':                file.chmod,
     'file.clear':                file.clear,
     'file.exists':               file.exists,

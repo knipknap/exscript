@@ -112,7 +112,7 @@ def run():
     if not options.no_auto_logout:
         script_content += r'''
     ## Exscript generated commands. ##
-    {if device.guess_os() is "vrp"}
+    {if connection.guess_os() is "vrp"}
         {connection.sendline("quit")}
     {else}
         {connection.sendline("exit")}

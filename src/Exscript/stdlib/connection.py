@@ -115,6 +115,20 @@ def execline(scope, data):
     scope.define(__response__ = response)
     return True
 
+def guess_os(scope):
+    """
+    Guesses the operating system of the connected host.
+
+    The recognition is based on the past conversation that has happened
+    on the host; Exscript looks for known patterns and maps them to specific
+    operating systems.
+
+    @rtype:  string
+    @return: The operating system.
+    """
+    conn = scope.get('__connection__')
+    return [conn.guess_os()]
+
 def send(scope, data):
     """
     Like exec(), but does not wait for a response of the remote host after

@@ -1,0 +1,4 @@
+{
+  result = connection.guess_os()
+  fail "connection.guess_os" if result is not "ios"
+}
