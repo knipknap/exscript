@@ -1,3 +1,2 @@
 * Add real life login responses to the OsGuesser test.
 * Create more stdlib tests like tests/templates/stdlib.crypt/.
-* Add demo scripts, auto-test them, pull them into the handbook.

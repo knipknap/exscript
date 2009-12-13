@@ -974,45 +974,17 @@ The more powerful and recommended way of using Exscript is by using
 \product.Queue.
 Consider the following simple example:
 
-\begin{lstlisting}
-from Exscript               import Queue
-from Exscript.util.file     import get_hosts_from_file
-from Exscript.util.match    import any_match
-from Exscript.util.interact import read_login
-from Exscript.util.template import eval_file
+\lstinputlisting{../demos/simple.py}
 
-def do_something(conn):
-    conn.open()
-    conn.authenticate()
-    conn.execute('show ip int brie')
-    ge_interfaces = any_match(conn, r'(Gigabit\S+)')
-    eval_file(conn, 'mytemplate.exscript', interfaces = ge_interfaces)
+This code reads a list of hostnames from ``hostlist.txt'', automatically
+logs into each of the hosts, and executes the ``do\_something'' once
+for each of the hosts.
 
-hosts    = get_hosts_from_file('hostlist.txt')
-exscript = Queue(max_threads = 5)
-exscript.add_account(read_login())
-exscript.run(hosts, do_something) 
-\end{lstlisting}
+The ``quickrun()'' function is a shortcut that you can use in most cases.
+However, there are some more advanced features that you can use. For
+example, Exscript can generate a report for all of the executed tasks:
 
-This should be mostly self explaining. By using some of Exscript's 
-shortcuts you may make this even simpler:
-
-\begin{lstlisting}
-from Exscript.util.file      import get_hosts_from_file
-from Exscript.util.match     import any_match
-from Exscript.util.template  import eval_file
-from Exscript.util.start     import quickrun
-from Exscript.util.decorator import autologin
-
-def do_something(conn):
-    conn.execute('show ip int brie')
-    ge_interfaces = any_match(conn, r'(Gigabit\S+)')
-    eval_file(conn, 'mytemplate.exscript', interfaces = ge_interfaces)
-
-quickrun(get_hosts_from_file('hostlist.txt'), autologin(do_something)) 
-\end{lstlisting}
-
-\subsection{More Information}
+\lstinputlisting{../demos/report.py}
 
 \product provides additional methods, and also offers protocol-specific 
 options. For a complete list of supported methods please refer to our API 
