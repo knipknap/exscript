@@ -15,23 +15,25 @@
 import re
 from StreamAnalyzer import StreamAnalyzer
 
-flags         = re.I | re.M
-huawei_re     = re.compile(r'huawei',                         flags)
-ios_user_re   = re.compile(r'user ?name:',                 flags)
-xr_prompt_re  = re.compile(r'RP/\d+/\w+/CPU\d+:[^#]+[#>] ?$', flags)
-junos_user_re = re.compile(r'[\r\n]login: ',               flags)
-unix_user_re  = re.compile(r'(user|login): ',               flags)
-pass_re       = re.compile(r'password:? ',                  flags)
+_flags         = re.I | re.M
+_aix_re        = re.compile(r'AIX')
+_huawei_re     = re.compile(r'huawei',                         _flags)
+_ios_user_re   = re.compile(r'user ?name:',                    _flags)
+_xr_prompt_re  = re.compile(r'RP/\d+/\w+/CPU\d+:[^#]+[#>] ?$', _flags)
+_junos_user_re = re.compile(r'[\r\n]login: ',                  _flags)
+_unix_user_re  = re.compile(r'(user|login): ',                 _flags)
+_pass_re       = re.compile(r'password:? ',                    _flags)
 
 # Matches before the authentication is complete.
-auth_os_map = ((huawei_re,     'vrp',    80),
-               (ios_user_re,   'ios',    60),
-               (xr_prompt_re,  'ios_xr', 95),
-               (junos_user_re, 'junos',  35),
-               (unix_user_re,  'shell',  30))
+auth_os_map = ((_huawei_re,     'vrp',    80),
+               (_ios_user_re,   'ios',    60),
+               (_xr_prompt_re,  'ios_xr', 95),
+               (_junos_user_re, 'junos',  35),
+               (_aix_re,        'shell',  70),
+               (_unix_user_re,  'shell',  30))
 
 # Matches later.
-os_map = ((xr_prompt_re,  'ios_xr', 95),)
+os_map = ((_xr_prompt_re,  'ios_xr', 95),)
 
 class OsGuesser(StreamAnalyzer):
     def __init__(self, conn):
