@@ -433,6 +433,8 @@ class Telnet:
                              c == WILL and 'WILL' or 'WONT', ord(opt))
                     if self.option_callback:
                         self.option_callback(self.sock, c, opt)
+                    elif opt == ECHO:
+                        self.sock.send(IAC + DO + opt)
                     else:
                         self.sock.send(IAC + DONT + opt)
                 else:
