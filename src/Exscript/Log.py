@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, traceback
+import os, traceback, sys
 
 class Log(object):
     def __init__(self):
@@ -49,12 +49,15 @@ class Log(object):
         self._write('STARTED\n')
         self.conn.signal_connect('data_received', self._write)
 
+    def _format_exc(self, exception):
+        return ''.join(traceback.format_exception(*sys.exc_info()))
+
     def aborted(self, exception):
-        self.traceback = traceback.format_exc(exception)
+        self.traceback = self._format_exc(exception)
         self.exception = exception
         self.ended     = True
         self._write('ABORTED:\n')
-        self._write(traceback.format_exc(exception))
+        self._write(self._format_exc(exception))
 
     def succeeded(self):
         self.ended = True

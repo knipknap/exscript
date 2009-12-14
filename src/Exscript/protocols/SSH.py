@@ -87,6 +87,7 @@ class SSH(Transport):
                        _verify_re,
                        self.prompt_re]
             #print 'Waiting for prompt:', self.conn.buffer, self.conn.before, self.conn.after
+            old_buffer = self.conn.buffer
             try:
                 which = self.conn.expect_list(prompt,
                                               self.timeout,
@@ -96,26 +97,33 @@ class SSH(Transport):
                                  repr(self.conn.before), \
                                  repr(self.conn.after)
                 raise
-            self.response = self._remove_esc(self.conn.before + self.conn.after)
-            self._receive_cb(self.response)
+            response = self._remove_esc(self.conn.before + self.conn.after)
 
             # No match.
             if which < 0:
+                self.response = response
+                self._receive_cb(response)
                 raise TransportException("Timeout while waiting for prompt")
 
             # Login error detected.
             elif which == 0:
+                self.response = response
+                self._receive_cb(response)
                 raise LoginFailure("Login failed")
 
             # User name prompt.
             elif which <= 1:
                 self._dbg(1, "Username prompt %s received." % which)
+                self.response = response
+                self._receive_cb(response)
                 self.send(user + '\r')
                 continue
 
             # s/key prompt.
             elif which == 2:
                 self._dbg(1, "S/Key prompt received.")
+                self.response = response
+                self._receive_cb(response)
                 seq  = int(self.conn.match.group(1))
                 seed = self.conn.match.group(2)
                 self._otp_cb(seq, seed)
@@ -136,6 +144,8 @@ class SSH(Transport):
             # Cleartext password prompt.
             elif which == 3:
                 self._dbg(1, "Cleartext prompt received.")
+                self.response = response
+                self._receive_cb(response)
                 self.send(password + '\r')
                 if not kwargs.get('wait'):
                     self._dbg(1, "Bailing out as requested.")
@@ -145,6 +155,8 @@ class SSH(Transport):
             # SSH key verification.
             elif which == 4:
                 self._dbg(1, 'Key verification prompt received.')
+                self.response = response
+                self._receive_cb(response)
                 if self.auto_verify:
                     self.send('yes\r')
                 continue
@@ -152,6 +164,11 @@ class SSH(Transport):
             # Shell prompt.
             elif which == 5:
                 self._dbg(1, 'Shell prompt received.')
+                if kwargs.get('wait'):
+                    self.response = response
+                    self._receive_cb(response)
+                else:
+                    self.conn.buffer = old_buffer
                 break
 
             else:
@@ -159,7 +176,7 @@ class SSH(Transport):
 
 
     def _authorize_hook(self, password, **kwargs):
-        return self._authenticate_hook('', password, **kwargs)
+        pass
 
 
     def send(self, data):

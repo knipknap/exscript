@@ -13,6 +13,12 @@ class SSHTest(TransportTest):
     def testConstructor(self):
         self.assert_(isinstance(self.transport, SSH))
 
+    def testAuthorize(self):
+        self.doAuthenticate(wait = False)
+        self.assertEqual(self.transport.response, None)  # Because wait = False
+        self.doAuthorize()  # Stub in SSH, no change in transport.response
+        self.assertEqual(self.transport.response, None)
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(SSHTest)
 if __name__ == '__main__':

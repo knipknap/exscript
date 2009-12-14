@@ -1,10 +1,10 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from TransportTest      import TransportTest
+from SSHTest            import SSHTest
 from Exscript.protocols import SSH2
 
-class SSH2Test(TransportTest):
+class SSH2Test(SSHTest):
     CORRELATE = SSH2
 
     def createTransport(self):
@@ -12,12 +12,6 @@ class SSH2Test(TransportTest):
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, SSH2))
-
-    def testAuthorize(self):
-        self.doAuthenticate(wait = False)
-        self.assertEqual(self.transport.response, None)  # Because wait = False
-        self.doAuthorize()  # Stub in SSH2, no change in transport.response
-        self.assertEqual(self.transport.response, None)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(SSH2Test)

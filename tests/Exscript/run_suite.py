@@ -5,7 +5,7 @@ from inspect import isfunction, ismodule, isclass
 def uppercase(match):
     return match.group(1).upper()
 
-correlated = set()
+correlated = dict()
 
 def correlate_class(theclass):
     """
@@ -39,7 +39,7 @@ def correlate_class(theclass):
             continue # function was imported.
         if both in correlated:
             continue
-        correlated.add(both)
+        correlated[both] = True
         if ismodule(theclass.CORRELATE):
             sys.stderr.write('!!!! WARNING: Untested function: ' + both + '\n')
         elif isclass(theclass.CORRELATE):

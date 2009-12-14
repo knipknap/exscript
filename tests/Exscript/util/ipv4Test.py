@@ -20,11 +20,11 @@ class ipv4Test(unittest.TestCase):
 
     def testIp2Int(self):
         from Exscript.util.ipv4 import ip2int
-        self.assertEqual(ip2int('0.0.0.0'),         0x00000000)
-        self.assertEqual(ip2int('255.255.255.255'), 0xFFFFFFFF)
-        self.assertEqual(ip2int('255.255.255.0'),   0xFFFFFF00)
-        self.assertEqual(ip2int('0.255.255.0'),     0x00FFFF00)
-        self.assertEqual(ip2int('0.128.255.0'),     0x0080FF00)
+        self.assertEqual(ip2int('0.0.0.0'),         0x00000000l)
+        self.assertEqual(ip2int('255.255.255.255'), 0xFFFFFFFFl)
+        self.assertEqual(ip2int('255.255.255.0'),   0xFFFFFF00l)
+        self.assertEqual(ip2int('0.255.255.0'),     0x00FFFF00l)
+        self.assertEqual(ip2int('0.128.255.0'),     0x0080FF00l)
 
     def testInt2Ip(self):
         from Exscript.util.ipv4 import int2ip, ip2int

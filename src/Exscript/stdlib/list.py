@@ -31,4 +31,4 @@ def unique(scope, source):
     @rtype:  string
     @return: The cleaned up list of strings.
     """
-    return list(set(source)) #old python version: dict(map(lambda a: (a,1), source)).keys()
+    return dict(map(lambda a: (a, 1), source)).keys()

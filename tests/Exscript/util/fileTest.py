@@ -32,7 +32,7 @@ class fileTest(unittest.TestCase):
 
         self.csv_host_file = NamedTemporaryFile()
         self.csv_host_file.write('hostname	test\n')
-        self.csv_host_file.write('\n'.join(h + '	blah' for h in hosts))
+        self.csv_host_file.write('\n'.join([h + '	blah' for h in hosts]))
         self.csv_host_file.flush()
 
     def tearDown(self):
@@ -42,7 +42,8 @@ class fileTest(unittest.TestCase):
         from Exscript.util.file import get_accounts_from_file
         accounts = get_accounts_from_file(self.account_file.name)
         result   = [(a.get_name(), a.get_password()) for a in accounts]
-        self.assertEqual(sorted(account_pool), sorted(result))
+        result.sort()
+        self.assertEqual(account_pool, result)
 
     def testGetHostsFromFile(self):
         from Exscript.util.file import get_hosts_from_file

@@ -12,7 +12,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from copy import deepcopy
+from copy              import deepcopy
+from inspect           import isfunction
 from Exscript.parselib import Token
 
 class Scope(Token):
@@ -72,8 +73,18 @@ class Scope(Token):
         Like get_vars(), but does not include any private variables and
         deep copies each variable.
         """
+        vars = {}
+        for key, value in self.get_vars().iteritems():
+            if key.startswith('_'):
+                continue
+            if isfunction(value):
+                vars[key] = value
+                continue
+            vars[key] = deepcopy(value)
+        return vars
+        #FIXME: In Python >= 2.4, do the following instead.
         vars = self.get_vars()
-        vars = dict(k for k in vars.iteritems() if not k[0].startswith('_'))
+        vars = dict([k for k in vars.iteritems() if not k[0].startswith('_')])
         return deepcopy(vars)
 
 

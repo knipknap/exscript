@@ -12,6 +12,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+import copy
+from inspect              import isfunction
 from Exscript             import stdlib
 from Exscript.interpreter import Parser
 
@@ -24,8 +26,20 @@ def _builtin_vars(conn = None, filename = 'undefined'):
         builtin.update(conn.get_host().vars)
     return builtin
 
+def _copy_vars(dictionary):
+    #FIXME: Obsolete in Python >= 2.4. Required because deepcopy() does not
+    # support copying functions in prior versions.
+    vars = {}
+    for key, value in dictionary.iteritems():
+        if isfunction(value):
+            vars[key] = value
+            continue
+        vars[key] = copy.deepcopy(value)
+    return vars
+
 def _compile(template, parser_kwargs, **kwargs):
     # Init the parser and compile the template.
+    kwargs = _copy_vars(kwargs) #FIXME: Remove and let parser handle this in Python >= 2.4
     parser = Parser(**parser_kwargs)
     parser.define_object(**kwargs)
     parser.define_object(**stdlib.functions)

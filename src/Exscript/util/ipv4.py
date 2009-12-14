@@ -65,7 +65,7 @@ def int2ip(number):
     @rtype:  string
     @return: The IP address.
     """
-    number &= 0xFFFFFFFF
+    number &= 0xFFFFFFFFl
     return socket.inet_ntoa(struct.pack('!L', number))
 
 def pfxlen2mask_int(pfxlen):

@@ -20,7 +20,7 @@ for i in range(256):
     _hextochr['%02x' % i] = chr(i)
     _hextochr['%02X' % i] = chr(i)
 
-well_known_ports = {
+_well_known_ports = {
     'ftp':    21,
     'ssh':    22,
     'ssh1':   22,
@@ -160,14 +160,19 @@ def parse_url(url, default_protocol = 'telnet'):
     # We substitute the protocol name by 'http' to support the usual http URL
     # scheme, because Python's urlparse does not support our protocols
     # directly.
+    # In Python < 2.4, urlsplit can not handle query variables, so we split
+    # them away.
     result          = Url()
     result.protocol = urlparse(url, default_protocol, 0)[0]
-    result.port     = well_known_ports.get(result.protocol)
+    result.port     = _well_known_ports.get(result.protocol)
     uri             = 'http://' + re.sub('^' + result.protocol + ':(?://)?', '', url)
-    components      = urlsplit(uri, 'http', 0)
+    location        = uri
+    query           = ''
+    if '?' in uri:
+        location, query = uri.split('?', 1)
+    components      = urlsplit(location, 'http', 0)
     netloc          = components[1]
     path            = components[2]
-    query           = components[3]
     auth            = ''
     if netloc.find('@') >= 0:
         auth, netloc = netloc.split('@')

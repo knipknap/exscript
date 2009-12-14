@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, traceback
+import os
 from Log import Log
 
 class Logfile(Log):
@@ -42,6 +42,7 @@ class Logfile(Log):
         except Exception, e:
             print 'Error writing to %s: %s' % (filename, e)
             self.do_log = False
+            raise
 
     def _write(self, *data):
         return self._write_file(self.filename, *data)
@@ -55,11 +56,11 @@ class Logfile(Log):
         self.conn.signal_connect('data_received', self._write)
 
     def aborted(self, exception):
-        self.traceback = traceback.format_exc(exception)
+        self.traceback = self._format_exc(exception)
         self.exception = exception
         self.ended     = True
         self._write('ABORTED:', str(exception), '\n')
-        self._write_error(traceback.format_exc(exception))
+        self._write_error(self._format_exc(exception))
 
     def succeeded(self):
         if self.delete:

@@ -44,13 +44,13 @@ class MainLoop(Trackable, threading.Thread):
         assert max_threads is not None
         self.condition.acquire()
         self.max_threads = max_threads
-        self.condition.notify_all()
+        self.condition.notifyAll()
         self.condition.release()
 
     def enqueue(self, action):
         self.condition.acquire()
         self.queue.append(action)
-        self.condition.notify_all()
+        self.condition.notifyAll()
         self.condition.release()
 
     def priority_enqueue(self, action, force_start = False):
@@ -59,19 +59,19 @@ class MainLoop(Trackable, threading.Thread):
             self.force_start.append(action)
         else:
             self.queue.insert(0, action)
-        self.condition.notify_all()
+        self.condition.notifyAll()
         self.condition.release()
 
     def pause(self):
         self.condition.acquire()
         self.paused = True
-        self.condition.notify_all()
+        self.condition.notifyAll()
         self.condition.release()
 
     def resume(self):
         self.condition.acquire()
         self.paused = False
-        self.condition.notify_all()
+        self.condition.notifyAll()
         self.condition.release()
 
     def is_paused(self):
@@ -97,7 +97,7 @@ class MainLoop(Trackable, threading.Thread):
     def shutdown(self):
         self.condition.acquire()
         self.shutdown_now = True
-        self.condition.notify_all()
+        self.condition.notifyAll()
         self.condition.release()
         for job in self.running_jobs:
             job.join()
@@ -166,7 +166,7 @@ class MainLoop(Trackable, threading.Thread):
             for action in self.force_start:
                 self._start_action(action)
             self.force_start = []
-            self.condition.notify_all()
+            self.condition.notifyAll()
 
             # Don't bother looking if the queue is empty.
             if len(self.queue) <= 0 or self.paused:
