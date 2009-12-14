@@ -8,7 +8,7 @@ Exscript is also an excellent and much more powerful Net::Telnet replacement,
 so we welcome all you Perl developers!
 
 Exscript may be used to automate sessions with routers from Cisco, Juniper, 
-OneIP, Huawei, or any others. If you want to configures machines 
+OneAccess, Huawei, or any others. If you want to configures machines 
 running Linux/Unix, IOS, IOS-XR, JunOS, VRP, or any other operating system 
 that can be used with a terminal, Exscript should be just what you are 
 looking for.
