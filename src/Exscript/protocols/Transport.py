@@ -22,51 +22,51 @@ from Exception                     import TransportException, \
 True  = 1 
 False = 0 
 
-flags         = re.I | re.M
-printable     = re.escape(string.printable)
-ignore        = r'[\x1b\x07\x00]'
-newline       = r'[\r\n]'
-prompt_start  = r'(?:' + newline + r'[^' + printable + r']?|' + ignore + '+)'
-prompt_chars  = r'[\-\w\(\)@:~]'
-filename      = r'(?:[\w\+\-\._]+)'
-path          = r'(?:(?:' + filename + r')?(?:/' + filename + r')*/?)'
-any_path      = r'(?:' + path + r'|~' + path + r'?)'
-host          = r'(?:[\w+\-\.]+)'
-user          = r'(?:[\w+\-]+)'
-user_host     = r'(?:(?:' + user + r'\@)?' + host + r')'
-prompt_re     = re.compile(prompt_start                 \
-                         + r'[\[\<]?'                   \
-                         + r'\w+'                       \
-                         + user_host + r'?'             \
-                         + r'[: ]?'                     \
-                         + any_path + r'?'              \
-                         + r'[: ]?'                     \
-                         + any_path + r'?'              \
-                         + r'(?:\(' + filename + '\))?' \
-                         + r'\]?'                       \
-                         + r'[#>%\$\]] ?$', flags)
+_flags         = re.I | re.M
+_printable     = re.escape(string.printable)
+_ignore        = r'[\x1b\x07\x00]'
+_nl            = r'[\r\n]'
+_prompt_start  = r'(?:' + _nl + r'[^' + _printable + r']?|' + _ignore + '+)'
+_prompt_chars  = r'[\-\w\(\)@:~]'
+_filename      = r'(?:[\w\+\-\._]+)'
+_path          = r'(?:(?:' + _filename + r')?(?:/' + _filename + r')*/?)'
+_any_path      = r'(?:' + _path + r'|~' + _path + r'?)'
+_host          = r'(?:[\w+\-\.]+)'
+_user          = r'(?:[\w+\-]+)'
+_user_host     = r'(?:(?:' + _user + r'\@)?' + _host + r')'
+_prompt_re     = re.compile(_prompt_start                 \
+                          + r'[\[\<]?'                   \
+                          + r'\w+'                       \
+                          + _user_host + r'?'             \
+                          + r'[: ]?'                     \
+                          + _any_path + r'?'              \
+                          + r'[: ]?'                     \
+                          + _any_path + r'?'              \
+                          + r'(?:\(' + _filename + '\))?' \
+                          + r'\]?'                       \
+                          + r'[#>%\$\]] ?$', _flags)
 
-user_re    = re.compile(r'(user ?name|user|login): *$', flags)
-pass_re    = re.compile(r'password:? *$',               flags)
-skey_re    = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
-errors     = [r'error',
-              r'invalid',
-              r'incomplete',
-              r'unrecognized',
-              r'unknown command',
-              r'connection timed out',
-              r'[^\r\n]+ not found']
-error_re   = re.compile(r'^%?\s*(?:' + '|'.join(errors) + r')', flags)
-login_fail = [r'bad secrets',
-              r'denied',
-              r'invalid',
-              r'too short',
-              r'incorrect',
-              r'connection timed out',
-              r'failed']
-login_fail_re = re.compile(newline      \
-                         + r'[^\r\n]*'  \
-                         + r'(?:' + '|'.join(login_fail) + r')', flags)
+_user_re    = re.compile(r'(user ?name|user|login): *$', _flags)
+_pass_re    = re.compile(r'password:? *$',               _flags)
+_skey_re    = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
+_errors     = [r'error',
+               r'invalid',
+               r'incomplete',
+               r'unrecognized',
+               r'unknown command',
+               r'connection timed out',
+               r'[^\r\n]+ not found']
+_error_re   = re.compile(r'^%?\s*(?:' + '|'.join(_errors) + r')', _flags)
+_login_fail = [r'bad secrets',
+               r'denied',
+               r'invalid',
+               r'too short',
+               r'incorrect',
+               r'connection timed out',
+               r'failed']
+_login_fail_re = re.compile(_nl          \
+                          + r'[^\r\n]*'  \
+                          + r'(?:' + '|'.join(_login_fail) + r')', _flags)
 
 class Transport(Trackable):
     """
@@ -99,8 +99,8 @@ class Transport(Trackable):
         self.os_guesser         = OsGuesser(self)
         self.authorized         = False
         self.authenticated      = False
-        self.prompt_re          = prompt_re
-        self.error_re           = error_re
+        self.prompt_re          = _prompt_re
+        self.error_re           = _error_re
         self.host               = kwargs.get('host',     None)
         self.user               = kwargs.get('user',     '')
         self.password           = kwargs.get('password', '')
@@ -185,7 +185,7 @@ class Transport(Trackable):
         @param prompt: The pattern that matches the prompt of the remote host.
         """
         if prompt is None:
-            self.prompt_re = prompt_re
+            self.prompt_re = _prompt_re
         else:
             self.prompt_re = prompt
 
@@ -211,7 +211,7 @@ class Transport(Trackable):
         @param error: The pattern that, when matched, causes an error.
         """
         if error is None:
-            self.error_re = error_re
+            self.error_re = _error_re
         else:
             self.error_re = error
 

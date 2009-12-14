@@ -17,17 +17,17 @@ import pexpect
 from Exscript.util.crypt import otp
 from Exception           import TransportException, LoginFailure
 from Transport           import Transport,    \
-                                user_re,      \
-                                pass_re,      \
-                                skey_re,      \
-                                login_fail_re
+                                _user_re,      \
+                                _pass_re,      \
+                                _skey_re,      \
+                                _login_fail_re
 
 True  = 1
 False = 0
 
-fingerprint = r'\:'.join([r'\w\w'] * 16)
-verify_re   = re.compile(r'\b' + fingerprint + r'\b.*\byes.*', re.I|re.S|re.M)
-escape_re   = re.compile(r'(?:[\x00-\x09]|\x1b\[[^m]*m|\x1b\][^\x07]*\x07)')
+_fingerprint = r'\:'.join([r'\w\w'] * 16)
+_verify_re   = re.compile(r'\b' + _fingerprint + r'\b.*\byes.*', re.I|re.S|re.M)
+_escape_re   = re.compile(r'(?:[\x00-\x09]|\x1b\[[^m]*m|\x1b\][^\x07]*\x07)')
 
 class SSH(Transport):
     """
@@ -46,7 +46,7 @@ class SSH(Transport):
 
     def _remove_esc(self, response):
         #print "PRE:", repr(response)
-        return escape_re.sub('', response)
+        return _escape_re.sub('', response)
 
 
     def _connect_hook(self, hostname, port):
@@ -80,11 +80,11 @@ class SSH(Transport):
         self._spawn(user, kwargs.get('key_file'))
         while 1:
             # Wait for the user prompt.
-            prompt  = [login_fail_re,
-                       user_re,
-                       skey_re,
-                       pass_re,
-                       verify_re,
+            prompt  = [_login_fail_re,
+                       _user_re,
+                       _skey_re,
+                       _pass_re,
+                       _verify_re,
                        self.prompt_re]
             #print 'Waiting for prompt:', self.conn.buffer, self.conn.before, self.conn.after
             try:
@@ -122,7 +122,7 @@ class SSH(Transport):
                 self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
-                self.conn.expect(pass_re, self.timeout)
+                self.conn.expect(_pass_re, self.timeout)
                 response      = self.conn.before + self.conn.after
                 self.response = self._remove_esc(response)
                 self._receive_cb(self.response)

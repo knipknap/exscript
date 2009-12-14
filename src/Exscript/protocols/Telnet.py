@@ -17,10 +17,10 @@ import telnetlib
 from Exscript.util.crypt import otp
 from Exception           import TransportException, LoginFailure
 from Transport           import Transport,    \
-                                user_re,      \
-                                pass_re,      \
-                                skey_re,      \
-                                login_fail_re
+                                _user_re,      \
+                                _pass_re,      \
+                                _skey_re,      \
+                                _login_fail_re
 
 True  = 1
 False = 0
@@ -51,10 +51,10 @@ class Telnet(Transport):
         while 1:
             # Wait for the user prompt.
             #print 'Waiting for prompt'
-            prompt  = [login_fail_re,
-                       user_re,
-                       skey_re,
-                       pass_re,
+            prompt  = [_login_fail_re,
+                       _user_re,
+                       _skey_re,
+                       _pass_re,
                        self.prompt_re]
             which   = None
             matches = None
@@ -91,7 +91,7 @@ class Telnet(Transport):
                 self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
-                self.tn.expect([pass_re], self.timeout)
+                self.tn.expect([_pass_re], self.timeout)
                 self.send(phrase + '\r')
                 self._dbg(1, "Password sent.")
                 if not kwargs.get('wait'):

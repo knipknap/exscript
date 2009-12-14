@@ -2,7 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from ConfigParser                 import RawConfigParser
-from Exscript.protocols.Transport import Transport, prompt_re
+from Exscript.protocols.Transport import Transport, _prompt_re
 
 class TransportTest(unittest.TestCase):
     """
@@ -51,11 +51,11 @@ class TransportTest(unittest.TestCase):
                    r'admin@s-x-a6.a.bc.de.fg:/# ',
                    r'admin@s-x-a6.a.bc.de.fg:/% ']
         for prompt in prompts:
-            if not prompt_re.search('\n' + prompt):
+            if not _prompt_re.search('\n' + prompt):
                 self.fail('Prompt %s does not match exactly.' % prompt)
-            if not prompt_re.search('this is a test\r\n' + prompt):
+            if not _prompt_re.search('this is a test\r\n' + prompt):
                 self.fail('Prompt %s does not match.' % prompt)
-            if prompt_re.search('some text ' + prompt):
+            if _prompt_re.search('some text ' + prompt):
                 self.fail('Prompt %s matches incorrectly.' % prompt)
 
     def testConstructor(self):
