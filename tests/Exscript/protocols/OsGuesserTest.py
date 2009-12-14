@@ -6,16 +6,72 @@ from StreamAnalyzerTest           import StreamAnalyzerTest
 
 login_responses = {
 'ios': '''
+
+(Banner goes here)
+
+testhost line 2 
+
+
+at 'testhost.t' port 'tty2' from '10.0.0.1'
+
 Username: test
-Password: blah
-hostname> ''',
+Password:
+testhost#''',
 
 'junos': '''
+
+(Banner goes here)
+
+
+testhost (ttyp0)
+
 login: test
-user@hostname> ''',
+Password: 
+
+--- JUNOS 8.4R4.2 built 2008-05-21 08:47:52 UTC
+user@testhost> ''',
+
+'ios_xr': '''
+
+(Banner goes here)
+
+at 'testhost.t' port '/dev/vty1' from '153.17.33.135'
+
+Username: sab
+s/key 9796 en29000000
+Password: 
+RP/0/RP0/CPU0:testhost#''',
+
+'shell': '''
+telnet (testhost)
+
+
+
+
+
+
+WARNING ! ! !  YOU ARE MONITORED
+Access to this system is restricted to authorized uses only.
+Any attempt to access this system without proper authority may result in prosecution.
+
+
+Security System V 5.0
+
+Authorized Login: test
+test's Password: 
+*******************************************************************************
+* testhost                                                                    *
+*                                                                             *
+*  AIX 4.3.3                                                                  *
+*                                                                             *
+*******************************************************************************
+Last unsuccessful login: Mon Mar 30 14:12:54 CEST 2009 on /dev/pts/102 from testhost.local
+Last login: Mon Dec 14 08:38:37 CET 2009 on /dev/pts/109 from testhost.local
+
+test@testhost:/home/test> ''',
 
 'unknown': '''
-user@hostname> ''',
+user@testhost> ''',
 }
 
 class FakeConnection(object):
