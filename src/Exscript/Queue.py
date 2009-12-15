@@ -53,8 +53,8 @@ class Queue(Trackable):
         Trackable.__init__(self)
         self.workqueue         = WorkQueue()
         self.account_manager   = AccountManager()
-        self.domain            = kwargs.get('domain')
-        self.verbose           = kwargs.get('verbose')
+        self.domain            = kwargs.get('domain',         '')
+        self.verbose           = kwargs.get('verbose',        1)
         self.times             = kwargs.get('times',          1)
         self.login_times       = kwargs.get('login_times',    1)
         self.protocol_args     = kwargs.get('protocol_args',  {})
@@ -327,8 +327,9 @@ class Queue(Trackable):
         # of the conversation to stdout.
         if not host.get_domain():
             host.set_domain(self.domain)
+        echo          = n_connections == 1 and self.verbose >= 1
         pargs         = self.protocol_args.copy()
-        pargs['echo'] = n_connections == 1 and pargs.get('echo')
+        pargs['echo'] = echo and pargs.get('echo', True)
 
         # Build an object that represents the actual task.
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
