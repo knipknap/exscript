@@ -19,18 +19,23 @@ class AccountManagerTest(unittest.TestCase):
 
     def testConstructor(self):
         accm = AccountManager()
-        self.assert_(accm.n_accounts() == 0)
+        self.assertEqual(accm.n_accounts(), 0)
 
         accm = AccountManager([self.account1, self.account2])
-        self.assert_(accm.n_accounts() == 2)
+        self.assertEqual(accm.n_accounts(), 2)
 
     def testAddAccount(self):
-        self.assert_(self.accm.n_accounts() == 0)
+        self.assertEqual(self.accm.n_accounts(), 0)
         self.accm.add_account(self.account1)
-        self.assert_(self.accm.n_accounts() == 1)
+        self.assertEqual(self.accm.n_accounts(), 1)
 
         self.accm.add_account(self.account2)
-        self.assert_(self.accm.n_accounts() == 2)
+        self.assertEqual(self.accm.n_accounts(), 2)
+
+    def testReset(self):
+        self.testAddAccount()
+        self.accm.reset()
+        self.assertEqual(self.accm.n_accounts(), 0)
 
     def testGetAccountFromName(self):
         self.testAddAccount()

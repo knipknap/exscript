@@ -40,7 +40,6 @@ class Account(Trackable):
             - ssh_key_file: the key file that is used (SSH only).
         """
         Trackable.__init__(self)
-        self.manager                = None
         self.name                   = name
         self.password               = password
         self.authorization_password = password2

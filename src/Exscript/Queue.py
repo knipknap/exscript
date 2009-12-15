@@ -290,6 +290,17 @@ class Queue(Trackable):
         self._del_status_bar()
 
 
+    def reset(self):
+        """
+        Remove all accounts, hosts, etc.
+        """
+        self.account_manager.reset()
+        self.workqueue.shutdown()
+        self.completed         = 0
+        self.total             = 0
+        self.status_bar_length = 0
+
+
     def _catch_sigint_and_run(self, function, *data, **kwargs):
         """
         Makes sure that we shut down properly even when SIGINT or SIGTERM

@@ -106,6 +106,11 @@ class QueueTest(unittest.TestCase):
         self.assert_(self.queue.task_is_completed(task))
         self.assert_(self.queue.is_completed())
 
+    def testReset(self):
+        self.testAddAccount()
+        self.queue.reset()
+        self.assertEqual(self.queue.account_manager.n_accounts(), 0)
+
     def testRun(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']

@@ -70,6 +70,35 @@ class AccountManager(object):
         self.unlock_cond.release()
 
 
+    def _remove_account(self, accounts):
+        """
+        Adds one or more account instances to the pool.
+
+        @type  accounts: Account|list[Account]
+        @param accounts: The accounts to be removed.
+        """
+        if isinstance(accounts, Account):
+            accounts = [accounts]
+        for account in accounts:
+            assert account in self.accounts
+            assert account in self.unlocked_accounts
+            account.signal_disconnect('acquire_before',
+                                      self._on_account_acquire_before)
+            account.signal_disconnect('released', self._on_account_released)
+            self.accounts.remove(account)
+            self.unlocked_accounts.remove(account)
+
+
+    def reset(self):
+        """
+        Removes all accounts.
+        """
+        self.unlock_cond.acquire()
+        self._remove_account(self.accounts[:])
+        self.unlock_cond.notify()
+        self.unlock_cond.release()
+
+
     def get_account_from_name(self, name):
         """
         Returns the account with the given name.
