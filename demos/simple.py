@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-from Exscript.util.file      import get_hosts_from_file
-from Exscript.util.match     import any_match
-from Exscript.util.template  import eval_file
-from Exscript.util.start     import quickrun
-from Exscript.util.decorator import autologin
+from Exscript.util.file     import get_hosts_from_file
+from Exscript.util.match    import any_match
+from Exscript.util.template import eval_file
+from Exscript.util.start    import quickstart
 
 def do_something(conn):
     conn.execute('show ip int brie')
@@ -19,4 +18,4 @@ hosts = get_hosts_from_file('hostlist.txt')
 # etc.
 # The "max_threads" keyword indicates the maximum number of concurrent
 # connections.
-quickrun(hosts, autologin(do_something), max_threads = 5)
+quickstart(hosts, do_something, max_threads = 5)
