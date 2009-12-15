@@ -24,8 +24,9 @@ from FunctionCall import FunctionCall
 from IfCondition  import IfCondition
 from Loop         import Loop
 from Try          import Try
+from String       import varname_re
 
-varname_re = r'((?:__)?[a-zA-Z][\w_]*(?:__)?)'
+varname  = varname_re.pattern
 keywords = ['append',
             'as',
             'else',
@@ -70,8 +71,8 @@ grammar = (
     ('comparison',          r'\b(?:' + '|'.join(operators) + r')\b'),
     ('arithmetic_operator', r'(?:\*|\+|-|%|\.)'),
     ('logical_operator',    r'\b(?:and|or|not)\b'),
-    ('open_function_call',  varname_re + r'(?:\.' + varname_re + r')*\('),
-    ('varname',             varname_re),
+    ('open_function_call',  varname + r'(?:\.' + varname + r')*\('),
+    ('varname',             varname),
     ('number',              r'\d+'),
     ('newline',             r'[\r\n]'),
     ('raw_data',            r'[^\r\n{}]+')

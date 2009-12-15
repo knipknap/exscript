@@ -15,7 +15,7 @@
 import re
 from Exscript.parselib import Token
 
-varname_re = re.compile(r'[a-z][\w_]*',       re.I)
+varname_re = re.compile(r'((?:__)?[a-zA-Z][\w_]*(?:__)?)')
 string_re  = re.compile(r'(\\?)\$([\w_]*\b)', re.I)
 
 grammar = [
