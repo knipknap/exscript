@@ -5,7 +5,7 @@ VERSION_IN=VERSION.in
 VERSION_FILE=src/Exscript/version.py
 
 # Check that we are actually in a git managed project.
-if [ ! -e .git ]; then
+if [ ! -e .git -a -z "$1" ]; then
   echo >&2 Not a git repository.
   exit 1
 fi
