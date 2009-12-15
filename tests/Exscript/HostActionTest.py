@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from Exscript.external.SpiffSignal import Trackable
 from Exscript                      import Queue, Host
 from Exscript.HostAction           import HostAction
-from Exscript.util.decorator       import bind_args
+from Exscript.util.decorator       import bind
 from Exscript.protocols.Exception  import LoginFailure
 
 class FakeHost(Host):
@@ -26,8 +26,8 @@ class HostActionTest(unittest.TestCase):
 
     def setUp(self):
         self.data         = {'n_calls': 0}
-        self.count_cb     = bind_args(count_calls, self.data)
-        self.fail_cb      = bind_args(fail_calls,  self.data, IntentionalError)
+        self.count_cb     = bind(count_calls, self.data)
+        self.fail_cb      = bind(fail_calls,  self.data, IntentionalError)
         self.count_action = HostAction(Queue(), self.count_cb, FakeHost())
         self.fail_action  = HostAction(Queue(), self.fail_cb, FakeHost())
 
@@ -50,7 +50,7 @@ class HostActionTest(unittest.TestCase):
     def testSetLoginTimes(self):
         # Run once.
         data     = {'n_calls' : 0}
-        callback = bind_args(fail_calls, data, LoginFailure)
+        callback = bind(fail_calls, data, LoginFailure)
         action   = HostAction(Queue(), callback, FakeHost())
         self.assertEqual(0, action.n_failures())
         self.assertRaises(LoginFailure, action.execute)
@@ -59,7 +59,7 @@ class HostActionTest(unittest.TestCase):
 
         # Run *three* times.
         data     = {'n_calls' : 0}
-        callback = bind_args(fail_calls, data, LoginFailure)
+        callback = bind(fail_calls, data, LoginFailure)
         action   = HostAction(Queue(), callback, FakeHost())
         action.set_times(10)
         action.set_login_times(3)
@@ -69,7 +69,7 @@ class HostActionTest(unittest.TestCase):
 
         # Should also run three times.
         data     = {'n_calls' : 0}
-        callback = bind_args(fail_calls, data, LoginFailure)
+        callback = bind(fail_calls, data, LoginFailure)
         action   = HostAction(Queue(), callback, FakeHost())
         action.set_times(1)
         action.set_login_times(3)

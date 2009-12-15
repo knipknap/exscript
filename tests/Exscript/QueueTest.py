@@ -6,7 +6,7 @@ from tempfile                import mkdtemp
 from Exscript                import Queue, Account
 from Exscript.Connection     import Connection
 from Exscript.protocols      import Dummy
-from Exscript.util.decorator import bind_args
+from Exscript.util.decorator import bind
 
 def count_calls(conn, data, **kwargs):
     assert kwargs.has_key('testarg')
@@ -15,7 +15,7 @@ def count_calls(conn, data, **kwargs):
 
 def spawn_subtask(conn, data, **kwargs):
     count_calls(conn, data, **kwargs)
-    func  = bind_args(count_calls, data, testarg = 1)
+    func  = bind(count_calls, data, testarg = 1)
     queue = conn.get_queue()
     task  = queue.priority_run('subtask', func)
     queue.wait_for(task)
@@ -109,7 +109,7 @@ class QueueTest(unittest.TestCase):
     def testRun(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
-        func  = bind_args(count_calls, data, testarg = 1)
+        func  = bind(count_calls, data, testarg = 1)
         self.queue.run(hosts,    func)
         self.queue.run('dummy3', func)
         self.queue.shutdown()
@@ -122,7 +122,7 @@ class QueueTest(unittest.TestCase):
     def testPriorityRun(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
-        func  = bind_args(spawn_subtask, data, testarg = 1)
+        func  = bind(spawn_subtask, data, testarg = 1)
 
         # Since the job (consisting of two connections) spawns a subtask,
         # we need at least two threads. But both subtasks could be waiting
@@ -142,7 +142,7 @@ class QueueTest(unittest.TestCase):
         # actually tested; the thread should run regardless.
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
-        func  = bind_args(count_calls, data, testarg = 1)
+        func  = bind(count_calls, data, testarg = 1)
 
         # Since the job (consisting of two connections) spawns a subtask,
         # we need at least two threads. But both subtasks could be waiting

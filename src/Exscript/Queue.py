@@ -365,7 +365,7 @@ class Queue(Trackable):
         """
         Add the given function to a queue, and call it once for each host
         according to the threading options.
-        Use decorators.bind_args() if you also want to pass additional
+        Use decorators.bind() if you also want to pass additional
         arguments to the callback function.
 
         Returns an object that represents the queued task, and that may be

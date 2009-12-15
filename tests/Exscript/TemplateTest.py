@@ -3,7 +3,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from Exscript                import Queue, Account, Logger
 from Exscript.util           import template
-from Exscript.util.decorator import bind_args
+from Exscript.util.decorator import bind
 from Exscript.protocols      import Dummy
 
 test_dir = '../templates'
@@ -54,7 +54,7 @@ class TemplateTest(unittest.TestCase):
         self.queue.shutdown()
 
     def testTemplates(self):
-        callback = bind_args(ios_dummy_cb, self)
+        callback = bind(ios_dummy_cb, self)
         for test in os.listdir(test_dir):
             self.queue.run('ios:' + test, callback)
         self.queue.shutdown()

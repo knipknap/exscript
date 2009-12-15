@@ -14,7 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import time, os
 from Exscript                import Host, util
-from Exscript.util.decorator import bind_args, autologin
+from Exscript.util.decorator import bind, autologin
 
 True  = 1
 False = 0
@@ -82,7 +82,7 @@ def run(scope, hostnames, filename):
 
     # Enqueue the new jobs.
     strip = scope.parser.strip_command
-    job   = bind_args(util.template.eval_file, filename, strip)
+    job   = bind(util.template.eval_file, filename, strip)
     queue = scope.get('__connection__').get_queue()
     task  = queue.force_run(hosts, autologin(job))
     queue.wait_for(task)

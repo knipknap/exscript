@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-def bind_args(function, *args, **kwargs):
+def bind(function, *args, **kwargs):
     """
     Wraps the given function such that when it is called, the given arguments
     are passed in addition to the connection argument.

@@ -8,10 +8,10 @@ class startTest(unittest.TestCase):
 
     def setUp(self):
         from Exscript                import Account
-        from Exscript.util.decorator import bind_args
+        from Exscript.util.decorator import bind
 
         self.data     = {'n_calls': 0}
-        self.callback = bind_args(self.count_calls, self.data, testarg = 1)
+        self.callback = bind(self.count_calls, self.data, testarg = 1)
         self.account  = Account('test', 'test')
 
     def count_calls(self, conn, data, **kwargs):

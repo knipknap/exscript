@@ -22,14 +22,14 @@ def run(users, hosts, func, **kwargs):
     hosts and function as an argument.
 
     If you also want to pass arguments to the given function, you may use
-    util.decorator.bind_args() like this::
+    util.decorator.bind() like this::
 
       def my_callback(conn, my_arg, **kwargs):
           print my_arg, kwargs.get('foo')
 
       run(account,
           host,
-          bind_args(my_callback, 'hello', foo = 'world'),
+          bind(my_callback, 'hello', foo = 'world'),
           max_threads = 10)
 
     @type  users: Account|list[Account]

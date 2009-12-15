@@ -35,9 +35,9 @@ class decoratorTest(unittest.TestCase):
         self.assert_(kwargs.get('three') == 3, kwargs.get('three'))
         return 123
 
-    def testBindArgs(self):
-        from Exscript.util.decorator import bind_args
-        bound  = bind_args(self.bind_cb, 'one', 'two', three = 3)
+    def testBind(self):
+        from Exscript.util.decorator import bind
+        bound  = bind(self.bind_cb, 'one', 'two', three = 3)
         result = bound(FakeConnection())
         self.assert_(result == 123, result)
 
