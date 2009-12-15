@@ -216,10 +216,9 @@ class AssignmentOption(Option):
     TYPE_CHECKER['protocol']   = check_protocol
 
     # Define a new store action that parses 'assignment' values.
-    ACTIONS              = Option.ACTIONS + ('store_dict',)
-    STORE_ACTIONS        = Option.STORE_ACTIONS + ('store_dict',)
-    TYPED_ACTIONS        = Option.TYPED_ACTIONS + ('store_dict',)
-    ALWAYS_TYPED_ACTIONS = Option.ALWAYS_TYPED_ACTIONS + ('store_dict',)
+    ACTIONS       = Option.ACTIONS + ('store_dict',)
+    STORE_ACTIONS = Option.STORE_ACTIONS + ('store_dict',)
+    TYPED_ACTIONS = Option.TYPED_ACTIONS + ('store_dict',)
 
     def take_action(self, action, dest, opt, value, values, parser):
         if action == "store_dict":
@@ -388,6 +387,8 @@ Instructs Exscript to overwrite existing logfiles. The default
 is to append the output if a log already exists.
 '''.strip())
 
+protocols = Queue.built_in_protocols.keys()
+protocols.sort()
 parser.add_option('--protocol', '-p',
                   dest    = 'protocol',
                   type    = 'protocol',
@@ -397,7 +398,7 @@ parser.add_option('--protocol', '-p',
 Specify which protocol to use to connect to the remote host.
 Allowed values for STRING include: %s.
 The default protocol is telnet.
-'''.strip() % ', '.join(sorted(Queue.built_in_protocols)))
+'''.strip() % ', '.join(protocols))
 
 parser.add_option('--retry',
                   dest    = 'retry',
