@@ -17,15 +17,6 @@ from inspect              import isfunction
 from Exscript             import stdlib
 from Exscript.interpreter import Parser
 
-def _builtin_vars(conn = None, filename = 'undefined'):
-    hostname = conn and conn.get_host().get_address() or 'undefined'
-    builtin  = dict(__filename__   = [filename],
-                    __hostname__   = [hostname],
-                    __connection__ = conn)
-    if conn:
-        builtin.update(conn.get_host().vars)
-    return builtin
-
 def _copy_vars(dictionary):
     #FIXME: Obsolete in Python >= 2.4. Required because deepcopy() does not
     # support copying functions in prior versions.
@@ -37,16 +28,28 @@ def _copy_vars(dictionary):
         vars[key] = copy.deepcopy(value)
     return vars
 
-def _compile(template, parser_kwargs, **kwargs):
-    # Init the parser and compile the template.
+def _compile(conn, filename, template, parser_kwargs, **kwargs):
     kwargs = _copy_vars(kwargs) #FIXME: Remove and let parser handle this in Python >= 2.4
-    parser = Parser(**parser_kwargs)
-    parser.define_object(**kwargs)
-    parser.define_object(**stdlib.functions)
-    return parser.parse(template, kwargs.get('__filename__')[0])
+    if conn:
+        kwargs.update(conn.get_host().vars)
 
-def _run(conn, template, parser_kwargs, **kwargs):
-    compiled = _compile(template, parser_kwargs, **kwargs)
+    # Init the parser.
+    parser = Parser(**parser_kwargs)
+    parser.define(**kwargs)
+
+    # Define the built-in variables and functions.
+    hostname = conn and conn.get_host().get_address() or 'undefined'
+    builtin  = dict(__filename__   = [filename or 'undefined'],
+                    __hostname__   = [hostname],
+                    __connection__ = conn)
+    parser.define_object(**builtin)
+    parser.define_object(**stdlib.functions)
+
+    # Compile the template.
+    return parser.parse(template, builtin.get('__filename__')[0])
+
+def _run(conn, filename, template, parser_kwargs, **kwargs):
+    compiled = _compile(conn, filename, template, parser_kwargs, **kwargs)
     return compiled.execute()
 
 def test(string, **kwargs):
@@ -59,8 +62,7 @@ def test(string, **kwargs):
     @type  kwargs: dict
     @param kwargs: Variables to define in the template.
     """
-    kwargs.update(_builtin_vars())
-    _compile(string, {}, **kwargs)
+    _compile(None, None, string, {}, **kwargs)
 
 def test_file(filename, **kwargs):
     """
@@ -72,8 +74,7 @@ def test_file(filename, **kwargs):
     @type  kwargs: dict
     @param kwargs: Variables to define in the template.
     """
-    kwargs.update(_builtin_vars())
-    _compile(string, {}, **kwargs)
+    _compile(None, filename, string, {}, **kwargs)
 
 def eval(conn, string, strip_command = True, **kwargs):
     """
@@ -111,8 +112,8 @@ def eval(conn, string, strip_command = True, **kwargs):
     @rtype:  dict
     @return: The variables that are defined after execution of the script.
     """
-    kwargs.update(_builtin_vars(conn))
-    return _run(conn, string, {'strip_command': strip_command}, **kwargs)
+    parser_args = {'strip_command': strip_command}
+    return _run(conn, None, string, parser_args, **kwargs)
 
 def eval_file(conn, filename, strip_command = True, **kwargs):
     """
@@ -128,9 +129,9 @@ def eval_file(conn, filename, strip_command = True, **kwargs):
     @type  kwargs: dict
     @param kwargs: Variables to define in the template.
     """
-    kwargs.update(_builtin_vars(conn, filename))
-    template = open(filename, 'r').read()
-    return _run(conn, template, {'strip_command': strip_command}, **kwargs)
+    template    = open(filename, 'r').read()
+    parser_args = {'strip_command': strip_command}
+    return _run(conn, filename, template, parser_args, **kwargs)
 
 def paste(conn, string, **kwargs):
     """
@@ -153,8 +154,7 @@ def paste(conn, string, **kwargs):
     @rtype:  dict
     @return: The variables that are defined after execution of the script.
     """
-    kwargs.update(_builtin_vars(conn))
-    return _run(conn, string, {'no_prompt': True}, **kwargs)
+    return _run(conn, None, string, {'no_prompt': True}, **kwargs)
 
 def paste_file(conn, filename, **kwargs):
     """
@@ -168,6 +168,5 @@ def paste_file(conn, filename, **kwargs):
     @type  kwargs: dict
     @param kwargs: Variables to define in the template.
     """
-    kwargs.update(_builtin_vars(conn, filename))
     template = open(filename, 'r').read()
-    return _run(conn, template, {'no_prompt': True}, **kwargs)
+    return _run(conn, None, template, {'no_prompt': True}, **kwargs)

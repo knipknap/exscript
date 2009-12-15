@@ -26,7 +26,7 @@ class Parser(object):
 
     def define(self, **kwargs):
         for key in kwargs:
-            if type(kwargs[key]) == type([]):
+            if hasattr(kwargs[key], '__iter__'):
                 self.variables[key] = kwargs[key]
             else:
                 self.variables[key] = [kwargs[key]]
