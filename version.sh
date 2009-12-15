@@ -17,11 +17,15 @@ if [ -r $VERSION_FILE -a ! -w $VERSION_FILE ]; then
 fi
 
 # By default, get the version number from "git describe".
-HEAD=`git log -1 --pretty=format:%H HEAD`
-VERSION=`git describe $HEAD --tags --match "v[0-9]*" | sed 's/-/./' 2>/dev/null`
-if [ -z "$VERSION" ]; then
-  echo >&2 No matching tag was found.
-  exit 1
+if [ ! -z "$1" ]; then
+  VERSION=$1
+else
+  HEAD=`git log -1 --pretty=format:%H HEAD`
+  VERSION=`git describe $HEAD --tags --match "v[0-9]*" | sed 's/-/./' 2>/dev/null`
+  if [ -z "$VERSION" ]; then
+    echo >&2 No matching tag was found.
+    exit 1
+  fi
 fi
 
 # If the --reset switch was given, reset the version number to 'DEVELOPMENT'.
