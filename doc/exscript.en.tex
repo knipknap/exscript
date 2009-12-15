@@ -233,7 +233,7 @@ For example:
 
 \begin{lstlisting}
 1. # This line is ignored...
-2. {if hostname is "test"}
+2. {if __hostname__ is "test"}
 3.   # ...and so is this one.
 4. {end}
 \end{lstlisting}
@@ -306,9 +306,9 @@ The following variables are available in any \product template, even if
 they were not explicitly passed in:
 
 \begin{enumerate}
-\item {\bf hostname} contains the hostname that was used to open the 
+\item {\bf \_\_hostname\_\_} contains the hostname that was used to open the 
 current connection.
-\item {\bf response} contains the response of the remote host that was 
+\item {\bf \_\_response\_\_} contains the response of the remote host that was 
 received after the execution of the last command. 
 \end{enumerate}
 
