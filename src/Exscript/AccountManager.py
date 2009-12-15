@@ -39,6 +39,7 @@ class AccountManager(object):
         assert account in self.accounts
         assert account in self.unlocked_accounts
         self.unlocked_accounts.remove(account)
+        self.unlock_cond.notifyAll()
         self.unlock_cond.release()
         return account
 
@@ -47,6 +48,7 @@ class AccountManager(object):
         assert account in self.accounts
         assert account not in self.unlocked_accounts
         self.unlocked_accounts.append(account)
+        self.unlock_cond.notifyAll()
         self.unlock_cond.release()
         return account
 
@@ -66,7 +68,7 @@ class AccountManager(object):
             account.signal_connect('released', self._on_account_released)
             self.accounts.append(account)
             self.unlocked_accounts.append(account)
-        self.unlock_cond.notify()
+        self.unlock_cond.notifyAll()
         self.unlock_cond.release()
 
 
@@ -95,7 +97,7 @@ class AccountManager(object):
         """
         self.unlock_cond.acquire()
         self._remove_account(self.accounts[:])
-        self.unlock_cond.notify()
+        self.unlock_cond.notifyAll()
         self.unlock_cond.release()
 
 
