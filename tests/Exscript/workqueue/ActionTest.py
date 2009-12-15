@@ -41,6 +41,9 @@ class TestAction(Action):
 class ActionTest(unittest.TestCase):
     CORRELATE = Action
 
+    def setUp(self):
+        TestAction.id = 0
+
     def testConstructor(self):
         action = Action()
         self.assertEqual(None, action.name)
