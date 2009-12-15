@@ -22,27 +22,40 @@ class startTest(unittest.TestCase):
         self.assert_(isinstance(conn, Exscript.Connection.Connection))
         data['n_calls'] += 1
 
-    def testRun(self):
-        from Exscript.util.start import run
-
+    def doTest(self, function):
         # Run on zero hosts.
-        run(self.account, [], self.callback, verbose = 0)
-        self.assert_(self.data['n_calls'] == 0)
+        function(self.account, [], self.callback, verbose = 0)
+        self.assertEqual(self.data['n_calls'], 0)
 
         # Run on one host.
-        run(self.account, 'dummy:localhost', self.callback, verbose = 0)
-        self.assert_(self.data['n_calls'] == 1)
+        function(self.account, 'dummy:localhost', self.callback, verbose = 0)
+        self.assertEqual(self.data['n_calls'], 1)
 
         # Run on multiple hosts.
         hosts = ['dummy:host1', 'dummy:host2']
-        run(self.account, hosts, self.callback, verbose = 0)
-        self.assert_(self.data['n_calls'] == 3)
+        function(self.account, hosts, self.callback, verbose = 0)
+        self.assertEqual(self.data['n_calls'], 3)
 
         # Run on multiple hosts with multiple threads.
-        run(self.account, hosts, self.callback, max_threads = 2, verbose = 0)
-        self.assert_(self.data['n_calls'] == 5)
+        function(self.account,
+                 hosts,
+                 self.callback,
+                 max_threads = 2,
+                 verbose     = 0)
+        self.assertEqual(self.data['n_calls'], 5)
+
+    def testRun(self):
+        from Exscript.util.start import run
+        self.doTest(run)
 
     def testQuickrun(self):
+        pass # can't really be tested, as it is user interactive
+
+    def testStart(self):
+        from Exscript.util.start import start
+        self.doTest(start)
+
+    def testQuickstart(self):
         pass # can't really be tested, as it is user interactive
 
 def suite():

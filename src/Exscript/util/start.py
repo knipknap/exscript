@@ -12,8 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript import Queue
-from interact import read_login
+from Exscript  import Queue
+from interact  import read_login
+from decorator import autologin
 
 def run(users, hosts, func, **kwargs):
     """
@@ -45,6 +46,7 @@ def run(users, hosts, func, **kwargs):
     queue.add_account(users)
     queue.run(hosts, func)
     queue.shutdown()
+    queue.reset()
 
 def quickrun(hosts, func, **kwargs):
     """
@@ -59,3 +61,33 @@ def quickrun(hosts, func, **kwargs):
     @param kwargs: Passed to the Exscript.Queue constructor.
     """
     run(read_login(), hosts, func, **kwargs)
+
+def start(users, hosts, func, **kwargs):
+    """
+    Like run(), but automatically logs into the host before passing
+    the connection to the callback function.
+
+    @type  users: Account|list[Account]
+    @param users: The account(s) to use for logging in.
+    @type  hosts: Host|list[Host]
+    @param hosts: A list of Host objects.
+    @type  func: function
+    @param func: The callback function.
+    @type  kwargs: dict
+    @param kwargs: Passed to the Exscript.Queue constructor.
+    """
+    run(users, hosts, autologin(func), **kwargs)
+
+def quickstart(hosts, func, **kwargs):
+    """
+    Like quickrun(), but automatically logs into the host before passing
+    the connection to the callback function.
+
+    @type  hosts: Host|list[Host]
+    @param hosts: A list of Host objects.
+    @type  func: function
+    @param func: The callback function.
+    @type  kwargs: dict
+    @param kwargs: Passed to the Exscript.Queue constructor.
+    """
+    quickrun(hosts, autologin(func), **kwargs)

@@ -1,3 +1,4 @@
+* Add cast.to_account() and to_accounts() and use that in the account manager.
 * Test the Transport wait parameters in several cases:
    - Login with username only.
    - Login with password only.
