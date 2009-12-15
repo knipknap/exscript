@@ -20,6 +20,7 @@ _aix_re        = re.compile(r'AIX')
 _huawei_re     = re.compile(r'huawei',                         _flags)
 _ios_user_re   = re.compile(r'user ?name:',                    _flags)
 _xr_prompt_re  = re.compile(r'RP/\d+/\w+/CPU\d+:[^#]+[#>] ?$', _flags)
+_junos_re      = re.compile(r'\bjunos\b',                      _flags)
 _junos_user_re = re.compile(r'[\r\n]login: ',                  _flags)
 _unix_user_re  = re.compile(r'(user|login): ',                 _flags)
 _pass_re       = re.compile(r'password:? ',                    _flags)
@@ -27,12 +28,12 @@ _pass_re       = re.compile(r'password:? ',                    _flags)
 # Matches before the authentication is complete.
 auth_os_map = ((_huawei_re,     'vrp',    80),
                (_ios_user_re,   'ios',    60),
-               (_xr_prompt_re,  'ios_xr', 95),
+               (_junos_re,      'junos',  80),
                (_junos_user_re, 'junos',  35),
                (_aix_re,        'shell',  70),
                (_unix_user_re,  'shell',  30))
 
-# Matches later.
+# Matches anytime.
 os_map = ((_xr_prompt_re,  'ios_xr', 95),)
 
 class OsGuesser(StreamAnalyzer):
@@ -44,13 +45,11 @@ class OsGuesser(StreamAnalyzer):
 
     def data_received(self, data):
         if self.conn.is_authenticated():
+            if self.get('os', 80) in ('unknown', None):
+                self.set_from_match('os', os_map, data)
             return
         self.auth_buffer += data
         if self.debug:
             print "DEBUG: Matching buffer:", repr(self.auth_buffer)
         self.set_from_match('os', auth_os_map, self.auth_buffer)
-
-    def response_received(self):
-        if not self.conn.is_authenticated():
-            return
-        self.set_from_match('os', os_map, self.conn.response)
+        self.set_from_match('os', os_map,      self.auth_buffer)

@@ -1,1 +1,19 @@
+* Test the Transport wait parameters in several cases:
+   - Login with username only.
+   - Login with password only.
+   - Login with both.
+   - Login with key.
+* Add a way for redirecting output channels.
+* Test verbosity by monitoring the output channels for the following cases:
+  (S = status bar,
+   L = live conversation,
+   E = errors,
+   ! = errors with tracebacks,
+   F = fatal errors with tracebacks)
+     - verbose = -1: stdout = None, stderr = F
+     - verbose =  0: stdout = None, stderr = EF
+     - verbose =  1, hosts = 1: stdout = M, stderr = EF
+     - verbose =  1, hosts = n: stdout = S, stderr = EF
+     - verbose =  2, hosts = 1: stdout = M, stderr = !F
+     - verbose =  2, hosts = n: stdout = S, stderr = !F
 * Create more stdlib tests like tests/templates/stdlib.crypt/.

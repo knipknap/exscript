@@ -109,7 +109,8 @@ def autologin(function, wait = True):
     @return: The wrapped function.
     """
     def decorated(conn, *args, **kwargs):
-        conn.authenticate(wait = wait)
+        conn.authenticate(wait = True)
+        conn.auto_authorize(wait = wait)
         result = function(conn, *args, **kwargs)
         conn.close(force = True)
         return result

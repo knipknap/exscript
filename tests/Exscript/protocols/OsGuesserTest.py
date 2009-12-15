@@ -35,7 +35,7 @@ user@testhost> ''',
 
 (Banner goes here)
 
-at 'testhost.t' port '/dev/vty1' from '153.17.33.135'
+at 'testhost.t' port '/dev/vty1' from '10.0.0.1'
 
 Username: sab
 s/key 9796 en29000000

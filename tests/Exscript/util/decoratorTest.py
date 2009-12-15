@@ -12,7 +12,11 @@ class FakeConnection(object):
 
     def authenticate(self, wait):
         self.authenticated = True
-        self.auth_waited   = wait
+        self.authe_waited  = wait
+
+    def auto_authorize(self, wait):
+        self.authorized   = True
+        self.autho_waited = wait
 
     def close(self, force):
         self.open         = False
@@ -66,7 +70,7 @@ class decoratorTest(unittest.TestCase):
 
     def autologin_cb(self, conn, *args, **kwargs):
         self.assert_(conn.authenticated == True)
-        self.assert_(conn.auth_waited == False)
+        self.assert_(conn.autho_waited == False)
         return self.connect_cb(conn, *args, **kwargs)
 
     def testAutologin(self):
