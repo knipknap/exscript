@@ -18,6 +18,7 @@ sys.path.append('src')
 from optparse                import OptionParser, Option, OptionValueError
 from Exscript                import Queue, Account, Host, __version__
 from Exscript.util           import template
+from Exscript.util.cast      import to_list
 from Exscript.util.interact  import get_login
 from Exscript.util.file      import get_accounts_from_file, \
                                     get_hosts_from_file, \
@@ -42,15 +43,15 @@ def expand_bracket(value_name, value):
 
 def expand_host_variables(host):
     # Define host-specific variables.
-    for key, val in host.vars.iteritems():
-        try:
-            val = val[0]
-        except:
-            val = None
-        if not isinstance(val, str):
-            continue
-        val = expand_bracket(key, val)
-        host.set(key, [val])
+    for key, value in host.vars.iteritems():
+        if isinstance(value, str):
+            value = expand_bracket(key, value)
+        elif hasattr(value, '__iter__'):
+            for n in range(len(value)):
+                if not isinstance(value[n], str):
+                    continue
+                value[n] = expand_bracket(key, value[n])
+        host.set(key, value)
 
 def run():
     # Parse options.
