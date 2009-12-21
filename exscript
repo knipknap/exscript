@@ -119,8 +119,12 @@ def run():
     {end}'''
 
     # Test whether the template compiles.
+    vars = options.define.copy()
+    if filename:
+        vars['__filename__'] = filename
+    vars.update(hosts[0].vars)
     try:
-        template.test(script_content, **options.define)
+        template.test(script_content, **vars)
     except Exception, e:
         if options.parser_verbose > 0:
             raise

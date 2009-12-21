@@ -21,3 +21,4 @@
      - verbose =  2, hosts = 1: stdout = M, stderr = !F
      - verbose =  2, hosts = n: stdout = S, stderr = !F
 * Create more stdlib tests like tests/templates/stdlib.crypt/.
+* Test the exscript executable.
