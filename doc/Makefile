@@ -88,6 +88,6 @@ publish: apidocs
 	&& mv ../api/ . \
 	&& git add api \
 	&& git commit -nam "Update API docs (automatically by doc/Makefile)." \
-	&& git push
+	&& git push origin gh-pages
 	git push github gh-pages
 	make clean
