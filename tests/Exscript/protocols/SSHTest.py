@@ -15,9 +15,9 @@ class SSHTest(TransportTest):
 
     def testAuthorize(self):
         self.doAuthenticate(wait = False)
-        self.assertEqual(self.transport.response, None)  # Because wait = False
+        old_response = self.transport.response
         self.doAuthorize()  # Stub in SSH, no change in transport.response
-        self.assertEqual(self.transport.response, None)
+        self.assertEqual(self.transport.response, old_response)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(SSHTest)
