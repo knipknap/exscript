@@ -55,7 +55,7 @@ class ActionTest(unittest.TestCase):
 
     def testExecute(self):
         action = Action()
-        self.assertRaises(Exception, action.execute)
+        action.execute()
 
         data   = {'sum': 0, 'randsum': 0}
         action = TestAction(threading.Lock(), data)

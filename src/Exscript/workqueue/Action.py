@@ -41,4 +41,4 @@ class Action(Trackable):
         """
         This method should be overwritten and made to do the actual work.
         """
-        raise AbstractMethod()
+        pass
