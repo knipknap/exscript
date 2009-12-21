@@ -86,8 +86,7 @@ class Transport(Trackable):
 
         @type  kwargs: dict
         @param kwargs: The following arguments are supported:
-          - echo: Whether to echo the device response to the terminal. The 
-          default is False.
+          - stdout: Where to write the device response. Defaults to os.devnull.
           - debug: An integer between 0 (no debugging) and 5 (very verbose 
           debugging) that specifies the amount of debug info sent to the 
           terminal. The default value is 0.
@@ -104,7 +103,7 @@ class Transport(Trackable):
         self.host               = kwargs.get('host',     None)
         self.user               = kwargs.get('user',     '')
         self.password           = kwargs.get('password', '')
-        self.echo               = kwargs.get('echo',     0)
+        self.stdout             = kwargs.get('stdout', open('/dev/null', 'w'))
         self.debug              = kwargs.get('debug',    0)
         self.timeout            = kwargs.get('timeout',  30)
         self.logfile            = kwargs.get('logfile',  None)
@@ -142,9 +141,8 @@ class Transport(Trackable):
     def _receive_cb(self, data, **kwargs):
         data = data.replace(chr(13) + chr(0), '')
         text = data.replace('\r', '')
-        if self.echo:
-            sys.stdout.write(text)
-            sys.stdout.flush()
+        self.stdout.write(text)
+        self.stdout.flush()
         if self.log is not None:
             self.log.write(text)
         self.os_guesser.data_received(data)

@@ -13,13 +13,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, traceback
-from workqueue             import Action
-from Log                   import Log
-from Logfile               import Logfile
-from Connection            import Connection
-from protocols.Exception   import LoginFailure
-from parselib.Exception    import SyntaxError
-from interpreter.Exception import FailException
+from workqueue           import Action
+from Log                 import Log
+from Logfile             import Logfile
+from Connection          import Connection
+from protocols.Exception import LoginFailure
 
 True  = 1
 False = 0
@@ -78,20 +76,14 @@ class HostAction(Action):
                 self.signal_emit('aborted', self, e)
                 self.login_failures += 1
                 continue
-            except (FailException, SyntaxError), e:
-                # This exception is raised if a user used the "fail"
-                # keyword in a template; this should always cause the action
-                # to fail, without retry.
-                self.signal_emit('aborted', self, e)
-                self.failures += 1
-                return
             except Exception, e:
                 self.signal_emit('aborted', self, e)
                 self.failures += 1
+                if not self.queue._is_recoverable_error(e):
+                    return
                 continue
 
             self.signal_emit('succeeded', self)
             return
 
         # Ending up here the function finally failed.
-        raise

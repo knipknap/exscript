@@ -2,11 +2,12 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 import shutil, time
-from tempfile                import mkdtemp
-from Exscript                import Queue, Account
-from Exscript.Connection     import Connection
-from Exscript.protocols      import Dummy
-from Exscript.util.decorator import bind
+from tempfile                       import mkdtemp
+from Exscript                       import Queue, Account
+from Exscript.Connection            import Connection
+from Exscript.protocols             import Dummy
+from Exscript.interpreter.Exception import FailException
+from Exscript.util.decorator        import bind
 
 def count_calls(conn, data, **kwargs):
     assert kwargs.has_key('testarg')
@@ -23,34 +24,104 @@ def spawn_subtask(conn, data, **kwargs):
 def do_nothing(conn):
     pass
 
-class IntentionalError(Exception):
+def say_hello(conn):
+    conn.send('hello')
+
+def error(conn):
+    say_hello(conn)
+    raise FailException('intentional error')
+
+def fatal_error(conn):
+    say_hello(conn)
+    raise Exception('intentional fatal error')
+
+class MyProtocol(Dummy):
     pass
 
-class ErrorProtocol(Dummy):
-    def __init__(self, *args, **kwargs):
-        raise IntentionalError('intentionally broken')
+def raise_if_not_myprotocol(conn):
+    if not isinstance(conn, MyProtocol):
+        raise Exception('not a MyProtocol instance')
+
+class Log(object):
+    data = ''
+
+    def write(self, data):
+        self.data += data
+
+    def flush(self):
+        pass
+
+    def read(self):
+        return self.data
 
 class QueueTest(unittest.TestCase):
     CORRELATE = Queue
 
+    def createQueue(self, **kwargs):
+        self.out     = Log()
+        self.err     = Log()
+        self.queue   = Queue(stdout = self.out, stderr = self.err, **kwargs)
+
     def setUp(self):
         self.tempdir = mkdtemp()
-        self.queue   = Queue(verbose     = -1,
-                             max_threads = 1,
-                             logdir      = self.tempdir)
+        self.createQueue(verbose = -1, logdir = self.tempdir)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
+    def assertVerbosity(self, channel, expected):
+        if expected == 'no_tb':
+            self.assert_('error' in channel.read(), channel.read())
+            self.assert_('Traceback' not in channel.read())
+        elif expected == 'tb':
+            self.assert_('error' in channel.read(), channel.read())
+            self.assert_('Traceback' in channel.read())
+        elif expected == '':
+            self.assertEqual(channel.read(), '')
+        else:
+            self.assert_(expected in channel.read(), channel.read())
+
     def testConstructor(self):
-        queue = Queue()
+        self.assertEqual(1, self.queue.get_max_threads())
+
+        # Test all verbosity levels.
+        levels = (
+            (-1, 1, ('',      ''), ('',      ''),      ('',      'tb')),
+            (-1, 2, ('',      ''), ('',      ''),      ('',      'tb')),
+            (0,  1, ('',      ''), ('',      'no_tb'), ('',      'tb')),
+            (0,  2, ('',      ''), ('',      'no_tb'), ('',      'tb')),
+            (1,  1, ('hello', ''), ('hello', 'no_tb'), ('hello', 'tb')),
+            (1,  2, ('[',     ''), ('[',     'no_tb'), ('[',     'tb')),
+            (2,  1, ('hello', ''), ('hello', 'tb'),    ('hello', 'tb')),
+            (2,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
+            (3,  1, ('hello', ''), ('hello', 'tb'),    ('hello', 'tb')),
+            (3,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
+        )
+        for level, max_threads, with_simple, with_error, with_fatal in levels:
+            stdout, stderr = with_simple
+            self.createQueue(verbose = level, max_threads = max_threads)
+            self.queue.run('dummy:mytest', say_hello)
+            self.queue.join()
+            self.assertVerbosity(self.out, stdout)
+            self.assertVerbosity(self.err, stderr)
+
+            stdout, stderr = with_error
+            self.createQueue(verbose = level, max_threads = max_threads)
+            self.queue.run('dummy:mytest', error)
+            self.queue.join()
+            self.assertVerbosity(self.out, stdout)
+            self.assertVerbosity(self.err, stderr)
+
+            stdout, stderr = with_fatal
+            self.createQueue(verbose = level, max_threads = max_threads)
+            self.queue.run('dummy:mytest', fatal_error)
+            self.queue.join()
+            self.assertVerbosity(self.out, stdout)
+            self.assertVerbosity(self.err, stderr)
 
     def testAddProtocol(self):
-        self.queue.add_protocol('error', ErrorProtocol)
-        host = 'error:test'
-        # Since the exception happens in a child thread, it should not affect
-        # the queue.
-        self.queue.run(host, object)
+        self.queue.add_protocol('test', MyProtocol)
+        self.queue.run('test:mytest', raise_if_not_myprotocol)
         self.queue.join()
 
     def testSetMaxThreads(self):

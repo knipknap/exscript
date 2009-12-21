@@ -13,9 +13,9 @@ class ConnectionTest(DummyTest):
     CORRELATE = Connection
 
     def createTransport(self):
-        self.queue     = Queue()
+        self.queue     = Queue(verbose = 0)
         self.host      = Host('dummy:localhost')
-        self.transport = Connection(self.queue, self.host, echo = 0)
+        self.transport = Connection(self.queue, self.host)
         self.account   = Account('user', 'test')
         self.queue.add_account(self.account)
 

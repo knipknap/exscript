@@ -13,12 +13,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, re, time, signal, gc, copy, traceback
-from SpiffSignal    import Trackable
-from AccountManager import AccountManager
-from HostAction     import HostAction
-from FileLogger     import FileLogger
-from workqueue      import WorkQueue
-from util.cast      import to_list, to_hosts
+from SpiffSignal           import Trackable
+from AccountManager        import AccountManager
+from HostAction            import HostAction
+from FileLogger            import FileLogger
+from workqueue             import WorkQueue
+from util.cast             import to_list, to_hosts
+from parselib.Exception    import SyntaxError
+from interpreter.Exception import FailException
 
 True  = 1
 False = 0
@@ -36,7 +38,25 @@ class Queue(Trackable):
 
     def __init__(self, **kwargs):
         """
-        Constructor.
+        Constructor. Depending on the verbosity level, the following types
+        of output are written to stdout/stderr (or to whatever else is
+        passed in the stdout/stderr arguments):
+
+          - S = status bar
+          - L = live conversation
+          - D = debug messages
+          - E = errors
+          - ! = errors with tracebacks
+          - F = fatal errors with tracebacks
+
+        The output types are mapped depending on the verbosity as follows:
+
+          - verbose = -1: stdout = None, stderr = F
+          - verbose =  0: stdout = None, stderr = EF
+          - verbose =  1, max_threads = 1: stdout = L, stderr = EF
+          - verbose =  1, max_threads = n: stdout = S, stderr = EF
+          - verbose >=  2, max_threads = 1: stdout = DL, stderr = !F
+          - verbose >=  2, max_threads = n: stdout = DS, stderr = !F
 
         @type  kwargs: dict
         @param kwargs: The following options are supported:
@@ -49,6 +69,8 @@ class Queue(Trackable):
             - overwrite_logs: Whether existing logfiles are overwritten.
             - delete_logs: Whether successful logfiles are deleted.
             - protocol_args: dict, passed to the protocol adapter as kwargs.
+            - stdout: The output channel, defaults to sys.stdout.
+            - stderr: The error channel, defaults to sys.stderr.
         """
         Trackable.__init__(self)
         self.workqueue         = WorkQueue()
@@ -58,13 +80,16 @@ class Queue(Trackable):
         self.times             = kwargs.get('times',          1)
         self.login_times       = kwargs.get('login_times',    1)
         self.protocol_args     = kwargs.get('protocol_args',  {})
+        self.stdout            = kwargs.get('stdout',         sys.stdout)
+        self.stderr            = kwargs.get('stderr',         sys.stderr)
+        self.devnull           = open('/dev/null', 'w') # Use open(os.devnull, 'w') in Python >= 2.4
+        self.channel_map       = {'fatal_errors': self.stderr,
+                                  'debug':        self.stdout}
         self.completed         = 0
         self.total             = 0
-        self.show_status_bar   = True
         self.status_bar_length = 0
         self.protocol_map      = self.built_in_protocols.copy()
         self.set_max_threads(kwargs.get('max_threads', 1))
-        self.workqueue.set_debug(max(0, kwargs.get('verbose', 1) - 1))
 
         # Enable logging.
         if kwargs.get('logdir'):
@@ -81,21 +106,56 @@ class Queue(Trackable):
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
 
 
+    def _update_verbosity(self):
+        if self.verbose < 0:
+            self.channel_map['status_bar'] = self.devnull
+            self.channel_map['connection'] = self.devnull
+            self.channel_map['errors']     = self.devnull
+            self.channel_map['tracebacks'] = self.devnull
+        elif self.verbose == 0:
+            self.channel_map['status_bar'] = self.devnull
+            self.channel_map['connection'] = self.devnull
+            self.channel_map['errors']     = self.stderr
+            self.channel_map['tracebacks'] = self.devnull
+        elif self.verbose == 1 and self.get_max_threads() == 1:
+            self.channel_map['status_bar'] = self.devnull
+            self.channel_map['connection'] = self.stdout
+            self.channel_map['errors']     = self.stderr
+            self.channel_map['tracebacks'] = self.devnull
+        elif self.verbose == 1:
+            self.channel_map['status_bar'] = self.stdout
+            self.channel_map['connection'] = self.devnull
+            self.channel_map['errors']     = self.stderr
+            self.channel_map['tracebacks'] = self.devnull
+        elif self.verbose >= 2 and self.get_max_threads() == 1:
+            self.channel_map['status_bar'] = self.devnull
+            self.channel_map['connection'] = self.stdout
+            self.channel_map['errors']     = self.stderr
+            self.channel_map['tracebacks'] = self.stderr
+        elif self.verbose >= 2:
+            self.channel_map['status_bar'] = self.stdout
+            self.channel_map['connection'] = self.devnull
+            self.channel_map['errors']     = self.stderr
+            self.channel_map['tracebacks'] = self.stderr
+
+
+    def _get_channel(self, channel):
+        return self.channel_map[channel]
+
+
+    def _write(self, channel, msg):
+        self.channel_map[channel].write(msg)
+        self.channel_map[channel].flush()
+
+
     def _del_status_bar(self):
         if self.status_bar_length == 0:
             return
-        sys.stdout.write('\b \b' * self.status_bar_length)
-        sys.stdout.flush()
+        self._write('status_bar', '\b \b' * self.status_bar_length)
         self.status_bar_length = 0
 
 
     def _print_status_bar(self):
-        if self.verbose == 0:
-            return
-        if not self.show_status_bar:
-            return
-        if self.workqueue.get_max_threads() == 1:
-            return
         if self.total == 0:
             return
         percent  = 100.0 / self.total * self.completed
@@ -103,14 +163,13 @@ class Queue(Trackable):
         actions  = self.workqueue.get_running_actions()
         running  = '|'.join([a.name for a in actions])
         text     = 'In progress: [%s] %s' % (running, progress)
-        sys.stdout.write(text)
-        sys.stdout.flush()
+        self._write('status_bar', text)
         self.status_bar_length = len(text)
 
 
     def _print(self, msg):
         self._del_status_bar()
-        sys.stdout.write(msg + '\n')
+        self._write('debug', msg + '\n')
         self._print_status_bar()
 
 
@@ -119,39 +178,39 @@ class Queue(Trackable):
             return
         self._print(msg)
 
-
     def _on_job_started(self, job):
-        if self.workqueue.get_max_threads() == 1:
-            return
-        if not self.show_status_bar:
-            self._dbg(1, job.getName() + ' started.')
-        else:
-            self._del_status_bar()
-            self._print_status_bar()
+        self._del_status_bar()
+        self._print_status_bar()
 
 
     def _on_job_succeeded(self, job):
         self.completed += 1
-        if self.workqueue.get_max_threads() == 1:
-            return
-        self._dbg(1, job.getName() + ' succeeded.')
+        self._write('status_bar', job.getName() + ' succeeded.\n')
+
+
+    def _is_recoverable_error(self, exc):
+        for cls in (SyntaxError, FailException):
+            if isinstance(exc, cls):
+                return False
+        return True
+
+
+    def _on_action_aborted(self, action, e):
+        self.completed += 1
+        msg = action.get_name() + ' aborted: ' + str(e) + '\n'
+        tb  = ''.join(traceback.format_exception(*sys.exc_info()))
+        self._write('errors',     msg)
+        self._write('tracebacks', tb)
+        if self._is_recoverable_error(e):
+            self._write('fatal_errors', tb)
 
 
     def _on_job_aborted(self, job, e):
-        self.completed += 1
-        self._dbg(0, job.getName() + ' aborted: ' + str(e))
-        if self.workqueue.get_max_threads() == 1:
-            return
-
-
-    def _enqueue_action(self, action):
-        self.total += 1
-        self.workqueue.enqueue(action)
-
-
-    def _priority_enqueue_action(self, action, force = False):
-        self.total += 1
-        self.workqueue.priority_enqueue(action, force)
+        """
+        Should, in theory, never be called, as HostAction never raises.
+        In other words, the workqueue does not notice if the action fails.
+        """
+        self._on_action_aborted(job, e)
 
 
     def _get_protocol_from_name(self, name):
@@ -193,6 +252,7 @@ class Queue(Trackable):
         @param n_connections: The maximum number of connections.
         """
         self.workqueue.set_max_threads(n_connections)
+        self._update_verbosity()
 
 
     def get_max_threads(self):
@@ -324,37 +384,29 @@ class Queue(Trackable):
 
     def _run1(self, host, function, prioritize, force):
         # To save memory, limit the number of parsed (=in-memory) items.
-        # A side effect is that we will no longer know the total
-        # number of jobs - to work around this, we first add the total
-        # ourselfes (see above), and then subtract one from the total
-        # each time a new host is appended (see below).
+        #FIXME: A side effect is that the function will not
+        # return until all remaining items are kept in memory.
         n_connections = self.get_max_threads()
         if not force:
             while self.workqueue.get_length() > n_connections * 2:
                 gc.collect()
                 self.workqueue.wait_for_activity()
 
-        # Create the connection. If we are multi threaded, disable echoing
-        # of the conversation to stdout.
+        # Build an object that represents the actual task.
         if not host.get_domain():
             host.set_domain(self.domain)
-        echo          = n_connections == 1 and self.verbose >= 1
-        pargs         = self.protocol_args.copy()
-        pargs['echo'] = echo and pargs.get('echo', True)
-
-        # Build an object that represents the actual task.
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
-        action = HostAction(self, function, host, **pargs)
+        action = HostAction(self, function, host, **self.protocol_args)
         action.set_times(self.times)
         action.set_login_times(self.login_times)
+        action.signal_connect('aborted', self._on_action_aborted)
         self.signal_emit('action_enqueued', action)
 
         # Done. Enqueue this.
         if prioritize:
-            self._priority_enqueue_action(action, force)
+            self.workqueue.priority_enqueue(action, force)
         else:
-            self._enqueue_action(action)
-        self.total -= 1
+            self.workqueue.enqueue(action)
         return action
 
 

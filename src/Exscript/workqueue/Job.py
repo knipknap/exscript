@@ -31,8 +31,6 @@ class Job(threading.Thread):
         self.completed = True
         self.condition.notifyAll()
         self.condition.release()
-        if exception and self.debug > 0:
-            raise
 
     def run(self):
         """
@@ -45,7 +43,7 @@ class Job(threading.Thread):
             self.action.execute()
         except Exception, e:
             self._completed(e)
-            return
+            raise
         self._completed()
 
     def is_alive(self):

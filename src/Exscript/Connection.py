@@ -48,20 +48,20 @@ class Connection(object):
         self.__dict__['last_account'] = None
 
         # Define protocol specific options.
-        protocol = queue._get_protocol_from_name(host.get_protocol())
-        if host.get_protocol() == 'ssh1':
+        protocol_name = host.get_protocol()
+        if protocol_name == 'ssh1':
             kwargs['ssh_version'] = 1
-        elif host.get_protocol() == 'ssh2':
-            kwargs['ssh_version'] = 2
-        else:
-            kwargs['ssh_version'] = None
         if host.get_tcp_port() is not None:
             kwargs['port'] = host.get_tcp_port()
 
         # Create an instance of the protocol adapter.
-        transport = protocol(**kwargs)
+        kwargs['stdout'] = queue._get_channel('connection')
+        protocol         = queue._get_protocol_from_name(protocol_name)
+        transport        = protocol(**kwargs)
         self.__dict__['transport'] = transport
-        if host.get_protocol() == 'pseudo':
+
+        # Define the behaviour of the pseudo protocol adapter.
+        if protocol_name == 'pseudo':
             filename = host.get_address()
             hostname = os.path.basename(filename)
             host.set_name(hostname)
