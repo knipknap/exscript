@@ -5,6 +5,15 @@ from Exscript.protocols.OsGuesser import OsGuesser
 from StreamAnalyzerTest           import StreamAnalyzerTest
 
 login_responses = {
+'one_os': '''
+
+(Banner goes here)
+
+Username:test
+Password:
+
+testhost>''',
+
 'ios': '''
 
 (Banner goes here)
@@ -98,4 +107,3 @@ def suite():
     return unittest.TestLoader().loadTestsFromTestCase(OsGuesserTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())
-

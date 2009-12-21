@@ -18,7 +18,8 @@ from StreamAnalyzer import StreamAnalyzer
 _flags         = re.I | re.M
 _aix_re        = re.compile(r'AIX')
 _huawei_re     = re.compile(r'huawei',                         _flags)
-_ios_user_re   = re.compile(r'user ?name:',                    _flags)
+_oneos_user_re = re.compile(r'[\r\n]Username:[^ ]',            _flags)
+_ios_user_re   = re.compile(r'user ?name: ',                   _flags)
 _xr_prompt_re  = re.compile(r'RP/\d+/\w+/CPU\d+:[^#]+[#>] ?$', _flags)
 _junos_re      = re.compile(r'\bjunos\b',                      _flags)
 _junos_user_re = re.compile(r'[\r\n]login: ',                  _flags)
@@ -27,6 +28,7 @@ _pass_re       = re.compile(r'password:? ',                    _flags)
 
 # Matches before the authentication is complete.
 auth_os_map = ((_huawei_re,     'vrp',    80),
+               (_oneos_user_re, 'one_os', 20),
                (_ios_user_re,   'ios',    60),
                (_junos_re,      'junos',  80),
                (_junos_user_re, 'junos',  35),
