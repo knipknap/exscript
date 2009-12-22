@@ -16,7 +16,7 @@ import re
 from Exscript.parselib import Token
 
 varname_re = re.compile(r'((?:__)?[a-zA-Z][\w_]*(?:__)?)')
-string_re  = re.compile(r'(\\?)\$([\w_]*\b)', re.I)
+string_re  = re.compile(r'(\\?)\$([\w_]*)')
 
 grammar = [
     ('escaped_data', r'\\.'),
@@ -33,7 +33,7 @@ class String(Token):
         # Create a grammar depending on the delimiting character.
         tok_type, delimiter = lexer.token()
         escaped_delimiter   = '\\' + delimiter
-        data                = r'[^\r\n\\' + escaped_delimiter + ']'
+        data                = r'[^\r\n\\' + escaped_delimiter + ']+'
         delimiter_re        = re.compile(escaped_delimiter)
         data_re             = re.compile(data)
         grammar_with_delim  = grammar_c[:]
@@ -68,6 +68,8 @@ class String(Token):
             return '\n'
         elif char == 'r':
             return '\r'
+        elif char == '$': # Escaping is done later, in variable_sub_cb.
+            return token
         return char
 
     def _variable_error(self, field, msg):
@@ -84,8 +86,8 @@ class String(Token):
         value   = self.parent.get(varname)
 
         # Check the variable name syntax.
-        if escape == '\\':
-            return field
+        if escape:
+            return '$' + varname
         if not varname_re.match(varname):
             msg = '%s is not a variable name' % repr(varname)
             self._variable_error(field, msg)

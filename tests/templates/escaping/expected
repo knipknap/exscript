@@ -1,0 +1,9 @@
+Username: sab
+escaping:0> test number one: $a test$
+escaping:0> test number two: \another test
+escaping:0> test number three: \another test\
+escaping:0> execline1 $another $test \
+escaping:0> "execline2 another test"
+escaping:0> execline3 $another $test 
+
+escaping:0> 
