@@ -12,7 +12,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, os, re, time, signal, gc, copy, traceback
+import sys, os, gc, copy, traceback
+import SigIntWatcher
 from SpiffSignal           import Trackable
 from AccountManager        import AccountManager
 from HostAction            import HostAction
@@ -361,27 +362,6 @@ class Queue(Trackable):
         self.status_bar_length = 0
 
 
-    def _catch_sigint_and_run(self, function, *data, **kwargs):
-        """
-        Makes sure that we shut down properly even when SIGINT or SIGTERM
-        is sent.
-        """
-        def on_posix_signal(signum, frame):
-            print '********** SIGINT RECEIVED - SHUTTING DOWN! **********'
-            raise KeyboardInterrupt
-
-        if self.workqueue.get_length() == 0:
-            signal.signal(signal.SIGINT,  on_posix_signal)
-            signal.signal(signal.SIGTERM, on_posix_signal)
-
-        try:
-            return function(*data, **kwargs)
-        except KeyboardInterrupt:
-            print 'Interrupt caught succcessfully.'
-            print '%d unfinished jobs.' % (self.total - self.completed)
-            sys.exit(1)
-
-
     def _run1(self, host, function, prioritize, force):
         # To save memory, limit the number of parsed (=in-memory) items.
         #FIXME: A side effect is that the function will not
@@ -441,7 +421,7 @@ class Queue(Trackable):
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._catch_sigint_and_run(self._run, hosts, function)
+        return self._run(hosts, function)
 
 
     def priority_run(self, hosts, function):
