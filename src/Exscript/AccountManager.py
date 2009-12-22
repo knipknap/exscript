@@ -13,7 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
-from Account import Account
+from Exscript.util.cast import to_list
+from Account            import Account
 
 class AccountManager(object):
     """
@@ -60,9 +61,7 @@ class AccountManager(object):
         @param accounts: The account to be added.
         """
         self.unlock_cond.acquire()
-        if isinstance(accounts, Account):
-            accounts = [accounts]
-        for account in accounts:
+        for account in to_list(accounts):
             account.signal_connect('acquire_before',
                                    self._on_account_acquire_before)
             account.signal_connect('released', self._on_account_released)
@@ -79,9 +78,7 @@ class AccountManager(object):
         @type  accounts: Account|list[Account]
         @param accounts: The accounts to be removed.
         """
-        if isinstance(accounts, Account):
-            accounts = [accounts]
-        for account in accounts:
+        for account in to_list(accounts):
             assert account in self.accounts
             assert account in self.unlocked_accounts
             account.signal_disconnect('acquire_before',
