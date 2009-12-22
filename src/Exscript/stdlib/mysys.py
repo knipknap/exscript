@@ -81,11 +81,12 @@ def run(scope, hostnames, filename):
         hosts.append(host)
 
     # Enqueue the new jobs.
-    strip = scope.parser.strip_command
-    job   = bind(util.template.eval_file, filename, strip)
-    queue = scope.get('__connection__').get_queue()
-    task  = queue.force_run(hosts, autologin(job))
-    queue.wait_for(task)
+    strip  = scope.parser.strip_command
+    job    = bind(util.template.eval_file, filename, strip)
+    queue  = scope.get('__connection__').get_queue()
+    action = scope.get('__connection__').get_action()
+    task   = queue.force_run(hosts, autologin(job))
+    action.wait_for(task)
     return True
 
 def wait(scope, seconds):

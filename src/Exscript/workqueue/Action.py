@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.AbstractMethod       import AbstractMethod
+from Exscript.util.cast            import to_list
 
 True  = 1
 False = 0
@@ -34,8 +35,18 @@ class Action(Trackable):
                  name: A human readable name for the action (string).
         """
         Trackable.__init__(self)
-        self.debug = kwargs.get('debug', 0)
-        self.name  = kwargs.get('name',  None)
+        self.debug      = kwargs.get('debug', 0)
+        self.name       = kwargs.get('name',  None)
+        self.__mainloop = None
+
+    def _mainloop_added_notify(self, loop):
+        self.__mainloop = loop
+
+    def wait_for(self, actions):
+        self.__mainloop._action_sleep_notify(self)
+        for action in to_list(actions):
+            self.__mainloop.wait_for(action)
+        self.__mainloop._action_wake_notify(self)
 
     def execute(self):
         """

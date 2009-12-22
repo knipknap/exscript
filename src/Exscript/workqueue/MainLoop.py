@@ -23,19 +23,35 @@ class MainLoop(Trackable, threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         Trackable.__init__(self)
-        self.queue        = []
-        self.force_start  = []
-        self.running_jobs = []
-        self.paused       = True
-        self.shutdown_now = False
-        self.max_threads  = 1
-        self.condition    = threading.Condition()
-        self.debug        = 0
+        self.queue            = []
+        self.force_start      = []
+        self.running_jobs     = []
+        self.sleeping_actions = []
+        self.paused           = True
+        self.shutdown_now     = False
+        self.max_threads      = 1
+        self.condition        = threading.Condition()
+        self.debug            = 0
         self.setDaemon(1)
 
     def _dbg(self, level, msg):
         if self.debug >= level:
             print msg
+
+    def _action_sleep_notify(self, action):
+        assert self.in_progress(action)
+        self.condition.acquire()
+        self.sleeping_actions.append(action)
+        self.condition.notifyAll()
+        self.condition.release()
+
+    def _action_wake_notify(self, action):
+        assert self.in_progress(action)
+        assert action in self.sleeping_actions
+        self.condition.acquire()
+        self.sleeping_actions.remove(action)
+        self.condition.notifyAll()
+        self.condition.release()
 
     def get_max_threads(self):
         return self.max_threads
@@ -48,12 +64,14 @@ class MainLoop(Trackable, threading.Thread):
         self.condition.release()
 
     def enqueue(self, action):
+        action._mainloop_added_notify(self)
         self.condition.acquire()
         self.queue.append(action)
         self.condition.notifyAll()
         self.condition.release()
 
     def priority_enqueue(self, action, force_start = False):
+        action._mainloop_added_notify(self)
         self.condition.acquire()
         if force_start:
             self.force_start.append(action)
@@ -174,7 +192,8 @@ class MainLoop(Trackable, threading.Thread):
                 continue
 
             # Wait until we have less than the maximum number of threads.
-            if len(self.running_jobs) >= self.max_threads:
+            active = len(self.running_jobs) - len(self.sleeping_actions)
+            if active >= self.max_threads:
                 self.condition.wait()
                 continue
 
