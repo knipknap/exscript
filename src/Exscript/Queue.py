@@ -197,13 +197,17 @@ class Queue(Trackable):
 
 
     def _on_action_aborted(self, action, e):
-        self.completed += 1
         msg = action.get_name() + ' aborted: ' + str(e)
         tb  = ''.join(traceback.format_exception(*sys.exc_info()))
         self._print('errors',     msg)
         self._print('tracebacks', tb)
         if self._is_recoverable_error(e):
             self._print('fatal_errors', tb)
+
+
+    def _on_action_give_up(self, action):
+        self.completed += 1
+        self._print('errors', action.get_name() + ' finally failed.')
 
 
     def _on_job_aborted(self, job, e):
@@ -380,6 +384,7 @@ class Queue(Trackable):
         action.set_times(self.times)
         action.set_login_times(self.login_times)
         action.signal_connect('aborted', self._on_action_aborted)
+        action.signal_connect('give_up', self._on_action_give_up)
         self.signal_emit('action_enqueued', action)
 
         # Done. Enqueue this.

@@ -86,10 +86,11 @@ class HostAction(Action):
                 self.signal_emit('aborted', self, e)
                 self.failures += 1
                 if not self.queue._is_recoverable_error(e):
-                    return
+                    break
                 continue
 
             self.signal_emit('succeeded', self)
             return
 
         # Ending up here the function finally failed.
+        self.signal_emit('give_up', self)
