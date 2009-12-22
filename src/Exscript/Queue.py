@@ -167,16 +167,16 @@ class Queue(Trackable):
         self.status_bar_length = len(text)
 
 
-    def _print(self, msg):
+    def _print(self, channel, msg):
         self._del_status_bar()
-        self._write('debug', msg + '\n')
+        self._write(channel, msg + '\n')
         self._print_status_bar()
 
 
     def _dbg(self, level, msg):
         if level > self.verbose:
             return
-        self._print(msg)
+        self._print('debug', msg)
 
     def _on_job_started(self, job):
         self._del_status_bar()
@@ -185,7 +185,7 @@ class Queue(Trackable):
 
     def _on_job_succeeded(self, job):
         self.completed += 1
-        self._write('status_bar', job.getName() + ' succeeded.\n')
+        self._print('status_bar', job.getName() + ' succeeded.')
 
 
     def _is_recoverable_error(self, exc):
@@ -197,12 +197,12 @@ class Queue(Trackable):
 
     def _on_action_aborted(self, action, e):
         self.completed += 1
-        msg = action.get_name() + ' aborted: ' + str(e) + '\n'
+        msg = action.get_name() + ' aborted: ' + str(e)
         tb  = ''.join(traceback.format_exception(*sys.exc_info()))
-        self._write('errors',     msg)
-        self._write('tracebacks', tb)
+        self._print('errors',     msg)
+        self._print('tracebacks', tb)
         if self._is_recoverable_error(e):
-            self._write('fatal_errors', tb)
+            self._print('fatal_errors', tb)
 
 
     def _on_job_aborted(self, job, e):
