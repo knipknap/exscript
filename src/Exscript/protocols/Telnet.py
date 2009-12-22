@@ -62,7 +62,7 @@ class Telnet(Transport):
                 result = self.tn.expect(prompt, self.timeout)
                 which, matches, self.response = result
             except:
-                print 'Telnet.authenticate(): Error while waiting for prompt'
+                self._dbg(1, 'Telnet.authenticate(): Error waiting for prompt')
                 raise
 
             # No match.
@@ -127,7 +127,7 @@ class Telnet(Transport):
         try:
             self.tn.write(data)
         except:
-            print 'Error while writing to connection'
+            self._dbg(1, 'Error while writing to connection')
             raise
 
 
@@ -144,7 +144,7 @@ class Telnet(Transport):
             result, match, response = self.tn.expect([prompt], self.timeout)
             self.response           = response
         except:
-            print 'Error while waiting for %s' % repr(prompt.pattern)
+            self._dbg(1, 'Error while waiting for %s' % repr(prompt.pattern))
             raise
 
         if match:

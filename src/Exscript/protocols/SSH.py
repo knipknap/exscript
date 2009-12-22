@@ -92,10 +92,15 @@ class SSH(Transport):
                 which = self.conn.expect_list(prompt,
                                               self.timeout,
                                               searchwindowsize = 1000)
-            except:
-                print 'Buffer:', repr(self.conn.buffer), \
-                                 repr(self.conn.before), \
-                                 repr(self.conn.after)
+            except pexpect.EOF:
+                response = repr(self.conn.before)
+                msg      = 'SSH.authenticate(): Error waiting for prompt: '
+                raise TransportException(msg + response)
+            except Exception, e:
+                buffer = repr(self.conn.buffer), \
+                         repr(self.conn.before), \
+                         repr(self.conn.after)
+                self._dbg(1, 'SSH.authenticate(): Buffer: ' + buffer)
                 raise
             response = self._remove_esc(self.conn.before + self.conn.after)
 

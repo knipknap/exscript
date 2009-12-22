@@ -194,8 +194,8 @@ class Dummy(Transport):
             try:
                 which, matches, response = self._expect_any(prompt)
             except:
-                print 'Dummy.authenticate(): Error while waiting for prompt'
-                raise
+                msg = 'Dummy.authenticate(): Error waiting for prompt'
+                raise TransportException(msg)
 
             # No match.
             if which < 0:
@@ -291,8 +291,8 @@ class Dummy(Transport):
                 raise Exception('no match')
             result, match, self.response = res
         except:
-            print 'Error while waiting for %s' % repr(prompt.pattern)
-            raise
+            msg = 'Error while waiting for %s' % repr(prompt.pattern)
+            raise TransportException(msg)
 
         if match:
             self._dbg(2, "Got a prompt, match was %s" % repr(match.group()))
