@@ -2,6 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from Exscript                import Host, Queue, Account
+from Exscript.HostAction     import HostAction
 from Exscript.AccountManager import AccountManager
 from Exscript.Connection     import Connection
 from protocols.DummyTest     import DummyTest
@@ -15,7 +16,8 @@ class ConnectionTest(DummyTest):
     def createTransport(self):
         self.queue     = Queue(verbose = 0)
         self.host      = Host('dummy:localhost')
-        self.transport = Connection(self.queue, self.host)
+        self.action    = HostAction(self.queue, object, self.host)
+        self.transport = Connection(self.action)
         self.account   = Account('user', 'test')
         self.queue.add_account(self.account)
 
@@ -30,6 +32,9 @@ class ConnectionTest(DummyTest):
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Connection))
+
+    def testGetAction(self):
+        self.assert_(isinstance(self.transport.get_action(), HostAction))
 
     def testGetQueue(self):
         self.assert_(isinstance(self.transport.get_queue(), Queue))

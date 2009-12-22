@@ -50,6 +50,12 @@ class HostAction(Action):
     def get_name(self):
         return self.name
 
+    def get_queue(self):
+        return self.queue
+
+    def get_host(self):
+        return self.host
+
     def set_times(self, times):
         self.times = int(times)
 
@@ -66,7 +72,7 @@ class HostAction(Action):
         while self.failures < self.times \
           and self.login_failures < self.login_times:
             # Create a new connection.
-            conn = Connection(self.queue, self.host, **self.conn_args)
+            conn = Connection(self, **self.conn_args)
             self.signal_emit('started', self, conn)
 
             # Execute the user-provided function.

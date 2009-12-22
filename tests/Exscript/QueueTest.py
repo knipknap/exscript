@@ -214,16 +214,12 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(6, data['n_calls'])
 
     def testForceRun(self):
-        # By setting max_threads to 0 we ensure that the 'force' part is
-        # actually tested; the thread should run regardless.
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
         func  = bind(count_calls, data, testarg = 1)
 
-        # Since the job (consisting of two connections) spawns a subtask,
-        # we need at least two threads. But both subtasks could be waiting
-        # for one of the parent tasks to complete, so we need at least
-        # *three* threads.
+        # By setting max_threads to 0 we ensure that the 'force' part is
+        # actually tested; the thread should run regardless.
         self.queue.set_max_threads(0)
         self.queue.force_run(hosts, func)
         self.queue.shutdown()

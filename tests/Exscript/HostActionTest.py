@@ -42,6 +42,12 @@ class HostActionTest(unittest.TestCase):
     def testGetName(self):
         self.assertEqual(self.count_action.get_name(), 'testaddress')
 
+    def testGetQueue(self):
+        self.assert_(isinstance(self.count_action.get_queue(), Queue))
+
+    def testGetHost(self):
+        self.assert_(isinstance(self.count_action.get_host(), Host))
+
     def testSetTimes(self):
         # Run once.
         self.fail_action.execute()

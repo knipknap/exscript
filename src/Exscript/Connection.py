@@ -28,26 +28,25 @@ class Connection(object):
     documentation.
     """
 
-    def __init__(self, queue, host, **kwargs):
+    def __init__(self, action, **kwargs):
         """
         Do not call directly; Exscript creates the connection for you and
         passes it to the function that is invoked by Queue.run().
 
-        @type  queue: Queue
-        @param queue: The associated Queue instance.
-        @type  host: Host
-        @param host: The host on which the job is executed.
+        @type  action: HostAction
+        @param action: The associated HostAction instance.
         @type  kwargs: dict
         @param kwargs: For a list of supported options please check the
                        protocol adapter API documentation.
         """
         # Since we override setattr below, we can't access our properties
         # directly.
-        self.__dict__['queue']        = queue
-        self.__dict__['host']         = host
+        self.__dict__['action']       = action
         self.__dict__['last_account'] = None
 
         # Define protocol specific options.
+        queue         = action.get_queue()
+        host          = action.get_host()
         protocol_name = host.get_protocol()
         if protocol_name == 'ssh1':
             kwargs['ssh_version'] = 1
@@ -157,6 +156,15 @@ class Connection(object):
         else:
             raise Exception('Attempt to relase a released account.')
 
+    def get_action(self):
+        """
+        Returns the associated HostAction instance.
+
+        @rtype:  HostAction
+        @return: The associated HostAction instance.
+        """
+        return self.action
+
     def get_queue(self):
         """
         Returns the associated Queue instance.
@@ -164,7 +172,7 @@ class Connection(object):
         @rtype:  Queue
         @return: The associated Queue instance.
         """
-        return self.queue
+        return self.action.get_queue()
 
     def get_account_manager(self):
         """
@@ -173,7 +181,7 @@ class Connection(object):
         @rtype:  AccountManager
         @return: The associated account manager.
         """
-        return self.queue.account_manager
+        return self.get_queue().account_manager
 
     def get_host(self):
         """
@@ -182,14 +190,14 @@ class Connection(object):
         @rtype:  Host
         @return: The Host instance.
         """
-        return self.host
+        return self.action.get_host()
 
     def open(self):
         """
         Opens the connection to the remote host.
         """
-        if not self.transport.connect(self.host.get_address(),
-                                      self.host.get_tcp_port()):
+        if not self.transport.connect(self.get_host().get_address(),
+                                      self.get_host().get_tcp_port()):
             raise Exception('Connection failed.')
 
     def authenticate(self, account = None, wait = False, lock = True):
