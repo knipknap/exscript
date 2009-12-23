@@ -45,7 +45,17 @@ class Logger(QueueListener):
                 successful.append(action)
         return successful
 
-    def get_failed_actions(self):
+    def get_error_actions(self):
+        """
+        Returns a list of all actions that have at least one error.
+        """
+        failed = []
+        for action in self.done:
+            if not [l for l in self.logs[action] if not l.has_error()]:
+                failed.append(action)
+        return failed
+
+    def get_aborted_actions(self):
         """
         Returns a list of all actions that were never completed successfully.
         """
@@ -75,11 +85,9 @@ class Logger(QueueListener):
         log.started(conn)
         self._add_log(action, log)
 
-    def _on_action_aborted(self, action, e):
+    def _on_action_error(self, action, e):
         log = self._get_log(action)
-        if action not in self.done:
-            self.done.append(action)
-        log.aborted(e)
+        log.error(e)
 
     def _on_action_succeeded(self, action):
         log = self._get_log(action)
@@ -87,7 +95,14 @@ class Logger(QueueListener):
             self.done.append(action)
         log.succeeded()
 
+    def _on_action_aborted(self, action):
+        log = self._get_log(action)
+        if action not in self.done:
+            self.done.append(action)
+        log.aborted()
+
     def _action_enqueued(self, action):
         action.signal_connect('started',   self._on_action_started)
-        action.signal_connect('aborted',   self._on_action_aborted)
+        action.signal_connect('error',     self._on_action_error)
         action.signal_connect('succeeded', self._on_action_succeeded)
+        action.signal_connect('aborted',   self._on_action_aborted)

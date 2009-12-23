@@ -79,11 +79,11 @@ class HostAction(Action):
             try:
                 self.function(conn)
             except LoginFailure, e:
-                self.signal_emit('aborted', self, e)
+                self.signal_emit('error', self, e)
                 self.login_failures += 1
                 continue
             except Exception, e:
-                self.signal_emit('aborted', self, e)
+                self.signal_emit('error', self, e)
                 self.failures += 1
                 if not self.queue._is_recoverable_error(e):
                     break
@@ -93,4 +93,4 @@ class HostAction(Action):
             return
 
         # Ending up here the function finally failed.
-        self.signal_emit('give_up', self)
+        self.signal_emit('aborted', self)

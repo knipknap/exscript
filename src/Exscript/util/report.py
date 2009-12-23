@@ -24,8 +24,8 @@ def _get_action_name(action, retry = 0):
 def _get_successful_logs_from_action(logger, action):
     return [l for l in logger.get_logs(action) if not l.has_aborted()]
 
-def _get_failed_logs_from_action(logger, action):
-    return [l for l in logger.get_logs(action) if l.has_aborted()]
+def _get_error_logs_from_action(logger, action):
+    return [l for l in logger.get_logs(action) if l.has_error()]
 
 def status(logger):
     """
@@ -38,8 +38,8 @@ def status(logger):
     @return: A string summarizing the status.
     """
     total     = len(logger.get_logged_actions())
-    failed    = len(logger.get_failed_actions())
-    succeeded = total - failed
+    aborted   = len(logger.get_aborted_actions())
+    succeeded = total - aborted
     if total == 0:
         return 'No actions done'
     elif total == 1 and succeeded == 1:
@@ -52,7 +52,7 @@ def status(logger):
         return '%d actions total (all failed)' % total
     else:
         msg = '%d actions total (%d failed, %d succeeded)'
-        return msg % (total, failed, succeeded)
+        return msg % (total, aborted, succeeded)
 
 def summarize(logger):
     """
@@ -91,7 +91,7 @@ def format(logger,
     output = []
 
     # Print failed actions.
-    errors = logger.get_failed_actions()
+    errors = logger.get_aborted_actions()
     if show_errors and errors:
         output += _underline('Failed actions:')
         for action in errors:
@@ -108,7 +108,7 @@ def format(logger,
     if show_successful:
         output += _underline('Successful actions:')
         for action in logger.get_successful_actions():
-            n_errors = len(_get_failed_logs_from_action(logger, action))
+            n_errors = len(_get_error_logs_from_action(logger, action))
             if n_errors == 0:
                 status = ''
             elif n_errors == 1:

@@ -49,17 +49,24 @@ class reportTest(unittest.TestCase):
         conn.signal_emit('data_received', 'hello world')
         return action
 
-    def createAbortedLog(self):
+    def createErrorLog(self):
         action = self.createLog()
         try:
             raise FakeError()
         except Exception, e:
             pass
-        action.signal_emit('aborted', action, e)
+        action.signal_emit('error', action, e)
+        return action
+
+    def createAbortedLog(self):
+        action = self.createErrorLog()
+        action.signal_emit('aborted', action)
+        return action
 
     def createSucceededLog(self):
         action = self.createLog()
         action.signal_emit('succeeded', action)
+        return action
 
     def testStatus(self):
         from Exscript.util.report import status
@@ -92,7 +99,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 55, in createAbortedLog
+  File "%s.py", line 55, in createErrorLog
     raise FakeError()
 FakeError
 

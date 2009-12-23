@@ -24,7 +24,7 @@ def fail_calls(conn, data, exception):
 class HostActionTest(unittest.TestCase):
     CORRELATE = HostAction
 
-    def onFailActionAborted(self, action, e):
+    def onFailActionError(self, action, e):
         self.failed = e
 
     def setUp(self):
@@ -34,7 +34,7 @@ class HostActionTest(unittest.TestCase):
         self.count_action = HostAction(Queue(), self.count_cb, FakeHost())
         self.fail_action  = HostAction(Queue(), self.fail_cb, FakeHost())
         self.failed       = False
-        self.fail_action.signal_connect('aborted', self.onFailActionAborted)
+        self.fail_action.signal_connect('error', self.onFailActionError)
 
     def testConstructor(self):
         action = HostAction(Queue(), self.count_cb, FakeHost())

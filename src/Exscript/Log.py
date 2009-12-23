@@ -20,7 +20,8 @@ class Log(object):
         self.conn      = None
         self.traceback = None
         self.exception = None
-        self.ended     = False
+        self.did_abort = False
+        self.did_end   = False
 
     def __str__(self):
         return self.data
@@ -44,27 +45,34 @@ class Log(object):
         return self.exception.__class__.__name__
 
     def started(self, conn):
-        self.ended = False
-        self.conn  = conn
+        self.did_end = False
+        self.conn    = conn
         self._write('STARTED\n')
         self.conn.signal_connect('data_received', self._write)
 
     def _format_exc(self, exception):
         return ''.join(traceback.format_exception(*sys.exc_info()))
 
-    def aborted(self, exception):
+    def error(self, exception):
         self.traceback = self._format_exc(exception)
         self.exception = exception
-        self.ended     = True
-        self._write('ABORTED:\n')
+        self._write('ERROR:\n')
         self._write(self._format_exc(exception))
 
     def succeeded(self):
-        self.ended = True
+        self.did_end = True
         self._write('SUCCEEDED\n')
 
-    def has_aborted(self):
+    def aborted(self):
+        self.did_end   = True
+        self.did_abort = True
+        self._write('ABORTED\n')
+
+    def has_error(self):
         return self.exception is not None
 
+    def has_aborted(self):
+        return self.did_abort
+
     def has_ended(self):
-        return self.ended
+        return self.did_end

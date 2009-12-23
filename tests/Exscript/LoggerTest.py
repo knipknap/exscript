@@ -65,29 +65,54 @@ class LoggerTest(unittest.TestCase):
             raise FakeError()
         except FakeError, e:
             pass
-        action2.signal_emit('aborted', action2, e)
+        action2.signal_emit('error', action2, e)
+        self.assertEqual(self.logger.get_successful_actions(), [action1])
+        action2.signal_emit('aborted', action2)
         self.assertEqual(self.logger.get_successful_actions(), [action1])
 
-    def testGetFailedActions(self):
-        self.assertEqual(self.logger.get_failed_actions(), [])
+    def testGetErrorActions(self):
+        self.assertEqual(self.logger.get_error_actions(), [])
 
         action = FakeAction()
         conn   = FakeConnection()
         self.logger._action_enqueued(action)
-        self.assertEqual(self.logger.get_failed_actions(), [])
+        self.assertEqual(self.logger.get_error_actions(), [])
 
         action.signal_emit('started', action, conn)
-        self.assertEqual(self.logger.get_failed_actions(), [])
+        self.assertEqual(self.logger.get_error_actions(), [])
 
         action.signal_emit('succeeded', action)
-        self.assertEqual(self.logger.get_failed_actions(), [])
+        self.assertEqual(self.logger.get_error_actions(), [])
 
         try:
             raise FakeError()
         except FakeError, e:
-            pass
-        action.signal_emit('aborted', action, e)
-        self.assertEqual(self.logger.get_failed_actions(), [action])
+            action.signal_emit('error', action, e)
+        self.assertEqual(self.logger.get_error_actions(), [action])
+        action.signal_emit('aborted', action)
+        self.assertEqual(self.logger.get_error_actions(), [action])
+
+    def testGetAbortedActions(self):
+        self.assertEqual(self.logger.get_aborted_actions(), [])
+
+        action = FakeAction()
+        conn   = FakeConnection()
+        self.logger._action_enqueued(action)
+        self.assertEqual(self.logger.get_aborted_actions(), [])
+
+        action.signal_emit('started', action, conn)
+        self.assertEqual(self.logger.get_aborted_actions(), [])
+
+        action.signal_emit('succeeded', action)
+        self.assertEqual(self.logger.get_aborted_actions(), [])
+
+        try:
+            raise FakeError()
+        except FakeError, e:
+            action.signal_emit('error', action, e)
+        self.assertEqual(self.logger.get_aborted_actions(), [])
+        action.signal_emit('aborted', action)
+        self.assertEqual(self.logger.get_aborted_actions(), [action])
 
     def testGetLogs(self):
         self.assertEqual(self.logger.get_logs(), {})

@@ -21,7 +21,7 @@ class LogTest(unittest.TestCase):
         try:
             raise FakeError()
         except FakeError, e:
-            self.log.aborted(e)
+            self.log.error(e)
         self.assert_('FakeError' in self.log.get_error())
 
     def testGetHost(self):
@@ -34,15 +34,20 @@ class LogTest(unittest.TestCase):
         self.log.started(FakeConnection())
         self.assert_(len(str(self.log)) > 0)
 
-    def testAborted(self):
+    def testError(self):
         self.testStarted()
         before = str(self.log)
         try:
             raise FakeError()
         except FakeError, e:
-            self.log.aborted(e)
+            self.log.error(e)
         self.assert_(str(self.log).startswith(before))
         self.assert_('FakeError' in str(self.log), str(self.log))
+
+    def testAborted(self):
+        self.testError()
+        self.log.aborted()
+        self.assert_('ABORTED' in str(self.log), str(self.log))
 
     def testSucceeded(self):
         self.testStarted()
@@ -50,6 +55,16 @@ class LogTest(unittest.TestCase):
         self.log.succeeded()
         self.assert_(str(self.log).startswith(before))
         self.assert_(len(self.log) > len(before))
+
+    def testHasError(self):
+        self.failIf(self.log.has_error())
+        self.testError()
+        self.assert_(self.log.has_error())
+
+    def testHasError2(self):
+        self.failIf(self.log.has_error())
+        self.testSucceeded()
+        self.failIf(self.log.has_error())
 
     def testHasAborted(self):
         self.failIf(self.log.has_aborted())

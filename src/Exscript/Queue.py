@@ -196,8 +196,8 @@ class Queue(Trackable):
         return True
 
 
-    def _on_action_aborted(self, action, e):
-        msg = action.get_name() + ' aborted: ' + str(e)
+    def _on_action_error(self, action, e):
+        msg = action.get_name() + ' error: ' + str(e)
         tb  = ''.join(traceback.format_exception(*sys.exc_info()))
         self._print('errors',     msg)
         self._print('tracebacks', tb)
@@ -205,7 +205,7 @@ class Queue(Trackable):
             self._print('fatal_errors', tb)
 
 
-    def _on_action_give_up(self, action):
+    def _on_action_aborted(self, action):
         self.completed += 1
         self._print('errors', action.get_name() + ' finally failed.')
 
@@ -215,7 +215,7 @@ class Queue(Trackable):
         Should, in theory, never be called, as HostAction never raises.
         In other words, the workqueue does not notice if the action fails.
         """
-        self._on_action_aborted(job, e)
+        self._on_action_error(job, e)
 
 
     def _get_protocol_from_name(self, name):
@@ -383,8 +383,8 @@ class Queue(Trackable):
         action = HostAction(self, function, host, **self.protocol_args)
         action.set_times(self.times)
         action.set_login_times(self.login_times)
+        action.signal_connect('error',   self._on_action_error)
         action.signal_connect('aborted', self._on_action_aborted)
-        action.signal_connect('give_up', self._on_action_give_up)
         self.signal_emit('action_enqueued', action)
 
         # Done. Enqueue this.

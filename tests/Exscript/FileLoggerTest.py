@@ -51,16 +51,20 @@ class FileLoggerTest(LoggerTest):
         content = open(logfile).read()
         self.assertEqual(content, 'hello world')
 
-        # Test "aborted".
+        # Test "error".
         try:
             raise FakeError()
         except Exception, e:
             pass
-        action.signal_emit('aborted', action, e)
+        action.signal_emit('error', action, e)
         self.assert_(os.path.isfile(logfile))
         self.assert_(os.path.isfile(errfile))
         content = open(errfile).read()
         self.assert_('FakeError' in content)
+
+        action.signal_emit('aborted', action)
+        content = open(logfile).read()
+        self.assert_('ABORTED' in content)
 
         # Repeat all of the above, with failures = 1.
         # Test "started".
