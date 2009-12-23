@@ -1,3 +1,5 @@
+* Test the exscript executable.
+* Test Queue constructor kwargs.
 * Opening the connection in authenticate() has a drawback: If the host
   does not respond, the account passed to authenticate() is locked for a
   very long time. So try to make sure to open the connection before that.
@@ -7,4 +9,3 @@
    - Login with both.
    - Login with key.
 * Create more stdlib tests like tests/templates/stdlib.crypt/.
-* Test the exscript executable.
