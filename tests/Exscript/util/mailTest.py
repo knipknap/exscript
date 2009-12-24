@@ -115,9 +115,9 @@ class MailTest(unittest.TestCase):
         pass # see testSetSubject()
 
     def testSetBody(self):
-        self.assertEqual(self.mail.get_body(), '\n')
+        self.assertEqual(self.mail.get_body(), '')
         self.mail.set_body('test')
-        self.assertEqual(self.mail.get_body(), 'test\n')
+        self.assertEqual(self.mail.get_body(), 'test')
 
     def testGetBody(self):
         pass # see testSetBody()

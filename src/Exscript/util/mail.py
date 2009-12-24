@@ -16,6 +16,7 @@
 Sending and formatting emails.
 """
 import os, time, re, socket
+from Exscript.external.SpiffSignal import Trackable
 
 ###########################################################
 # Helpers. (non-public)
@@ -67,7 +68,7 @@ def _render_template(string, **vars):
 ###########################################################
 # Public.
 ###########################################################
-class Mail(object):
+class Mail(Trackable):
     """
     Represents an email.
     """
@@ -97,6 +98,7 @@ class Mail(object):
         @type  body: string
         @param body: The email body, passed to set_body().
         """
+        Trackable.__init__(self)
         if not sender:
             domain = socket.getfqdn('localhost')
             sender = os.environ.get('USER') + '@' + domain
@@ -138,7 +140,7 @@ class Mail(object):
                 self.set_subject(value)
             else:
                 raise Exception('Invalid header field "%s"' % key)
-        self.set_body(body)
+        self.set_body(body.strip())
 
     def _is_header_line(self, line):
         return re.match(r'^\w+: .+$', line) is not None
@@ -161,6 +163,7 @@ class Mail(object):
         @param sender: The email address of the sender.
         """
         self.sender = sender
+        self.signal_emit('changed')
 
     def get_sender(self):
         """
@@ -183,6 +186,7 @@ class Mail(object):
         @param to: The email addresses for the 'to' field.
         """
         self.to = self._cleanup_mail_addresses(to)
+        self.signal_emit('changed')
 
     def add_to(self, to):
         """
@@ -193,6 +197,7 @@ class Mail(object):
         @param to: The list of email addresses.
         """
         self.to += self._cleanup_mail_addresses(to)
+        self.signal_emit('changed')
 
     def get_to(self):
         """
@@ -211,6 +216,7 @@ class Mail(object):
         @param cc: The email addresses for the 'cc' field.
         """
         self.cc = self._cleanup_mail_addresses(cc)
+        self.signal_emit('changed')
 
     def add_cc(self, cc):
         """
@@ -220,6 +226,7 @@ class Mail(object):
         @param cc: The list of email addresses.
         """
         self.cc += self._cleanup_mail_addresses(cc)
+        self.signal_emit('changed')
 
     def get_cc(self):
         """
@@ -238,6 +245,7 @@ class Mail(object):
         @param bcc: The email addresses for the 'bcc' field.
         """
         self.bcc = self._cleanup_mail_addresses(bcc)
+        self.signal_emit('changed')
 
     def add_bcc(self, bcc):
         """
@@ -247,6 +255,7 @@ class Mail(object):
         @param bcc: The list of email addresses.
         """
         self.bcc += self._cleanup_mail_addresses(bcc)
+        self.signal_emit('changed')
 
     def get_bcc(self):
         """
@@ -274,6 +283,7 @@ class Mail(object):
         @param subject: The new subject line.
         """
         self.subject = subject
+        self.signal_emit('changed')
 
     def get_subject(self):
         """
@@ -291,7 +301,8 @@ class Mail(object):
         @type  body: string
         @param body: The new email body.
         """
-        self.body = body.strip() + '\n'
+        self.body = body
+        self.signal_emit('changed')
 
     def get_body(self):
         """
@@ -325,7 +336,7 @@ class Mail(object):
         """
         header = self.get_smtp_header()
         body   = self.get_body().replace('\n', '\r\n')
-        return header + '\r\n' + body
+        return header + '\r\n' + body + '\r\n'
 
 def from_template_string(string, **vars):
     """
