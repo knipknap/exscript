@@ -17,6 +17,7 @@ Contains graphical user interfaces using Python's tkinter.
 """
 from MailWidget import MailWidget
 from MailWindow import MailWindow
+from Notebook   import Notebook
 
 import inspect
 __all__ = [name for name, obj in locals().items()
