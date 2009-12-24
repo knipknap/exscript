@@ -15,7 +15,7 @@
 """
 Sending and formatting emails.
 """
-import os, time, re, socket
+import os, time, re, socket, smtplib
 from Exscript.external.SpiffSignal import Trackable
 
 ###########################################################
@@ -345,6 +345,8 @@ def from_template_string(string, **vars):
 
     @type  string: string
     @param string: The SMTP formatted template.
+    @rtype:  Mail
+    @return: The resulting mail.
     """
     tmpl = _render_template(string, **vars)
     mail = Mail()
@@ -358,6 +360,18 @@ def from_template(filename, **vars):
 
     @type  filename: string
     @param filename: The name of the template file.
+    @rtype:  Mail
+    @return: The resulting mail.
     """
     tmpl = open(filename).read()
     return from_template_string(tmpl, **vars)
+
+def send(mail, server = 'localhost'):
+    """
+    Sends the given mail.
+    """
+    sender  = mail.get_sender()
+    rcpt    = mail.get_receipients()
+    mail    = mail.get_smtp_mail()
+    session = smtplib.SMTP(server)
+    result  = session.sendmail(sender, rcpt, mail)

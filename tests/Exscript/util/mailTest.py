@@ -157,6 +157,9 @@ class mailTest(unittest.TestCase):
         tmpfile.close()
         self.checkResult(mail)
 
+    def testSend(self):
+        pass # no easy way to test without spamming.
+
 def suite():
     mail_cls    = unittest.TestLoader().loadTestsFromTestCase(MailTest)
     mail_module = unittest.TestLoader().loadTestsFromTestCase(mailTest)

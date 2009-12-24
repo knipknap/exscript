@@ -15,9 +15,8 @@
 """
 A simple email editor.
 """
-import smtplib
 from Tkinter            import *
-from Exscript.util.mail import Mail
+from Exscript.util.mail import Mail, send
 try:
     import tkMessageBox
 except:
@@ -207,12 +206,8 @@ class MailWidget(Frame):
         return self.mail
 
     def _on_send(self):
-        sender = self.mail.get_sender()
-        rcpt   = self.mail.get_receipients()
-        mail   = self.mail.get_smtp_mail()
         try:
-            session = smtplib.SMTP(self.server)
-            result  = session.sendmail(sender, rcpt, mail)
+            send(self.mail, server = self.server)
         except Exception, e:
             title    = 'Send failed'
             message  = 'The email could not be sent. This was the error:\n'
