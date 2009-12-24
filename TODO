@@ -1,4 +1,3 @@
-* Make the SigIntWatcher optional.
 * Test the exscript executable.
 * Test Queue constructor kwargs.
 * Opening the connection in authenticate() has a drawback: If the host
