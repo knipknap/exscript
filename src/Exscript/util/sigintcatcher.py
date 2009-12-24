@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-When imported, this module catches KeyboardInterrupts (SIGINT).
+When imported, this module catches KeyboardInterrupt (SIGINT).
 This solves two problems with multithreaded programs in Python:
 
   - A signal might be delivered to any thread and
@@ -21,7 +21,7 @@ This solves two problems with multithreaded programs in Python:
     is ignored (which is a bug).
 
 The module forks during the import procedure, so all that is
-required for the change to take effect is the following statement:
+required for the change to take effect is the following statement::
 
   import Exscript.util.sigintcatcher
 

@@ -12,6 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+Logging to memory.
+"""
 import os, traceback
 from Log           import Log
 from QueueListener import QueueListener
@@ -23,6 +26,14 @@ class Logger(QueueListener):
     """
 
     def __init__(self, queue):
+        """
+        Creates a new logger instance and attaches it to the given Queue.
+        Any actions performed within the queue are watched, and a log of
+        them is kept in memory.
+
+        @type  queue: Queue
+        @param queue: The Queue that is watched.
+        """
         QueueListener.__init__(self, queue)
         self.actions = []
         self.logs    = {}

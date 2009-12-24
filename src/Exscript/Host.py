@@ -12,12 +12,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from util.ipv4 import is_ip as is_ipv4_ip
+"""
+Representing a device to connect with.
+"""
+from util.ipv4 import is_ip
 from util.url  import parse_url
 
-def is_ip(string):
+def _is_ip(string):
     # Adds IPv6 support.
-    return ':' in string or is_ipv4_ip(string)
+    return ':' in string or is_ip(string)
 
 class Host(object):
     """
@@ -82,7 +85,7 @@ class Host(object):
         @type  address: string
         @param address: A hostname or IP address.
         """
-        if '.' in address and not is_ip(address):
+        if '.' in address and not _is_ip(address):
             self.address, self.domain = address.split('.', 1)
         else:
             self.address = address

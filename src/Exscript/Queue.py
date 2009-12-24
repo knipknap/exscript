@@ -12,9 +12,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+The heart of Exscript.
+"""
 import sys, os, gc, copy, traceback
-import SigIntWatcher
-from SpiffSignal           import Trackable
+from external.SpiffSignal  import Trackable
 from AccountManager        import AccountManager
 from HostAction            import HostAction
 from FileLogger            import FileLogger
@@ -28,7 +30,7 @@ False = 0
 
 class Queue(Trackable):
     """
-    The heart of Exscript. It manages accounts, connections, and threads.
+    Manages hosts/tasks, accounts, connections, and threads.
     """
     built_in_protocols = {'dummy':  'Dummy',
                           'telnet': 'Telnet',

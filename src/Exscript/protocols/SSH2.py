@@ -12,6 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+SSH version 2 support, based on paramiko.
+"""
 import time, select
 from Exscript.external import paramiko
 from Exception         import TransportException, LoginFailure

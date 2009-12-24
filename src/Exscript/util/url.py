@@ -12,6 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+Working with URLs (as used in URL formatted hostnames).
+"""
 import re, urllib
 from urlparse import urlparse, urlsplit
 
@@ -49,26 +52,27 @@ def _unquote(s):
     return "".join(res)
 
 def _urlparse_qs(url, keep_blank_values=0, strict_parsing=0):
-    """Parse a URL query string and return the components as a dictionary.
+    """
+    Parse a URL query string and return the components as a dictionary.
 
     Based on the cgi.parse_qs method.This is a utility function provided
     with urlparse so that users need not use cgi module for
     parsing the url query string.
 
-        Arguments:
+    Arguments:
 
-        url: URL with query string to be parsed
+      - url: URL with query string to be parsed
 
-        keep_blank_values: flag indicating whether blank values in
-            URL encoded queries should be treated as blank strings.
-            A true value indicates that blanks should be retained as
-            blank strings.  The default false value indicates that
-            blank values are to be ignored and treated as if they were
-            not included.
+      - keep_blank_values: flag indicating whether blank values in
+        URL encoded queries should be treated as blank strings.
+        A true value indicates that blanks should be retained as
+        blank strings.  The default false value indicates that
+        blank values are to be ignored and treated as if they were
+        not included.
 
-        strict_parsing: flag indicating what to do with parsing errors.
-            If false (the default), errors are silently ignored.
-            If true, errors raise a ValueError exception.
+      - strict_parsing: flag indicating what to do with parsing errors.
+        If false (the default), errors are silently ignored.
+        If true, errors raise a ValueError exception.
     """
 
     scheme, netloc, url, params, querystring, fragment = urlparse(url)

@@ -12,10 +12,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Telnet import Telnet
-from SSH    import SSH
-from SSH2   import SSH2
-from Dummy  import Dummy
+from Transport import Transport
+from Telnet    import Telnet
+from SSH       import SSH
+from SSH2      import SSH2
+from Dummy     import Dummy
 
 import inspect 
 __all__ = [name for name, obj in locals().items()

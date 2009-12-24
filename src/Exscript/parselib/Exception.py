@@ -13,10 +13,21 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 class LexerException(Exception):
+    """
+    Fallback exception that is called when the error type is not known.
+    """
     name = 'Error'
 
 class SyntaxError(LexerException):
+    """
+    Raised during the compilation procedure if the template contained
+    a syntax error.
+    """
     name = 'Syntax error'
 
 class RuntimeError(LexerException):
+    """
+    Raised during the execution of the compiled template whenever any
+    error occurs.
+    """
     name = 'Runtime error'
