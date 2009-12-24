@@ -4,7 +4,7 @@
 import os, re, sys
 
 project  = 'Exscript'
-base_dir = os.path.join('..', 'src', project)
+base_dir = os.path.join('..', 'src')
 doc_dir  = 'api'
 
 # Create the documentation directory.
@@ -30,6 +30,7 @@ cmd = 'epydoc ' + ' '.join(['--name', project,
                             r'--exclude ^Exscript\.workqueue$',
                             r'--exclude ^Exscript\.version$',
                             r'--exclude-introspect ^Exscript\.util\.sigintcatcher$',
+                            r'--exclude ^TkExscript\.compat$',
                             '--html',
                             '--no-private',
                             '--introspect-only',
@@ -38,6 +39,7 @@ cmd = 'epydoc ' + ' '.join(['--name', project,
                             '--inheritance=included',
                             '-v',
                             '-o %s' % doc_dir,
-                            base_dir])
+                            os.path.join(base_dir, project),
+                            os.path.join(base_dir, 'TkExscript')])
 print cmd
 os.system(cmd)
