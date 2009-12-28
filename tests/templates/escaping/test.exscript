@@ -5,3 +5,11 @@ test number three: \\another test\\
 {connection.execline("execline1 \$another \$test \\")}
 {connection.execline("\"execline2 another test\"")}
 {connection.execline("execline3 \$another \$test \r")}
+
+{extract /(.t)$/ as result from "test"}
+regex result should be "st": "$result"
+{
+  var = "es"
+  extract /(.)$var/ as result from "test"
+}
+regex result should be "t": "$result"

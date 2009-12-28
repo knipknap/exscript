@@ -88,6 +88,8 @@ class String(Token):
         # Check the variable name syntax.
         if escape:
             return '$' + varname
+        elif varname == '':
+            return '$'
         if not varname_re.match(varname):
             msg = '%s is not a variable name' % repr(varname)
             self._variable_error(field, msg)

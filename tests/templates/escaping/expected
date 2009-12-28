@@ -6,4 +6,6 @@ escaping:0> execline1 $another $test \
 escaping:0> "execline2 another test"
 escaping:0> execline3 $another $test 
 
+escaping:0> regex result should be "st": "st"
+escaping:0> regex result should be "t": "t"
 escaping:0> 
