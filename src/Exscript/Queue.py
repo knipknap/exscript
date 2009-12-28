@@ -382,15 +382,6 @@ class Queue(Trackable):
 
 
     def _run1(self, host, function, prioritize, force):
-        # To save memory, limit the number of parsed (=in-memory) items.
-        #FIXME: A side effect is that the function will not
-        # return until all remaining items are kept in memory.
-        n_connections = self.get_max_threads()
-        if not force:
-            while self.workqueue.get_length() > n_connections * 2:
-                gc.collect()
-                self.workqueue.wait_for_activity()
-
         # Build an object that represents the actual task.
         if not host.get_domain():
             host.set_domain(self.domain)
