@@ -164,15 +164,21 @@ class MainLoop(Trackable, threading.Thread):
             pass
 
     def _update_running_jobs(self):
-        running_jobs = []
+        # Update the list of running jobs.
+        running   = []
+        completed = []
         for job in self.running_jobs:
             if job.is_alive():
-                running_jobs.append(job)
+                running.append(job)
                 continue
+            completed.append(job)
+        self.running_jobs = running[:]
+
+        # Notify any clients *after* removing the job from the list.
+        for job in completed:
             self._on_job_completed(job)
             job.join()
             del job
-        self.running_jobs = running_jobs[:]
         gc.collect()
 
     def run(self):

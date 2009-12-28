@@ -181,6 +181,7 @@ class Queue(Trackable):
             return
         self._print('debug', msg)
 
+
     def _on_job_started(self, job):
         self._del_status_bar()
         self._print_status_bar()
