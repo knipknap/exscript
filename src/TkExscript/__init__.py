@@ -15,9 +15,11 @@
 """
 Contains graphical user interfaces using Python's tkinter.
 """
-from MailWidget import MailWidget
-from MailWindow import MailWindow
-from Notebook   import Notebook
+from MailWidget   import MailWidget
+from MailWindow   import MailWindow
+from Notebook     import Notebook
+from ProgressBar  import ProgressBar
+from QueueWatcher import QueueWatcher
 
 import inspect
 __all__ = [name for name, obj in locals().items()

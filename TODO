@@ -1,4 +1,4 @@
-* Implement a TkExscript.QueueWatcher.
+* Add docs for TkExscript.
 * Add API docs for Exscript.parselib.
 * Test the exscript executable.
 * Test Queue constructor kwargs.

@@ -132,6 +132,11 @@ class QueueTest(unittest.TestCase):
     def testGetMaxThreads(self):
         pass # Already tested in testSetMaxThreads().
 
+    def testGetProgress(self):
+        self.assertEqual(0.0, self.queue.get_progress())
+        self.testIsCompleted()
+        self.assertEqual(100.0, self.queue.get_progress())
+
     def testAddAccount(self):
         self.assertEqual(0, self.queue.account_manager.n_accounts())
         account = Account('user', 'test')
