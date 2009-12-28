@@ -27,7 +27,7 @@ def message(scope, string):
     @param string: A string, or a list of strings.
     """
     exscript = scope.get('__connection__').get_queue()
-    exscript._print(string[0] + '\n')
+    exscript._print('debug', string[0] + '\n')
     return True
 
 def tacacs_lock(scope, user):
