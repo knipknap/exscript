@@ -67,7 +67,7 @@ class _ConnectionWatcher(object):
         else:
             self.buffer += data
 
-class QueueWatcher(Frame):
+class QueueWidget(Frame):
     """
     A widget for watching Exscript.Queue.
     """

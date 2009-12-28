@@ -13,15 +13,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-Contains graphical user interfaces using Python's tkinter.
+A window containing a MailWatcher.
 """
-from MailWidget  import MailWidget
-from MailWindow  import MailWindow
-from Notebook    import Notebook
-from ProgressBar import ProgressBar
+from Tkinter     import *
 from QueueWidget import QueueWidget
-from QueueWindow import QueueWindow
 
-import inspect
-__all__ = [name for name, obj in locals().items()
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+class QueueWindow(Frame):
+    def __init__(self, queue):
+        self.widget = None
+        Frame.__init__(self)
+        self.pack(expand = True, fill = BOTH)
+        self.widget = QueueWidget(self, queue)
+        self.widget.pack(expand = True, fill = BOTH, padx = 6, pady = 6)
