@@ -158,6 +158,18 @@ class Queue(Trackable):
         self.status_bar_length = 0
 
 
+    def get_progress(self):
+        """
+        Returns the progress in percent.
+
+        @rtype:  float
+        @return: The progress in percent.
+        """
+        if self.total == 0:
+            return 0.0
+        return 100.0 / self.total * self.completed
+
+
     def _print_status_bar(self):
         if self.total == 0:
             return
