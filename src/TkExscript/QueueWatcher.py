@@ -52,8 +52,9 @@ class _ConnectionWatcher(object):
         self.conn.signal_connect('data_received', self._on_data_received)
 
     def _show_data(self, data):
-        self.widget.data_queue.put((self.widget.text_widget.insert,
-                                    (END, data)))
+        data = data.replace('\r\n', '\n')
+        func = self.widget.text_widget.insert
+        self.widget.data_queue.put((func, (END, data)))
 
     def create_widget(self, parent):
         self.widget = _ConnectionWatcherWidget(parent)
