@@ -26,6 +26,7 @@ class Notebook(tk.Frame):
         self.tabs         = []
         self.tab_buttons  = []
         self.tab_area     = tk.Frame(self)
+        self.count        = 0
         self.tab_area.pack(fill = tk.BOTH, side = tk.TOP)
 
     def _display_page(self, pg):
@@ -41,13 +42,14 @@ class Notebook(tk.Frame):
         """
         Adds a new page to the notebook and returns it.
         """
+        self.count += 1
         pos    = len(self.tabs)
         page   = tk.Frame(self)
         button = tk.Radiobutton(self.tab_area,
                                 text        = title,
                                 indicatoron = False,
                                 variable    = self.tabgroup,
-                                value       = pos,
+                                value       = self.count,
                                 relief      = tk.RIDGE,
                                 offrelief   = tk.RIDGE,
                                 borderwidth = 1,
@@ -58,7 +60,7 @@ class Notebook(tk.Frame):
                     pady = 0)
         self.tabs.append(page)
         self.tab_buttons.append(button)
-        if pos == 0:
+        if self.active_page is None:
             self.select(pos)
         return page
 
