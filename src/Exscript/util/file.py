@@ -38,12 +38,14 @@ def get_accounts_from_file(filename):
     return accounts
 
 
-def get_hosts_from_file(filename):
+def get_hosts_from_file(filename, remove_duplicates = False):
     """
     Reads a list of hostnames from the file with the given name.
 
     @type  filename: string
     @param filename: A full filename.
+    @type  remove_duplicates: bool
+    @param remove_duplicates: Whether duplicates are removed.
     @rtype:  list[Host]
     @return: The newly created host instances.
     """
@@ -53,11 +55,15 @@ def get_hosts_from_file(filename):
     file_handle = open(filename, 'r')
 
     # Read the hostnames.
+    have  = {}
     hosts = []
     for line in file_handle:
         hostname = line.split('#')[0].strip()
         if hostname == '':
             continue
+        if remove_duplicates and hostname in have:
+            continue
+        have[hostname] = 1
         hosts.append(Host(hostname))
 
     file_handle.close()
