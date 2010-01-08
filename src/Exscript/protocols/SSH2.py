@@ -42,18 +42,17 @@ class SSH2(Transport):
     def _connect_hook(self, hostname, port):
         self.host   = hostname
         self.port   = port or 22
-        self.client = None
+        self.client = paramiko.SSHClient()
+        self.client.load_system_host_keys()
+        if self.auto_verify:
+            policy = paramiko.AutoAddPolicy()
+            self.client.set_missing_host_key_policy(policy)
         return True
 
 
     def _authenticate_hook(self, user, password, **kwargs):
         if self.is_authenticated():
             return
-        self.client = paramiko.SSHClient()
-        self.client.load_system_host_keys()
-        if self.auto_verify:
-            policy = paramiko.AutoAddPolicy()
-            self.client.set_missing_host_key_policy(policy)
         try:
             self.client.connect(self.host,
                                 self.port,

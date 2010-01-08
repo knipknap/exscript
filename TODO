@@ -2,9 +2,6 @@
 * Add API docs for Exscript.parselib.
 * Test the exscript executable.
 * Test Queue constructor kwargs.
-* Opening the connection in authenticate() has a drawback: If the host
-  does not respond, the account passed to authenticate() is locked for a
-  very long time. So try to make sure to open the connection before that.
 * Test the Transport wait parameters in several cases:
    - Login with username only.
    - Login with password only.
