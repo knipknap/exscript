@@ -11,6 +11,8 @@ class FakeQueue(Trackable):
 
 class FakeAction(Trackable):
     failures = 0
+    aborted  = False
+
     def __init__(self, name = 'fake'):
         Trackable.__init__(self)
         self.name = name
@@ -20,6 +22,9 @@ class FakeAction(Trackable):
 
     def n_failures(self):
         return self.failures
+
+    def has_aborted(self):
+        return self.aborted
 
 class FakeConnection(Trackable):
     def __init__(self, name = 'fake'):
@@ -60,6 +65,7 @@ class reportTest(unittest.TestCase):
 
     def createAbortedLog(self):
         action = self.createErrorLog()
+        action.aborted = True
         action.signal_emit('aborted', action)
         return action
 
@@ -99,7 +105,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 55, in createErrorLog
+  File "%s.py", line 60, in createErrorLog
     raise FakeError()
 FakeError
 

@@ -44,46 +44,18 @@ class LogTest(unittest.TestCase):
         self.assert_(str(self.log).startswith(before))
         self.assert_('FakeError' in str(self.log), str(self.log))
 
-    def testAborted(self):
+    def testDone(self):
         self.testError()
-        self.log.aborted()
-        self.assert_('ABORTED' in str(self.log), str(self.log))
-
-    def testSucceeded(self):
-        self.testStarted()
-        before = str(self.log)
-        self.log.succeeded()
-        self.assert_(str(self.log).startswith(before))
-        self.assert_(len(self.log) > len(before))
+        self.log.done()
 
     def testHasError(self):
         self.failIf(self.log.has_error())
-        self.testError()
+        self.testDone()
         self.assert_(self.log.has_error())
-
-    def testHasError2(self):
-        self.failIf(self.log.has_error())
-        self.testSucceeded()
-        self.failIf(self.log.has_error())
-
-    def testHasAborted(self):
-        self.failIf(self.log.has_aborted())
-        self.testAborted()
-        self.assert_(self.log.has_aborted())
-
-    def testHasAborted2(self):
-        self.failIf(self.log.has_aborted())
-        self.testSucceeded()
-        self.failIf(self.log.has_aborted())
 
     def testHasEnded(self):
         self.failIf(self.log.has_ended())
-        self.testAborted()
-        self.assert_(self.log.has_ended())
-
-    def testHasEnded2(self):
-        self.failIf(self.log.has_ended())
-        self.testSucceeded()
+        self.testDone()
         self.assert_(self.log.has_ended())
 
 def suite():

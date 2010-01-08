@@ -55,7 +55,7 @@ def get_hosts_from_file(filename):
     # Read the hostnames.
     hosts = []
     for line in file_handle:
-        hostname = line.strip()
+        hostname = line.split('#')[0].strip()
         if hostname == '':
             continue
         hosts.append(Host(hostname))

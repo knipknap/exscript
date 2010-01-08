@@ -61,8 +61,8 @@ class Logfile(Log):
         self._write('ERROR:', str(exception), '\n')
         self._write_error(self._format_exc(exception))
 
-    def succeeded(self):
-        if self.delete:
+    def done(self):
+        if self.delete and not self.has_error():
             os.remove(self.filename)
             return
-        Log.succeeded(self)
+        Log.done(self)

@@ -239,7 +239,6 @@ class QueueTest(unittest.TestCase):
         self.assert_('dummy2.log' in logfiles)
         for file in logfiles:
             content = open(os.path.join(self.tempdir, file)).read()
-            self.assert_('SUCCEEDED' in content)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(QueueTest)

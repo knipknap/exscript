@@ -64,7 +64,6 @@ class FileLoggerTest(LoggerTest):
 
         action.signal_emit('aborted', action)
         content = open(logfile).read()
-        self.assert_('ABORTED' in content)
 
         # Repeat all of the above, with failures = 1.
         # Test "started".

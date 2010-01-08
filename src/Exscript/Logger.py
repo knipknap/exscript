@@ -52,7 +52,7 @@ class Logger(QueueListener):
         """
         successful = []
         for action in self.done:
-            if [l for l in self.logs[action] if not l.has_aborted()]:
+            if [l for l in self.logs[action] if not l.has_error()]:
                 successful.append(action)
         return successful
 
@@ -62,19 +62,16 @@ class Logger(QueueListener):
         """
         failed = []
         for action in self.done:
-            if not [l for l in self.logs[action] if not l.has_error()]:
+            if [l for l in self.logs[action] if l.has_error()]:
                 failed.append(action)
         return failed
 
     def get_aborted_actions(self):
         """
-        Returns a list of all actions that were never completed successfully.
+        Returns a list of all actions that were never completed
+        successfully.
         """
-        failed = []
-        for action in self.done:
-            if not [l for l in self.logs[action] if not l.has_aborted()]:
-                failed.append(action)
-        return failed
+        return [a for a in self.actions if a.has_aborted()]
 
     def get_logs(self, action = None):
         if action:
@@ -100,20 +97,13 @@ class Logger(QueueListener):
         log = self._get_log(action)
         log.error(e)
 
-    def _on_action_succeeded(self, action):
+    def _on_action_done(self, action):
         log = self._get_log(action)
         if action not in self.done:
             self.done.append(action)
-        log.succeeded()
-
-    def _on_action_aborted(self, action):
-        log = self._get_log(action)
-        if action not in self.done:
-            self.done.append(action)
-        log.aborted()
 
     def _action_enqueued(self, action):
         action.signal_connect('started',   self._on_action_started)
         action.signal_connect('error',     self._on_action_error)
-        action.signal_connect('succeeded', self._on_action_succeeded)
-        action.signal_connect('aborted',   self._on_action_aborted)
+        action.signal_connect('succeeded', self._on_action_done)
+        action.signal_connect('aborted',   self._on_action_done)

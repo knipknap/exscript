@@ -200,8 +200,7 @@ class Queue(Trackable):
 
 
     def _on_job_succeeded(self, job):
-        self.completed += 1
-        self._print('status_bar', job.getName() + ' succeeded.')
+        self._dbg(2, job.getName() + ' job is done.')
 
 
     def _is_recoverable_error(self, exc):
@@ -225,12 +224,17 @@ class Queue(Trackable):
         self._print('errors', action.get_name() + ' finally failed.')
 
 
+    def _on_action_succeeded(self, action):
+        self.completed += 1
+        self._print('status_bar', action.get_name() + ' succeeded.')
+
+
     def _on_job_aborted(self, job, e):
         """
         Should, in theory, never be called, as HostAction never raises.
         In other words, the workqueue does not notice if the action fails.
         """
-        self._on_action_error(job, e)
+        raise
 
 
     def _get_protocol_from_name(self, name):
@@ -389,8 +393,9 @@ class Queue(Trackable):
         action = HostAction(self, function, host, **self.protocol_args)
         action.set_times(self.times)
         action.set_login_times(self.login_times)
-        action.signal_connect('error',   self._on_action_error)
-        action.signal_connect('aborted', self._on_action_aborted)
+        action.signal_connect('error',     self._on_action_error)
+        action.signal_connect('aborted',   self._on_action_aborted)
+        action.signal_connect('succeeded', self._on_action_succeeded)
         self.signal_emit('action_enqueued', action)
 
         # Done. Enqueue this.

@@ -20,7 +20,6 @@ class Log(object):
         self.conn      = None
         self.traceback = None
         self.exception = None
-        self.did_abort = False
         self.did_end   = False
 
     def __str__(self):
@@ -59,20 +58,12 @@ class Log(object):
         self._write('ERROR:\n')
         self._write(self._format_exc(exception))
 
-    def succeeded(self):
+    def done(self):
         self.did_end = True
-        self._write('SUCCEEDED\n')
-
-    def aborted(self):
-        self.did_end   = True
-        self.did_abort = True
-        self._write('ABORTED\n')
+        self._write('DONE\n')
 
     def has_error(self):
         return self.exception is not None
-
-    def has_aborted(self):
-        return self.did_abort
 
     def has_ended(self):
         return self.did_end

@@ -66,9 +66,11 @@ class HostActionTest(unittest.TestCase):
         callback = bind(fail_calls, data, LoginFailure)
         action   = HostAction(Queue(), callback, FakeHost())
         self.assertEqual(0, action.n_failures())
+        self.assertEqual(False, action.has_aborted())
         action.execute()
         self.assertEqual(1, data['n_calls'])
         self.assertEqual(1, action.n_failures())
+        self.assertEqual(True, action.has_aborted())
 
         # Run *three* times.
         data     = {'n_calls' : 0}
@@ -91,6 +93,9 @@ class HostActionTest(unittest.TestCase):
         self.assertEqual(3, action.n_failures())
 
     def testNFailures(self):
+        pass # Tested in testSetLoginTimes().
+
+    def testHasAborted(self):
         pass # Tested in testSetLoginTimes().
 
     def testExecute(self):

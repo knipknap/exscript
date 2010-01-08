@@ -45,6 +45,7 @@ class HostAction(Action):
         self.login_times    = 1
         self.failures       = 0
         self.login_failures = 0
+        self.aborted        = False
         self.name           = host.get_address()
 
     def get_name(self):
@@ -67,6 +68,9 @@ class HostAction(Action):
 
     def n_failures(self):
         return self.failures + self.login_failures
+
+    def has_aborted(self):
+        return self.aborted
 
     def execute(self):
         while self.failures < self.times \
@@ -93,4 +97,5 @@ class HostAction(Action):
             return
 
         # Ending up here the function finally failed.
+        self.aborted = True
         self.signal_emit('aborted', self)

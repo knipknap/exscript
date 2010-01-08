@@ -11,12 +11,16 @@ from util.reportTest               import FakeQueue
 
 class FakeAction(Trackable):
     failures = 0
+    aborted  = False
 
     def get_name(self):
         return 'fake'
 
     def n_failures(self):
         return self.failures
+
+    def has_aborted(self):
+        return self.aborted
 
 class LoggerTest(unittest.TestCase):
     CORRELATE = Logger
@@ -111,6 +115,7 @@ class LoggerTest(unittest.TestCase):
         except FakeError, e:
             action.signal_emit('error', action, e)
         self.assertEqual(self.logger.get_aborted_actions(), [])
+        action.aborted = True
         action.signal_emit('aborted', action)
         self.assertEqual(self.logger.get_aborted_actions(), [action])
 

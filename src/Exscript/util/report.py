@@ -25,7 +25,7 @@ def _get_action_name(action, retry = 0):
     return action.get_name() + ' (retry %d)' % retry
 
 def _get_successful_logs_from_action(logger, action):
-    return [l for l in logger.get_logs(action) if not l.has_aborted()]
+    return [l for l in logger.get_logs(action) if not l.has_error()]
 
 def _get_error_logs_from_action(logger, action):
     return [l for l in logger.get_logs(action) if l.has_error()]
@@ -70,7 +70,7 @@ def summarize(logger):
     summary = []
     for action in logger.get_logged_actions():
         for n, log in enumerate(logger.get_logs(action)):
-            status = log.has_aborted() and log.get_error(False) or 'ok'
+            status = log.has_error() and log.get_error(False) or 'ok'
             name   = log.get_host().get_address()
             if n > 0:
                 name += ' (retry %d)' % n
@@ -105,7 +105,7 @@ def format(logger,
                     output.append(log.get_error())
                 else:
                     output.append(name + ': ' + log.get_error(False))
-        output.append('')
+            output.append('')
 
     # Print successful actions.
     if show_successful:
