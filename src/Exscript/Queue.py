@@ -107,6 +107,7 @@ class Queue(Trackable):
         self.workqueue.signal_connect('job-started',   self._on_job_started)
         self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
+        self.workqueue.signal_connect('queue-empty',   self._on_queue_empty)
 
 
     def _update_verbosity(self):
@@ -235,6 +236,13 @@ class Queue(Trackable):
         In other words, the workqueue does not notice if the action fails.
         """
         raise
+
+
+    def _on_queue_empty(self):
+        """
+        Called whenever the workqueue is empty.
+        """
+        self.signal_emit('queue-empty')
 
 
     def _get_protocol_from_name(self, name):

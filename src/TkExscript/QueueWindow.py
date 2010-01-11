@@ -15,13 +15,20 @@
 """
 A window containing a MailWatcher.
 """
+import Queue
 from Tkinter     import *
 from QueueWidget import QueueWidget
 
 class QueueWindow(Frame):
-    def __init__(self, queue):
+    def __init__(self, queue, **kwargs):
         self.widget = None
         Frame.__init__(self)
         self.pack(expand = True, fill = BOTH)
         self.widget = QueueWidget(self, queue)
         self.widget.pack(expand = True, fill = BOTH, padx = 6, pady = 6)
+
+        if kwargs.get('autoclose', False):
+            queue.signal_connect('queue-empty', self._on_queue_empty)
+
+    def _on_queue_empty(self):
+        self.after(1, self.quit)

@@ -45,6 +45,7 @@ class WorkQueue(Trackable):
         self.main_loop.signal_connect('job-succeeded', self._on_job_succeeded)
         self.main_loop.signal_connect('job-aborted',   self._on_job_aborted)
         self.main_loop.signal_connect('job-completed', self._on_job_completed)
+        self.main_loop.signal_connect('queue-empty',   self._on_queue_empty)
         self.main_loop.start()
 
     def _on_job_started(self, job):
@@ -84,6 +85,15 @@ class WorkQueue(Trackable):
         @param job: The job that was completed.
         """
         self.signal_emit('job-completed', job)
+
+    def _on_queue_empty(self):
+        """
+        Called as soon as the queue is empty.
+
+        @type  job: Job
+        @param job: The job that was completed.
+        """
+        self.signal_emit('queue-empty')
 
     def set_debug(self, debug = 1):
         """

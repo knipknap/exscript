@@ -185,6 +185,8 @@ class MainLoop(Trackable, threading.Thread):
         self.condition.acquire()
         while not self.shutdown_now:
             self._update_running_jobs()
+            if self.get_queue_length() == 0:
+                self.signal_emit('queue-empty')
 
             # If there are any actions to be force_started, run them now.
             for action in self.force_start:
