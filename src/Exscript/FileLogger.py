@@ -52,7 +52,6 @@ class FileLogger(Logger):
         self._add_log(action, log)
 
     def _on_action_done(self, action):
+        Logger._on_action_done(self, action)
         if self.clearmem:
             self._remove_logs(action)
-        else:
-            Logger._on_action_done(self, action)

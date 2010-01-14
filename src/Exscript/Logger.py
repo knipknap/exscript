@@ -89,8 +89,12 @@ class Logger(QueueListener):
         return self.logs[action][-1]
 
     def _remove_logs(self, action):
-        del self.logs[action]
-        self.actions.remove(action)
+        if self.logs.has_key(action):
+            del self.logs[action]
+        if action in self.actions:
+            self.actions.remove(action)
+        if action in self.done:
+            self.done.remove(action)
 
     def _on_action_started(self, action, conn):
         log = Log()
@@ -103,6 +107,7 @@ class Logger(QueueListener):
 
     def _on_action_done(self, action):
         log = self._get_log(action)
+        log.done()
         if action not in self.done:
             self.done.append(action)
 
