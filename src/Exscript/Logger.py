@@ -88,6 +88,10 @@ class Logger(QueueListener):
     def _get_log(self, action):
         return self.logs[action][-1]
 
+    def _remove_logs(self, action):
+        del self.logs[action]
+        self.actions.remove(action)
+
     def _on_action_started(self, action, conn):
         log = Log()
         log.started(conn)

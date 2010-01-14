@@ -24,11 +24,17 @@ class FileLogger(Logger):
     A Logger that stores logs into files.
     """
 
-    def __init__(self, queue, logdir, mode = 'a', delete = False):
+    def __init__(self,
+                 queue,
+                 logdir,
+                 mode     = 'a',
+                 delete   = False,
+                 clearmem = True):
         Logger.__init__(self, queue)
-        self.logdir = logdir
-        self.mode   = mode
-        self.delete = delete
+        self.logdir   = logdir
+        self.mode     = mode
+        self.delete   = delete
+        self.clearmem = clearmem
         if not os.path.exists(self.logdir):
             os.mkdir(self.logdir)
 
@@ -44,3 +50,9 @@ class FileLogger(Logger):
         log      = Logfile(filename, self.mode, self.delete)
         log.started(conn)
         self._add_log(action, log)
+
+    def _on_action_done(self, action):
+        if self.clearmem:
+            self._remove_logs(action)
+        else:
+            Logger._on_action_done(self, action)

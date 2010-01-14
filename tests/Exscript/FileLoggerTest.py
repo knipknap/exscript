@@ -19,7 +19,7 @@ class FileLoggerTest(LoggerTest):
     def setUp(self):
         self.tempdir = mkdtemp()
         self.logdir  = os.path.join(self.tempdir, 'non-existent')
-        self.logger  = FileLogger(FakeQueue(), self.logdir)
+        self.logger  = FileLogger(FakeQueue(), self.logdir, clearmem = False)
 
     def tearDown(self):
         rmtree(self.tempdir)

@@ -1,3 +1,4 @@
+* Add TkExscript.LoginWidget and .LoginWindow.
 * Add docs for TkExscript.
 * Add API docs for Exscript.parselib.
 * Test the exscript executable.
