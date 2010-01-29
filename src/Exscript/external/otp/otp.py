@@ -11,13 +11,14 @@ please see __init__.py
 __version__ = '$Revision: 1.4 $'
 
 import string, random
-from Crypto.Hash import MD4, MD5, SHA
+from Crypto.Hash import MD4
+from hashlib import md5, sha1
 from AppendixB import DefaultDictionary
 from keywrangling import keyformat, convertkey
 
 _VALIDSEEDCHARACTERS = string.letters + string.digits
 
-_HASHMODULE = { 'md4': MD4, 'md5' : MD5, 'sha' : SHA }
+_HASHMODULE = { 'md4': MD4, 'md5' : md5, 'sha' : sha1 }
 
 def _fold_md5(digest):
     result = ''
