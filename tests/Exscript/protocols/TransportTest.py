@@ -31,7 +31,7 @@ class TransportTest(unittest.TestCase):
         self.createTransport()
 
     def testPrompts(self):
-        prompts = [r'[sam123@home ~]$',
+        prompts = (r'[sam123@home ~]$',
                    r'[MyHost-A1]',
                    r'<MyHost-A1>',
                    r'sam@knip:~/Code/exscript$',
@@ -49,7 +49,9 @@ class TransportTest(unittest.TestCase):
                    r'FA/0/1/2/3(config)>',
                    r'FA/0/1/2/3(config)#',
                    r'admin@s-x-a6.a.bc.de.fg:/# ',
-                   r'admin@s-x-a6.a.bc.de.fg:/% ']
+                   r'admin@s-x-a6.a.bc.de.fg:/% ')
+        notprompts = (r'one two',
+                      r'[edit one two]')
         for prompt in prompts:
             if not _prompt_re.search('\n' + prompt):
                 self.fail('Prompt %s does not match exactly.' % prompt)
@@ -57,6 +59,13 @@ class TransportTest(unittest.TestCase):
                 self.fail('Prompt %s does not match.' % prompt)
             if _prompt_re.search('some text ' + prompt):
                 self.fail('Prompt %s matches incorrectly.' % prompt)
+        for prompt in notprompts:
+            if _prompt_re.search(prompt):
+                self.fail('Prompt %s matches incorrecly.' % prompt)
+            if _prompt_re.search(prompt + ' '):
+                self.fail('Prompt %s matches incorrecly.' % prompt)
+            if _prompt_re.search('\n' + prompt):
+                self.fail('Prompt %s matches incorrecly.' % prompt)
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Transport))

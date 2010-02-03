@@ -38,15 +38,15 @@ _host          = r'(?:[\w+\-\.]+)'
 _user          = r'(?:[\w+\-]+)'
 _user_host     = r'(?:(?:' + _user + r'\@)?' + _host + r')'
 _prompt_re     = re.compile(_prompt_start                 \
-                          + r'[\[\<]?'                   \
-                          + r'\w+'                       \
+                          + r'[\[\<]?'                    \
+                          + r'\w+'                        \
                           + _user_host + r'?'             \
-                          + r'[: ]?'                     \
+                          + r':?'                         \
                           + _any_path + r'?'              \
-                          + r'[: ]?'                     \
+                          + r'[: ]?'                      \
                           + _any_path + r'?'              \
                           + r'(?:\(' + _filename + '\))?' \
-                          + r'\]?'                       \
+                          + r'\]?'                        \
                           + r'[#>%\$\]] ?$', _flags)
 
 _user_re    = re.compile(r'(user ?name|user|login): *$', _flags)
