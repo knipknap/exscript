@@ -25,11 +25,12 @@ from Exception                     import TransportException, \
 True  = 1 
 False = 0 
 
-_flags         = re.I | re.M
+_flags         = re.I
 _printable     = re.escape(string.printable)
+_unprintable   = r'[^' + _printable + r']'
 _ignore        = r'[\x1b\x07\x00]'
 _nl            = r'[\r\n]'
-_prompt_start  = r'(?:' + _nl + r'[^' + _printable + r']?|' + _ignore + '+)'
+_prompt_start  = _nl + r'(?:' + _unprintable + r'*|' + _ignore + '*)'
 _prompt_chars  = r'[\-\w\(\)@:~]'
 _filename      = r'(?:[\w\+\-\._]+)'
 _path          = r'(?:(?:' + _filename + r')?(?:/' + _filename + r')*/?)'
@@ -47,7 +48,7 @@ _prompt_re     = re.compile(_prompt_start                 \
                           + _any_path + r'?'              \
                           + r'(?:\(' + _filename + '\))?' \
                           + r'\]?'                        \
-                          + r'[#>%\$\]] ?$', _flags)
+                          + r'[#>%\$\]] ?\Z', _flags)
 
 _user_re    = re.compile(r'(user ?name|user|login): *$', _flags)
 _pass_re    = re.compile(r'password:? *$',               _flags)

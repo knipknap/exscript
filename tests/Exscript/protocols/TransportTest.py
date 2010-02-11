@@ -31,41 +31,47 @@ class TransportTest(unittest.TestCase):
         self.createTransport()
 
     def testPrompts(self):
-        prompts = (r'[sam123@home ~]$',
-                   r'[MyHost-A1]',
-                   r'<MyHost-A1>',
-                   r'sam@knip:~/Code/exscript$',
-                   r'sam@MyHost-X123>',
-                   r'sam@MyHost-X123#',
-                   r'MyHost-ABC-CDE123>',
-                   r'MyHost-A1#',
-                   r'S-ABC#',
-                   r'0123456-1-1-abc#',
-                   r'0123456-1-1-a>',
-                   r'MyHost-A1(config)#',
-                   r'MyHost-A1(config)>',
-                   r'RP/0/RP0/CPU0:A-BC2#',
-                   r'FA/0/1/2/3>',
-                   r'FA/0/1/2/3(config)>',
-                   r'FA/0/1/2/3(config)#',
-                   r'admin@s-x-a6.a.bc.de.fg:/# ',
-                   r'admin@s-x-a6.a.bc.de.fg:/% ')
-        notprompts = (r'one two',
-                      r'[edit one two]')
+        prompts = ('[sam123@home ~]$',
+                   '[MyHost-A1]',
+                   '<MyHost-A1>',
+                   'sam@knip:~/Code/exscript$',
+                   'sam@MyHost-X123>',
+                   'sam@MyHost-X123#',
+                   'MyHost-ABC-CDE123>',
+                   'MyHost-A1#',
+                   'S-ABC#',
+                   '0123456-1-1-abc#',
+                   '0123456-1-1-a>',
+                   'MyHost-A1(config)#',
+                   'MyHost-A1(config)>',
+                   'RP/0/RP0/CPU0:A-BC2#',
+                   'FA/0/1/2/3>',
+                   'FA/0/1/2/3(config)>',
+                   'FA/0/1/2/3(config)#',
+                   'admin@s-x-a6.a.bc.de.fg:/# ',
+                   'admin@s-x-a6.a.bc.de.fg:/% ')
+        notprompts = ('one two',
+                      ' [MyHost-A1]',
+                      '[edit]\r',
+                      '[edit]\n',
+                      '[edit foo]\r',
+                      '[edit foo]\n',
+                      '[edit foo]\r\n',
+                      '[edit one two]')
         for prompt in prompts:
             if not _prompt_re.search('\n' + prompt):
                 self.fail('Prompt %s does not match exactly.' % prompt)
             if not _prompt_re.search('this is a test\r\n' + prompt):
                 self.fail('Prompt %s does not match.' % prompt)
             if _prompt_re.search('some text ' + prompt):
-                self.fail('Prompt %s matches incorrectly.' % prompt)
+                self.fail('Prompt %s matches incorrectly.' % repr(prompt))
         for prompt in notprompts:
             if _prompt_re.search(prompt):
-                self.fail('Prompt %s matches incorrecly.' % prompt)
+                self.fail('Prompt %s matches incorrecly.' % repr(prompt))
             if _prompt_re.search(prompt + ' '):
-                self.fail('Prompt %s matches incorrecly.' % prompt)
+                self.fail('Prompt %s matches incorrecly.' % repr(prompt))
             if _prompt_re.search('\n' + prompt):
-                self.fail('Prompt %s matches incorrecly.' % prompt)
+                self.fail('Prompt %s matches incorrecly.' % repr(prompt))
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Transport))
