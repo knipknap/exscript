@@ -202,6 +202,8 @@ class Queue(Trackable):
 
     def _on_job_succeeded(self, job):
         self._dbg(2, job.getName() + ' job is done.')
+        self._del_status_bar()
+        self._print_status_bar()
 
 
     def _is_recoverable_error(self, exc):
