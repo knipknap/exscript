@@ -1,0 +1,42 @@
+<!--
+This is the Exscript daemon configuration file.
+-->
+
+<xml>
+  <!--
+  The user accounts used by the Exscript daemon.
+  Passwords are base64 encrypted!
+  -->
+  <account-pool name="default">
+    <account>
+      <user>user1</user>
+      <password></password>
+    </account>
+    <account>
+      <user>user2</user>
+      <password></password>
+    </account>
+  </account-pool>
+
+  <!--
+  Exscript queue configuration.
+  You may define any number of queues in this file.
+  -->
+  <queue name="default-queue">
+    <max-threads>5</max-threads>
+    <logdir>/var/log/exscriptd</logdir>
+    <delete-logs/>
+    <account-pool>default</account-pool>
+  </queue>
+
+  <!--
+  Exscript daemon configuration.
+  You may define only one daemon at this time.
+  -->
+  <daemon type="inotify" name="exscript-daemon">
+    <in>/var/spool/exscriptd/in</in>
+    <out>/var/spool/exscriptd/out</out>
+    <queue>default-queue</queue>
+    <!-- load-service name="foobar" load="/path/to/my/test.xml"/ -->
+  </daemon>
+</xml>

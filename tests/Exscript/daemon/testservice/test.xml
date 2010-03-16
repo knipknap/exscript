@@ -1,0 +1,14 @@
+<xml>
+  <task name="init">
+    <set-prompt>[\r\n][a-z]+[#>]\b</set-prompt>
+    <execline>term len 0</execline>
+    <execline>term width 0</execline>
+  </task>
+
+  <service>
+    <invoke-task name="init"/>
+    <invoke-script language="python">
+      test.py
+    </invoke-script>
+  </service>
+</xml>

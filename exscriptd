@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+import sys
+from optparse        import OptionParser
+from Exscript        import __version__
+from Exscript.daemon import init
+
+parser = OptionParser(usage = '%prog [options]', version = __version__)
+parser.add_option('--domain',
+                  dest    = 'domain',
+                  metavar = 'DOMAIN',
+                  default = None,
+                  help    = 'The default domain name')
+parser.add_option('--config-file',
+                  dest    = 'config',
+                  metavar = 'FILE',
+                  help    = '''
+The XML config file for the Exscript daemon.
+'''.strip())
+parser.add_option('--verbose',
+                  dest    = 'verbose',
+                  action  = 'store_true',
+                  default = False,
+                  help    = 'Show the conversation with the router')
+
+# Parse options.
+options, args = parser.parse_args(sys.argv)
+args.pop(0)
+
+if not options.config:
+    parser.error('Required option --config not set')
+
+config = init(options.config)
+
+for daemon in config.daemons.itervalues():
+    daemon.run()
