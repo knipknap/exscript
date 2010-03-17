@@ -3,7 +3,8 @@ import os, base64
 from lxml          import etree
 from Exscript      import Account, Queue
 from INotifyDaemon import INotifyDaemon
-from Service       import Service, Task
+from Service       import Service
+from Task          import Task
 from util          import resolve_variables
 
 def _read_variables(cfgtree):
