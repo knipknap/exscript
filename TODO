@@ -1,6 +1,7 @@
 * Add TkExscript.LoginWidget and .LoginWindow.
 * Add docs for TkExscript.
 * Add API docs for Exscript.parselib.
+* Add a test for Exscript.Task.
 * Test the exscript executable.
 * Test Queue constructor kwargs.
 * Test the Transport wait parameters in several cases:

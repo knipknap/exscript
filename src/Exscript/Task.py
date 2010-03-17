@@ -13,7 +13,7 @@ class Task(Trackable):
     def _on_action_done(self, action):
         self.completed += 1
         if self.is_completed():
-            self.signal_emit('task_done')
+            self.signal_emit('done')
 
     def is_completed(self):
         return self.completed == len(self.actions)

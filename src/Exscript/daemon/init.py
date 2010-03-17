@@ -114,7 +114,6 @@ def _read_tasks(cfgtree, dirname):
     return tasks
 
 def _read_service(filename):
-    print "Reading service from", filename
     cfgtree = etree.parse(filename)
     dirname = os.path.dirname(filename)
     tasks   = _read_tasks(cfgtree, dirname)
