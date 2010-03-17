@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, base64
+import os, base64, re
 from lxml          import etree
 from Exscript      import Account, Queue
 from INotifyDaemon import INotifyDaemon
@@ -89,8 +89,13 @@ def _read_queues(cfgtree, variables, accounts):
 def _collect_task_children(element, dirname):
     children = []
     for child in element:
-        if child.tag in ('sendline', 'execline', 'set-prompt'):
+        if child.tag in ('connect', 'autologin'):
+            children.append((child.tag,))
+        elif child.tag in ('sendline', 'execline'):
             children.append((child.tag, child.text))
+        elif child.tag in ('expect', 'set-prompt'):
+            regex = re.compile(child.text)
+            children.append((child.tag, regex))
         elif child.tag == 'invoke-task':
             name = child.get('name').strip()
             args = dict((c.tag, c.text.strip()) for c in child)
@@ -110,16 +115,16 @@ def _read_tasks(cfgtree, dirname):
     for element in cfgtree.iterfind('task'):
         name        = element.get('name').strip()
         actions     = _collect_task_children(element, dirname)
-        tasks[name] = Task(actions, tasks)
+        tasks[name] = Task(name, actions, tasks)
     return tasks
 
-def _read_service(filename):
+def _read_service(name, filename):
     cfgtree = etree.parse(filename)
     dirname = os.path.dirname(filename)
     tasks   = _read_tasks(cfgtree, dirname)
     element = cfgtree.find('service')
     actions = _collect_task_children(element, dirname)
-    return Service(actions, tasks)
+    return Service(name, actions, tasks)
 
 def _read_inotify_daemon(element, variables, queues):
     name       = element.get('name').strip()
@@ -137,7 +142,7 @@ def _read_inotify_daemon(element, variables, queues):
         name           = resolve_variables(variables, name)
         path           = service.get('path').strip()
         path           = resolve_variables(variables, path)
-        services[name] = _read_service(path)
+        services[name] = _read_service(name, path)
 
     return INotifyDaemon(name,
                          input_dir  = input_dir,

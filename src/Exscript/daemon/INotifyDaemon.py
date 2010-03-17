@@ -24,6 +24,7 @@ class INotifyDaemon(object):
 
     def _run_service(self, conn, service):
         print "CONN", conn.get_host().get_name(), service
+        service.call(conn)
         #FIXME
 
     def _on_task_done(self, order):

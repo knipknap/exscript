@@ -1,5 +1,6 @@
 <xml>
   <task name="init">
+    <autologin/>
     <set-prompt>[\r\n][a-z]+[#>]\b</set-prompt>
     <execline>term len 0</execline>
     <execline>term width 0</execline>
