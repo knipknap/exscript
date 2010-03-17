@@ -1,6 +1,6 @@
 import os
 from DirWatcher              import monitor
-from util                    import read_order
+from Order                   import Order
 from Exscript.util.decorator import bind
 
 class INotifyDaemon(object):
@@ -28,9 +28,9 @@ class INotifyDaemon(object):
 
     def _on_order_received(self, filename):
         print 'Order received:', filename
-        order   = read_order(filename)
+        order   = Order.from_xml_file(filename)
         service = self.services[order.service_name]
-        self.queue.run(order.hosts, bind(self._run_service, service))
+        task    = self.queue.run(order.hosts, bind(self._run_service, service))
 
     def run(self):
         #FIXME: read existing orders on startup.

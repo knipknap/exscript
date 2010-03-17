@@ -1,14 +1,4 @@
 import re
-from lxml  import etree
-from Order import Order
-
-def read_order(filename):
-    print "Parsing order", filename
-    cfgtree = etree.parse(filename)
-    order   = cfgtree.find('order')
-    service = order.get('service').strip()
-    hosts   = [h.get('address').strip() for h in order.iterfind('host')]
-    return Order(service, hosts)
 
 def resolve_variables(variables, string):
     def variable_sub_cb(match):
