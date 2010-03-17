@@ -79,6 +79,9 @@ class decoratorTest(unittest.TestCase):
         result = bound(FakeConnection(), 'one', 'two', three = 3)
         self.assert_(result == 123, result)
 
+    def testDeprecated(self):
+        pass #not really needed.
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(decoratorTest)
 if __name__ == '__main__':

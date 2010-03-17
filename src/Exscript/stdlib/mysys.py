@@ -86,7 +86,7 @@ def run(scope, hostnames, filename):
     queue  = scope.get('__connection__').get_queue()
     action = scope.get('__connection__').get_action()
     task   = queue.force_run(hosts, autologin(job))
-    action.wait_for(task)
+    action.wait_for(task.actions)
     return True
 
 def wait(scope, seconds):

@@ -1,5 +1,7 @@
-import sys, unittest, re, os.path
+import sys, unittest, re, os.path, warnings
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
+
+warnings.simplefilter('ignore', DeprecationWarning)
 
 import shutil, time
 from tempfile                       import mkdtemp

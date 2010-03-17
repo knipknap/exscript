@@ -20,8 +20,10 @@ from external.SpiffSignal  import Trackable
 from AccountManager        import AccountManager
 from HostAction            import HostAction
 from FileLogger            import FileLogger
-from workqueue             import WorkQueue
+from Task                  import Task
+from workqueue             import WorkQueue, Action
 from util.cast             import to_list, to_hosts
+from util.decorator        import deprecated
 from parselib.Exception    import SyntaxError
 from interpreter.Exception import FailException
 
@@ -310,35 +312,40 @@ class Queue(Trackable):
         self.account_manager.add_account(account)
 
 
+    @deprecated
     def task_is_completed(self, task):
         """
+        This method is deprecated, use Task.is_completed() instead.
+
         Returns True if the given task is completed, False otherwise. The task
         is an object as returned by the Queue.run() method.
 
-        @type  task: object
+        @type  task: Task
         @param task: The object that was returned by Queue.run().
         @rtype:  bool
         @return: Whether the task is completed.
         """
         assert task is not None
-        for action in to_list(task):
-            if self.workqueue.in_queue(action):
-                return False
-        return True
+        return task.is_completed()
 
 
-    def wait_for(self, task):
+    def wait_for(self, action):
         """
-        Waits until the given task is completed. The task is an object as
+        Waits until the given action is completed. The action is an object as
         returned by the Queue.run() method.
 
-        @type  task: object
-        @param task: The object that was returned by Queue.run().
+        @type  action: Task|Action
+        @param action: The object that was returned by Queue.run().
         """
-        self._dbg(2, 'Waiting for the task to finish.')
-        assert task is not None
-        for action in to_list(task):
-            self.workqueue.wait_for(action)
+        assert action is not None
+        if isinstance(action, Task):
+            self._dbg(2, 'Waiting for the task to finish.')
+            return action.wait()
+        elif isinstance(action, Action):
+            self._dbg(2, 'Waiting for the action to finish.')
+            return self.workqueue.wait_for(action)
+        else:
+            raise ValueError('invalid type for argument "action"')
 
 
     def is_completed(self):
@@ -421,13 +428,13 @@ class Queue(Trackable):
         self.total += len(hosts)
         self.workqueue.unpause()
 
-        actions = []
+        task = Task(self)
         for host in hosts:
             action = self._run1(host, function, False, False)
-            actions.append(action)
+            task.add_action(action)
 
         self._dbg(2, 'All actions enqueued.')
-        return actions
+        return task
 
 
     def run(self, hosts, function):
@@ -465,13 +472,13 @@ class Queue(Trackable):
         self.total += len(hosts)
         self.workqueue.unpause()
 
-        actions = []
+        task = Task(self)
         for host in hosts:
             action = self._run1(host, function, True, False)
-            actions.append(action)
+            task.add_action(action)
 
         self._dbg(2, 'All prioritized actions enqueued.')
-        return actions
+        return task
 
 
     def force_run(self, hosts, function):
@@ -490,10 +497,10 @@ class Queue(Trackable):
         self.total += len(hosts)
         self.workqueue.unpause()
 
-        actions = []
+        task = Task(self)
         for host in hosts:
             action = self._run1(host, function, True, True)
-            actions.append(action)
+            task.add_action(action)
 
         self._dbg(2, 'All forced actions enqueued.')
-        return actions
+        return task
