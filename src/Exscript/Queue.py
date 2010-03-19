@@ -23,7 +23,7 @@ from FileLogger            import FileLogger
 from Task                  import Task
 from workqueue             import WorkQueue, Action
 from util.cast             import to_list, to_hosts
-from util.decorator        import deprecated
+from util.impl             import deprecation
 from parselib.Exception    import SyntaxError
 from interpreter.Exception import FailException
 
@@ -312,7 +312,6 @@ class Queue(Trackable):
         self.account_manager.add_account(account)
 
 
-    @deprecated
     def task_is_completed(self, task):
         """
         This method is deprecated, use Task.is_completed() instead.
@@ -325,6 +324,8 @@ class Queue(Trackable):
         @rtype:  bool
         @return: Whether the task is completed.
         """
+        deprecation('task_is_completed(): this method is deprecated.' \
+                  + ' Please use Task.is_completed() instead.')
         assert task is not None
         return task.is_completed()
 

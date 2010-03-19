@@ -15,7 +15,6 @@
 """
 Decorators for callbacks passed to Queue.run().
 """
-import warnings
 
 def bind(function, *args, **kwargs):
     """
@@ -119,18 +118,3 @@ def autologin(function, wait = True):
         conn.close(force = True)
         return result
     return connect(decorated)
-
-def deprecated(func):
-    """
-    A decorator for marking functions as deprecated. Results in
-    a printed warning message when the function is used.
-    """
-    def decorated(*args, **kwargs):
-        warnings.warn('Call to deprecated function %s.' % func.__name__,
-                      category   = DeprecationWarning,
-                      stacklevel = 2)
-        return func(*args, **kwargs)
-    decorated.__name__ = func.__name__
-    decorated.__doc__  = func.__doc__
-    decorated.__dict__.update(func.__dict__)
-    return decorated
