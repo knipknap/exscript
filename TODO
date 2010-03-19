@@ -15,8 +15,6 @@ Exscript
 
 exscriptd
 ---------
-* Create a client library that takes an order, assigns an order id,
-  and places it.
 * Add a way for polling the order status.
 * Make sure that logs are stored properly (and not overwritten).
 * Add logging for the daemon.
