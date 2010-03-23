@@ -156,12 +156,18 @@ class QueueTest(unittest.TestCase):
         task = self.startTask()
         while not self.queue.task_is_completed(task):
             time.sleep(.1)
+        # The following function is not synchronous with the above, so add
+        # a timeout to avoid races.
+        time.sleep(.1)
         self.assert_(self.queue.is_completed())
 
     def testWaitFor(self):
         task = self.startTask()
         self.queue.wait_for(task)
         self.assert_(self.queue.task_is_completed(task))
+        # The following function is not synchronous with the above, so add
+        # a timeout to avoid races.
+        time.sleep(.1)
         self.assert_(self.queue.is_completed())
 
     def testIsCompleted(self):
