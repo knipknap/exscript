@@ -7,9 +7,9 @@
   </task>
 
   <service>
-    <invoke-task name="init"/>
     <invoke-script language="python">
       test.py
     </invoke-script>
+    <invoke-task name="init"/>
   </service>
 </xml>

@@ -1,1 +1,1 @@
-print "Hello Service"
+print "Hello Service", locals()

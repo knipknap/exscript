@@ -5,7 +5,7 @@ class Task(object):
         self.tasks   = tasks
         #print self.__class__.__name__, actions, tasks
 
-    def call(self, conn):
+    def call(self, conn, order):
         #print "Task called:", self.name
         for action in self.actions:
             name = action[0]
@@ -24,9 +24,13 @@ class Task(object):
             elif name == 'set-prompt':
                 conn.set_prompt(action[1])
             elif name == 'invoke-task':
-                self.tasks[action[1]].call(conn, *action[2])
+                self.tasks[action[1]].call(conn, order, *action[2])
             elif name == 'invoke-script':
-                print name, action[1:]
-                #FIXME
+                language = action[1]
+                filename = action[2]
+                if language == 'python':
+                    execfile(filename, {}, {'conn': conn, 'order': order})
+                else:
+                    raise Exception('Unsupported language %s.' % language)
             else:
                 raise Exception('BUG: invalid action %s' % name)

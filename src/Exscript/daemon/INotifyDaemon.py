@@ -23,11 +23,12 @@ class INotifyDaemon(object):
             os.makedirs(self.output_dir)
 
     def _run_service(self, conn, order):
-        print "CONN", conn.get_host().get_name(), order.get_service()
+        service_name = order.get_service()
+        hostname     = conn.get_host().get_name()
+        print "Running service", service_name, "on", hostname
         order.set_status('in-progress')
-        service = self.services[order.get_service()]
-        service.call(conn)
-        #FIXME
+        service = self.services[service_name]
+        service.call(conn, order)
 
     def _save_order(self, order):
         outfile = os.path.join(self.output_dir, order.get_filename())
