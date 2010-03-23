@@ -129,10 +129,8 @@ def _read_service(name, filename):
 def _read_inotify_daemon(element, variables, queues):
     name       = element.get('name').strip()
     name       = resolve_variables(variables, name)
-    input_dir  = element.find('in').text.strip()
-    input_dir  = resolve_variables(variables, input_dir)
-    output_dir = element.find('out').text.strip()
-    output_dir = resolve_variables(variables, output_dir)
+    directory  = element.find('directory').text.strip()
+    directory  = resolve_variables(variables, directory)
     queue_name = element.find('queue').text.strip()
     queue_name = resolve_variables(variables, queue_name)
 
@@ -145,10 +143,9 @@ def _read_inotify_daemon(element, variables, queues):
         services[name] = _read_service(name, path)
 
     return INotifyDaemon(name,
-                         input_dir  = input_dir,
-                         output_dir = output_dir,
-                         queue      = queues[queue_name],
-                         services   = services)
+                         directory = directory,
+                         queue     = queues[queue_name],
+                         services  = services)
 
 def _read_daemons(cfgtree, variables, accounts):
     daemons = {}

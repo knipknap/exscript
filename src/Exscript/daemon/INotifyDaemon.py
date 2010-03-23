@@ -7,14 +7,13 @@ from Exscript.util.decorator import bind
 class INotifyDaemon(object):
     def __init__(self,
                  name,
-                 input_dir  = None,
-                 output_dir = None,
+                 directory  = None,
                  queue      = None,
                  processors = None,
                  services   = None):
         self.name       = name
-        self.input_dir  = input_dir
-        self.output_dir = output_dir
+        self.input_dir  = os.path.join(directory, 'in')
+        self.output_dir = os.path.join(directory, 'out')
         self.processors = processors
         self.services   = services
         self.queue      = queue
@@ -31,15 +30,17 @@ class INotifyDaemon(object):
         #FIXME
 
     def _save_order(self, order):
-        outfile = os.path.join(self.output_dir, order.get_id() + '.xml')
+        outfile = os.path.join(self.output_dir, order.get_filename())
         order.write(outfile)
 
     def _on_task_done(self, order):
-        print 'Order done:', order.filename
+        print 'Order done:', order.get_id()
         order.set_status('completed')
         self._save_order(order)
 
     def _on_order_received(self, filename):
+        if os.path.basename(filename).startswith('.'):
+            return
         print 'Order received:', filename
 
         # Parse the order.

@@ -34,8 +34,7 @@ This is the Exscript daemon configuration file.
   You may define only one daemon at this time.
   -->
   <daemon type="inotify" name="exscript-daemon">
-    <in>/var/spool/exscriptd/in</in>
-    <out>/var/spool/exscriptd/out</out>
+    <directory>/var/spool/exscriptd</directory>
     <queue>default-queue</queue>
     <!-- load-service name="foobar" load="/path/to/my/test.xml"/ -->
   </daemon>
