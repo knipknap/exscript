@@ -106,11 +106,12 @@ def _collect_task_children(element, dirname):
             if not os.path.isfile(filename):
                 raise Exception('not a valid file: ' + filename)
             if language == 'python':
-                content = open(filename).read()
-                code    = compile(content, filename, 'exec')
-                vars    = {}
-                result  = eval(code, vars)
-                start   = vars.get('run')
+                content          = open(filename).read()
+                code             = compile(content, filename, 'exec')
+                vars             = globals().copy()
+                vars['__file__'] = filename
+                result           = eval(code, vars)
+                start            = vars.get('run')
                 if not start:
                     msg = 'Error: %s run() function not found' % filename
                     raise Exception(msg)
@@ -135,7 +136,9 @@ def _read_service(name, filename):
     tasks   = _read_tasks(cfgtree, dirname)
     element = cfgtree.find('service')
     actions = _collect_task_children(element, dirname)
-    return Service(name, actions, tasks)
+    service = Service(name, actions, tasks)
+    print 'Service "%s" initialized.' % name
+    return service
 
 def _read_inotify_daemon(element, variables, queues):
     name       = element.get('name').strip()
