@@ -2,6 +2,7 @@ import os
 from lxml                    import etree
 from DirWatcher              import monitor
 from Order                   import Order
+from Exscript                import Host
 from Exscript.util.decorator import bind
 
 class INotifyDaemon(object):
@@ -57,9 +58,13 @@ class INotifyDaemon(object):
         basename = os.path.basename(filename)
         order.id = os.path.splitext(basename)[0]
 
+        # Prepare the list of hosts from the order.
+        hosts = [Host(h) for h in order.get_hosts()]
+        for host in hosts:
+            host.set_logname(os.path.join(order.id, host.get_logname()))
+
         # Enqueue it.
-        hosts   = order.get_hosts()
-        task    = self.queue.run(hosts, bind(self._run_service, order))
+        task = self.queue.run(hosts, bind(self._run_service, order))
         task.signal_connect('done', self._on_task_done, order)
         order.set_status('queued')
         self._save_order(order)

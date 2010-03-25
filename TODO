@@ -15,5 +15,4 @@ Exscript
 
 exscriptd
 ---------
-* Make sure that logs are stored properly (and not overwritten).
 * Add logging for the daemon.
