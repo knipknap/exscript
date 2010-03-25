@@ -105,7 +105,18 @@ def _collect_task_children(element, dirname):
             filename = os.path.join(dirname, child.text.strip())
             if not os.path.isfile(filename):
                 raise Exception('not a valid file: ' + filename)
-            children.append((child.tag, language, filename))
+            if language == 'python':
+                content = open(filename).read()
+                code    = compile(content, filename, 'exec')
+                vars    = {}
+                result  = eval(code, vars)
+                start   = vars.get('run')
+                if not start:
+                    msg = 'Error: %s run() function not found' % filename
+                    raise Exception(msg)
+                children.append(('invoke-python', start))
+            else:
+                raise Exception('Unsupported language %s.' % language)
         else:
             raise Exception('Invalid tag %s' % child.tag)
     return children

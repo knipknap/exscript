@@ -25,12 +25,7 @@ class Task(object):
                 conn.set_prompt(action[1])
             elif name == 'invoke-task':
                 self.tasks[action[1]].call(conn, order, *action[2])
-            elif name == 'invoke-script':
-                language = action[1]
-                filename = action[2]
-                if language == 'python':
-                    execfile(filename, {}, {'conn': conn, 'order': order})
-                else:
-                    raise Exception('Unsupported language %s.' % language)
+            elif name == 'invoke-python':
+                action[1](conn, order)
             else:
                 raise Exception('BUG: invalid action %s' % name)
