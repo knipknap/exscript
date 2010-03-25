@@ -38,15 +38,8 @@ class FileLogger(Logger):
         if not os.path.exists(self.logdir):
             os.mkdir(self.logdir)
 
-    def _get_logfile_name(self, action):
-        logfile = action.get_name()
-        retries = action.n_failures()
-        if retries > 0:
-            logfile += '_retry%d' % retries
-        return os.path.join(self.logdir, logfile + '.log')
-
     def _on_action_started(self, action, conn):
-        filename = self._get_logfile_name(action)
+        filename = os.path.join(self.logdir, action.get_logname())
         log      = Logfile(filename, self.mode, self.delete)
         log.started(conn)
         self._add_log(action, log)

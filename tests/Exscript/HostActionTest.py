@@ -48,6 +48,13 @@ class HostActionTest(unittest.TestCase):
     def testGetHost(self):
         self.assert_(isinstance(self.count_action.get_host(), Host))
 
+    def testGetLogname(self):
+        self.assert_(self.count_action.get_logname())
+        self.assertEqual(self.count_action.get_logname(),
+                         self.count_action.get_name() + '.log')
+        self.count_action.get_host().set_logname('test')
+        self.assertEqual(self.count_action.get_logname(), 'test.log')
+
     def testSetTimes(self):
         # Run once.
         self.fail_action.execute()

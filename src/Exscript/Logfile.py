@@ -23,6 +23,9 @@ class Logfile(Log):
         self.mode      = mode
         self.delete    = delete
         self.do_log    = True
+        dirname        = os.path.dirname(filename)
+        if dirname and not os.path.exists(dirname):
+            os.mkdir(dirname)
 
     def __str__(self):
         data = ''

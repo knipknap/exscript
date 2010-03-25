@@ -16,6 +16,9 @@ class FakeAction(Trackable):
     def get_name(self):
         return 'fake'
 
+    def get_logname(self):
+        return 'fake.log'
+
     def n_failures(self):
         return self.failures
 

@@ -86,6 +86,15 @@ class HostTest(unittest.TestCase):
         self.host.set_password('test')
         self.assertEqual(self.host.get_password(), 'test')
 
+    def testGetLogname(self):
+        pass # Tested in testGetLogname().
+
+    def testSetLogname(self):
+        self.assert_(self.host.get_logname())
+        self.assertEqual(self.host.get_logname(), self.host.get_address())
+        self.host.set_logname('test')
+        self.assertEqual(self.host.get_logname(), 'test')
+
     def testGetPassword(self):
         pass # Tested in testSetPassword().
 

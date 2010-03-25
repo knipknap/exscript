@@ -3,12 +3,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from tempfile                      import mkdtemp
 from shutil                        import rmtree
+from Exscript                      import Host
+from Exscript.HostAction           import HostAction
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.FileLogger           import FileLogger
 from util.reportTest               import FakeQueue
-from LoggerTest                    import LoggerTest, \
-                                          FakeAction,      \
-                                          FakeConnection
+from LoggerTest                    import LoggerTest, FakeConnection
 
 class FakeError(Exception):
     pass
@@ -29,7 +29,8 @@ class FileLoggerTest(LoggerTest):
         logger = FileLogger(FakeQueue(), self.logdir)
 
     def testActionEnqueued(self):
-        action  = FakeAction()
+        host    = Host('fake')
+        action  = HostAction(object, object, host)
         conn    = FakeConnection()
         logfile = os.path.join(self.logdir, 'fake.log')
         errfile = logfile + '.error'
@@ -39,7 +40,7 @@ class FileLoggerTest(LoggerTest):
 
         # Test "started".
         action.signal_emit('started', action, conn)
-        self.assert_(os.path.isfile(logfile))
+        self.assert_(os.path.isfile(logfile), 'No such file: ' + logfile)
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
         self.assertEqual(content, '')

@@ -57,6 +57,13 @@ class HostAction(Action):
     def get_host(self):
         return self.host
 
+    def get_logname(self):
+        logname = self.host.get_logname()
+        retries = self.n_failures()
+        if retries > 0:
+            logname += '_retry%d' % retries
+        return logname + '.log'
+
     def set_times(self, times):
         self.times = int(times)
 

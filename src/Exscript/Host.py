@@ -41,6 +41,7 @@ class Host(object):
         self.vars     = kwargs
         self.username = None
         self.password = None
+        self.logname  = None
         self.set_uri(uri) 
 
 
@@ -236,6 +237,31 @@ class Host(object):
         @return: The password.
         """
         return self.password
+
+
+    def set_logname(self, logname):
+        """
+        Defines the basename of the log name. The name may include a slash,
+        in which case the logs for this host are placed in a subdirectory
+        (when a FileLogger is used).
+        By default, the logname is the address of the host.
+
+        @type:  string
+        @param: The basename of the logfile.
+        """
+        self.logname = logname
+
+
+    def get_logname(self):
+        """
+        Returns the basename of the logfile.
+
+        @rtype:  string
+        @return: The basename of the logfile.
+        """
+        if self.logname:
+            return self.logname
+        return self.get_address()
 
 
     def set(self, name, value):
