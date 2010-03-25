@@ -15,7 +15,7 @@ Exscript through a web server.
 
 Prerequisite: Exscript is already installed and working.
 
-The following instructions should work on Debian based Linux
+The following instructions should work on most Debian based Linux
 distributions. On other systems the procedure will probably differ.
 
 - Define the directories for the following steps:
@@ -23,6 +23,12 @@ distributions. On other systems the procedure will probably differ.
     export EXSCRIPT_LOG=/var/log/exscriptd
     export EXSCRIPT_SPOOL=/var/spool/exscriptd
     export EXSCRIPT_CFG=/etc/exscriptd
+    export EXSCRIPT_USER=exscriptd
+    export EXSCRIPT_GROUP=exscriptd
+
+- Create a user and group for the daemon:
+
+    sudo adduser $EXSCRIPT_USER $EXSCRIPT_GROUP
 
 - Create the required directories:
 
@@ -43,6 +49,11 @@ distributions. On other systems the procedure will probably differ.
 
     sudo cp util/exscriptd_init.sh /etc/init.d/exscriptd
 
+- Set the permissions:
+
+    sudo chown -R $EXSCRIPT_USER:$EXSCRIPT_GROUP \
+                  $EXSCRIPT_LOG $EXSCRIPT_SPOOL $EXSCRIPT_CFG
+
 - If you used a custom installation path, you'll need to edit
   the path in /etc/init.d/exscriptd accordingly.
 
@@ -60,6 +71,7 @@ distributions. On other systems the procedure will probably differ.
 
      tests/Exscript/daemon/testservice/test.xml
 
+   Don't forget to make the service file readable by exscriptd.
    You may then tell exscriptd to load the service by
    adding it to /etc/exscript/config.xml using the <load-service>
    XML tag under the daemon. For example:
