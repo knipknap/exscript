@@ -12,6 +12,11 @@ class Order(object):
                                       service = service_name)
         self.order.set('status', 'new')
 
+    def __repr__(self):
+        return "<Order('%s','%s','%s')>" % (self.get_id(),
+                                            self.get_service(),
+                                            self.get_status())
+
     @staticmethod
     def from_xml_file(filename):
         # Parse required attributes.
