@@ -1,9 +1,18 @@
 import os, shutil
-from tempfile import NamedTemporaryFile
-from lxml     import etree
-from util     import mkorderid
+from sqlalchemy     import *
+from sqlalchemy.orm import relation
+from Database       import Base
+from tempfile       import NamedTemporaryFile
+from lxml           import etree
+from util           import mkorderid
 
-class Order(object):
+class Order(Base):
+    __tablename__ = 'order'
+    id            = Column(String(50), primary_key = True)
+    service       = Column(String(50), index = True)
+    status        = Column(String(20), index = True)
+    xml           = Column(Text)
+
     def __init__(self, service_name):
         self.id    = mkorderid(service_name)
         self.xml   = etree.Element('xml')
@@ -79,3 +88,13 @@ class Order(object):
 
     def get_hosts(self):
         return [h.get('address').strip() for h in self.order.iterfind('host')]
+
+class Host(Base):
+    __tablename__ = 'host'
+
+    order_id = Column(String(50),  ForeignKey('order.id'), primary_key = True)
+    address  = Column(String(150), primary_key = True)
+    name     = Column(String(50),  primary_key = True)
+    hosts    = relation(Order,
+                        backref  = 'hosts',
+                        order_by = Order.id)

@@ -2,6 +2,7 @@
 import os, base64, re
 from sqlalchemy     import create_engine
 from sqlalchemy.orm import sessionmaker
+from Order          import Order
 from Database       import Base
 from lxml           import etree
 from Exscript       import Account, Queue
@@ -96,6 +97,7 @@ def _read_database(element, variables):
     print 'Creating database connection for', dbn
     engine  = create_engine(dbn)
     Session = sessionmaker(bind = engine)
+    print 'Initializing database tables...'
     Base.metadata.create_all(engine)
     return Session()
 
