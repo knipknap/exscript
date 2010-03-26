@@ -70,6 +70,8 @@ class INotifyDaemon(object):
         task.signal_connect('done', self._on_task_done, order)
         order.set_status('queued')
         self._save_order(order)
+        self.db.save(order)
+        self.db.commit()
 
     def run(self):
         #FIXME: read existing orders on startup.

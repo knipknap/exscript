@@ -1,6 +1,6 @@
 import os, shutil
 from sqlalchemy     import *
-from sqlalchemy.orm import relation
+from sqlalchemy.orm import relation, synonym
 from Database       import Base
 from tempfile       import NamedTemporaryFile
 from lxml           import etree
@@ -11,7 +11,7 @@ class Order(Base):
     id            = Column(String(50), primary_key = True)
     service       = Column(String(50), index = True)
     status        = Column(String(20), index = True)
-    xml           = Column(Text)
+    xmldoc        = Column(Text)
 
     def __init__(self, service_name):
         self.id    = mkorderid(service_name)
@@ -43,6 +43,12 @@ class Order(Base):
 
     def toxml(self):
         return etree.tostring(self.xml)
+
+    def fromxml(self, xml):
+        self.xml   = etree.fromstring(xml)
+        self.order = xml.find('order')
+        if not self.order.get('status'):
+            self.order.set('status', 'new')
 
     def write(self, filename):
         dirname  = os.path.dirname(filename)
@@ -88,6 +94,10 @@ class Order(Base):
 
     def get_hosts(self):
         return [h.get('address').strip() for h in self.order.iterfind('host')]
+
+    status  = property(get_status, set_status)
+    service = property(get_service)
+    xmldoc  = property(toxml, fromxml)
 
 class Host(Base):
     __tablename__ = 'host'
