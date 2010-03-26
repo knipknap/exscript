@@ -9,12 +9,14 @@ class INotifyDaemon(object):
     def __init__(self,
                  name,
                  directory  = None,
+                 database   = None,
                  queue      = None,
                  processors = None,
                  services   = None):
         self.name       = name
         self.input_dir  = os.path.join(directory, 'in')
         self.output_dir = os.path.join(directory, 'out')
+        self.db         = database
         self.processors = processors
         self.services   = services
         self.queue      = queue

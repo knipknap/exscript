@@ -15,4 +15,5 @@ Exscript
 
 exscriptd
 ---------
+* Delete empty log directories when done.
 * Add logging for the daemon.

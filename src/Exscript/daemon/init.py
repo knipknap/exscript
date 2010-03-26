@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import os, base64, re
-from lxml          import etree
-from Exscript      import Account, Queue
-from INotifyDaemon import INotifyDaemon
-from Service       import Service
-from Task          import Task
-from util          import resolve_variables
+from sqlalchemy     import create_engine
+from sqlalchemy.orm import sessionmaker
+from lxml           import etree
+from Exscript       import Account, Queue
+from INotifyDaemon  import INotifyDaemon
+from Service        import Service
+from Task           import Task
+from util           import resolve_variables
 
 def _read_variables(cfgtree):
     variables = {}
@@ -86,6 +88,20 @@ def _read_queues(cfgtree, variables, accounts):
         queues[name] = _read_queue(element, variables, accounts)
     return queues
 
+def _read_database(element, variables):
+    dbn     = element.find('dbn').text.strip()
+    dbn     = resolve_variables(variables, dbn)
+    Session = sessionmaker(bind = create_engine(dbn))
+    return Session()
+
+def _read_databases(cfgtree, variables):
+    databases = {}
+    for element in cfgtree.iterfind('database'):
+        name            = element.get('name').strip()
+        name            = resolve_variables(variables, name)
+        databases[name] = _read_database(element, variables)
+    return databases
+
 def _collect_task_children(element, dirname):
     children = []
     for child in element:
@@ -140,13 +156,15 @@ def _read_service(name, filename):
     print 'Service "%s" initialized.' % name
     return service
 
-def _read_inotify_daemon(element, variables, queues):
+def _read_inotify_daemon(element, variables, queues, databases):
     name       = element.get('name').strip()
     name       = resolve_variables(variables, name)
     directory  = element.find('directory').text.strip()
     directory  = resolve_variables(variables, directory)
     queue_name = element.find('queue').text.strip()
     queue_name = resolve_variables(variables, queue_name)
+    db_name    = element.find('database').text.strip()
+    db_name    = resolve_variables(variables, db_name)
 
     services = {}
     for service in element.iterfind('load-service'):
@@ -158,10 +176,11 @@ def _read_inotify_daemon(element, variables, queues):
 
     return INotifyDaemon(name,
                          directory = directory,
+                         database  = databases[db_name],
                          queue     = queues[queue_name],
                          services  = services)
 
-def _read_daemons(cfgtree, variables, accounts):
+def _read_daemons(cfgtree, variables, accounts, databases):
     daemons = {}
     for element in cfgtree.iterfind('daemon'):
         type = element.get('type').strip()
@@ -171,7 +190,8 @@ def _read_daemons(cfgtree, variables, accounts):
         if type == 'inotify':
             daemon = _read_inotify_daemon(element,
                                           variables,
-                                          accounts)
+                                          accounts,
+                                          databases)
         else:
             raise Exception('No such daemon type: %s' % type)
         daemons[name] = daemon
@@ -186,6 +206,7 @@ def init(filename):
     class Config:
         variables = _read_variables(cfgtree)
         accounts  = _read_account_pools(cfgtree, variables)
+        databases = _read_databases(cfgtree, variables)
         queues    = _read_queues(cfgtree, variables, accounts)
-        daemons   = _read_daemons(cfgtree, variables, queues)
+        daemons   = _read_daemons(cfgtree, variables, queues, databases)
     return Config()

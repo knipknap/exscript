@@ -19,6 +19,15 @@ This is the Exscript daemon configuration file.
   </account-pool>
 
   <!--
+  Database configuration. The following databases are supported:
+    Tested: sqlite
+    Untested: Any other database supported by SQLAlchemy.
+  -->
+  <database name="default">
+    <dbn>sqlite:///home/sab/exscriptd/db.sqlite</dbn>
+  </database>
+
+  <!--
   Exscript queue configuration.
   You may define any number of queues in this file.
   -->
@@ -35,6 +44,7 @@ This is the Exscript daemon configuration file.
   -->
   <daemon type="inotify" name="exscript-daemon">
     <directory>/var/spool/exscriptd</directory>
+    <database>default</database>
     <queue>default-queue</queue>
     <!-- load-service name="foobar" load="/path/to/my/test.xml"/ -->
   </daemon>
