@@ -1,34 +1,39 @@
 import os
-from Order import Order
+from Order                 import Order
+from sqlalchemy.exceptions import InvalidRequestError
+from init                  import get_inotify_daemon_dir,       \
+                                  get_inotify_daemon_db_name,   \
+                                  init_database
 
 class Client(object):
-    def __init__(self, directory):
+    def __init__(self, config_file, server_name):
+        directory       = get_inotify_daemon_dir(config_file, server_name)
+        database_name   = get_inotify_daemon_db_name(config_file, server_name)
+        self.db         = init_database(config_file, database_name)
         self.input_dir  = os.path.join(directory, 'in')
         self.output_dir = os.path.join(directory, 'out')
 
     def place_order(self, order):
-        if order.get_status() != 'new':
-            msg = 'order status is "%s", should be "new"' % order.get_status()
+        if order.status != 'new':
+            msg = 'order status is "%s", should be "new"' % order.status
             raise ValueError(msg)
         if not order.is_valid():
             raise ValueError('incomplete or invalid order')
 
-        order.set_status('accepted')
-        filename = os.path.join(self.input_dir, order.get_filename())
+        order.status = 'accepted'
+        filename     = os.path.join(self.input_dir, order.get_filename())
         order.write(filename)
-        order.set_status('placed')
+        order.status = 'placed'
 
-    def get_order_status(self, order_id):
-        order        = Order('')
-        order.id     = order_id
-        in_filename  = os.path.join(self.input_dir,  order.get_filename())
-        out_filename = os.path.join(self.output_dir, order.get_filename())
-        if os.path.exists(in_filename):
-            return 'new'
-        if not os.path.exists(out_filename):
-            return 'none'
-        order = Order.from_xml_file(out_filename)
-        return order.get_status()
+    def get_order_from_id(self, order_id):
+        return self.db.query(Order).filter(Order.id == order_id).one()
+
+    def get_order_status_from_id(self, order_id):
+        try:
+            order = self.get_order_from_id(order_id)
+        except InvalidRequestError:
+            return 'not-found'
+        return order.status
 
 if __name__ == '__main__':
     import sys, time
@@ -37,15 +42,15 @@ if __name__ == '__main__':
     else:
         order = Order('testservice')
 
-    client = Client('/home/sab/exscriptd')
-    print "Status:", client.get_order_status(order.get_id())
+    client = Client('/home/sab/sandbox/exscript/config.xml', 'exscript-daemon')
+    print "Status:", client.get_order_status_from_id(order.id)
     client.place_order(order)
-    print "Placed order", order.get_id()
-    status = client.get_order_status(order.get_id())
+    print "Placed order", order.id
+    status = client.get_order_status_from_id(order.id)
 
     while status != 'completed':
         print "Status:", status
         time.sleep(.1)
-        status = client.get_order_status(order.get_id())
+        status = client.get_order_status_from_id(order.id)
 
     print "Status:", status

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os, base64, re
 from sqlalchemy     import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 from Order          import Order
 from Database       import Base
 from lxml           import etree
@@ -96,10 +96,10 @@ def _read_database(element, variables):
 
     print 'Creating database connection for', dbn
     engine  = create_engine(dbn)
-    Session = sessionmaker(bind = engine)
+    Session = scoped_session(sessionmaker(bind = engine))
     print 'Initializing database tables...'
     Base.metadata.create_all(engine)
-    return Session()
+    return Session
 
 def _read_databases(cfgtree, variables):
     databases = {}
@@ -203,6 +203,25 @@ def _read_daemons(cfgtree, variables, accounts, databases):
             raise Exception('No such daemon type: %s' % type)
         daemons[name] = daemon
     return daemons
+
+def get_inotify_daemon_dir(filename, server_name):
+    cfgtree = etree.parse(filename)
+    daemon  = cfgtree.find('daemon[@name="%s"]' % server_name)
+    return daemon.find('directory').text.strip()
+
+def get_inotify_daemon_db_name(filename, server_name):
+    cfgtree = etree.parse(filename)
+    daemon  = cfgtree.find('daemon[@name="%s"]' % server_name)
+    return daemon.find('database').text.strip()
+
+def init_database(filename, db_name):
+    """
+    Reads the config file and inits the databases only.
+    """
+    cfgtree   = etree.parse(filename)
+    variables = _read_variables(cfgtree)
+    element   = cfgtree.find('database[@name="%s"]' % db_name)
+    return _read_database(element, variables)
 
 def init(filename):
     """
