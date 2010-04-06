@@ -1,4 +1,5 @@
 import os, shutil
+import Exscript
 from sqlalchemy     import *
 from sqlalchemy.orm import relation, synonym
 from Database       import Base
@@ -62,6 +63,16 @@ class Order(Base):
 
     def get_filename(self):
         return self.id + '.xml'
+
+    def get_hosts(self):
+        """
+        Returns Exscript.Host objects.
+        """
+        # Prepare the list of hosts from the order.
+        hosts = [Exscript.Host(h.address) for h in self.hosts]
+        for host in hosts:
+            host.set_logname(os.path.join(self.id, host.get_logname()))
+        return hosts
 
 class Host(Base):
     __tablename__ = 'host'
