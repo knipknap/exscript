@@ -15,6 +15,7 @@ class Config(object):
     def __init__(self, filename):
         self.cfgtree   = etree.parse(filename)
         self.variables = {}
+        self.queues    = {}
         self._clean_tree()
 
     def _resolve(self, text):
@@ -46,6 +47,9 @@ class Config(object):
         return accounts
 
     def init_queue_from_name(self, name):
+        if self.queues.has_key(name):
+            return self.queues[name]
+
         # Create the queue first.
         element     = self.cfgtree.find('queue[@name="%s"]' % name)
         max_threads = element.find('max-threads').text
@@ -63,6 +67,8 @@ class Config(object):
         if account_pool is not None:
             accounts = self.init_account_pool_from_name(account_pool.text)
             queue.add_account(accounts)
+
+        self.queues[name] = queue
         return queue
 
     def init_database_from_name(self, name):
