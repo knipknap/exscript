@@ -60,7 +60,7 @@ class Config(object):
 
         # Add some accounts, if any.
         account_pool = element.find('account-pool')
-        if account_pool:
+        if account_pool is not None:
             accounts = self.init_account_pool_from_name(account_pool.text)
             queue.add_account(accounts)
         return queue
