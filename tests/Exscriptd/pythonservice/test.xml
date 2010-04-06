@@ -1,0 +1,3 @@
+<xml>
+  <service type="python" filename="test.py"/>
+</xml>

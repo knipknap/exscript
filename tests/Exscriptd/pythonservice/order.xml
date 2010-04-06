@@ -1,0 +1,6 @@
+<xml>
+  <order service="python-service">
+    <host address="localhost"/>
+    <host address="otherhost"/>
+  </order>
+</xml>
