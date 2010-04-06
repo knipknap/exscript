@@ -1,1 +1,1 @@
-from init import init
+from Config import Config

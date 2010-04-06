@@ -1,12 +1,9 @@
 class Task(object):
-    def __init__(self, name, actions, tasks):
+    def __init__(self, name, actions):
         self.name    = name
         self.actions = actions
-        self.tasks   = tasks
-        #print self.__class__.__name__, actions, tasks
 
     def call(self, conn, order):
-        #print "Task called:", self.name
         for action in self.actions:
             name = action[0]
             if name == 'connect':
@@ -24,7 +21,7 @@ class Task(object):
             elif name == 'set-prompt':
                 conn.set_prompt(action[1])
             elif name == 'invoke-task':
-                self.tasks[action[1]].call(conn, order, *action[2])
+                action[1].call(conn, order, *action[2])
             elif name == 'invoke-python':
                 action[1](conn, order)
             else:

@@ -2,7 +2,7 @@
 import sys
 from optparse  import OptionParser
 from Exscript  import __version__
-from Exscriptd import init
+from Exscriptd import Config
 
 parser = OptionParser(usage = '%prog [options]', version = __version__)
 parser.add_option('--domain',
@@ -29,7 +29,7 @@ args.pop(0)
 if not options.config:
     parser.error('Required option --config not set')
 
-config = init(options.config)
+config = Config(options.config)
 
-for daemon in config.daemons.itervalues():
+for daemon in config.init_daemons():
     daemon.run()

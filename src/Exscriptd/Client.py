@@ -1,15 +1,14 @@
 import os
 from Order                 import Order
 from sqlalchemy.exceptions import InvalidRequestError
-from init                  import get_inotify_daemon_dir,       \
-                                  get_inotify_daemon_db_name,   \
-                                  init_database
+from Config                import Config
 
 class Client(object):
     def __init__(self, config_file, server_name):
-        directory       = get_inotify_daemon_dir(config_file, server_name)
-        database_name   = get_inotify_daemon_db_name(config_file, server_name)
-        self.db         = init_database(config_file, database_name)
+        config          = Config(config_file)
+        directory       = config.get_inotify_daemon_dir(server_name)
+        database_name   = config.get_inotify_daemon_db_name(server_name)
+        self.db         = config.init_database_from_name(database_name)
         self.input_dir  = os.path.join(directory, 'in')
         self.output_dir = os.path.join(directory, 'out')
 
