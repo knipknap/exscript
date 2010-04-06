@@ -7,7 +7,7 @@ from Database       import Base
 from lxml           import etree
 from Exscript       import Account, Queue
 from INotifyDaemon  import INotifyDaemon
-from Service        import Service
+from XmlService     import XmlService
 from PythonService  import PythonService
 from Task           import Task
 from util           import resolve_variables
@@ -140,11 +140,11 @@ class Config(object):
             actions = self._collect_task_children(cfgtree,
                                                   element,
                                                   dirname)
-            service = Service(daemon,
-                              name,
-                              actions,
-                              queue     = queue,
-                              autoqueue = autoqueue)
+            service = XmlService(daemon,
+                                 name,
+                                 actions,
+                                 queue     = queue,
+                                 autoqueue = autoqueue)
         elif type == 'python':
             basename = element.get('filename')
             filename = os.path.join(dirname, basename)

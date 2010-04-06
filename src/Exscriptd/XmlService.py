@@ -1,7 +1,7 @@
 from Exscript.util.decorator import bind
 from Task                    import Task
 
-class Service(Task):
+class XmlService(Task):
     def __init__(self,
                  daemon,
                  name,
