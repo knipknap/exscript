@@ -15,6 +15,7 @@ Exscript
 
 exscriptd
 ---------
+* XML: autoqueue should be a property of the service, not of the XML.
 * Add API docs for the client, hide the rest.
 * Add tests.
 * Delete empty log directories when done.

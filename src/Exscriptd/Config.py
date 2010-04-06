@@ -8,6 +8,7 @@ from lxml           import etree
 from Exscript       import Account, Queue
 from INotifyDaemon  import INotifyDaemon
 from Service        import Service
+from PythonService  import PythonService
 from Task           import Task
 from util           import resolve_variables
 
@@ -123,37 +124,68 @@ class Config(object):
         actions = self._collect_task_children(cfgtree, element, dirname)
         return Task(name, actions)
 
-    def init_service_from_name(self, name, filename):
+    def init_service_from_name(self,
+                               daemon,
+                               name,
+                               filename,
+                               queue     = None,
+                               autoqueue = False):
         print 'Loading service "%s"...' % name,
         cfgtree = etree.parse(filename)
         dirname = os.path.dirname(filename)
         element = cfgtree.find('service')
-        actions = self._collect_task_children(cfgtree, element, dirname)
-        service = Service(name, actions)
+        type    = element.get('type')
+
+        if type == 'xml':
+            actions = self._collect_task_children(cfgtree,
+                                                  element,
+                                                  dirname)
+            service = Service(daemon,
+                              name,
+                              actions,
+                              queue     = queue,
+                              autoqueue = autoqueue)
+        elif type == 'python':
+            basename = element.get('filename')
+            filename = os.path.join(dirname, basename)
+            service  = PythonService(daemon,
+                                     name,
+                                     filename,
+                                     queue     = queue,
+                                     autoqueue = autoqueue)
+        else:
+            raise Exception('Invalid service type: %s' % type)
         print 'done.'
         return service
 
     def init_inotify_daemon(self, element):
-        name       = element.get('name')
-        directory  = element.find('directory').text
-        queue_name = element.find('queue').text
-        queue      = self.init_queue_from_name(queue_name)
-        db_name    = element.find('database').text
-        db         = self.init_database_from_name(db_name)
+        # Init the database for the daemon first, then
+        # create the daemon (this does not start it).
+        name      = element.get('name')
+        directory = element.find('directory').text
+        db_name   = element.find('database').text
+        db        = self.init_database_from_name(db_name)
+        daemon    = INotifyDaemon(name, directory = directory, database = db)
 
-        services = {}
+        # Load any associated services from external xml files.
         for service in element.iterfind('load-service'):
-            name           = service.get('name')
-            path           = service.get('path')
-            services[name] = self.init_service_from_name(name, path)
+            name       = service.get('name')
+            path       = service.get('path')
+            queue_elem = service.find('queue')
+            queue_name = queue_elem is not None and queue_elem.text
+            queue      = self.init_queue_from_name(queue_name)
+            autoqueue  = service.find('autoqueue') is not None
+            args       = dict(queue = queue, autoqueue = autoqueue)
+            service    = self.init_service_from_name(daemon,
+                                                     name,
+                                                     path,
+                                                     **args)
+            daemon.add_service(name, service)
 
-        return INotifyDaemon(name,
-                             directory = directory,
-                             database  = db,
-                             queue     = queue,
-                             services  = services)
+        return daemon
 
     def init_daemon_from_name(self, name):
+        # Create the daemon.
         element = self.cfgtree.find('daemon[@name="%s"]' % name)
         type    = element.get('type')
         if type == 'inotify':

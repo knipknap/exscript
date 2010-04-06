@@ -45,7 +45,11 @@ This is the Exscript daemon configuration file.
   <daemon type="inotify" name="exscript-daemon">
     <directory>/var/spool/exscriptd</directory>
     <database>default</database>
-    <queue>default-queue</queue>
-    <!-- load-service name="foobar" load="/path/to/my/test.xml"/ -->
+    <!--
+    <load-service name="foobar" path="/path/to/my/test.xml">
+      <queue>default-queue</queue>
+      <autoqueue/>
+    </load-service>
+    -->
   </daemon>
 </xml>

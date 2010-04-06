@@ -3,7 +3,7 @@ class Task(object):
         self.name    = name
         self.actions = actions
 
-    def call(self, conn, order):
+    def run(self, conn, order):
         for action in self.actions:
             name = action[0]
             if name == 'connect':
@@ -21,7 +21,7 @@ class Task(object):
             elif name == 'set-prompt':
                 conn.set_prompt(action[1])
             elif name == 'invoke-task':
-                action[1].call(conn, order, *action[2])
+                action[1].run(conn, order, *action[2])
             elif name == 'invoke-python':
                 action[1](conn, order)
             else:
