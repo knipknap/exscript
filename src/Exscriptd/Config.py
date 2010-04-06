@@ -46,18 +46,23 @@ class Config(object):
         return accounts
 
     def init_queue_from_name(self, name):
-        element      = self.cfgtree.find('queue[@name="%s"]' % name)
-        max_threads  = element.find('max-threads').text
-        logdir       = element.find('logdir').text
-        delete_logs  = element.find('delete-logs') is not None
-        account_pool = element.find('account-pool').text
+        # Create the queue first.
+        element     = self.cfgtree.find('queue[@name="%s"]' % name)
+        max_threads = element.find('max-threads').text
+        logdir      = element.find('logdir').text
+        delete_logs = element.find('delete-logs') is not None
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
         queue = Queue(verbose     = 0,
                       max_threads = max_threads,
                       logdir      = logdir,
                       delete_logs = delete_logs)
-        queue.add_account(self.init_account_pool_from_name(account_pool))
+
+        # Add some accounts, if any.
+        account_pool = element.find('account-pool')
+        if account_pool:
+            accounts = self.init_account_pool_from_name(account_pool.text)
+            queue.add_account(accounts)
         return queue
 
     def init_database_from_name(self, name):
