@@ -128,8 +128,7 @@ class Config(object):
                                daemon,
                                name,
                                filename,
-                               queue     = None,
-                               autoqueue = False):
+                               queue = None):
         print 'Loading service "%s"...' % name,
         cfgtree = etree.parse(filename)
         dirname = os.path.dirname(filename)
@@ -144,15 +143,16 @@ class Config(object):
                                  name,
                                  actions,
                                  queue     = queue,
-                                 autoqueue = autoqueue)
+                                 autoqueue = True)
         elif type == 'python':
-            basename = element.get('filename')
-            filename = os.path.join(dirname, basename)
-            service  = PythonService(daemon,
-                                     name,
-                                     filename,
-                                     queue     = queue,
-                                     autoqueue = autoqueue)
+            basename  = element.get('filename')
+            filename  = os.path.join(dirname, basename)
+            autoqueue = element.find('autoqueue') is not None
+            service   = PythonService(daemon,
+                                      name,
+                                      filename,
+                                      queue     = queue,
+                                      autoqueue = autoqueue)
         else:
             raise Exception('Invalid service type: %s' % type)
         print 'done.'
@@ -174,12 +174,10 @@ class Config(object):
             queue_elem = service.find('queue')
             queue_name = queue_elem is not None and queue_elem.text
             queue      = self.init_queue_from_name(queue_name)
-            autoqueue  = service.find('autoqueue') is not None
-            args       = dict(queue = queue, autoqueue = autoqueue)
             service    = self.init_service_from_name(daemon,
                                                      name,
                                                      path,
-                                                     **args)
+                                                     queue = queue)
             daemon.add_service(name, service)
 
         return daemon
