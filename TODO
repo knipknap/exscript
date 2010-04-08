@@ -15,6 +15,7 @@ Exscript
 
 exscriptd
 ---------
+* XmlService should derive from Service.
 * XML: autoqueue should be a property of the service, not of the XML.
 * Add API docs for the client, hide the rest.
 * Add tests.

@@ -1,16 +1,18 @@
 from Exscript.util.decorator import bind
+from Service                 import Service
 
-class PythonService(object):
+class PythonService(Service):
     def __init__(self,
                  daemon,
                  name,
                  filename,
                  queue     = None,
                  autoqueue = False):
-        self.daemon      = daemon
-        self.name        = name
-        self.queue       = queue
-        self.autoqueue   = autoqueue
+        Service.__init__(self,
+                         daemon,
+                         name,
+                         queue     = queue,
+                         autoqueue = autoqueue)
         content          = open(filename).read()
         code             = compile(content, filename, 'exec')
         vars             = globals().copy()
@@ -19,17 +21,10 @@ class PythonService(object):
         self.enter_func  = vars.get('enter')
         self.run_func    = vars.get('run')
 
-        if self.autoqueue and not self.queue:
-            raise Exception('error: autoqueue requires a queue')
-
     def enter(self, order):
         if self.enter_func and not self.enter_func(self, order):
             return False
-        if not self.autoqueue:
-            return True
-        task = self.queue.run(order.get_hosts(), bind(self.run, order.id))
-        task.signal_connect('done', self.daemon.order_done, order.id)
-        self.daemon.set_order_status(order, 'queued')
+        self._autoqueue(order)
         return True
 
     def run(self, conn, order_id):
