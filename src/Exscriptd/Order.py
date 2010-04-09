@@ -52,7 +52,7 @@ class Order(Base):
         file     = NamedTemporaryFile(dir = dirname, prefix = '.') #delete = False)
         file.write(self.toxml())
         file.flush()
-        os.chmod(file.name, 0x644)
+        os.chmod(file.name, 0644)
         os.rename(file.name, filename)
         try:
             file.close()
