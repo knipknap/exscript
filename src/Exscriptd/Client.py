@@ -5,12 +5,11 @@ from Config                import Config
 
 class Client(object):
     def __init__(self, config_file, server_name):
-        config          = Config(config_file)
-        directory       = config.get_inotify_daemon_dir(server_name)
-        database_name   = config.get_inotify_daemon_db_name(server_name)
-        self.db         = config.init_database_from_name(database_name)
-        self.input_dir  = os.path.join(directory, 'in')
-        self.output_dir = os.path.join(directory, 'out')
+        config         = Config(config_file)
+        directory      = config.get_inotify_daemon_dir(server_name)
+        database_name  = config.get_inotify_daemon_db_name(server_name)
+        self.db        = config.init_database_from_name(database_name)
+        self.input_dir = os.path.join(directory, 'in')
 
     def place_order(self, order):
         if order.status != 'new':

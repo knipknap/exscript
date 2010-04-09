@@ -13,14 +13,11 @@ class INotifyDaemon(object):
                  processors = None):
         self.name       = name
         self.input_dir  = os.path.join(directory, 'in')
-        self.output_dir = os.path.join(directory, 'out')
         self.db_cls     = database
         self.processors = processors
         self.services   = {}
         if not os.path.isdir(self.input_dir):
             os.makedirs(self.input_dir)
-        if not os.path.isdir(self.output_dir):
-            os.makedirs(self.output_dir)
 
     def add_service(self, name, service):
         self.services[name] = service
@@ -39,8 +36,6 @@ class INotifyDaemon(object):
         print 'Order done:', order_id
         order = self.get_order_from_id(order_id)
         self.set_order_status(order, 'completed')
-        outfile = os.path.join(self.output_dir, order.get_filename())
-        order.write(outfile)
 
     def _on_order_received(self, filename):
         if os.path.basename(filename).startswith('.'):
