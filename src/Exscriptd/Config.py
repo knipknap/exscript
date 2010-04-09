@@ -7,9 +7,7 @@ from Database       import Base
 from lxml           import etree
 from Exscript       import Account, Queue
 from INotifyDaemon  import INotifyDaemon
-from XmlService     import XmlService
 from PythonService  import PythonService
-from Task           import Task
 from util           import resolve_variables
 
 class Config(object):
@@ -82,48 +80,6 @@ class Config(object):
         Base.metadata.create_all(engine)
         return Session
 
-    def _collect_task_children(self, cfgtree, element, dirname):
-        children = []
-        for child in element:
-            if child.tag in ('connect', 'autologin'):
-                children.append((child.tag,))
-            elif child.tag in ('sendline', 'execline'):
-                children.append((child.tag, child.text))
-            elif child.tag in ('expect', 'set-prompt'):
-                regex = re.compile(child.text)
-                children.append((child.tag, regex))
-            elif child.tag == 'invoke-task':
-                name = child.get('name').strip()
-                task = self._init_task_from_name(cfgtree, name, dirname)
-                args = dict((c.tag, c.text.strip()) for c in child)
-                children.append((child.tag, task, args))
-            elif child.tag == 'invoke-script':
-                language = child.get('language').strip()
-                filename = os.path.join(dirname, child.text.strip())
-                if not os.path.isfile(filename):
-                    raise Exception('not a valid file: ' + filename)
-                if language == 'python':
-                    content          = open(filename).read()
-                    code             = compile(content, filename, 'exec')
-                    vars             = globals().copy()
-                    vars['__file__'] = filename
-                    result           = eval(code, vars)
-                    start            = vars.get('run')
-                    if not start:
-                        msg = 'Error: %s run() function not found' % filename
-                        raise Exception(msg)
-                    children.append(('invoke-python', start))
-                else:
-                    raise Exception('Unsupported language %s.' % language)
-            else:
-                raise Exception('Invalid tag %s' % child.tag)
-        return children
-
-    def _init_task_from_name(self, cfgtree, name, dirname):
-        element = cfgtree.find('task[@name="%s"]' % name)
-        actions = self._collect_task_children(cfgtree, element, dirname)
-        return Task(name, actions)
-
     def init_service_from_name(self,
                                daemon,
                                name,
@@ -135,16 +91,7 @@ class Config(object):
         element = cfgtree.find('service')
         type    = element.get('type')
 
-        if type == 'xml':
-            actions = self._collect_task_children(cfgtree,
-                                                  element,
-                                                  dirname)
-            service = XmlService(daemon,
-                                 name,
-                                 actions,
-                                 queue     = queue,
-                                 autoqueue = True)
-        elif type == 'python':
+        if type == 'python':
             basename  = element.get('filename')
             filename  = os.path.join(dirname, basename)
             autoqueue = element.find('autoqueue') is not None

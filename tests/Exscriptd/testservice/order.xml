@@ -1,6 +1,0 @@
-<xml>
-  <order service="test-service">
-    <host address="localhost"/>
-    <host address="otherhost"/>
-  </order>
-</xml>
