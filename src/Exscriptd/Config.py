@@ -24,7 +24,8 @@ class Config(object):
 
     def _clean_tree(self):
         # Read all variables.
-        for element in self.cfgtree.find('variables'):
+        variables = self.cfgtree.find('variables') or []
+        for element in variables:
             varname = element.tag.strip()
             value   = resolve_variables(self.variables, element.text)
             self.variables[varname] = value
