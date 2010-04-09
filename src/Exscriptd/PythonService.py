@@ -1,3 +1,4 @@
+import __builtin__
 from Exscript.util.decorator import bind
 from Service                 import Service
 
@@ -13,13 +14,14 @@ class PythonService(Service):
                          name,
                          queue     = queue,
                          autoqueue = autoqueue)
-        content          = open(filename).read()
-        code             = compile(content, filename, 'exec')
-        vars             = globals().copy()
-        vars['__file__'] = filename
-        result           = eval(code, vars)
-        self.enter_func  = vars.get('enter')
-        self.run_func    = vars.get('run')
+        content             = open(filename).read()
+        code                = compile(content, filename, 'exec')
+        vars                = {}
+        vars['__builtin__'] = __builtin__
+        vars['__file__']    = filename
+        result              = eval(code, vars)
+        self.enter_func     = vars.get('enter')
+        self.run_func       = vars.get('run')
 
     def enter(self, order):
         if self.enter_func and not self.enter_func(self, order):
