@@ -36,12 +36,15 @@ class Client(object):
 
 if __name__ == '__main__':
     import sys, time
-    if len(sys.argv) == 2:
-        order = Order.from_xml_file(sys.argv[1])
+    if len(sys.argv) == 4:
+        config      = sys.argv[1]
+        daemon_name = sys.argv[2]
+        order       = Order.from_xml_file(sys.argv[3])
     else:
-        order = Order('testservice')
+        sys.stderr.write('Syntax: config daemon-name order\n')
+        sys.exit(1)
 
-    client = Client('/home/sab/sandbox/exscript/config.xml', 'exscript-daemon')
+    client = Client(config, daemon_name)
     print "Status:", client.get_order_status_from_id(order.id)
     client.place_order(order)
     print "Placed order", order.id
