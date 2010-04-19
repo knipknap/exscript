@@ -210,7 +210,8 @@ class MailWidget(Frame):
             send(self.mail, server = self.server)
         except Exception, e:
             title    = 'Send failed'
-            message  = 'The email could not be sent. This was the error:\n'
+            message  = 'The email could not be sent using %s.' % self.server
+            message += ' This was the error:\n'
             message += str(e)
             if tkMessageBox.askretrycancel(title, message):
                 self.after(1, self._on_send)
