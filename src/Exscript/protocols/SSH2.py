@@ -16,12 +16,16 @@
 SSH version 2 support, based on paramiko.
 """
 import time, select
-from Exscript.external import paramiko
-from Exception         import TransportException, LoginFailure
-from Transport         import Transport
+from Exscript.external          import paramiko
+from Exscript.external.paramiko import util
+from Exception                  import TransportException, LoginFailure
+from Transport                  import Transport
 
 True  = 1
 False = 0
+
+# Workaround for paramiko error; avoids a warning message.
+util.log_to_file('/dev/null')
 
 class SSH2(Transport):
     """

@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, traceback
+import os, traceback, Crypto
 from workqueue           import Action
 from Log                 import Log
 from Logfile             import Logfile
@@ -47,6 +47,18 @@ class HostAction(Action):
         self.login_failures = 0
         self.aborted        = False
         self.name           = host.get_address()
+
+        # Since each action is created in it's own thread, we must
+        # re-initialize the random number generator to make sure that
+        # child threads have no way of guessing the numbers of the parent.
+        # If we don't, PyCrypto generates an error message for security
+        # reasons.
+        try:
+            Crypto.Random.atfork()
+        except AttributeError:
+            # pycrypto versions that have no "Random" module also do not
+            # detect the missing atfork() call, so they do not raise.
+            pass
 
     def get_name(self):
         return self.name
