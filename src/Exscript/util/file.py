@@ -29,9 +29,10 @@ def get_accounts_from_file(filename):
     @rtype:  list[Account]
     @return: The newly created account instances.
     """
-    accounts  = []
-    cfgparser = __import__('ConfigParser', globals(), locals(), [''])
-    parser    = cfgparser.RawConfigParser()
+    accounts           = []
+    cfgparser          = __import__('ConfigParser', {}, {}, [''])
+    parser             = cfgparser.RawConfigParser()
+    parser.optionxform = str
     parser.read(filename)
     for user, password in parser.items('account-pool'):
         accounts.append(Account(user, base64.decodestring(password)))
