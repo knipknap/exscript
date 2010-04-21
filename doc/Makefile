@@ -68,7 +68,7 @@ apidocs:
 
 clean:
 	rm -Rf api handbook latex stdlib cloned_repo
-	rm -f *.aux *.log *.out *.pdf *.toc version.tex figures/*.png
+	rm -f *.aux *.log *.out exscript.*.pdf *.toc version.tex figures/*.png
 	cd ..; ./version.sh --reset
 
 publish-local: handbook apidocs
