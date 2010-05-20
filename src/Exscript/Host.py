@@ -276,6 +276,17 @@ class Host(object):
         self.vars[name] = value
 
 
+    def set_all(self, vars):
+        """
+        Returns the given variables from the dictionary in the object
+        for later retrieval.
+
+        @type  vars: dict
+        @param vars: The dictionary with the variables.
+        """
+        self.vars = dict(vars)
+
+
     def append(self, name, value):
         """
         Appends the given value to the list variable with the given name.
@@ -331,3 +342,13 @@ class Host(object):
         @return: The value of the variable.
         """
         return self.vars.get(name, default)
+
+
+    def get_all(self):
+        """
+        Returns the dictionary with all variables.
+
+        @rtype:  dict
+        @return: The dictionary with the variables.
+        """
+        return self.vars
