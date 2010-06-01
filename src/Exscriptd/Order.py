@@ -1,14 +1,16 @@
 """
 Represents a call to a service.
 """
-import os, shutil
+import os, traceback, shutil
 import Exscript
-from sqlalchemy     import *
-from sqlalchemy.orm import relation, synonym
-from Database       import Base
-from tempfile       import NamedTemporaryFile
-from lxml           import etree
-from util           import mkorderid
+from Exscript.util.file import get_hosts_from_file, \
+                               get_hosts_from_csv
+from sqlalchemy         import *
+from sqlalchemy.orm     import relation, synonym
+from Database           import Base
+from tempfile           import NamedTemporaryFile
+from lxml               import etree
+from util               import mkorderid
 
 class Order(Base):
     """
@@ -57,7 +59,23 @@ class Order(Base):
     def _read_hosts_from_xml(self, element):
         for host in element.iterfind('host'):
             address = host.get('address').strip()
-            self.hosts.append(_Host(address))
+            self.hosts.append(Host(address))
+        for file in element.iterfind('file'):
+            type = file.get('type').strip()
+            path = file.get('path').strip()
+            try:
+                file_hosts = None
+                if type == 'txt':
+                    file_hosts = get_hosts_from_file(path)
+                elif type == 'csv':
+                    file_hosts = get_hosts_from_csv(path)
+            except Exception, e:
+                traceback.print_exc()
+            if file_hosts:
+                for host in file_hosts:
+                    h = Host(host.get_address())
+                    h.add_host_variables(host.get_all())
+                    self.hosts.append(h)
 
     def fromxml(self, xml):
         """
@@ -128,12 +146,15 @@ class Order(Base):
         @return: A list of hosts.
         """
         # Prepare the list of hosts from the order.
-        hosts = [Exscript.Host(h.address) for h in self.hosts]
-        for host in hosts:
+        hosts = []
+        for h in self.hosts:
+            host = Exscript.Host(h.address)
+            host.set_all(h.get_vars())
             host.set_logname(os.path.join(self.id, host.get_logname()))
+            hosts.append(host)
         return hosts
 
-class _Host(Base):
+class Host(Base):
     __tablename__ = 'host'
 
     order_id = Column(String(50),  ForeignKey('order.id'), primary_key = True)
@@ -145,3 +166,26 @@ class _Host(Base):
 
     def __init__(self, address):
         Base.__init__(self, address = address, name = address)
+
+    def get_vars(self):
+        vars = {}
+        for v in self.vars:
+            vars[v.name] = v.value
+        return vars
+
+    def add_host_variables(self, vars):
+        for v in vars.keys():
+            self.vars.append(Variable(v, vars[v]))
+
+class Variable(Base):
+    __tablename__ = 'variable'
+
+    host_address = Column(String(150), ForeignKey('host.address'),  primary_key = True)
+    name         = Column(String(50),  primary_key = True)
+    value        = Column(String(150))
+    variables    = relation(Host,
+                            backref  = 'vars',
+                            order_by = Host.address)
+
+    def __init__(self, name, value = None):
+        Base.__init__(self, name = name, value = value)
