@@ -80,14 +80,14 @@ class Queue(Trackable):
         Trackable.__init__(self)
         self.workqueue         = WorkQueue()
         self.account_manager   = AccountManager()
-        self.domain            = kwargs.get('domain',         '')
-        self.verbose           = kwargs.get('verbose',        1)
-        self.times             = kwargs.get('times',          1)
-        self.login_times       = kwargs.get('login_times',    1)
-        self.protocol_args     = kwargs.get('protocol_args',  {})
-        self.stdout            = kwargs.get('stdout',         sys.stdout)
-        self.stderr            = kwargs.get('stderr',         sys.stderr)
-        self.devnull           = open('/dev/null', 'w') # Use open(os.devnull, 'w') in Python >= 2.4
+        self.domain            = kwargs.get('domain',        '')
+        self.verbose           = kwargs.get('verbose',       1)
+        self.times             = kwargs.get('times',         1)
+        self.login_times       = kwargs.get('login_times',   1)
+        self.protocol_args     = kwargs.get('protocol_args', {})
+        self.stdout            = kwargs.get('stdout',        sys.stdout)
+        self.stderr            = kwargs.get('stderr',        sys.stderr)
+        self.devnull           = open(os.devnull, 'w')
         self.channel_map       = {'fatal_errors': self.stderr,
                                   'debug':        self.stdout}
         self.completed         = 0
