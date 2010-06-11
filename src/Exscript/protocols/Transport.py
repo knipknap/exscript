@@ -15,7 +15,7 @@
 """
 An abstract base class for all protocols.
 """
-import string, re, sys
+import string, re, sys, os
 from OsGuesser                     import OsGuesser
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.AbstractMethod       import AbstractMethod
@@ -91,6 +91,7 @@ class Transport(Trackable):
         @type  kwargs: dict
         @param kwargs: The following arguments are supported:
           - stdout: Where to write the device response. Defaults to os.devnull.
+          - stderr: Where to write debug info. Defaults to stderr.
           - debug: An integer between 0 (no debugging) and 5 (very verbose 
           debugging) that specifies the amount of debug info sent to the 
           terminal. The default value is 0.
@@ -107,7 +108,8 @@ class Transport(Trackable):
         self.host               = kwargs.get('host',     None)
         self.user               = kwargs.get('user',     '')
         self.password           = kwargs.get('password', '')
-        self.stdout             = kwargs.get('stdout', open('/dev/null', 'w'))
+        self.stdout             = kwargs.get('stdout',   open(os.devnull, 'w'))
+        self.stderr             = kwargs.get('stderr',   sys.stderr)
         self.debug              = kwargs.get('debug',    0)
         self.timeout            = kwargs.get('timeout',  30)
         self.logfile            = kwargs.get('logfile',  None)
@@ -172,7 +174,7 @@ class Transport(Trackable):
     def _dbg(self, level, msg):
         if self.debug < level:
             return
-        print msg
+        self.stderr.write(msg + '\n')
 
 
     def set_prompt(self, prompt = None):

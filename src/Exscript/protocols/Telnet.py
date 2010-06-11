@@ -42,6 +42,7 @@ class Telnet(Transport):
         assert self.tn is None
         self.tn = telnetlib.Telnet(hostname,
                                    port or 23,
+                                   stderr           = self.stderr,
                                    receive_callback = self._receive_cb)
         if self.debug >= 5:
             self.tn.set_debuglevel(1)
