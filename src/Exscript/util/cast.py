@@ -34,18 +34,6 @@ def to_list(item):
         return item
     return [item]
 
-def to_hosts(hosts):
-    """
-    Given a string or a Host object, or a list of strings or Host objects,
-    this function returns a list of Host objects.
-
-    @type  hosts: string|Host|list(string)|list(Host)
-    @param hosts: One or more hosts or hostnames.
-    @rtype:  list[Host]
-    @return: A list of Host objects.
-    """
-    return [to_host(h) for h in to_list(hosts)]
-
 def to_host(host):
     """
     Given a string or a Host object, this function returns a Host object.
