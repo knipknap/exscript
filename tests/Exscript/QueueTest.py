@@ -98,6 +98,10 @@ class QueueTest(unittest.TestCase):
             (2,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
             (3,  1, ('hello', ''), ('hello', 'tb'),    ('hello', 'tb')),
             (3,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
+            (4,  1, ('hello', ''), ('hello', 'tb'),    ('hello', 'tb')),
+            (4,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
+            (5,  1, ('hello', ''), ('hello', 'tb'),    ('hello', 'tb')),
+            (5,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
         )
         for level, max_threads, with_simple, with_error, with_fatal in levels:
             stdout, stderr = with_simple

@@ -1,5 +1,6 @@
 Exscript
 --------
+* Add tests for Transport class debug levels.
 * Add TkExscript.LoginWidget and .LoginWindow.
 * Add docs for TkExscript.
 * Add API docs for Exscript.parselib.

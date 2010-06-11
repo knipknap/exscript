@@ -134,7 +134,8 @@ def run():
     # Create Exscript.
     protocol_args = {
         'echo':        not options.no_echo,
-        'auto_verify': not options.ssh_auto_verify
+        'auto_verify': not options.ssh_auto_verify,
+        'debug':       options.protocol_verbose
     }
     queue = Queue(domain         = options.default_domain,
                   verbose        = options.verbose,
@@ -456,7 +457,7 @@ parser.add_option('--verbose', '-v',
                   metavar = 'NUM',
                   default = 1,
                   help    = '''
-Print out debug information about the network activity.
+Print out debug information about the queue.
 NUM is a number between 0 (min) and 5 (max). Default is 1.
 '''.strip())
 
@@ -468,6 +469,16 @@ parser.add_option('--parser-verbose', '-V',
                   help    = '''
 Print out debug information about the Exscript template parser.
 NUM is a number between 0 (min) and 5 (max). Default is 0.
+'''.strip())
+
+parser.add_option('--protocol-verbose',
+                  dest    = 'protocol_verbose',
+                  type    = 'int',
+                  metavar = 'NUM',
+                  default = 1,
+                  help    = '''
+Print out debug information about the network activity.
+NUM is a number between 0 (min) and 5 (max). Default is 1.
 '''.strip())
 
 if __name__ == '__main__':
