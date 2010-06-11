@@ -187,9 +187,11 @@ class Telnet:
         self.irawq = 0
         self.cookedq = ''
         self.eof = 0
+        self.stdout               = kwargs.get('stdout',           sys.stdout)
+        self.stderr               = kwargs.get('stderr',           sys.stderr)
         self.data_callback        = kwargs.get('receive_callback', None)
         self.data_callback_kwargs = {}
-        self.option_callback = None
+        self.option_callback      = None
         if host:
             self.open(host, port)
 
@@ -230,16 +232,17 @@ class Telnet:
 
         """
         if self.debuglevel > 0:
-            print 'Telnet(%s,%d):' % (self.host, self.port),
+            self.stderr.write('Telnet(%s,%d): ' % (self.host, self.port))
             if args:
-                print msg % args
+                self.stderr.write(msg % args)
             else:
-                print msg
+                self.stderr.write(msg)
+            self.stderr.write('\n')
 
     def set_debuglevel(self, debuglevel):
         """Set the debug level.
 
-        The higher it is, the more debug output you get (on sys.stdout).
+        The higher it is, the more debug output you get (on stdout).
 
         """
         self.debuglevel = debuglevel
@@ -498,8 +501,8 @@ class Telnet:
                     print '*** Connection closed by remote host ***'
                     break
                 if text:
-                    sys.stdout.write(text)
-                    sys.stdout.flush()
+                    self.stdout.write(text)
+                    self.stdout.flush()
             if sys.stdin in rfd:
                 line = sys.stdin.readline()
                 if not line:
@@ -525,9 +528,9 @@ class Telnet:
                 print '*** Connection closed by remote host ***'
                 return
             if data:
-                sys.stdout.write(data)
+                self.stdout.write(data)
             else:
-                sys.stdout.flush()
+                self.stdout.flush()
 
     def _wait_for_data(self, timeout):
         end = time.time() + timeout
