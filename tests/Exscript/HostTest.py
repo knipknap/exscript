@@ -103,6 +103,21 @@ class HostTest(unittest.TestCase):
         self.host.set('test', 3)
         self.assertEqual(self.host.get('test'), 3)
 
+    def testSetAll(self):
+        self.testSet()
+        self.host.set_all({'test1': 1, 'test2': 2})
+        self.assertEqual(self.host.get('test'),  None)
+        self.assertEqual(self.host.get('test1'), 1)
+        self.assertEqual(self.host.get('test2'), 2)
+
+    def testGetAll(self):
+        self.assertEqual(self.host.get_all(), {'testarg': 1})
+        self.testSetAll()
+        self.assertEqual(self.host.get_all(), {'test1': 1, 'test2': 2})
+
+        host = Host('localhost')
+        self.assertEqual(host.get_all(), {})
+
     def testAppend(self):
         self.assertEqual(self.host.get('test'), None)
         self.host.append('test', 3)
