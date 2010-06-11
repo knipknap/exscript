@@ -278,8 +278,9 @@ class Host(object):
 
     def set_all(self, vars):
         """
-        Returns the given variables from the dictionary in the object
-        for later retrieval.
+        Like set(), but replaces all variables by using the given
+        dictionary. In other words, passing an empty dictionary
+        results in all variables being removed.
 
         @type  vars: dict
         @param vars: The dictionary with the variables.
@@ -346,7 +347,7 @@ class Host(object):
 
     def get_all(self):
         """
-        Returns the dictionary with all variables.
+        Returns a dictionary containing all variables.
 
         @rtype:  dict
         @return: The dictionary with the variables.
