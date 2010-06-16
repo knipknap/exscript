@@ -58,7 +58,7 @@ class Order(Base):
 
     def _read_hosts_from_xml(self, element):
         for host_elem in element.iterfind('host'):
-            address = host.get('address').strip()
+            address = host_elem.get('address').strip()
             args    = self._read_arguments_from_xml(host_elem)
             host    = _Host(address)
             host.add_host_variables(args)
@@ -66,7 +66,7 @@ class Order(Base):
 
     def _read_arguments_from_xml(self, host_elem):
         arg_elem = host_elem.find('argument-list')
-        if not arg_elem:
+        if arg_elem is None:
             return {}
         args = {}
         for child in arg_elem.iterfind('variable'):
