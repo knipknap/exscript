@@ -186,6 +186,3 @@ class _Variable(Base):
     variables    = relation(_Host,
                             backref  = 'vars',
                             order_by = _Host.address)
-
-    def __init__(self, name, value = None):
-        Base.__init__(self, name = name, value = value)
