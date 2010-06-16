@@ -168,10 +168,7 @@ class _Host(Base):
         Base.__init__(self, address = address, name = address)
 
     def get_vars(self):
-        vars = {}
-        for v in self.vars:
-            vars[v.name] = v.value
-        return vars
+        return dict((v.name, v.value) for v in self.vars)
 
     def add_host_variables(self, vars):
         for v in vars.keys():
