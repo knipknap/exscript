@@ -157,12 +157,11 @@ class Order(Base):
 class _Host(Base):
     __tablename__ = 'host'
 
-    order_id = Column(String(50),  ForeignKey('order.id'), primary_key = True)
-    address  = Column(String(150), primary_key = True)
-    name     = Column(String(50),  primary_key = True)
-    hosts    = relation(Order,
-                        backref  = 'hosts',
-                        order_by = Order.id)
+    id       = Column(Integer, primary_key = True)
+    order_id = Column(String(50), ForeignKey('order.id'))
+    address  = Column(String(150))
+    name     = Column(String(150))
+    hosts    = relation(Order, backref = 'hosts', order_by = Order.id)
 
     def __init__(self, address):
         Base.__init__(self, address = address, name = address)
@@ -176,9 +175,7 @@ class _Host(Base):
 class _Variable(Base):
     __tablename__ = 'variable'
 
-    host_address = Column(String(150), ForeignKey('host.address'),  primary_key = True)
-    name         = Column(String(50),  primary_key = True)
-    value        = Column(String(150))
-    variables    = relation(_Host,
-                            backref  = 'vars',
-                            order_by = _Host.address)
+    host_id   = Column(Integer, ForeignKey('host.id'), primary_key = True)
+    name      = Column(String(150), primary_key = True)
+    value     = Column(String(150))
+    variables = relation(_Host, backref = 'vars', order_by = _Host.id)
