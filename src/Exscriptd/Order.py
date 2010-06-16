@@ -57,25 +57,22 @@ class Order(Base):
         return order
 
     def _read_hosts_from_xml(self, element):
-        for host in element.iterfind('host'):
+        for host_elem in element.iterfind('host'):
             address = host.get('address').strip()
-            self.hosts.append(_Host(address))
-        for file in element.iterfind('file'):
-            type = file.get('type').strip()
-            path = file.get('path').strip()
-            try:
-                file_hosts = None
-                if type == 'txt':
-                    file_hosts = get_hosts_from_file(path)
-                elif type == 'csv':
-                    file_hosts = get_hosts_from_csv(path)
-            except Exception, e:
-                traceback.print_exc()
-            if file_hosts:
-                for host in file_hosts:
-                    h = _Host(host.get_address())
-                    h.add_host_variables(host.get_all())
-                    self.hosts.append(h)
+            args    = self._read_arguments_from_xml(host_elem)
+            host    = _Host(address)
+            host.add_host_variables(args)
+            self.hosts.append(host)
+
+    def _read_arguments_from_xml(self, host_elem):
+        arg_elem = host_elem.find('argument-list')
+        if not arg_elem:
+            return {}
+        args = {}
+        for child in arg_elem.iterfind('variable'):
+            name       = child.get('name').strip()
+            args[name] = child.text.strip()
+        return args
 
     def fromxml(self, xml):
         """
@@ -88,7 +85,26 @@ class Order(Base):
         xml = etree.fromstring(xml)
         self._read_hosts_from_xml(xml.find('order'))
 
-    def toxml(self):
+    def _list_to_xml(self, root, name, thelist):
+        list_elem = etree.SubElement(root, 'list', name = name)
+        for value in thelist:
+            item = etree.SubElement(list_elem, 'list-item')
+            item.text = value
+        return list_elem
+
+    def _arguments_to_xml(self, root, args):
+        arg_elem = etree.SubElement(root, 'argument-list')
+        for name, value in args.iteritems():
+            if isinstance(value, list):
+                self._list_to_xml(arg_elem, name, value)
+            elif isinstance(value, str):
+                variable = etree.SubElement(arg_elem, 'variable', name = name)
+                variable.text = value
+            else:
+                raise Exception('unknown variable type')
+        return arg_elem
+
+    def toxml(self, pretty = True):
         """
         Returns the order as an XML formatted string.
 
@@ -98,8 +114,9 @@ class Order(Base):
         xml   = etree.Element('xml')
         order = etree.SubElement(xml, 'order', service = self.service)
         for host in self.hosts:
-            etree.SubElement(order, 'host', address = host.address)
-        return etree.tostring(xml)
+            elem = etree.SubElement(order, 'host', address = host.address)
+            self._arguments_to_xml(elem, host.get_vars())
+        return etree.tostring(xml, pretty_print = pretty)
 
     def write(self, filename):
         """
@@ -136,6 +153,22 @@ class Order(Base):
         @return: A filename for the order.
         """
         return self.id + '.xml'
+
+    def add_hosts_from_csv(self, filename):
+        """
+        Parses the given CSV file using
+        Exscript.util.file.get_hosts_from_csv(), and adds the resulting
+        Exscript.Host objects to the order.
+        Multi-column CSVs are supported, i.e. variables defined in the
+        Exscript.Host objects are preserved.
+
+        @type  filename: str
+        @param filename: A file containing a CSV formatted list of hosts.
+        """
+        for host in get_hosts_from_csv(filename):
+            h = _Host(host.get_address())
+            h.add_host_variables(host.get_all())
+            self.hosts.append(h)
 
     def get_hosts(self):
         """
@@ -179,3 +212,11 @@ class _Variable(Base):
     name      = Column(String(150), primary_key = True)
     value     = Column(String(150))
     variables = relation(_Host, backref = 'vars', order_by = _Host.id)
+
+    def __init__(self, name, value = None):
+        Base.__init__(self, name = name, value = value)
+
+if __name__ == '__main__':
+    order = Order('test')
+    order.add_hosts_from_csv('/nmc/scripts/data/xpc3_discovery/tmdxpc3discovery_2010.05.05_17.03.14.csv')
+    print order.toxml()
