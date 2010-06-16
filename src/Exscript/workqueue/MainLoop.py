@@ -59,7 +59,7 @@ class MainLoop(Trackable, threading.Thread):
     def set_max_threads(self, max_threads):
         assert max_threads is not None
         self.condition.acquire()
-        self.max_threads = max_threads
+        self.max_threads = int(max_threads)
         self.condition.notifyAll()
         self.condition.release()
 
