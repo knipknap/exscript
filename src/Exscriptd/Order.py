@@ -59,7 +59,7 @@ class Order(Base):
     def _read_hosts_from_xml(self, element):
         for host in element.iterfind('host'):
             address = host.get('address').strip()
-            self.hosts.append(Host(address))
+            self.hosts.append(_Host(address))
         for file in element.iterfind('file'):
             type = file.get('type').strip()
             path = file.get('path').strip()
@@ -73,7 +73,7 @@ class Order(Base):
                 traceback.print_exc()
             if file_hosts:
                 for host in file_hosts:
-                    h = Host(host.get_address())
+                    h = _Host(host.get_address())
                     h.add_host_variables(host.get_all())
                     self.hosts.append(h)
 
@@ -154,7 +154,7 @@ class Order(Base):
             hosts.append(host)
         return hosts
 
-class Host(Base):
+class _Host(Base):
     __tablename__ = 'host'
 
     order_id = Column(String(50),  ForeignKey('order.id'), primary_key = True)
@@ -175,17 +175,17 @@ class Host(Base):
 
     def add_host_variables(self, vars):
         for v in vars.keys():
-            self.vars.append(Variable(v, vars[v]))
+            self.vars.append(_Variable(v, vars[v]))
 
-class Variable(Base):
+class _Variable(Base):
     __tablename__ = 'variable'
 
     host_address = Column(String(150), ForeignKey('host.address'),  primary_key = True)
     name         = Column(String(50),  primary_key = True)
     value        = Column(String(150))
-    variables    = relation(Host,
+    variables    = relation(_Host,
                             backref  = 'vars',
-                            order_by = Host.address)
+                            order_by = _Host.address)
 
     def __init__(self, name, value = None):
         Base.__init__(self, name = name, value = value)
