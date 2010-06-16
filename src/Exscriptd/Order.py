@@ -171,8 +171,7 @@ class _Host(Base):
         return dict((v.name, v.value) for v in self.vars)
 
     def add_host_variables(self, vars):
-        for v in vars.keys():
-            self.vars.append(_Variable(v, vars[v]))
+        self.vars += [_Variable(v, k) for (v, k) in vars.iteritems()]
 
 class _Variable(Base):
     __tablename__ = 'variable'
