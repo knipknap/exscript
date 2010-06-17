@@ -7,6 +7,7 @@ from Database       import Base
 from lxml           import etree
 from Exscript       import Account, Queue
 from INotifyDaemon  import INotifyDaemon
+from RestDaemon     import RestDaemon
 from PythonService  import PythonService
 from util           import resolve_variables
 
@@ -106,16 +107,7 @@ class Config(object):
         print 'done.'
         return service
 
-    def init_inotify_daemon(self, element):
-        # Init the database for the daemon first, then
-        # create the daemon (this does not start it).
-        name      = element.get('name')
-        directory = element.find('directory').text
-        db_name   = element.find('database').text
-        db        = self.init_database_from_name(db_name)
-        daemon    = INotifyDaemon(name, directory = directory, database = db)
-
-        # Load any associated services from external xml files.
+    def load_services(self, element, daemon):
         for service in element.iterfind('load-service'):
             name       = service.get('name')
             path       = service.get('path')
@@ -128,13 +120,39 @@ class Config(object):
                                                      queue = queue)
             daemon.add_service(name, service)
 
+    def init_rest_daemon(self, element):
+        # Init the database for the daemon first, then
+        # create the daemon (this does not start it).
+        name     = element.get('name')
+        address  = element.find('address').text or ''
+        username = element.find('username').text or ''
+        password = element.find('password').text or ''
+        port     = int(element.find('port').text)
+        db_name  = element.find('database').text
+        db       = self.init_database_from_name(db_name)
+        daemon   = RestDaemon(name, address, port, database = db)
+        daemon.add_user(username, password)
+        self.load_services(element, daemon)
+        return daemon
+
+    def init_inotify_daemon(self, element):
+        # Init the database for the daemon first, then
+        # create the daemon (this does not start it).
+        name      = element.get('name')
+        directory = element.find('directory').text
+        db_name   = element.find('database').text
+        db        = self.init_database_from_name(db_name)
+        daemon    = INotifyDaemon(name, directory = directory, database = db)
+        self.load_services(element, daemon)
         return daemon
 
     def init_daemon_from_name(self, name):
         # Create the daemon.
         element = self.cfgtree.find('daemon[@name="%s"]' % name)
         type    = element.get('type')
-        if type == 'inotify':
+        if type == 'rest':
+            return self.init_rest_daemon(element)
+        elif type == 'inotify':
             return self.init_inotify_daemon(element)
         else:
             raise Exception('No such daemon type: %s' % type)

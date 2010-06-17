@@ -39,6 +39,27 @@ This is the Exscript daemon configuration file.
   </queue>
 
   <!--
+  An HTTP daemon providing a REST API.
+  You may define only one daemon at this time.
+  -->
+  <daemon type="rest" name="rest-daemon">
+    <!-- An empty address binds to all. -->
+    <address></address>
+    <port>8123</port>
+
+    <!-- Login data for clients. -->
+    <username>exscript-rest</username>
+    <password>exscript-rest</password>
+
+    <database>default</database>
+    <!--
+    <load-service name="foobar" path="/path/to/my/test.xml">
+      <queue>default-queue</queue>
+    </load-service>
+    -->
+  </daemon>
+
+  <!--
   Exscript daemon configuration.
   You may define only one daemon at this time.
   -->
