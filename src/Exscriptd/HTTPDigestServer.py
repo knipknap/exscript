@@ -62,7 +62,7 @@ else:
 
 DEBUG = False
 
-realm = "Crunchy Access"
+realm = "exscriptd"
 
 # This is convoluted because there's no way to tell 2to3 to insert a
 # byte literal.
