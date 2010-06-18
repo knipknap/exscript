@@ -22,8 +22,10 @@ class RestDaemon(Daemon):
         self.port    = port
         self.server  = HTTPServer((self.address, self.port), HTTPHandler)
 
-    def add_user(self, username, password):
-        self.server.accounts[username] = password
+    def add_account(self, account):
+        user     = account.get_name()
+        password = account.get_password()
+        self.server.accounts[user] = password
 
     def run(self):
         address = self.address + ':' + str(self.port)

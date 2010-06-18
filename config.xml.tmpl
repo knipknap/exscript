@@ -19,6 +19,17 @@ This is the Exscript daemon configuration file.
   </account-pool>
 
   <!--
+  Another account pool that we use for defining users
+  that may log into the HTTP REST API.
+  -->
+  <account-pool name="rest-accounts">
+    <account>
+      <user>exscript-rest</user>
+      <password>ZXhzY3JpcHQtcmVzdA==</password>
+    </account>
+  </account-pool>
+
+  <!--
   Database configuration. The following databases are supported:
     Tested: sqlite
     Untested: Any other database supported by SQLAlchemy.
@@ -47,10 +58,7 @@ This is the Exscript daemon configuration file.
     <address></address>
     <port>8123</port>
 
-    <!-- Login data for clients. -->
-    <username>exscript-rest</username>
-    <password>exscript-rest</password>
-
+    <account-pool>rest-accounts</account-pool>
     <database>default</database>
     <!--
     <load-service name="foobar" path="/path/to/my/test.xml">

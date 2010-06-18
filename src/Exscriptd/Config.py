@@ -123,15 +123,18 @@ class Config(object):
     def init_rest_daemon(self, element):
         # Init the database for the daemon first, then
         # create the daemon (this does not start it).
-        name     = element.get('name')
-        address  = element.find('address').text or ''
-        username = element.find('username').text or ''
-        password = element.find('password').text or ''
-        port     = int(element.find('port').text)
-        db_name  = element.find('database').text
-        db       = self.init_database_from_name(db_name)
-        daemon   = RestDaemon(name, address, port, database = db)
-        daemon.add_user(username, password)
+        name    = element.get('name')
+        address = element.find('address').text or ''
+        port    = int(element.find('port').text)
+        db_name = element.find('database').text
+        db      = self.init_database_from_name(db_name)
+        daemon  = RestDaemon(name, address, port, database = db)
+
+        # Add some accounts, if any.
+        account_pool = element.find('account-pool')
+        for account in self.init_account_pool_from_name(account_pool.text):
+            daemon.add_account(account)
+
         self.load_services(element, daemon)
         return daemon
 
