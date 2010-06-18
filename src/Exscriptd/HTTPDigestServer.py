@@ -259,8 +259,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
     if sys.version_info[0] < 3:
         MessageClass = message_wrapper
 
-    @require_authenticate
-    def do_POST(self):
+    def do_POSTGET(self, handler):
         """handle an HTTP request"""
         # at first, assume that the given path is the actual path and there are no arguments
         if DEBUG:
@@ -288,16 +287,26 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         if DEBUG:
             print(u"Preparing to call get_handler in do_POST")
         try:
-            self.handle_response()
+            handler()
         except:
             self.send_response(500)
             self.end_headers()
             self.wfile.write(format_exc().encode('utf8'))
 
-    # We draw no distinction.
-    do_GET = do_POST
+    @require_authenticate
+    def do_POST(self):
+        self.do_POSTGET(self.handle_POST)
 
-    def handle_response(self):
+    @require_authenticate
+    def do_GET(self):
+        self.do_POSTGET(self.handle_GET)
+
+    def handle_POST(self):
+        self.send_response(404)
+        self.end_headers()
+        self.wfile.write('not found'.encode('utf8'))
+
+    def handle_GET(self):
         self.send_response(404)
         self.end_headers()
         self.wfile.write('not found'.encode('utf8'))
