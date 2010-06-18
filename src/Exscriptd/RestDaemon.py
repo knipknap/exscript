@@ -6,9 +6,26 @@ from Order                   import Order
 from Exscript                import Host
 from Exscript.util.decorator import bind
 
+"""
+URL list:
+
+  Path                            Method  Function
+  order/                          POST    Place an XML formatted order
+  order/list/?offset=10&limit=25  GET     Get a list of orders
+  order/full/?id=1234             GET     Get the XML formatted order 1234
+  order/status/?id=1234           GET     Get the status for order 1234
+  order/status/?id=1234&task=55   GET     Get the status for host 55 in order 1234
+  services/                       GET     Service overview   (not implemented)
+  services/foo/                   GET     Get info for the "foo" service   (not implemented)
+"""
+
 class HTTPHandler(HTTPRequestHandler):
-    def handle_response(self):
-        self.wfile.write("<html>It works!</html>")
+    def handle_POST(self):
+        if self.path == '/order/':
+            print "ORDER POSTED", self.data
+            self.wfile.write("<html>FIXME</html>")
+            return
+        raise Exception('no such API call')
 
 class RestDaemon(Daemon):
     def __init__(self,
