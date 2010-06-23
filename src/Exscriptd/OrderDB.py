@@ -20,7 +20,7 @@ class OrderDB(object):
         """
         self.engine        = engine
         self.metadata      = sa.MetaData(self.engine)
-        self._table_prefix = 'ips_'
+        self._table_prefix = 'exscriptd_'
         self._table_map    = {}
         self.__update_table_names()
 
@@ -107,10 +107,7 @@ class OrderDB(object):
         @type  debug: Boolean
         @param debug: True to enable debugging.
         """
-        if debug:
-            self.engine.echo = 1
-        else:
-            self.engine.echo = 0
+        self.engine.echo = debug
 
     def set_table_prefix(self, prefix):
         """
@@ -147,6 +144,32 @@ class OrderDB(object):
                                 value   = value)
         return result.last_inserted_ids()[0]
 
+    def __save_variable(self, host_id, key, value):
+        """
+        Inserts or updates the given variable in the database.
+        """
+        if host_id is None:
+            raise AttributeError('host_id argument must not be None')
+        if key is None:
+            raise AttributeError('key argument must not be None')
+
+        # Check if the host already exists.
+        table  = self._table_map['variable']
+        where  = sa.and_(table.c.host_id == host_id,
+                         table.c.name    == key)
+        thevar = table.select(where).execute().fetchone()
+        fields = dict(host_id = host_id,
+                      name    = key,
+                      value   = value)
+
+        # Insert or update it.
+        if thevar is None:
+            query = table.insert()
+            query.execute(**fields)
+        else:
+            query = table.update(where)
+            query.execute(**fields)
+
     def __get_variable_from_row(self, row):
         assert row is not None
         tbl_v = self._table_map['variable']
@@ -173,6 +196,43 @@ class OrderDB(object):
             self.__add_variable(host_id, key, value)
         return host_id
 
+    def __save_host(self, order_id, host):
+        """
+        Inserts or updates the given host into the database.
+        """
+        if order_id is None:
+            raise AttributeError('order_id argument must not be None')
+        if host is None:
+            raise AttributeError('host argument must not be None')
+
+        # Check if the host already exists.
+        table   = self._table_map['host']
+        where   = sa.and_(table.c.order_id == order_id,
+                          table.c.address  == host.get_address())
+        thehost = table.select(where).execute().fetchone()
+        fields  = dict(order_id = order_id,
+                       name     = host.get_name(),
+                       address  = host.get_address())
+
+        # Insert or update it.
+        if thehost is None:
+            query  = table.insert()
+            result = query.execute(**fields)
+            host_id = result.last_inserted_ids()[0]
+        else:
+            query   = table.update(where)
+            result  = query.execute(**fields)
+            host_id = thehost[table.c.id]
+
+        # Delete obsolete variables.
+        #FIXME
+
+        # Check the list of attached variables.
+        for key, value in host.get_all().iteritems():
+            self.__save_variable(host_id, key, value)
+
+        return host_id
+
     def __get_host_from_row(self, row):
         assert row is not None
         tbl_h = self._table_map['host']
@@ -197,6 +257,42 @@ class OrderDB(object):
         for host in order.get_hosts():
             self.__add_host(order.get_id(), host)
         return result.last_inserted_ids()[0]
+
+    def __save_order(self, order):
+        """
+        Updates the given order in the database. Does nothing if the
+        order is not yet in the database.
+
+        @type  order: Order
+        @param order: The order to be saved.
+        @rtype:  Boolean
+        @return: True on success, False otherwise.
+        """
+        if order is None:
+            raise AttributeError('order argument must not be None')
+
+        # Check if the order already exists.
+        theorder = self.get_order(id = order.get_id())
+        table    = self._table_map['order']
+        fields   = dict(id      = order.get_id(),
+                        service = order.get_service_name(),
+                        status  = order.get_status())
+
+        # Insert or update it.
+        if theorder is None:
+            query = table.insert()
+        else:
+            query = table.update(table.c.id == order.get_id())
+        query.execute(**fields)
+
+        # Delete obsolete hosts.
+        #FIXME
+
+        # Update the list of attached hosts.
+        for host in order.get_hosts():
+            self.__save_host(order.get_id(), host)
+
+        return True
 
     def __get_order_from_row(self, row):
         assert row is not None
@@ -261,7 +357,6 @@ class OrderDB(object):
 
         return order_list
 
-
     def get_order(self, **kwargs):
         """
         Like get_orders(), but
@@ -280,7 +375,6 @@ class OrderDB(object):
         elif len(result) > 1:
             raise Exception('Too many results')
         return result[0]
-
 
     def get_orders(self, offset = 0, limit = 0, **kwargs):
         """
@@ -325,10 +419,6 @@ class OrderDB(object):
 
         return self.__get_orders_from_query(select)
 
-
-##################################################
-# FIXME: everything below is not yet ported
-#
     def add_order(self, orders):
         """
         Inserts the given order into the database.
@@ -344,32 +434,6 @@ class OrderDB(object):
             self.__add_order(order)
         return True
 
-
-    def __save_order1(self, order):
-        """
-        Updates the given order in the database. Does nothing if the
-        order is not yet in the database.
-
-        @type  order: Order
-        @param order: The order to be saved.
-        @rtype:  Boolean
-        @return: True on success, False otherwise.
-        """
-        if order is None:
-            raise AttributeError('order argument must not be None')
-        if order.__class__.__name__ not in self._types:
-            raise AttributeError('order type is not yet registered')
-
-        table  = self._table_map['order']
-        update = table.update(table.c.id == order.get_id())
-        update.execute(order_type = order.__class__.__name__,
-                       handle      = order.get_handle(),
-                       name        = order.get_name())
-        self._order_cache_flush()
-        self._order_cache_add(order)
-        return True
-
-
     def save_order(self, orders):
         """
         Updates the given orders in the database. Does nothing if
@@ -382,81 +446,6 @@ class OrderDB(object):
         """
         if orders is None:
             raise AttributeError('order argument must not be None')
-        if type(orders) != type([]):
-            orders = [orders]
-        for order in orders:
-            self.__save_order1(order)
+        for order in to_list(orders):
+            self.__save_order(order)
         return True
-
-
-    def delete_order(self, orders):
-        """
-        Convenience wrapper around delete_order_from_match().
-
-        @type  orders: Order|list[Order]
-        @param orders: The orders to be removed.
-        @rtype:  int
-        @return: The number of deleted orders.
-        """
-        if orders is None:
-            raise AttributeError('order argument must not be None')
-        if type(orders) != type([]):
-            orders = [orders]
-        ids = [order.get_id() for order in orders]
-        res = self.delete_order_from_match(id = ids)
-        for order in orders:
-            order.set_id(None)
-        return res
-
-
-    def delete_order_from_match(self, **kwargs):
-        """
-        Deletes all orders that match the given criteria from the
-        database.
-        All ACLs associated with the order are removed.
-
-        @type  kwargs: dict
-        @param kwargs: The following keys may be used:
-                         - id - the id of the resource
-                         - handle - the handle of the resource
-                         - type - the class type of the resource
-                       All values may also be lists (logical OR).
-        @rtype:  int
-        @return: The number of deleted orders.
-        """
-        tbl_a = self._table_map['order']
-        table = tbl_a
-        where = None
-
-        # ID.
-        if kwargs.has_key('id'):
-            ids = kwargs.get('id')
-            if type(ids) == type(0):
-                ids = [ids]
-            id_where = None
-            for current_id in ids:
-                id_where = sa.or_(id_where, table.c.id == current_id)
-            where = sa.and_(where, id_where)
-
-        # Handle.
-        if kwargs.has_key('handle'):
-            handles = kwargs.get('handle')
-            if type(handles) != type([]):
-                handles = [handles]
-            handle_where = None
-            for handle in handles:
-                handle_where = sa.or_(handle_where, table.c.handle == handle)
-            where = sa.and_(where, handle_where)
-
-        # Object type.
-        if kwargs.has_key('type'):
-            types = kwargs.get('type')
-            cond  = self._get_subtype_sql(tbl_a.c.order_type, types)
-            where = sa.and_(where, cond)
-
-        delete = table.delete(where)
-        result = delete.execute()
-
-        if result.rowcount > 0:
-            self._order_cache_flush()
-        return result.rowcount
