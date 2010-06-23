@@ -3,8 +3,7 @@ Represents a call to a service.
 """
 import os, traceback, shutil
 import Exscript
-from Exscript.util.file import get_hosts_from_file, \
-                               get_hosts_from_csv
+from Exscript.util.file import get_hosts_from_csv
 from sqlalchemy         import *
 from sqlalchemy.orm     import relation, synonym
 from Database           import Base
@@ -144,6 +143,33 @@ class Order(Base):
         @return: True if the order is valid, False otherwise.
         """
         return True #FIXME
+
+    def get_id(self):
+        """
+        Returns the order id.
+
+        @rtype:  str
+        @return: The id of the order.
+        """
+        return self.id
+
+    def get_service_name(self):
+        """
+        Returns the name of the service that is ordered.
+
+        @rtype:  str
+        @return: The service name.
+        """
+        return self.service
+
+    def get_status(self):
+        """
+        Returns the order status.
+
+        @rtype:  str
+        @return: The order status.
+        """
+        return self.status
 
     def get_filename(self):
         """
