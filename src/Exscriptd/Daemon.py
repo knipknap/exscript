@@ -10,26 +10,23 @@ class Daemon(object):
                  database   = None,
                  processors = None):
         self.name       = name
-        self.db_cls     = database
+        self.db         = database
         self.processors = processors
         self.services   = {}
 
     def add_service(self, name, service):
         self.services[name] = service
 
-    def get_order_from_id(self, order_id):
-        db = self.db_cls()
-        return db.query(Order).filter(Order.id == order_id).one()
-
     def set_order_status(self, order, status):
-        db = self.db_cls()
         order.status = status
-        db.save_or_update(order)
-        db.commit()
+        self.db.save_order(order)
+
+    def get_order_from_id(self, order_id):
+        return self.db.get_order(id = order_id)
 
     def order_done(self, order_id):
         print 'Order done:', order_id
-        order = self.get_order_from_id(order_id)
+        order = self.db.get_order(id == order_id)
         self.set_order_status(order, 'completed')
 
     def _place_order(self, order):

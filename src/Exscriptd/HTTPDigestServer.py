@@ -145,9 +145,10 @@ class HTTPServer(ThreadingMixIn, PyHTTPServer):
     daemon_threads = True
     accounts = {}
 
-    def __init__(self, addr, rqh):
+    def __init__(self, addr, rqh, user_data):
         self.default_handler = None
-        self.handler_table = {}
+        self.handler_table   = {}
+        self.user_data       = user_data
         PyHTTPServer.__init__(self, addr, rqh)
 
     def register_default_handler(self, handler):

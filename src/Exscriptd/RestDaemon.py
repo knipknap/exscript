@@ -1,4 +1,5 @@
 import os, time, cgi
+from traceback               import format_exc
 from HTTPDigestServer        import HTTPRequestHandler, HTTPServer
 from lxml                    import etree
 from Daemon                  import Daemon
@@ -21,9 +22,15 @@ URL list:
 
 class HTTPHandler(HTTPRequestHandler):
     def handle_POST(self):
+        self.daemon = self.server.user_data
         if self.path == '/order/':
-            print "ORDER POSTED", self.data
-            self.wfile.write("<html>FIXME</html>")
+            try:
+                order = Order.from_xml(self.data)
+                self.daemon._place_order(order)
+            except Exception, e:
+                self.wfile.write(format_exc().encode('utf8'))
+            else:
+                self.wfile.write("ok")
             return
         raise Exception('no such API call')
 
@@ -37,7 +44,8 @@ class RestDaemon(Daemon):
         Daemon.__init__(self, name, database, processors)
         self.address = address
         self.port    = port
-        self.server  = HTTPServer((self.address, self.port), HTTPHandler)
+        addr         = self.address, self.port
+        self.server  = HTTPServer(addr, HTTPHandler, self)
 
     def add_account(self, account):
         user     = account.get_name()

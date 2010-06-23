@@ -6,20 +6,15 @@ import Exscript
 from Exscript.util.file import get_hosts_from_csv
 from sqlalchemy         import *
 from sqlalchemy.orm     import relation, synonym
-from Database           import Base
 from tempfile           import NamedTemporaryFile
 from lxml               import etree
 from util               import mkorderid
 
-class Order(Base):
+class Order(object):
     """
     An order includes all information that is required to make a
     service call.
     """
-    __tablename__ = 'order'
-    id            = Column(String(50), primary_key = True)
-    service       = Column(String(50), index = True)
-    status        = Column(String(20), index = True)
 
     def __init__(self, service_name):
         """
@@ -30,13 +25,30 @@ class Order(Base):
         @type  service_name: str
         @param service_name: The service that handles the order.
         """
-        Base.__init__(self,
-                      id      = mkorderid(service_name),
-                      status  = 'new',
-                      service = service_name)
+        self.id      = mkorderid(service_name)
+        self.status  = 'new'
+        self.service = service_name
+        self.hosts   = []
 
     def __repr__(self):
         return "<Order('%s','%s','%s')>" % (self.id, self.service, self.status)
+
+    @staticmethod
+    def from_xml(xml):
+        """
+        Creates a new instance by parsing the given XML.
+
+        @type  xml: str
+        @param xml: A string containing an XML formatted order.
+        @rtype:  Order
+        @return: A new instance of an order.
+        """
+        # Parse required attributes.
+        xml     = etree.fromstring(xml)
+        element = xml.find('order')
+        order   = Order(element.get('service'))
+        order._read_hosts_from_xml(element)
+        return order
 
     @staticmethod
     def from_xml_file(filename):
@@ -59,8 +71,8 @@ class Order(Base):
         for host_elem in element.iterfind('host'):
             address = host_elem.get('address').strip()
             args    = self._read_arguments_from_xml(host_elem)
-            host    = _Host(address)
-            host.add_host_variables(args)
+            host    = Exscript.Host(address)
+            host.set_all(args)
             self.hosts.append(host)
 
     def _read_arguments_from_xml(self, host_elem):
@@ -114,7 +126,7 @@ class Order(Base):
         order = etree.SubElement(xml, 'order', service = self.service)
         for host in self.hosts:
             elem = etree.SubElement(order, 'host', address = host.address)
-            self._arguments_to_xml(elem, host.get_vars())
+            self._arguments_to_xml(elem, host.get_all())
         return etree.tostring(xml, pretty_print = pretty)
 
     def write(self, filename):
@@ -180,6 +192,9 @@ class Order(Base):
         """
         return self.id + '.xml'
 
+    def add_host(self, host):
+        self.hosts.append(host)
+
     def add_hosts_from_csv(self, filename):
         """
         Parses the given CSV file using
@@ -192,9 +207,7 @@ class Order(Base):
         @param filename: A file containing a CSV formatted list of hosts.
         """
         for host in get_hosts_from_csv(filename):
-            h = _Host(host.get_address())
-            h.add_host_variables(host.get_all())
-            self.hosts.append(h)
+            self.add_host(host)
 
     def get_hosts(self):
         """
@@ -204,43 +217,7 @@ class Order(Base):
         @rtype:  [Exscript.Host]
         @return: A list of hosts.
         """
-        # Prepare the list of hosts from the order.
-        hosts = []
-        for h in self.hosts:
-            host = Exscript.Host(h.address)
-            host.set_all(h.get_vars())
-            host.set_logname(os.path.join(self.id, host.get_logname()))
-            hosts.append(host)
-        return hosts
-
-class _Host(Base):
-    __tablename__ = 'host'
-
-    id       = Column(Integer, primary_key = True)
-    order_id = Column(String(50), ForeignKey('order.id'))
-    address  = Column(String(150))
-    name     = Column(String(150))
-    hosts    = relation(Order, backref = 'hosts', order_by = Order.id)
-
-    def __init__(self, address):
-        Base.__init__(self, address = address, name = address)
-
-    def get_vars(self):
-        return dict((v.name, v.value) for v in self.vars)
-
-    def add_host_variables(self, vars):
-        self.vars += [_Variable(v, k) for (v, k) in vars.iteritems()]
-
-class _Variable(Base):
-    __tablename__ = 'variable'
-
-    host_id   = Column(Integer, ForeignKey('host.id'), primary_key = True)
-    name      = Column(String(150), primary_key = True)
-    value     = Column(String(150))
-    variables = relation(_Host, backref = 'vars', order_by = _Host.id)
-
-    def __init__(self, name, value = None):
-        Base.__init__(self, name = name, value = value)
+        return self.hosts
 
 if __name__ == '__main__':
     order = Order('test')

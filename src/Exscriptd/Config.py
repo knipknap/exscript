@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 import os, base64, re
-from sqlalchemy     import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
-from Order          import Order
-from Database       import Base
-from lxml           import etree
-from Exscript       import Account, Queue
-from INotifyDaemon  import INotifyDaemon
-from RestDaemon     import RestDaemon
-from PythonService  import PythonService
-from util           import resolve_variables
+from sqlalchemy    import create_engine
+from Order         import Order
+from OrderDB       import OrderDB
+from lxml          import etree
+from Exscript      import Account, Queue
+from RestDaemon    import RestDaemon
+from PythonService import PythonService
+from util          import resolve_variables
 
 class Config(object):
     def __init__(self, filename):
@@ -77,10 +75,10 @@ class Config(object):
         dbn     = element.find('dbn').text
         print 'Creating database connection for', dbn
         engine  = create_engine(dbn)
-        Session = scoped_session(sessionmaker(bind = engine))
+        db      = OrderDB(engine)
         print 'Initializing database tables...'
-        Base.metadata.create_all(engine)
-        return Session
+        db.install()
+        return db
 
     def init_service_from_name(self,
                                daemon,
@@ -138,25 +136,12 @@ class Config(object):
         self.load_services(element, daemon)
         return daemon
 
-    def init_inotify_daemon(self, element):
-        # Init the database for the daemon first, then
-        # create the daemon (this does not start it).
-        name      = element.get('name')
-        directory = element.find('directory').text
-        db_name   = element.find('database').text
-        db        = self.init_database_from_name(db_name)
-        daemon    = INotifyDaemon(name, directory = directory, database = db)
-        self.load_services(element, daemon)
-        return daemon
-
     def init_daemon_from_name(self, name):
         # Create the daemon.
         element = self.cfgtree.find('daemon[@name="%s"]' % name)
         type    = element.get('type')
         if type == 'rest':
             return self.init_rest_daemon(element)
-        elif type == 'inotify':
-            return self.init_inotify_daemon(element)
         else:
             raise Exception('No such daemon type: %s' % type)
 
@@ -167,11 +152,3 @@ class Config(object):
             daemon = self.init_daemon_from_name(name)
             daemons.append(daemon)
         return daemons
-
-    def get_inotify_daemon_dir(self, daemon_name):
-        daemon = self.cfgtree.find('daemon[@name="%s"]' % daemon_name)
-        return daemon.find('directory').text
-
-    def get_inotify_daemon_db_name(self, daemon_name):
-        daemon = self.cfgtree.find('daemon[@name="%s"]' % daemon_name)
-        return daemon.find('database').text

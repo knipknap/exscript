@@ -6,7 +6,7 @@ from urllib2          import HTTPDigestAuthHandler, build_opener
 from HTTPDigestServer import realm
 from Order            import Order
 
-class Client(object):
+class RestClient(object):
     """
     Handles all contact with a server.
     """
@@ -87,7 +87,7 @@ if __name__ == '__main__':
         sys.stderr.write('Syntax: ip[:port] user password order\n')
         sys.exit(1)
 
-    client = Client(address, user, password)
+    client = RestClient(address, user, password)
     #print "Status:", client.get_order_status_from_id(order.id)
     client.place_order(order)
     print "Placed order", order.id
