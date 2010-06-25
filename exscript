@@ -475,7 +475,7 @@ parser.add_option('--protocol-verbose',
                   dest    = 'protocol_verbose',
                   type    = 'int',
                   metavar = 'NUM',
-                  default = 1,
+                  default = 0,
                   help    = '''
 Print out debug information about the network activity.
 NUM is a number between 0 (min) and 5 (max). Default is 1.
