@@ -47,7 +47,7 @@ _prompt_re     = re.compile(_prompt_start                 \
                           + r'[: ]?'                      \
                           + _any_path + r'?'              \
                           + r'(?:\(' + _filename + '\))?' \
-                          + r'\]?'                        \
+                          + r'[\]\-]?'                    \
                           + r'[#>%\$\]] ?\Z', _flags)
 
 _user_re    = re.compile(r'(user ?name|user|login): *$', _flags)

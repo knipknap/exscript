@@ -18,6 +18,7 @@ from StreamAnalyzer import StreamAnalyzer
 _flags         = re.I | re.M
 _aix_re        = re.compile(r'AIX')
 _huawei_re     = re.compile(r'huawei',                         _flags)
+_enterasys_re  = re.compile(r'enterasys',                      _flags)
 _oneos_user_re = re.compile(r'[\r\n]Username:[^ ]',            _flags)
 _ios_user_re   = re.compile(r'user ?name: ',                   _flags)
 _xr_prompt_re  = re.compile(r'RP/\d+/\w+/CPU\d+:[^#]+[#>] ?$', _flags)
@@ -27,16 +28,18 @@ _unix_user_re  = re.compile(r'(user|login): ',                 _flags)
 _pass_re       = re.compile(r'password:? ',                    _flags)
 
 # Matches before the authentication is complete.
-auth_os_map = ((_huawei_re,     'vrp',    80),
-               (_oneos_user_re, 'one_os', 20),
-               (_ios_user_re,   'ios',    60),
-               (_junos_re,      'junos',  80),
-               (_junos_user_re, 'junos',  35),
-               (_aix_re,        'shell',  70),
-               (_unix_user_re,  'shell',  30))
+auth_os_map = ((_huawei_re,     'vrp',       80),
+               (_enterasys_re,  'enterasys', 80),
+               (_oneos_user_re, 'one_os',    20),
+               (_ios_user_re,   'ios',       60),
+               (_junos_re,      'junos',     80),
+               (_junos_user_re, 'junos',     35),
+               (_aix_re,        'shell',     70),
+               (_unix_user_re,  'shell',     30))
 
 # Matches anytime.
-os_map = ((_xr_prompt_re,  'ios_xr', 95),)
+os_map = ((_xr_prompt_re, 'ios_xr',    95),
+          (_enterasys_re, 'enterasys', 80),)
 
 class OsGuesser(StreamAnalyzer):
     def __init__(self, conn):
