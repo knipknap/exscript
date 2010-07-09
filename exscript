@@ -61,11 +61,13 @@ def run():
     # Extract the hostnames out of the command line arguments.
     try:
         filename = args[0]
-        hosts    = [Host(h) for h in list(args[1:])]
+        hosts    = [Host(h, default_protocol = options.protocol)
+                    for h in list(args[1:])]
     except:
         parser.error('Missing filename')
     if options.execute:
-        hosts.append(Host(filename))
+        host = Host(filename, default_protocol = options.protocol)
+        hosts.append(host)
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
     if options.csv_hosts:
