@@ -9,9 +9,15 @@ class HostTest(unittest.TestCase):
     CORRELATE = Host
 
     def setUp(self):
-        self.host = Host('localhost', testarg = 1)
+        self.host = Host('localhost')
+        self.host.set_all(dict(testarg = 1))
 
     def testConstructor(self):
+        host = Host('localhost')
+        self.assertEqual(host.get_protocol(), 'telnet')
+        host = Host('localhost', default_protocol = 'foo')
+        self.assertEqual(host.get_protocol(), 'foo')
+
         for url, result in urls:
             host = Host(url)
             uri  = parse_url(url)

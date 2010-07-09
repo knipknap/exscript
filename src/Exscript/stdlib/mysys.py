@@ -77,7 +77,8 @@ def run(scope, hostnames, filename):
     # Copy the variables from the current scope into new host objects.
     hosts = []
     for hostname in hostnames:
-        host = Host(hostname, **scope.copy_public_vars())
+        host = Host(hostname)
+        host.set_all(**scope.copy_public_vars())
         hosts.append(host)
 
     # Enqueue the new jobs.

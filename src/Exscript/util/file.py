@@ -39,7 +39,9 @@ def get_accounts_from_file(filename):
     return accounts
 
 
-def get_hosts_from_file(filename, remove_duplicates = False):
+def get_hosts_from_file(filename,
+                        default_protocol  = 'telnet',
+                        remove_duplicates = False):
     """
     Reads a list of hostnames from the file with the given name.
 
@@ -56,7 +58,7 @@ def get_hosts_from_file(filename, remove_duplicates = False):
     file_handle = open(filename, 'r')
 
     # Read the hostnames.
-    have  = {}
+    have  = set()
     hosts = []
     for line in file_handle:
         hostname = line.split('#')[0].strip()
@@ -64,8 +66,8 @@ def get_hosts_from_file(filename, remove_duplicates = False):
             continue
         if remove_duplicates and hostname in have:
             continue
-        have[hostname] = 1
-        hosts.append(Host(hostname))
+        have.add(hostname)
+        hosts.append(Host(hostname, default_protocol = default_protocol))
 
     file_handle.close()
     return hosts

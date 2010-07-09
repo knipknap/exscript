@@ -27,18 +27,19 @@ class Host(object):
     Represents a device on which to open a connection.
     """
 
-    def __init__(self, uri, **kwargs):
+    def __init__(self, uri, default_protocol = 'telnet'):
         """
-        Constructor. The given uri is passed to Host.set_uri(). The given
-        kwargs are variables that are passed to Host.set().
+        Constructor. The given uri is passed to Host.set_uri().
+        The default_protocol argument defines the protocol that is used
+        in case the given uri does not specify it.
 
         @type  uri: string
         @param uri: A hostname; see set_uri() for more info.
-        @type  kwargs: dict
-        @param kwargs: Variables to define using Host.set()
+        @type  default_protocol: string
+        @param default_protocol: The protocol name.
         """
-        self.protocol = 'telnet'
-        self.vars     = kwargs
+        self.protocol = default_protocol
+        self.vars     = {}
         self.username = None
         self.password = None
         self.logname  = None
