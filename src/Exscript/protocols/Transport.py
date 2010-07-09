@@ -25,30 +25,33 @@ from Exception                     import TransportException, \
 True  = 1 
 False = 0 
 
-_flags         = re.I
-_printable     = re.escape(string.printable)
-_unprintable   = r'[^' + _printable + r']'
-_ignore        = r'[\x1b\x07\x00]'
-_nl            = r'[\r\n]'
-_prompt_start  = _nl + r'(?:' + _unprintable + r'*|' + _ignore + '*)'
-_prompt_chars  = r'[\-\w\(\)@:~]'
-_filename      = r'(?:[\w\+\-\._]+)'
-_path          = r'(?:(?:' + _filename + r')?(?:/' + _filename + r')*/?)'
-_any_path      = r'(?:' + _path + r'|~' + _path + r'?)'
-_host          = r'(?:[\w+\-\.]+)'
-_user          = r'(?:[\w+\-]+)'
-_user_host     = r'(?:(?:' + _user + r'\@)?' + _host + r')'
-_prompt_re     = re.compile(_prompt_start                 \
-                          + r'[\[\<]?'                    \
-                          + r'\w+'                        \
-                          + _user_host + r'?'             \
-                          + r':?'                         \
-                          + _any_path + r'?'              \
-                          + r'[: ]?'                      \
-                          + _any_path + r'?'              \
-                          + r'(?:\(' + _filename + '\))?' \
-                          + r'[\]\-]?'                    \
-                          + r'[#>%\$\]] ?\Z', _flags)
+_flags          = re.I
+_printable      = re.escape(string.printable)
+_unprintable    = r'[^' + _printable + r']'
+_unprintable_re = re.compile(_unprintable)
+_ignore         = r'[\x1b\x07\x00]'
+_nl             = r'[\r\n]'
+_prompt_start   = _nl + r'(?:' + _unprintable + r'*|' + _ignore + '*)'
+_prompt_chars   = r'[\-\w\(\)@:~]'
+_filename       = r'(?:[\w\+\-\._]+)'
+_path           = r'(?:(?:' + _filename + r')?(?:/' + _filename + r')*/?)'
+_any_path       = r'(?:' + _path + r'|~' + _path + r'?)'
+_host           = r'(?:[\w+\-\.]+)'
+_user           = r'(?:[\w+\-]+)'
+_user_host      = r'(?:(?:' + _user + r'\@)?' + _host + r')'
+_prompt_re      = re.compile(_prompt_start                 \
+                           + r'[\[\<]?'                    \
+                           + r'\w+'                        \
+                           + _user_host + r'?'             \
+                           + r':?'                         \
+                           + _any_path + r'?'              \
+                           + r'[: ]?'                      \
+                           + _any_path + r'?'              \
+                           + r'(?:\(' + _filename + '\))?' \
+                           + r'[\]\-]?'                    \
+                           + r'[#>%\$\]] ?'                \
+                           + _unprintable + r'*'           \
+                           + r'\Z', _flags)
 
 _user_re    = re.compile(r'(user ?name|user|login): *$', _flags)
 _pass_re    = re.compile(r'password:? *$',               _flags)
