@@ -4,6 +4,28 @@ from Exscript.util.cast import to_list
 import sqlalchemy                 as sa
 import sqlalchemy.databases.mysql as mysql
 
+def synchronized(func):
+    """
+    Decorator for synchronizing method access. Used because
+    sqlite does not support concurrent writes, so we need to
+    do this to have graceful locking (rather than sqlite's
+    hard locking).
+    """
+    def wrapped(self, *args, **kwargs):
+        try:
+            rlock = self._sync_lock
+        except AttributeError:
+            from threading import RLock
+            rlock = self.__dict__.setdefault('_sync_lock', RLock())
+        with rlock:
+            return func(self, *args, **kwargs)
+
+    wrapped.__name__ = func.__name__
+    wrapped.__dict__ = func.__dict__
+    wrapped.__doc__ = func.__doc__
+    return wrapped
+
+
 class OrderDB(object):
     """
     The main interface for accessing the database.
@@ -64,6 +86,7 @@ class OrderDB(object):
             mysql_engine = 'INNODB'
         ))
 
+    @synchronized
     def install(self):
         """
         Installs (or upgrades) database tables.
@@ -74,7 +97,7 @@ class OrderDB(object):
         self.metadata.create_all()
         return True
 
-
+    @synchronized
     def uninstall(self):
         """
         Drops all tables from the database. Use with care.
@@ -85,7 +108,7 @@ class OrderDB(object):
         self.metadata.drop_all()
         return True
 
-
+    @synchronized
     def clear_database(self):
         """
         Drops the content of any database table used by this library.
@@ -129,6 +152,7 @@ class OrderDB(object):
         """
         return self._table_prefix
 
+    @synchronized
     def __add_variable(self, host_id, key, value):
         """
         Inserts the given variable into the database.
@@ -144,6 +168,7 @@ class OrderDB(object):
                                 value   = value)
         return result.last_inserted_ids()[0]
 
+    @synchronized
     def __save_variable(self, host_id, key, value):
         """
         Inserts or updates the given variable in the database.
@@ -175,6 +200,7 @@ class OrderDB(object):
         tbl_v = self._table_map['variable']
         return row[tbl_v.c.name], row[tbl_v.c.value]
 
+    @synchronized
     def __add_host(self, order_id, host):
         """
         Inserts the given host into the database.
@@ -196,6 +222,7 @@ class OrderDB(object):
             self.__add_variable(host_id, key, value)
         return host_id
 
+    @synchronized
     def __save_host(self, order_id, host):
         """
         Inserts or updates the given host into the database.
@@ -240,6 +267,7 @@ class OrderDB(object):
         host.set_address(row[tbl_h.c.address])
         return host
 
+    @synchronized
     def __add_order(self, order):
         """
         Inserts the given order into the database.
@@ -258,6 +286,7 @@ class OrderDB(object):
             self.__add_host(order.get_id(), host)
         return result.last_inserted_ids()[0]
 
+    @synchronized
     def __save_order(self, order):
         """
         Updates the given order in the database. Does nothing if the
