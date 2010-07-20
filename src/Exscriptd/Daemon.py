@@ -26,7 +26,7 @@ class Daemon(object):
 
     def order_done(self, order_id):
         print 'Order done:', order_id
-        order = self.db.get_order(id == order_id)
+        order = self.db.get_order(id = order_id)
         self.set_order_status(order, 'completed')
 
     def _place_order(self, order):
