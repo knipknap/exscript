@@ -35,9 +35,9 @@ class OrderDB(object):
         """
         Instantiates a new OrderDB.
         
-        @type  db: object
-        @param db: An sqlalchemy database connection.
-        @rtype:  DB
+        @type  engine: object
+        @param engine: An sqlalchemy database engine.
+        @rtype:  OrderDB
         @return: The new instance.
         """
         self.engine        = engine
