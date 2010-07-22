@@ -75,28 +75,3 @@ class RestClient(object):
         @return: The status of the order.
         """
         raise NotImplementedError()
-
-if __name__ == '__main__':
-    import sys, time
-    if len(sys.argv) == 5:
-        address     = sys.argv[1]
-        user        = sys.argv[2]
-        password    = sys.argv[3]
-        order       = Order.from_xml_file(sys.argv[4])
-    else:
-        sys.stderr.write('Syntax: ip[:port] user password order\n')
-        sys.exit(1)
-
-    client = RestClient(address, user, password)
-    #print "Status:", client.get_order_status_from_id(order.id)
-    client.place_order(order)
-    print "Placed order", order.id
-    sys.exit()
-    #status = client.get_order_status_from_id(order.id)
-
-    while status != 'completed':
-        print "Status:", status
-        time.sleep(.1)
-        status = client.get_order_status_from_id(order.id)
-
-    print "Status:", status
