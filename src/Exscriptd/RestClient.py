@@ -50,7 +50,7 @@ class RestClient(object):
         url          = self.address + '/order/'
         xml          = order.toxml()
         result       = self.opener.open(url, xml)
-        if result.getcode() != '100':
+        if result.getcode() != 200:
             raise Exception(result.read())
 
     def get_order_from_id(self, order_id):
