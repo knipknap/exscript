@@ -17,9 +17,13 @@ class Service(object):
     def _autoqueue(self, order):
         if not self.autoqueue:
             return
+        # For performance reasons, we defer the starting of further
+        # threads by pausing the queue.
+        self.queue.workqueue.pause()
         task = self.queue.run(order.get_hosts(), bind(self.run, order.id))
         task.signal_connect('done', self.daemon.order_done, order.id)
         self.daemon.set_order_status(order, 'queued')
+        self.queue.workqueue.unpause()
 
     def enter(self, order):
         self._autoqueue(order)

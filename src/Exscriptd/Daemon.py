@@ -47,5 +47,3 @@ class Daemon(object):
             print 'Order %s: Rejected by service "%s"' % args
             self.set_order_status(order, 'rejected')
             return
-
-        self.set_order_status(order, 'accepted')

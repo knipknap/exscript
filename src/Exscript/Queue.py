@@ -110,6 +110,7 @@ class Queue(Trackable):
         self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
         self.workqueue.signal_connect('queue-empty',   self._on_queue_empty)
+        self.workqueue.unpause()
 
 
     def _update_verbosity(self):
@@ -388,6 +389,7 @@ class Queue(Trackable):
 
         self._dbg(2, 'Shutting down engine...')
         self.workqueue.shutdown()
+        self.workqueue.unpause()
         self._dbg(2, 'Engine shut down.')
         self._del_status_bar()
 
@@ -427,7 +429,6 @@ class Queue(Trackable):
     def _run(self, hosts, function):
         hosts       = to_hosts(hosts)
         self.total += len(hosts)
-        self.workqueue.unpause()
 
         task = Task(self)
         for host in hosts:
@@ -471,7 +472,6 @@ class Queue(Trackable):
         """
         hosts       = to_hosts(hosts)
         self.total += len(hosts)
-        self.workqueue.unpause()
 
         task = Task(self)
         for host in hosts:
@@ -496,7 +496,6 @@ class Queue(Trackable):
         """
         hosts       = to_hosts(hosts)
         self.total += len(hosts)
-        self.workqueue.unpause()
 
         task = Task(self)
         for host in hosts:
