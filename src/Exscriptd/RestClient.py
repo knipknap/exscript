@@ -74,4 +74,9 @@ class RestClient(object):
         @rtype:  str
         @return: The status of the order.
         """
-        raise NotImplementedError()
+        url      = self.address + '/order/status/?id=%s' % order_id
+        result   = self.opener.open(url)
+        response = result.read()
+        if result.getcode() != 200:
+            raise Exception(response)
+        return response

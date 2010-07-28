@@ -21,18 +21,30 @@ URL list:
 """
 
 class HTTPHandler(HTTPRequestHandler):
+    def get_response(self):
+        if self.path == '/order/':
+            order = Order.from_xml(self.data)
+            self.daemon._place_order(order)
+            return 'ok'
+        elif self.path == '/order/status/':
+            order = self.daemon.get_order_from_id(str(self.args['id']))
+            if not order:
+                raise Exception('no such id')
+            return order.status
+        else:
+            raise Exception('no such API call')
+
     def handle_POST(self):
         self.daemon = self.server.user_data
-        if self.path == '/order/':
-            try:
-                order = Order.from_xml(self.data)
-                self.daemon._place_order(order)
-            except Exception, e:
-                self.wfile.write(format_exc().encode('utf8'))
-            else:
-                self.wfile.write("ok")
-            return
-        raise Exception('no such API call')
+        try:
+            response = self.get_response()
+        except Exception, e:
+            self.wfile.write(format_exc().encode('utf8'))
+        else:
+            self.wfile.write(response)
+
+    def handle_GET(self):
+        self.handle_POST()
 
 class RestDaemon(Daemon):
     def __init__(self,
