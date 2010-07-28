@@ -62,7 +62,7 @@ class OrderDB(object):
         """
         pfx = self._table_prefix
         self.__add_table(sa.Table(pfx + 'order', self.metadata,
-            sa.Column('id',      sa.String(50), primary_key = True),
+            sa.Column('id',      sa.Integer,    primary_key = True),
             sa.Column('service', sa.String(50), index = True),
             sa.Column('status',  sa.String(20), index = True),
             mysql_engine = 'INNODB'
@@ -70,7 +70,7 @@ class OrderDB(object):
 
         self.__add_table(sa.Table(pfx + 'host', self.metadata,
             sa.Column('id',       sa.Integer,     primary_key = True),
-            sa.Column('order_id', sa.String(50),  index = True),
+            sa.Column('order_id', sa.Integer,     index = True),
             sa.Column('address',  sa.String(150), index = True),
             sa.Column('name',     sa.String(150), index = True),
             sa.ForeignKeyConstraint(['order_id'], [pfx + 'order.id'], ondelete = 'CASCADE'),
@@ -277,14 +277,14 @@ class OrderDB(object):
 
         # Insert the order
         insert = self._table_map['order'].insert()
-        result = insert.execute(id      = order.get_id(),
-                                service = order.get_service_name(),
+        result = insert.execute(service = order.get_service_name(),
                                 status  = order.get_status())
+        order.id = result.last_inserted_ids()[0]
 
         # Insert the hosts of the order.
         for host in order.get_hosts():
-            self.__add_host(order.get_id(), host)
-        return result.last_inserted_ids()[0]
+            self.__add_host(order.id, host)
+        return order.id
 
     @synchronized
     def __save_order(self, order):
@@ -301,18 +301,20 @@ class OrderDB(object):
             raise AttributeError('order argument must not be None')
 
         # Check if the order already exists.
-        theorder = self.get_order(id = order.get_id())
-        table    = self._table_map['order']
-        fields   = dict(id      = order.get_id(),
-                        service = order.get_service_name(),
-                        status  = order.get_status())
+        if order.id:
+            theorder = self.get_order(id = order.get_id())
+        else:
+            theorder = None
 
         # Insert or update it.
-        if theorder is None:
-            query = table.insert()
+        if theorder:
+            table  = self._table_map['order']
+            fields = dict(service = order.get_service_name(),
+                          status  = order.get_status())
+            query  = table.update(table.c.id == order.get_id())
+            query.execute(**fields)
         else:
-            query = table.update(table.c.id == order.get_id())
-        query.execute(**fields)
+            self.add_order(order)
 
         # Delete obsolete hosts.
         #FIXME

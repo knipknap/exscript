@@ -21,7 +21,3 @@ def resolve_variables(variables, string):
 
     string_re = re.compile(r'(\\?)\$([\w_]*)')
     return string_re.sub(variable_sub_cb, string)
-
-def mkorderid(prefix):
-    rand = random.randint(0, 99999)
-    return prefix + '_' + str(time.time()) + '-' + str(rand)

@@ -61,7 +61,7 @@ class OrderDBTest(unittest.TestCase):
         order1.add_host(host1)
         order1.add_host(host2)
 
-        self.assert_(order1.get_id())
+        self.assert_(order1.get_id() is None)
         self.db.add_order(order1)
 
         # Check that the order is stored.
@@ -91,7 +91,7 @@ class OrderDBTest(unittest.TestCase):
         order1.add_host(host1)
         order1.add_host(host2)
 
-        self.assert_(order1.get_id())
+        self.assert_(order1.get_id() is None)
         self.db.save_order(order1)
 
         # Check that the order is stored.

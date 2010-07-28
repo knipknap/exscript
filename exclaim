@@ -81,7 +81,7 @@ if args:
 
 def say(*args):
     if not options.quite:
-        sys.stdout.write(' '.join(args) + '\n')
+        sys.stdout.write(' '.join(str(a) for a in args) + '\n')
 
 client = RestClient(address, options.user, options.password)
 

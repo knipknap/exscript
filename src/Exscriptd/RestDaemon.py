@@ -25,7 +25,7 @@ class HTTPHandler(HTTPRequestHandler):
         if self.path == '/order/':
             order = Order.from_xml(self.data)
             self.daemon._place_order(order)
-            return 'ok'
+            return str(order.get_id())
         elif self.path == '/order/status/':
             order = self.daemon.get_order_from_id(str(self.args['id']))
             if not order:

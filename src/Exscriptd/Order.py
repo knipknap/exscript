@@ -8,7 +8,6 @@ from sqlalchemy         import *
 from sqlalchemy.orm     import relation, synonym
 from tempfile           import NamedTemporaryFile
 from lxml               import etree
-from util               import mkorderid
 
 class Order(object):
     """
@@ -25,7 +24,7 @@ class Order(object):
         @type  service_name: str
         @param service_name: The service that handles the order.
         """
-        self.id      = mkorderid(service_name)
+        self.id      = None
         self.status  = 'new'
         self.service = service_name
         self.hosts   = []
@@ -182,15 +181,6 @@ class Order(object):
         @return: The order status.
         """
         return self.status
-
-    def get_filename(self):
-        """
-        Creates a filename from the id.
-
-        @rtype:  str
-        @return: A filename for the order.
-        """
-        return self.id + '.xml'
 
     def add_host(self, host):
         self.hosts.append(host)
