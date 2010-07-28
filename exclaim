@@ -21,7 +21,7 @@ from Exscriptd import RestClient, Order
 
 __version__ = '0'
 
-parser = OptionParser(usage   = '%prog [options] ip[:port] order',
+parser = OptionParser(usage   = '%prog [options] ip[:port] [filename]',
                       version = __version__)
 parser.add_option('--user', '-u',
                   dest    = 'user',
@@ -41,6 +41,12 @@ parser.add_option('--wait', '-w',
                   default = False,
                   help    = '''
 After placing the order, wait until it is completed.
+'''.strip())
+parser.add_option('--status', '-s',
+                  dest    = 'status',
+                  metavar = 'STRING',
+                  help    = '''
+Prints the status of the order with the given id and exit.
 '''.strip())
 parser.add_option('--quite', '-q',
                   dest    = 'quite',
@@ -64,10 +70,11 @@ try:
 except IndexError:
     parser.error('ip argument missing')
 
-try:
-    filename = args.pop(0)
-except IndexError:
-    parser.error('order argument missing')
+if not options.status:
+    try:
+        filename = args.pop(0)
+    except IndexError:
+        parser.error('order argument missing')
 
 if args:
     parser.error('too many arguments')
@@ -77,6 +84,11 @@ def say(*args):
         sys.stdout.write(' '.join(args) + '\n')
 
 client = RestClient(address, options.user, options.password)
+
+if options.status:
+    print client.get_order_status_from_id(options.status)
+    sys.exit(0)
+
 order  = Order.from_xml_file(filename)
 client.place_order(order)
 say('Placed order', order.id)
