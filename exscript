@@ -63,7 +63,7 @@ def run():
         filename = args[0]
         hosts    = [Host(h, default_protocol = options.protocol)
                     for h in list(args[1:])]
-    except:
+    except IndexError, e:
         parser.error('Missing filename')
     if options.execute:
         host = Host(filename, default_protocol = options.protocol)
@@ -73,7 +73,7 @@ def run():
     if options.csv_hosts:
         try:
             csv_hosts = get_hosts_from_csv(options.csv_hosts)
-        except Exception, e:
+        except IOError, e:
             parser.error(str(e))
         if not csv_hosts:
             print 'Warning: %s is empty.' % options.csv_hosts
@@ -83,8 +83,10 @@ def run():
     if options.hosts:
         try:
             txt_hosts = get_hosts_from_file(options.hosts)
-        except Exception, e:
+        except IOError, e:
             parser.error(str(e))
+        except ValueError, e:
+            parser.error(e)
         if not txt_hosts:
             print 'Warning: %s is empty.' % options.hosts
         hosts += txt_hosts
@@ -95,7 +97,7 @@ def run():
             print 'Creating log directory (%s)...' % options.logdir
             try:
                 os.makedirs(options.logdir)
-            except Exception, e:
+            except IOError, e:
                 parser.error(str(e))
 
     # Make sure that all mandatory options are present.
@@ -155,7 +157,7 @@ def run():
         if options.account_pool:
             accounts = get_accounts_from_file(options.account_pool)
             account_manager.add_account(accounts)
-    except Exception, e:
+    except IOError, e:
         parser.error(str(e))
     if options.account_pool and account_manager.n_accounts() == 0:
         msg = r'WARNING: No accounts found in account pool file (%s)!'

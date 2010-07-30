@@ -66,7 +66,10 @@ class Host(object):
         @type  uri: string
         @param uri: An URL formatted hostname.
         """
-        uri      = parse_url(uri, self.protocol)
+        try:
+            uri = parse_url(uri, self.protocol)
+        except ValueError, e:
+            raise ValueError('Hostname parse error: ' + repr(uri))
         hostname = uri.hostname or ''
         address  = uri.path and hostname + uri.path or hostname
         self.set_protocol(uri.protocol)
