@@ -1,6 +1,6 @@
 [submodule "src/Exscript/external/SpiffSignal.git"]
 	path = src/Exscript/external/SpiffSignal.git
-	url = git@github.com:knipknap/SpiffSignal.git
+	url = git://github.com/knipknap/SpiffSignal.git
 [submodule "src/Exscript/external/paramiko.git"]
 	path = src/Exscript/external/paramiko.git
 	url = git://github.com/robey/paramiko.git
