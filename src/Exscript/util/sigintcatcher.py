@@ -14,49 +14,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
 When imported, this module catches KeyboardInterrupt (SIGINT).
-This solves two problems with multithreaded programs in Python:
-
-  - A signal might be delivered to any thread and
-  - if the thread that gets the signal is waiting, the signal
-    is ignored (which is a bug).
-
-The module forks during the import procedure, so all that is
-required for the change to take effect is the following statement::
+It is a convenience wrapper around sigint.SigIntWatcher()
+such that all that is required for the change to take effect
+is the following statement::
 
   import Exscript.util.sigintcatcher
 
-The watcher is a concurrent process (not thread) that waits for a
-signal and the process that contains the threads.
-Works on Linux, Solaris, MacOS, and AIX. Known not to work
-on Windows.
+Be warned that this way may of importing it breaks on some
+systems, because a fork during an import may cause the following error:
+
+  RuntimeError: not holding the import lock
+
+So in general it is recommended to use the class directly.
 """
-import os, sys, signal
-
-class _SigIntWatcher(object):
-    def __init__(self):
-        """
-        Creates a child process, which returns. The parent
-        process waits for a KeyboardInterrupt and then kills
-        the child process.
-        """
-        self.child = os.fork()
-        if self.child == 0:
-            return
-        else:
-            self.watch()
-
-    def watch(self):
-        try:
-            os.wait()
-        except KeyboardInterrupt:
-            print '********** SIGINT RECEIVED - SHUTTING DOWN! **********'
-            self.kill()
-        sys.exit()
-
-    def kill(self):
-        try:
-            os.kill(self.child, signal.SIGKILL)
-        except OSError:
-            pass
-
-_watcher = _SigIntWatcher()
+from sigint import SigIntWatcher
+_watcher = SigIntWatcher()
