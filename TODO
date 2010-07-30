@@ -1,5 +1,6 @@
 Exscript
 --------
+* Eliminate "catch all" statements like "except:" and "except Exception".
 * Add tests for Transport class debug levels.
 * Add TkExscript.LoginWidget and .LoginWindow.
 * Add docs for TkExscript.
