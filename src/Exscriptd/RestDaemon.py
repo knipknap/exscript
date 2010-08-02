@@ -19,13 +19,17 @@ URL list:
   order/status/?id=1234&task=55   GET     Get the status for host 55 in order 1234
   services/                       GET     Service overview   (not implemented)
   services/foo/                   GET     Get info for the "foo" service   (not implemented)
+
+To test with curl:
+
+  curl --digest --user exscript-rest:exscript-rest --data @postorder localhost:8123/order/
 """
 
 class HTTPHandler(HTTPRequestHandler):
     def get_response(self):
         data = parse_qs(self.data)
         if self.path == '/order/':
-            order = Order.from_xml(data['xml'])
+            order = Order.from_xml(data['xml'][0])
             self.daemon._place_order(order)
             return str(order.get_id())
         elif self.path == '/order/status/':

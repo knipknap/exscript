@@ -134,7 +134,10 @@ def require_authenticate(func):
                              'algorithm="MD5",'
                              'nonce="%s"' % (realm, nonce))
             self.end_headers()
+            self.rfile.read()
+            self.rfile.close()
             self.wfile.write(msg.encode('utf8'))
+            self.wfile.close()
         else:
             return func(self)
 
