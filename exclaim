@@ -42,6 +42,20 @@ parser.add_option('--wait', '-w',
                   help    = '''
 After placing the order, wait until it is completed.
 '''.strip())
+parser.add_option('--csv',
+                  dest    = 'csv',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+The order is using CSV format.
+'''.strip())
+parser.add_option('--service',
+                  dest    = 'service',
+                  metavar = 'STRING',
+                  help    = '''
+Send to the service with the given name, instead of
+the service that is specified in the order.
+'''.strip())
 parser.add_option('--status', '-s',
                   dest    = 'status',
                   metavar = 'STRING',
@@ -89,7 +103,15 @@ if options.status:
     print client.get_order_status_from_id(options.status)
     sys.exit(0)
 
-order  = Order.from_xml_file(filename)
+if options.csv:
+    if not options.service:
+        parser.error('Need --service when using --csv.')
+    order = Order.from_csv_file(options.service, filename)
+else:
+    order = Order.from_xml_file(filename)
+    if options.service:
+        order.set_service_name(service)
+
 client.place_order(order)
 say('Placed order', order.id)
 

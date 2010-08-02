@@ -66,6 +66,20 @@ class Order(object):
         order._read_hosts_from_xml(element)
         return order
 
+    @staticmethod
+    def from_csv_file(service, filename):
+        """
+        Creates a new instance by reading the given CSV file.
+
+        @type  filename: str
+        @param filename: A file containing a CSV formatted list of hosts.
+        @rtype:  Order
+        @return: A new instance of an order.
+        """
+        order = Order(service)
+        order.add_hosts_from_csv(filename)
+        return order
+
     def _read_hosts_from_xml(self, element):
         for host_elem in element.iterfind('host'):
             address = host_elem.get('address').strip()
@@ -163,6 +177,15 @@ class Order(object):
         @return: The id of the order.
         """
         return self.id
+
+    def set_service_name(self, name):
+        """
+        Set the name of the service that is ordered.
+
+        @type:  str
+        @param: The service name.
+        """
+        self.service = name
 
     def get_service_name(self):
         """
