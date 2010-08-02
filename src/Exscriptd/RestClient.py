@@ -49,7 +49,8 @@ class RestClient(object):
         order.status = 'accepted'
         url          = self.address + '/order/'
         xml          = order.toxml()
-        result       = self.opener.open(url, xml)
+        data         = urlencode({'xml': xml})
+        result       = self.opener.open(url, data)
         if result.getcode() != 200:
             raise Exception(result.read())
         order.id = int(result.read())

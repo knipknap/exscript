@@ -2,6 +2,7 @@ import os, time, cgi
 from traceback               import format_exc
 from HTTPDigestServer        import HTTPRequestHandler, HTTPServer
 from lxml                    import etree
+from urlparse                import parse_qs
 from Daemon                  import Daemon
 from Order                   import Order
 from Exscript                import Host
@@ -22,8 +23,9 @@ URL list:
 
 class HTTPHandler(HTTPRequestHandler):
     def get_response(self):
+        data = parse_qs(self.data)
         if self.path == '/order/':
-            order = Order.from_xml(self.data)
+            order = Order.from_xml(data['xml'])
             self.daemon._place_order(order)
             return str(order.get_id())
         elif self.path == '/order/status/':
