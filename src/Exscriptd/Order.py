@@ -138,7 +138,7 @@ class Order(object):
         xml   = etree.Element('xml')
         order = etree.SubElement(xml, 'order', service = self.service)
         for host in self.hosts:
-            elem = etree.SubElement(order, 'host', address = host.address)
+            elem = etree.SubElement(order, 'host', address = host.get_address())
             self._arguments_to_xml(elem, host.get_all())
         return etree.tostring(xml, pretty_print = pretty)
 
