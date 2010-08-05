@@ -10,7 +10,9 @@ from PythonService import PythonService
 from util          import resolve_variables
 
 class Config(object):
-    def __init__(self, filename):
+    def __init__(self, cfg_dir):
+        self.cfg_dir   = cfg_dir
+        filename       = os.path.join(cfg_dir, 'main.xml')
         self.cfgtree   = etree.parse(filename)
         self.variables = {}
         self.queues    = {}
@@ -83,23 +85,25 @@ class Config(object):
     def init_service_from_name(self,
                                daemon,
                                name,
-                               filename,
+                               dirname,
                                queue = None):
         print 'Loading service "%s"...' % name,
-        cfgtree = etree.parse(filename)
-        dirname = os.path.dirname(filename)
-        element = cfgtree.find('service')
-        type    = element.get('type')
+        cfgfile    = os.path.join(dirname, 'service.xml')
+        servicedir = os.path.join(self.cfg_dir, 'services', name)
+        cfgtree    = etree.parse(cfgfile)
+        element    = cfgtree.find('service')
+        type       = element.get('type')
 
         if type == 'python':
-            basename  = element.get('filename')
-            filename  = os.path.join(dirname, basename)
-            autoqueue = element.find('autoqueue') is not None
-            service   = PythonService(daemon,
-                                      name,
-                                      filename,
-                                      queue     = queue,
-                                      autoqueue = autoqueue)
+            basename   = element.get('filename')
+            filename   = os.path.join(dirname, basename)
+            autoqueue  = element.find('autoqueue') is not None
+            service    = PythonService(daemon,
+                                       name,
+                                       filename,
+                                       servicedir,
+                                       queue     = queue,
+                                       autoqueue = autoqueue)
         else:
             raise Exception('Invalid service type: %s' % type)
         print 'done.'

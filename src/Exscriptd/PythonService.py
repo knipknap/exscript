@@ -7,11 +7,13 @@ class PythonService(Service):
                  daemon,
                  name,
                  filename,
+                 cfg_dir,
                  queue     = None,
                  autoqueue = False):
         Service.__init__(self,
                          daemon,
                          name,
+                         cfg_dir,
                          queue     = queue,
                          autoqueue = autoqueue)
         content             = open(filename).read()
@@ -19,6 +21,7 @@ class PythonService(Service):
         vars                = {}
         vars['__builtin__'] = __builtin__
         vars['__file__']    = filename
+        vars['__service__'] = self
         result              = eval(code, vars)
         self.enter_func     = vars.get('enter')
         self.run_func       = vars.get('run')

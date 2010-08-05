@@ -1,15 +1,18 @@
+import os
 from Exscript.util.decorator import bind
 
 class Service(object):
     def __init__(self,
                  daemon,
                  name,
+                 cfg_dir,
                  queue     = None,
                  autoqueue = False):
-        self.daemon      = daemon
-        self.name        = name
-        self.queue       = queue
-        self.autoqueue   = autoqueue
+        self.cfg_dir   = cfg_dir
+        self.daemon    = daemon
+        self.name      = name
+        self.queue     = queue
+        self.autoqueue = autoqueue
 
         if self.autoqueue and not self.queue:
             raise Exception('error: autoqueue requires a queue')
@@ -24,6 +27,9 @@ class Service(object):
         task.signal_connect('done', self.daemon.order_done, order.id)
         self.daemon.set_order_status(order, 'queued')
         self.queue.workqueue.unpause()
+
+    def config_file(self, name):
+        return os.path.join(self.cfg_dir, name)
 
     def enter(self, order):
         self._autoqueue(order)

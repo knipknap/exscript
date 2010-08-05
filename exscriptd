@@ -10,8 +10,8 @@ parser.add_option('--domain',
                   metavar = 'DOMAIN',
                   default = None,
                   help    = 'The default domain name')
-parser.add_option('--config-file',
-                  dest    = 'config',
+parser.add_option('--config-dir',
+                  dest    = 'config_dir',
                   metavar = 'FILE',
                   help    = '''
 The XML config file for the Exscript daemon.
@@ -26,10 +26,10 @@ parser.add_option('--verbose',
 options, args = parser.parse_args(sys.argv)
 args.pop(0)
 
-if not options.config:
-    parser.error('Required option --config not set')
+if not options.config_dir:
+    parser.error('Required option --config-dir not set')
 
-config = Config(options.config)
+config = Config(options.config_dir)
 
 for daemon in config.init_daemons():
     daemon.run()
