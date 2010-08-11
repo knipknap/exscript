@@ -45,6 +45,8 @@ class HTTPHandler(HTTPRequestHandler):
         try:
             response = self.get_response()
         except Exception, e:
+            self.send_response(500)
+            self.end_headers()
             self.wfile.write(format_exc().encode('utf8'))
         else:
             self.wfile.write(response)

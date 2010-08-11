@@ -2,7 +2,7 @@
 Places orders and requests the status from a server.
 """
 from urllib           import urlencode
-from urllib2          import HTTPDigestAuthHandler, build_opener
+from urllib2          import HTTPDigestAuthHandler, build_opener, HTTPError
 from HTTPDigestServer import realm
 from Order            import Order
 
@@ -50,7 +50,10 @@ class RestClient(object):
         url          = self.address + '/order/'
         xml          = order.toxml()
         data         = urlencode({'xml': xml})
-        result       = self.opener.open(url, data)
+        try:
+            result = self.opener.open(url, data)
+        except HTTPError, e:
+            raise Exception(str(e) + ' with ' + e.read())
         if result.getcode() != 200:
             raise Exception(result.read())
         order.id = int(result.read())
