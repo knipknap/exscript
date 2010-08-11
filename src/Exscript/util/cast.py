@@ -45,7 +45,7 @@ def to_host(host):
     """
     if host is None:
         raise TypeError('None can not be cast to Host')
-    if isinstance(host, Host):
+    if hasattr(host, 'get_address'):
         return host
     return Host(host)
 
