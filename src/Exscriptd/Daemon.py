@@ -19,7 +19,7 @@ class Daemon(object):
 
     def set_order_status(self, order, status):
         order.status = status
-        self.db.save_order(order)
+        self.db.save_order(order, recursive = False)
 
     def get_order_from_id(self, order_id):
         return self.db.get_order(id = order_id)
@@ -47,3 +47,7 @@ class Daemon(object):
             print 'Order %s: Rejected by service "%s"' % args
             self.set_order_status(order, 'rejected')
             return
+
+        # Save the order, including the data that was passed.
+        order.status = 'accepted'
+        self.db.save_order(order)

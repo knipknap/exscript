@@ -210,6 +210,9 @@ class OrderDB(object):
         if host is None:
             raise AttributeError('host argument must not be None')
 
+        if not host.is_dirty():
+            return
+
         # Insert the host.
         insert = self._table_map['host'].insert()
         result = insert.execute(order_id = order_id,
@@ -220,6 +223,8 @@ class OrderDB(object):
         # Insert the host's variables.
         for key, value in host.get_all().iteritems():
             self.__add_variable(host_id, key, value)
+
+        host.untouch()
         return host_id
 
     @synchronized
@@ -231,6 +236,9 @@ class OrderDB(object):
             raise AttributeError('order_id argument must not be None')
         if host is None:
             raise AttributeError('host argument must not be None')
+
+        if not host.is_dirty():
+            return
 
         # Check if the host already exists.
         table   = self._table_map['host']
@@ -258,6 +266,7 @@ class OrderDB(object):
         for key, value in host.get_all().iteritems():
             self.__save_variable(host_id, key, value)
 
+        host.untouch()
         return host_id
 
     def __get_host_from_row(self, row):
@@ -268,7 +277,7 @@ class OrderDB(object):
         return host
 
     @synchronized
-    def __add_order(self, order):
+    def __add_order(self, order, recursive = True):
         """
         Inserts the given order into the database.
         """
@@ -281,21 +290,24 @@ class OrderDB(object):
                                 status  = order.get_status())
         order.id = result.last_inserted_ids()[0]
 
+        if not recursive:
+            return
+
         # Insert the hosts of the order.
         for host in order.get_hosts():
             self.__add_host(order.id, host)
         return order.id
 
     @synchronized
-    def __save_order(self, order):
+    def __save_order(self, order, recursive = True):
         """
         Updates the given order in the database. Does nothing if the
         order is not yet in the database.
 
         @type  order: Order
         @param order: The order to be saved.
-        @rtype:  Boolean
-        @return: True on success, False otherwise.
+        @type  recursive: Boolean
+        @param recursive: Whether to save the children of the order.
         """
         if order is None:
             raise AttributeError('order argument must not be None')
@@ -316,14 +328,15 @@ class OrderDB(object):
         else:
             self.add_order(order)
 
+        if not recursive:
+            return
+
         # Delete obsolete hosts.
         #FIXME
 
         # Update the list of attached hosts.
         for host in order.get_hosts():
             self.__save_host(order.get_id(), host)
-
-        return True
 
     def __get_order_from_row(self, row):
         assert row is not None
@@ -450,7 +463,7 @@ class OrderDB(object):
 
         return self.__get_orders_from_query(select)
 
-    def add_order(self, orders):
+    def add_order(self, orders, recursive = True):
         """
         Inserts the given order into the database.
 
@@ -463,12 +476,13 @@ class OrderDB(object):
 
         try:
             for order in to_list(orders):
-                self.__add_order(order)
+                self.__add_order(order, recursive)
             transaction.commit()
         except:
             transaction.rollback()
+            raise
 
-    def save_order(self, orders):
+    def save_order(self, orders, recursive = True):
         """
         Updates the given orders in the database. Does nothing if
         the order doesn't exist.
@@ -482,7 +496,8 @@ class OrderDB(object):
 
         try:
             for order in to_list(orders):
-                self.__save_order(order)
+                self.__save_order(order, recursive)
             transaction.commit()
         except:
             transaction.rollback()
+            raise

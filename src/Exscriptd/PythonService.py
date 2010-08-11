@@ -36,6 +36,4 @@ class PythonService(Service):
         hostname = conn.get_host().get_name()
         print "Running service", self.name, "on", hostname
         order = self.daemon.get_order_from_id(order_id)
-        self.daemon.set_order_status(order, 'in-progress')
         self.run_func(self, order, conn)
-        self.daemon.set_order_status(order, 'serviced')

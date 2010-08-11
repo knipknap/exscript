@@ -8,8 +8,9 @@ from sqlalchemy         import *
 from sqlalchemy.orm     import relation, synonym
 from tempfile           import NamedTemporaryFile
 from lxml               import etree
+from DBObject           import DBObject
 
-class Order(object):
+class Order(DBObject):
     """
     An order includes all information that is required to make a
     service call.
@@ -86,7 +87,7 @@ class Order(object):
             args    = self._read_arguments_from_xml(host_elem)
             host    = Exscript.Host(address)
             host.set_all(args)
-            self.hosts.append(host)
+            self.add_host(host)
 
     def _read_arguments_from_xml(self, host_elem):
         arg_elem = host_elem.find('argument-list')
@@ -206,7 +207,8 @@ class Order(object):
         return self.status
 
     def add_host(self, host):
-        self.hosts.append(host)
+        self.touch()
+        self.hosts.append(DBObject(host))
 
     def add_hosts_from_csv(self, filename):
         """
