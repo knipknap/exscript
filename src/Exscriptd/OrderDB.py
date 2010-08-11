@@ -456,14 +456,17 @@ class OrderDB(object):
 
         @type  orders: Order|list[Order]
         @param orders: The orders to be added.
-        @rtype:  Boolean
-        @return: True on success, False otherwise.
         """
         if orders is None:
             raise AttributeError('order argument must not be None')
-        for order in to_list(orders):
-            self.__add_order(order)
-        return True
+        transaction = self.engine.contextual_connect().begin()
+
+        try:
+            for order in to_list(orders):
+                self.__add_order(order)
+            transaction.commit()
+        except:
+            transaction.rollback()
 
     def save_order(self, orders):
         """
@@ -472,11 +475,14 @@ class OrderDB(object):
 
         @type  orders: Order|list[Order]
         @param orders: The order to be saved.
-        @rtype:  Boolean
-        @return: True on success, False otherwise.
         """
         if orders is None:
             raise AttributeError('order argument must not be None')
-        for order in to_list(orders):
-            self.__save_order(order)
-        return True
+        transaction = self.engine.contextual_connect().begin()
+
+        try:
+            for order in to_list(orders):
+                self.__save_order(order)
+            transaction.commit()
+        except:
+            transaction.rollback()
