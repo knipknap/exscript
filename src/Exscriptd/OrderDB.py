@@ -81,7 +81,7 @@ class OrderDB(object):
             sa.Column('id',      sa.Integer,     primary_key = True),
             sa.Column('host_id', sa.Integer,     index = True),
             sa.Column('name',    sa.String(150), index = True),
-            sa.Column('value',   sa.String(150), index = True),
+            sa.Column('value',   sa.PickleType()),
             sa.ForeignKeyConstraint(['host_id'], [pfx + 'host.id'], ondelete = 'CASCADE'),
             mysql_engine = 'INNODB'
         ))
