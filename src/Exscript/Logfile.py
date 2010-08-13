@@ -60,7 +60,8 @@ class Logfile(Log):
     def started(self, conn):
         self._write('')  # Creates the file.
         self.conn = conn
-        self.conn.signal_connect('data_received', self._write)
+        if conn:
+            self.conn.signal_connect('data_received', self._write)
 
     def error(self, exception):
         self.traceback = self._format_exc(exception)

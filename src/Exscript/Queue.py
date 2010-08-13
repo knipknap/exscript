@@ -18,6 +18,7 @@ The heart of Exscript.
 import sys, os, gc, copy, traceback
 from external.SpiffSignal  import Trackable
 from AccountManager        import AccountManager
+from CustomAction          import CustomAction
 from HostAction            import HostAction
 from FileLogger            import FileLogger
 from Task                  import Task
@@ -405,12 +406,8 @@ class Queue(Trackable):
         self.status_bar_length = 0
 
 
-    def _run1(self, host, function, prioritize, force):
-        # Build an object that represents the actual task.
-        if not host.get_domain():
-            host.set_domain(self.domain)
-        self._dbg(2, 'Building HostAction for %s.' % host.get_name())
-        action = HostAction(self, function, host, **self.protocol_args)
+    def _enqueue1(self, action, prioritize, force):
+        self._dbg(2, 'Enqueing Action.')
         action.set_times(self.times)
         action.set_login_times(self.login_times)
         action.signal_connect('error',     self._on_action_error)
@@ -423,6 +420,15 @@ class Queue(Trackable):
             self.workqueue.priority_enqueue(action, force)
         else:
             self.workqueue.enqueue(action)
+
+
+    def _run1(self, host, function, prioritize, force):
+        # Build an object that represents the actual task.
+        if not host.get_domain():
+            host.set_domain(self.domain)
+        self._dbg(2, 'Building HostAction for %s.' % host.get_name())
+        action = HostAction(self, function, host, **self.protocol_args)
+        self._enqueue1(action, prioritize, force)
         return action
 
 
@@ -503,4 +509,29 @@ class Queue(Trackable):
             task.add_action(action)
 
         self._dbg(2, 'All forced actions enqueued.')
+        return task
+
+
+    def enqueue(self, function, name = 'CustomAction'):
+        """
+        Places the given function in the queue and calls it as soon
+        as a thread is available. To pass additional arguments to the
+        callback, use Python's functools.partial().
+
+        @type  function: function
+        @param function: The function to execute.
+        @type  name: string
+        @param name: A name for the task.
+        @rtype:  object
+        @return: An object representing the task.
+        """
+        self.total += 1
+
+        self._dbg(2, 'Building CustomAction for Queue.enqueue().')
+        task   = Task(self)
+        action = CustomAction(self, function, name)
+        task.add_action(action)
+        self._enqueue1(action, False, False)
+
+        self._dbg(2, 'Function enqueued.')
         return task

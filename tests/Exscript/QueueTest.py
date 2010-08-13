@@ -11,14 +11,17 @@ from Exscript.protocols             import Dummy
 from Exscript.interpreter.Exception import FailException
 from Exscript.util.decorator        import bind
 
-def count_calls(conn, data, **kwargs):
+def count_calls(data, **kwargs):
     assert kwargs.has_key('testarg')
-    assert isinstance(conn, Connection)
     data['n_calls'] += 1
 
+def count_calls2(conn, data, **kwargs):
+    assert isinstance(conn, Connection)
+    count_calls(data, **kwargs)
+
 def spawn_subtask(conn, data, **kwargs):
-    count_calls(conn, data, **kwargs)
-    func  = bind(count_calls, data, testarg = 1)
+    count_calls2(conn, data, **kwargs)
+    func  = bind(count_calls2, data, testarg = 1)
     queue = conn.get_queue()
     task  = queue.priority_run('subtask', func)
     queue.wait_for(task)
@@ -202,15 +205,15 @@ class QueueTest(unittest.TestCase):
     def testRun(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
-        func  = bind(count_calls, data, testarg = 1)
+        func  = bind(count_calls2, data, testarg = 1)
         self.queue.run(hosts,    func)
         self.queue.run('dummy3', func)
         self.queue.shutdown()
-        self.assert_(data['n_calls'] == 3)
+        self.assertEqual(data['n_calls'], 3)
 
         self.queue.run('dummy4', func)
         self.queue.shutdown()
-        self.assert_(data['n_calls'] == 4)
+        self.assertEqual(data['n_calls'], 4)
 
     def testPriorityRun(self):
         data  = {'n_calls': 0}
@@ -233,7 +236,7 @@ class QueueTest(unittest.TestCase):
     def testForceRun(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
-        func  = bind(count_calls, data, testarg = 1)
+        func  = bind(count_calls2, data, testarg = 1)
 
         # By setting max_threads to 0 we ensure that the 'force' part is
         # actually tested; the thread should run regardless.
@@ -241,6 +244,19 @@ class QueueTest(unittest.TestCase):
         self.queue.force_run(hosts, func)
         self.queue.shutdown()
         self.assertEqual(2, data['n_calls'])
+
+    def testEnqueue(self):
+        from functools import partial
+        data = {'n_calls': 0}
+        func = partial(count_calls, data, testarg = 1)
+        self.queue.enqueue(func)
+        self.queue.enqueue(func)
+        self.queue.shutdown()
+        self.assertEqual(data['n_calls'], 2)
+
+        self.queue.enqueue(func)
+        self.queue.shutdown()
+        self.assertEqual(data['n_calls'], 3)
 
     #FIXME: Not a method test; this should probably be elsewhere.
     def testLogging(self):
