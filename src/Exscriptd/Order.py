@@ -81,6 +81,24 @@ class Order(DBObject):
         order.add_hosts_from_csv(filename)
         return order
 
+    def _read_list_from_xml(self, list_elem):
+        return [i.text.strip() for i in list_elem.iterfind('list-item')]
+
+    def _read_arguments_from_xml(self, host_elem):
+        arg_elem = host_elem.find('argument-list')
+        if arg_elem is None:
+            return {}
+        args = {}
+        for child in arg_elem:
+            name = child.get('name').strip()
+            if child.tag == 'variable':
+                args[name] = child.text.strip()
+            elif child.tag == 'list':
+                args[name] = self._read_list_from_xml(child)
+            else:
+                raise Exception('Invalid XML tag: %s' % element.tag)
+        return args
+
     def _read_hosts_from_xml(self, element):
         for host_elem in element.iterfind('host'):
             address = host_elem.get('address').strip()
@@ -88,16 +106,6 @@ class Order(DBObject):
             host    = Exscript.Host(address)
             host.set_all(args)
             self.add_host(host)
-
-    def _read_arguments_from_xml(self, host_elem):
-        arg_elem = host_elem.find('argument-list')
-        if arg_elem is None:
-            return {}
-        args = {}
-        for child in arg_elem.iterfind('variable'):
-            name       = child.get('name').strip()
-            args[name] = child.text.strip()
-        return args
 
     def fromxml(self, xml):
         """
