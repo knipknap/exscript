@@ -31,6 +31,11 @@ class Service(object):
     def config_file(self, name):
         return os.path.join(self.cfg_dir, name)
 
+    def enqueue(self, function, name):
+        task = self.queue.enqueue(function, name)
+        self.queue.workqueue.unpause()
+        return task
+
     def enter(self, order):
         self._autoqueue(order)
         return True
