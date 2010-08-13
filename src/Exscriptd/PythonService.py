@@ -1,4 +1,4 @@
-import __builtin__
+import __builtin__, sys, os
 from Exscript.util.decorator import bind
 from Service                 import Service
 
@@ -22,9 +22,15 @@ class PythonService(Service):
         vars['__builtin__'] = __builtin__
         vars['__file__']    = filename
         vars['__service__'] = self
-        result              = eval(code, vars)
-        self.enter_func     = vars.get('enter')
-        self.run_func       = vars.get('run')
+
+        # Load the module using evil path manipulation, but oh well...
+        # can't think of a sane way to do this.
+        sys.path.insert(0, os.path.dirname(filename))
+        result = eval(code, vars)
+        sys.path.pop(0)
+
+        self.enter_func = vars.get('enter')
+        self.run_func   = vars.get('run')
 
     def enter(self, order):
         if self.enter_func and not self.enter_func(self, order):

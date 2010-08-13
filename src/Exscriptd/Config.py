@@ -95,15 +95,15 @@ class Config(object):
         type       = element.get('type')
 
         if type == 'python':
-            basename   = element.get('filename')
-            filename   = os.path.join(dirname, basename)
-            autoqueue  = element.find('autoqueue') is not None
-            service    = PythonService(daemon,
-                                       name,
-                                       filename,
-                                       servicedir,
-                                       queue     = queue,
-                                       autoqueue = autoqueue)
+            basename  = element.get('filename')
+            filename  = os.path.join(dirname, basename)
+            autoqueue = element.find('autoqueue') is not None
+            service   = PythonService(daemon,
+                                      name,
+                                      filename,
+                                      servicedir,
+                                      queue     = queue,
+                                      autoqueue = autoqueue)
         else:
             raise Exception('Invalid service type: %s' % type)
         print 'done.'
