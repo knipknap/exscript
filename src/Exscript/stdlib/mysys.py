@@ -78,7 +78,7 @@ def run(scope, hostnames, filename):
     hosts = []
     for hostname in hostnames:
         host = Host(hostname)
-        host.set_all(**scope.copy_public_vars())
+        host.set_all(scope.copy_public_vars())
         hosts.append(host)
 
     # Enqueue the new jobs.

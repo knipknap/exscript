@@ -73,16 +73,6 @@ class Scope(Token):
         Like get_vars(), but does not include any private variables and
         deep copies each variable.
         """
-        vars = {}
-        for key, value in self.get_vars().iteritems():
-            if key.startswith('_'):
-                continue
-            if isfunction(value):
-                vars[key] = value
-                continue
-            vars[key] = deepcopy(value)
-        return vars
-        #FIXME: In Python >= 2.4, do the following instead.
         vars = self.get_vars()
         vars = dict([k for k in vars.iteritems() if not k[0].startswith('_')])
         return deepcopy(vars)
