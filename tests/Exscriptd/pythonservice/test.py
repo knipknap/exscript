@@ -1,6 +1,6 @@
 print "Hello Python-Service!"
 
-def run(service, order, conn):
+def run(conn, service, order):
     """
     Called whenever a host that is associated with an order was contacted.
     """
@@ -14,4 +14,7 @@ def enter(service, order):
     the order is rejected.
     """
     print "Hello from python-service enter()!", service.name, order.id
+    callback = bind(run, service, order)
+    service.enqueue_hosts(order, order.get_hosts(), callback)
+    service.set_order_status(order, 'queued')
     return True

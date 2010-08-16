@@ -47,21 +47,18 @@ class Config(object):
             accounts.append(Account(user, base64.decodestring(password)))
         return accounts
 
-    def init_queue_from_name(self, name):
+    def init_queue_from_name(self, name, logdir):
         if self.queues.has_key(name):
             return self.queues[name]
 
         # Create the queue first.
         element     = self.cfgtree.find('queue[@name="%s"]' % name)
         max_threads = element.find('max-threads').text
-        logdir      = element.find('logdir').text
         delete_logs = element.find('delete-logs') is not None
-        if not os.path.isdir(logdir):
-            os.makedirs(logdir)
-        queue = Queue(verbose     = 0,
-                      max_threads = max_threads,
-                      logdir      = logdir,
-                      delete_logs = delete_logs)
+        queue       = Queue(verbose     = 0,
+                            max_threads = max_threads,
+                            logdir      = logdir,
+                            delete_logs = delete_logs)
 
         # Add some accounts, if any.
         account_pool = element.find('account-pool')
@@ -113,7 +110,8 @@ class Config(object):
             path       = service.get('path')
             queue_elem = service.find('queue')
             queue_name = queue_elem is not None and queue_elem.text
-            queue      = self.init_queue_from_name(queue_name)
+            logdir     = daemon.get_logdir()
+            queue      = self.init_queue_from_name(queue_name, logdir)
             service    = self.init_service_from_name(daemon,
                                                      name,
                                                      path,
@@ -127,8 +125,15 @@ class Config(object):
         address = element.find('address').text or ''
         port    = int(element.find('port').text)
         db_name = element.find('database').text
+        logdir  = element.find('logdir').text
         db      = self.init_database_from_name(db_name)
-        daemon  = RestDaemon(name, address, port, database = db)
+        if not os.path.isdir(logdir):
+            os.makedirs(logdir)
+        daemon  = RestDaemon(name,
+                             address,
+                             port,
+                             database = db,
+                             logdir   = logdir)
 
         # Add some accounts, if any.
         account_pool = element.find('account-pool')

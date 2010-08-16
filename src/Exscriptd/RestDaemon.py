@@ -1,4 +1,4 @@
-import os, time, cgi
+import os, time, cgi, logging
 from traceback               import format_exc
 from HTTPDigestServer        import HTTPRequestHandler, HTTPServer
 from lxml                    import etree
@@ -60,8 +60,9 @@ class RestDaemon(Daemon):
                  address    = '',
                  port       = 80,
                  database   = None,
-                 processors = None):
-        Daemon.__init__(self, name, database, processors)
+                 processors = None,
+                 logdir     = None):
+        Daemon.__init__(self, name, database, processors, logdir)
         self.address = address
         self.port    = port
         addr         = self.address, self.port
@@ -74,9 +75,10 @@ class RestDaemon(Daemon):
 
     def run(self):
         address = self.address + ':' + str(self.port)
-        print 'REST daemon "' + self.name + '" running on ' + address
+        self.logger.info('REST daemon "' + self.name + '" running on ' + address)
         try:
             self.server.serve_forever()
         except KeyboardInterrupt:
             print '^C received, shutting down server'
+            self.logger.info('Shutting down normally.')
             self.server.socket.close()
