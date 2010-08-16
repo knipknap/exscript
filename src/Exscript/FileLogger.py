@@ -39,8 +39,12 @@ class FileLogger(Logger):
             os.mkdir(self.logdir)
 
     def _on_action_started(self, action, conn):
-        filename = os.path.join(self.logdir, action.get_logname())
-        log      = Logfile(filename, self.mode, self.delete)
+        logname = action.get_logname()
+        if logname.startswith('/'):
+            filename = logname
+        else:
+            filename = os.path.join(self.logdir, action.get_logname())
+        log = Logfile(filename, self.mode, self.delete)
         log.started(conn)
         self._add_log(action, log)
 
