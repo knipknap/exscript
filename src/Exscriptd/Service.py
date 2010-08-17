@@ -92,6 +92,9 @@ class Service(object):
         self.queue.workqueue.unpause()
         return task
 
+    def check(self, order):
+        return True
+
     def enter(self, order):
         return True
 

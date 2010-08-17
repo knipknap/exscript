@@ -43,27 +43,33 @@ class HTTPHandler(HTTPRequestHandler):
     def get_response(self):
         data = parse_qs(self.data)
         if self.path == '/order/':
+            self.daemon.logger.info('Parsing order from REST request.')
             order = Order.from_xml(data['xml'][0])
+            self.daemon.logger.info('XML order parsed complete.')
             self.daemon._place_order(order)
             return str(order.get_id())
         elif self.path == '/order/status/':
             order = self.daemon.get_order_from_id(str(self.args['id']))
             if not order:
-                raise Exception('no such id')
+                raise Exception('no such order id')
             return order.status
         else:
             raise Exception('no such API call')
 
     def handle_POST(self):
         self.daemon = self.server.user_data
+        self.daemon.logger.info('Receiving REST request.')
         try:
             response = self.get_response()
         except Exception, e:
             self.send_response(500)
             self.end_headers()
             self.wfile.write(format_exc().encode('utf8'))
+            self.daemon.logger.error('Exception: %s' % e)
         else:
+            self.daemon.logger.info('Sending REST response.')
             self.wfile.write(response)
+        self.daemon.logger.info('REST call complete.')
 
     def handle_GET(self):
         self.handle_POST()

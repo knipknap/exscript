@@ -41,9 +41,18 @@ class PythonService(Service):
         result = eval(code, vars)
         sys.path.pop(0)
 
+        self.check_func = vars.get('check')
         self.enter_func = vars.get('enter')
 
-    def enter(self, order):
-        if self.enter_func:
-            return self.enter_func(self, order)
+        if not self.enter_func:
+            msg = filename + ': required function enter() not found.'
+            raise Exception(msg)
+
+
+    def check(self, order):
+        if self.check_func:
+            return self.check_func(self, order)
         return True
+
+    def enter(self, order):
+        return self.enter_func(self, order)

@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, logging, logging.handlers
+from threading               import Thread
 from lxml                    import etree
 from Order                   import Order
 from Exscript                import Host
@@ -22,6 +23,16 @@ from Exscript.util.decorator import bind
 # /var/log/exscriptd/mydaemon/access.log
 # /var/log/exscriptd/mydaemon/myservice/123/host2.log
 # /var/log/exscriptd/mydaemon/myservice/123/host3.log
+
+class _AsyncFunction(Thread):
+    def __init__ (self, function, *args, **kwargs):
+        Thread.__init__(self)
+        self.function = function
+        self.args     = args
+        self.kwargs   = kwargs
+
+    def run(self):
+        self.function(*self.args, **self.kwargs)
 
 class Daemon(object):
     def __init__(self,
@@ -75,9 +86,26 @@ class Daemon(object):
         self.set_order_status(order, 'completed')
 
     def save_order(self, order):
+        self.log(order, 'Saving order data.')
         return self.db.save_order(order)
 
+    def _enter_order(self, service, order):
+        # Note: This method is called asynchronously.
+        # Store the order in the database.
+        order.status = 'enter-start'
+        self.save_order(order)
+
+        try:
+            service.enter(order)
+        except Exception, e:
+            self.log(order, 'Exception: %s' % e)
+            self.set_order_status(order, 'enter-error')
+            raise
+        self.set_order_status(order, 'enter-complete')
+
     def _place_order(self, order):
+        self.logger.info('Placing incoming order.')
+
         # Store it in the database.
         self.set_order_status(order, 'incoming')
 
@@ -92,7 +120,7 @@ class Daemon(object):
 
         # Notify the service of the new order.
         try:
-            accepted = service.enter(order)
+            accepted = service.check(order)
         except Exception, e:
             self.log(order, 'Exception: %s' % e)
             self.set_order_status(order, 'error')
@@ -101,7 +129,9 @@ class Daemon(object):
         if not accepted:
             self.set_order_status(order, 'rejected')
             return
+        self.set_order_status(order, 'accepted')
 
         # Save the order, including the data that was passed.
-        order.status = 'accepted'
-        self.db.save_order(order)
+        # For performance reasons, use a new thread.
+        func = _AsyncFunction(self._enter_order, service, order)
+        func.start()
