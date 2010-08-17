@@ -333,14 +333,13 @@ class OrderDB(object):
             theorder = None
 
         # Insert or update it.
-        if theorder:
-            table  = self._table_map['order']
-            fields = dict(service = order.get_service_name(),
-                          status  = order.get_status())
-            query  = table.update(table.c.id == order.get_id())
-            query.execute(**fields)
-        else:
-            self.add_order(order)
+        if not theorder:
+            return self.add_order(order, recursive)
+        table  = self._table_map['order']
+        fields = dict(service = order.get_service_name(),
+                      status  = order.get_status())
+        query  = table.update(table.c.id == order.get_id())
+        query.execute(**fields)
 
         if not recursive:
             return
