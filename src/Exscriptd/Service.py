@@ -1,4 +1,4 @@
-import os
+import os, logging
 from threading               import Lock
 from Exscript.util.decorator import bind
 
@@ -15,11 +15,24 @@ class Service(object):
         self.task_lock = Lock()
         self.tasks     = {}   # Maps order ids to lists of tasks.
 
+    def log(self, order, message):
+        self.daemon.log(order, message)
+
     def get_logname(self, order, name = ''):
         return os.path.join(self.daemon.get_logdir(),
                             self.name,
                             str(order.get_id()),
                             name)
+
+    def create_logger(self, order, name, level = logging.INFO):
+        logfile   = self.get_logname(order, name)
+        logger    = logging.getLogger(logfile)
+        handler   = logging.FileHandler(logfile)
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        logger.setLevel(logging.INFO)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        return logger
 
     def _update_host_logname(self, order, host):
         host.set_logname(self.get_logname(order, host.get_logname()))
