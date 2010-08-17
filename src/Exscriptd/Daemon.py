@@ -104,7 +104,7 @@ class Daemon(object):
         self.set_order_status(order, 'enter-complete')
 
     def _place_order(self, order):
-        self.logger.info('Placing incoming order.')
+        self.logger.debug('Placing incoming order.')
 
         # Store it in the database.
         self.set_order_status(order, 'incoming')
