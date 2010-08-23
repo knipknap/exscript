@@ -16,17 +16,15 @@
 The heart of Exscript.
 """
 import sys, os, gc, copy, traceback
-from external.SpiffSignal  import Trackable
-from AccountManager        import AccountManager
-from CustomAction          import CustomAction
-from HostAction            import HostAction
-from FileLogger            import FileLogger
-from Task                  import Task
-from workqueue             import WorkQueue, Action
-from util.cast             import to_list, to_hosts
-from util.impl             import deprecation
-from parselib.Exception    import SyntaxError
-from interpreter.Exception import FailException
+from external.SpiffSignal import Trackable
+from AccountManager       import AccountManager
+from CustomAction         import CustomAction
+from HostAction           import HostAction
+from FileLogger           import FileLogger
+from Task                 import Task
+from workqueue            import WorkQueue, Action
+from util.cast            import to_list, to_hosts
+from util.impl            import deprecation
 
 True  = 1
 False = 0
@@ -210,19 +208,12 @@ class Queue(Trackable):
         self._print_status_bar()
 
 
-    def _is_recoverable_error(self, exc):
-        for cls in (SyntaxError, FailException):
-            if isinstance(exc, cls):
-                return False
-        return True
-
-
     def _on_action_error(self, action, e):
         msg = action.get_name() + ' error: ' + str(e)
         tb  = ''.join(traceback.format_exception(*sys.exc_info()))
         self._print('errors',     msg)
         self._print('tracebacks', tb)
-        if self._is_recoverable_error(e):
+        if action._is_recoverable_error(e):
             self._print('fatal_errors', tb)
 
 

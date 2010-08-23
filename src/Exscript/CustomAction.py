@@ -13,10 +13,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, traceback, Crypto
-from workqueue           import Action
-from Log                 import Log
-from Logfile             import Logfile
-from protocols.Exception import LoginFailure
+from workqueue             import Action
+from Log                   import Log
+from Logfile               import Logfile
+from protocols.Exception   import LoginFailure
+from interpreter.Exception import FailException
+from parselib.Exception    import SyntaxError
 
 class CustomAction(Action):
     """
@@ -82,6 +84,12 @@ class CustomAction(Action):
     def has_aborted(self):
         return self.aborted
 
+    def _is_recoverable_error(self, exc):
+        for cls in (SyntaxError, FailException):
+            if isinstance(exc, cls):
+                return False
+        return True
+
     def _create_connection(self):
         return None
 
@@ -104,7 +112,7 @@ class CustomAction(Action):
             except Exception, e:
                 self.signal_emit('error', self, e)
                 self.failures += 1
-                if not self.queue._is_recoverable_error(e):
+                if not self._is_recoverable_error(e):
                     break
                 continue
 
