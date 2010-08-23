@@ -47,12 +47,14 @@ class Dummy(Transport):
         this adapter supports the following:
          - banner: A string to show as soon as the connection is opened.
          - login_type:
+         - echo: whether to echo the command in a response.
          - strict: Whether to raise when a given command has no handler.
         """
         Transport.__init__(self, **kwargs)
         self.connected_host = None
         self.connected_port = None
         self.banner         = kwargs.get('banner',     None)
+        self.echo           = kwargs.get('echo',       True)
         self.login_type     = kwargs.get('login_type', self.LOGIN_TYPE_BOTH)
         self.strict         = kwargs.get('strict',     False)
         self.prompt_stage   = self.PROMPT_STAGE_USERNAME
@@ -263,18 +265,22 @@ class Dummy(Transport):
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))
         data = data.replace('\r', '\r\n')
-        for command, response in self.response_list:
-            if not command.search(data):
-                continue
-            if isinstance(response, str):
-                self._say(data + response)
-            else:
-                self._say(data + response(data))
-            return
-        if self.strict and self.logged_in:
-            raise Exception('Undefined command: ' + repr(data))
+        echo = self.echo and data or ''
+        if self.logged_in:
+            for command, response in self.response_list:
+                if not command.search(data):
+                    continue
+                if response is None:
+                    pass
+                elif isinstance(response, str):
+                    self._say(echo + response)
+                else:
+                    self._say(echo + response(data))
+                return
+            if self.strict and self.logged_in:
+                raise Exception('Undefined command: ' + repr(data))
         prompt = self._get_prompt()
-        self._say(data + prompt)
+        self._say(echo + prompt)
 
 
     def execute(self, data):
