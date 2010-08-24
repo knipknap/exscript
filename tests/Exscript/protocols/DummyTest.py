@@ -8,7 +8,7 @@ class DummyTest(TransportTest):
     CORRELATE = Dummy
 
     def createTransport(self):
-        self.transport = Dummy(echo = 0)
+        self.transport = Dummy(echo = 1)
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Dummy))
