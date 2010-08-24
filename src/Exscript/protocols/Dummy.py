@@ -17,8 +17,8 @@ Emulating a device.
 """
 import os, re
 from Exscript.util.crypt import otp
+from Exscript.emulators  import CommandSet
 from Exception           import TransportException, LoginFailure
-from CommandSet          import CommandSet
 from Transport           import Transport,    \
                                 _user_re,      \
                                 _pass_re,      \

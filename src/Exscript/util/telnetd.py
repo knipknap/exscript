@@ -16,8 +16,8 @@
 A very simple Telnet server for emulating a device.
 """
 import socket, select
-from multiprocessing               import Process, Pipe
-from Exscript.protocols.CommandSet import CommandSet
+from multiprocessing    import Process, Pipe
+from Exscript.emulators import CommandSet
 
 class Telnetd(Process):
     """
