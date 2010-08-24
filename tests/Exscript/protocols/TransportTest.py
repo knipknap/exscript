@@ -49,6 +49,7 @@ class TransportTest(unittest.TestCase):
                    'FA/0/1/2/3(config)>',
                    'FA/0/1/2/3(config)#',
                    'ec-c3-c27s99(su)->',
+                   'foobar:0>',
                    'admin@s-x-a6.a.bc.de.fg:/# ',
                    'admin@s-x-a6.a.bc.de.fg:/% ')
         notprompts = ('one two',
