@@ -2,6 +2,7 @@ import sys, unittest, re, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 import time
+from Exscript.emulators    import VirtualDevice
 from Exscript.util.telnetd import Telnetd
 from Exscript.protocols    import Telnet
 
@@ -12,6 +13,8 @@ class TelnetdTest(unittest.TestCase):
         self.host   = 'localhost'
         self.port   = 1235
         self.daemon = None
+        self.device = VirtualDevice(self.host, echo = False)
+        self.device.set_prompt(self.host + ':' + str(self.port) + '> ')
 
     def tearDown(self):
         if self.daemon:
@@ -19,28 +22,24 @@ class TelnetdTest(unittest.TestCase):
             self.daemon.join()
 
     def _create_daemon(self):
-        self.daemon = Telnetd(self.host, self.port, banner = 'Welcome!')
+        self.daemon = Telnetd(self.host, self.port, self.device)
 
     def _add_commands(self):
-        self.daemon.add_command('exit', self.daemon.exit_command)
-        self.daemon.add_command('ls',   'ok1')
-        self.daemon.add_command('ll',   'ok2\nfoobar:1>', prompt = False)
-        self.daemon.add_command('.+',   'Unknown command.')
+        self.device.add_command('exit', self.daemon.exit_command)
+        self.device.add_command('ls',   'ok1')
+        self.device.add_command('ll',   'ok2\nfoobar:1>', prompt = False)
+        self.device.add_command('.+',   'Unknown command.')
 
     def testConstructor(self):
         self._create_daemon()
         self.daemon.start()
         time.sleep(1)
 
-    def testAddCommand(self):
-        self._create_daemon()
-        self._add_commands()
-        self.daemon.start()
-
     def testStart(self):
         self._create_daemon()
         self._add_commands()
         self.daemon.start()
+        time.sleep(1)
 
         client = Telnet()
         client.set_prompt(re.compile(r'\w+:\d+> ?'))

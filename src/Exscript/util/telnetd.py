@@ -17,35 +17,31 @@ A very simple Telnet server for emulating a device.
 """
 import socket, select
 from multiprocessing    import Process, Pipe
-from Exscript.emulators import CommandSet
+from Exscript.emulators import VirtualDevice
 
 class Telnetd(Process):
     """
-    A Telnet server. Usage:
+    A Telnet server. Usage::
 
-        d = Telnetd('localhost', 1234)
-        d.add_command('ls', 'ok', prompt = True)
-        d.add_command('exit', s.exit_command)
-        d.start() # Start the server.
-        d.exit()  # Stop the server.
-        d.join()  # Wait until it terminates.
+        device = VirtualDevice('myhost')
+        daemon = Telnetd('localhost', 1234, device)
+        device.add_command('ls', 'ok', prompt = True)
+        device.add_command('exit', daemon.exit_command)
+        daemon.start() # Start the server.
+        daemon.exit()  # Stop the server.
+        daemon.join()  # Wait until it terminates.
     """
 
-    def __init__(self,
-                 host   = 'localhost',
-                 port   = 21,
-                 banner = None):
+    def __init__(self, host, port, device):
         Process.__init__(self, target = self._run)
-        self.banner   = banner or 'Welcome to %s!\n' % str(host)
         self.host     = host
         self.port     = int(port)
         self.timeout  = 1
         self.running  = False
-        self.prompt   = host + ':' + str(port) + '> '
         self.buf      = ''
-        self.commands = CommandSet(strict = True)
         self.socket   = None
         self.conn     = None
+        self.device   = device
         self.parent_conn, self.child_conn = Pipe()
 
     def _recvline(self):
@@ -90,47 +86,19 @@ class Telnetd(Process):
                 continue
 
             self.conn, addr = self.socket.accept()
+            self.conn.send(self.device.init())
 
-            self.conn.send(self.banner + self.prompt)
             while self.running:
                 line = self._recvline()
                 if not line:
                     continue
-                response = self.commands.eval(line)
+                response = self.device.do(line)
                 if response:
                     self.conn.send(response)
 
             self.conn.close()
 
         self.socket.close()
-
-    def add_command(self, command, handler, prompt = True):
-        """
-        Registers a command.
-
-        The command may be either a string (which is then automatically
-        compiled into a regular expression), or a pre-compiled regular
-        expression object.
-
-        If the given response handler is a string, it is sent as the
-        response to any command that matches the given regular expression.
-        If the given response handler is a function, it is called
-        with the command passed as an argument.
-
-        @type  command: str|regex
-        @param command: A string or a compiled regular expression.
-        @type  handler: function|str
-        @param handler: A string, or a response handler.
-        @type  prompt: bool
-        @param prompt: Whether to show a prompt after completing the command.
-        """
-        if prompt and isinstance(handler, str):
-            thehandler = lambda x: handler + '\n' + self.prompt
-        elif prompt:
-            thehandler = lambda x: handler(x) + '\n' + self.prompt
-        else:
-            thehandler = handler
-        self.commands.add(command, thehandler)
 
     def exit(self):
         """
