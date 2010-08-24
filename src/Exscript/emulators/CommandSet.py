@@ -22,13 +22,12 @@ class CommandSet(object):
     A set of commands to be used by the Dummy adapter.
     """
 
-    def __init__(self, strict = False):
+    def __init__(self, strict = True):
         """
         Constructor.
         """
         self.strict        = strict
         self.response_list = []
-
 
     def add(self, command, response):
         """
@@ -54,7 +53,6 @@ class CommandSet(object):
             raise TypeError('command argument must be str or a regex')
         self.response_list.append((command, response))
 
-
     def add_from_file(self, filename, handler_decorator = None):
         """
         Wrapper around add() that reads the handlers from the
@@ -79,7 +77,6 @@ class CommandSet(object):
             if handler_decorator:
                 handler = handler_decorator(handler)
             self.add(key, handler)
-
 
     def eval(self, command):
         for cmd, response in self.response_list:
