@@ -36,7 +36,7 @@ class Telnetd(Process):
                  port   = 21,
                  banner = None):
         Process.__init__(self, target = self._run)
-        self.banner   = banner or 'Welcome to %s \n' % str(host)
+        self.banner   = banner or 'Welcome to %s!\n' % str(host)
         self.host     = host
         self.port     = int(port)
         self.timeout  = 1
@@ -50,6 +50,7 @@ class Telnetd(Process):
 
     def _recvline(self):
         while not '\n' in self.buf:
+            self._check_pipe()
             r, w, x = select.select([self.conn], [], [], self.timeout)
             if not self.running:
                 return None
@@ -92,7 +93,6 @@ class Telnetd(Process):
 
             self.conn.send(self.banner + self.prompt)
             while self.running:
-                self._check_pipe()
                 line = self._recvline()
                 if not line:
                     continue
