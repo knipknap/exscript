@@ -15,7 +15,7 @@ class TransportTest(unittest.TestCase):
         self.transport = Transport(echo = 0)
 
     def doAuthenticate(self, wait = True):
-        self.transport.connect(self.host)
+        self.transport.connect(self.host, self.port)
         self.transport.authenticate(self.user, self.password, wait = wait)
 
     def doAuthorize(self):
@@ -26,6 +26,7 @@ class TransportTest(unittest.TestCase):
         cfg     = RawConfigParser()
         cfg.read(cfgfile)
         self.host     = cfg.get('testhost', 'hostname')
+        self.port     = None
         self.user     = cfg.get('testhost', 'user')
         self.password = cfg.get('testhost', 'password')
         self.createTransport()
@@ -137,7 +138,7 @@ class TransportTest(unittest.TestCase):
             self.assertRaises(Exception, self.transport.connect)
             return
         self.assert_(self.transport.response is None)
-        self.transport.connect(self.host)
+        self.transport.connect(self.host, self.port)
         self.assert_(self.transport.response is None)
         self.assert_(self.transport.get_host() == self.host)
 
@@ -234,14 +235,14 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.close)
             return
-        self.transport.connect(self.host)
+        self.transport.connect(self.host, self.port)
         self.transport.close(True)
 
     def testGetHost(self):
         self.assert_(self.transport.get_host() is None)
         if self.transport.__class__ == Transport:
             return
-        self.transport.connect(self.host)
+        self.transport.connect(self.host, self.port)
         self.assert_(self.transport.get_host() == self.host)
 
     def testGuessOs(self):
@@ -250,7 +251,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.close)
             return
-        self.transport.connect(self.host)
+        self.transport.connect(self.host, self.port)
         self.assertEqual('unknown', self.transport.guess_os())
         self.transport.authenticate(self.user, self.password, wait = True)
         self.assertEqual('shell', self.transport.guess_os())

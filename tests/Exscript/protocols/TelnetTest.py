@@ -1,11 +1,31 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from TransportTest      import TransportTest
-from Exscript.protocols import Telnet
+from TransportTest         import TransportTest
+from Exscript.util.telnetd import Telnetd
+from Exscript.protocols    import Telnet
+from Exscript.emulators    import VirtualDevice
 
 class TelnetTest(TransportTest):
     CORRELATE = Telnet
+
+    def setUp(self):
+        self.host     = 'localhost'
+        self.port     = 1236
+        self.user     = 'user'
+        self.password = 'password'
+        self.device   = VirtualDevice(self.host, echo = True)
+        self.daemon   = Telnetd(self.host, self.port, self.device)
+        ls_response   = '-rw-r--r--  1 sab  nmc    1628 Aug 18 10:02 file'
+        self.device.add_command('ls',   ls_response)
+        self.device.add_command('df',   'foobar')
+        self.device.add_command('exit', self.daemon.exit_command)
+        self.daemon.start()
+        self.createTransport()
+
+    def tearDown(self):
+        self.daemon.exit()
+        self.daemon.join()
 
     def createTransport(self):
         self.transport = Telnet(echo = 0)
