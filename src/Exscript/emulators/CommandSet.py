@@ -80,7 +80,7 @@ class CommandSet(object):
 
     def eval(self, command):
         for cmd, response in self.response_list:
-            if not cmd.search(command):
+            if not cmd.match(command):
                 continue
             if response is None:
                 return None
