@@ -18,14 +18,12 @@ Emulating a device.
 import os, re
 from Exscript.util.crypt import otp
 from Exception           import TransportException, LoginFailure
+from CommandSet          import CommandSet
 from Transport           import Transport,    \
                                 _user_re,      \
                                 _pass_re,      \
                                 _skey_re,      \
                                 _login_fail_re
-
-True  = 1
-False = 0
 
 class Dummy(Transport):
     """
@@ -56,13 +54,12 @@ class Dummy(Transport):
         self.banner         = kwargs.get('banner',     None)
         self.echo           = kwargs.get('echo',       True)
         self.login_type     = kwargs.get('login_type', self.LOGIN_TYPE_BOTH)
-        self.strict         = kwargs.get('strict',     False)
         self.prompt_stage   = self.PROMPT_STAGE_USERNAME
         self.custom_prompt  = None
         self.logged_in      = False
         self.buffer         = ''
         self.response       = None
-        self.response_list  = []
+        self.commands       = CommandSet(strict = kwargs.get('strict', False))
 
 
     def is_dummy(self):
@@ -131,11 +128,7 @@ class Dummy(Transport):
         @type  response: function or string
         @param response: A reponse, or a response handler.
         """
-        if isinstance(command, str):
-            command = re.compile(command)
-        elif not hasattr(command, 'search'):
-            raise TypeError('command argument must be str or a regex')
-        self.response_list.append((command, response))
+        self.commands.add(command, response)
 
 
     def load_command_handler_from_file(self, filename, autoprompt = True):
@@ -150,16 +143,11 @@ class Dummy(Transport):
         @type  autoprompt: bool
         @param autoprompt: Whether to append a prompt to each response.
         """
-        vars = {}
-        execfile(filename, vars)
-        commands = vars.get('commands')
-        if commands is None:
-            raise Exception(filename + ' has no variable named "commands"')
-        elif not hasattr(commands, '__iter__'):
-            raise Exception(filename + ': "commands" is not iterable')
-        for key, handler in commands:
-            handler = self._create_autoprompt_handler(handler)
-            self.add_command_handler(key, handler)
+        if autoprompt:
+            deco = self._create_autoprompt_handler
+        else:
+            deco = None
+        self.commands.add_from_file(filename, deco)
 
     def _connect_hook(self, hostname, port):
         assert self.connected_host is None
@@ -185,7 +173,7 @@ class Dummy(Transport):
 
 
     def _authenticate_hook(self, user, password, **kwargs):
-        while 1:
+        while True:
             # Wait for the user prompt.
             #print 'Waiting for prompt'
             prompt  = [_login_fail_re,
@@ -267,18 +255,10 @@ class Dummy(Transport):
         data = data.replace('\r', '\r\n')
         echo = self.echo and data or ''
         if self.logged_in:
-            for command, response in self.response_list:
-                if not command.search(data):
-                    continue
-                if response is None:
-                    pass
-                elif isinstance(response, str):
-                    self._say(echo + response)
-                else:
-                    self._say(echo + response(data))
+            response = self.commands.eval(data)
+            if response is not None:
+                self._say(echo + response)
                 return
-            if self.strict and self.logged_in:
-                raise Exception('Undefined command: ' + repr(data))
         prompt = self._get_prompt()
         self._say(echo + prompt)
 
