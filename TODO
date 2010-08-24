@@ -2,8 +2,6 @@ Exscript
 --------
 * Eliminate "catch all" statements like "except:" and "except Exception".
 * Add tests for Transport class debug levels.
-* Add TkExscript.LoginWidget and .LoginWindow.
-* Add docs for TkExscript.
 * Add API docs for Exscript.parselib.
 * Add a test for Exscript.Task.
 * Test the exscript executable.
@@ -14,6 +12,11 @@ Exscript
    - Login with both.
    - Login with key.
 * Create more stdlib tests like tests/templates/stdlib.crypt/.
+
+TkExscript
+----------
+* Add TkExscript.LoginWidget and .LoginWindow.
+* Add docs for TkExscript.
 
 exscriptd
 ---------
