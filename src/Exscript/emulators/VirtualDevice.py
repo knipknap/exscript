@@ -62,7 +62,7 @@ class VirtualDevice(object):
                 self.prompt_stage = self.PROMPT_STAGE_CUSTOM
             else:
                 self.prompt_stage = self.PROMPT_STAGE_PASSWORD
-            return 'Username: '
+            return 'User: '
         elif self.prompt_stage == self.PROMPT_STAGE_PASSWORD:
             self.prompt_stage = self.PROMPT_STAGE_CUSTOM
             return 'Password: '
