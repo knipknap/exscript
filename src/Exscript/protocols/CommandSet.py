@@ -92,5 +92,5 @@ class CommandSet(object):
             else:
                 return response(command)
         if self.strict:
-            raise Exception('Undefined command: ' + repr(data))
+            raise Exception('Undefined command: ' + repr(command))
         return None
