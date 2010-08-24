@@ -1,4 +1,4 @@
-import sys, unittest, re, os.path
+import sys, unittest, re, os, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from TransportTest         import TransportTest
@@ -22,6 +22,7 @@ class TelnetTest(TransportTest):
         self.device.add_command('exit', self.daemon.exit_command)
         self.daemon.start()
         self.createTransport()
+        time.sleep(.2)
 
     def tearDown(self):
         self.daemon.exit()
