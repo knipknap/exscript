@@ -62,10 +62,14 @@ class Telnetd(Process):
         return lines[0] + '\n'
 
     def _check_pipe(self):
-        if self.child_conn.poll():
+        if not self.child_conn.poll():
+            return
+        try:
             msg = self.child_conn.recv()
             if msg == 'shutdown':
                 self._exit()
+        except socket.error, e:
+            self.running = False
 
     def _exit(self):
         if self.conn:
@@ -86,17 +90,21 @@ class Telnetd(Process):
                 continue
 
             self.conn, addr = self.socket.accept()
-            self.conn.send(self.device.init())
 
-            while self.running:
-                line = self._recvline()
-                if not line:
-                    continue
-                response = self.device.do(line)
-                if response:
-                    self.conn.send(response)
+            try:
+                self.conn.send(self.device.init())
 
-            self.conn.close()
+                while self.running:
+                    line = self._recvline()
+                    if not line:
+                        continue
+                    response = self.device.do(line)
+                    if response:
+                        self.conn.send(response)
+            except socket.error, e:
+                pass # network error
+            finally:
+                self.conn.close()
 
         self.socket.close()
 
