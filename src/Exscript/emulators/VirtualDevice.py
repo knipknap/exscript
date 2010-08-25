@@ -172,6 +172,8 @@ class VirtualDevice(object):
         echo = self.echo and command or ''
         if self.logged_in:
             response = self.commands.eval(command)
-            if response is not None:
+            if response is None:
+                return echo + '\n' + self._get_prompt()
+            else:
                 return echo + response
         return echo + self._get_prompt()
