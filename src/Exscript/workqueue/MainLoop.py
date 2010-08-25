@@ -16,9 +16,6 @@ import threading, time, gc
 from Exscript.external.SpiffSignal import Trackable
 from Job                           import Job
 
-True  = 1
-False = 0
-
 class MainLoop(Trackable, threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)

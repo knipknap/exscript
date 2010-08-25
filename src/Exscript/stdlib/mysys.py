@@ -16,9 +16,6 @@ import time, os
 from Exscript                import Host, util
 from Exscript.util.decorator import bind, autologin
 
-True  = 1
-False = 0
-
 def message(scope, string):
     """
     Writes the given string to stdout.

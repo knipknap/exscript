@@ -25,8 +25,6 @@ pdf:
 	mv stdlib/mysys.py stdlib/sys.py
 	sed -i 's/\(def [^(]*(\)scope,? ?/\1/' stdlib/*.py # Remove the scope arg
 	sed -i 's/\(def [^(]*\)_(/\1(/' stdlib/*.py      	 # Remove trailing _
-	sed -i 's/^True *= 1//' stdlib/*.py								 # Remove True
-	sed -i 's/^False *= 0//' stdlib/*.py            	 # Remove False
 
 	# Generate a latex file that includes Exscript's stdlib commands.
 	epydoc --latex --parse-only --no-source --exclude __init__.py stdlib

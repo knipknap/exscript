@@ -22,9 +22,6 @@ from Exscript.AbstractMethod       import AbstractMethod
 from Exception                     import TransportException, \
                                           InvalidCommandException
 
-True  = 1 
-False = 0 
-
 _flags          = re.I
 _printable      = re.escape(string.printable)
 _unprintable    = r'[^' + _printable + r']'

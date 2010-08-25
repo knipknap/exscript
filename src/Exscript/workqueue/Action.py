@@ -16,9 +16,6 @@ from Exscript.external.SpiffSignal import Trackable
 from Exscript.AbstractMethod       import AbstractMethod
 from Exscript.util.cast            import to_list
 
-True  = 1
-False = 0
-
 class Action(Trackable):
     """
     This class represents an executable action that may be handed to the 

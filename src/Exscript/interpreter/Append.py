@@ -15,9 +15,6 @@
 from Exscript.parselib import Token
 from Term              import Term
 
-True  = 1
-False = 0
-
 class Append(Token):
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'Append', lexer, parser, parent)

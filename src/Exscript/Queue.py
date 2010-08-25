@@ -26,9 +26,6 @@ from workqueue            import WorkQueue, Action
 from util.cast            import to_list, to_hosts
 from util.impl            import deprecation
 
-True  = 1
-False = 0
-
 class Queue(Trackable):
     """
     Manages hosts/tasks, accounts, connections, and threads.

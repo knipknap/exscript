@@ -15,9 +15,6 @@
 from Exscript.external.SpiffSignal import Trackable
 from MainLoop                      import MainLoop
 
-True  = 1
-False = 0
-
 class WorkQueue(Trackable):
     """
     This class implements the asynchronous workqueue and is the main API

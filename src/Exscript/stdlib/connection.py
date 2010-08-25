@@ -14,9 +14,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.protocols.Exception import InvalidCommandException
 
-True  = 1
-False = 0
-
 def authenticate(scope, user = [None], password = [None]):
     """
     Looks for any username/password prompts on the current connection

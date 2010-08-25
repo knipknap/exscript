@@ -21,9 +21,6 @@ from Exscript.external.paramiko import util
 from Exception                  import TransportException, LoginFailure
 from Transport                  import Transport
 
-True  = 1
-False = 0
-
 # Workaround for paramiko error; avoids a warning message.
 util.log_to_file('/dev/null')
 

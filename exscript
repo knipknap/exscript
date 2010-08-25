@@ -26,9 +26,6 @@ from Exscript.util.file      import get_accounts_from_file, \
                                     get_hosts_from_csv
 from Exscript.util.decorator import autologin, bind
 
-True  = 1
-False = 0
-
 bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
 
 def expand_bracket(value_name, value):

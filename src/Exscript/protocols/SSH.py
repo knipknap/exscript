@@ -25,9 +25,6 @@ from Transport           import Transport,    \
                                 _skey_re,      \
                                 _login_fail_re
 
-True  = 1
-False = 0
-
 _fingerprint = r'\:'.join([r'\w\w'] * 16)
 _verify_re   = re.compile(r'\b' + _fingerprint + r'\b.*\byes.*', re.I|re.S|re.M)
 _escape_re   = re.compile(r'(?:[\x00-\x09]|\x1b\[[^m]*m|\x1b\][^\x07]*\x07)')

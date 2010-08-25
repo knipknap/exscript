@@ -14,9 +14,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.util import ipv4
 
-True  = 1
-False = 0
-
 def in_network(scope, prefixes, destination, default_pfxlen = [24]):
     """
     Returns True if the given destination is in the network range that is

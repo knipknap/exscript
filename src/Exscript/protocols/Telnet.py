@@ -25,9 +25,6 @@ from Transport           import Transport,    \
                                 _skey_re,      \
                                 _login_fail_re
 
-True  = 1
-False = 0
-
 class Telnet(Transport):
     """
     The Telnet protocol adapter.

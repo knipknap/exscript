@@ -14,9 +14,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Action import Action
 
-True  = 1
-False = 0
-
 class Sequence(Action):
     """
     This class represents an action that executes sub-actions sequentially.
