@@ -104,6 +104,19 @@ SLOT 0  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC 
   RX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
   0 crashes since restart
 """.lstrip()),
+
+(r'sh\S* ip int\S* brie\S*', """
+Interface     IP-Address     OK?  Method  Status                  Protocol
+Ethernet0     10.108.00.5    YES  NVRAM   up                      up      
+Ethernet1     unassigned     YES  unset   administratively down   down    
+Loopback0     10.108.200.5   YES  NVRAM   up                      up      
+Serial0       10.108.100.5   YES  NVRAM   up                      up      
+Serial1       10.108.40.5    YES  NVRAM   up                      up      
+Serial2       10.108.100.5   YES  manual  up                      up      
+Serial3       unassigned     YES  unset   administratively down   down 
+""".lstrip()),
+
+(r'^!.*', '')
 )
 
 class IOSEmulator(VirtualDevice):
