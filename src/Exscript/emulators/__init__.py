@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from CommandSet    import CommandSet
 from VirtualDevice import VirtualDevice
+from IOSEmulator   import IOSEmulator
 
 import inspect 
 __all__ = [name for name, obj in locals().items()

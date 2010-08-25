@@ -15,7 +15,6 @@
 """
 Emulating a device.
 """
-import os, re
 from Exscript.emulators import CommandSet
 
 class VirtualDevice(object):
@@ -47,13 +46,15 @@ class VirtualDevice(object):
          - echo: whether to echo the command in a response.
          - strict: Whether to raise when a given command has no handler.
         """
-        self.hostname     = hostname
-        self.banner       = banner or 'Welcome to %s!\n' % str(hostname)
-        self.echo         = echo
-        self.login_type   = login_type
-        self.prompt       = hostname + '> '
-        self.logged_in    = False
-        self.commands     = CommandSet(strict = strict)
+        self.hostname        = hostname
+        self.banner          = banner or 'Welcome to %s!\n' % str(hostname)
+        self.echo            = echo
+        self.login_type      = login_type
+        self.prompt          = hostname + '> '
+        self.logged_in       = False
+        self.commands        = CommandSet(strict = strict)
+        self.user_prompt     = 'User: '
+        self.password_prompt = 'Password: '
         self.init()
 
     def _get_prompt(self):
@@ -62,10 +63,10 @@ class VirtualDevice(object):
                 self.prompt_stage = self.PROMPT_STAGE_CUSTOM
             else:
                 self.prompt_stage = self.PROMPT_STAGE_PASSWORD
-            return 'User: '
+            return self.user_prompt
         elif self.prompt_stage == self.PROMPT_STAGE_PASSWORD:
             self.prompt_stage = self.PROMPT_STAGE_CUSTOM
-            return 'Password: '
+            return self.password_prompt
         elif self.prompt_stage == self.PROMPT_STAGE_CUSTOM:
             self.logged_in = True
             return self.prompt

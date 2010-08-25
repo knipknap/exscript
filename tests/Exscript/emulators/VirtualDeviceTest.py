@@ -4,14 +4,19 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 from Exscript.emulators import VirtualDevice
 
 class VirtualDeviceTest(unittest.TestCase):
-    CORRELATE = VirtualDevice
+    CORRELATE    = VirtualDevice
+    cls          = VirtualDevice
+    banner       = 'Welcome to myhost!\n'
+    prompt       = 'myhost> '
+    userprompt   = 'User: '
+    passwdprompt = 'Password: '
 
     def testConstructor(self):
-        VirtualDevice('myhost')
+        self.cls('myhost')
 
     def testGetPrompt(self):
-        v = VirtualDevice('myhost')
-        self.assertEqual(v.get_prompt(), 'myhost> ')
+        v = self.cls('myhost')
+        self.assertEqual(v.get_prompt(), self.prompt)
         v.set_prompt('foo# ')
         self.assertEqual(v.get_prompt(), 'foo# ')
 
@@ -19,18 +24,18 @@ class VirtualDeviceTest(unittest.TestCase):
         self.testGetPrompt()
 
     def testAddCommand(self):
-        cs = VirtualDevice('myhost',
-                           strict     = True,
-                           echo       = False,
-                           login_type = VirtualDevice.LOGIN_TYPE_NONE)
+        cs = self.cls('myhost',
+                      strict     = True,
+                      echo       = False,
+                      login_type = self.cls.LOGIN_TYPE_NONE)
         self.assertRaises(Exception, cs.do, 'foo')
         cs.add_command('foo', 'bar')
-        self.assertEqual(cs.do('foo'), 'bar\nmyhost> ')
+        self.assertEqual(cs.do('foo'), 'bar\n' + self.prompt)
 
         def sayhello(cmd):
             return 'hello'
         cs.add_command('hi$', sayhello)
-        self.assertEqual(cs.do('hi'), 'hello\nmyhost> ')
+        self.assertEqual(cs.do('hi'), 'hello\n' + self.prompt)
         cs.add_command('hi2$', sayhello, prompt = False)
         self.assertEqual(cs.do('hi2'), 'hello')
 
@@ -38,21 +43,21 @@ class VirtualDeviceTest(unittest.TestCase):
         pass # FIXME
 
     def testInit(self):
-        cs = VirtualDevice('testhost',
-                           login_type = VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
-        self.assertEqual(cs.init(), 'Welcome to testhost!\nPassword: ')
+        cs = self.cls('myhost',
+                      login_type = self.cls.LOGIN_TYPE_PASSWORDONLY)
+        self.assertEqual(cs.init(), self.banner + self.passwdprompt)
 
-        cs = VirtualDevice('testhost',
-                           login_type = VirtualDevice.LOGIN_TYPE_USERONLY)
-        self.assertEqual(cs.init(), 'Welcome to testhost!\nUsername: ')
+        cs = self.cls('myhost',
+                      login_type = self.cls.LOGIN_TYPE_USERONLY)
+        self.assertEqual(cs.init(), self.banner + self.userprompt)
 
-        cs = VirtualDevice('testhost',
-                           login_type = VirtualDevice.LOGIN_TYPE_BOTH)
-        self.assertEqual(cs.init(), 'Welcome to testhost!\nUsername: ')
+        cs = self.cls('myhost',
+                      login_type = self.cls.LOGIN_TYPE_BOTH)
+        self.assertEqual(cs.init(), self.banner + self.userprompt)
 
-        cs = VirtualDevice('testhost',
-                           login_type = VirtualDevice.LOGIN_TYPE_NONE)
-        self.assertEqual(cs.init(), 'Welcome to testhost!\ntesthost> ')
+        cs = self.cls('myhost',
+                      login_type = self.cls.LOGIN_TYPE_NONE)
+        self.assertEqual(cs.init(), self.banner + self.prompt)
 
     def testDo(self):
         pass # See testAddCommand()
