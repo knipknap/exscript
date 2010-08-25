@@ -102,11 +102,9 @@ class Dummy(Transport):
         for prompt in prompt_list:
             matches = prompt.search(self.buffer)
             if matches is not None:
-                prompt_len    = len(matches.group())
-                self.response = self.buffer[:-prompt_len]
-                self.buffer   = ''
-                #print "MATCH", i, repr(prompt.pattern), repr(response)
-                return (i, matches, self.response)
+                self.response = self.buffer[:matches.start()]
+                self.buffer   = self.buffer[matches.end():]
+                return i, matches, self.response
             i += 1
         return None
 
