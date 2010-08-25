@@ -15,6 +15,7 @@
 """
 Cisco IOS emulator.
 """
+import re
 from Exscript.emulators import VirtualDevice
 
 iosbanner = '''
@@ -30,6 +31,35 @@ Unauthorized access prohibited!
 
 at '%s' port '/dev/vty0' from '12.34.56.78'
 '''
+
+def show_diag(data):
+    slot = re.search(r'(\d+)', data).groups()[0]
+    return """
+SLOT %s  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC connector
+  MAIN: type 79,  800-19733-08 rev A0
+        Deviation: 0
+        HW config: 0x01    SW key: 00-00-00
+  PCA:  73-7614-07 rev A0 ver 1
+        Design Release 1.0  S/N SAL1026SSZX
+  MBUS: Embedded Agent
+        Test hist: 0x00    RMA#: 00-00-00    RMA hist: 0x00
+  DIAG: Test count: 0x00000000    Test results: 0x00000000
+  FRU:  Linecard/Module: 16OC3X/POS-IR-LC-B=
+        Processor Memory: MEM-LC-ISE-1024=
+        Packet Memory: MEM-LC1-PKT-512=(Non-Replaceable)
+  L3 Engine: 3 - ISE OC48 (2.5 Gbps)
+  MBUS Agent Software version 2.68 (RAM) (ROM version is 3.66)
+  ROM Monitor version 18.0
+  Fabric Downloader version used 7.1 (ROM version is 7.1)
+  Primary clock is CSC 1
+  Board is analyzed 
+  Board State is Line Card Enabled (IOS  RUN )
+  Insertion time: 00:00:30 (36w1d ago)
+  Processor Memory size: 1073741824 bytes
+  TX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
+  RX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
+  0 crashes since restart
+""" % slot
 
 commands = (
 ('show version', """
@@ -78,33 +108,6 @@ Channelized E1, Version 1.0.
 Configuration register is 0x2102
 """.lstrip()),
 
-(r'show diag \d+', """
-SLOT 0  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC connector
-  MAIN: type 79,  800-19733-08 rev A0
-        Deviation: 0
-        HW config: 0x01    SW key: 00-00-00
-  PCA:  73-7614-07 rev A0 ver 1
-        Design Release 1.0  S/N SAL1026SSZX
-  MBUS: Embedded Agent
-        Test hist: 0x00    RMA#: 00-00-00    RMA hist: 0x00
-  DIAG: Test count: 0x00000000    Test results: 0x00000000
-  FRU:  Linecard/Module: 16OC3X/POS-IR-LC-B=
-        Processor Memory: MEM-LC-ISE-1024=
-        Packet Memory: MEM-LC1-PKT-512=(Non-Replaceable)
-  L3 Engine: 3 - ISE OC48 (2.5 Gbps)
-  MBUS Agent Software version 2.68 (RAM) (ROM version is 3.66)
-  ROM Monitor version 18.0
-  Fabric Downloader version used 7.1 (ROM version is 7.1)
-  Primary clock is CSC 1
-  Board is analyzed 
-  Board State is Line Card Enabled (IOS  RUN )
-  Insertion time: 00:00:30 (36w1d ago)
-  Processor Memory size: 1073741824 bytes
-  TX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
-  RX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
-  0 crashes since restart
-""".lstrip()),
-
 (r'sh\S* ip int\S* brie\S*', """
 Interface     IP-Address     OK?  Method  Status                  Protocol
 Ethernet0     10.108.00.5    YES  NVRAM   up                      up      
@@ -115,6 +118,35 @@ Serial1       10.108.40.5    YES  NVRAM   up                      up
 Serial2       10.108.100.5   YES  manual  up                      up      
 Serial3       unassigned     YES  unset   administratively down   down 
 """.lstrip()),
+
+('show interface.*', """
+FastEthernet0/2 is administratively down, line protocol is down 
+  Hardware is i82545, address is 0001.c9f4.c418 (bia 0001.c9f4.c418)
+  MTU 1500 bytes, BW 100000 Kbit, DLY 100 usec, rely 255/255, load 1/255
+  Encapsulation ARPA, loopback not set
+  Keepalive set (10 sec)
+  Half-duplex, Auto Speed
+  ARP type: ARPA, ARP Timeout 04:00:00
+  Last input never, output never, output hang never
+  Last clearing of "show interface" counters never
+  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0
+  Queueing strategy: fifo
+  Output queue: 0/40 (size/max)
+  5 minute input rate 0 bits/sec, 0 packets/sec
+  5 minute output rate 0 bits/sec, 0 packets/sec
+     0 packets input, 0 bytes
+     Received 0 broadcasts, 0 runts, 0 giants, 0 throttles
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+     0 watchdog, 0 multicast
+     0 input packets with dribble condition detected
+     0 packets output, 0 bytes, 0 underruns
+     1 output errors, 0 collisions, 0 interface resets
+     0 babbles, 0 late collision, 0 deferred
+     1 lost carrier, 0 no carrier
+     0 output buffer failures, 0 output buffers swapped out
+"""),
+
+(r'show diag \d+', show_diag),
 
 (r'^!.*', '')
 )
