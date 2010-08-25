@@ -1,13 +1,14 @@
-Username: sab
+Welcome to dummy!
+User: sab
 Password: 
-whitespace:0> ls -1 
-
+dummy> ls -1 
 hello
 testme
-whitespace:0> ls -1
 
+dummy> ls -1
 hello
 testme
-whitespace:0> ! Iteration: hello/hello
-whitespace:0> ! Iteration: testme/testme
-whitespace:0> 
+
+dummy> ! Iteration: hello/hello
+dummy> ! Iteration: testme/testme
+dummy> 

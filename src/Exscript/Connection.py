@@ -17,9 +17,6 @@ Accessing the connection to a remote host.
 """
 import threading, os.path
 
-True  = 1
-False = 0
-
 class Connection(object):
     """
     This class is a decorator for protocols.Transport objects that
@@ -66,8 +63,7 @@ class Connection(object):
         if protocol_name == 'pseudo':
             filename = host.get_address()
             hostname = os.path.basename(filename)
-            host.set_name(hostname)
-            transport.load_command_handler_from_file(filename)
+            transport.device.add_commands_from_file(filename)
 
 
     def __copy__(self):

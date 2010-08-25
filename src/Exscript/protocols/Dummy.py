@@ -17,7 +17,7 @@ Emulating a device.
 """
 import os, re
 from Exscript.util.crypt import otp
-from Exscript.emulators  import CommandSet
+from Exscript.emulators  import VirtualDevice
 from Exception           import TransportException, LoginFailure
 from Transport           import Transport,    \
                                 _user_re,      \
@@ -27,77 +27,36 @@ from Transport           import Transport,    \
 
 class Dummy(Transport):
     """
-    A protocol adapter that emulates a remote device.
+    A protocol adapter that talks to a VirtualDevice.
     """
-    LOGIN_TYPE_PASSWORDONLY, \
-    LOGIN_TYPE_USERONLY, \
-    LOGIN_TYPE_BOTH, \
-    LOGIN_TYPE_NONE = range(1, 5)
-
-    PROMPT_STAGE_USERNAME, \
-    PROMPT_STAGE_PASSWORD, \
-    PROMPT_STAGE_CUSTOM = range(1, 4)
 
     def __init__(self, **kwargs):
         """
+        @type  device: Exscript.emulators.VirtualDevice
+        @param device: The virtual device with which to communicate.
         @type  kwargs: dict
-        @param kwargs: In addition to the kwargs of Transport,
-        this adapter supports the following:
-         - banner: A string to show as soon as the connection is opened.
-         - login_type:
-         - echo: whether to echo the command in a response.
-         - strict: Whether to raise when a given command has no handler.
+        @param kwargs: See Transport.__init__().
         """
         Transport.__init__(self, **kwargs)
-        self.connected_host = None
-        self.connected_port = None
-        self.banner         = kwargs.get('banner',     None)
-        self.echo           = kwargs.get('echo',       True)
-        self.login_type     = kwargs.get('login_type', self.LOGIN_TYPE_BOTH)
-        self.prompt_stage   = self.PROMPT_STAGE_USERNAME
-        self.custom_prompt  = None
-        self.logged_in      = False
-        self.buffer         = ''
-        self.response       = None
-        self.commands       = CommandSet(strict = kwargs.get('strict', False))
-
+        self.device    = kwargs.get('device')
+        self.init_done = False
+        self.buffer    = ''
+        self.response  = None
+        if not self.device:
+            self.device = VirtualDevice('dummy', strict = False)
 
     def is_dummy(self):
         return True
 
-
-    def _get_custom_prompt(self):
-        port   = str(self.connected_port)
-        prompt = str(self.connected_host) + ':' + port + '> '
-        return self.custom_prompt or prompt
-
-
-    def _get_prompt(self):
-        if self.prompt_stage == self.PROMPT_STAGE_USERNAME:
-            if self.login_type == self.LOGIN_TYPE_USERONLY:
-                self.prompt_stage = self.PROMPT_STAGE_CUSTOM
-            else:
-                self.prompt_stage = self.PROMPT_STAGE_PASSWORD
-            return 'Username: '
-        elif self.prompt_stage == self.PROMPT_STAGE_PASSWORD:
-            self.prompt_stage = self.PROMPT_STAGE_CUSTOM
-            return 'Password: '
-        elif self.prompt_stage == self.PROMPT_STAGE_CUSTOM:
-            self.logged_in = True
-            return self._get_custom_prompt()
-        else:
-            assert False # No such stage.
-
-
-    def _create_autoprompt_handler(self, handler):
-        def append_prompt(data):
-            if isinstance(handler, str):
-                return handler + self._get_custom_prompt()
-            return handler(data) + self._get_custom_prompt()
-        return append_prompt
-
-
     def _expect_any(self, prompt_list):
+        # Send the banner, etc. To more correctly mimic the behavior of
+        # a network device, we to this here instead of in connect(), as
+        # connect would be too early.
+        if not self.init_done:
+            self.init_done = True
+            self._say(self.device.init())
+
+        # Look for a match in the buffer.
         i = 0
         for prompt in prompt_list:
             matches = prompt.search(self.buffer)
@@ -108,72 +67,16 @@ class Dummy(Transport):
             i += 1
         return None
 
-
     def _say(self, string):
         self.buffer += self._receive_cb(string)
 
-
-    def add_command_handler(self, command, response):
-        """
-        Register a regular expression such that whenever a string sent to the 
-        remote host matches, the given response handler is called.
-
-        If the given response handler is a string, that string is sent as the 
-        response to any command that matches the given regular expression.
-
-        @type  command: str|regex
-        @param command: A string or a compiled regular expression.
-        @type  response: function or string
-        @param response: A reponse, or a response handler.
-        """
-        self.commands.add(command, response)
-
-
-    def load_command_handler_from_file(self, filename, autoprompt = True):
-        """
-        Wrapper around add_command_handler that reads the handlers from the
-        file with the given name. The file is a Python script containing
-        a list named 'commands' of tuples that map command names to
-        handlers.
-
-        @type  filename: str
-        @param filename: The name of the file containing the tuples.
-        @type  autoprompt: bool
-        @param autoprompt: Whether to append a prompt to each response.
-        """
-        if autoprompt:
-            deco = self._create_autoprompt_handler
-        else:
-            deco = None
-        self.commands.add_from_file(filename, deco)
-
     def _connect_hook(self, hostname, port):
-        assert self.connected_host is None
-        self.connected_host = hostname
-        self.connected_port = port or 0
-        self.buffer         = ''
-
-        if self.login_type == self.LOGIN_TYPE_PASSWORDONLY:
-            self.prompt_stage = self.PROMPT_STAGE_PASSWORD
-        elif self.login_type == self.LOGIN_TYPE_USERONLY:
-            self.prompt_stage = self.PROMPT_STAGE_USERNAME
-        elif self.login_type == self.LOGIN_TYPE_BOTH:
-            self.prompt_stage = self.PROMPT_STAGE_USERNAME
-        elif self.login_type == self.LOGIN_TYPE_NONE:
-            self.prompt_stage = self.PROMPT_STAGE_CUSTOM
-        else:
-            assert False # No such login type.
-
-        if self.banner is not None:
-            self._say(self.banner + '\r\n')
-        self._say(self._get_prompt())
+        self.buffer = ''
         return True
-
 
     def _authenticate_hook(self, user, password, **kwargs):
         while True:
             # Wait for the user prompt.
-            #print 'Waiting for prompt'
             prompt  = [_login_fail_re,
                        _user_re,
                        _skey_re,
@@ -202,9 +105,8 @@ class Dummy(Transport):
             # User name prompt.
             elif which <= 1:
                 self._dbg(1, "Username prompt %s received." % which)
-                self.send(user + '\r')
-                if self.login_type == self.LOGIN_TYPE_USERONLY \
-                  and not kwargs.get('wait'):
+                self.send(user + '\r\n')
+                if kwargs.get('userwait') == False:
                     self._dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -218,7 +120,7 @@ class Dummy(Transport):
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
                 self._expect_any([_pass_re])
-                self.send(phrase + '\r')
+                self.send(phrase + '\r\n')
                 self._dbg(1, "Password sent.")
                 if not kwargs.get('wait'):
                     self._dbg(1, "Bailing out as requested.")
@@ -228,7 +130,7 @@ class Dummy(Transport):
             # Cleartext password prompt.
             elif which == 3:
                 self._dbg(1, "Cleartext password prompt received.")
-                self.send(password + '\r')
+                self.send(password + '\r\n')
                 if not kwargs.get('wait'):
                     self._dbg(1, "Bailing out as requested.")
                     break
@@ -242,34 +144,23 @@ class Dummy(Transport):
             else:
                 assert 0 # Not reached.
 
-
     def _authorize_hook(self, password, **kwargs):
         # The username should not be asked, so not passed.
         return self._authenticate_hook('', password, **kwargs)
 
-
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))
-        data = data.replace('\r', '\r\n')
-        echo = self.echo and data or ''
-        if self.logged_in:
-            response = self.commands.eval(data)
-            if response is not None:
-                self._say(echo + response)
-                return
-        prompt = self._get_prompt()
-        self._say(echo + prompt)
-
+        self._say(self.device.do(data))
 
     def execute(self, data):
         # Send the command.
         self.send(data + '\r')
         return self.expect_prompt()
 
-
     def _expect_hook(self, prompt):
         if not hasattr(prompt, 'match'):
             raise TypeError('prompt must be a compiled regular expression.')
+
         # Wait for a prompt.
         try:
             res = self._expect_any([prompt])
@@ -292,5 +183,3 @@ class Dummy(Transport):
 
     def close(self, force = False):
         self._say('\n')
-        self.connected_host = None
-        self.connected_port = None

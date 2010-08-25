@@ -5,7 +5,7 @@ show diag $slot{
 
 {sys.run("dummy:subdummy", "subtest.exscript")}
 
-show ip int brie{extract /^(Giga\S+)/ as interfaces}
+show ip int brie{extract /^(Eth\S+)/ as interfaces}
 {loop interfaces as interface}
   show interface $interface
   {if interface matches /\/2/}

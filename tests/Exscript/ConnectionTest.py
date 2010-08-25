@@ -5,6 +5,7 @@ from Exscript                import Host, Queue, Account
 from Exscript.HostAction     import HostAction
 from Exscript.AccountManager import AccountManager
 from Exscript.Connection     import Connection
+from Exscript.emulators      import VirtualDevice
 from protocols.DummyTest     import DummyTest
 
 # Connection proxies the calls to a protocols.Transport object,
@@ -16,6 +17,10 @@ class ConnectionTest(DummyTest):
     def createTransport(self):
         self.queue     = Queue(verbose = 0)
         self.host      = Host('dummy:localhost')
+        self.hostname  = self.host.get_name()
+        self.device    = VirtualDevice(self.hostname, echo = True)
+        self.banner    = self.device.banner
+        self.prompt    = self.device.prompt
         self.action    = HostAction(self.queue, object, self.host)
         self.transport = Connection(self.action)
         self.account   = Account('user', 'test')
@@ -49,22 +54,27 @@ class ConnectionTest(DummyTest):
     def testOpen(self):
         self.transport.open()
 
+    def testConnect(self):
+        self.assertEqual(self.transport.response, None)
+        self.transport.connect(self.hostname, self.port)
+        self.assertEqual(self.transport.response, None)
+        self.assertEqual(self.transport.get_host(), self.host)
+
     def testAutoAuthorize(self):
         self.doAuthenticate()
         response = self.transport.response
         self.transport.auto_authorize()
-        self.assert_(self.transport.response != response)
+        self.assertEqual(self.transport.response, response)
         self.assert_(len(self.transport.response) > 0)
 
     def testGuessOs(self):
         self.assertEqual('unknown', self.transport.guess_os())
         self.transport.open()
-        self.assertEqual('ios', self.transport.guess_os())
+        self.assertEqual('unknown', self.transport.guess_os())
         self.transport.authenticate(wait = True)
-        self.assertEqual('ios', self.transport.guess_os())
+        self.assertEqual('shell', self.transport.guess_os())
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ConnectionTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())
-

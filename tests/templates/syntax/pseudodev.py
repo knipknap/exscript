@@ -4,5 +4,5 @@ hello
 testme
 """),
 
-('ls -l .+', lambda x: x)
+('ls -l .+', lambda x: '\n' + x)
 )

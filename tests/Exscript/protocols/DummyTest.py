@@ -2,13 +2,22 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from TransportTest      import TransportTest
+from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy
 
 class DummyTest(TransportTest):
     CORRELATE = Dummy
 
     def createTransport(self):
-        self.transport = Dummy(echo = 1)
+        self.device    = VirtualDevice(self.hostname, echo = True)
+        self.transport = Dummy(device = self.device)
+        self.banner    = 'Welcome to %s!\n' % self.hostname
+        self.prompt    = self.hostname + '> '
+
+        ls_response = '-rw-r--r--  1 sab  nmc    1628 Aug 18 10:02 file'
+        self.device.add_command('ls',   ls_response)
+        self.device.add_command('df',   'foobar')
+        self.device.add_command('exit', '')
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Dummy))
@@ -16,135 +25,108 @@ class DummyTest(TransportTest):
     def testIsDummy(self):
         self.assert_(self.transport.is_dummy())
 
-    def testAddCommandHandler(self):
-        self.doAuthenticate(wait = True)
-
-        self.transport.execute('blah')
-        self.assertEqual(self.transport.response, 'blah\r')
-
-        # Responds using a string.
-        self.transport.add_command_handler('blah', 'foobar\r\ntest>')
-        self.transport.execute('blah')
-        self.assertEqual(self.transport.response, 'blah\r\nfoobar\r')
-
-        # Responds using a function.
-        say_hello = lambda cmd: cmd.strip() + ' world\r\ntest>'
-        self.transport.add_command_handler('hello', say_hello)
-        self.transport.execute('hello')
-        self.assertEqual(self.transport.response, 'hello\r\nhello world\r')
-
-    def testLoadCommandHandlerFromFile(self):
-        testdir   = os.path.join(os.path.dirname(__file__), '..', '..')
-        dirname   = os.path.join(testdir, 'templates', 'iosdummy')
-        filename  = os.path.join(dirname, 'pseudodev.py')
-        transport = Dummy(banner = 'blah', strict = True)
-        transport.load_command_handler_from_file(filename)
-        transport.connect('testhost')
-        transport.authenticate('user', 'password')
-        transport.execute('show version')
-        self.assert_('cisco 12416' in transport.response)
-        transport.execute('show diag 0')
-        self.assert_('SLOT 0' in transport.response, repr(transport.response))
-
-        # The following must raise because of the strict = True argument
-        # above. The reason is that the command "show something" is not
-        # known.
-        self.assertRaises(Exception, transport.execute, 'show something')
-        transport.close()
-
-    def testGuessOs(self):
-        self.assertEqual('unknown', self.transport.guess_os())
-        self.transport.connect(self.host)
-        self.assertEqual('ios', self.transport.guess_os())
-        self.transport.authenticate(self.user, self.password, wait = True)
-        self.assertEqual('ios', self.transport.guess_os())
+    def _create_dummy_and_eat_banner(self, device, port = None):
+        transport = Dummy(device = device)
+        transport.connect(device.hostname, port)
+        self.assertEqual(transport.buffer,   '')
+        self.assertEqual(transport.response, None)
+        transport.expect(re.compile(re.escape(self.banner)))
+        self.assertEqual(transport.response, '')
+        return transport
 
     def testDummy(self):
         # Test simple instance with banner.
-        transport = Dummy(banner = 'blah')
+        transport = Dummy(device = self.device)
         transport.connect('testhost')
-        self.assert_(transport.buffer == 'blah\r\nUsername: ')
-        self.assert_(transport.response is None)
+        self.assertEqual(transport.buffer,   '')
+        self.assertEqual(transport.response, None)
         transport.close()
 
         # Test login.
-        transport = Dummy()
+        transport = Dummy(device = self.device)
         transport.connect('testhost')
-        self.assert_(transport.buffer == 'Username: ')
-        self.assert_(transport.response is None)
+        self.assertEqual(transport.buffer,   '')
+        self.assertEqual(transport.response, None)
         transport.authenticate('sab', 'test')
-        self.assert_(transport.buffer.endswith('testhost:0> '))
+        self.assert_(transport.buffer.endswith(self.prompt))
         transport.close()
 
         # Test login with user prompt.
-        transport = Dummy(login_type = Dummy.LOGIN_TYPE_USERONLY)
-        transport.connect('testhost')
-        self.assert_(transport.buffer == 'Username: ')
-        self.assert_(transport.response is None)
-        transport.authenticate('sab', '')
-        self.assert_(transport.buffer.endswith('testhost:0> '))
+        device = VirtualDevice(self.hostname,
+                               echo       = True,
+                               login_type = VirtualDevice.LOGIN_TYPE_USERONLY)
+        transport = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(transport.buffer, 'User: ')
+        transport.authenticate('sab', '', userwait = False)
+        self.assert_(transport.buffer.endswith(self.prompt), repr(transport.buffer))
         transport.close()
 
         # Test login with password prompt.
-        transport = Dummy(login_type = Dummy.LOGIN_TYPE_PASSWORDONLY)
-        transport.connect('testhost')
-        self.assert_(transport.buffer == 'Password: ')
-        self.assert_(transport.response is None)
+        device = VirtualDevice(self.hostname,
+                               echo       = True,
+                               login_type = VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
+        transport = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(transport.buffer, 'Password: ')
         transport.authenticate(None, 'test')
-        self.assert_(transport.buffer.endswith('testhost:0> '))
+        self.assert_(transport.buffer.endswith(self.prompt))
         transport.close()
 
         # Test login without user/password prompt.
-        transport = Dummy(login_type = Dummy.LOGIN_TYPE_NONE)
-        transport.connect('testhost')
-        self.assert_(transport.buffer == 'testhost:0> ')
-        self.assert_(transport.response is None)
+        device = VirtualDevice(self.hostname,
+                               echo       = True,
+                               login_type = VirtualDevice.LOGIN_TYPE_NONE)
+        transport = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(transport.buffer, self.prompt)
         transport.close()
 
         # Test login with user prompt and wait parameter.
-        transport = Dummy(login_type = Dummy.LOGIN_TYPE_USERONLY)
-        transport.connect('testhost')
-        self.assertEqual(transport.buffer,  'Username: ')
-        self.assertEqual(transport.response, None)
+        device = VirtualDevice(self.hostname,
+                               echo       = True,
+                               login_type = VirtualDevice.LOGIN_TYPE_USERONLY)
+        transport = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(transport.buffer, 'User: ')
         transport.authenticate('sab', '', wait = True)
         self.assertEqual(transport.buffer,   '')
         self.assertEqual(transport.response, 'sab\r')
         transport.close()
 
         # Test login with password prompt and wait parameter.
-        transport = Dummy(login_type = Dummy.LOGIN_TYPE_PASSWORDONLY)
-        transport.connect('testhost')
-        self.assertEqual(transport.buffer,  'Password: ')
-        self.assertEqual(transport.response, None)
+        device = VirtualDevice(self.hostname,
+                               echo       = True,
+                               login_type = VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
+        transport = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(transport.buffer, 'Password: ')
         transport.authenticate(None, 'test', wait = True)
         self.assertEqual(transport.buffer,   '')
         self.assertEqual(transport.response, 'test\r')
         transport.close()
 
         # Test login with port number.
-        transport = Dummy()
-        transport.connect('testhost', 1234)
-        self.assertEqual(transport.buffer,   'Username: ')
-        self.assertEqual(transport.response, None)
+        transport = self._create_dummy_and_eat_banner(device, 1234)
+        self.assertEqual(transport.buffer, 'Password: ')
         transport.authenticate('sab', 'test', wait = True)
         self.assertEqual(transport.buffer,   '')
         self.assertEqual(transport.response, 'test\r')
         transport.close()
 
         # Test a custom response.
-        transport = Dummy(login_type = Dummy.LOGIN_TYPE_NONE)
+        device = VirtualDevice(self.hostname,
+                               echo       = True,
+                               login_type = VirtualDevice.LOGIN_TYPE_NONE)
+        transport = Dummy(device = device)
         command   = re.compile(r'testcommand')
-        response  = 'hello world\r\ntesthost:0> '
-        transport.add_command_handler(command, response)
+        response  = 'hello world\r\n%s> ' % self.hostname
+        device.add_command(command, response, prompt = False)
         transport.set_prompt(re.compile(r'> $'))
         transport.connect('testhost')
-        self.assertEqual(transport.buffer,   'testhost:0> ')
-        self.assertEqual(transport.response, None)
+        transport.expect(re.compile(re.escape(self.banner)))
+        self.assertEqual(transport.response, '')
+        self.assertEqual(transport.buffer, self.prompt)
         transport.expect_prompt()
         self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, 'testhost:0')
+        self.assertEqual(transport.response, self.hostname)
         transport.execute('testcommand')
-        expected = 'testcommand\r\nhello world\r\ntesthost:0'
+        expected = 'testcommand\rhello world\r\n' + self.hostname
         self.assertEqual(transport.response, expected)
         self.assertEqual(transport.buffer,   '')
         transport.close()
