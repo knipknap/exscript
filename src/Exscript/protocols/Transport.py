@@ -71,7 +71,6 @@ class Transport(Trackable):
         self.timeout               = kwargs.get('timeout',  30)
         self.logfile               = kwargs.get('logfile',  None)
         self.log                   = None
-        self.last_tacacs_key_id    = None
         self.response              = None
         if not self.stdout:
             self.stdout = open(os.devnull, 'w')

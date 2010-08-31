@@ -112,7 +112,6 @@ class Dummy(Transport):
                 self._dbg(1, "S/Key prompt received.")
                 seq  = int(matches.group(1))
                 seed = matches.group(2)
-                self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
                 self._expect_any([self.get_password_prompt()])

@@ -128,7 +128,6 @@ class SSH(Transport):
                 seq  = int(self.conn.match.group(1))
                 seed = self.conn.match.group(2)
                 self._otp_cb(seq, seed)
-                self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
                 self.conn.expect(self.get_password_prompt(), self.timeout)

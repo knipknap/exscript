@@ -85,7 +85,6 @@ class Telnet(Transport):
                 seq  = int(matches.group(1))
                 seed = matches.group(2)
                 self._otp_cb(seq, seed)
-                self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
                 self.tn.expect([self.get_password_prompt()], self.timeout)
