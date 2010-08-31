@@ -16,6 +16,7 @@
 An abstract base class for all protocols.
 """
 import string, re, sys, os
+from drivers                       import driver_map
 from OsGuesser                     import OsGuesser
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.AbstractMethod       import AbstractMethod
