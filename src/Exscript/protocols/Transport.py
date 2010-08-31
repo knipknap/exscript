@@ -16,7 +16,7 @@
 An abstract base class for all protocols.
 """
 import string, re, sys, os
-from drivers                       import driver_map
+from drivers                       import driver_map, isdriver
 from OsGuesser                     import OsGuesser
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.AbstractMethod       import AbstractMethod
@@ -43,6 +43,7 @@ class Transport(Trackable):
 
         @type  kwargs: dict
         @param kwargs: The following arguments are supported:
+          - driver: passed to set_driver().
           - stdout: Where to write the device response. Defaults to os.devnull.
           - stderr: Where to write debug info. Defaults to stderr.
           - debug: An integer between 0 (no debugging) and 5 (very verbose 
@@ -54,7 +55,7 @@ class Transport(Trackable):
         """
         Trackable.__init__(self)
         self.os_guesser            = OsGuesser(self)
-        self.driver                = driver_map[self.guess_os()]
+        self.auto_driver           = driver_map[self.guess_os()]
         self.authorized            = False
         self.authenticated         = False
         self.manual_user_re        = None
@@ -62,6 +63,7 @@ class Transport(Trackable):
         self.manual_prompt_re      = None
         self.manual_error_re       = None
         self.manual_login_error_re = None
+        self.manual_driver         = kwargs.get('driver')
         self.host                  = kwargs.get('host',     None)
         self.user                  = kwargs.get('user',     '')
         self.password              = kwargs.get('password', '')
@@ -110,8 +112,8 @@ class Transport(Trackable):
         if self.log is not None:
             self.log.write(text)
         self.os_guesser.data_received(data)
-        os          = self.guess_os()
-        self.driver = driver_map[os]
+        os               = self.guess_os()
+        self.auto_driver = driver_map[os]
         self.signal_emit('data_received', data)
         return data
 
@@ -137,6 +139,42 @@ class Transport(Trackable):
         self.stderr.write(msg + '\n')
 
 
+    def set_driver(self, driver = None):
+        """
+        Defines the driver that is used to recognize prompts and implement
+        behavior depending on the remote system.
+        The driver argument may be an subclass of protocols.drivers.Driver,
+        a known driver name (string), or None.
+        If the driver argument is None, the adapter automatically chooses
+        a driver using the the guess_os() function.
+
+        @type  driver: Driver|str
+        @param driver: The pattern that, when matched, causes an error.
+        """
+        if driver is None:
+            self.manual_driver = None
+        elif isinstance(driver, str):
+            if not driver_map.has_key(driver):
+                raise TypeError('no such driver:' + repr(driver))
+            self.manual_driver = driver_map[driver]
+        elif isdriver(driver):
+            self.manual_driver = driver
+        else:
+            raise TypeError('unsupported argument type:' + type(driver))
+
+
+    def get_driver(self):
+        """
+        Returns the currently used driver.
+
+        @rtype:  Driver
+        @return: A regular expression.
+        """
+        if self.manual_driver:
+            return self.manual_driver
+        return self.auto_driver
+
+
     def set_username_prompt(self, regex = None):
         """
         Defines a pattern that is used to monitor the response of the
@@ -158,7 +196,7 @@ class Transport(Trackable):
         """
         if self.manual_user_re:
             return self.manual_user_re
-        return self.driver.user_re
+        return self.get_driver().user_re
 
 
     def set_password_prompt(self, regex = None):
@@ -182,7 +220,7 @@ class Transport(Trackable):
         """
         if self.manual_password_re:
             return self.manual_password_re
-        return self.driver.password_re
+        return self.get_driver().password_re
 
 
     def set_prompt(self, prompt = None):
@@ -209,7 +247,7 @@ class Transport(Trackable):
         """
         if self.manual_prompt_re:
             return self.manual_prompt_re
-        return self.driver.prompt_re
+        return self.get_driver().prompt_re
 
 
     def set_error_prompt(self, error = None):
@@ -234,7 +272,7 @@ class Transport(Trackable):
         """
         if self.manual_error_re:
             return self.manual_error_re
-        return self.driver.error_re
+        return self.get_driver().error_re
 
 
     def set_login_error_prompt(self, error = None):
@@ -260,7 +298,7 @@ class Transport(Trackable):
         """
         if self.manual_login_error_re:
             return self.manual_login_error_re
-        return self.driver.login_error_re
+        return self.get_driver().login_error_re
 
 
     def set_timeout(self, timeout):

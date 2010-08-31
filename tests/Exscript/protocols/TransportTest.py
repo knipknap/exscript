@@ -87,7 +87,26 @@ class TransportTest(unittest.TestCase):
         self.assert_(self.transport == self.transport.__deepcopy__({}))
 
     def testIsDummy(self):
-        self.assert_(self.transport.is_dummy() == False)
+        self.assertEqual(self.transport.is_dummy(), False)
+
+    def testSetDriver(self):
+        self.assert_(self.transport.get_driver() is not None)
+        self.assertEqual(self.transport.get_driver().name, 'generic')
+
+        self.transport.set_driver()
+        self.assert_(self.transport.get_driver() is not None)
+        self.assertEqual(self.transport.get_driver().name, 'generic')
+
+        self.transport.set_driver('ios')
+        self.assert_(self.transport.get_driver() is not None)
+        self.assertEqual(self.transport.get_driver().name, 'ios')
+
+        self.transport.set_driver()
+        self.assert_(self.transport.get_driver() is not None)
+        self.assertEqual(self.transport.get_driver().name, 'generic')
+
+    def testGetDriver(self):
+        pass # Already tested in testSetDriver()
 
     def testSetUsernamePrompt(self):
         initial_regex = self.transport.get_username_prompt()
