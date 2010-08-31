@@ -12,34 +12,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import re
+import re, drivers
 from StreamAnalyzer import StreamAnalyzer
 
-_flags         = re.I | re.M
-_aix_re        = re.compile(r'AIX')
-_huawei_re     = re.compile(r'huawei',                         _flags)
-_enterasys_re  = re.compile(r'enterasys',                      _flags)
-_oneos_user_re = re.compile(r'[\r\n]Username:[^ ]',            _flags)
-_ios_user_re   = re.compile(r'user ?name: ',                   _flags)
-_xr_prompt_re  = re.compile(r'RP/\d+/\w+/CPU\d+:[^#]+[#>] ?$', _flags)
-_junos_re      = re.compile(r'\bjunos\b',                      _flags)
-_junos_user_re = re.compile(r'[\r\n]login: ',                  _flags)
-_unix_user_re  = re.compile(r'(user|login): ',                 _flags)
-_pass_re       = re.compile(r'password:? ',                    _flags)
+driver_list = [d() for d in drivers.driver_list]
 
 # Matches before the authentication is complete.
-auth_os_map = ((_huawei_re,     'vrp',       80),
-               (_enterasys_re,  'enterasys', 80),
-               (_oneos_user_re, 'one_os',    20),
-               (_ios_user_re,   'ios',       60),
-               (_junos_re,      'junos',     80),
-               (_junos_user_re, 'junos',     35),
-               (_aix_re,        'shell',     70),
-               (_unix_user_re,  'shell',     30))
+auth_os_map = [d._check_head for d in driver_list]
 
-# Matches anytime.
-os_map = ((_xr_prompt_re, 'ios_xr',    95),
-          (_enterasys_re, 'enterasys', 80),)
+# Matches any time.
+os_map = [d._check_response for d in driver_list]
 
 class OsGuesser(StreamAnalyzer):
     def __init__(self, conn):

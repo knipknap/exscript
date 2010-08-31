@@ -37,22 +37,33 @@ class StreamAnalyzer(object):
             return
         if self.info.has_key(key):
             old_confidence, old_value = self.info.get(key)
-            if old_confidence > confidence:
+            if old_confidence >= confidence:
                 return
         self.info[key] = (confidence, value)
 
     def set_from_match(self, key, regex_list, string):
         """
-        Given a list of tuples (regex, value, confidence), this function
-        walks through them and checks whether any of the matches the given
-        string.
+        Given a list of functions or three-tuples (regex, value, confidence),
+        this function walks through them and checks whether any of the
+        items in the list matches the given string.
+        If the list item is a function, it must have the following
+        signature::
+
+            func(string) : (string, int)
+
+        Where the return value specifies the resulting value and the
+        confidence of the match.
         If a match is found, and the confidence level is higher
         than the currently defined one, the given value is defined with
         the given confidence.
         """
-        for regex, value, confidence in regex_list:
-            if regex.search(string):
-                self.set(key, value, confidence)
+        for item in regex_list:
+            if hasattr(item, '__call__'):
+                self.set(key, *item(string))
+            else:
+                regex, value, confidence = item
+                if regex.search(string):
+                    self.set(key, value, confidence)
 
     def get(self, key, confidence = 0):
         """

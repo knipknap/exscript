@@ -73,7 +73,7 @@ s/key 9796 en29000000
 Password: 
 RP/0/RP0/CPU0:testhost#''',
 
-'shell': '''
+'aix': '''
 telnet (testhost)
 
 
