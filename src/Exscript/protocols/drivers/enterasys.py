@@ -18,15 +18,17 @@ A driver for Enterasys devices.
 import re
 from driver import Driver
 
-user_re       = re.compile(r'[\r\n]Username: $')
-password_re   = re.compile(r'[\r\n]Password: $')
-prompt_re     = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?-?[>#] ?$')
+_user_re      = re.compile(r'[\r\n]Username: $')
+_password_re  = re.compile(r'[\r\n]Password: $')
+_prompt_re    = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?-?[>#] ?$')
 _enterasys_re = re.compile(r'\benterasys\b', re.I)
 
 class EnterasysDriver(Driver):
     def __init__(self):
         Driver.__init__(self, 'enterasys')
-        self.prompt = prompt_re
+        self.user_re     = _user_re
+        self.password_re = _password_re
+        self.prompt_re   = _prompt_re
 
     def check_head_for_os(self, string):
         if _enterasys_re.search(string):

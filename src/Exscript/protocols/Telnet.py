@@ -19,11 +19,7 @@ import os, re
 import telnetlib
 from Exscript.util.crypt import otp
 from Exception           import TransportException, LoginFailure
-from Transport           import Transport,    \
-                                _user_re,      \
-                                _pass_re,      \
-                                _skey_re,      \
-                                _login_fail_re
+from Transport           import Transport, _skey_re
 
 class Telnet(Transport):
     """
@@ -49,14 +45,14 @@ class Telnet(Transport):
 
 
     def _authenticate_hook(self, user, password, **kwargs):
-        while 1:
+        while True:
             # Wait for the user prompt.
             #print 'Waiting for prompt'
-            prompt  = [_login_fail_re,
-                       _user_re,
+            prompt  = [self.get_login_error_prompt(),
+                       self.get_username_prompt(),
                        _skey_re,
-                       _pass_re,
-                       self.prompt_re]
+                       self.get_password_prompt(),
+                       self.get_prompt()]
             which   = None
             matches = None
             try:
@@ -92,7 +88,7 @@ class Telnet(Transport):
                 self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
-                self.tn.expect([_pass_re], self.timeout)
+                self.tn.expect([self.get_password_prompt()], self.timeout)
                 self.send(phrase + '\r')
                 self._dbg(1, "Password sent.")
                 if not kwargs.get('wait'):

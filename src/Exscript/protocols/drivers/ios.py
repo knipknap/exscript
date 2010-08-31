@@ -18,16 +18,18 @@ A driver for Cisco IOS (not IOS XR).
 import re
 from driver import Driver
 
-user_re     = re.compile(r'user ?name: ', re.I)
-password_re = re.compile(r'[\r\n]Password: $')
-prompt_re   = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')
+_user_re     = re.compile(r'user ?name: ', re.I)
+_password_re = re.compile(r'[\r\n]Password: $')
+_prompt_re   = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')
 
 class IOSDriver(Driver):
     def __init__(self):
         Driver.__init__(self, 'ios')
-        self.prompt = prompt_re
+        self.user_re     = _user_re
+        self.password_re = _password_re
+        self.prompt_re   = _prompt_re
 
     def check_head_for_os(self, string):
-        if user_re.search(string):
+        if _user_re.search(string):
             return 60
         return 0

@@ -19,11 +19,7 @@ import os, re
 import pexpect
 from Exscript.util.crypt import otp
 from Exception           import TransportException, LoginFailure
-from Transport           import Transport,    \
-                                _user_re,      \
-                                _pass_re,      \
-                                _skey_re,      \
-                                _login_fail_re
+from Transport           import Transport, _skey_re
 
 _fingerprint = r'\:'.join([r'\w\w'] * 16)
 _verify_re   = re.compile(r'\b' + _fingerprint + r'\b.*\byes.*', re.I|re.S|re.M)
@@ -78,14 +74,14 @@ class SSH(Transport):
 
     def _authenticate_hook(self, user, password, **kwargs):
         self._spawn(user, kwargs.get('key_file'))
-        while 1:
+        while True:
             # Wait for the user prompt.
-            prompt  = [_login_fail_re,
-                       _user_re,
+            prompt  = [self.get_login_error_prompt(),
+                       self.get_username_prompt(),
                        _skey_re,
-                       _pass_re,
+                       self.get_password_prompt(),
                        _verify_re,
-                       self.prompt_re]
+                       self.get_prompt()]
             #print 'Waiting for prompt:', self.conn.buffer, self.conn.before, self.conn.after
             old_buffer = self.conn.buffer
             try:
@@ -135,7 +131,7 @@ class SSH(Transport):
                 self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
-                self.conn.expect(_pass_re, self.timeout)
+                self.conn.expect(self.get_password_prompt(), self.timeout)
                 response      = self.conn.before + self.conn.after
                 self.response = self._remove_esc(response)
                 self._receive_cb(self.response)

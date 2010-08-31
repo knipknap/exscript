@@ -16,3 +16,4 @@ def isdriver(o):
 driver_classes = [obj for name, obj in locals().items() if isdriver(obj)]
 drivers        = [d() for d in driver_classes]
 driver_map     = dict((d.name, d) for d in drivers)
+driver_map['unknown'] = driver_map['generic']

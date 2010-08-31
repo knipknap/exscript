@@ -23,55 +23,7 @@ from Exscript.AbstractMethod       import AbstractMethod
 from Exception                     import TransportException, \
                                           InvalidCommandException
 
-_flags          = re.I
-_printable      = re.escape(string.printable)
-_unprintable    = r'[^' + _printable + r']'
-_unprintable_re = re.compile(_unprintable)
-_ignore         = r'[\x1b\x07\x00]'
-_nl             = r'[\r\n]'
-_prompt_start   = _nl + r'(?:' + _unprintable + r'*|' + _ignore + '*)'
-_prompt_chars   = r'[\-\w\(\)@:~]'
-_filename       = r'(?:[\w\+\-\._]+)'
-_path           = r'(?:(?:' + _filename + r')?(?:/' + _filename + r')*/?)'
-_any_path       = r'(?:' + _path + r'|~' + _path + r'?)'
-_host           = r'(?:[\w+\-\.]+)'
-_user           = r'(?:[\w+\-]+)'
-_user_host      = r'(?:(?:' + _user + r'\@)?' + _host + r')'
-_prompt_re      = re.compile(_prompt_start                 \
-                           + r'[\[\<]?'                    \
-                           + r'\w+'                        \
-                           + _user_host + r'?'             \
-                           + r':?'                         \
-                           + _any_path + r'?'              \
-                           + r'[: ]?'                      \
-                           + _any_path + r'?'              \
-                           + r'(?:\(' + _filename + '\))?' \
-                           + r'[\]\-]?'                    \
-                           + r'[#>%\$\]] ?'                \
-                           + _unprintable + r'*'           \
-                           + r'\Z', _flags)
-
-_user_re    = re.compile(r'(user ?name|user|login): *$', _flags)
-_pass_re    = re.compile(r'password:? *$',               _flags)
 _skey_re    = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
-_errors     = [r'error',
-               r'invalid',
-               r'incomplete',
-               r'unrecognized',
-               r'unknown command',
-               r'connection timed out',
-               r'[^\r\n]+ not found']
-_error_re   = re.compile(r'^%?\s*(?:' + '|'.join(_errors) + r')', _flags)
-_login_fail = [r'bad secrets',
-               r'denied',
-               r'invalid',
-               r'too short',
-               r'incorrect',
-               r'connection timed out',
-               r'failed']
-_login_fail_re = re.compile(_nl          \
-                          + r'[^\r\n]*'  \
-                          + r'(?:' + '|'.join(_login_fail) + r')', _flags)
 
 class Transport(Trackable):
     """
@@ -101,22 +53,28 @@ class Transport(Trackable):
           device is dumped.
         """
         Trackable.__init__(self)
-        self.os_guesser         = OsGuesser(self)
-        self.authorized         = False
-        self.authenticated      = False
-        self.prompt_re          = _prompt_re
-        self.error_re           = _error_re
-        self.host               = kwargs.get('host',     None)
-        self.user               = kwargs.get('user',     '')
-        self.password           = kwargs.get('password', '')
-        self.stdout             = kwargs.get('stdout',   open(os.devnull, 'w'))
-        self.stderr             = kwargs.get('stderr',   sys.stderr)
-        self.debug              = kwargs.get('debug',    0)
-        self.timeout            = kwargs.get('timeout',  30)
-        self.logfile            = kwargs.get('logfile',  None)
-        self.log                = None
-        self.last_tacacs_key_id = None
-        self.response           = None
+        self.os_guesser            = OsGuesser(self)
+        self.driver                = driver_map[self.guess_os()]
+        self.authorized            = False
+        self.authenticated         = False
+        self.manual_user_re        = None
+        self.manual_password_re    = None
+        self.manual_prompt_re      = None
+        self.manual_error_re       = None
+        self.manual_login_error_re = None
+        self.host                  = kwargs.get('host',     None)
+        self.user                  = kwargs.get('user',     '')
+        self.password              = kwargs.get('password', '')
+        self.stdout                = kwargs.get('stdout')
+        self.stderr                = kwargs.get('stderr',   sys.stderr)
+        self.debug                 = kwargs.get('debug',    0)
+        self.timeout               = kwargs.get('timeout',  30)
+        self.logfile               = kwargs.get('logfile',  None)
+        self.log                   = None
+        self.last_tacacs_key_id    = None
+        self.response              = None
+        if not self.stdout:
+            self.stdout = open(os.devnull, 'w')
         if self.logfile is not None:
             self.log = open(kwargs['logfile'], 'a')
 
@@ -153,6 +111,8 @@ class Transport(Trackable):
         if self.log is not None:
             self.log.write(text)
         self.os_guesser.data_received(data)
+        os          = self.guess_os()
+        self.driver = driver_map[os]
         self.signal_emit('data_received', data)
         return data
 
@@ -178,6 +138,54 @@ class Transport(Trackable):
         self.stderr.write(msg + '\n')
 
 
+    def set_username_prompt(self, regex = None):
+        """
+        Defines a pattern that is used to monitor the response of the
+        connected host for a username prompt.
+
+        @type  regex: RegEx
+        @param regex: The pattern that, when matched, causes an error.
+        """
+        self.manual_user_re = regex
+
+
+    def get_username_prompt(self):
+        """
+        Returns the regular expression that is used to monitor the response
+        of the connected host for a username prompt.
+
+        @rtype:  regex
+        @return: A regular expression.
+        """
+        if self.manual_user_re:
+            return self.manual_user_re
+        return self.driver.user_re
+
+
+    def set_password_prompt(self, regex = None):
+        """
+        Defines a pattern that is used to monitor the response of the
+        connected host for a password prompt.
+
+        @type  regex: RegEx
+        @param regex: The pattern that, when matched, causes an error.
+        """
+        self.manual_password_re = regex
+
+
+    def get_password_prompt(self):
+        """
+        Returns the regular expression that is used to monitor the response
+        of the connected host for a username prompt.
+
+        @rtype:  regex
+        @return: A regular expression.
+        """
+        if self.manual_password_re:
+            return self.manual_password_re
+        return self.driver.password_re
+
+
     def set_prompt(self, prompt = None):
         """
         Defines a pattern that is waited for when calling the expect_prompt() 
@@ -189,10 +197,7 @@ class Transport(Trackable):
         @type  prompt: RegEx
         @param prompt: The pattern that matches the prompt of the remote host.
         """
-        if prompt is None:
-            self.prompt_re = _prompt_re
-        else:
-            self.prompt_re = prompt
+        self.manual_prompt_re = prompt
 
 
     def get_prompt(self):
@@ -203,7 +208,9 @@ class Transport(Trackable):
         @rtype:  regex
         @return: A regular expression.
         """
-        return self.prompt_re
+        if self.manual_prompt_re:
+            return self.manual_prompt_re
+        return self.driver.prompt_re
 
 
     def set_error_prompt(self, error = None):
@@ -215,10 +222,7 @@ class Transport(Trackable):
         @type  error: RegEx
         @param error: The pattern that, when matched, causes an error.
         """
-        if error is None:
-            self.error_re = _error_re
-        else:
-            self.error_re = error
+        self.manual_error_re = error
 
 
     def get_error_prompt(self):
@@ -229,7 +233,35 @@ class Transport(Trackable):
         @rtype:  regex
         @return: A regular expression.
         """
-        return self.error_re
+        if self.manual_error_re:
+            return self.manual_error_re
+        return self.driver.error_re
+
+
+    def set_login_error_prompt(self, error = None):
+        """
+        Defines a pattern that is used to monitor the response of the
+        connected host during the authentication procedure.
+        If the pattern matches an error is raised.
+
+        @type  error: RegEx
+        @param error: The pattern that, when matched, causes an error.
+        """
+        self.manual_login_error_re = error
+
+
+    def get_login_error_prompt(self):
+        """
+        Returns the regular expression that is used to monitor the response
+        of the connected host for login errors; this is only used during
+        the login procedure, i.e. authenticate() or authorize().
+
+        @rtype:  regex
+        @return: A regular expression.
+        """
+        if self.manual_login_error_re:
+            return self.manual_login_error_re
+        return self.driver.login_error_re
 
 
     def set_timeout(self, timeout):
@@ -400,16 +432,16 @@ class Transport(Trackable):
         This method also stores the received data in the response 
         attribute (self.response).
         """
-        self.expect(self.prompt_re)
+        self.expect(self.get_prompt())
 
         # We skip the first line because it contains the echo of the command
         # sent.
         self._dbg(5, "Checking %s for errors" % repr(self.response))
         for line in self.response.split('\n')[1:]:
-            match = self.error_re.match(line)
+            match = self.get_error_prompt().match(line)
             if match is None:
                 continue
-            error = repr(self.error_re.pattern)
+            error = repr(self.get_error_prompt().pattern)
             self._dbg(5, "error prompt (%s) matches %s" % (error, repr(line)))
             raise InvalidCommandException('Device said:\n' + self.response)
 

@@ -19,11 +19,7 @@ import os, re
 from Exscript.util.crypt import otp
 from Exscript.emulators  import VirtualDevice
 from Exception           import TransportException, LoginFailure
-from Transport           import Transport,    \
-                                _user_re,      \
-                                _pass_re,      \
-                                _skey_re,      \
-                                _login_fail_re
+from Transport           import Transport, _skey_re
 
 class Dummy(Transport):
     """
@@ -77,11 +73,11 @@ class Dummy(Transport):
     def _authenticate_hook(self, user, password, **kwargs):
         while True:
             # Wait for the user prompt.
-            prompt  = [_login_fail_re,
-                       _user_re,
+            prompt  = [self.get_login_error_prompt(),
+                       self.get_username_prompt(),
                        _skey_re,
-                       _pass_re,
-                       self.prompt_re]
+                       self.get_password_prompt(),
+                       self.get_prompt()]
             which    = None
             matches  = None
             response = None
@@ -119,7 +115,7 @@ class Dummy(Transport):
                 self.last_tacacs_key_id = seq
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
-                self._expect_any([_pass_re])
+                self._expect_any([self.get_password_prompt()])
                 self.send(phrase + '\r\n')
                 self._dbg(1, "Password sent.")
                 if not kwargs.get('wait'):

@@ -18,19 +18,21 @@ A driver for devices running JunOS (by Juniper).
 import re
 from driver import Driver
 
-user_re     = re.compile(r'[\r\n]login: $')
-password_re = re.compile(r'[\r\n]Password: $')
-prompt_re   = re.compile(r'(?:[\r\n]\[edit\])?[\r\n]\w+@[\-\w+\.]+> $')
-_junos_re   = re.compile(r'\bjunos\b', re.I)
+_user_re     = re.compile(r'[\r\n]login: $')
+_password_re = re.compile(r'[\r\n]Password: $')
+_prompt_re   = re.compile(r'(?:[\r\n]\[edit\])?[\r\n]\w+@[\-\w+\.]+> $')
+_junos_re    = re.compile(r'\bjunos\b', re.I)
 
 class JunOSDriver(Driver):
     def __init__(self):
         Driver.__init__(self, 'junos')
-        self.prompt = prompt_re
+        self.user_re     = _user_re
+        self.password_re = _password_re
+        self.prompt_re   = _prompt_re
 
     def check_head_for_os(self, string):
         if _junos_re.search(string):
             return 80
-        if user_re.search(string):
+        if _user_re.search(string):
             return 35
         return 0
