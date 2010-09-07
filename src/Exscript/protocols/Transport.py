@@ -136,7 +136,7 @@ class Transport(Trackable):
     def _dbg(self, level, msg):
         if self.debug < level:
             return
-        self.stderr.write(msg + '\n')
+        self.stderr.write(self.get_driver().name + ': ' + msg + '\n')
 
 
     def set_driver(self, driver = None):
