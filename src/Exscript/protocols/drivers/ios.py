@@ -20,7 +20,7 @@ from driver import Driver
 
 _user_re     = re.compile(r'user ?name: ', re.I)
 _password_re = re.compile(r'[\r\n]Password: $')
-_prompt_re   = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')
+_prompt_re   = re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')
 
 class IOSDriver(Driver):
     def __init__(self):
