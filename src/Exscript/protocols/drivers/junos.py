@@ -20,7 +20,7 @@ from driver import Driver
 
 _user_re     = re.compile(r'[\r\n]login: $')
 _password_re = re.compile(r'[\r\n]Password: $')
-_prompt_re   = re.compile(r'(?:[\r\n]\[edit\])?[\r\n]\w+@[\-\w+\.]+[>#] $')
+_prompt_re   = re.compile(r'(?:[\r\n]\[edit\])?[\r\n][\w\-]+@[\-\w+\.]+[>#] $')
 _junos_re    = re.compile(r'\bjunos\b', re.I)
 
 class JunOSDriver(Driver):
