@@ -1,14 +1,15 @@
 import inspect
-from driver    import Driver
-from aix       import AIXDriver
-from enterasys import EnterasysDriver
-from generic   import GenericDriver
-from ios       import IOSDriver
-from ios_xr    import IOSXRDriver
-from junos     import JunOSDriver
-from one_os    import OneOSDriver
-from shell     import ShellDriver
-from vrp       import VRPDriver
+from driver         import Driver
+from aix            import AIXDriver
+from arbor_peakflow import ArborPeakflowDriver
+from enterasys      import EnterasysDriver
+from generic        import GenericDriver
+from ios            import IOSDriver
+from ios_xr         import IOSXRDriver
+from junos          import JunOSDriver
+from one_os         import OneOSDriver
+from shell          import ShellDriver
+from vrp            import VRPDriver
 
 def isdriver(o):
     return inspect.isclass(o) and issubclass(o, Driver) and not o is Driver
