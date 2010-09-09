@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, logging
+from collections             import defaultdict
 from threading               import Lock
 from Exscript.util.decorator import bind
 
@@ -27,7 +28,7 @@ class Service(object):
         self.name      = name
         self.queue     = queue
         self.task_lock = Lock()
-        self.tasks     = {}   # Maps order ids to lists of tasks.
+        self.tasks     = defaultdict(list)  # Maps order ids to lists of tasks.
 
     def log(self, order, message):
         self.daemon.log(order, message)
@@ -57,10 +58,7 @@ class Service(object):
     def _track_task(self, order, task):
         with self.task_lock:
             task.signal_connect('done', self._task_done, order, task)
-            if self.tasks.has_key(order.id):
-                self.tasks[order.id].append(task)
-            else:
-                self.tasks[order.id] = [task]
+            self.tasks[order.id].append(task)
 
     def _task_done(self, order, task):
         with self.task_lock:
