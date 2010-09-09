@@ -28,7 +28,8 @@ class Service(object):
         self.name      = name
         self.queue     = queue
         self.task_lock = Lock()
-        self.tasks     = defaultdict(list)  # Maps order ids to lists of tasks.
+        self.tasks     = defaultdict(list) # Map order ids to lists of tasks.
+        self.loggers   = defaultdict(list) # Map order ids to loggers.
 
     def log(self, order, message):
         self.daemon.log(order, message)
@@ -47,7 +48,13 @@ class Service(object):
         logger.setLevel(logging.INFO)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+        self.loggers[order.id].append(logger)
         return logger
+
+    def _free_loggers(self, order):
+        for logger in self.loggers[order.id]:
+            del logger.manager.loggerDict[logger.name]
+            logger.manager = None
 
     def _update_host_logname(self, order, host):
         host.set_logname(self.get_logname(order, host.get_logname()))
@@ -97,6 +104,7 @@ class Service(object):
         return True
 
     def done(self, order):
+        self._free_loggers(order)
         self.daemon.set_order_status_done(order)
 
     def set_order_status(self, order, status):
