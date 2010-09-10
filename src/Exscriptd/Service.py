@@ -55,6 +55,7 @@ class Service(object):
         for logger in self.loggers[order.id]:
             del logger.manager.loggerDict[logger.name]
             logger.manager = None
+        del self.loggers[order.id]
 
     def _update_host_logname(self, order, host):
         host.set_logname(self.get_logname(order, host.get_logname()))
