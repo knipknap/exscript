@@ -44,7 +44,6 @@ This is the Exscript daemon configuration file.
   -->
   <queue name="default-queue">
     <max-threads>5</max-threads>
-    <logdir>/var/log/exscriptd</logdir>
     <delete-logs/>
     <account-pool>default</account-pool>
   </queue>
@@ -58,6 +57,7 @@ This is the Exscript daemon configuration file.
     <address></address>
     <port>8123</port>
 
+    <logdir>/var/log/exscriptd</logdir>
     <account-pool>rest-accounts</account-pool>
     <database>default</database>
     <!--
