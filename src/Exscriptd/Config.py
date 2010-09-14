@@ -20,36 +20,13 @@ from lxml          import etree
 from Exscript      import Account, Queue
 from RestDaemon    import RestDaemon
 from PythonService import PythonService
-from util          import resolve_variables
+from ConfigReader  import ConfigReader
 
-class Config(object):
+class Config(ConfigReader):
     def __init__(self, cfg_dir):
-        self.cfg_dir   = cfg_dir
-        filename       = os.path.join(cfg_dir, 'main.xml')
-        self.cfgtree   = etree.parse(filename)
-        self.variables = {}
-        self.queues    = {}
-        self._clean_tree()
-
-    def _resolve(self, text):
-        if text is None:
-            return None
-        return resolve_variables(self.variables, text.strip())
-
-    def _clean_tree(self):
-        # Read all variables.
-        variables = self.cfgtree.find('variables') or []
-        for element in variables:
-            varname = element.tag.strip()
-            value   = resolve_variables(self.variables, element.text)
-            self.variables[varname] = value
-
-        # Resolve variables everywhere.
-        for element in self.cfgtree.iter():
-            element.text = self._resolve(element.text)
-            for attr in element.attrib:
-                value                = element.attrib[attr]
-                element.attrib[attr] = self._resolve(value)
+        ConfigReader.__init__(self, os.path.join(cfg_dir, 'main.xml'))
+        self.queues  = {}
+        self.cfg_dir = cfg_dir
 
     def init_account_pool_from_name(self, name):
         accounts = []
