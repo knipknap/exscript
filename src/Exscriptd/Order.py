@@ -96,7 +96,10 @@ class Order(DBObject):
         return order
 
     def _read_list_from_xml(self, list_elem):
-        return [i.text.strip() for i in list_elem.iterfind('list-item')]
+        items = list_elem.iterfind('list-item')
+        if items is None:
+            return []
+        return [i.text.strip() for i in list_items]
 
     def _read_arguments_from_xml(self, host_elem):
         arg_elem = host_elem.find('argument-list')
