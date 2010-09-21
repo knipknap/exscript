@@ -40,3 +40,4 @@ class JunOSDriver(Driver):
     def init_terminal(self, conn):
         conn.execute('set cli screen-length 0')
         conn.execute('set cli screen-width 0')
+        conn.execute('set cli terminal ansi')
