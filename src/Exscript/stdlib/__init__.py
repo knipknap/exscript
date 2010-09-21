@@ -24,6 +24,7 @@ functions = {
     'connection.authenticate':   connection.authenticate,
     'connection.authorize':      connection.authorize,
     'connection.auto_authorize': connection.auto_authorize,
+    'connection.autoinit':       connection.autoinit,
     'connection.close':          connection.close,
     'connection.exec':           connection.exec_,
     'connection.execline':       connection.execline,

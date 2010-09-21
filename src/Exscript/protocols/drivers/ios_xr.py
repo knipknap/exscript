@@ -33,3 +33,8 @@ class IOSXRDriver(Driver):
         if _prompt_re.search(string):
             return 95
         return 0
+
+    def init_terminal(self, conn):
+        conn.execute('terminal exec prompt no-timestamp')
+        conn.execute('terminal len 0')
+        conn.execute('terminal width 0')

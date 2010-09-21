@@ -33,3 +33,7 @@ class OneOSDriver(Driver):
         if _user_re.search(string):
             return 20
         return 0
+
+    def init_terminal(self, conn):
+        conn.execute('term len 0')
+        conn.execute('term width 0')

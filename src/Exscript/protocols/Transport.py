@@ -175,6 +175,20 @@ class Transport(Trackable):
         return self.auto_driver
 
 
+    def autoinit(self):
+        """
+        Make the remote host more script-friendly by automatically executing
+        one or more commands on it.
+        The commands executed depend on the currently used driver.
+        For example, the driver for Cisco IOS would execute the
+        following commands::
+
+            term len 0
+            term width 0
+        """
+        self.get_driver().init_terminal(self)
+
+
     def set_username_prompt(self, regex = None):
         """
         Defines a pattern that is used to monitor the response of the

@@ -108,6 +108,9 @@ class TransportTest(unittest.TestCase):
     def testGetDriver(self):
         pass # Already tested in testSetDriver()
 
+    def testAutoinit(self):
+        self.transport.autoinit()
+
     def testSetUsernamePrompt(self):
         initial_regex = self.transport.get_username_prompt()
         self.assert_(hasattr(initial_regex, 'groups'))

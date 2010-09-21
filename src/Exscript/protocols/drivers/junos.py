@@ -36,3 +36,7 @@ class JunOSDriver(Driver):
         if _user_re.search(string):
             return 35
         return 0
+
+    def init_terminal(self, conn):
+        conn.execute('set cli screen-length 0')
+        conn.execute('set cli screen-width 0')

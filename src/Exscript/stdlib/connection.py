@@ -63,6 +63,20 @@ def auto_authorize(scope, password = [None]):
     scope.get('__connection__').auto_authorize(password = password[0])
     return True
 
+def autoinit(scope):
+    """
+    Make the remote host more script-friendly by automatically executing
+    one or more commands on it.
+    The commands executed depend on the currently used driver.
+    For example, the driver for Cisco IOS would execute the
+    following commands::
+
+        term len 0
+        term width 0
+    """
+    scope.get('__connection__').autoinit()
+    return True
+
 def close(scope):
     """
     Closes the existing connection with the remote host. This function is
