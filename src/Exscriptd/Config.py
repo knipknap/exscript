@@ -13,21 +13,23 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, base64, re
-from sqlalchemy    import create_engine
-from Order         import Order
-from OrderDB       import OrderDB
-from lxml          import etree
-from Exscript      import Account, Queue
-from RestDaemon    import RestDaemon
-from PythonService import PythonService
-from ConfigReader  import ConfigReader
+from sqlalchemy              import create_engine
+from Order                   import Order
+from OrderDB                 import OrderDB
+from lxml                    import etree
+from Exscript                import Account, Queue
+from RestDaemon              import RestDaemon
+from PythonService           import PythonService
+from ConfigReader            import ConfigReader
+from Exscript.AccountManager import AccountManager
 
 class Config(ConfigReader):
     def __init__(self, cfg_dir):
         ConfigReader.__init__(self, os.path.join(cfg_dir, 'main.xml'))
-        self.daemons = {}
-        self.queues  = {}
-        self.cfg_dir = cfg_dir
+        self.daemons          = {}
+        self.account_managers = {}
+        self.queues           = {}
+        self.cfg_dir          = cfg_dir
 
     def init_account_pool_from_name(self, name):
         accounts = []
@@ -37,6 +39,14 @@ class Config(ConfigReader):
             password = child.find('password').text
             accounts.append(Account(user, base64.decodestring(password)))
         return accounts
+
+    def init_account_manager_from_name(self, name):
+        if self.account_managers.has_key(name):
+            return self.account_managers[name]
+        accounts = self.init_account_pool_from_name(name)
+        manager  = AccountManager(accounts)
+        self.account_managers[name] = manager
+        return manager
 
     def init_queue_from_name(self, name, logdir):
         if self.queues.has_key(name):
@@ -54,8 +64,8 @@ class Config(ConfigReader):
         # Add some accounts, if any.
         account_pool = element.find('account-pool')
         if account_pool is not None:
-            accounts = self.init_account_pool_from_name(account_pool.text)
-            queue.add_account(accounts)
+            manager = self.init_account_manager_from_name(account_pool.text)
+            queue.account_manager = manager
 
         self.queues[name] = queue
         return queue
