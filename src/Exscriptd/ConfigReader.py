@@ -19,7 +19,7 @@ from util import resolve_variables
 class ConfigReader(object):
     def __init__(self, filename):
         self.cfgtree   = etree.parse(filename)
-        self.variables = {}
+        self.variables = os.environ.copy()
         self._clean_tree()
 
     def _resolve(self, text):
