@@ -154,6 +154,17 @@ class WorkQueue(Trackable):
         """
         self.main_loop.priority_enqueue(action, force_start)
 
+    def priority_enqueue_or_raise(self, action, force_start = False):
+        """
+        Like priority_enqueue(), but if an action with the same name is
+        already in the queue, the existing action is moved to the top of
+        the queue and the given action is ignored.
+
+        @type  action: Action
+        @param action: The action that is executed.
+        """
+        self.main_loop.priority_enqueue_or_raise(action, force_start)
+
     def unpause(self):
         """
         Restart the execution of enqueued actions after pausing them.

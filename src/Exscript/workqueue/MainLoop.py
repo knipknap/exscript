@@ -87,6 +87,40 @@ class MainLoop(Trackable, threading.Thread):
         self.condition.notifyAll()
         self.condition.release()
 
+    def priority_enqueue_or_raise(self, action, force_start = False):
+        self.condition.acquire()
+
+        # If the action is already running (or about to be forced),
+        # there is nothing to be done.
+        running_actions = self.get_running_actions()
+        for queue_action in chain(self.force_start, running_actions):
+            if queue_action.name == action.name:
+                self.condition.notifyAll()
+                self.condition.release()
+                return
+
+        # If the action is already in the queue, remove it so it can be
+        # re-added later.
+        existing = None
+        for queue_action in self.queue:
+            if queue_action.name == action.name:
+                existing = queue_action
+                break
+        if existing:
+            self.queue.remove(existing)
+            action = existing
+        else:
+            action._mainloop_added_notify(self)
+
+        # Now add the action to the queue.
+        if force_start:
+            self.force_start.append(action)
+        else:
+            self.queue.insert(0, action)
+
+        self.condition.notifyAll()
+        self.condition.release()
+
     def pause(self):
         self.condition.acquire()
         self.paused = True

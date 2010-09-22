@@ -78,6 +78,19 @@ class WorkQueueTest(unittest.TestCase):
         self.wq.priority_enqueue(Action())
         self.assertEqual(2, self.wq.get_length())
 
+    def testPriorityEnqueueOrRaise(self):
+        action1 = Action(name = 'foo')
+        action2 = Action(name = 'bar')
+        action3 = Action(name = 'foo')
+        self.assertEqual(0, self.wq.get_length())
+
+        self.wq.priority_enqueue_or_raise(action1)
+        self.assertEqual(1, self.wq.get_length())
+        self.wq.priority_enqueue_or_raise(action2)
+        self.assertEqual(2, self.wq.get_length())
+        self.wq.priority_enqueue_or_raise(action3)
+        self.assertEqual(2, self.wq.get_length())
+
     def testPause(self):
         pass # See testEnqueue()
 
