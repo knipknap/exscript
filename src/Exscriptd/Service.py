@@ -75,8 +75,11 @@ class Service(object):
                 del self.tasks[order.id]
                 self.done(order)
 
-    def enqueue_hosts(self, order, hosts, callback):
-        hosts = order.get_hosts()
+    def enqueue_hosts(self,
+                      order,
+                      hosts,
+                      callback,
+                      handle_duplicates = False):
         for host in hosts:
             self._update_host_logname(order, host)
 
@@ -85,7 +88,27 @@ class Service(object):
         # We also need to pause to avoid getting a 'done' signal before
         # the signal is connected.
         self.queue.workqueue.pause()
-        task = self.queue.run(hosts, callback)
+        if handle_duplicates:
+            task = self.queue.run_or_ignore(hosts, callback)
+        else:
+            task = self.queue.run(hosts, callback)
+        self._track_task(order, task)
+        self.queue.workqueue.unpause()
+        return task
+
+    def priority_enqueue_hosts(self,
+                               order,
+                               hosts,
+                               callback,
+                               handle_duplicates = False):
+        for host in hosts:
+            self._update_host_logname(order, host)
+
+        self.queue.workqueue.pause()
+        if handle_duplicates:
+            task = self.queue.priority_run_or_raise(hosts, callback)
+        else:
+            task = self.queue.priority_run(hosts, callback)
         self._track_task(order, task)
         self.queue.workqueue.unpause()
         return task
