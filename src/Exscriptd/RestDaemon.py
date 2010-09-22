@@ -97,6 +97,7 @@ class RestDaemon(Daemon):
         address = self.address + ':' + str(self.port)
         self.logger.info('REST daemon "' + self.name + '" running on ' + address)
         try:
+            print 'Daemon', repr(self.name), 'listening on', repr(address) + '.'
             self.server.serve_forever()
         except KeyboardInterrupt:
             print '^C received, shutting down server'
