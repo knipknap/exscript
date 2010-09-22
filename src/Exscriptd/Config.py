@@ -25,6 +25,7 @@ from ConfigReader  import ConfigReader
 class Config(ConfigReader):
     def __init__(self, cfg_dir):
         ConfigReader.__init__(self, os.path.join(cfg_dir, 'main.xml'))
+        self.daemons = {}
         self.queues  = {}
         self.cfg_dir = cfg_dir
 
@@ -69,44 +70,34 @@ class Config(ConfigReader):
         db.install()
         return db
 
-    def init_service_from_name(self,
-                               daemon,
-                               name,
-                               dirname,
-                               queue = None):
-        print 'Loading service "%s"...' % name,
-        cfgfile    = os.path.join(dirname, 'service.xml')
-        servicedir = os.path.join(self.cfg_dir, 'services', name)
-        cfgtree    = etree.parse(cfgfile)
-        element    = cfgtree.find('service')
-        type       = element.get('type')
+    def load_service(self, filename):
+        service_dir = os.path.dirname(filename)
+        cfgtree     = ConfigReader(filename).cfgtree
+        for element in cfgtree.iterfind('service'):
+            name = element.get('name')
+            print 'Loading service "%s"...' % name,
 
-        if type == 'python':
-            basename = element.get('filename')
-            filename = os.path.join(dirname, basename)
-            service  = PythonService(daemon,
-                                     name,
-                                     filename,
-                                     servicedir,
-                                     queue = queue)
-        else:
-            raise Exception('Invalid service type: %s' % type)
-        print 'done.'
-        return service
-
-    def load_services(self, element, daemon):
-        for service in element.iterfind('load-service'):
-            name       = service.get('name')
-            path       = service.get('path')
-            queue_elem = service.find('queue')
-            queue_name = queue_elem is not None and queue_elem.text
-            logdir     = daemon.get_logdir()
-            queue      = self.init_queue_from_name(queue_name, logdir)
-            service    = self.init_service_from_name(daemon,
-                                                     name,
-                                                     path,
-                                                     queue = queue)
+            path        = element.find('path').text
+            daemon_name = element.find('daemon').text
+            daemon      = self.init_daemon_from_name(daemon_name)
+            queue_elem  = element.find('queue')
+            queue_name  = queue_elem is not None and queue_elem.text
+            logdir      = daemon.get_logdir()
+            queue       = self.init_queue_from_name(queue_name, logdir)
+            filename    = os.path.join(path, 'service.py')
+            service     = PythonService(daemon,
+                                        name,
+                                        filename,
+                                        service_dir,
+                                        queue = queue)
             daemon.add_service(name, service)
+            print 'done.'
+
+    def load_services(self):
+        service_dir = os.path.join(self.cfg_dir, 'services')
+        for file in os.listdir(service_dir):
+            config_file = os.path.join(service_dir, file, 'config.xml')
+            service     = self.load_service(config_file)
 
     def init_rest_daemon(self, element):
         # Init the database for the daemon first, then
@@ -130,22 +121,23 @@ class Config(ConfigReader):
         for account in self.init_account_pool_from_name(account_pool.text):
             daemon.add_account(account)
 
-        self.load_services(element, daemon)
         return daemon
 
     def init_daemon_from_name(self, name):
+        if self.daemons.has_key(name):
+            return self.daemons[name]
+
         # Create the daemon.
         element = self.cfgtree.find('daemon[@name="%s"]' % name)
         type    = element.get('type')
         if type == 'rest':
-            return self.init_rest_daemon(element)
+            daemon = self.init_rest_daemon(element)
         else:
             raise Exception('No such daemon type: %s' % type)
 
+        self.daemons[name] = daemon
+        return daemon
+
     def init_daemons(self):
-        daemons = []
-        for element in self.cfgtree.iterfind('daemon'):
-            name   = element.get('name')
-            daemon = self.init_daemon_from_name(name)
-            daemons.append(daemon)
-        return daemons
+        self.load_services()
+        return self.daemons.values()
