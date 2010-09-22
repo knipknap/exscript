@@ -59,6 +59,17 @@ class WorkQueueTest(unittest.TestCase):
         self.wq.shutdown()
         self.assertEqual(0, self.wq.get_length())
 
+    def testEnqueueOrIgnore(self):
+        self.assertEqual(0, self.wq.get_length())
+        self.wq.enqueue_or_ignore(Action())
+        self.assertEqual(1, self.wq.get_length())
+        self.wq.enqueue_or_ignore(Action())
+        self.assertEqual(1, self.wq.get_length())
+        self.wq.shutdown()
+        self.assertEqual(0, self.wq.get_length())
+
+        # Stress testing from testEnqueue() not repeated here.
+
     def testPriorityEnqueue(self):
         # Well, this test sucks.
         self.assertEqual(0, self.wq.get_length())

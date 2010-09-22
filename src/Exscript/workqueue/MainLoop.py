@@ -13,6 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading, time, gc
+from itertools                     import chain
+from collections                   import defaultdict
 from Exscript.external.SpiffSignal import Trackable
 from Job                           import Job
 
@@ -64,6 +66,14 @@ class MainLoop(Trackable, threading.Thread):
         action._mainloop_added_notify(self)
         self.condition.acquire()
         self.queue.append(action)
+        self.condition.notifyAll()
+        self.condition.release()
+
+    def enqueue_or_ignore(self, action):
+        action._mainloop_added_notify(self)
+        self.condition.acquire()
+        if not self.get_first_action_from_name(action.name):
+            self.queue.append(action)
         self.condition.notifyAll()
         self.condition.release()
 
@@ -134,6 +144,19 @@ class MainLoop(Trackable, threading.Thread):
         return len(self.queue) \
              + len(self.force_start) \
              + len(self.running_jobs)
+
+    def get_actions_from_name(self, name):
+        actions = self.queue + self.force_start + self.running_jobs
+        map     = defaultdict(list)
+        for action in self.workqueue.get_running_actions():
+            map[action.get_name()].append(action)
+        return map[name]
+
+    def get_first_action_from_name(self, action_name):
+        for action in chain(self.queue, self.force_start, self.running_jobs):
+            if action.name == action_name:
+                return action
+        return None
 
     def _start_action(self, action):
         job = Job(self.condition, action, debug = self.debug)

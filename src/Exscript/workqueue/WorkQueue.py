@@ -131,6 +131,16 @@ class WorkQueue(Trackable):
         """
         self.main_loop.enqueue(action)
 
+    def enqueue_or_ignore(self, action):
+        """
+        Like enqueue(), but does nothing if an action with the same name
+        is already in the queue.
+
+        @type  action: Action
+        @param action: The action that is executed.
+        """
+        self.main_loop.enqueue_or_ignore(action)
+
     def priority_enqueue(self, action, force_start = False):
         """
         Add the given action at the top of the queue.
