@@ -99,7 +99,7 @@ class Order(DBObject):
         items = list_elem.iterfind('list-item')
         if items is None:
             return []
-        return [i.text.strip() for i in list_items]
+        return [i.text.strip() for i in items]
 
     def _read_arguments_from_xml(self, host_elem):
         arg_elem = host_elem.find('argument-list')
