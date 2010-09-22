@@ -215,6 +215,19 @@ class QueueTest(unittest.TestCase):
         self.queue.shutdown()
         self.assertEqual(data['n_calls'], 4)
 
+    def testRunOrIgnore(self):
+        data  = {'n_calls': 0}
+        hosts = ['dummy1', 'dummy2', 'dummy1']
+        func  = bind(count_calls2, data, testarg = 1)
+        self.queue.run_or_ignore(hosts,    func)
+        self.queue.run_or_ignore('dummy2', func)
+        self.queue.shutdown()
+        self.assertEqual(data['n_calls'], 2)
+
+        self.queue.run_or_ignore('dummy4', func)
+        self.queue.shutdown()
+        self.assertEqual(data['n_calls'], 3)
+
     def testPriorityRun(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
@@ -232,6 +245,19 @@ class QueueTest(unittest.TestCase):
         self.queue.run('dummy4', func)
         self.queue.shutdown()
         self.assertEqual(6, data['n_calls'])
+
+    def testPriorityRunOrRaise(self):
+        data  = {'n_calls': 0}
+        hosts = ['dummy1', 'dummy2', 'dummy1']
+        func  = bind(count_calls2, data, testarg = 1)
+        self.queue.priority_run_or_raise(hosts,    func)
+        self.queue.priority_run_or_raise('dummy2', func)
+        self.queue.shutdown()
+        self.assertEqual(data['n_calls'], 2)
+
+        self.queue.priority_run_or_raise('dummy4', func)
+        self.queue.shutdown()
+        self.assertEqual(data['n_calls'], 3)
 
     def testForceRun(self):
         data  = {'n_calls': 0}

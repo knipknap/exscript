@@ -394,7 +394,7 @@ class Queue(Trackable):
         self.status_bar_length = 0
 
 
-    def _enqueue1(self, action, prioritize, force):
+    def _enqueue1(self, action, prioritize, force, duplicate_check):
         self._dbg(2, 'Enqueing Action.')
         action.set_times(self.times)
         action.set_login_times(self.login_times)
@@ -404,29 +404,35 @@ class Queue(Trackable):
         self.signal_emit('action_enqueued', action)
 
         # Done. Enqueue this.
-        if prioritize:
-            self.workqueue.priority_enqueue(action, force)
+        if duplicate_check:
+            if prioritize:
+                self.workqueue.priority_enqueue_or_raise(action, force)
+            else:
+                self.workqueue.enqueue_or_ignore(action)
         else:
-            self.workqueue.enqueue(action)
+            if prioritize:
+                self.workqueue.priority_enqueue(action, force)
+            else:
+                self.workqueue.enqueue(action)
 
 
-    def _run1(self, host, function, prioritize, force):
+    def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
         if not host.get_domain():
             host.set_domain(self.domain)
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
         action = HostAction(self, function, host, **self.protocol_args)
-        self._enqueue1(action, prioritize, force)
+        self._enqueue1(action, prioritize, force, duplicate_check)
         return action
 
 
-    def _run(self, hosts, function):
+    def _run(self, hosts, function, duplicate_check):
         hosts       = to_hosts(hosts)
         self.total += len(hosts)
 
         task = Task(self)
         for host in hosts:
-            action = self._run1(host, function, False, False)
+            action = self._run1(host, function, False, False, duplicate_check)
             task.add_action(action)
 
         self._dbg(2, 'All actions enqueued.')
@@ -450,7 +456,22 @@ class Queue(Trackable):
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._run(hosts, function)
+        return self._run(hosts, function, False)
+
+
+    def run_or_ignore(self, hosts, function):
+        """
+        Like run(), but only appends hosts that are not already in the
+        queue.
+
+        @type  hosts: string|list(string)|Host|list(Host)
+        @param hosts: A hostname or Host object, or a list of them.
+        @type  function: function
+        @param function: The function to execute.
+        @rtype:  object
+        @return: An object representing the task.
+        """
+        return self._run(hosts, function, True)
 
 
     def priority_run(self, hosts, function):
@@ -469,7 +490,32 @@ class Queue(Trackable):
 
         task = Task(self)
         for host in hosts:
-            action = self._run1(host, function, True, False)
+            action = self._run1(host, function, True, False, False)
+            task.add_action(action)
+
+        self._dbg(2, 'All prioritized actions enqueued.')
+        return task
+
+
+    def priority_run_or_raise(self, hosts, function):
+        """
+        Like priority_run(), but if a host is already in the queue, the
+        existing host is moved to the top of the queue instead of enqueuing
+        the new one.
+
+        @type  hosts: string|list(string)|Host|list(Host)
+        @param hosts: A hostname or Host object, or a list of them.
+        @type  function: function
+        @param function: The function to execute.
+        @rtype:  object
+        @return: An object representing the task.
+        """
+        hosts       = to_hosts(hosts)
+        self.total += len(hosts)
+
+        task = Task(self)
+        for host in hosts:
+            action = self._run1(host, function, True, False, True)
             task.add_action(action)
 
         self._dbg(2, 'All prioritized actions enqueued.')
@@ -493,7 +539,7 @@ class Queue(Trackable):
 
         task = Task(self)
         for host in hosts:
-            action = self._run1(host, function, True, True)
+            action = self._run1(host, function, True, True, False)
             task.add_action(action)
 
         self._dbg(2, 'All forced actions enqueued.')
@@ -519,7 +565,7 @@ class Queue(Trackable):
         task   = Task(self)
         action = CustomAction(self, function, name)
         task.add_action(action)
-        self._enqueue1(action, False, False)
+        self._enqueue1(action, False, False, False)
 
         self._dbg(2, 'Function enqueued.')
         return task
