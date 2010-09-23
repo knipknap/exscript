@@ -119,6 +119,7 @@ if options.wait:
     while True:
         status = client.get_order_status_from_id(order.id)
         say('Status:', status)
-        if status == 'completed':
+        if status in ('completed', 'rejected'):
+            print 'Order', status + '.'
             break
         time.sleep(1)
