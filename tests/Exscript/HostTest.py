@@ -21,6 +21,7 @@ class HostTest(unittest.TestCase):
         for url, result in urls:
             host = Host(url)
             uri  = parse_url(url)
+            self.assertEqual(host.get_name(),    uri.hostname)
             self.assertEqual(host.get_address(), uri.hostname)
 
     def testSetUri(self):
@@ -35,8 +36,9 @@ class HostTest(unittest.TestCase):
         self.host.set_domain('com')
         self.host.set_address('test.org')
         self.assertEqual(self.host.get_protocol(), 'dummy')
-        self.assertEqual(self.host.get_name(),     'test')
-        self.assertEqual(self.host.get_domain(),   'org')
+        self.assertEqual(self.host.get_name(),     'localhost')
+        self.assertEqual(self.host.get_domain(),   'com')
+        self.assertEqual(self.host.get_fullname(), 'localhost.com')
         self.assertEqual(self.host.get_address(),  'test.org')
 
     def testGetAddress(self):
@@ -45,17 +47,30 @@ class HostTest(unittest.TestCase):
 
     def testSetName(self):
         self.assertEqual(self.host.get_name(), 'localhost')
+        self.host.set_protocol('dummy')
+        self.host.set_domain('com')
+        self.host.set_name('test.org')
+        self.assertEqual(self.host.get_protocol(), 'dummy')
+        self.assertEqual(self.host.get_name(),     'test')
+        self.assertEqual(self.host.get_domain(),   'org')
+        self.assertEqual(self.host.get_fullname(), 'test.org')
+        self.assertEqual(self.host.get_address(),  'localhost')
         self.host.set_name('testhost')
         self.assertEqual(self.host.get_name(), 'testhost')
 
     def testGetName(self):
-        pass # Tested in testSetAddress().
+        pass # Tested in testSetName().
+
+    def testGetFullname(self):
+        pass # Tested in testSetName().
 
     def testSetDomain(self):
         self.assertEqual(self.host.get_domain(), '')
         self.host.set_domain('com')
         self.assertEqual(self.host.get_domain(), 'com')
         self.host.set_address('test.org')
+        self.assertEqual(self.host.get_domain(), 'com')
+        self.host.set_name('test.org')
         self.assertEqual(self.host.get_domain(), 'org')
 
     def testGetDomain(self):

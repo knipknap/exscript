@@ -43,6 +43,7 @@ class Host(object):
         self.username = None
         self.password = None
         self.logname  = None
+        self.domain   = ''
         self.set_uri(uri) 
 
 
@@ -71,10 +72,11 @@ class Host(object):
         except ValueError, e:
             raise ValueError('Hostname parse error: ' + repr(uri))
         hostname = uri.hostname or ''
-        address  = uri.path and hostname + uri.path or hostname
+        name     = uri.path and hostname + uri.path or hostname
         self.set_protocol(uri.protocol)
         self.set_tcp_port(uri.port)
-        self.set_address(address)
+        self.set_name(name)
+        self.set_address(name)
         self.set_username(uri.username)
         self.set_password(uri.password)
 
@@ -82,51 +84,41 @@ class Host(object):
             self.append(key, val)
 
 
-    def set_address(self, address):
+    def set_name(self, name):
         """
-        Set the hostname/domain or IP address of the remote host without
+        Set the hostname/domain of the remote host without
         changing username, password, protocol, and TCP port number.
 
-        @type  address: string
-        @param address: A hostname or IP address.
+        @type  name: string
+        @param name: A hostname or IP name.
         """
-        if '.' in address and not _is_ip(address):
-            self.address, self.domain = address.split('.', 1)
+        if '.' in name and not _is_ip(name):
+            self.name, self.domain = name.split('.', 1)
         else:
-            self.address = address
-            self.domain  = ''
+            self.name   = name
+            self.domain = ''
 
 
-    def get_address(self):
+    def get_name(self):
+        """
+        Returns the name, without the domain name.
+
+        @rtype:  string
+        @return: The hostname excluding the domain name.
+        """
+        return self.name
+
+
+    def get_fullname(self):
         """
         Returns the name with the domain appended (if any).
 
         @rtype:  string
         @return: The hostname including the domain name.
         """
-        if self.domain and not '.' in self.address:
-            return self.address + '.' + self.domain
-        return self.address
-
-
-    def set_name(self, name):
-        """
-        Defines the hostname, without changing the domain.
-
-        @type  name: string
-        @param name: A hostname or IP address.
-        """
-        self.address = name
-
-
-    def get_name(self):
-        """
-        Returns the hostname, excluding the domain part.
-
-        @rtype:  string
-        @return: The hostname excluding the domain name.
-        """
-        return self.address
+        if self.domain and not '.' in self.name:
+            return self.name + '.' + self.domain
+        return self.name
 
 
     def set_domain(self, domain):
@@ -147,6 +139,29 @@ class Host(object):
         @return: The domain name.
         """
         return self.domain
+
+
+    def set_address(self, address):
+        """
+        Set the address of the remote host the is contacted, without
+        changing hostname, username, password, protocol, and TCP port
+        number.
+        This is the actual address that is used to open the connection.
+
+        @type  address: string
+        @param address: A hostname or IP name.
+        """
+        self.address = address
+
+
+    def get_address(self):
+        """
+        Returns the address that is used to open the connection.
+
+        @rtype:  string
+        @return: The address that is used to open the connection.
+        """
+        return self.address
 
 
     def set_protocol(self, protocol):
@@ -248,7 +263,7 @@ class Host(object):
         Defines the basename of the log name. The name may include a slash,
         in which case the logs for this host are placed in a subdirectory
         (when a FileLogger is used).
-        By default, the logname is the address of the host.
+        By default, the logname is the name of the host.
 
         @type:  string
         @param: The basename of the logfile.
@@ -265,7 +280,7 @@ class Host(object):
         """
         if self.logname:
             return self.logname
-        return self.get_address()
+        return self.get_name()
 
 
     def set(self, name, value):
