@@ -15,6 +15,7 @@
 """
 Places orders and requests the status from a server.
 """
+from lxml             import etree
 from urllib           import urlencode
 from urllib2          import HTTPDigestAuthHandler, build_opener, HTTPError
 from HTTPDigestServer import realm
@@ -99,3 +100,22 @@ class RestClient(object):
         if result.getcode() != 200:
             raise Exception(response)
         return response
+
+    def get_order_list(self, offset = 0, limit = 0):
+        """
+        Returns a list of currently running orders.
+
+        @type  offset: int
+        @param offset: The number of orders to skip.
+        @type  limit: int
+        @param limit: The maximum number of orders to return.
+        @rtype:  list[Order]
+        @return: A list of orders.
+        """
+        args   = 'offset=%d&limit=%d' % (offset, limit)
+        url    = self.address + '/order/list/?' + args
+        result = self.opener.open(url)
+        if result.getcode() != 200:
+            raise Exception(response)
+        xml = etree.parse(result)
+        return [Order.from_etree(n) for n in xml.iterfind('order')]
