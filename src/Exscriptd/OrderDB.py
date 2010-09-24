@@ -436,7 +436,7 @@ class OrderDB(object):
     def get_orders(self, offset = 0, limit = 0, **kwargs):
         """
         Returns all orders that match the given criteria.
-        
+
         @type  offset: int
         @param offset: The offset of the first item to be returned.
         @type  limit: int
@@ -468,10 +468,12 @@ class OrderDB(object):
         # Select the orders (subselect).
         order_select = sa.select([tbl_o.c.id.label('order_id')],
                                  where,
-                                 offset     = offset).alias('orders')
+                                 offset = offset,
+                                 limit  = limit).alias('orders')
 
         # Select all hosts from the order.
         select = table.select(tbl_o.c.id == order_select.c.order_id,
+                              order_by   = [sa.desc(tbl_o.c.id)],
                               use_labels = True)
 
         return self.__get_orders_from_query(select)
