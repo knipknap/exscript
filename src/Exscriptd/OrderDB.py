@@ -409,7 +409,7 @@ class OrderDB(object):
                     if not row or last_host_id != row[tbl_h.c.id]:
                         break
 
-            if not row or last_order_id != row[tbl_o.c.id]:
+            if not row:
                 break
 
         return order_list
