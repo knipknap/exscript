@@ -48,6 +48,21 @@ class Order(DBObject):
         return "<Order('%s','%s','%s')>" % (self.id, self.service, self.status)
 
     @staticmethod
+    def from_etree(xml, order_node):
+        """
+        Creates a new instance by parsing the given XML.
+
+        @type  order_node: lxml.etree.Element
+        @param order_node: The order node of an etree.
+        @rtype:  Order
+        @return: A new instance of an order.
+        """
+        # Parse required attributes.
+        order = Order(order_node.get('service'))
+        order._read_hosts_from_xml(order_node)
+        return order
+
+    @staticmethod
     def from_xml(xml):
         """
         Creates a new instance by parsing the given XML.
@@ -124,6 +139,16 @@ class Order(DBObject):
             host.set_all(args)
             self.add_host(host)
 
+    def frometree(self, order_tree):
+        """
+        Updates the order using the values that are defined in the
+        given etree. The given node must be the 'order' tag.
+
+        @rtype:  lxml.etree
+        @return: The resulting tree.
+        """
+        self._read_hosts_from_xml(order_tree)
+
     def fromxml(self, xml):
         """
         Updates the order using the values that are defined in the
@@ -154,18 +179,31 @@ class Order(DBObject):
                 raise Exception('unknown variable type')
         return arg_elem
 
+    def toetree(self):
+        """
+        Returns the order as an lxml etree.
+
+        @rtype:  lxml.etree
+        @return: The resulting tree.
+        """
+        order = etree.Element('order', service = self.service)
+        for host in self.hosts:
+            elem = etree.SubElement(order, 'host', address = host.get_address())
+            self._arguments_to_xml(elem, host.get_all())
+        return order
+
     def toxml(self, pretty = True):
         """
         Returns the order as an XML formatted string.
 
+        @type  pretty: bool
+        @param pretty: Whether to format the XML in a human readable way.
         @rtype:  str
         @return: The XML representing the order.
         """
         xml   = etree.Element('xml')
-        order = etree.SubElement(xml, 'order', service = self.service)
-        for host in self.hosts:
-            elem = etree.SubElement(order, 'host', address = host.get_address())
-            self._arguments_to_xml(elem, host.get_all())
+        order = self.toetree()
+        xml.append(order)
         return etree.tostring(xml, pretty_print = pretty)
 
     def write(self, filename):
