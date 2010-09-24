@@ -48,7 +48,7 @@ class Order(DBObject):
         return "<Order('%s','%s','%s')>" % (self.id, self.service, self.status)
 
     @staticmethod
-    def from_etree(xml, order_node):
+    def from_etree(order_node):
         """
         Creates a new instance by parsing the given XML.
 
@@ -58,7 +58,9 @@ class Order(DBObject):
         @return: A new instance of an order.
         """
         # Parse required attributes.
-        order = Order(order_node.get('service'))
+        order        = Order(order_node.get('service'))
+        order.id     = order_node.get('id')
+        order.status = order_node.get('status')
         order._read_hosts_from_xml(order_node)
         return order
 
@@ -187,6 +189,10 @@ class Order(DBObject):
         @return: The resulting tree.
         """
         order = etree.Element('order', service = self.service)
+        if self.id:
+            order.attrib['id'] = str(self.id)
+        if self.status:
+            order.attrib['status'] = str(self.status)
         for host in self.hosts:
             elem = etree.SubElement(order, 'host', address = host.get_address())
             self._arguments_to_xml(elem, host.get_all())
