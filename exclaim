@@ -62,6 +62,13 @@ parser.add_option('--status', '-s',
                   help    = '''
 Prints the status of the order with the given id and exit.
 '''.strip())
+parser.add_option('--order-list',
+                  dest    = 'order_list',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Lists the last 50 orders.
+'''.strip())
 parser.add_option('--quite', '-q',
                   dest    = 'quite',
                   action  = 'store_true',
@@ -84,7 +91,11 @@ try:
 except IndexError:
     parser.error('ip argument missing')
 
-if not options.status:
+if options.status:
+    pass
+elif options.order_list:
+    pass
+else:
     try:
         filename = args.pop(0)
     except IndexError:
@@ -97,10 +108,47 @@ def say(*args):
     if not options.quite:
         sys.stdout.write(' '.join(str(a) for a in args) + '\n')
 
+def print_table(headers, **kwargs):
+    widths = [0 for h in headers]
+    n_rows = max(len(l) for l in kwargs.itervalues())
+    for n, header in enumerate(headers):
+        widths[n] = max(len(header), max(kwargs.get(header, 0)))
+        print header.zfill(widths[n]),
+    for row in range(n_rows):
+        for header, width in zip(headers, widths):
+            try:
+                field = kwargs[header][row]
+            except IndexError:
+                field = ''
+            print field.zfill(width),
+        print
+
+def print_table(rows):
+    if not rows:
+        return
+    widths = [1 for h in rows[0]]
+    for row in rows:
+        for n, col in enumerate(row):
+            widths[n] = max(widths[n], len(col) + 2)
+    for i, row in enumerate(rows):
+        for n, col in enumerate(row):
+            sys.stdout.write(col.ljust(widths[n]))
+        print
+        if i == 0:
+            print '-' * sum(widths)
+
+
 client = RestClient(address, options.user, options.password)
 
 if options.status:
     print client.get_order_status_from_id(options.status)
+    sys.exit(0)
+elif options.order_list:
+    rows = [('OrderID', 'Service', 'Status')]
+    for order in client.get_order_list(0, 100):
+        row = (order.get_id(), order.get_service_name(), order.get_status())
+        rows.append(row)
+    print_table(rows)
     sys.exit(0)
 
 if options.csv:
