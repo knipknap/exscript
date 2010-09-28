@@ -34,12 +34,16 @@ def to_list(item):
         return item
     return [item]
 
-def to_host(host):
+def to_host(host, default_protocol = 'telnet', default_domain = ''):
     """
     Given a string or a Host object, this function returns a Host object.
 
     @type  host: string|Host
     @param host: A hostname (may be URL formatted) or a Host object.
+    @type  default_protocol: str
+    @param default_protocol: Passed to the Host constructor.
+    @type  default_domain: str
+    @param default_domain: Appended to each hostname that has no domain.
     @rtype:  Host
     @return: The Host object.
     """
@@ -47,19 +51,26 @@ def to_host(host):
         raise TypeError('None can not be cast to Host')
     if hasattr(host, 'get_address'):
         return host
+    if default_domain and not '.' in host:
+        host += '.' + default_domain
     return Host(host)
 
-def to_hosts(hosts):
+def to_hosts(hosts, default_protocol = 'telnet', default_domain = ''):
     """
     Given a string or a Host object, or a list of strings or Host objects,
     this function returns a list of Host objects.
 
     @type  hosts: string|Host|list(string)|list(Host)
     @param hosts: One or more hosts or hostnames.
+    @type  default_protocol: str
+    @param default_protocol: Passed to the Host constructor.
+    @type  default_domain: str
+    @param default_domain: Appended to each hostname that has no domain.
     @rtype:  list[Host]
     @return: A list of Host objects.
     """
-    return [to_host(h) for h in to_list(hosts)]
+    return [to_host(h, default_protocol, default_domain)
+            for h in to_list(hosts)]
 
 def to_log(log):
     """
