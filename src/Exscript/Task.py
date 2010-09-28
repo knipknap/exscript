@@ -10,10 +10,13 @@ class Task(Trackable):
         self.actions   = []
         self.completed = 0
 
-    def _on_action_done(self, action):
-        self.completed += 1
+    def _emit_done_if_completed(self):
         if self.is_completed():
             self.signal_emit('done')
+
+    def _on_action_done(self, action):
+        self.completed += 1
+        self._emit_done_if_completed()
 
     def is_completed(self):
         return self.completed == len(self.actions)

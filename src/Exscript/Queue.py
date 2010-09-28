@@ -432,6 +432,7 @@ class Queue(Trackable):
         for host in hosts:
             action = self._run1(host, function, False, False, duplicate_check)
             task.add_action(action)
+        task._emit_done_if_completed()
 
         self._dbg(2, 'All actions enqueued.')
         return task
@@ -490,6 +491,7 @@ class Queue(Trackable):
         for host in hosts:
             action = self._run1(host, function, True, False, False)
             task.add_action(action)
+        task._emit_done_if_completed()
 
         self._dbg(2, 'All prioritized actions enqueued.')
         return task
@@ -515,6 +517,7 @@ class Queue(Trackable):
         for host in hosts:
             action = self._run1(host, function, True, False, True)
             task.add_action(action)
+        task._emit_done_if_completed()
 
         self._dbg(2, 'All prioritized actions enqueued.')
         return task
@@ -539,6 +542,7 @@ class Queue(Trackable):
         for host in hosts:
             action = self._run1(host, function, True, True, False)
             task.add_action(action)
+        task._emit_done_if_completed()
 
         self._dbg(2, 'All forced actions enqueued.')
         return task
