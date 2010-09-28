@@ -16,7 +16,8 @@
 Utilities for reading data from files.
 """
 import re, os, base64
-from Exscript import Account, Host
+from cast     import to_host
+from Exscript import Account
 
 def get_accounts_from_file(filename):
     """
@@ -41,12 +42,17 @@ def get_accounts_from_file(filename):
 
 def get_hosts_from_file(filename,
                         default_protocol  = 'telnet',
+                        default_domain    = '',
                         remove_duplicates = False):
     """
     Reads a list of hostnames from the file with the given name.
 
     @type  filename: string
     @param filename: A full filename.
+    @type  default_protocol: str
+    @param default_protocol: Passed to the Host constructor.
+    @type  default_domain: str
+    @param default_domain: Appended to each hostname that has no domain.
     @type  remove_duplicates: bool
     @param remove_duplicates: Whether duplicates are removed.
     @rtype:  list[Host]
@@ -67,19 +73,25 @@ def get_hosts_from_file(filename,
         if remove_duplicates and hostname in have:
             continue
         have.add(hostname)
-        hosts.append(Host(hostname, default_protocol = default_protocol))
+        hosts.append(to_host(hostname, default_protocol, default_domain))
 
     file_handle.close()
     return hosts
 
 
-def get_hosts_from_csv(filename):
+def get_hosts_from_csv(filename,
+                       default_protocol = 'telnet',
+                       default_domain   = ''):
     """
     Reads a list of hostnames and variables from the .csv file with the
     given name.
 
     @type  filename: string
     @param filename: A full filename.
+    @type  default_protocol: str
+    @param default_protocol: Passed to the Host constructor.
+    @type  default_domain: str
+    @param default_domain: Appended to each hostname that has no domain.
     @rtype:  list[Host]
     @return: The newly created host instances.
     """
@@ -117,7 +129,7 @@ def get_hosts_from_csv(filename):
         # Add the hostname to our list.
         if uri != last_uri:
             #print "Reading hostname", hostname_url, "from csv."
-            host     = Host(uri)
+            host     = to_host(uri, default_protocol, default_domain)
             last_uri = uri
             hosts.append(host)
 
