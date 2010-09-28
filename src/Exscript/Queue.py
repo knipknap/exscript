@@ -418,8 +418,6 @@ class Queue(Trackable):
 
     def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
-        if not host.get_domain():
-            host.set_domain(self.domain)
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
         action = HostAction(self, function, host, **self.protocol_args)
         self._enqueue1(action, prioritize, force, duplicate_check)
@@ -427,7 +425,7 @@ class Queue(Trackable):
 
 
     def _run(self, hosts, function, duplicate_check):
-        hosts       = to_hosts(hosts)
+        hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
 
         task = Task(self)
@@ -485,7 +483,7 @@ class Queue(Trackable):
         @rtype:  object
         @return: An object representing the task.
         """
-        hosts       = to_hosts(hosts)
+        hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
 
         task = Task(self)
@@ -510,7 +508,7 @@ class Queue(Trackable):
         @rtype:  object
         @return: An object representing the task.
         """
-        hosts       = to_hosts(hosts)
+        hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
 
         task = Task(self)
@@ -534,7 +532,7 @@ class Queue(Trackable):
         @rtype:  object
         @return: An object representing the task.
         """
-        hosts       = to_hosts(hosts)
+        hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
 
         task = Task(self)

@@ -16,10 +16,10 @@
 import sys, os, re, getpass
 sys.path.append('src')
 from optparse                import OptionParser, Option, OptionValueError
-from Exscript                import Queue, Account, Host, __version__
+from Exscript                import Queue, Account, __version__
 from Exscript.util           import template
 from Exscript.util.sigint    import SigIntWatcher
-from Exscript.util.cast      import to_list
+from Exscript.util.cast      import to_list, to_host
 from Exscript.util.interact  import get_login
 from Exscript.util.file      import get_accounts_from_file, \
                                     get_hosts_from_file, \
@@ -56,21 +56,35 @@ def run():
     options, args = parser.parse_args(sys.argv)
     args.pop(0)
 
+    def mkhost(name):
+        return to_host(name,
+                       default_protocol = options.protocol,
+                       default_domain   = options.default_domain)
+
+    def mkhosts_from_file(filename):
+        return get_hosts_from_file(options.csv_hosts,
+                                   default_protocol = options.protocol,
+                                   default_domain   = options.default_domain)
+
+    def mkhosts_from_csv(filename):
+        return get_hosts_from_csv(options.csv_hosts,
+                                  default_protocol = options.protocol,
+                                  default_domain   = options.default_domain)
+
     # Extract the hostnames out of the command line arguments.
     try:
         filename = args[0]
-        hosts    = [Host(h, default_protocol = options.protocol)
-                    for h in list(args[1:])]
+        hosts    = [mkhost(h) for h in list(args[1:])]
     except IndexError, e:
         parser.error('Missing filename')
     if options.execute:
-        host = Host(filename, default_protocol = options.protocol)
+        host = mkhost(filename)
         hosts.append(host)
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
     if options.csv_hosts:
         try:
-            csv_hosts = get_hosts_from_csv(options.csv_hosts)
+            csv_hosts = mkhosts_from_csv(options.csv_hosts)
         except IOError, e:
             parser.error(str(e))
         if not csv_hosts:
@@ -80,7 +94,7 @@ def run():
     # If a filename containing hostnames was given, read it.
     if options.hosts:
         try:
-            txt_hosts = get_hosts_from_file(options.hosts)
+            txt_hosts = mkhosts_from_file(options.hosts)
         except IOError, e:
             parser.error(str(e))
         except ValueError, e:

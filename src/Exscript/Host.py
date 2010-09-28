@@ -43,13 +43,12 @@ class Host(object):
         self.username = None
         self.password = None
         self.logname  = None
-        self.domain   = ''
         self.set_uri(uri) 
 
 
     def set_uri(self, uri):
         """
-        Defines the protocol, hostname, domain, TCP port number, username,
+        Defines the protocol, hostname/address, TCP port number, username,
         and password from the given URL. The hostname may be URL formatted,
         so the following formats are all valid:
 
@@ -86,59 +85,23 @@ class Host(object):
 
     def set_name(self, name):
         """
-        Set the hostname/domain of the remote host without
+        Set the hostname of the remote host without
         changing username, password, protocol, and TCP port number.
 
         @type  name: string
-        @param name: A hostname or IP name.
+        @param name: A hostname or IP address.
         """
-        if '.' in name and not _is_ip(name):
-            self.name, self.domain = name.split('.', 1)
-        else:
-            self.name   = name
-            self.domain = ''
+        self.name = name
 
 
     def get_name(self):
         """
-        Returns the name, without the domain name.
+        Returns the name.
 
         @rtype:  string
-        @return: The hostname excluding the domain name.
+        @return: The hostname excluding the name.
         """
         return self.name
-
-
-    def get_fullname(self):
-        """
-        Returns the name with the domain appended (if any).
-
-        @rtype:  string
-        @return: The hostname including the domain name.
-        """
-        if self.domain and not '.' in self.name:
-            return self.name + '.' + self.domain
-        return self.name
-
-
-    def set_domain(self, domain):
-        """
-        Defines the domain name.
-
-        @type  domain: string
-        @param domain: A domain name, or None for default.
-        """
-        self.domain = domain
-
-
-    def get_domain(self):
-        """
-        Returns the domain name.
-
-        @rtype:  string
-        @return: The domain name.
-        """
-        return self.domain
 
 
     def set_address(self, address):
