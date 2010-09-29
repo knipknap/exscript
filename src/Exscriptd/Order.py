@@ -18,8 +18,6 @@ Represents a call to a service.
 import os, traceback, shutil
 import Exscript
 from Exscript.util.file import get_hosts_from_csv
-from sqlalchemy         import *
-from sqlalchemy.orm     import relation, synonym
 from tempfile           import NamedTemporaryFile
 from lxml               import etree
 from DBObject           import DBObject

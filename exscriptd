@@ -14,9 +14,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys
-from optparse  import OptionParser
-from Exscript  import __version__
-from Exscriptd import Config
+from optparse         import OptionParser
+from Exscript         import __version__
+from Exscriptd.Config import Config
 
 parser = OptionParser(usage = '%prog [options]', version = __version__)
 parser.add_option('--domain',
