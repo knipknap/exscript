@@ -101,7 +101,7 @@ class RestClient(object):
             raise Exception(response)
         return response
 
-    def get_order_list(self, offset = 0, limit = 0):
+    def get_order_list(self, offset = 0, limit = 0, recursive = True):
         """
         Returns a list of currently running orders.
 
@@ -109,10 +109,13 @@ class RestClient(object):
         @param offset: The number of orders to skip.
         @type  limit: int
         @param limit: The maximum number of orders to return.
+        @type  recursive: bool
+        @param recursive: Whether to load the attached hosts.
         @rtype:  list[Order]
         @return: A list of orders.
         """
         args   = 'offset=%d&limit=%d' % (offset, limit)
+        args  += '&recursive=%d' % (recursive and 1 or 0)
         url    = self.address + '/order/list/?' + args
         result = self.opener.open(url)
         if result.getcode() != 200:

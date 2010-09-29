@@ -77,8 +77,10 @@ class Daemon(object):
     def get_order_from_id(self, order_id):
         return self.db.get_order(id = order_id)
 
-    def get_order_list(self, offset = 0, limit = 0):
-        return self.db.get_orders(offset = offset, limit = limit)
+    def get_order_list(self, offset = 0, limit = 0, recursive = True):
+        return self.db.get_orders(offset    = offset,
+                                  limit     = limit,
+                                  recursive = recursive)
 
     def set_order_status(self, order, status):
         order.status = status

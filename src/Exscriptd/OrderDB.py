@@ -383,7 +383,7 @@ class OrderDB(object):
             order = self.__get_order_from_row(row)
             order_list.append(order)
 
-            if not row[tbl_h.c.id]:
+            if not row.has_key(tbl_h.c.order_id) or not row[tbl_h.c.id]:
                 row = result.fetchone()
                 continue
 
@@ -433,7 +433,7 @@ class OrderDB(object):
             raise Exception('Too many results')
         return result[0]
 
-    def get_orders(self, offset = 0, limit = 0, **kwargs):
+    def get_orders(self, offset = 0, limit = 0, recursive = True, **kwargs):
         """
         Returns all orders that match the given criteria.
 
@@ -441,6 +441,8 @@ class OrderDB(object):
         @param offset: The offset of the first item to be returned.
         @type  limit: int
         @param limit: The maximum number of items that is returned.
+        @type  recursive: bool
+        @param recursive: Whether to load the attached hosts.
         @type  kwargs: dict
         @param kwargs: The following keys may be used:
                          - id - the id of the order (str)
@@ -451,13 +453,9 @@ class OrderDB(object):
         @return: The list of orders.
         """
         tbl_o = self._table_map['order']
-        tbl_h = self._table_map['host']
-        tbl_v = self._table_map['variable']
-        table = tbl_o.outerjoin(tbl_h, tbl_o.c.id == tbl_h.c.order_id)
-        table = table.outerjoin(tbl_v, tbl_h.c.id == tbl_v.c.host_id)
-        where = None
 
         # Search conditions.
+        where = None
         for field in ('id', 'service', 'status'):
             if kwargs.has_key(field):
                 cond = None
@@ -465,16 +463,24 @@ class OrderDB(object):
                     cond = sa.or_(cond, tbl_o.c[field] == value)
                 where = sa.and_(where, cond)
 
-        # Select the orders (subselect).
-        order_select = sa.select([tbl_o.c.id.label('order_id')],
-                                 where,
-                                 offset = offset,
-                                 limit  = limit).alias('orders')
+        if recursive:
+            tbl_h = self._table_map['host']
+            tbl_v = self._table_map['variable']
+            table = tbl_o.outerjoin(tbl_h, tbl_o.c.id == tbl_h.c.order_id)
+            table = table.outerjoin(tbl_v, tbl_h.c.id == tbl_v.c.host_id)
 
-        # Select all hosts from the order.
-        select = table.select(tbl_o.c.id == order_select.c.order_id,
-                              order_by   = [sa.desc(tbl_o.c.id)],
-                              use_labels = True)
+            # Select the orders (subselect).
+            order_select = sa.select([tbl_o.c.id.label('order_id')],
+                                     where,
+                                     offset = offset,
+                                     limit  = limit).alias('orders')
+
+            # Select all hosts from the order.
+            select = table.select(tbl_o.c.id == order_select.c.order_id,
+                                  order_by   = [sa.desc(tbl_o.c.id)],
+                                  use_labels = True)
+        else:
+            select = tbl_o.select(where, offset = offset, limit = limit)
 
         return self.__get_orders_from_query(select)
 

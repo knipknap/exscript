@@ -53,10 +53,16 @@ class HTTPHandler(HTTPRequestHandler):
                 raise Exception('no such order id')
             return order.status
         elif self.path == '/order/list/':
-            offset = int(self.args.get('offset', 0))
-            limit  = min(100, int(self.args.get('limit', 100)))
-            orders = self.daemon.get_order_list(offset = offset, limit = limit)
-            xml    = etree.Element('xml')
+            # Fetch the orders.
+            offset    = int(self.args.get('offset', 0))
+            limit     = min(100, int(self.args.get('limit', 100)))
+            recursive = self.args.get('recursive') == '1'
+            orders    = self.daemon.get_order_list(offset    = offset,
+                                                   limit     = limit,
+                                                   recursive = recursive)
+
+            # Assemble an XML document containing the orders.
+            xml = etree.Element('xml')
             for order in orders:
                 xml.append(order.toetree())
             return etree.tostring(xml, pretty_print = True)
@@ -69,6 +75,7 @@ class HTTPHandler(HTTPRequestHandler):
         try:
             response = self.get_response()
         except Exception, e:
+            print format_exc()
             self.send_response(500)
             self.end_headers()
             self.wfile.write(format_exc().encode('utf8'))
