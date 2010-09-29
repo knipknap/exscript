@@ -62,7 +62,7 @@ def run():
                        default_domain   = options.default_domain)
 
     def mkhosts_from_file(filename):
-        return get_hosts_from_file(options.csv_hosts,
+        return get_hosts_from_file(options.hosts,
                                    default_protocol = options.protocol,
                                    default_domain   = options.default_domain)
 
