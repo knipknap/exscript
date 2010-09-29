@@ -47,6 +47,8 @@ class HTTPHandler(HTTPRequestHandler):
             self.daemon.logger.debug('XML order parsed complete.')
             self.daemon._place_order(order)
             return str(order.get_id())
+        elif self.path == '/order/count/':
+            return str(self.daemon.count_orders())
         elif self.path == '/order/status/':
             order = self.daemon.get_order_from_id(str(self.args['id']))
             if not order:

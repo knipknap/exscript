@@ -101,6 +101,20 @@ class RestClient(object):
             raise Exception(response)
         return response
 
+    def count_orders(self):
+        """
+        Returns the total number of orders.
+
+        @rtype:  int
+        @return: The number of orders.
+        """
+        url      = self.address + '/order/count/'
+        result   = self.opener.open(url)
+        response = result.read()
+        if result.getcode() != 200:
+            raise Exception(response)
+        return int(response)
+
     def get_order_list(self, offset = 0, limit = 0, recursive = True):
         """
         Returns a list of currently running orders.

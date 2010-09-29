@@ -74,6 +74,9 @@ class Daemon(object):
     def add_service(self, name, service):
         self.services[name] = service
 
+    def count_orders(self):
+        return self.db.count_orders()
+
     def get_order_from_id(self, order_id):
         return self.db.get_order(id = order_id)
 

@@ -414,6 +414,15 @@ class OrderDB(object):
 
         return order_list
 
+    def count_orders(self):
+        """
+        Returns the total number of orders in the DB.
+
+        @rtype:  int
+        @return: The number of orders.
+        """
+        return self._table_map['order'].count().execute().fetchone()[0]
+
     def get_order(self, **kwargs):
         """
         Like get_orders(), but

@@ -62,6 +62,13 @@ parser.add_option('--status', '-s',
                   help    = '''
 Prints the status of the order with the given id and exit.
 '''.strip())
+parser.add_option('--order-count',
+                  dest    = 'order_count',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Prints the total number of orders.
+'''.strip())
 parser.add_option('--order-list',
                   dest    = 'order_list',
                   action  = 'store_true',
@@ -92,6 +99,8 @@ except IndexError:
     parser.error('ip argument missing')
 
 if options.status:
+    pass
+elif options.order_count:
     pass
 elif options.order_list:
     pass
@@ -137,11 +146,13 @@ def print_table(rows):
         if i == 0:
             print '-' * sum(widths)
 
-
 client = RestClient(address, options.user, options.password)
 
 if options.status:
     print client.get_order_status_from_id(options.status)
+    sys.exit(0)
+elif options.order_count:
+    print client.count_orders()
     sys.exit(0)
 elif options.order_list:
     rows = [('OrderID', 'Service', 'Status')]
