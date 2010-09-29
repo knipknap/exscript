@@ -117,21 +117,6 @@ def say(*args):
     if not options.quite:
         sys.stdout.write(' '.join(str(a) for a in args) + '\n')
 
-def print_table(headers, **kwargs):
-    widths = [0 for h in headers]
-    n_rows = max(len(l) for l in kwargs.itervalues())
-    for n, header in enumerate(headers):
-        widths[n] = max(len(header), max(kwargs.get(header, 0)))
-        print header.zfill(widths[n]),
-    for row in range(n_rows):
-        for header, width in zip(headers, widths):
-            try:
-                field = kwargs[header][row]
-            except IndexError:
-                field = ''
-            print field.zfill(width),
-        print
-
 def print_table(rows):
     if not rows:
         return
