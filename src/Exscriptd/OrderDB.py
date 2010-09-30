@@ -489,7 +489,10 @@ class OrderDB(object):
                                   order_by   = [sa.desc(tbl_o.c.id)],
                                   use_labels = True)
         else:
-            select = tbl_o.select(where, offset = offset, limit = limit)
+            select = tbl_o.select(where,
+                                  order_by = [sa.desc(tbl_o.c.id)],
+                                  offset   = offset,
+                                  limit    = limit)
 
         return self.__get_orders_from_query(select)
 
