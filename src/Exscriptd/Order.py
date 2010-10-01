@@ -17,6 +17,7 @@ Represents a call to a service.
 """
 import os, traceback, shutil
 import Exscript
+from datetime           import datetime
 from Exscript.util.file import get_hosts_from_csv
 from tempfile           import NamedTemporaryFile
 from lxml               import etree
@@ -41,6 +42,7 @@ class Order(DBObject):
         self.status  = 'new'
         self.service = service_name
         self.hosts   = []
+        self.created = datetime.now()
 
     def __repr__(self):
         return "<Order('%s','%s','%s')>" % (self.id, self.service, self.status)
@@ -272,6 +274,15 @@ class Order(DBObject):
         @return: The order status.
         """
         return self.status
+
+    def get_created_timestamp(self):
+        """
+        Returns the time at which the order was created.
+
+        @rtype:  datetime.datetime
+        @return: The timestamp.
+        """
+        return self.created
 
     def add_host(self, host):
         self.touch()

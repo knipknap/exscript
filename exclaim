@@ -139,9 +139,12 @@ elif options.order_count:
     print client.count_orders()
     sys.exit(0)
 elif options.order_list:
-    rows = [('OrderID', 'Service', 'Status')]
+    rows = [('OrderID', 'Service', 'Status', 'Time')]
     for order in client.get_order_list(0, 100, False):
-        row = (order.get_id(), order.get_service_name(), order.get_status())
+        row = (order.get_id(),
+               order.get_service_name(),
+               order.get_status(),
+               str(order.get_created_timestamp()))
         rows.append(row)
     print_table(rows)
     sys.exit(0)

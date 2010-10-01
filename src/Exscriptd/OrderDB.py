@@ -79,6 +79,7 @@ class OrderDB(object):
             sa.Column('id',      sa.Integer,    primary_key = True),
             sa.Column('service', sa.String(50), index = True),
             sa.Column('status',  sa.String(20), index = True),
+            sa.Column('created', sa.DateTime,   default = sa.func.now()),
             mysql_engine = 'INNODB'
         ))
 
@@ -353,10 +354,11 @@ class OrderDB(object):
 
     def __get_order_from_row(self, row):
         assert row is not None
-        tbl_a        = self._table_map['order']
-        order        = Order(row[tbl_a.c.service])
-        order.id     = row[tbl_a.c.id]
-        order.status = row[tbl_a.c.status]
+        tbl_a         = self._table_map['order']
+        order         = Order(row[tbl_a.c.service])
+        order.id      = row[tbl_a.c.id]
+        order.status  = row[tbl_a.c.status]
+        order.created = row[tbl_a.c.created]
         return order
 
     def __get_orders_from_query(self, query):
