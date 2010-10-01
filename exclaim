@@ -140,7 +140,7 @@ elif options.order_count:
     sys.exit(0)
 elif options.order_list:
     rows = [('OrderID', 'Service', 'Status')]
-    for order in client.get_order_list(0, 100, True):
+    for order in client.get_order_list(0, 100, False):
         row = (order.get_id(), order.get_service_name(), order.get_status())
         rows.append(row)
     print_table(rows)
