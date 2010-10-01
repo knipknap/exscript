@@ -58,9 +58,14 @@ class Order(DBObject):
         @return: A new instance of an order.
         """
         # Parse required attributes.
-        order        = Order(order_node.get('service'))
-        order.id     = order_node.get('id')
-        order.status = order_node.get('status')
+        order         = Order(order_node.get('service'))
+        order.id      = order_node.get('id')
+        order.status  = order_node.get('status')
+        created       = order_node.get('created')
+        if created:
+            created = created.split('.', 1)[0]
+            created = datetime.strptime(created, "%Y-%m-%d %H:%M:%S")
+            order.created = created
         order._read_hosts_from_xml(order_node)
         return order
 
@@ -193,6 +198,7 @@ class Order(DBObject):
             order.attrib['id'] = str(self.id)
         if self.status:
             order.attrib['status'] = str(self.status)
+        order.attrib['created'] = str(self.created)
         for host in self.hosts:
             elem = etree.SubElement(order, 'host', address = host.get_address())
             self._arguments_to_xml(elem, host.get_all())
