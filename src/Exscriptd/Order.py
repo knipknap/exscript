@@ -198,7 +198,8 @@ class Order(DBObject):
             order.attrib['id'] = str(self.id)
         if self.status:
             order.attrib['status'] = str(self.status)
-        order.attrib['created'] = str(self.created)
+        if self.created:
+            order.attrib['created'] = str(self.created)
         for host in self.hosts:
             elem = etree.SubElement(order, 'host', address = host.get_address())
             self._arguments_to_xml(elem, host.get_all())
