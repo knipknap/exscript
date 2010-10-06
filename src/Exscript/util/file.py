@@ -102,11 +102,11 @@ def get_hosts_from_csv(filename,
 
     # Read the header.
     header = file_handle.readline().rstrip()
-    if re.search(r'^hostname\b', header) is None:
+    if re.search(r'^(?:hostname|address)\b', header) is None:
         msg  = 'Syntax error in CSV file header:'
-        msg += ' File does not start with "hostname".'
+        msg += ' File does not start with "hostname" or "address".'
         raise Exception(msg)
-    if re.search(r'^hostname(?:\t[^\t]+)*$', header) is None:
+    if re.search(r'^(?:hostname|address)(?:\t[^\t]+)*$', header) is None:
         msg  = 'Syntax error in CSV file header:'
         msg += ' Make sure to separate columns by tabs.'
         raise Exception(msg)
