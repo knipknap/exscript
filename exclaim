@@ -61,6 +61,13 @@ parser.add_option('--status', '-s',
                   help    = '''
 Prints the status of the order with the given id and exit.
 '''.strip())
+parser.add_option('--test',
+                  dest    = 'test',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Print the XML formatted order to stdout.
+'''.strip())
 parser.add_option('--order-count',
                   dest    = 'order_count',
                   action  = 'store_true',
@@ -87,10 +94,11 @@ Do not write anything to stdout.
 options, args = parser.parse_args(sys.argv)
 args.pop(0)
 
-if not options.user:
-    parser.error('Required option --user not set')
-if not options.password:
-    parser.error('Required option --password not set')
+if not options.test:
+    if not options.user:
+        parser.error('Required option --user not set')
+    if not options.password:
+        parser.error('Required option --password not set')
 
 try:
     address = args.pop(0)
@@ -157,6 +165,10 @@ else:
     order = Order.from_xml_file(filename)
     if options.service:
         order.set_service_name(service)
+
+if options.test:
+    print order.toxml()
+    sys.exit(0)
 
 client.place_order(order)
 say('Placed order', order.id)
