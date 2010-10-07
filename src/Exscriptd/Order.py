@@ -141,8 +141,10 @@ class Order(DBObject):
     def _read_hosts_from_xml(self, element):
         for host_elem in element.iterfind('host'):
             address = host_elem.get('address').strip()
+            name    = host_elem.get('name', '').strip()
             args    = self._read_arguments_from_xml(host_elem)
             host    = Exscript.Host(address)
+            host.set_name(name)
             host.set_all(args)
             self.add_host(host)
 
@@ -201,7 +203,10 @@ class Order(DBObject):
         if self.created:
             order.attrib['created'] = str(self.created)
         for host in self.hosts:
-            elem = etree.SubElement(order, 'host', address = host.get_address())
+            elem = etree.SubElement(order,
+                                    'host',
+                                    address = host.get_address(),
+                                    name    = host.get_name())
             self._arguments_to_xml(elem, host.get_all())
         return order
 
