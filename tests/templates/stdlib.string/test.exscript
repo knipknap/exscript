@@ -1,0 +1,7 @@
+{
+  string = string.replace("ssuccessss", "ss", "s")
+  fail "string.otp" if string is not "success"
+
+  string = string.tolower("LOWER")
+  fail "string.otp" if string is not "lower"
+}

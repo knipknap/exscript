@@ -52,6 +52,7 @@ functions = {
     'list.new':                  list.new,
     'list.unique':               list.unique,
     'string.replace':            string.replace,
+    'string.tolower':            string.tolower,
     'sys.message':               mysys.message,
     'sys.tacacs_lock':           mysys.tacacs_lock,
     'sys.tacacs_unlock':         mysys.tacacs_unlock,
