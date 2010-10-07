@@ -83,8 +83,27 @@ def get_hosts_from_csv(filename,
                        default_protocol = 'telnet',
                        default_domain   = ''):
     """
-    Reads a list of hostnames and variables from the .csv file with the
-    given name.
+    Reads a list of hostnames and variables from the tab-separated .csv file
+    with the given name. The first line of the file must contain the column
+    names, e.g.::
+
+        address	testvar1	testvar2
+        10.0.0.1	value1	othervalue
+        10.0.0.1	value2	othervalue2
+        10.0.0.2	foo	bar
+
+    For the above example, the function returns *two* host objects, where
+    the 'testvar1' variable of the first host holds a list containing two
+    entries ('value1' and 'value2'), and the 'testvar1' variable of the
+    second host contains a list with a single entry ('foo').
+
+    Both, the address and the hostname of each host are set to the address
+    given in the first column. If you want the hostname set to another value,
+    you may add a second column containing the hostname::
+
+        address	hostname	testvar
+        10.0.0.1	myhost	value
+        10.0.0.2	otherhost	othervalue
 
     @type  filename: string
     @param filename: A full filename.
@@ -134,12 +153,15 @@ def get_hosts_from_csv(filename,
             hosts.append(host)
 
         # Define variables according to the definition.
-        for i in range(0, len(varnames)):
+        for i, varname in enumerate(varnames):
             try:
                 value = values[i]
-            except:
+            except IndexError, e:
                 value = ''
-            host.append(varnames[i], value)
+            if varname == 'hostname':
+                host.set_name(value)
+            else:
+                host.append(varname, value)
 
     file_handle.close()
     return hosts
