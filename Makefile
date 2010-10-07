@@ -69,5 +69,5 @@ doc-publish:
 publish-local:
 	git push
 	cp -r src/Exscript/external/* /nmc/code/exscript/src/Exscript/external/
-	chmod -R a+rX /nmc/code/exscript/src/Exscript/external/
 	chgrp -R nipscript /nmc/code/exscript/src/Exscript/external/
+	chmod -R a+rX,g+rwX /nmc/code/exscript/src/Exscript/external/
