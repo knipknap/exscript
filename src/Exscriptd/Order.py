@@ -140,11 +140,14 @@ class Order(DBObject):
 
     def _read_hosts_from_xml(self, element):
         for host_elem in element.iterfind('host'):
-            address = host_elem.get('address').strip()
             name    = host_elem.get('name', '').strip()
+            address = host_elem.get('address', name).strip()
             args    = self._read_arguments_from_xml(host_elem)
             host    = Exscript.Host(address)
-            host.set_name(name)
+            if not address:
+                raise TypeError('host element without name or address')
+            if name:
+                host.set_name(name)
             host.set_all(args)
             self.add_host(host)
 
