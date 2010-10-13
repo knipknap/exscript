@@ -12,6 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+from datetime           import datetime
 from Order              import Order
 from Exscript           import Host
 from Exscript.util.cast import to_list
@@ -520,6 +521,15 @@ class OrderDB(object):
         except:
             transaction.rollback()
             raise
+
+    def close_open_orders(self):
+        """
+        Sets the 'closed' timestamp of all orders that have none, without
+        changing the status field.
+        """
+        tbl_o = self._table_map['order']
+        query = tbl_o.update(tbl_o.c.closed == None)
+        query.execute(closed = datetime.now())
 
     def save_order(self, orders, recursive = True):
         """

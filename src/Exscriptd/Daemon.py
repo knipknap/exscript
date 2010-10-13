@@ -74,6 +74,10 @@ class Daemon(object):
     def add_service(self, name, service):
         self.services[name] = service
 
+    def close_open_orders(self):
+        self.logger.info('%s: Closing all open orders.' % self.name)
+        self.db.close_open_orders()
+
     def count_orders(self):
         return self.db.count_orders()
 

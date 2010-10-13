@@ -120,7 +120,22 @@ class OrderDBTest(unittest.TestCase):
         self.assertEqual(self.db.count_orders(), 2)
 
     def testGetOrders(self):
-        pass #FIXME
+        self.testAddOrder()
+        self.testAddOrder()
+        self.assertEqual(self.db.count_orders(), 2)
+        orders = self.db.get_orders()
+        self.assertEqual(len(orders), 2)
+
+    def testCloseOpenOrders(self):
+        self.testAddOrder()
+        self.assertEqual(self.db.count_orders(), 1)
+
+        order = self.db.get_orders()[0]
+        self.assertEqual(order.closed, None)
+
+        self.db.close_open_orders()
+        order = self.db.get_orders()[0]
+        self.failIf(order.get_closed_timestamp(), None)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(OrderDBTest)

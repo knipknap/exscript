@@ -111,7 +111,8 @@ class RestDaemon(Daemon):
 
     def run(self):
         address = self.address + ':' + str(self.port)
-        self.logger.info('REST daemon "' + self.name + '" running on ' + address)
+        self.logger.info('REST daemon "' + self.name + '" starting on ' + address)
+        self.close_open_orders()
         try:
             print 'Daemon', repr(self.name), 'listening on', repr(address) + '.'
             self.server.serve_forever()
