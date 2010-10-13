@@ -77,11 +77,12 @@ class OrderDB(object):
         """
         pfx = self._table_prefix
         self.__add_table(sa.Table(pfx + 'order', self.metadata,
-            sa.Column('id',      sa.Integer,    primary_key = True),
-            sa.Column('service', sa.String(50), index = True),
-            sa.Column('status',  sa.String(20), index = True),
-            sa.Column('created', sa.DateTime,   default = sa.func.now()),
-            sa.Column('closed',  sa.DateTime),
+            sa.Column('id',         sa.Integer,    primary_key = True),
+            sa.Column('service',    sa.String(50), index = True),
+            sa.Column('status',     sa.String(20), index = True),
+            sa.Column('created',    sa.DateTime,   default = sa.func.now()),
+            sa.Column('closed',     sa.DateTime),
+            sa.Column('created_by', sa.String(50)),
             mysql_engine = 'INNODB'
         ))
 
@@ -303,9 +304,10 @@ class OrderDB(object):
 
         # Insert the order
         insert = self._table_map['order'].insert()
-        result = insert.execute(service = order.get_service_name(),
-                                status  = order.get_status(),
-                                closed  = order.get_closed_timestamp())
+        result = insert.execute(service    = order.get_service_name(),
+                                status     = order.get_status(),
+                                closed     = order.get_closed_timestamp(),
+                                created_by = order.get_created_by())
         order.id = result.last_inserted_ids()[0]
 
         if not recursive:
@@ -340,9 +342,10 @@ class OrderDB(object):
         if not theorder:
             return self.add_order(order, recursive)
         table  = self._table_map['order']
-        fields = dict(service = order.get_service_name(),
-                      status  = order.get_status(),
-                      closed  = order.get_closed_timestamp())
+        fields = dict(service    = order.get_service_name(),
+                      status     = order.get_status(),
+                      closed     = order.get_closed_timestamp(),
+                      created_by = order.get_created_by())
         query  = table.update(table.c.id == order.get_id())
         query.execute(**fields)
 
@@ -358,12 +361,13 @@ class OrderDB(object):
 
     def __get_order_from_row(self, row):
         assert row is not None
-        tbl_a         = self._table_map['order']
-        order         = Order(row[tbl_a.c.service])
-        order.id      = row[tbl_a.c.id]
-        order.status  = row[tbl_a.c.status]
-        order.created = row[tbl_a.c.created]
-        order.closed  = row[tbl_a.c.closed]
+        tbl_a            = self._table_map['order']
+        order            = Order(row[tbl_a.c.service])
+        order.id         = row[tbl_a.c.id]
+        order.status     = row[tbl_a.c.status]
+        order.created    = row[tbl_a.c.created]
+        order.closed     = row[tbl_a.c.closed]
+        order.created_by = row[tbl_a.c.created_by]
         return order
 
     def __get_orders_from_query(self, query):

@@ -38,12 +38,13 @@ class Order(DBObject):
         @type  service_name: str
         @param service_name: The service that handles the order.
         """
-        self.id      = None
-        self.status  = 'new'
-        self.service = service_name
-        self.hosts   = []
-        self.created = datetime.now()
-        self.closed  = None
+        self.id         = None
+        self.status     = 'new'
+        self.service    = service_name
+        self.hosts      = []
+        self.created    = datetime.now()
+        self.closed     = None
+        self.created_by = os.environ.get('USER')
 
     def __repr__(self):
         return "<Order('%s','%s','%s')>" % (self.id, self.service, self.status)
@@ -59,11 +60,12 @@ class Order(DBObject):
         @return: A new instance of an order.
         """
         # Parse required attributes.
-        order         = Order(order_node.get('service'))
-        order.id      = order_node.get('id')
-        order.status  = order_node.get('status')
-        created       = order_node.get('created')
-        closed        = order_node.get('closed')
+        order           = Order(order_node.get('service'))
+        order.id        = order_node.get('id')
+        order.status    = order_node.get('status')
+        created         = order_node.get('created')
+        closed          = order_node.get('closed')
+        self.created_by = order_node.get('created-by', self.created_by)
         if created:
             created = created.split('.', 1)[0]
             created = datetime.strptime(created, "%Y-%m-%d %H:%M:%S")
@@ -213,6 +215,8 @@ class Order(DBObject):
             order.attrib['created'] = str(self.created)
         if self.closed:
             order.attrib['closed'] = str(self.closed)
+        if self.created_by:
+            order.attrib['created-by'] = str(self.created_by)
         for host in self.hosts:
             elem = etree.SubElement(order,
                                     'host',
@@ -316,6 +320,16 @@ class Order(DBObject):
         @return: The timestamp or None.
         """
         return self.closed
+
+    def get_created_by(self):
+        """
+        Returns the username of the user who opened the order. Defaults
+        to the USER environment variable.
+
+        @rtype:  str
+        @return: The value of the 'created-by' field.
+        """
+        return self.created_by
 
     def close(self):
         """

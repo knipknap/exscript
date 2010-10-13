@@ -52,6 +52,10 @@ class OrderDBTest(unittest.TestCase):
         self.testInstall()
 
         order1 = Order('fooservice')
+        self.assertEqual(order1.get_created_by(), os.environ.get('USER'))
+        order1.created_by = 'this test'
+        self.assertEqual(order1.get_created_by(), 'this test')
+
         host1  = Host('foohost1')
         host2  = Host('foohost2')
         host1.set('foovar1', 'value1')
@@ -66,7 +70,8 @@ class OrderDBTest(unittest.TestCase):
 
         # Check that the order is stored.
         order2 = self.db.get_order(id = order1.get_id())
-        self.assert_(order1.get_id() == order2.get_id())
+        self.assertEqual(order1.get_id(), order2.get_id())
+        self.assertEqual(order2.get_created_by(), 'this test')
 
         # Check that the hosts of the order are stored.
         hosts1 = [h.get_address() for h in order1.get_hosts()]
