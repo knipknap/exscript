@@ -87,12 +87,8 @@ class Order(DBObject):
         @rtype:  Order
         @return: A new instance of an order.
         """
-        # Parse required attributes.
-        xml     = etree.fromstring(xml)
-        element = xml.find('order')
-        order   = Order(element.get('service'))
-        order._read_hosts_from_xml(element)
-        return order
+        xml = etree.fromstring(xml)
+        return Order.from_etree(xml.find('order'))
 
     @staticmethod
     def from_xml_file(filename):
@@ -105,11 +101,8 @@ class Order(DBObject):
         @return: A new instance of an order.
         """
         # Parse required attributes.
-        xml     = etree.parse(filename)
-        element = xml.find('order')
-        order   = Order(element.get('service'))
-        order._read_hosts_from_xml(element)
-        return order
+        xml = etree.parse(filename)
+        return Order.from_etree(xml.find('order'))
 
     @staticmethod
     def from_csv_file(service, filename):
