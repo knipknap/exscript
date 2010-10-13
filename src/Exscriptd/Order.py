@@ -60,12 +60,12 @@ class Order(DBObject):
         @return: A new instance of an order.
         """
         # Parse required attributes.
-        order           = Order(order_node.get('service'))
-        order.id        = order_node.get('id')
-        order.status    = order_node.get('status')
-        created         = order_node.get('created')
-        closed          = order_node.get('closed')
-        self.created_by = order_node.get('created-by', self.created_by)
+        order            = Order(order_node.get('service'))
+        order.id         = order_node.get('id')
+        order.status     = order_node.get('status')
+        order.created_by = order_node.get('created-by', order.created_by)
+        created          = order_node.get('created')
+        closed           = order_node.get('closed')
         if created:
             created = created.split('.', 1)[0]
             created = datetime.strptime(created, "%Y-%m-%d %H:%M:%S")
