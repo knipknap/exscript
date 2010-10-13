@@ -135,7 +135,7 @@ class OrderDBTest(unittest.TestCase):
 
         self.db.close_open_orders()
         order = self.db.get_orders()[0]
-        self.failIf(order.get_closed_timestamp(), None)
+        self.failIfEqual(order.get_closed_timestamp(), None)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(OrderDBTest)
