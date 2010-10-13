@@ -533,7 +533,7 @@ class OrderDB(object):
         """
         tbl_o = self._table_map['order']
         query = tbl_o.update(tbl_o.c.closed == None)
-        query.execute(closed = datetime.now())
+        query.execute(closed = datetime.utcnow())
 
     def save_order(self, orders, recursive = True):
         """

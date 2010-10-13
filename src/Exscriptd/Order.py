@@ -42,7 +42,7 @@ class Order(DBObject):
         self.status     = 'new'
         self.service    = service_name
         self.hosts      = []
-        self.created    = datetime.now()
+        self.created    = datetime.utcnow()
         self.closed     = None
         self.created_by = os.environ.get('USER')
 
@@ -328,7 +328,7 @@ class Order(DBObject):
         """
         Marks the order closed.
         """
-        self.closed = datetime.now()
+        self.closed = datetime.utcnow()
 
     def add_host(self, host):
         self.touch()
