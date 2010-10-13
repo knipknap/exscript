@@ -91,6 +91,7 @@ class Daemon(object):
         self.log(order, 'Status is now "%s"' % status)
 
     def set_order_status_done(self, order):
+        order.close()
         self.set_order_status(order, 'completed')
 
     def save_order(self, order):
@@ -100,16 +101,16 @@ class Daemon(object):
     def _enter_order(self, service, order):
         # Note: This method is called asynchronously.
         # Store the order in the database.
-        order.status = 'enter-start'
+        self.set_order_status(order, 'saving')
         self.save_order(order)
 
+        self.set_order_status(order, 'enter-start')
         try:
             service.enter(order)
         except Exception, e:
             self.log(order, 'Exception: %s' % e)
             self.set_order_status(order, 'enter-error')
             raise
-        self.set_order_status(order, 'enter-complete')
 
     def _place_order(self, order):
         self.logger.debug('Placing incoming order.')

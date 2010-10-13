@@ -80,6 +80,7 @@ class OrderDB(object):
             sa.Column('service', sa.String(50), index = True),
             sa.Column('status',  sa.String(20), index = True),
             sa.Column('created', sa.DateTime,   default = sa.func.now()),
+            sa.Column('closed',  sa.DateTime),
             mysql_engine = 'INNODB'
         ))
 
@@ -302,7 +303,8 @@ class OrderDB(object):
         # Insert the order
         insert = self._table_map['order'].insert()
         result = insert.execute(service = order.get_service_name(),
-                                status  = order.get_status())
+                                status  = order.get_status(),
+                                closed  = order.get_closed_timestamp())
         order.id = result.last_inserted_ids()[0]
 
         if not recursive:
@@ -338,7 +340,8 @@ class OrderDB(object):
             return self.add_order(order, recursive)
         table  = self._table_map['order']
         fields = dict(service = order.get_service_name(),
-                      status  = order.get_status())
+                      status  = order.get_status(),
+                      closed  = order.get_closed_timestamp())
         query  = table.update(table.c.id == order.get_id())
         query.execute(**fields)
 
@@ -359,6 +362,7 @@ class OrderDB(object):
         order.id      = row[tbl_a.c.id]
         order.status  = row[tbl_a.c.status]
         order.created = row[tbl_a.c.created]
+        order.closed  = row[tbl_a.c.closed]
         return order
 
     def __get_orders_from_query(self, query):

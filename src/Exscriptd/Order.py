@@ -43,6 +43,7 @@ class Order(DBObject):
         self.service = service_name
         self.hosts   = []
         self.created = datetime.now()
+        self.closed  = None
 
     def __repr__(self):
         return "<Order('%s','%s','%s')>" % (self.id, self.service, self.status)
@@ -62,10 +63,15 @@ class Order(DBObject):
         order.id      = order_node.get('id')
         order.status  = order_node.get('status')
         created       = order_node.get('created')
+        closed        = order_node.get('closed')
         if created:
             created = created.split('.', 1)[0]
             created = datetime.strptime(created, "%Y-%m-%d %H:%M:%S")
             order.created = created
+        if closed:
+            closed = closed.split('.', 1)[0]
+            closed = datetime.strptime(closed, "%Y-%m-%d %H:%M:%S")
+            order.closed = closed
         order._read_hosts_from_xml(order_node)
         return order
 
@@ -205,6 +211,8 @@ class Order(DBObject):
             order.attrib['status'] = str(self.status)
         if self.created:
             order.attrib['created'] = str(self.created)
+        if self.closed:
+            order.attrib['closed'] = str(self.closed)
         for host in self.hosts:
             elem = etree.SubElement(order,
                                     'host',
@@ -298,6 +306,22 @@ class Order(DBObject):
         @return: The timestamp.
         """
         return self.created
+
+    def get_closed_timestamp(self):
+        """
+        Returns the time at which the order was closed, or None if the
+        order is still open.
+
+        @rtype:  datetime.datetime|None
+        @return: The timestamp or None.
+        """
+        return self.closed
+
+    def close(self):
+        """
+        Marks the order closed.
+        """
+        self.closed = datetime.now()
 
     def add_host(self, host):
         self.touch()
