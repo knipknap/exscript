@@ -109,6 +109,8 @@ class Order(DBObject):
         """
         Creates a new instance by reading the given CSV file.
 
+        @type  service: str
+        @param service: The service name.
         @type  filename: str
         @param filename: A file containing a CSV formatted list of hosts.
         @rtype:  Order
@@ -151,27 +153,6 @@ class Order(DBObject):
                 host.set_name(name)
             host.set_all(args)
             self.add_host(host)
-
-    def frometree(self, order_tree):
-        """
-        Updates the order using the values that are defined in the
-        given etree. The given node must be the 'order' tag.
-
-        @rtype:  lxml.etree
-        @return: The resulting tree.
-        """
-        self._read_hosts_from_xml(order_tree)
-
-    def fromxml(self, xml):
-        """
-        Updates the order using the values that are defined in the
-        given XML string.
-
-        @type  xml: str
-        @param xml: XML
-        """
-        xml = etree.fromstring(xml)
-        self._read_hosts_from_xml(xml.find('order'))
 
     def _list_to_xml(self, root, name, thelist):
         list_elem = etree.SubElement(root, 'list', name = name)
@@ -272,6 +253,8 @@ class Order(DBObject):
         """
         Set the name of the service that is ordered.
 
+        @type  name: str
+        @param name: The service name.
         @type:  str
         @param: The service name.
         """
@@ -331,6 +314,12 @@ class Order(DBObject):
         self.closed = datetime.utcnow()
 
     def add_host(self, host):
+        """
+        Adds the given host to the order.
+
+        @type  host: Exscript.Host
+        @param host: A host object.
+        """
         self.touch()
         self.hosts.append(DBObject(host))
 
