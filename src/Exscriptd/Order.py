@@ -42,6 +42,7 @@ class Order(DBObject):
         self.status     = 'new'
         self.service    = service_name
         self.hosts      = []
+        self.descr      = ''
         self.created    = datetime.utcnow()
         self.closed     = None
         self.created_by = os.environ.get('USER')
@@ -60,12 +61,15 @@ class Order(DBObject):
         @return: A new instance of an order.
         """
         # Parse required attributes.
+        descr_node       = order_node.find('description')
         order            = Order(order_node.get('service'))
         order.id         = order_node.get('id')
         order.status     = order_node.get('status')
         order.created_by = order_node.get('created-by', order.created_by)
         created          = order_node.get('created')
         closed           = order_node.get('closed')
+        if descr_node is not None:
+            order.descr = descr_node.text
         if created:
             created = created.split('.', 1)[0]
             created = datetime.strptime(created, "%Y-%m-%d %H:%M:%S")
@@ -189,6 +193,8 @@ class Order(DBObject):
             order.attrib['created'] = str(self.created)
         if self.closed:
             order.attrib['closed'] = str(self.closed)
+        if self.descr:
+            etree.SubElement(order, 'description').text = str(self.descr)
         if self.created_by:
             order.attrib['created-by'] = str(self.created_by)
         for host in self.hosts:
@@ -255,8 +261,6 @@ class Order(DBObject):
 
         @type  name: str
         @param name: The service name.
-        @type:  str
-        @param: The service name.
         """
         self.service = name
 
@@ -277,6 +281,24 @@ class Order(DBObject):
         @return: The order status.
         """
         return self.status
+
+    def set_description(self, description):
+        """
+        Sets a freely defined description on the order.
+
+        @type  description: str
+        @param description: The new description.
+        """
+        self.descr = description and str(description) or ''
+
+    def get_description(self):
+        """
+        Returns the description of the order.
+
+        @rtype:  str
+        @return: The description.
+        """
+        return self.descr
 
     def get_created_timestamp(self):
         """
