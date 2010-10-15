@@ -113,6 +113,7 @@ class Daemon(object):
             service.enter(order)
         except Exception, e:
             self.log(order, 'Exception: %s' % e)
+            order.close()
             self.set_order_status(order, 'enter-error')
             raise
 
@@ -130,6 +131,7 @@ class Daemon(object):
         # Loop the requested service up.
         service = self.services.get(order.service)
         if not service:
+            order.close()
             self.set_order_status(order, 'service-not-found')
             return
 
@@ -141,10 +143,12 @@ class Daemon(object):
             accepted = service.check(order)
         except Exception, e:
             self.log(order, 'Exception: %s' % e)
+            order.close()
             self.set_order_status(order, 'error')
             raise
 
         if not accepted:
+            order.close()
             self.set_order_status(order, 'rejected')
             return
         self.set_order_status(order, 'accepted')
