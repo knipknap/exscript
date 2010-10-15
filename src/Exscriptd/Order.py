@@ -64,7 +64,7 @@ class Order(DBObject):
         descr_node       = order_node.find('description')
         order            = Order(order_node.get('service'))
         order.id         = order_node.get('id')
-        order.status     = order_node.get('status')
+        order.status     = order_node.get('status',     order.status)
         order.created_by = order_node.get('created-by', order.created_by)
         created          = order_node.get('created')
         closed           = order_node.get('closed')
