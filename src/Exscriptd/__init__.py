@@ -17,4 +17,4 @@ The Exscript server
 """
 from ConfigReader import ConfigReader
 from Order        import Order
-from RestClient   import RestClient
+from Client       import Client

@@ -18,7 +18,7 @@ from Order                   import Order
 from OrderDB                 import OrderDB
 from lxml                    import etree
 from Exscript                import Account, Queue
-from RestDaemon              import RestDaemon
+from HTTPDaemon              import HTTPDaemon
 from PythonService           import PythonService
 from ConfigReader            import ConfigReader
 from Exscript.AccountManager import AccountManager
@@ -120,7 +120,7 @@ class Config(ConfigReader):
         db      = self.init_database_from_name(db_name)
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
-        daemon  = RestDaemon(name,
+        daemon  = HTTPDaemon(name,
                              address,
                              port,
                              database = db,

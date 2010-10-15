@@ -90,7 +90,7 @@ class HTTPHandler(HTTPRequestHandler):
     def handle_GET(self):
         self.handle_POST()
 
-class RestDaemon(Daemon):
+class HTTPDaemon(Daemon):
     def __init__(self,
                  name,
                  address    = '',

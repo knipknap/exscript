@@ -16,7 +16,7 @@
 import os, sys, time
 from optparse  import OptionParser
 from Exscript  import __version__
-from Exscriptd import RestClient, Order
+from Exscriptd import Client, Order
 
 __version__ = '0'
 
@@ -138,7 +138,7 @@ def print_table(rows):
         if i == 0:
             print '-' * sum(widths)
 
-client = RestClient(address, options.user, options.password)
+client = Client(address, options.user, options.password)
 
 if options.status:
     print client.get_order_status_from_id(options.status)

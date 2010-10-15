@@ -21,9 +21,9 @@ from urllib2          import HTTPDigestAuthHandler, build_opener, HTTPError
 from HTTPDigestServer import realm
 from Order            import Order
 
-class RestClient(object):
+class Client(object):
     """
-    Handles all contact with a server.
+    An Exscriptd client that communicates via HTTP.
     """
 
     def __init__(self, address, user, password):
