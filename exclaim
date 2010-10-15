@@ -147,12 +147,21 @@ elif options.order_count:
     print client.count_orders()
     sys.exit(0)
 elif options.order_list:
-    rows = [('OrderID', 'Service', 'Status', 'Time')]
+    rows = [('OrderID',
+             'Service',
+             'Description',
+             'Status',
+             'Created by',
+             'Created',
+             'Closed')]
     for order in client.get_order_list(0, 100, False):
         row = (order.get_id(),
                order.get_service_name(),
+               order.get_description(),
                order.get_status(),
-               str(order.get_created_timestamp()))
+               order.get_created_by(),
+               str(order.get_created_timestamp()),
+               str(order.get_closed_timestamp() or 'open'))
         rows.append(row)
     print_table(rows)
     sys.exit(0)
