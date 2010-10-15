@@ -64,13 +64,16 @@ class Service(object):
         return os.path.join(self.cfg_dir, name)
 
     def _track_task(self, order, task):
+        if not task:
+            return
         with self.task_lock:
             task.signal_connect('done', self._task_done, order, task)
             self.tasks[order.id].append(task)
 
     def _task_done(self, order, task):
         with self.task_lock:
-            self.tasks[order.id].remove(task)
+            if task is not None:
+                self.tasks[order.id].remove(task)
             if not self.tasks[order.id]:
                 del self.tasks[order.id]
                 self.done(order)
@@ -92,9 +95,10 @@ class Service(object):
             task = self.queue.run_or_ignore(hosts, callback)
         else:
             task = self.queue.run(hosts, callback)
-        if task:
-            self._track_task(order, task)
+        self._track_task(order, task)
         self.queue.workqueue.unpause()
+        if not task:
+            self._task_done(order, None)
         return task
 
     def priority_enqueue_hosts(self,
@@ -112,6 +116,8 @@ class Service(object):
             task = self.queue.priority_run(hosts, callback)
         self._track_task(order, task)
         self.queue.workqueue.unpause()
+        if not task:
+            self._task_done(order, None)
         return task
 
     def enqueue(self, order, function, name):
@@ -120,6 +126,8 @@ class Service(object):
         task = self.queue.enqueue(function, name)
         self._track_task(order, task)
         self.queue.workqueue.unpause()
+        if not task:
+            self._task_done(order, None)
         return task
 
     def check(self, order):
