@@ -59,12 +59,8 @@ class OrderDBTest(unittest.TestCase):
         self.assertEqual(order1.get_created_by(), 'this test')
         self.assertEqual(order1.get_description(), 'my description')
 
-        host1  = Host('foohost1')
-        host2  = Host('foohost2')
-        host1.set('foovar1', 'value1')
-        host1.set('foovar2', 'value2')
-        host2.set('foovar1', 'value1')
-        host2.set('foovar2', 'value3')
+        host1 = Host('foohost1')
+        host2 = Host('foohost2')
         order1.add_host(host1)
         order1.add_host(host2)
 
@@ -82,21 +78,12 @@ class OrderDBTest(unittest.TestCase):
         hosts2 = [h.get_address() for h in order2.get_hosts()]
         self.assertEqual(hosts1, hosts2)
 
-        # Check that the variables of the hosts are stored.
-        hosts2 = order2.get_hosts()
-        self.assertEqual(host1.get_all(), hosts2[0].get_all())
-        self.assertEqual(host2.get_all(), hosts2[1].get_all())
-
     def testSaveOrder(self):
         self.testInstall()
 
         order1 = Order('fooservice')
         host1  = Host('foohost1')
         host2  = Host('foohost2')
-        host1.set('foovar1', 'value1')
-        host1.set('foovar2', 'value2')
-        host2.set('foovar1', 'value1')
-        host2.set('foovar2', 'value3')
         order1.add_host(host1)
         order1.add_host(host2)
 
@@ -111,11 +98,6 @@ class OrderDBTest(unittest.TestCase):
         hosts1 = [h.get_address() for h in order1.get_hosts()]
         hosts2 = [h.get_address() for h in order2.get_hosts()]
         self.assertEqual(hosts1, hosts2)
-
-        # Check that the variables of the hosts are stored.
-        hosts2 = order2.get_hosts()
-        self.assertEqual(host1.get_all(), hosts2[0].get_all())
-        self.assertEqual(host2.get_all(), hosts2[1].get_all())
 
     def testGetOrder(self):
         self.testAddOrder()

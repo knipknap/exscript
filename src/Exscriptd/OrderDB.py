@@ -96,14 +96,6 @@ class OrderDB(object):
             mysql_engine = 'INNODB'
         ))
 
-        self.__add_table(sa.Table(pfx + 'variable', self.metadata,
-            sa.Column('id',      sa.Integer,     primary_key = True),
-            sa.Column('host_id', sa.Integer,     index = True),
-            sa.Column('name',    sa.String(150), index = True),
-            sa.Column('value',   sa.PickleType()),
-            sa.ForeignKeyConstraint(['host_id'], [pfx + 'host.id'], ondelete = 'CASCADE'),
-            mysql_engine = 'INNODB'
-        ))
 
     @synchronized
     def install(self):
@@ -172,54 +164,6 @@ class OrderDB(object):
         return self._table_prefix
 
     @synchronized
-    def __add_variable(self, host_id, key, value):
-        """
-        Inserts the given variable into the database.
-        """
-        if host_id is None:
-            raise AttributeError('host_id argument must not be None')
-        if key is None:
-            raise AttributeError('key argument must not be None')
-
-        insert = self._table_map['variable'].insert()
-        result = insert.execute(host_id = host_id,
-                                name    = key,
-                                value   = value)
-        return result.last_inserted_ids()[0]
-
-    @synchronized
-    def __save_variable(self, host_id, key, value):
-        """
-        Inserts or updates the given variable in the database.
-        """
-        if host_id is None:
-            raise AttributeError('host_id argument must not be None')
-        if key is None:
-            raise AttributeError('key argument must not be None')
-
-        # Check if the host already exists.
-        table  = self._table_map['variable']
-        where  = sa.and_(table.c.host_id == host_id,
-                         table.c.name    == key)
-        thevar = table.select(where).execute().fetchone()
-        fields = dict(host_id = host_id,
-                      name    = key,
-                      value   = value)
-
-        # Insert or update it.
-        if thevar is None:
-            query = table.insert()
-            query.execute(**fields)
-        else:
-            query = table.update(where)
-            query.execute(**fields)
-
-    def __get_variable_from_row(self, row):
-        assert row is not None
-        tbl_v = self._table_map['variable']
-        return row[tbl_v.c.name], row[tbl_v.c.value]
-
-    @synchronized
     def __add_host(self, order_id, host):
         """
         Inserts the given host into the database.
@@ -238,10 +182,6 @@ class OrderDB(object):
                                 name     = host.get_name(),
                                 address  = host.get_address())
         host_id = result.last_inserted_ids()[0]
-
-        # Insert the host's variables.
-        for key, value in host.get_all().iteritems():
-            self.__add_variable(host_id, key, value)
 
         host.untouch()
         return host_id
@@ -277,13 +217,6 @@ class OrderDB(object):
             query   = table.update(where)
             result  = query.execute(**fields)
             host_id = thehost[table.c.id]
-
-        # Delete obsolete variables.
-        #FIXME
-
-        # Check the list of attached variables.
-        for key, value in host.get_all().iteritems():
-            self.__save_variable(host_id, key, value)
 
         host.untouch()
         return host_id
@@ -376,7 +309,7 @@ class OrderDB(object):
 
     def __get_orders_from_query(self, query):
         """
-        Returns a list of orders, including their hosts and variables.
+        Returns a list of orders, including their hosts.
         """
         assert query is not None
         result = query.execute()
@@ -387,7 +320,6 @@ class OrderDB(object):
 
         tbl_o         = self._table_map['order']
         tbl_h         = self._table_map['host']
-        tbl_v         = self._table_map['variable']
         last_order_id = row[tbl_o.c.id]
         order_list    = []
         while row is not None:
@@ -410,19 +342,7 @@ class OrderDB(object):
                 last_host_id = row[tbl_h.c.id]
                 host         = self.__get_host_from_row(row)
                 order.add_host(host)
-
-                if not row[tbl_v.c.host_id]:
-                    row = result.fetchone()
-                    continue
-
-                # Append the host's variables.
-                while row and row[tbl_v.c.host_id]:
-                    key, value = self.__get_variable_from_row(row)
-                    host.set(key, value)
-
-                    row = result.fetchone()
-                    if not row or last_host_id != row[tbl_h.c.id]:
-                        break
+                row = result.fetchone()
 
             if not row:
                 break
@@ -489,9 +409,7 @@ class OrderDB(object):
 
         if recursive:
             tbl_h = self._table_map['host']
-            tbl_v = self._table_map['variable']
             table = tbl_o.outerjoin(tbl_h, tbl_o.c.id == tbl_h.c.order_id)
-            table = table.outerjoin(tbl_v, tbl_h.c.id == tbl_v.c.host_id)
 
             # Select the orders (subselect).
             order_select = sa.select([tbl_o.c.id.label('order_id')],
