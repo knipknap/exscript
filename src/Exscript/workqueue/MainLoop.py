@@ -74,8 +74,12 @@ class MainLoop(Trackable, threading.Thread):
         self.condition.acquire()
         if not self.get_first_action_from_name(action.name):
             self.queue.append(action)
+            enqueued = True
+        else:
+            enqueued = False
         self.condition.notifyAll()
         self.condition.release()
+        return enqueued
 
     def priority_enqueue(self, action, force_start = False):
         action._mainloop_added_notify(self)
@@ -97,7 +101,7 @@ class MainLoop(Trackable, threading.Thread):
             if queue_action.name == action.name:
                 self.condition.notifyAll()
                 self.condition.release()
-                return
+                return False
 
         # If the action is already in the queue, remove it so it can be
         # re-added later.
@@ -120,6 +124,7 @@ class MainLoop(Trackable, threading.Thread):
 
         self.condition.notifyAll()
         self.condition.release()
+        return existing is None
 
     def pause(self):
         self.condition.acquire()

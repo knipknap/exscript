@@ -138,8 +138,10 @@ class WorkQueue(Trackable):
 
         @type  action: Action
         @param action: The action that is executed.
+        @rtype:  bool
+        @return: True if the action was enqueued, False otherwise.
         """
-        self.main_loop.enqueue_or_ignore(action)
+        return self.main_loop.enqueue_or_ignore(action)
 
     def priority_enqueue(self, action, force_start = False):
         """
@@ -162,8 +164,10 @@ class WorkQueue(Trackable):
 
         @type  action: Action
         @param action: The action that is executed.
+        @rtype:  bool
+        @return: True if the action was enqueued, False otherwise.
         """
-        self.main_loop.priority_enqueue_or_raise(action, force_start)
+        return self.main_loop.priority_enqueue_or_raise(action, force_start)
 
     def unpause(self):
         """

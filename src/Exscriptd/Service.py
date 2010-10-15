@@ -92,7 +92,8 @@ class Service(object):
             task = self.queue.run_or_ignore(hosts, callback)
         else:
             task = self.queue.run(hosts, callback)
-        self._track_task(order, task)
+        if task:
+            self._track_task(order, task)
         self.queue.workqueue.unpause()
         return task
 

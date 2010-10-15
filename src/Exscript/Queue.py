@@ -395,6 +395,9 @@ class Queue(Trackable):
 
 
     def _enqueue1(self, action, prioritize, force, duplicate_check):
+        """
+        Returns True if the action was enqueued, False otherwise.
+        """
         self._dbg(2, 'Enqueing Action.')
         action.set_times(self.times)
         action.set_login_times(self.login_times)
@@ -406,22 +409,24 @@ class Queue(Trackable):
         # Done. Enqueue this.
         if duplicate_check:
             if prioritize:
-                self.workqueue.priority_enqueue_or_raise(action, force)
+                return self.workqueue.priority_enqueue_or_raise(action, force)
             else:
-                self.workqueue.enqueue_or_ignore(action)
+                return self.workqueue.enqueue_or_ignore(action)
+
+        if prioritize:
+            self.workqueue.priority_enqueue(action, force)
         else:
-            if prioritize:
-                self.workqueue.priority_enqueue(action, force)
-            else:
-                self.workqueue.enqueue(action)
+            self.workqueue.enqueue(action)
+        return True
 
 
     def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
         action = HostAction(self, function, host, **self.protocol_args)
-        self._enqueue1(action, prioritize, force, duplicate_check)
-        return action
+        if self._enqueue1(action, prioritize, force, duplicate_check):
+            return action
+        return None
 
 
     def _run(self, hosts, function, duplicate_check):
@@ -431,8 +436,12 @@ class Queue(Trackable):
         task = Task(self)
         for host in hosts:
             action = self._run1(host, function, False, False, duplicate_check)
-            task.add_action(action)
-        task._emit_done_if_completed()
+            if action is not None:
+                task.add_action(action)
+
+        if task.is_completed():
+            self._dbg(2, 'No actions enqueued.')
+            return None
 
         self._dbg(2, 'All actions enqueued.')
         return task
@@ -468,7 +477,7 @@ class Queue(Trackable):
         @type  function: function
         @param function: The function to execute.
         @rtype:  object
-        @return: An object representing the task.
+        @return: A task object, or None if all hosts were duplicates.
         """
         return self._run(hosts, function, True)
 
@@ -491,7 +500,6 @@ class Queue(Trackable):
         for host in hosts:
             action = self._run1(host, function, True, False, False)
             task.add_action(action)
-        task._emit_done_if_completed()
 
         self._dbg(2, 'All prioritized actions enqueued.')
         return task
@@ -508,7 +516,7 @@ class Queue(Trackable):
         @type  function: function
         @param function: The function to execute.
         @rtype:  object
-        @return: An object representing the task.
+        @return: A task object, or None if all hosts were duplicates.
         """
         hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
@@ -516,8 +524,12 @@ class Queue(Trackable):
         task = Task(self)
         for host in hosts:
             action = self._run1(host, function, True, False, True)
-            task.add_action(action)
-        task._emit_done_if_completed()
+            if action is not None:
+                task.add_action(action)
+
+        if task.is_completed():
+            self._dbg(2, 'All prioritized actions were duplicates.')
+            return None
 
         self._dbg(2, 'All prioritized actions enqueued.')
         return task
@@ -542,7 +554,6 @@ class Queue(Trackable):
         for host in hosts:
             action = self._run1(host, function, True, True, False)
             task.add_action(action)
-        task._emit_done_if_completed()
 
         self._dbg(2, 'All forced actions enqueued.')
         return task
