@@ -78,6 +78,9 @@ class Service(object):
                 del self.tasks[order.id]
                 self.done(order)
 
+    def _enter_completed_notify(self, order):
+        self._task_done(order, None)
+
     def enqueue_hosts(self,
                       order,
                       hosts,
@@ -97,8 +100,6 @@ class Service(object):
             task = self.queue.run(hosts, callback)
         self._track_task(order, task)
         self.queue.workqueue.unpause()
-        if not task:
-            self._task_done(order, None)
         return task
 
     def priority_enqueue_hosts(self,
@@ -116,8 +117,6 @@ class Service(object):
             task = self.queue.priority_run(hosts, callback)
         self._track_task(order, task)
         self.queue.workqueue.unpause()
-        if not task:
-            self._task_done(order, None)
         return task
 
     def enqueue(self, order, function, name):
@@ -126,8 +125,6 @@ class Service(object):
         task = self.queue.enqueue(function, name)
         self._track_task(order, task)
         self.queue.workqueue.unpause()
-        if not task:
-            self._task_done(order, None)
         return task
 
     def check(self, order):

@@ -116,6 +116,11 @@ class Daemon(object):
             self.set_order_status(order, 'enter-error')
             raise
 
+        # If the service did not enqueue anything, it also
+        # has no opportunity to mark the order 'done'. So mark
+        # it automatically here.
+        service._enter_completed_notify(order)
+
     def _place_order(self, order):
         self.logger.debug('Placing incoming order.')
 
