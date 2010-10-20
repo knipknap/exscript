@@ -122,6 +122,16 @@ class MailTest(unittest.TestCase):
     def testGetBody(self):
         pass # see testSetBody()
 
+    def testAddAttachment(self):
+        self.assertEqual(self.mail.get_attachments(), [])
+        self.mail.add_attachment('foo')
+        self.assertEqual(self.mail.get_attachments(), ['foo'])
+        self.mail.add_attachment('bar')
+        self.assertEqual(self.mail.get_attachments(), ['foo', 'bar'])
+
+    def testGetAttachments(self):
+        self.testAddAttachment()
+
     def testGetSmtpHeader(self):
         pass # see testSetFromTemplateString()
 
