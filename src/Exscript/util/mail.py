@@ -16,6 +16,7 @@
 Sending and formatting emails.
 """
 import os, time, re, socket, smtplib, mimetypes
+from email                         import encoders
 from email.mime.multipart          import MIMEMultipart
 from email.mime.audio              import MIMEAudio
 from email.mime.base               import MIMEBase
