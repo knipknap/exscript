@@ -15,7 +15,12 @@
 """
 Sending and formatting emails.
 """
-import os, time, re, socket, smtplib
+import os, time, re, socket, smtplib, mimetypes
+from email.mime.multipart          import MIMEMultipart
+from email.mime.audio              import MIMEAudio
+from email.mime.base               import MIMEBase
+from email.mime.image              import MIMEImage
+from email.mime.text               import MIMEText
 from Exscript.external.SpiffSignal import Trackable
 
 ###########################################################
@@ -99,6 +104,7 @@ class Mail(Trackable):
         @param body: The email body, passed to set_body().
         """
         Trackable.__init__(self)
+        self.files = []
         if not sender:
             domain = socket.getfqdn('localhost')
             sender = os.environ.get('USER') + '@' + domain
@@ -338,6 +344,25 @@ class Mail(Trackable):
         body   = self.get_body().replace('\n', '\r\n')
         return header + '\r\n' + body + '\r\n'
 
+    def add_attachment(self, filename):
+        """
+        Adds the file with the given name as an attachment.
+
+        @type  filename: string
+        @param filename: A filename.
+        """
+        self.files.append(filename)
+
+    def get_attachments(self):
+        """
+        Returns a list of attached files.
+
+        @rtype:  list[string]
+        @return: The list of filenames.
+        """
+        return self.files
+
+
 def from_template_string(string, **vars):
     """
     Reads the given SMTP formatted template, and creates a new Mail object
@@ -366,12 +391,58 @@ def from_template(filename, **vars):
     tmpl = open(filename).read()
     return from_template_string(tmpl, **vars)
 
+def _get_mime_object(filename):
+    # Guess the content type based on the file's extension.  Encoding
+    # is ignored, although we should check for simple things like
+    # gzip'd or compressed files.
+    ctype, encoding = mimetypes.guess_type(filename)
+    if ctype is None or encoding is not None:
+        ctype = 'application/octet-stream'
+
+    maintype, subtype = ctype.split('/', 1)
+    if maintype == 'text':
+        fp  = open(filename)
+        msg = MIMEText(fp.read(), _subtype = subtype)
+    elif maintype == 'image':
+        fp  = open(filename, 'rb')
+        msg = MIMEImage(fp.read(), _subtype = subtype)
+    elif maintype == 'audio':
+        fp  = open(filename, 'rb')
+        msg = MIMEAudio(fp.read(), _subtype = subtype)
+    else:
+        fp  = open(filename, 'rb')
+        msg = MIMEBase(maintype, subtype)
+        msg.set_payload(fp.read())
+        encoders.encode_base64(msg)
+    fp.close()
+
+    # Set the filename parameter
+    msg.add_header('Content-Disposition', 'attachment', filename = filename)
+    return msg
+
 def send(mail, server = 'localhost'):
     """
     Sends the given mail.
+
+    @type  mail: Mail
+    @param mail: The mail object.
+    @type  server: string
+    @param server: The address of the mailserver.
     """
-    sender  = mail.get_sender()
-    rcpt    = mail.get_receipients()
-    mail    = mail.get_smtp_mail()
-    session = smtplib.SMTP(server)
-    result  = session.sendmail(sender, rcpt, mail)
+    sender             = mail.get_sender()
+    rcpt               = mail.get_receipients()
+    session            = smtplib.SMTP(server)
+    message            = MIMEMultipart()
+    message['Subject'] = mail.get_subject()
+    message['From']    = mail.get_sender()
+    message['To']      = ', '.join(mail.get_to())
+    message.preamble   = 'Your mail client is not MIME aware.'
+
+    body = MIMEText(mail.get_body())
+    body.add_header('Content-Disposition', 'inline')
+    message.attach(body)
+
+    for file in mail.get_attachments():
+        message.attach(_get_mime_object(file))
+
+    result = session.sendmail(sender, rcpt, message.as_string())
