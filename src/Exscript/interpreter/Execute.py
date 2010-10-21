@@ -49,7 +49,8 @@ class Execute(String):
             response = ''
         else:
             conn.execute(command)
-            response = conn.response.split('\n')
+            response = conn.response.replace('\r\n', '\n')
+            response = response.replace('\r', '\n').split('\n')
 
         if self.strip_command:
             response = response[1:]
