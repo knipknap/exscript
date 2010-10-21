@@ -1,0 +1,26 @@
+telnet (testhost)
+
+
+
+
+
+
+WARNING ! ! !  YOU ARE MONITORED
+Access to this system is restricted to authorized uses only.
+Any attempt to access this system without proper authority may result in prosecution.
+
+
+Security System V 5.0
+
+Authorized Login: test
+test's Password: 
+*******************************************************************************
+* testhost                                                                    *
+*                                                                             *
+*  AIX 4.3.3                                                                  *
+*                                                                             *
+*******************************************************************************
+Last unsuccessful login: Mon Mar 30 14:12:54 CEST 2009 on /dev/pts/102 from testhost.local
+Last login: Mon Dec 14 08:38:37 CET 2009 on /dev/pts/109 from testhost.local
+
+test@testhost:/home/test> 

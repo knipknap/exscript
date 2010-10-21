@@ -1,0 +1,9 @@
+
+(Banner goes here)
+
+at 'testhost.t' port '/dev/vty1' from '10.0.0.1'
+
+Username: sab
+s/key 9796 en29000000
+Password: 
+RP/0/RP0/CPU0:testhost#
