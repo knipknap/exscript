@@ -15,6 +15,7 @@
 import os, logging
 from collections             import defaultdict
 from threading               import Lock
+from Exscriptd               import Task
 from Exscript.util.decorator import bind
 
 class Service(object):
@@ -142,3 +143,11 @@ class Service(object):
 
     def save_order(self, order):
         self.daemon.save_order(order)
+
+    def create_task(self, order, name):
+        task = Task(name)
+        self.save_task(order, task)
+        return task
+
+    def save_task(self, order, task):
+        self.daemon.save_task(order, task)

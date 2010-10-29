@@ -56,12 +56,9 @@ class HTTPHandler(HTTPRequestHandler):
             return order.status
         elif self.path == '/order/list/':
             # Fetch the orders.
-            offset    = int(self.args.get('offset', 0))
-            limit     = min(100, int(self.args.get('limit', 100)))
-            recursive = self.args.get('recursive') == '1'
-            orders    = self.daemon.get_order_list(offset    = offset,
-                                                   limit     = limit,
-                                                   recursive = recursive)
+            offset = int(self.args.get('offset', 0))
+            limit  = min(100, int(self.args.get('limit', 100)))
+            orders = self.daemon.get_order_list(offset = offset, limit = limit)
 
             # Assemble an XML document containing the orders.
             xml = etree.Element('xml')

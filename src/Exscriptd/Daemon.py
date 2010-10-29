@@ -84,14 +84,12 @@ class Daemon(object):
     def get_order_from_id(self, order_id):
         return self.db.get_order(id = order_id)
 
-    def get_order_list(self, offset = 0, limit = 0, recursive = True):
-        return self.db.get_orders(offset    = offset,
-                                  limit     = limit,
-                                  recursive = recursive)
+    def get_order_list(self, offset = 0, limit = 0):
+        return self.db.get_orders(offset = offset, limit = limit)
 
     def set_order_status(self, order, status):
         order.status = status
-        self.db.save_order(order, recursive = False)
+        self.db.save_order(order)
         self.log(order, 'Status is now "%s"' % status)
 
     def set_order_status_done(self, order):
@@ -101,6 +99,9 @@ class Daemon(object):
     def save_order(self, order):
         self.log(order, 'Saving order data.')
         return self.db.save_order(order)
+
+    def save_task(self, order, task):
+        return self.db.save_task(order, task)
 
     def _enter_order(self, service, order):
         # Note: This method is called asynchronously.

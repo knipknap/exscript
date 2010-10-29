@@ -2,8 +2,8 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from sqlalchemy        import create_engine
-from Exscript          import Host
 from Exscriptd.Order   import Order
+from Exscriptd.Task    import Task
 from Exscriptd.OrderDB import OrderDB
 
 class OrderDBTest(unittest.TestCase):
@@ -59,11 +59,6 @@ class OrderDBTest(unittest.TestCase):
         self.assertEqual(order1.get_created_by(), 'this test')
         self.assertEqual(order1.get_description(), 'my description')
 
-        host1 = Host('foohost1')
-        host2 = Host('foohost2')
-        order1.add_host(host1)
-        order1.add_host(host2)
-
         self.assert_(order1.get_id() is None)
         self.db.add_order(order1)
 
@@ -73,31 +68,17 @@ class OrderDBTest(unittest.TestCase):
         self.assertEqual(order2.get_created_by(), 'this test')
         self.assertEqual(order2.get_description(), 'my description')
 
-        # Check that the hosts of the order are stored.
-        hosts1 = [h.get_address() for h in order1.get_hosts()]
-        hosts2 = [h.get_address() for h in order2.get_hosts()]
-        self.assertEqual(hosts1, hosts2)
-
     def testSaveOrder(self):
         self.testInstall()
 
         order1 = Order('fooservice')
-        host1  = Host('foohost1')
-        host2  = Host('foohost2')
-        order1.add_host(host1)
-        order1.add_host(host2)
 
         self.assert_(order1.get_id() is None)
         self.db.save_order(order1)
 
         # Check that the order is stored.
         order2 = self.db.get_order(id = order1.get_id())
-        self.assert_(order1.get_id() == order2.get_id())
-
-        # Check that the hosts of the order are stored.
-        hosts1 = [h.get_address() for h in order1.get_hosts()]
-        hosts2 = [h.get_address() for h in order2.get_hosts()]
-        self.assertEqual(hosts1, hosts2)
+        self.assertEqual(order1.get_id(), order2.get_id())
 
     def testGetOrder(self):
         self.testAddOrder()
@@ -127,6 +108,53 @@ class OrderDBTest(unittest.TestCase):
         self.db.close_open_orders()
         order = self.db.get_orders()[0]
         self.failIfEqual(order.get_closed_timestamp(), None)
+
+    def testSaveTask(self):
+        self.testInstall()
+
+        order = Order('fooservice')
+        self.db.save_order(order)
+
+        task = Task('my test task')
+        self.assert_(task.id is None)
+        self.db.save_task(order, task)
+        self.assert_(task.id is not None)
+
+    def testGetTask(self):
+        self.testInstall()
+
+        order = Order('fooservice')
+        self.db.save_order(order)
+
+        task1 = Task('my test task')
+        self.db.save_task(order, task1)
+        self.assertEqual(task1.id, self.db.get_task().id)
+
+        task2 = Task('another test task')
+        self.db.save_task(order, task2)
+        self.assertRaises(IndexError, self.db.get_task)
+
+    def testGetTasks(self):
+        self.testInstall()
+
+        order = Order('fooservice')
+        self.db.save_order(order)
+
+        task1 = Task('my test task')
+        task2 = Task('another test task')
+        self.db.save_task(order, task1)
+        self.db.save_task(order, task2)
+
+        id_list1 = sorted([task1.id, task2.id])
+        id_list2 = sorted([task.id for task in self.db.get_tasks()])
+        self.assertEqual(id_list1, id_list2)
+
+        tasks    = self.db.get_tasks(order_id = order.id)
+        id_list2 = sorted([task.id for task in tasks])
+        self.assertEqual(id_list1, id_list2)
+
+        id_list2 = [task.id for task in self.db.get_tasks(order_id = 2)]
+        self.assertEqual([], id_list2)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(OrderDBTest)

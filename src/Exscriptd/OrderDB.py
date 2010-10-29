@@ -14,7 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from datetime           import datetime
 from Order              import Order
-from Exscript           import Host
+from Task               import Task
 from Exscript.util.cast import to_list
 import sqlalchemy                 as sa
 import sqlalchemy.databases.mysql as mysql
@@ -87,11 +87,14 @@ class OrderDB(object):
             mysql_engine = 'INNODB'
         ))
 
-        self.__add_table(sa.Table(pfx + 'host', self.metadata,
+        self.__add_table(sa.Table(pfx + 'task', self.metadata,
             sa.Column('id',       sa.Integer,     primary_key = True),
             sa.Column('order_id', sa.Integer,     index = True),
-            sa.Column('address',  sa.String(150), index = True),
             sa.Column('name',     sa.String(150), index = True),
+            sa.Column('status',   sa.String(150), index = True),
+            sa.Column('progress', sa.Float,       default = 0.0),
+            sa.Column('started',  sa.DateTime,    default = sa.func.now()),
+            sa.Column('closed',   sa.DateTime),
             sa.ForeignKeyConstraint(['order_id'], [pfx + 'order.id'], ondelete = 'CASCADE'),
             mysql_engine = 'INNODB'
         ))
@@ -164,72 +167,75 @@ class OrderDB(object):
         return self._table_prefix
 
     @synchronized
-    def __add_host(self, order_id, host):
+    def __add_task(self, order_id, task):
         """
-        Inserts the given host into the database.
+        Inserts the given task into the database.
         """
         if order_id is None:
             raise AttributeError('order_id argument must not be None')
-        if host is None:
-            raise AttributeError('host argument must not be None')
+        if task is None:
+            raise AttributeError('task argument must not be None')
 
-        if not host.is_dirty():
+        if not task.is_dirty():
             return
 
-        # Insert the host.
-        insert = self._table_map['host'].insert()
-        result = insert.execute(order_id = order_id,
-                                name     = host.get_name(),
-                                address  = host.get_address())
-        host_id = result.last_inserted_ids()[0]
+        # Insert the task
+        insert  = self._table_map['task'].insert()
+        result  = insert.execute(order_id = order_id, **task.todict())
+        task_id = result.last_inserted_ids()[0]
 
-        host.untouch()
-        return host_id
+        task.untouch()
+        return task_id
 
     @synchronized
-    def __save_host(self, order_id, host):
+    def __save_task(self, order_id, task):
         """
-        Inserts or updates the given host into the database.
+        Inserts or updates the given task into the database.
         """
         if order_id is None:
             raise AttributeError('order_id argument must not be None')
-        if host is None:
-            raise AttributeError('host argument must not be None')
+        if task is None:
+            raise AttributeError('task argument must not be None')
 
-        if not host.is_dirty():
+        if not task.is_dirty():
             return
 
-        # Check if the host already exists.
-        table   = self._table_map['host']
-        where   = sa.and_(table.c.order_id == order_id,
-                          table.c.address  == host.get_address())
-        thehost = table.select(where).execute().fetchone()
-        fields  = dict(order_id = order_id,
-                       name     = host.get_name(),
-                       address  = host.get_address())
-
-        # Insert or update it.
-        if thehost is None:
-            query  = table.insert()
-            result = query.execute(**fields)
-            host_id = result.last_inserted_ids()[0]
-        else:
-            query   = table.update(where)
+        # Insert or update the task.
+        tbl_t  = self._table_map['task']
+        fields = dict(order_id = order_id, **task.todict())
+        if task.id is None:
+            query   = tbl_t.insert()
             result  = query.execute(**fields)
-            host_id = thehost[table.c.id]
+            task.id = result.last_inserted_ids()[0]
+        else:
+            query   = tbl_t.update(tbl_t.c.id == task.id)
+            result  = query.execute(**fields)
 
-        host.untouch()
-        return host_id
+        task.untouch()
+        return task.id
 
-    def __get_host_from_row(self, row):
+    def __get_task_from_row(self, row):
         assert row is not None
-        tbl_h = self._table_map['host']
-        host  = Host(row[tbl_h.c.name])
-        host.set_address(row[tbl_h.c.address])
-        return host
+        tbl_t         = self._table_map['task']
+        task          = Task(row[tbl_t.c.name])
+        task.id       = row[tbl_t.c.id]
+        task.status   = row[tbl_t.c.status]
+        task.progress = row[tbl_t.c.progress]
+        task.started  = row[tbl_t.c.started]
+        task.closed   = row[tbl_t.c.closed]
+        task.untouch()
+        return task
+
+    def __get_tasks_from_query(self, query):
+        """
+        Returns a list of tasks.
+        """
+        assert query is not None
+        result = query.execute()
+        return [self.__get_task_from_row(row) for row in result]
 
     @synchronized
-    def __add_order(self, order, recursive = True):
+    def __add_order(self, order):
         """
         Inserts the given order into the database.
         """
@@ -244,25 +250,16 @@ class OrderDB(object):
                                 closed      = order.get_closed_timestamp(),
                                 created_by  = order.get_created_by())
         order.id = result.last_inserted_ids()[0]
-
-        if not recursive:
-            return
-
-        # Insert the hosts of the order.
-        for host in order.get_hosts():
-            self.__add_host(order.id, host)
         return order.id
 
     @synchronized
-    def __save_order(self, order, recursive = True):
+    def __save_order(self, order):
         """
         Updates the given order in the database. Does nothing if the
         order is not yet in the database.
 
         @type  order: Order
         @param order: The order to be saved.
-        @type  recursive: Boolean
-        @param recursive: Whether to save the children of the order.
         """
         if order is None:
             raise AttributeError('order argument must not be None')
@@ -275,7 +272,7 @@ class OrderDB(object):
 
         # Insert or update it.
         if not theorder:
-            return self.add_order(order, recursive)
+            return self.add_order(order)
         table  = self._table_map['order']
         fields = dict(service     = order.get_service_name(),
                       status      = order.get_status(),
@@ -284,16 +281,6 @@ class OrderDB(object):
                       created_by  = order.get_created_by())
         query  = table.update(table.c.id == order.get_id())
         query.execute(**fields)
-
-        if not recursive:
-            return
-
-        # Delete obsolete hosts.
-        #FIXME
-
-        # Update the list of attached hosts.
-        for host in order.get_hosts():
-            self.__save_host(order.get_id(), host)
 
     def __get_order_from_row(self, row):
         assert row is not None
@@ -309,45 +296,11 @@ class OrderDB(object):
 
     def __get_orders_from_query(self, query):
         """
-        Returns a list of orders, including their hosts.
+        Returns a list of orders.
         """
         assert query is not None
         result = query.execute()
-
-        row = result.fetchone()
-        if not row:
-            return []
-
-        tbl_o         = self._table_map['order']
-        tbl_h         = self._table_map['host']
-        last_order_id = row[tbl_o.c.id]
-        order_list    = []
-        while row is not None:
-            last_order_id = row[tbl_o.c.id]
-            if not last_order_id:
-                break
-
-            order = self.__get_order_from_row(row)
-            order_list.append(order)
-
-            if not row.has_key(tbl_h.c.order_id) or not row[tbl_h.c.id]:
-                row = result.fetchone()
-                continue
-
-            # Append all hosts.
-            while row and row[tbl_h.c.id]:
-                if last_order_id != row[tbl_o.c.id]:
-                    break
-
-                last_host_id = row[tbl_h.c.id]
-                host         = self.__get_host_from_row(row)
-                order.add_host(host)
-                row = result.fetchone()
-
-            if not row:
-                break
-
-        return order_list
+        return [self.__get_order_from_row(row) for row in result]
 
     def count_orders(self):
         """
@@ -374,10 +327,10 @@ class OrderDB(object):
         if len(result) == 0:
             return None
         elif len(result) > 1:
-            raise Exception('Too many results')
+            raise IndexError('Too many results')
         return result[0]
 
-    def get_orders(self, offset = 0, limit = 0, recursive = True, **kwargs):
+    def get_orders(self, offset = 0, limit = 0, **kwargs):
         """
         Returns all orders that match the given criteria.
 
@@ -385,8 +338,6 @@ class OrderDB(object):
         @param offset: The offset of the first item to be returned.
         @type  limit: int
         @param limit: The maximum number of items that is returned.
-        @type  recursive: bool
-        @param recursive: Whether to load the attached hosts.
         @type  kwargs: dict
         @param kwargs: The following keys may be used:
                          - id - the id of the order (str)
@@ -407,29 +358,14 @@ class OrderDB(object):
                     cond = sa.or_(cond, tbl_o.c[field] == value)
                 where = sa.and_(where, cond)
 
-        if recursive:
-            tbl_h = self._table_map['host']
-            table = tbl_o.outerjoin(tbl_h, tbl_o.c.id == tbl_h.c.order_id)
-
-            # Select the orders (subselect).
-            order_select = sa.select([tbl_o.c.id.label('order_id')],
-                                     where,
-                                     offset = offset,
-                                     limit  = limit).alias('orders')
-
-            # Select all hosts from the order.
-            select = table.select(tbl_o.c.id == order_select.c.order_id,
-                                  order_by   = [sa.desc(tbl_o.c.id)],
-                                  use_labels = True)
-        else:
-            select = tbl_o.select(where,
-                                  order_by = [sa.desc(tbl_o.c.id)],
-                                  offset   = offset,
-                                  limit    = limit)
+        select = tbl_o.select(where,
+                              order_by = [sa.desc(tbl_o.c.id)],
+                              offset   = offset,
+                              limit    = limit)
 
         return self.__get_orders_from_query(select)
 
-    def add_order(self, orders, recursive = True):
+    def add_order(self, orders):
         """
         Inserts the given order into the database.
 
@@ -442,7 +378,7 @@ class OrderDB(object):
 
         try:
             for order in to_list(orders):
-                self.__add_order(order, recursive)
+                self.__add_order(order)
             transaction.commit()
         except:
             transaction.rollback()
@@ -453,11 +389,15 @@ class OrderDB(object):
         Sets the 'closed' timestamp of all orders that have none, without
         changing the status field.
         """
-        tbl_o = self._table_map['order']
-        query = tbl_o.update(tbl_o.c.closed == None)
-        query.execute(closed = datetime.utcnow())
+        closed = datetime.utcnow()
+        tbl_o  = self._table_map['order']
+        tbl_t  = self._table_map['task']
+        query1 = tbl_t.update(tbl_t.c.closed == None)
+        query2 = tbl_o.update(tbl_o.c.closed == None)
+        query1.execute(closed = closed)
+        query2.execute(closed = closed)
 
-    def save_order(self, orders, recursive = True):
+    def save_order(self, orders):
         """
         Updates the given orders in the database. Does nothing if
         the order doesn't exist.
@@ -471,8 +411,84 @@ class OrderDB(object):
 
         try:
             for order in to_list(orders):
-                self.__save_order(order, recursive)
+                self.__save_order(order)
             transaction.commit()
         except:
             transaction.rollback()
             raise
+
+    def get_task(self, **kwargs):
+        """
+        Like get_tasks(), but
+          - Returns None, if no match was found.
+          - Returns the task, if exactly one match was found.
+          - Raises an error if more than one match was found.
+
+        @type  kwargs: dict
+        @param kwargs: For a list of allowed keys see get_tasks().
+        @rtype:  Task
+        @return: The task or None.
+        """
+        result = self.get_tasks(0, 2, **kwargs)
+        if len(result) == 0:
+            return None
+        elif len(result) > 1:
+            raise IndexError('Too many results')
+        return result[0]
+
+    def get_tasks(self, offset = 0, limit = 0, **kwargs):
+        """
+        Returns all tasks that match the given criteria.
+
+        @type  offset: int
+        @param offset: The offset of the first item to be returned.
+        @type  limit: int
+        @param limit: The maximum number of items that is returned.
+        @type  kwargs: dict
+        @param kwargs: The following keys may be used:
+                         - id - the id of the task (int)
+                         - order_id - the order id of the task (int)
+                         - name - the name (str)
+                         - status - the status (str)
+                       All values may also be lists (logical OR).
+        @rtype:  list[Task]
+        @return: The list of tasks.
+        """
+        tbl_t = self._table_map['task']
+
+        # Search conditions.
+        where = None
+        for field in ('id', 'order_id', 'name', 'status'):
+            if kwargs.has_key(field):
+                cond = None
+                for value in to_list(kwargs.get(field)):
+                    cond = sa.or_(cond, tbl_t.c[field] == value)
+                where = sa.and_(where, cond)
+
+        select = tbl_t.select(where,
+                              order_by = [sa.desc(tbl_t.c.id)],
+                              offset   = offset,
+                              limit    = limit)
+
+        return self.__get_tasks_from_query(select)
+
+    def save_task(self, order, task):
+        """
+        Inserts or updates the given task in the database.
+
+        @type  order: Order
+        @param order: The order for which a task is added.
+        @type  task: Task
+        @param task: The task to be saved.
+        """
+        if order is None:
+            raise AttributeError('order argument must not be None')
+        if order.id is None:
+            raise AttributeError('order is not yet stored')
+        if task is None:
+            raise AttributeError('task argument must not be None')
+
+        if not task.is_dirty():
+            return
+
+        return self.__save_task(order.id, task)
