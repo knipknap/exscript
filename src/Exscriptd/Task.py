@@ -147,6 +147,15 @@ class Task(DBObject):
         """
         return self.progress
 
+    def get_progress_percent(self):
+        """
+        Returns the progress as a float between 0.0 and 100.0.
+
+        @rtype:  float
+        @return: The progress in percent.
+        """
+        return '%.1f' % (self.progress * 100.0)
+
     def get_started_timestamp(self):
         """
         Returns the time at which the task was started.
