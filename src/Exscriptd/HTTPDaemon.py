@@ -28,8 +28,8 @@ URL list:
   Path                            Method  Function
   order/                          POST    Place an XML formatted order
   order/status/?id=1234           GET     Get the status for order 1234
-  order/status/?id=1234&task=55   GET     Get the status for host 55 in order 1234
   order/list/?offset=10&limit=25  GET     Get a list of orders
+  task/list/?order_id=1234        GET     Get a list of tasks for order 1234
   services/                       GET     Service overview   (not implemented)
   services/foo/                   GET     Get info for the "foo" service   (not implemented)
 
@@ -64,6 +64,20 @@ class HTTPHandler(HTTPRequestHandler):
             xml = etree.Element('xml')
             for order in orders:
                 xml.append(order.toetree())
+            return etree.tostring(xml, pretty_print = True)
+        elif self.path == '/task/list/':
+            # Fetch the tasks.
+            order_id = int(self.args.get('order_id'))
+            offset   = int(self.args.get('offset', 0))
+            limit    = min(100, int(self.args.get('limit', 100)))
+            tasks    = self.daemon.get_task_list(order_id,
+                                                 offset = offset,
+                                                 limit = limit)
+
+            # Assemble an XML document containing the orders.
+            xml = etree.Element('xml')
+            for task in tasks:
+                xml.append(task.toetree())
             return etree.tostring(xml, pretty_print = True)
         else:
             raise Exception('no such API call')

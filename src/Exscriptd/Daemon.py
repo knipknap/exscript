@@ -87,6 +87,11 @@ class Daemon(object):
     def get_order_list(self, offset = 0, limit = 0):
         return self.db.get_orders(offset = offset, limit = limit)
 
+    def get_task_list(self, order_id, offset = 0, limit = 0):
+        return self.db.get_tasks(order_id = order_id,
+                                 offset   = offset,
+                                 limit    = limit)
+
     def set_order_status(self, order, status):
         order.status = status
         self.db.save_order(order)

@@ -16,6 +16,7 @@
 Represents an activity within an order.
 """
 from datetime import datetime
+from lxml     import etree
 from DBObject import DBObject
 
 class Task(DBObject):
@@ -28,12 +29,66 @@ class Task(DBObject):
         self.started  = datetime.utcnow()
         self.closed   = None
 
+    @staticmethod
+    def from_etree(task_node):
+        """
+        Creates a new instance by parsing the given XML.
+
+        @type  task_node: lxml.etree.Element
+        @param task_node: The task node of an etree.
+        @rtype:  Task
+        @return: A new instance of an task.
+        """
+        # Parse required attributes.
+        name          = task_node.find('name').text
+        task          = Task(name)
+        task.id       = int(task_node.get('id'))
+        task.status   = task_node.find('status').text
+        task.progress = float(task_node.find('progress').text)
+        started_node  = task_node.find('started')
+        closed_node   = task_node.find('closed')
+        if started_node is not None:
+            started = started_node.text.split('.', 1)[0]
+            started = datetime.strptime(started, "%Y-%m-%d %H:%M:%S")
+            task.started = started
+        if closed_node is not None:
+            closed = closed_node.text.split('.', 1)[0]
+            closed = datetime.strptime(closed, "%Y-%m-%d %H:%M:%S")
+            task.closed = closed
+        return task
+
+    def toetree(self):
+        """
+        Returns the task as an lxml etree.
+
+        @rtype:  lxml.etree
+        @return: The resulting tree.
+        """
+        task = etree.Element('task', id = str(self.id))
+        etree.SubElement(task, 'name').text     = str(self.name)
+        etree.SubElement(task, 'status').text   = str(self.status)
+        etree.SubElement(task, 'progress').text = str(self.progress)
+        if self.started:
+            etree.SubElement(task, 'started').text = str(self.started)
+        if self.closed:
+            etree.SubElement(task, 'closed').text = str(self.closed)
+        return task
+
     def todict(self):
         return dict(name     = self.get_name(),
                     status   = self.get_status(),
                     progress = self.get_progress(),
                     started  = self.get_started_timestamp(),
                     closed   = self.get_closed_timestamp())
+
+    def get_id(self):
+        """
+        Returns the task id.
+
+        @rtype:  str
+        @return: The id of the task.
+        """
+        return self.id
 
     def set_name(self, name):
         """

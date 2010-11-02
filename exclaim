@@ -82,6 +82,12 @@ parser.add_option('--order-list',
                   help    = '''
 Lists the last 50 orders.
 '''.strip())
+parser.add_option('--task-list',
+                  dest    = 'task_list',
+                  metavar = 'INTEGER',
+                  help    = '''
+Lists the last 50 tasks of the order with the given id.
+'''.strip())
 parser.add_option('--quite', '-q',
                   dest    = 'quite',
                   action  = 'store_true',
@@ -111,6 +117,8 @@ elif options.order_count:
     pass
 elif options.order_list:
     pass
+elif options.task_list:
+    pass
 else:
     try:
         filename = args.pop(0)
@@ -130,10 +138,10 @@ def print_table(rows):
     widths = [1 for h in rows[0]]
     for row in rows:
         for n, col in enumerate(row):
-            widths[n] = max(widths[n], len(col) + 2)
+            widths[n] = max(widths[n], len(str(col)) + 2)
     for i, row in enumerate(rows):
         for n, col in enumerate(row):
-            sys.stdout.write(col.ljust(widths[n]))
+            sys.stdout.write(str(col).ljust(widths[n]))
         print
         if i == 0:
             print '-' * sum(widths)
@@ -162,6 +170,23 @@ elif options.order_list:
                order.get_created_by(),
                str(order.get_created_timestamp()),
                str(order.get_closed_timestamp() or 'open'))
+        rows.append(row)
+    print_table(rows)
+    sys.exit(0)
+elif options.task_list:
+    rows = [('TaskID',
+             'Name',
+             'Status',
+             'Progress',
+             'Started',
+             'Closed')]
+    for task in client.get_task_list(int(options.task_list), 0, 100):
+        row = (task.get_id(),
+               task.get_name(),
+               task.get_status(),
+               '%.1f' % (task.get_progress() * 100.0),
+               str(task.get_started_timestamp()),
+               str(task.get_closed_timestamp() or 'open'))
         rows.append(row)
     print_table(rows)
     sys.exit(0)
