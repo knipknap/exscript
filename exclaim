@@ -82,6 +82,12 @@ parser.add_option('--order-list',
                   help    = '''
 Lists the last 50 orders.
 '''.strip())
+parser.add_option('--task-count',
+                  dest    = 'task_count',
+                  metavar = 'INTEGER',
+                  help    = '''
+Prints the number of tasks in the order with the given id.
+'''.strip())
 parser.add_option('--task-list',
                   dest    = 'task_list',
                   metavar = 'INTEGER',
@@ -116,6 +122,8 @@ if options.status:
 elif options.order_count:
     pass
 elif options.order_list:
+    pass
+elif options.task_count:
     pass
 elif options.task_list:
     pass
@@ -172,6 +180,9 @@ elif options.order_list:
                str(order.get_closed_timestamp() or 'open'))
         rows.append(row)
     print_table(rows)
+    sys.exit(0)
+elif options.task_count:
+    print client.count_tasks(int(options.task_count))
     sys.exit(0)
 elif options.task_list:
     rows = [('TaskID',

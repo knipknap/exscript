@@ -417,6 +417,22 @@ class OrderDB(object):
             transaction.rollback()
             raise
 
+    def count_tasks(self, order_id = None):
+        """
+        Returns the total number of tasks in the DB.
+
+        @type  order_id: int
+        @param order_id: The id of an order whose tasks are counted.
+        @rtype:  int
+        @return: The number of tasks.
+        """
+        tbl_t = self._table_map['task']
+        if order_id is not None:
+            query = tbl_t.count(tbl_t.c.order_id == order_id)
+        else:
+            query = tbl_t.count()
+        return query.execute().fetchone()[0]
+
     def get_task(self, **kwargs):
         """
         Like get_tasks(), but

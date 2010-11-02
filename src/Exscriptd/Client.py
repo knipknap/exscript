@@ -135,6 +135,23 @@ class Client(object):
         xml = etree.parse(result)
         return [Order.from_etree(n) for n in xml.iterfind('order')]
 
+    def count_tasks(self, order_id = None):
+        """
+        Returns the total number of tasks.
+
+        @rtype:  int
+        @return: The number of tasks.
+        """
+        args = ''
+        if order_id:
+            args += '?order_id=%d' % order_id
+        url      = self.address + '/task/count/' + args
+        result   = self.opener.open(url)
+        response = result.read()
+        if result.getcode() != 200:
+            raise Exception(response)
+        return int(response)
+
     def get_task_list(self, order_id, offset = 0, limit = 0):
         """
         Returns a list of currently running orders.

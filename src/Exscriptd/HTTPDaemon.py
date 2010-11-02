@@ -28,7 +28,9 @@ URL list:
   Path                            Method  Function
   order/                          POST    Place an XML formatted order
   order/status/?id=1234           GET     Get the status for order 1234
+  order/count/                    GET     Get the total number of orders
   order/list/?offset=10&limit=25  GET     Get a list of orders
+  task/count/?order_id=1234       GET     Get the number of tasks for order 1234
   task/list/?order_id=1234        GET     Get a list of tasks for order 1234
   services/                       GET     Service overview   (not implemented)
   services/foo/                   GET     Get info for the "foo" service   (not implemented)
@@ -65,6 +67,13 @@ class HTTPHandler(HTTPRequestHandler):
             for order in orders:
                 xml.append(order.toetree())
             return etree.tostring(xml, pretty_print = True)
+        elif self.path == '/task/count/':
+            order_id = self.args.get('order_id')
+            if order_id:
+                n_tasks = self.daemon.count_tasks(int(order_id))
+            else:
+                n_tasks = self.daemon.count_tasks()
+            return str(n_tasks)
         elif self.path == '/task/list/':
             # Fetch the tasks.
             order_id = int(self.args.get('order_id'))
