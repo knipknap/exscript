@@ -170,3 +170,35 @@ class Client(object):
             raise Exception(response)
         xml = etree.parse(result)
         return [Task.from_etree(n) for n in xml.iterfind('task')]
+
+    def get_log_from_task(self, task):
+        """
+        Returns the content of the logfile for the given task.
+
+        @type  task: Task
+        @param task: The task object.
+        @rtype:  str
+        @return: The file content.
+        """
+        args   = 'task_id=%d' % task.get_id()
+        url    = self.address + '/log/?' + args
+        result = self.opener.open(url)
+        if result.getcode() != 200:
+            raise Exception(response)
+        return result
+
+    def get_trace_from_task(self, task):
+        """
+        Returns the content of the trace file for the given task.
+
+        @type  task: Task
+        @param task: The task object.
+        @rtype:  str
+        @return: The file content.
+        """
+        args   = 'task_id=%d' % task.get_id()
+        url    = self.address + '/trace/?' + args
+        result = self.opener.open(url)
+        if result.getcode() != 200:
+            raise Exception(response)
+        return result

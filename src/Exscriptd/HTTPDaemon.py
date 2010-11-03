@@ -32,6 +32,8 @@ URL list:
   order/list/?offset=10&limit=25  GET     Get a list of orders
   task/count/?order_id=1234       GET     Get the number of tasks for order 1234
   task/list/?order_id=1234        GET     Get a list of tasks for order 1234
+  log/?task_id=4567               GET     Returns the content of the logfile
+  trace/?task_id=4567             GET     Returns the content of the trace file
   services/                       GET     Service overview   (not implemented)
   services/foo/                   GET     Get info for the "foo" service   (not implemented)
 
@@ -88,6 +90,14 @@ class HTTPHandler(HTTPRequestHandler):
             for task in tasks:
                 xml.append(task.toetree())
             return etree.tostring(xml, pretty_print = True)
+        elif self.path == '/log/':
+            task_id  = int(self.args.get('task_id'))
+            filename = task.get_logfile()
+            return open(filename).read()
+        elif self.path == '/trace/':
+            task_id  = int(self.args.get('task_id'))
+            filename = task.get_tracefile()
+            return open(filename).read()
         else:
             raise Exception('no such API call')
 

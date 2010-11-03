@@ -95,6 +95,9 @@ class Daemon(object):
                                  offset   = offset,
                                  limit    = limit)
 
+    def get_task_from_id(self, id):
+        return self.db.get_task(id = id)
+
     def set_order_status(self, order, status):
         order.status = status
         self.db.save_order(order)
