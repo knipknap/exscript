@@ -65,6 +65,19 @@ class Task(DBObject):
             task.tracefile = tracefile_node.text
         return task
 
+    @staticmethod
+    def from_xml(xml):
+        """
+        Creates a new instance by parsing the given XML.
+
+        @type  xml: str
+        @param xml: A string containing an XML formatted task.
+        @rtype:  Task
+        @return: A new instance of an task.
+        """
+        xml = etree.fromstring(xml)
+        return Task.from_etree(xml.find('task'))
+
     def toetree(self):
         """
         Returns the task as an lxml etree.
@@ -85,6 +98,20 @@ class Task(DBObject):
         if self.tracefile:
             etree.SubElement(task, 'tracefile').text = str(self.tracefile)
         return task
+
+    def toxml(self, pretty = True):
+        """
+        Returns the task as an XML formatted string.
+
+        @type  pretty: bool
+        @param pretty: Whether to format the XML in a human readable way.
+        @rtype:  str
+        @return: The XML representing the task.
+        """
+        xml  = etree.Element('xml')
+        task = self.toetree()
+        xml.append(task)
+        return etree.tostring(xml, pretty_print = pretty)
 
     def todict(self):
         return dict(name      = self.get_name(),

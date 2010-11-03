@@ -74,16 +74,21 @@ class Client(object):
             raise Exception(result.read())
         order.id = int(result.read())
 
-    def get_order_from_id(self, order_id):
+    def get_order_from_id(self, id):
         """
         Returns the order with the given id.
 
-        @type  order_id: str
-        @param order_id: The id of the order.
+        @type  id: str
+        @param id: The id of the order.
         @rtype:  Order
         @return: The order if it exists, None otherwise.
         """
-        raise NotImplementedError()
+        args   = 'id=%d' % id
+        url    = self.address + '/order/get/?' + args
+        result = self.opener.open(url)
+        if result.getcode() != 200:
+            raise Exception(response)
+        return Order.from_xml(result.read())
 
     def get_order_status_from_id(self, order_id):
         """
@@ -170,6 +175,22 @@ class Client(object):
             raise Exception(response)
         xml = etree.parse(result)
         return [Task.from_etree(n) for n in xml.iterfind('task')]
+
+    def get_task_from_id(self, id):
+        """
+        Returns the task with the given id.
+
+        @type  id: int
+        @param id: The id of the task.
+        @rtype:  Task
+        @return: The task with the given id.
+        """
+        args   = 'id=%d' % id
+        url    = self.address + '/task/get/?' + args
+        result = self.opener.open(url)
+        if result.getcode() != 200:
+            raise Exception(response)
+        return Task.from_xml(result.read())
 
     def get_log_from_task_id(self, task_id):
         """

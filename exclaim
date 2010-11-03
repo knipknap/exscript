@@ -68,6 +68,12 @@ parser.add_option('--test',
                   help    = '''
 Print the XML formatted order to stdout.
 '''.strip())
+parser.add_option('--order-get',
+                  dest    = 'order_get',
+                  metavar = 'INTEGER',
+                  help    = '''
+Prints the order with the given id.
+'''.strip())
 parser.add_option('--order-count',
                   dest    = 'order_count',
                   action  = 'store_true',
@@ -81,6 +87,12 @@ parser.add_option('--order-list',
                   default = False,
                   help    = '''
 Lists the last 50 orders.
+'''.strip())
+parser.add_option('--task-get',
+                  dest    = 'task_get',
+                  metavar = 'INTEGER',
+                  help    = '''
+Prints the task with the given id.
 '''.strip())
 parser.add_option('--task-count',
                   dest    = 'task_count',
@@ -119,9 +131,13 @@ except IndexError:
 
 if options.status:
     pass
+elif options.order_get:
+    pass
 elif options.order_count:
     pass
 elif options.order_list:
+    pass
+elif options.task_get:
     pass
 elif options.task_count:
     pass
@@ -159,6 +175,16 @@ client = Client(address, options.user, options.password)
 if options.status:
     print client.get_order_status_from_id(options.status)
     sys.exit(0)
+elif options.order_get:
+    order = client.get_order_from_id(int(options.order_get))
+    print 'ID:',          order.get_id()
+    print 'Service:',     order.get_service_name()
+    print 'Status:',      order.get_status()
+    print 'Description:', order.get_description()
+    print 'Created by:',  order.get_created_by()
+    print 'Created:',     order.get_created_timestamp()
+    print 'Closed:',      order.get_closed_timestamp()
+    sys.exit(0)
 elif options.order_count:
     print client.count_orders()
     sys.exit(0)
@@ -180,6 +206,16 @@ elif options.order_list:
                str(order.get_closed_timestamp() or 'open'))
         rows.append(row)
     print_table(rows)
+    sys.exit(0)
+elif options.task_get:
+    task = client.get_task_from_id(int(options.task_get))
+    print 'ID:',         task.get_id()
+    print 'Name:',       task.get_name()
+    print 'Status:',     task.get_status()
+    print 'Started:',    task.get_started_timestamp()
+    print 'Closed:',     task.get_closed_timestamp()
+    print 'Logfile:',    task.get_logfile()
+    print 'Trace file:', task.get_tracefile()
     sys.exit(0)
 elif options.task_count:
     print client.count_tasks(int(options.task_count))

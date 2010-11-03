@@ -27,9 +27,11 @@ URL list:
 
   Path                            Method  Function
   order/                          POST    Place an XML formatted order
+  order/get/?id=1234              GET     Returns order 1234
   order/status/?id=1234           GET     Get the status for order 1234
   order/count/                    GET     Get the total number of orders
   order/list/?offset=10&limit=25  GET     Get a list of orders
+  task/get/?id=1234               GET     Returns task 1234
   task/count/?order_id=1234       GET     Get the number of tasks for order 1234
   task/list/?order_id=1234        GET     Get a list of tasks for order 1234
   log/?task_id=4567               GET     Returns the content of the logfile
@@ -51,6 +53,10 @@ class HTTPHandler(HTTPRequestHandler):
             self.daemon.logger.debug('XML order parsed complete.')
             self.daemon._place_order(order)
             return str(order.get_id())
+        elif self.path == '/order/get/':
+            id    = int(self.args.get('id'))
+            order = self.daemon.get_order_from_id(id)
+            return order.toxml()
         elif self.path == '/order/count/':
             return str(self.daemon.count_orders())
         elif self.path == '/order/status/':
@@ -69,6 +75,10 @@ class HTTPHandler(HTTPRequestHandler):
             for order in orders:
                 xml.append(order.toetree())
             return etree.tostring(xml, pretty_print = True)
+        elif self.path == '/task/get/':
+            id   = int(self.args.get('id'))
+            task = self.daemon.get_task_from_id(id)
+            return task.toxml()
         elif self.path == '/task/count/':
             order_id = self.args.get('order_id')
             if order_id:
