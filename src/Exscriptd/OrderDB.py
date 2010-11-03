@@ -88,13 +88,15 @@ class OrderDB(object):
         ))
 
         self.__add_table(sa.Table(pfx + 'task', self.metadata,
-            sa.Column('id',       sa.Integer,     primary_key = True),
-            sa.Column('order_id', sa.Integer,     index = True),
-            sa.Column('name',     sa.String(150), index = True),
-            sa.Column('status',   sa.String(150), index = True),
-            sa.Column('progress', sa.Float,       default = 0.0),
-            sa.Column('started',  sa.DateTime,    default = sa.func.now()),
-            sa.Column('closed',   sa.DateTime),
+            sa.Column('id',        sa.Integer,     primary_key = True),
+            sa.Column('order_id',  sa.Integer,     index = True),
+            sa.Column('name',      sa.String(150), index = True),
+            sa.Column('status',    sa.String(150), index = True),
+            sa.Column('progress',  sa.Float,       default = 0.0),
+            sa.Column('started',   sa.DateTime,    default = sa.func.now()),
+            sa.Column('closed',    sa.DateTime),
+            sa.Column('logfile',   sa.String(80)),
+            sa.Column('tracefile', sa.String(80)),
             sa.ForeignKeyConstraint(['order_id'], [pfx + 'order.id'], ondelete = 'CASCADE'),
             mysql_engine = 'INNODB'
         ))
@@ -216,13 +218,15 @@ class OrderDB(object):
 
     def __get_task_from_row(self, row):
         assert row is not None
-        tbl_t         = self._table_map['task']
-        task          = Task(row[tbl_t.c.name])
-        task.id       = row[tbl_t.c.id]
-        task.status   = row[tbl_t.c.status]
-        task.progress = row[tbl_t.c.progress]
-        task.started  = row[tbl_t.c.started]
-        task.closed   = row[tbl_t.c.closed]
+        tbl_t          = self._table_map['task']
+        task           = Task(row[tbl_t.c.name])
+        task.id        = row[tbl_t.c.id]
+        task.status    = row[tbl_t.c.status]
+        task.progress  = row[tbl_t.c.progress]
+        task.started   = row[tbl_t.c.started]
+        task.closed    = row[tbl_t.c.closed]
+        task.logfile   = row[tbl_t.c.logfile]
+        task.tracefile = row[tbl_t.c.tracefile]
         task.untouch()
         return task
 

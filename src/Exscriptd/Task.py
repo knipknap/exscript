@@ -22,12 +22,14 @@ from DBObject import DBObject
 class Task(DBObject):
     def __init__(self, name):
         DBObject.__init__(self)
-        self.id       = None
-        self.name     = name
-        self.status   = 'new'
-        self.progress = .0
-        self.started  = datetime.utcnow()
-        self.closed   = None
+        self.id        = None
+        self.name      = name
+        self.status    = 'new'
+        self.progress  = .0
+        self.started   = datetime.utcnow()
+        self.closed    = None
+        self.logfile   = None
+        self.tracefile = None
 
     @staticmethod
     def from_etree(task_node):
@@ -40,13 +42,15 @@ class Task(DBObject):
         @return: A new instance of an task.
         """
         # Parse required attributes.
-        name          = task_node.find('name').text
-        task          = Task(name)
-        task.id       = int(task_node.get('id'))
-        task.status   = task_node.find('status').text
-        task.progress = float(task_node.find('progress').text)
-        started_node  = task_node.find('started')
-        closed_node   = task_node.find('closed')
+        name           = task_node.find('name').text
+        task           = Task(name)
+        task.id        = int(task_node.get('id'))
+        task.status    = task_node.find('status').text
+        task.progress  = float(task_node.find('progress').text)
+        started_node   = task_node.find('started')
+        closed_node    = task_node.find('closed')
+        logfile_node   = task_node.find('logfile')
+        tracefile_node = task_node.find('tracefile')
         if started_node is not None:
             started = started_node.text.split('.', 1)[0]
             started = datetime.strptime(started, "%Y-%m-%d %H:%M:%S")
@@ -55,6 +59,10 @@ class Task(DBObject):
             closed = closed_node.text.split('.', 1)[0]
             closed = datetime.strptime(closed, "%Y-%m-%d %H:%M:%S")
             task.closed = closed
+        if logfile_node is not None:
+            task.logfile = logfile_node.text
+        if tracefile_node is not None:
+            task.tracefile = tracefile_node.text
         return task
 
     def toetree(self):
@@ -72,14 +80,20 @@ class Task(DBObject):
             etree.SubElement(task, 'started').text = str(self.started)
         if self.closed:
             etree.SubElement(task, 'closed').text = str(self.closed)
+        if self.logfile:
+            etree.SubElement(task, 'logfile').text = str(self.logfile)
+        if self.tracefile:
+            etree.SubElement(task, 'tracefile').text = str(self.tracefile)
         return task
 
     def todict(self):
-        return dict(name     = self.get_name(),
-                    status   = self.get_status(),
-                    progress = self.get_progress(),
-                    started  = self.get_started_timestamp(),
-                    closed   = self.get_closed_timestamp())
+        return dict(name      = self.get_name(),
+                    status    = self.get_status(),
+                    progress  = self.get_progress(),
+                    started   = self.get_started_timestamp(),
+                    closed    = self.get_closed_timestamp(),
+                    logfile   = self.get_logfile(),
+                    tracefile = self.get_tracefile())
 
     def get_id(self):
         """
@@ -194,3 +208,41 @@ class Task(DBObject):
         @return: The timestamp or None.
         """
         return self.closed
+
+    def set_logfile(self, logfile):
+        """
+        Set the name of the logfile.
+
+        @type  logfile: string
+        @param logfile: A filename.
+        """
+        self.touch()
+        self.logfile = logfile
+
+    def get_logfile(self):
+        """
+        Returns the name of the logfile as a string.
+
+        @rtype:  string|None
+        @return: A filename, or None.
+        """
+        return self.logfile
+
+    def set_tracefile(self, tracefile):
+        """
+        Set the name of the tracefile.
+
+        @type  tracefile: string
+        @param tracefile: A filename.
+        """
+        self.touch()
+        self.tracefile = tracefile
+
+    def get_tracefile(self):
+        """
+        Returns the name of the tracefile as a string.
+
+        @rtype:  string|None
+        @return: A filename, or None.
+        """
+        return self.tracefile
