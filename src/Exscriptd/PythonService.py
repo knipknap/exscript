@@ -48,11 +48,10 @@ class PythonService(Service):
             msg = filename + ': required function enter() not found.'
             raise Exception(msg)
 
-
     def check(self, order):
         if self.check_func:
-            return self.check_func(self, order)
+            return self.check_func(order)
         return True
 
     def enter(self, order):
-        return self.enter_func(self, order)
+        return self.enter_func(order)
