@@ -103,11 +103,17 @@ class HTTPHandler(HTTPRequestHandler):
         elif self.path == '/log/':
             task_id  = int(self.args.get('task_id'))
             filename = task.get_logfile()
-            return open(filename).read()
+            if os.path.exists(filename):
+                return open(filename).read()
+            else:
+                return ''
         elif self.path == '/trace/':
             task_id  = int(self.args.get('task_id'))
             filename = task.get_tracefile()
-            return open(filename).read()
+            if os.path.exists(filename):
+                return open(filename).read()
+            else:
+                return ''
         else:
             raise Exception('no such API call')
 
