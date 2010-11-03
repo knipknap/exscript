@@ -173,7 +173,8 @@ def print_table(rows):
 client = Client(address, options.user, options.password)
 
 if options.status:
-    print client.get_order_status_from_id(options.status)
+    status, progress = client.get_order_status_from_id(options.status)
+    print status, '%.1f%%' % (progress * 100.0)
     sys.exit(0)
 elif options.order_get:
     order = client.get_order_from_id(int(options.order_get))
@@ -256,7 +257,7 @@ say('Placed order', order.id)
 
 if options.wait:
     while True:
-        status = client.get_order_status_from_id(order.id)
+        status, progress = client.get_order_status_from_id(order.id)
         say('Status:', status)
         if status in ('completed', 'rejected'):
             print 'Order', status + '.'

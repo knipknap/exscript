@@ -28,7 +28,7 @@ URL list:
   Path                            Method  Function
   order/                          POST    Place an XML formatted order
   order/get/?id=1234              GET     Returns order 1234
-  order/status/?id=1234           GET     Get the status for order 1234
+  order/status/?id=1234           GET     Status and progress for order 1234
   order/count/                    GET     Get the total number of orders
   order/list/?offset=10&limit=25  GET     Get a list of orders
   task/get/?id=1234               GET     Returns task 1234
@@ -60,10 +60,12 @@ class HTTPHandler(HTTPRequestHandler):
         elif self.path == '/order/count/':
             return str(self.daemon.count_orders())
         elif self.path == '/order/status/':
-            order = self.daemon.get_order_from_id(str(self.args['id']))
+            order_id = int(self.args['id'])
+            order    = self.daemon.get_order_from_id(order_id)
+            progress = self.daemon.get_order_progress_from_id(order_id)
             if not order:
                 raise Exception('no such order id')
-            return order.status
+            return order.status + ' %f' % progress
         elif self.path == '/order/list/':
             # Fetch the orders.
             offset = int(self.args.get('offset', 0))

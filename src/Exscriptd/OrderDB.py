@@ -421,6 +421,24 @@ class OrderDB(object):
             transaction.rollback()
             raise
 
+    def get_order_progress_from_id(self, id):
+        """
+        Returns the progress of the order in percent.
+
+        @type  id: int
+        @param id: The id of the order.
+        @rtype:  float
+        @return: A float between 0.0 and 1.0
+        """
+        tbl_t = self._table_map['task']
+        query = sa.select([sa.func.avg(tbl_t.c.progress)],
+                          sa.and_(tbl_t.c.order_id == id,
+                                  tbl_t.c.closed == None))
+        avg = query.execute().fetchone()[0]
+        if avg is None:
+            return 1.0
+        return avg
+
     def count_tasks(self, order_id = None):
         """
         Returns the total number of tasks in the DB.

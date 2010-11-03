@@ -94,18 +94,21 @@ class Client(object):
         """
         Returns the status of the order with the given id if it
         exists. Returns 'not-found' otherwise.
+        Also returns the progress as a floating point number between
+        0.0 and 1.0.
 
         @type  order_id: str
         @param order_id: The id of the order.
-        @rtype:  str
-        @return: The status of the order.
+        @rtype:  (str, float)
+        @return: The status and progress of the order.
         """
         url      = self.address + '/order/status/?id=%s' % order_id
         result   = self.opener.open(url)
         response = result.read()
         if result.getcode() != 200:
             raise Exception(response)
-        return response
+        status, progress = response.split()
+        return str(status), float(progress)
 
     def count_orders(self):
         """
