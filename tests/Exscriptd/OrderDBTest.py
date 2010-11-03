@@ -156,6 +156,14 @@ class OrderDBTest(unittest.TestCase):
         id_list2 = [task.id for task in self.db.get_tasks(order_id = 2)]
         self.assertEqual([], id_list2)
 
+    def testCountTasks(self):
+        self.testInstall()
+        self.assertEqual(self.db.count_tasks(), 0)
+        self.testSaveTask()
+        self.assertEqual(self.db.count_tasks(), 1)
+        self.testSaveTask()
+        self.assertEqual(self.db.count_tasks(), 2)
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(OrderDBTest)
 if __name__ == '__main__':
