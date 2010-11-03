@@ -209,7 +209,7 @@ class Client(object):
         result = self.opener.open(url)
         if result.getcode() != 200:
             raise Exception(response)
-        return result
+        return result.read()
 
     def get_trace_from_task_id(self, task_id):
         """
@@ -225,4 +225,4 @@ class Client(object):
         result = self.opener.open(url)
         if result.getcode() != 200:
             raise Exception(response)
-        return result
+        return result.read()

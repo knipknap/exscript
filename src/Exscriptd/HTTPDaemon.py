@@ -104,15 +104,17 @@ class HTTPHandler(HTTPRequestHandler):
             return etree.tostring(xml, pretty_print = True)
         elif self.path == '/log/':
             task_id  = int(self.args.get('task_id'))
+            task     = self.daemon.get_task_from_id(task_id)
             filename = task.get_logfile()
-            if os.path.exists(filename):
+            if filename and os.path.isfile(filename):
                 return open(filename).read()
             else:
                 return ''
         elif self.path == '/trace/':
             task_id  = int(self.args.get('task_id'))
+            task     = self.daemon.get_task_from_id(task_id)
             filename = task.get_tracefile()
-            if os.path.exists(filename):
+            if filename and os.path.isfile(filename):
                 return open(filename).read()
             else:
                 return ''
@@ -131,6 +133,8 @@ class HTTPHandler(HTTPRequestHandler):
             self.wfile.write(format_exc().encode('utf8'))
             self.daemon.logger.error('Exception: %s' % e)
         else:
+            self.send_response(200)
+            self.end_headers()
             self.daemon.logger.debug('Sending REST response.')
             self.wfile.write(response)
         self.daemon.logger.debug('REST call complete.')
