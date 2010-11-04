@@ -72,14 +72,13 @@ def run():
                                   default_domain   = options.default_domain)
 
     # Extract the hostnames out of the command line arguments.
-    try:
-        filename = args[0]
-        hosts    = [mkhost(h) for h in list(args[1:])]
-    except IndexError, e:
-        parser.error('Missing filename')
-    if options.execute:
-        host = mkhost(filename)
-        hosts.append(host)
+    filename = None
+    if not options.execute:
+        try:
+            filename = args.pop(0)
+        except IndexError, e:
+            parser.error('Missing filename')
+    hosts = [mkhost(h) for h in args]
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
     if options.csv_hosts:
