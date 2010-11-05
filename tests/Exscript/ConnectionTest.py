@@ -16,7 +16,7 @@ class ConnectionTest(DummyTest):
 
     def createTransport(self):
         self.queue     = Queue(verbose = 0)
-        self.host      = Host('dummy:localhost')
+        self.host      = Host('dummy://localhost')
         self.hostname  = self.host.get_name()
         self.device    = VirtualDevice(self.hostname, echo = True)
         self.banner    = self.device.banner

@@ -4,26 +4,59 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 import Exscript.util.url
 
 urls = [
+    # No protocol.
     ('testhost',
      'telnet://testhost:23'),
     ('testhost?myvar=testvalue',
      'telnet://testhost:23?myvar=testvalue'),
+
+    # No protocol + empty user.
+    ('@testhost',
+     'telnet://@testhost:23'),
+    ('@testhost?myvar=testvalue',
+     'telnet://@testhost:23?myvar=testvalue'),
+
+    # No protocol + user.
     ('user@testhost',
      'telnet://user@testhost:23'),
-    ('user@testhost?myvar=testvalue',
-     'telnet://user@testhost:23?myvar=testvalue'),
-    ('user:mypass@testhost',
-     'user://mypass@testhost'),
-    ('user:mypass@testhost?myvar=testvalue',
-     'user://mypass@testhost?myvar=testvalue'),
-    ('ssh:testhost',
-     'ssh://testhost:22'),
-    ('ssh:testhost?myvar=testvalue',
-     'ssh://testhost:22?myvar=testvalue'),
-    ('ssh://testhost',
-     'ssh://testhost:22'),
-    ('ssh://testhost?myvar=testvalue',
-     'ssh://testhost:22?myvar=testvalue'),
+    ('user:password@testhost',
+     'telnet://user:password@testhost:23'),
+    ('user:password:password2@testhost',
+     'telnet://user:password:password2@testhost:23'),
+
+    # No protocol + empty password 1.
+    ('user:@testhost',
+     'telnet://user:@testhost:23'),
+    ('user::password2@testhost',
+     'telnet://user::password2@testhost:23'),
+    (':@testhost',
+     'telnet://:@testhost:23'),
+
+    # No protocol + empty password 2.
+    ('user:password:@testhost',
+     'telnet://user:password:@testhost:23'),
+    ('user::@testhost',
+     'telnet://user::@testhost:23'),
+    ('::@testhost',
+     'telnet://::@testhost:23'),
+    (':password:@testhost',
+     'telnet://:password:@testhost:23'),
+
+    # Protocol.
+    ('ssh1://testhost',
+     'ssh1://testhost:22'),
+    ('ssh1://testhost?myvar=testvalue',
+     'ssh1://testhost:22?myvar=testvalue'),
+
+    # Protocol + empty user.
+    ('ssh://@testhost',
+     'ssh://@testhost:22'),
+    ('ssh://:password@testhost',
+     'ssh://:password@testhost:22'),
+    ('ssh://:password:password2@testhost',
+     'ssh://:password:password2@testhost:22'),
+
+    # Protocol + user.
     ('ssh://user@testhost',
      'ssh://user@testhost:22'),
     ('ssh://user@testhost?myvar=testvalue',
@@ -34,10 +67,26 @@ urls = [
      'ssh://user:password@testhost:22?myvar=testvalue'),
     ('ssh://user:password@testhost',
      'ssh://user:password@testhost:22'),
+    ('ssh://user:password:password2@testhost',
+     'ssh://user:password:password2@testhost:22'),
+
+    # Multiple arguments.
     ('ssh://user:password@testhost?myvar=testvalue&myvar2=test%202',
      'ssh://user:password@testhost:22?myvar=testvalue&myvar2=test+2'),
     ('ssh://user:password@testhost?myvar=testvalue&amp;myvar2=test%202',
-     'ssh://user:password@testhost:22?myvar=testvalue&myvar2=test+2')
+     'ssh://user:password@testhost:22?myvar=testvalue&myvar2=test+2'),
+
+    # Pseudo protocol.
+    ('pseudo://../my/path',
+     'pseudo://../my/path'),
+    ('pseudo://../path',
+     'pseudo://../path'),
+    ('pseudo://filename',
+     'pseudo://filename'),
+    ('pseudo:///abspath',
+     'pseudo:///abspath'),
+    ('pseudo:///abs/path',
+     'pseudo:///abs/path'),
 ]
 
 class urlTest(unittest.TestCase):

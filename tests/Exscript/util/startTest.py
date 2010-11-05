@@ -28,11 +28,11 @@ class startTest(unittest.TestCase):
         self.assertEqual(self.data['n_calls'], 0)
 
         # Run on one host.
-        function(self.account, 'dummy:localhost', self.callback, verbose = 0)
+        function(self.account, 'dummy://localhost', self.callback, verbose = 0)
         self.assertEqual(self.data['n_calls'], 1)
 
         # Run on multiple hosts.
-        hosts = ['dummy:host1', 'dummy:host2']
+        hosts = ['dummy://host1', 'dummy://host2']
         function(self.account, hosts, self.callback, verbose = 0)
         self.assertEqual(self.data['n_calls'], 3)
 

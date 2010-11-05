@@ -83,8 +83,23 @@ class HostTest(unittest.TestCase):
 
     def testSetPassword(self):
         self.assertEqual(self.host.get_password(), None)
+        self.assertEqual(self.host.get_password2(), None)
         self.host.set_password('test')
         self.assertEqual(self.host.get_password(), 'test')
+        self.assertEqual(self.host.get_password2(), None)
+
+    def testGetPassword(self):
+        pass # Tested in testSetPassword().
+
+    def testSetPassword2(self):
+        self.assertEqual(self.host.get_password(), None)
+        self.assertEqual(self.host.get_password2(), None)
+        self.host.set_password2('test')
+        self.assertEqual(self.host.get_password(), None)
+        self.assertEqual(self.host.get_password2(), 'test')
+
+    def testGetPassword2(self):
+        pass # Tested in testSetPassword2().
 
     def testGetLogname(self):
         pass # Tested in testGetLogname().
@@ -94,9 +109,6 @@ class HostTest(unittest.TestCase):
         self.assertEqual(self.host.get_logname(), self.host.get_address())
         self.host.set_logname('test')
         self.assertEqual(self.host.get_logname(), 'test')
-
-    def testGetPassword(self):
-        pass # Tested in testSetPassword().
 
     def testSet(self):
         self.assertEqual(self.host.get('test'), None)

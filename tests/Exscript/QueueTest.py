@@ -109,28 +109,28 @@ class QueueTest(unittest.TestCase):
         for level, max_threads, with_simple, with_error, with_fatal in levels:
             stdout, stderr = with_simple
             self.createQueue(verbose = level, max_threads = max_threads)
-            self.queue.run('dummy:mytest', say_hello)
+            self.queue.run('dummy://mytest', say_hello)
             self.queue.join()
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
             stdout, stderr = with_error
             self.createQueue(verbose = level, max_threads = max_threads)
-            self.queue.run('dummy:mytest', error)
+            self.queue.run('dummy://mytest', error)
             self.queue.join()
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
             stdout, stderr = with_fatal
             self.createQueue(verbose = level, max_threads = max_threads)
-            self.queue.run('dummy:mytest', fatal_error)
+            self.queue.run('dummy://mytest', fatal_error)
             self.queue.join()
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
     def testAddProtocol(self):
         self.queue.add_protocol('test', MyProtocol)
-        self.queue.run('test:mytest', raise_if_not_myprotocol)
+        self.queue.run('test://mytest', raise_if_not_myprotocol)
         self.queue.join()
 
     def testSetMaxThreads(self):

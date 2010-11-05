@@ -38,11 +38,12 @@ class Host(object):
         @type  default_protocol: string
         @param default_protocol: The protocol name.
         """
-        self.protocol = default_protocol
-        self.vars     = {}
-        self.username = None
-        self.password = None
-        self.logname  = None
+        self.protocol  = default_protocol
+        self.vars      = {}
+        self.username  = None
+        self.password1 = None
+        self.password2 = None
+        self.logname   = None
         self.set_uri(uri) 
 
 
@@ -77,7 +78,8 @@ class Host(object):
         self.set_name(name)
         self.set_address(name)
         self.set_username(uri.username)
-        self.set_password(uri.password)
+        self.set_password(uri.password1)
+        self.set_password2(uri.password2)
 
         for key, val in uri.vars.iteritems():
             self.append(key, val)
@@ -208,7 +210,7 @@ class Host(object):
         @type  password: string
         @param password: The password.
         """
-        self.password = password
+        self.password1 = password
 
 
     def get_password(self):
@@ -218,7 +220,28 @@ class Host(object):
         @rtype:  string
         @return: The password.
         """
-        return self.password
+        return self.password1
+
+
+    def set_password2(self, password):
+        """
+        Defines an alternate password. This is used, for example in any
+        place where auto_authorize() is called.
+
+        @type  password: string
+        @param password: The password.
+        """
+        self.password2 = password
+
+
+    def get_password2(self):
+        """
+        Returns the password of the account that is used to log in.
+
+        @rtype:  string
+        @return: The password.
+        """
+        return self.password2
 
 
     def set_logname(self, logname):

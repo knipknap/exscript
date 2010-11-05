@@ -65,9 +65,9 @@ class TemplateTest(unittest.TestCase):
         for test in os.listdir(test_dir):
             pseudo = os.path.join(test_dir, test, 'pseudodev.py')
             if os.path.exists(pseudo):
-                self.queue.run('pseudo:' + pseudo, callback)
+                self.queue.run('pseudo://' + pseudo, callback)
             else:
-                self.queue.run('ios:' + test, callback)
+                self.queue.run('ios://' + test, callback)
         self.queue.shutdown()
 
         # Unfortunately, unittest.TestCase does not fail if self.assert()

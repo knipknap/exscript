@@ -111,22 +111,29 @@ class Url(object):
     """
     Represents a URL.
     """
-    protocol = None
-    username = None
-    password = None
-    hostname = None
-    port     = None
-    path     = None
-    vars     = None
+    protocol  = None
+    username  = None
+    password1 = None
+    password2 = None
+    hostname  = None
+    port      = None
+    path      = None
+    vars      = None
 
     def __str__(self):
         url = ''
-        if self.protocol:
+        if self.protocol is not None:
             url += self.protocol + '://'
-        if self.username is not None:
+        if self.username is not None or \
+           self.password1 is not None or \
+           self.password2 is not None:
             url += self.username
-            if self.password:
-                url += ':' + self.password
+            if self.password1 is not None or self.password2 is not None:
+                url += ':'
+            if self.password1 is not None:
+                url += self.password1
+            if self.password2 is not None:
+                url += ':' + self.password2
             url += '@'
         url += self.hostname
         if self.port:
@@ -161,48 +168,51 @@ def parse_url(url, default_protocol = 'telnet'):
     @rtype:  Url
     @return: The Url object contructed from the given URL.
     """
-    # We substitute the protocol name by 'http' to support the usual http URL
-    # scheme, because Python's urlparse does not support our protocols
-    # directly.
-    # In Python < 2.4, urlsplit can not handle query variables, so we split
-    # them away.
-    result          = Url()
-    result.protocol = urlparse(url, default_protocol, 0)[0]
-    result.port     = _well_known_ports.get(result.protocol)
-    uri             = 'http://' + re.sub('^' + result.protocol + ':(?://)?', '', url)
-    location        = uri
-    query           = ''
-    if '?' in uri:
-        location, query = uri.split('?', 1)
-    components      = urlsplit(location, 'http', 0)
-    netloc          = components[1]
-    path            = components[2]
-    auth            = ''
-    if netloc.find('@') >= 0:
-        auth, netloc = netloc.split('@')
+    if url is None:
+        raise TypeError('Expected string but got' + type(url))
 
-    # Parse the hostname/port number.
-    netloc   = netloc.split(':')
-    hostname = netloc[0]
-    if len(netloc) == 2:
-        result.port = int(netloc[1])
+    # Extract the protocol name from the URL.
+    result = Url()
+    match  = re.match(r'(\w+)://', url)
+    if match:
+        result.protocol = match.group(1)
+    else:
+        result.protocol = default_protocol
+
+    # Now remove the query from the url.
+    query = ''
+    if '?' in url:
+        url, query = url.split('?', 1)
+    result.vars = _urlparse_qs('http://dummy/?' + query)
+
+    # Substitute the protocol name by 'http', because Python's urlsplit
+    # fails on our protocol names otherwise.
+    prefix = result.protocol + '://'
+    if url.startswith(prefix):
+        url = url[len(prefix):]
+    url = 'http://' + url
+
+    # Parse the remaining url.
+    parsed = urlsplit(url, 'http', False)
+    netloc = parsed[1]
 
     # Parse username and password.
-    if auth != '':
-        result.username = auth
-    auth = auth.split(':')
-    if len(auth) == 1:
-        result.username == auth[0]
-    elif len(auth) == 2:
-        result.username, result.password = auth
+    auth = ''
+    if '@' in netloc:
+        auth, netloc = netloc.split('@')
+        auth = auth.split(':')
+        if len(auth) == 1:
+            result.username = auth[0]
+        elif len(auth) == 2:
+            result.username, result.password1 = auth
+        elif len(auth) == 3:
+            result.username, result.password1, result.password2 = auth
 
-    # Build the result.
-    if not hostname and '/' in path:
-        result.hostname = None
-    elif not hostname:
-        result.hostname = path
-    else:
-        result.hostname = hostname
-    result.path = path
-    result.vars = _urlparse_qs('http://dummy/?' + query)
+    # Parse hostname and port number.
+    result.hostname = netloc + parsed.path
+    result.port     = _well_known_ports.get(result.protocol)
+    if ':' in netloc:
+        result.hostname, port = netloc.split(':')
+        result.port           = int(port)
+
     return result
