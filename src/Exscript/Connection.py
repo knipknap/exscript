@@ -16,6 +16,7 @@
 Accessing the connection to a remote host.
 """
 import threading, os.path
+from Account import Account
 
 class Connection(object):
     """
@@ -41,12 +42,19 @@ class Connection(object):
         """
         # Since we override setattr below, we can't access our properties
         # directly.
-        self.__dict__['action']       = action
+        self.__dict__['action'] = action
+
+        # If specified, use the host-specific login details.
+        host = action.get_host()
         self.__dict__['last_account'] = None
+        if host.get_username() is not None:
+            account = Account(host.get_username(),
+                              host.get_password(),
+                              host.get_password2())
+            self.__dict__['last_account'] = account
 
         # Define protocol specific options.
         queue         = action.get_queue()
-        host          = action.get_host()
         protocol_name = host.get_protocol()
         if protocol_name == 'ssh1':
             kwargs['ssh_version'] = 1
@@ -151,7 +159,6 @@ class Connection(object):
             account.release()
         elif self.last_account:
             self.last_account.release()
-            self.last_account = None
         else:
             raise Exception('Attempt to relase a released account.')
 

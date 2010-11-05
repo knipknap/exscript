@@ -135,6 +135,7 @@ class AccountManager(object):
         """
         if account:
             return self._acquire_specific_account(account)
+        assert len(self.accounts) > 0
         self.unlock_cond.acquire()
         while len(self.unlocked_accounts) == 0:
             self.unlock_cond.wait()
