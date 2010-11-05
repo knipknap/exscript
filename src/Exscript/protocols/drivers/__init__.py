@@ -7,6 +7,7 @@ from generic        import GenericDriver
 from ios            import IOSDriver
 from ios_xr         import IOSXRDriver
 from junos          import JunOSDriver
+from junos_erx      import JunOSERXDriver
 from one_os         import OneOSDriver
 from shell          import ShellDriver
 from vrp            import VRPDriver

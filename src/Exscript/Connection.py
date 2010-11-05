@@ -300,10 +300,11 @@ class Connection(object):
         """
         os       = self.guess_os()
         account  = self._acquire_account(account, lock)
-        command  = {'ios':    'enable\r',
-                    'one_os': 'enable\r',
-                    'junos':  None,
-                    'ios_xr': None}.get(os)
+        command  = {'ios':       'enable\r',
+                    'one_os':    'enable\r',
+                    'junos':     None,
+                    'junos_erx': 'enable\r',
+                    'ios_xr':    None}.get(os)
 
         if password is None:
             password = account.get_authorization_password()
