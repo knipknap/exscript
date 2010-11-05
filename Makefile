@@ -67,6 +67,6 @@ doc-publish:
 
 .PHONY : publish-local
 publish-local:
-	cp -r * /nmc/code/exscript/
+	cp -r * /nmc/code/exscript/; true
 	chgrp -R nipscript /nmc/code/exscript/
 	chmod -R a+rX,g+rwX /nmc/code/exscript/
