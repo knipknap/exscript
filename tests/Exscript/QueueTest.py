@@ -219,8 +219,10 @@ class QueueTest(unittest.TestCase):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2', 'dummy1']
         func  = bind(count_calls2, data, testarg = 1)
+        self.queue.workqueue.pause()
         self.queue.run_or_ignore(hosts,    func)
         self.queue.run_or_ignore('dummy2', func)
+        self.queue.workqueue.unpause()
         self.queue.shutdown()
         self.assertEqual(data['n_calls'], 2)
 
@@ -250,8 +252,10 @@ class QueueTest(unittest.TestCase):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2', 'dummy1']
         func  = bind(count_calls2, data, testarg = 1)
+        self.queue.workqueue.pause()
         self.queue.priority_run_or_raise(hosts,    func)
         self.queue.priority_run_or_raise('dummy2', func)
+        self.queue.workqueue.unpause()
         self.queue.shutdown()
         self.assertEqual(data['n_calls'], 2)
 
