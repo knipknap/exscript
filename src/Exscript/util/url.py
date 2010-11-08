@@ -127,7 +127,7 @@ class Url(object):
         if self.username is not None or \
            self.password1 is not None or \
            self.password2 is not None:
-            url += self.username
+            url += self.username or ''
             if self.password1 is not None or self.password2 is not None:
                 url += ':'
             if self.password1 is not None:
