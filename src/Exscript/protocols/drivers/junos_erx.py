@@ -33,8 +33,6 @@ class JunOSERXDriver(Driver):
     def check_head_for_os(self, string):
         if _junos_re.search(string):
             return 75
-        if _user_re.search(string):
-            return 35
         return 0
 
     def init_terminal(self, conn):
