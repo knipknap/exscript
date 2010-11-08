@@ -46,12 +46,12 @@ class Connection(object):
 
         # If specified, use the host-specific login details.
         host = action.get_host()
-        self.__dict__['last_account'] = None
+        self.__dict__['default_account'] = None
         if host.get_username() is not None:
             account = Account(host.get_username(),
                               host.get_password(),
                               host.get_password2())
-            self.__dict__['last_account'] = account
+            self.__dict__['default_account'] = account
 
         # Define protocol specific options.
         queue         = action.get_queue()
@@ -130,37 +130,36 @@ class Connection(object):
     def _on_otp_requested(self, key, seq, account):
         account.signal_emit('otp_requested', account, key, seq)
 
-    def _acquire_account(self, account = None, lock = True):
-        if account and lock:
-            account.acquire()
-        elif account:
-            pass
-        elif self.last_account and lock:
-            account = self.last_account
-            account.acquire()
-        elif self.last_account:
-            account = self.last_account
-        elif lock:
-            account = self.get_account_manager().acquire_account()
-        else:
-            raise Exception('Non-locking shared accounts unsupported.')
-        self.last_account = account
+    def _track_account(self, account):
         self.transport.signal_connect('otp_requested',
                                       self._on_otp_requested,
                                       account)
-        return account
 
-    def _release_account(self, account = None):
+    def _untrack_accounts(self):
         self.transport.signal_disconnect('otp_requested',
                                          self._on_otp_requested)
-        if account == self.last_account:
-            account = None
+
+    def _acquire_account(self, account = None, lock = True):
+        # Specific account requested?
         if account:
-            account.release()
-        elif self.last_account:
-            self.last_account.release()
-        else:
-            raise Exception('Attempt to relase a released account.')
+            if lock:
+                account.acquire()
+            return account
+
+        # Is a default account defined for this connection?
+        if self.default_account:
+            if lock:
+                self.default_account.acquire()
+            self.default_account.acquire()
+            return self.default_account
+
+        # Else, choose an account from the account pool.
+        if lock:
+            return self.get_account_manager().acquire_account()
+        raise Exception('non-locking shared accounts are not supported.')
+
+    def _release_account(self, account):
+        account.release()
 
     def get_action(self):
         """
@@ -225,18 +224,17 @@ class Connection(object):
         """
         account  = self._acquire_account(account, lock)
         key_file = account.options.get('ssh_key_file')
+        self._track_account(account)
 
         try:
             self.transport.authenticate(account.get_name(),
                                         account.get_password(),
                                         wait     = wait,
                                         key_file = key_file)
-        except:
+        finally:
             if lock:
                 self._release_account(account)
-            raise
-        if lock:
-            self._release_account(account)
+            self._untrack_accounts()
         return account
 
     def authorize(self, account = None, wait = False, lock = True):
@@ -255,15 +253,14 @@ class Connection(object):
         account  = self._acquire_account(account, lock)
         key_file = account.options.get('ssh_key_file')
         password = account.get_authorization_password()
+        self._track_account(account)
 
         try:
             self.transport.authorize(password, wait = wait)
-        except:
+        finally:
             if lock:
                 self._release_account(account)
-            raise
-        if lock:
-            self._release_account(account)
+            self._untrack_accounts()
         return account
 
     def auto_authorize(self,
@@ -305,6 +302,7 @@ class Connection(object):
                     'junos':     None,
                     'junos_erx': 'enable\r',
                     'ios_xr':    None}.get(os)
+        self._track_account(account)
 
         if password is None:
             password = account.get_authorization_password()
@@ -313,10 +311,8 @@ class Connection(object):
             if command:
                 self.send(command)
                 self.transport.authorize(password, wait = wait)
-        except:
+        finally:
             if lock:
                 self._release_account(account)
-            raise
-        if lock:
-            self._release_account(account)
+            self._untrack_accounts()
         return account
