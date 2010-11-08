@@ -50,6 +50,9 @@ class Account(Trackable):
         self.lock                   = threading.Lock()
 
 
+    def __str__(self):
+        return self.name
+
     def acquire(self):
         """
         Locks the account.

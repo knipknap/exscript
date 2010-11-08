@@ -34,23 +34,26 @@ class AccountManager(object):
         if accounts:
             self.add_account(accounts)
 
-
     def _on_account_acquire_before(self, account):
-        self.unlock_cond.acquire()
-        assert account in self.accounts
-        assert account in self.unlocked_accounts
-        self.unlocked_accounts.remove(account)
-        self.unlock_cond.notifyAll()
-        self.unlock_cond.release()
+        with self.unlock_cond:
+            if account not in self.accounts:
+                msg = 'attempt to acquire unknown account %s' % account
+                raise Exception(msg)
+            if account not in self.unlocked_accounts:
+                raise Exception('account %s is already locked' % account)
+            self.unlocked_accounts.remove(account)
+            self.unlock_cond.notify_all()
         return account
 
     def _on_account_released(self, account):
-        self.unlock_cond.acquire()
-        assert account in self.accounts
-        assert account not in self.unlocked_accounts
-        self.unlocked_accounts.append(account)
-        self.unlock_cond.notifyAll()
-        self.unlock_cond.release()
+        with self.unlock_cond:
+            if account not in self.accounts:
+                msg = 'attempt to acquire unknown account %s' % account
+                raise Exception(msg)
+            if account in self.unlocked_accounts:
+                raise Exception('account %s should be locked' % account)
+            self.unlocked_accounts.append(account)
+            self.unlock_cond.notify_all()
         return account
 
     def add_account(self, accounts):
@@ -60,16 +63,14 @@ class AccountManager(object):
         @type  accounts: Account|list[Account]
         @param accounts: The account to be added.
         """
-        self.unlock_cond.acquire()
-        for account in to_list(accounts):
-            account.signal_connect('acquire_before',
-                                   self._on_account_acquire_before)
-            account.signal_connect('released', self._on_account_released)
-            self.accounts.append(account)
-            self.unlocked_accounts.append(account)
-        self.unlock_cond.notifyAll()
-        self.unlock_cond.release()
-
+        with self.unlock_cond:
+            for account in to_list(accounts):
+                account.signal_connect('acquire_before',
+                                       self._on_account_acquire_before)
+                account.signal_connect('released', self._on_account_released)
+                self.accounts.append(account)
+                self.unlocked_accounts.append(account)
+            self.unlock_cond.notify_all()
 
     def _remove_account(self, accounts):
         """
@@ -87,16 +88,13 @@ class AccountManager(object):
             self.accounts.remove(account)
             self.unlocked_accounts.remove(account)
 
-
     def reset(self):
         """
         Removes all accounts.
         """
-        self.unlock_cond.acquire()
-        self._remove_account(self.accounts[:])
-        self.unlock_cond.notifyAll()
-        self.unlock_cond.release()
-
+        with self.unlock_cond:
+            self._remove_account(self.accounts[:])
+            self.unlock_cond.notify_all()
 
     def get_account_from_name(self, name):
         """
@@ -110,18 +108,15 @@ class AccountManager(object):
                 return account
         return None
 
-
     def n_accounts(self):
         """
         Returns the number of accounts that are currently in the pool.
         """
         return len(self.accounts)
 
-
     def _acquire_specific_account(self, account):
         assert account in self.accounts
         account = account.acquire()
-
 
     def acquire_account(self, account = None):
         """
@@ -136,14 +131,12 @@ class AccountManager(object):
         if account:
             return self._acquire_specific_account(account)
         assert len(self.accounts) > 0
-        self.unlock_cond.acquire()
-        while len(self.unlocked_accounts) == 0:
-            self.unlock_cond.wait()
-        account = self.unlocked_accounts.pop(0)
-        account._acquire()
-        self.unlock_cond.release()
+        with self.unlock_cond:
+            while len(self.unlocked_accounts) == 0:
+                self.unlock_cond.wait()
+            account = self.unlocked_accounts.pop(0)
+            account._acquire()
         return account
-
 
     def release_account(self, account):
         """
