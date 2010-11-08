@@ -15,7 +15,7 @@
 """
 Accessing the connection to a remote host.
 """
-import threading, os.path
+import threading, os
 from Account import Account
 
 class Connection(object):
@@ -150,7 +150,6 @@ class Connection(object):
         if self.default_account:
             if lock:
                 self.default_account.acquire()
-            self.default_account.acquire()
             return self.default_account
 
         # Else, choose an account from the account pool.
