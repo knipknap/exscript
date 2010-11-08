@@ -28,7 +28,7 @@ class AccountManager(object):
         @type  accounts: Account|list[Account]
         @param accounts: Passed to add_account()
         """
-        self.accounts          = []
+        self.accounts          = set()
         self.unlocked_accounts = []
         self.unlock_cond       = threading.Condition()
         if accounts:
@@ -68,7 +68,7 @@ class AccountManager(object):
                 account.signal_connect('acquire_before',
                                        self._on_account_acquire_before)
                 account.signal_connect('released', self._on_account_released)
-                self.accounts.append(account)
+                self.accounts.add(account)
                 self.unlocked_accounts.append(account)
             self.unlock_cond.notify_all()
 
@@ -80,8 +80,11 @@ class AccountManager(object):
         @param accounts: The accounts to be removed.
         """
         for account in to_list(accounts):
-            assert account in self.accounts
-            assert account in self.unlocked_accounts
+            if account not in self.accounts:
+                msg = 'attempt to remove unknown account %s' % account
+                raise Exception(msg)
+            if account not in self.unlocked_accounts:
+                raise Exception('account %s should be unlocked' % account)
             account.signal_disconnect('acquire_before',
                                       self._on_account_acquire_before)
             account.signal_disconnect('released', self._on_account_released)
@@ -93,7 +96,7 @@ class AccountManager(object):
         Removes all accounts.
         """
         with self.unlock_cond:
-            self._remove_account(self.accounts[:])
+            self._remove_account(self.accounts.copy())
             self.unlock_cond.notify_all()
 
     def get_account_from_name(self, name):
