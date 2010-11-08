@@ -15,7 +15,7 @@
 """
 Handy shortcuts for converting types.
 """
-from Exscript.Host    import Host
+import Exscript
 from Exscript.Log     import Log
 from Exscript.Logfile import Logfile
 
@@ -53,7 +53,7 @@ def to_host(host, default_protocol = 'telnet', default_domain = ''):
         return host
     if default_domain and not '.' in host:
         host += '.' + default_domain
-    return Host(host)
+    return Exscript.Host(host)
 
 def to_hosts(hosts, default_protocol = 'telnet', default_domain = ''):
     """

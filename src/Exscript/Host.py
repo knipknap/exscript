@@ -15,8 +15,9 @@
 """
 Representing a device to connect with.
 """
+from util.cast import to_list
 from util.ipv4 import is_ip
-from util.url  import parse_url
+from util.url  import parse_url, Url
 
 def _is_ip(string):
     # Adds IPv6 support.
@@ -82,8 +83,20 @@ class Host(object):
         self.set_password2(uri.password2)
 
         for key, val in uri.vars.iteritems():
-            self.append(key, val)
+            self.set(key, val)
 
+
+    def get_uri(self):
+        url = Url()
+        url.protocol  = self.get_protocol()
+        url.username  = self.get_username()
+        url.password1 = self.get_password()
+        url.password2 = self.get_password2()
+        url.hostname  = self.get_name()
+        url.port      = self.get_tcp_port()
+        url.vars      = dict((k, to_list(v))
+                             for (k, v) in self.get_all().iteritems())
+        return str(url)
 
     def set_name(self, name):
         """

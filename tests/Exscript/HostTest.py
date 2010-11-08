@@ -31,6 +31,12 @@ class HostTest(unittest.TestCase):
             self.assertEqual(self.host.get_name(),    uri.hostname)
             self.assertEqual(self.host.get_address(), uri.hostname)
 
+    def testGetUri(self):
+        for url, result in urls:
+            host = Host(url)
+            uri  = parse_url(url)
+            self.assertEqual(host.get_uri(), str(uri))
+
     def testSetAddress(self):
         self.host.set_protocol('dummy')
         self.host.set_address('test.org')
