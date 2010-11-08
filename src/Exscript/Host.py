@@ -92,7 +92,7 @@ class Host(object):
         url.username  = self.get_username()
         url.password1 = self.get_password()
         url.password2 = self.get_password2()
-        url.hostname  = self.get_name()
+        url.hostname  = self.get_address()
         url.port      = self.get_tcp_port()
         url.vars      = dict((k, to_list(v))
                              for (k, v) in self.get_all().iteritems())
