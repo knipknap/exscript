@@ -76,6 +76,10 @@ urls = [
     ('ssh://user:password@testhost?myvar=testvalue&amp;myvar2=test%202',
      'ssh://user:password@testhost:22?myvar=testvalue&myvar2=test+2'),
 
+    # Encoding.
+    ('foo://%27M%7B7Zk:%27%2FM%7B7Zyk:C7%26Rt%3Ea@ULM-SZRC1:23',
+     'foo://%27M%7B7Zk:%27%2FM%7B7Zyk:C7%26Rt%3Ea@ULM-SZRC1:23'),
+
     # Pseudo protocol.
     ('pseudo://../my/path',
      'pseudo://../my/path'),

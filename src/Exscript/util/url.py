@@ -15,7 +15,8 @@
 """
 Working with URLs (as used in URL formatted hostnames).
 """
-import re, urllib
+import re
+from urllib   import urlencode, quote
 from urlparse import urlparse, urlsplit
 
 _hextochr = dict()
@@ -127,13 +128,14 @@ class Url(object):
         if self.username is not None or \
            self.password1 is not None or \
            self.password2 is not None:
-            url += self.username or ''
+            if self.username is not None:
+                url += quote(self.username, '')
             if self.password1 is not None or self.password2 is not None:
                 url += ':'
             if self.password1 is not None:
-                url += self.password1
+                url += quote(self.password1, '')
             if self.password2 is not None:
-                url += ':' + self.password2
+                url += ':' + quote(self.password2, '')
             url += '@'
         url += self.hostname
         if self.port:
@@ -146,7 +148,7 @@ class Url(object):
             for key, values in self.vars.iteritems():
                 for value in values:
                     pairs.append((key, value))
-            url += '?' + urllib.urlencode(pairs)
+            url += '?' + urlencode(pairs)
         return url
 
 def parse_url(url, default_protocol = 'telnet'):
@@ -201,12 +203,12 @@ def parse_url(url, default_protocol = 'telnet'):
     if '@' in netloc:
         auth, netloc = netloc.split('@')
         auth = auth.split(':')
-        if len(auth) == 1:
-            result.username = auth[0]
-        elif len(auth) == 2:
-            result.username, result.password1 = auth
-        elif len(auth) == 3:
-            result.username, result.password1, result.password2 = auth
+        try:
+            result.username  = _unquote(auth[0])
+            result.password1 = _unquote(auth[1])
+            result.password2 = _unquote(auth[2])
+        except IndexError:
+            pass
 
     # Parse hostname and port number.
     result.hostname = netloc + parsed.path
