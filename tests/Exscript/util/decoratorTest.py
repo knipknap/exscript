@@ -10,7 +10,7 @@ class FakeConnection(object):
     def open(self):
         self.open = True
 
-    def authenticate(self, wait):
+    def authenticate(self, wait = True):
         self.authenticated = True
         self.authe_waited  = wait
 

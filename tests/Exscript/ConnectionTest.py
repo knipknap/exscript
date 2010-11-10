@@ -71,7 +71,7 @@ class ConnectionTest(DummyTest):
         self.assertEqual('unknown', self.transport.guess_os())
         self.transport.open()
         self.assertEqual('unknown', self.transport.guess_os())
-        self.transport.authenticate(wait = True)
+        self.transport.authenticate()
         self.assertEqual('shell', self.transport.guess_os())
 
 def suite():

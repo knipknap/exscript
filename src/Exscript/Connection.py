@@ -204,7 +204,7 @@ class Connection(object):
                                       self.get_host().get_tcp_port()):
             raise Exception('Connection failed.')
 
-    def authenticate(self, account = None, wait = False, lock = True):
+    def authenticate(self, account = None, wait = True, lock = True):
         """
         Like protocols.Transport.authenticate(), but makes sure to
         lock/release the account while it is used.
@@ -240,7 +240,7 @@ class Connection(object):
             self._untrack_accounts()
         return account
 
-    def authorize(self, account = None, wait = False, lock = True):
+    def authorize(self, account = None, wait = True, lock = True):
         """
         Like authenticate(), but uses the authorization password instead.
 

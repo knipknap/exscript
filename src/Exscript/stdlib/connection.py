@@ -28,7 +28,7 @@ def authenticate(scope, user = [None], password = [None]):
     @param password: A password.
     """
     conn = scope.get('__connection__')
-    conn.transport.authenticate(user[0], password[0], wait = True)
+    conn.transport.authenticate(user[0], password[0])
     return True
 
 def authorize(scope, password = [None]):
@@ -43,7 +43,7 @@ def authorize(scope, password = [None]):
     @param password: A password.
     """
     conn = scope.get('__connection__')
-    conn.transport.authorize(password[0], wait = True)
+    conn.transport.authorize(password[0])
     return True
 
 def auto_authorize(scope, password = [None]):
