@@ -247,6 +247,19 @@ class TransportTest(unittest.TestCase):
         self.failIfEqual(self.transport.response, response)
         self.assert_(len(self.transport.response) > 0)
 
+    def testAutoAuthorize(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.authorize)
+            return
+        self.doAuthenticate(wait = False)
+        response = self.transport.response
+        # This should do nothing, because our test host does not
+        # support AAA. Can't think of a way to test against a
+        # device using AAA.
+        self.transport.auto_authorize(self.user)
+        self.failUnlessEqual(self.transport.response, response)
+
     def testIsAuthorized(self):
         self.failIf(self.transport.is_authorized())
         # Test can not work on the abstract base.

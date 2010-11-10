@@ -250,7 +250,6 @@ class Connection(object):
         @return: The account that was used to log in.
         """
         account  = self._acquire_account(account, lock)
-        key_file = account.options.get('ssh_key_file')
         password = account.get_authorization_password()
         self._track_account(account)
 
@@ -296,20 +295,13 @@ class Connection(object):
         """
         os       = self.guess_os()
         account  = self._acquire_account(account, lock)
-        command  = {'ios':       'enable\r',
-                    'one_os':    'enable\r',
-                    'junos':     None,
-                    'junos_erx': 'enable\r',
-                    'ios_xr':    None}.get(os)
         self._track_account(account)
 
         if password is None:
             password = account.get_authorization_password()
 
         try:
-            if command:
-                self.send(command)
-                self.transport.authorize(password, wait = wait)
+            self.transport.auto_authorize(password, wait = wait)
         finally:
             if lock:
                 self._release_account(account)

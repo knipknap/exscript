@@ -391,7 +391,7 @@ class Transport(Trackable):
         return self.authenticated
 
 
-    def authorize(self, password = None, **kwargs):
+    def authorize(self, password = None, wait = False):
         """
         Authorizes at the remote host, if the remote host supports 
         authorization. Does nothing otherwise.
@@ -412,7 +412,34 @@ class Transport(Trackable):
         self.password = password
 
         self._dbg(1, "Attempting to authorize.")
-        self._authorize_hook(password, **kwargs)
+        self._authorize_hook(password, wait = wait)
+        self.authorized = True
+
+
+    def auto_authorize(self, password = None, wait = False):
+        """
+        Like authorize(), but instead of just waiting for a password
+        prompt, it automatically initiates the authorization procedure.
+
+        In the case of devices that understand AAA, that means sending
+        a command to the device. For example, on routers running Cisco
+        IOS, this command executes the 'enable' command before expecting
+        the password.
+
+        In the case of a device that is not recognized to support AAA, this
+        method does nothing.
+
+        @type  password: string
+        @param password: The plain password.
+        """
+        if password is None:
+            password = self.password
+        if password is None:
+            raise TypeError('A password is required')
+        self.password = password
+
+        self._dbg(1, 'Calling driver.auto_authorize().')
+        self.get_driver().auto_authorize(self, password, wait)
         self.authorized = True
 
 
