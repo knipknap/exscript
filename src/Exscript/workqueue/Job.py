@@ -26,11 +26,10 @@ class Job(threading.Thread):
         self.setName(self.action.name)
 
     def _completed(self, exception = None):
-        self.condition.acquire()
-        self.exception = exception
-        self.completed = True
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            self.exception = exception
+            self.completed = True
+            self.condition.notifyAll()
 
     def run(self):
         """

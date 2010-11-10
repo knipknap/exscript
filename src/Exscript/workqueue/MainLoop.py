@@ -39,130 +39,115 @@ class MainLoop(Trackable, threading.Thread):
 
     def _action_sleep_notify(self, action):
         assert self.in_progress(action)
-        self.condition.acquire()
-        self.sleeping_actions.append(action)
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            self.sleeping_actions.append(action)
+            self.condition.notify_all()
 
     def _action_wake_notify(self, action):
         assert self.in_progress(action)
         assert action in self.sleeping_actions
-        self.condition.acquire()
-        self.sleeping_actions.remove(action)
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            self.sleeping_actions.remove(action)
+            self.condition.notify_all()
 
     def get_max_threads(self):
         return self.max_threads
 
     def set_max_threads(self, max_threads):
         assert max_threads is not None
-        self.condition.acquire()
-        self.max_threads = int(max_threads)
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            self.max_threads = int(max_threads)
+            self.condition.notify_all()
 
     def enqueue(self, action):
         action._mainloop_added_notify(self)
-        self.condition.acquire()
-        self.queue.append(action)
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            self.queue.append(action)
+            self.condition.notify_all()
 
     def enqueue_or_ignore(self, action):
         action._mainloop_added_notify(self)
-        self.condition.acquire()
-        if not self.get_first_action_from_name(action.name):
-            self.queue.append(action)
-            enqueued = True
-        else:
-            enqueued = False
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            if not self.get_first_action_from_name(action.name):
+                self.queue.append(action)
+                enqueued = True
+            else:
+                enqueued = False
+            self.condition.notify_all()
         return enqueued
 
     def priority_enqueue(self, action, force_start = False):
         action._mainloop_added_notify(self)
-        self.condition.acquire()
-        if force_start:
-            self.force_start.append(action)
-        else:
-            self.queue.insert(0, action)
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            if force_start:
+                self.force_start.append(action)
+            else:
+                self.queue.insert(0, action)
+            self.condition.notify_all()
 
     def priority_enqueue_or_raise(self, action, force_start = False):
-        self.condition.acquire()
+        with self.condition:
+            # If the action is already running (or about to be forced),
+            # there is nothing to be done.
+            running_actions = self.get_running_actions()
+            for queue_action in chain(self.force_start, running_actions):
+                if queue_action.name == action.name:
+                    self.condition.notify_all()
+                    return False
 
-        # If the action is already running (or about to be forced),
-        # there is nothing to be done.
-        running_actions = self.get_running_actions()
-        for queue_action in chain(self.force_start, running_actions):
-            if queue_action.name == action.name:
-                self.condition.notifyAll()
-                self.condition.release()
-                return False
+            # If the action is already in the queue, remove it so it can be
+            # re-added later.
+            existing = None
+            for queue_action in self.queue:
+                if queue_action.name == action.name:
+                    existing = queue_action
+                    break
+            if existing:
+                self.queue.remove(existing)
+                action = existing
+            else:
+                action._mainloop_added_notify(self)
 
-        # If the action is already in the queue, remove it so it can be
-        # re-added later.
-        existing = None
-        for queue_action in self.queue:
-            if queue_action.name == action.name:
-                existing = queue_action
-                break
-        if existing:
-            self.queue.remove(existing)
-            action = existing
-        else:
-            action._mainloop_added_notify(self)
+            # Now add the action to the queue.
+            if force_start:
+                self.force_start.append(action)
+            else:
+                self.queue.insert(0, action)
 
-        # Now add the action to the queue.
-        if force_start:
-            self.force_start.append(action)
-        else:
-            self.queue.insert(0, action)
-
-        self.condition.notifyAll()
-        self.condition.release()
+            self.condition.notify_all()
         return existing is None
 
     def pause(self):
-        self.condition.acquire()
-        self.paused = True
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            self.paused = True
+            self.condition.notify_all()
 
     def resume(self):
-        self.condition.acquire()
-        self.paused = False
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            self.paused = False
+            self.condition.notify_all()
 
     def is_paused(self):
         return self.paused
 
     def wait_for(self, action):
-        self.condition.acquire()
-        while self.in_queue(action):
-            self.condition.wait()
-        self.condition.release()
+        with self.condition:
+            while self.in_queue(action):
+                self.condition.wait()
 
     def wait_for_activity(self):
-        self.condition.acquire()
-        self.condition.wait(.2)
-        self.condition.release()
+        with self.condition:
+            self.condition.wait(.2)
 
     def wait_until_done(self):
-        self.condition.acquire()
-        while self.get_queue_length() > 0:
-            self.condition.wait()
-        self.condition.release()
+        with self.condition:
+            while self.get_queue_length() > 0:
+                self.condition.wait()
 
     def shutdown(self):
-        self.condition.acquire()
-        self.shutdown_now = True
-        self.condition.notifyAll()
-        self.condition.release()
+        with self.condition:
+            self.shutdown_now = True
+            self.condition.notify_all()
         for job in self.running_jobs:
             job.join()
             self._dbg(1, 'Job "%s" finished' % job.getName())
@@ -251,7 +236,7 @@ class MainLoop(Trackable, threading.Thread):
             for action in self.force_start:
                 self._start_action(action)
             self.force_start = []
-            self.condition.notifyAll()
+            self.condition.notify_all()
 
             # Don't bother looking if the queue is empty.
             if len(self.queue) <= 0 or self.paused:
