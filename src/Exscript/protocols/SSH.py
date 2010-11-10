@@ -35,7 +35,6 @@ class SSH(Transport):
         self.conn        = None
         self.debug       = kwargs.get('debug', 0)
         self.ssh_version = kwargs.get('ssh_version')
-        self.keyfile     = kwargs.get('key_file')
         self.auto_verify = kwargs.get('auto_verify', False)
         self.port        = None
 

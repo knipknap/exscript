@@ -35,7 +35,6 @@ class SSH2(Transport):
         self.shell       = None
         self.buffer      = ''
         self.debug       = kwargs.get('debug', 0)
-        self.keyfile     = kwargs.get('key_file')
         self.auto_verify = kwargs.get('auto_verify', False)
         self.port        = None
 
