@@ -135,7 +135,7 @@ def get_hosts_from_csv(filename,
         msg  = 'Syntax error in CSV file header:'
         msg += ' Make sure to separate columns by tabs.'
         raise Exception(msg)
-    varnames = header.split('\t')
+    varnames = [str(v) for v in header.split('\t')]
     varnames.pop(0)
 
     # Walk through all lines and create a map that maps hostname to
