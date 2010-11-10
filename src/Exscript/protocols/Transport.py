@@ -401,9 +401,8 @@ class Transport(Trackable):
 
         @type  password: string
         @param password: The plain password.
-        @type  kwargs: dict
-        @param kwargs: The following arguments are supported:
-            - wait: Whether to wait for a prompt using expect_prompt().
+        @type  wait: bool
+        @param wait: Whether to wait for a prompt using expect_prompt().
         """
         if password is None:
             password = self.password
@@ -431,6 +430,8 @@ class Transport(Trackable):
 
         @type  password: string
         @param password: The plain password.
+        @type  wait: bool
+        @param wait: Whether to wait for a prompt using expect_prompt().
         """
         if password is None:
             password = self.password
