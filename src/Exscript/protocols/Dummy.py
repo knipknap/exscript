@@ -139,6 +139,11 @@ class Dummy(Transport):
             else:
                 assert 0 # Not reached.
 
+
+    def _authenticate_by_keyfile_hook(self, user, key_file, wait):
+        pass
+
+
     def _authorize_hook(self, password, **kwargs):
         # The username should not be asked, so not passed.
         return self._authenticate_hook('', password, **kwargs)

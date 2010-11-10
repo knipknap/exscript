@@ -228,6 +228,17 @@ class TransportTest(unittest.TestCase):
         self.assert_(self.transport.response is not None)
         self.assert_(len(self.transport.response) > 0)
 
+    def testAuthenticateByKeyfile(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception,
+                              self.transport.authenticate_by_keyfile,
+                              'test',
+                              'foo')
+            return
+        self.transport.connect(self.hostname, self.port)
+        self.transport.authenticate_by_keyfile(self.user, 'fake.id', False)
+
     def testIsAuthenticated(self):
         self.failIf(self.transport.is_authenticated())
         # Test can not work on the abstract base.

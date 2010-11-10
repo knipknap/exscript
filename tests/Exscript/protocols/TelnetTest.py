@@ -34,6 +34,14 @@ class TelnetTest(TransportTest):
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Telnet))
 
+    def testAuthenticateByKeyfile(self):
+        self.transport.connect(self.hostname, self.port)
+        # Telnet does not support this.
+        self.assertRaises(NotImplementedError,
+                          self.transport.authenticate_by_keyfile,
+                          'test',
+                          'foo')
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TelnetTest)
 if __name__ == '__main__':

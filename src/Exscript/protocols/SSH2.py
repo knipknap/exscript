@@ -58,8 +58,7 @@ class SSH2(Transport):
                                 self.port,
                                 user,
                                 password,
-                                key_filename = kwargs.get('key_file'),
-                                timeout      = self.timeout)
+                                timeout = self.timeout)
         except paramiko.BadHostKeyException, e:
             self._dbg(1, 'Bad host key!')
             raise LoginFailure('Bad host key: ' + str(e))
@@ -76,6 +75,34 @@ class SSH2(Transport):
             self._dbg(1, 'Failed to open shell.')
             raise LoginFailure('Failed to open shell: ' + str(e))
         if kwargs.get('wait'):
+            self.expect_prompt()
+
+
+    def _authenticate_by_keyfile_hook(self, user, key_file, wait):
+        if self.is_authenticated():
+            return
+        try:
+            self.client.connect(self.host,
+                                self.port,
+                                user,
+                                key_filename = key_file,
+                                timeout      = self.timeout)
+        except paramiko.BadHostKeyException, e:
+            self._dbg(1, 'Bad host key!')
+            raise LoginFailure('Bad host key: ' + str(e))
+        except paramiko.SSHException, e:
+            self._dbg(1, 'Missing host key.')
+            raise LoginFailure('Missing host key: ' + str(e))
+        except paramiko.AuthenticationException, e:
+            self._dbg(1, 'Login failed.')
+            raise LoginFailure('Login failed: ' + str(e))
+
+        try:
+            self.shell = self.client.invoke_shell()
+        except paramiko.SSHException, e:
+            self._dbg(1, 'Failed to open shell.')
+            raise LoginFailure('Failed to open shell: ' + str(e))
+        if wait:
             self.expect_prompt()
 
 

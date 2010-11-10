@@ -72,7 +72,7 @@ class SSH(Transport):
 
 
     def _authenticate_hook(self, user, password, **kwargs):
-        self._spawn(user, kwargs.get('key_file'))
+        self._spawn(user)
         while True:
             # Wait for the user prompt.
             prompt  = [self.get_login_error_prompt(),
@@ -172,6 +172,11 @@ class SSH(Transport):
 
             else:
                 assert 0 # Not reached.
+
+
+    def _authenticate_by_keyfile_hook(self, user, key_file, wait):
+        self._spawn(user, key_file)
+        self._authenticate_hook(user, '', wait = wait)
 
 
     def _authorize_hook(self, password, **kwargs):

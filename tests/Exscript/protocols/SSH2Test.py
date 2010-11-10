@@ -13,6 +13,13 @@ class SSH2Test(SSHTest):
     def testConstructor(self):
         self.assert_(isinstance(self.transport, SSH2))
 
+    def testAuthenticateByKeyfile(self):
+        self.transport.connect(self.hostname, self.port)
+        self.assertRaises(IOError,
+                          self.transport.authenticate_by_keyfile,
+                          'user',
+                          'test.id')  # raises file-not-found
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(SSH2Test)
 if __name__ == '__main__':

@@ -226,10 +226,14 @@ class Connection(object):
         self._track_account(account)
 
         try:
-            self.transport.authenticate(account.get_name(),
-                                        account.get_password(),
-                                        wait     = wait,
-                                        key_file = key_file)
+            if key_file:
+                self.transport.authenticate_by_key(account.get_name(),
+                                                   key_file,
+                                                   wait = wait)
+            else:
+                self.transport.authenticate(account.get_name(),
+                                            account.get_password(),
+                                            wait = wait)
         finally:
             if lock:
                 self._release_account(account)

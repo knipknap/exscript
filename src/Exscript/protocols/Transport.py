@@ -67,6 +67,7 @@ class Transport(Trackable):
         self.host                  = kwargs.get('host',     None)
         self.user                  = kwargs.get('user',     '')
         self.password              = kwargs.get('password', '')
+        self.key_file              = kwargs.get('key_file')
         self.stdout                = kwargs.get('stdout')
         self.stderr                = kwargs.get('stderr',   sys.stderr)
         self.debug                 = kwargs.get('debug',    0)
@@ -377,6 +378,33 @@ class Transport(Trackable):
 
         self._dbg(1, "Attempting to authenticate %s." % user)
         self._authenticate_hook(user, password, **kwargs)
+        self.authenticated = True
+
+
+    def authenticate_by_keyfile(self, user, key_file, wait = True):
+        """
+        Authenticates at the remote host using key authentification.
+
+        @type  user: string
+        @param user: The remote username.
+        @type  key_file: string
+        @param key_file: Name of the file containing the key.
+        @type  wait: bool
+        @param wait: Whether to wait for a prompt using expect_prompt().
+        """
+        if user is None:
+            user = self.user
+        if key_file is None:
+            key_file = self.key_file
+        if user is None:
+            raise TypeError('A username is required')
+        if key_file is None:
+            raise TypeError('A key_file is required')
+        self.user     = user
+        self.key_file = key_file
+
+        self._dbg(1, "Attempting to authenticate %s." % user)
+        self._authenticate_by_keyfile_hook(user, key_file, wait)
         self.authenticated = True
 
 
