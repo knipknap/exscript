@@ -15,7 +15,7 @@
 """
 Utilities for reading data from files.
 """
-import re, os, base64
+import re, os, base64, codecs
 from cast     import to_host
 from Exscript import Account
 
@@ -43,7 +43,8 @@ def get_accounts_from_file(filename):
 def get_hosts_from_file(filename,
                         default_protocol  = 'telnet',
                         default_domain    = '',
-                        remove_duplicates = False):
+                        remove_duplicates = False,
+                        encoding          = 'utf-8'):
     """
     Reads a list of hostnames from the file with the given name.
 
@@ -55,13 +56,15 @@ def get_hosts_from_file(filename,
     @param default_domain: Appended to each hostname that has no domain.
     @type  remove_duplicates: bool
     @param remove_duplicates: Whether duplicates are removed.
+    @type  encoding: str
+    @param encoding: The encoding of the file.
     @rtype:  list[Host]
     @return: The newly created host instances.
     """
     # Open the file.
     if not os.path.exists(filename):
         raise IOError('No such file: %s' % filename)
-    file_handle = open(filename, 'r')
+    file_handle = codecs.open(filename, 'r', encoding)
 
     # Read the hostnames.
     have  = set()
@@ -81,7 +84,8 @@ def get_hosts_from_file(filename,
 
 def get_hosts_from_csv(filename,
                        default_protocol = 'telnet',
-                       default_domain   = ''):
+                       default_domain   = '',
+                       encoding         = 'utf-8'):
     """
     Reads a list of hostnames and variables from the tab-separated .csv file
     with the given name. The first line of the file must contain the column
@@ -111,13 +115,15 @@ def get_hosts_from_csv(filename,
     @param default_protocol: Passed to the Host constructor.
     @type  default_domain: str
     @param default_domain: Appended to each hostname that has no domain.
+    @type  encoding: str
+    @param encoding: The encoding of the file.
     @rtype:  list[Host]
     @return: The newly created host instances.
     """
     # Open the file.
     if not os.path.exists(filename):
         raise IOError('No such file: %s' % filename)
-    file_handle = open(filename, 'r')
+    file_handle = codecs.open(filename, 'r', encoding)
 
     # Read the header.
     header = file_handle.readline().rstrip()
