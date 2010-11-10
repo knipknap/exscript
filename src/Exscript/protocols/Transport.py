@@ -354,7 +354,7 @@ class Transport(Trackable):
     def authenticate(self,
                      user     = None,
                      password = None,
-                     wait     = False,
+                     wait     = True,
                      userwait = True):
         """
         Authenticates at the remote host. Attempts to smartly recognize the 
@@ -424,7 +424,7 @@ class Transport(Trackable):
         return self.authenticated
 
 
-    def authorize(self, password = None, wait = False):
+    def authorize(self, password = None, wait = True):
         """
         Authorizes at the remote host, if the remote host supports 
         authorization. Does nothing otherwise.
@@ -448,7 +448,7 @@ class Transport(Trackable):
         self.authorized = True
 
 
-    def auto_authorize(self, password = None, wait = False):
+    def auto_authorize(self, password = None, wait = True):
         """
         Like authorize(), but instead of just waiting for a password
         prompt, it automatically initiates the authorization procedure.

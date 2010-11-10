@@ -354,7 +354,7 @@ class TransportTest(unittest.TestCase):
             return
         self.transport.connect(self.hostname, self.port)
         self.assertEqual('unknown', self.transport.guess_os())
-        self.transport.authenticate(self.user, self.password, wait = True)
+        self.transport.authenticate(self.user, self.password)
         self.assertEqual('shell', self.transport.guess_os())
 
 def suite():
