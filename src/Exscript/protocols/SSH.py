@@ -71,7 +71,7 @@ class SSH(Transport):
         self._dbg(1, "SSH client spawned.")
 
 
-    def _authenticate_hook(self, user, password, **kwargs):
+    def _authenticate_hook(self, user, password, wait, userwait):
         self._spawn(user)
         while True:
             # Wait for the user prompt.
@@ -117,6 +117,9 @@ class SSH(Transport):
                 self.response = response
                 self._receive_cb(response)
                 self.send(user + '\r')
+                if not userwait:
+                    self._dbg(1, "Bailing out as requested.")
+                    break
                 continue
 
             # s/key prompt.
@@ -135,7 +138,7 @@ class SSH(Transport):
                 self._receive_cb(self.response)
                 self.send(phrase + '\r')
                 self._dbg(1, "Password sent.")
-                if not kwargs.get('wait'):
+                if not wait:
                     self._dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -146,7 +149,7 @@ class SSH(Transport):
                 self.response = response
                 self._receive_cb(response)
                 self.send(password + '\r')
-                if not kwargs.get('wait'):
+                if not wait:
                     self._dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -163,7 +166,7 @@ class SSH(Transport):
             # Shell prompt.
             elif which == 5:
                 self._dbg(1, 'Shell prompt received.')
-                if kwargs.get('wait'):
+                if wait:
                     self.response = response
                     self._receive_cb(response)
                 else:
@@ -176,10 +179,10 @@ class SSH(Transport):
 
     def _authenticate_by_keyfile_hook(self, user, key_file, wait):
         self._spawn(user, key_file)
-        self._authenticate_hook(user, '', wait = wait)
+        self._authenticate_hook(user, '', wait, True)
 
 
-    def _authorize_hook(self, password, **kwargs):
+    def _authorize_hook(self, password, wait):
         pass
 
 

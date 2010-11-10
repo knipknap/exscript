@@ -44,7 +44,7 @@ class Telnet(Transport):
         return True
 
 
-    def _authenticate_hook(self, user, password, **kwargs):
+    def _authenticate_hook(self, user, password, wait, userwait):
         while True:
             # Wait for the user prompt.
             #print 'Waiting for prompt'
@@ -77,6 +77,9 @@ class Telnet(Transport):
             elif which == 1:
                 self._dbg(1, "Username prompt %s received." % which)
                 self.send(user + '\r')
+                if not userwait:
+                    self._dbg(1, "Bailing out as requested.")
+                    break
                 continue
 
             # s/key prompt.
@@ -90,7 +93,7 @@ class Telnet(Transport):
                 self.tn.expect([self.get_password_prompt()], self.timeout)
                 self.send(phrase + '\r')
                 self._dbg(1, "Password sent.")
-                if not kwargs.get('wait'):
+                if not wait:
                     self._dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -99,7 +102,7 @@ class Telnet(Transport):
             elif which == 3:
                 self._dbg(1, "Cleartext password prompt received.")
                 self.send(password + '\r')
-                if not kwargs.get('wait'):
+                if not wait:
                     self._dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -119,9 +122,9 @@ class Telnet(Transport):
         raise NotImplementedError(msg)
 
 
-    def _authorize_hook(self, password, **kwargs):
+    def _authorize_hook(self, password, wait):
         # The username should not be asked, so not passed.
-        return self._authenticate_hook('', password, **kwargs)
+        return self._authenticate_hook('', password, wait, True)
 
 
     def send(self, data):

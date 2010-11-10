@@ -70,7 +70,7 @@ class Dummy(Transport):
         self.buffer = ''
         return True
 
-    def _authenticate_hook(self, user, password, **kwargs):
+    def _authenticate_hook(self, user, password, wait, userwait):
         while True:
             # Wait for the user prompt.
             prompt  = [self.get_login_error_prompt(),
@@ -102,7 +102,7 @@ class Dummy(Transport):
             elif which <= 1:
                 self._dbg(1, "Username prompt %s received." % which)
                 self.send(user + '\r\n')
-                if kwargs.get('userwait') == False:
+                if not userwait:
                     self._dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -117,7 +117,7 @@ class Dummy(Transport):
                 self._expect_any([self.get_password_prompt()])
                 self.send(phrase + '\r\n')
                 self._dbg(1, "Password sent.")
-                if not kwargs.get('wait'):
+                if not wait:
                     self._dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -126,7 +126,7 @@ class Dummy(Transport):
             elif which == 3:
                 self._dbg(1, "Cleartext password prompt received.")
                 self.send(password + '\r\n')
-                if not kwargs.get('wait'):
+                if not wait:
                     self._dbg(1, "Bailing out as requested.")
                     break
                 continue
@@ -144,9 +144,9 @@ class Dummy(Transport):
         pass
 
 
-    def _authorize_hook(self, password, **kwargs):
+    def _authorize_hook(self, password, wait):
         # The username should not be asked, so not passed.
-        return self._authenticate_hook('', password, **kwargs)
+        return self._authenticate_hook('', password, wait, True)
 
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))

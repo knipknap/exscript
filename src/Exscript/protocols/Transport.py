@@ -351,7 +351,11 @@ class Transport(Trackable):
         return self._connect_hook(self.host, port)
 
 
-    def authenticate(self, user = None, password = None, **kwargs):
+    def authenticate(self,
+                     user     = None,
+                     password = None,
+                     wait     = False,
+                     userwait = True):
         """
         Authenticates at the remote host. Attempts to smartly recognize the 
         user and password prompts; the following remote operating systems 
@@ -361,9 +365,10 @@ class Transport(Trackable):
         @param user: The remote username.
         @type  password: string
         @param password: The plain password.
-        @type  kwargs: dict
-        @param kwargs: The following arguments are supported:
-            - wait: Whether to wait for a prompt using expect_prompt().
+        @type  wait: bool
+        @param wait: Whether to wait for a prompt using expect_prompt().
+        @type  userwait: bool
+        @param userwait: When False, bail out after sending the username.
         """
         if user is None:
             user = self.user
@@ -377,7 +382,7 @@ class Transport(Trackable):
         self.password = password
 
         self._dbg(1, "Attempting to authenticate %s." % user)
-        self._authenticate_hook(user, password, **kwargs)
+        self._authenticate_hook(user, password, wait, userwait)
         self.authenticated = True
 
 
@@ -439,7 +444,7 @@ class Transport(Trackable):
         self.password = password
 
         self._dbg(1, "Attempting to authorize.")
-        self._authorize_hook(password, wait = wait)
+        self._authorize_hook(password, wait)
         self.authorized = True
 
 

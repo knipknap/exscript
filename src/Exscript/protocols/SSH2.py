@@ -50,7 +50,7 @@ class SSH2(Transport):
         return True
 
 
-    def _authenticate_hook(self, user, password, **kwargs):
+    def _authenticate_hook(self, user, password, wait, userwait):
         if self.is_authenticated():
             return
         try:
@@ -74,7 +74,7 @@ class SSH2(Transport):
         except paramiko.SSHException, e:
             self._dbg(1, 'Failed to open shell.')
             raise LoginFailure('Failed to open shell: ' + str(e))
-        if kwargs.get('wait'):
+        if wait:
             self.expect_prompt()
 
 
@@ -106,7 +106,7 @@ class SSH2(Transport):
             self.expect_prompt()
 
 
-    def _authorize_hook(self, password, **kwargs):
+    def _authorize_hook(self, password, wait):
         pass
 
 
