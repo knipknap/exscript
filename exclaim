@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, sys, time
+import os, sys, time, codecs
 from optparse  import OptionParser
 from Exscript  import __version__
 from Exscriptd import Client, Order
@@ -47,6 +47,13 @@ parser.add_option('--csv',
                   default = False,
                   help    = '''
 The order is using CSV format.
+'''.strip())
+parser.add_option('--encoding',
+                  dest    = 'encoding',
+                  metavar = 'STRING',
+                  default = 'utf-8',
+                  help    = '''
+The encoding of the input file when using --csv. Defaults to utf8.
 '''.strip())
 parser.add_option('--service',
                   dest    = 'service',
@@ -239,10 +246,15 @@ elif options.task_list:
     print_table(rows)
     sys.exit(0)
 
+try:
+    codecs.lookup(options.encoding)
+except LookupError:
+    parser.error('no such encoding: ' + str(options.encoding))
+
 if options.csv:
     if not options.service:
         parser.error('Need --service when using --csv.')
-    order = Order.from_csv_file(options.service, filename)
+    order = Order.from_csv_file(options.service, filename, options.encoding)
 else:
     order = Order.from_xml_file(filename)
     if options.service:

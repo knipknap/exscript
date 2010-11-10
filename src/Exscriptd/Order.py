@@ -109,7 +109,7 @@ class Order(DBObject):
         return Order.from_etree(xml.find('order'))
 
     @staticmethod
-    def from_csv_file(service, filename):
+    def from_csv_file(service, filename, encoding = 'utf-8'):
         """
         Creates a new instance by reading the given CSV file.
 
@@ -117,11 +117,13 @@ class Order(DBObject):
         @param service: The service name.
         @type  filename: str
         @param filename: A file containing a CSV formatted list of hosts.
+        @type  encoding: str
+        @param encoding: The name of the encoding.
         @rtype:  Order
         @return: A new instance of an order.
         """
         order = Order(service)
-        order.add_hosts_from_csv(filename)
+        order.add_hosts_from_csv(filename, encoding = encoding)
         return order
 
     def _read_list_from_xml(self, list_elem):
@@ -345,7 +347,7 @@ class Order(DBObject):
         self.touch()
         self.hosts.append(DBObject(host))
 
-    def add_hosts_from_csv(self, filename):
+    def add_hosts_from_csv(self, filename, encoding = 'utf-8'):
         """
         Parses the given CSV file using
         Exscript.util.file.get_hosts_from_csv(), and adds the resulting
@@ -356,7 +358,7 @@ class Order(DBObject):
         @type  filename: str
         @param filename: A file containing a CSV formatted list of hosts.
         """
-        for host in get_hosts_from_csv(filename):
+        for host in get_hosts_from_csv(filename, encoding = encoding):
             self.add_host(host)
 
     def get_hosts(self):
@@ -368,8 +370,3 @@ class Order(DBObject):
         @return: A list of hosts.
         """
         return self.hosts
-
-if __name__ == '__main__':
-    order = Order('test')
-    order.add_hosts_from_csv('/nmc/scripts/data/xpc3_discovery/tmdxpc3discovery_2010.05.05_17.03.14.csv')
-    print order.toxml()
