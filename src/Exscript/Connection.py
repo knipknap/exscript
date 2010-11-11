@@ -227,9 +227,9 @@ class Connection(object):
 
         try:
             if key_file:
-                self.transport.authenticate_by_key(account.get_name(),
-                                                   key_file,
-                                                   wait = wait)
+                self.transport.authenticate_by_keyfile(account.get_name(),
+                                                       key_file,
+                                                       wait = wait)
             else:
                 self.transport.authenticate(account.get_name(),
                                             account.get_password(),
