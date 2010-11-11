@@ -45,6 +45,10 @@ class WorkQueue(Trackable):
         self.main_loop.signal_connect('queue-empty',   self._on_queue_empty)
         self.main_loop.start()
 
+    def _check_if_ready(self):
+        if self.main_loop is None:
+            raise Exception('main loop is already destroyed')
+
     def _on_job_started(self, job):
         """
         Called whenever a new thread was started.
@@ -99,6 +103,7 @@ class WorkQueue(Trackable):
         @type  debug: int
         @param debug: The debug level.
         """
+        self._check_if_ready()
         self.debug           = debug
         self.main_loop.debug = debug
 
@@ -109,6 +114,7 @@ class WorkQueue(Trackable):
         @rtype:  int
         @return: The number of threads.
         """
+        self._check_if_ready()
         return self.main_loop.get_max_threads()
 
     def set_max_threads(self, max_threads):
@@ -118,7 +124,9 @@ class WorkQueue(Trackable):
         @type  max_threads: int
         @param max_threads: The number of threads.
         """
-        assert max_threads is not None
+        if max_threads is None:
+            raise TypeError('max_threads must not be None.')
+        self._check_if_ready()
         self.max_threads = max_threads
         self.main_loop.set_max_threads(max_threads)
 
@@ -129,6 +137,7 @@ class WorkQueue(Trackable):
         @type  action: Action
         @param action: The action that is executed.
         """
+        self._check_if_ready()
         self.main_loop.enqueue(action)
 
     def enqueue_or_ignore(self, action):
@@ -141,6 +150,7 @@ class WorkQueue(Trackable):
         @rtype:  bool
         @return: True if the action was enqueued, False otherwise.
         """
+        self._check_if_ready()
         return self.main_loop.enqueue_or_ignore(action)
 
     def priority_enqueue(self, action, force_start = False):
@@ -154,6 +164,7 @@ class WorkQueue(Trackable):
         @type  force_start: bool
         @param force_start: Whether to start execution immediately.
         """
+        self._check_if_ready()
         self.main_loop.priority_enqueue(action, force_start)
 
     def priority_enqueue_or_raise(self, action, force_start = False):
@@ -167,6 +178,7 @@ class WorkQueue(Trackable):
         @rtype:  bool
         @return: True if the action was enqueued, False otherwise.
         """
+        self._check_if_ready()
         return self.main_loop.priority_enqueue_or_raise(action, force_start)
 
     def unpause(self):
@@ -175,6 +187,7 @@ class WorkQueue(Trackable):
         This method is the opposite of pause().
         This method is asynchronous.
         """
+        self._check_if_ready()
         self.main_loop.resume()
 
     def pause(self):
@@ -183,6 +196,7 @@ class WorkQueue(Trackable):
         Executing may later be resumed by calling unpause().
         This method is asynchronous.
         """
+        self._check_if_ready()
         self.main_loop.pause()
 
     def wait_for(self, action):
@@ -192,6 +206,7 @@ class WorkQueue(Trackable):
         @type  action: Action
         @param action: The action that is executed.
         """
+        self._check_if_ready()
         self.main_loop.wait_for(action)
 
     def wait_for_activity(self):
@@ -200,12 +215,15 @@ class WorkQueue(Trackable):
         or a new job was enqueued. This method can be useful for avoiding
         polling.
         """
+        self._check_if_ready()
         self.main_loop.wait_for_activity()
 
     def wait_until_done(self):
         """
         Waits until the queue is empty.
         """
+        if self.main_loop is None:
+            return
         self.main_loop.wait_until_done()
 
     def shutdown(self):
@@ -217,8 +235,10 @@ class WorkQueue(Trackable):
         Once all actions are terminated, the queue is emptied and paused,
         so you may fill it with new actions.
         """
+        self._check_if_ready()
         self.main_loop.shutdown()
         self.main_loop.join()
+        self.main_loop = None
         self._init()
 
     def is_paused(self):
@@ -229,6 +249,8 @@ class WorkQueue(Trackable):
         @rtype:  bool
         @return: Whether enqueued actions are executed.
         """
+        if self.main_loop is None:
+            return True
         return self.main_loop.is_paused()
 
     def in_queue(self, action):
@@ -241,6 +263,8 @@ class WorkQueue(Trackable):
         @rtype:  bool
         @return: Whether the action is currently in the queue.
         """
+        if self.main_loop is None:
+            return False
         return self.main_loop.in_queue(action)
 
     def in_progress(self, action):
@@ -253,6 +277,8 @@ class WorkQueue(Trackable):
         @rtype:  bool
         @return: Whether the action is currently in progress.
         """
+        if self.main_loop is None:
+            return False
         return self.main_loop.in_progress(action)
 
     def get_running_actions(self):
@@ -262,6 +288,8 @@ class WorkQueue(Trackable):
         @rtype:  list[Action]
         @return: A list of running actions.
         """
+        if self.main_loop is None:
+            return []
         return self.main_loop.get_running_actions()
 
     def get_length(self):
@@ -271,4 +299,6 @@ class WorkQueue(Trackable):
         @rtype:  int
         @return: The length of the queue.
         """
+        if self.main_loop is None:
+            return 0
         return self.main_loop.get_queue_length()
