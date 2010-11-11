@@ -354,7 +354,7 @@ class Queue(Trackable):
         """
         Waits until all jobs are completed.
         """
-        self._dbg(2, 'Waiting for the engine to finish.')
+        self._dbg(2, 'Waiting for the queue to finish.')
         self.workqueue.wait_until_done()
         self._del_status_bar()
         self._print_status_bar()
@@ -376,10 +376,32 @@ class Queue(Trackable):
         if not force:
             self.join()
 
-        self._dbg(2, 'Shutting down engine...')
-        self.workqueue.shutdown()
+        self._dbg(2, 'Shutting down queue...')
+        self.workqueue.shutdown(True)
         self.workqueue.unpause()
-        self._dbg(2, 'Engine shut down.')
+        self._dbg(2, 'Queue shut down.')
+        self._del_status_bar()
+
+
+    def destroy(self, force = False):
+        """
+        Like shutdown(), but also removes all accounts, hosts, etc., and
+        does not restart the queue. In other words, the queue can no longer
+        be used after calling this method.
+
+        @type  force: bool
+        @param force: Whether to wait until all jobs were processed.
+        """
+        if not force:
+            self.join()
+
+        self._dbg(2, 'Destroying queue...')
+        self.workqueue.shutdown()
+        self.account_manager.reset()
+        self.completed         = 0
+        self.total             = 0
+        self.status_bar_length = 0
+        self._dbg(2, 'Queue destroyed.')
         self._del_status_bar()
 
 
@@ -387,11 +409,14 @@ class Queue(Trackable):
         """
         Remove all accounts, hosts, etc.
         """
+        self._dbg(2, 'Resetting queue...')
         self.account_manager.reset()
-        self.workqueue.shutdown()
+        self.workqueue.shutdown(True)
         self.completed         = 0
         self.total             = 0
         self.status_bar_length = 0
+        self._dbg(2, 'Queue reset.')
+        self._del_status_bar()
 
 
     def _enqueue1(self, action, prioritize, force, duplicate_check):

@@ -192,10 +192,18 @@ class QueueTest(unittest.TestCase):
         self.assert_(self.queue.is_completed())
 
     def testShutdown(self):
-        task = self.startTask()
+        task = self.startTask()   # this also adds an account
         self.queue.shutdown()
         self.assert_(self.queue.task_is_completed(task))
         self.assert_(self.queue.is_completed())
+        self.assertEqual(self.queue.account_manager.n_accounts(), 1)
+
+    def testDestroy(self):
+        task = self.startTask()   # this also adds an account
+        self.queue.destroy()
+        self.assert_(self.queue.task_is_completed(task))
+        self.assert_(self.queue.is_completed())
+        self.assertEqual(self.queue.account_manager.n_accounts(), 0)
 
     def testReset(self):
         self.testAddAccount()
@@ -212,7 +220,7 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(data['n_calls'], 3)
 
         self.queue.run('dummy4', func)
-        self.queue.shutdown()
+        self.queue.destroy()
         self.assertEqual(data['n_calls'], 4)
 
     def testRunOrIgnore(self):
@@ -227,7 +235,7 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(data['n_calls'], 2)
 
         self.queue.run_or_ignore('dummy4', func)
-        self.queue.shutdown()
+        self.queue.destroy()
         self.assertEqual(data['n_calls'], 3)
 
     def testPriorityRun(self):
@@ -245,7 +253,7 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(4, data['n_calls'])
 
         self.queue.run('dummy4', func)
-        self.queue.shutdown()
+        self.queue.destroy()
         self.assertEqual(6, data['n_calls'])
 
     def testPriorityRunOrRaise(self):
@@ -260,7 +268,7 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(data['n_calls'], 2)
 
         self.queue.priority_run_or_raise('dummy4', func)
-        self.queue.shutdown()
+        self.queue.destroy()
         self.assertEqual(data['n_calls'], 3)
 
     def testForceRun(self):
@@ -272,7 +280,7 @@ class QueueTest(unittest.TestCase):
         # actually tested; the thread should run regardless.
         self.queue.set_max_threads(0)
         self.queue.force_run(hosts, func)
-        self.queue.shutdown()
+        self.queue.destroy()
         self.assertEqual(2, data['n_calls'])
 
     def testEnqueue(self):
@@ -285,7 +293,7 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(data['n_calls'], 2)
 
         self.queue.enqueue(func)
-        self.queue.shutdown()
+        self.queue.destroy()
         self.assertEqual(data['n_calls'], 3)
 
     #FIXME: Not a method test; this should probably be elsewhere.

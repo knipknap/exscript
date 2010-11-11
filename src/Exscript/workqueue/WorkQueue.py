@@ -226,20 +226,27 @@ class WorkQueue(Trackable):
             return
         self.main_loop.wait_until_done()
 
-    def shutdown(self):
+    def shutdown(self, restart = True):
         """
         Stop the execution of enqueued actions, and terminate any running
         actions. This method is synchronous and returns as soon as all actions
         are terminated (i.e. all threads are stopped).
 
-        Once all actions are terminated, the queue is emptied and paused,
+        If restart is True, the workqueue is restarted and paused,
         so you may fill it with new actions.
+
+        If restart is False, the WorkQueue can no longer be used after calling
+        this method.
+
+        @type  restart: bool
+        @param restart: Whether to restart the queue after shutting down.
         """
         self._check_if_ready()
         self.main_loop.shutdown()
         self.main_loop.join()
         self.main_loop = None
-        self._init()
+        if restart:
+            self._init()
 
     def is_paused(self):
         """

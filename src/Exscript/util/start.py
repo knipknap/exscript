@@ -48,8 +48,7 @@ def run(users, hosts, func, **kwargs):
     queue = Queue(**kwargs)
     queue.add_account(users)
     queue.run(hosts, func)
-    queue.shutdown()
-    queue.reset()
+    queue.destroy()
 
 def quickrun(hosts, func, **kwargs):
     """

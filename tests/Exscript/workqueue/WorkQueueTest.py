@@ -33,7 +33,7 @@ class WorkQueueTest(unittest.TestCase):
         self.assertEqual(1, self.wq.get_length())
         self.wq.enqueue(Action())
         self.assertEqual(2, self.wq.get_length())
-        self.wq.shutdown()
+        self.wq.shutdown(True)
         self.assertEqual(0, self.wq.get_length())
 
         # Enqueue 111 * 3 = 333 actions.
@@ -65,7 +65,7 @@ class WorkQueueTest(unittest.TestCase):
         self.assertEqual(1, self.wq.get_length())
         self.wq.enqueue_or_ignore(Action())
         self.assertEqual(1, self.wq.get_length())
-        self.wq.shutdown()
+        self.wq.shutdown(True)
         self.assertEqual(0, self.wq.get_length())
 
         # Stress testing from testEnqueue() not repeated here.
@@ -172,7 +172,7 @@ class WorkQueueTest(unittest.TestCase):
         action = TestAction()
         self.assertEqual(self.wq.get_running_actions(), [])
         self.wq.enqueue(action)
-        self.wq.shutdown()
+        self.wq.shutdown(True)
         self.assertEqual(self.wq.get_running_actions(), [])
 
     def testGetLength(self):
