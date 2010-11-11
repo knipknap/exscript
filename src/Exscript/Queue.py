@@ -377,7 +377,7 @@ class Queue(Trackable):
             self.join()
 
         self._dbg(2, 'Shutting down queue...')
-        self.workqueue.shutdown(True)
+        self.workqueue.shutdown()
         self.workqueue.unpause()
         self._dbg(2, 'Queue shut down.')
         self._del_status_bar()
@@ -396,7 +396,7 @@ class Queue(Trackable):
             self.join()
 
         self._dbg(2, 'Destroying queue...')
-        self.workqueue.shutdown()
+        self.workqueue.shutdown(False)
         self.account_manager.reset()
         self.completed         = 0
         self.total             = 0
