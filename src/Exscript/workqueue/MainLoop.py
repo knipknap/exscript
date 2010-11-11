@@ -31,7 +31,7 @@ class MainLoop(Trackable, threading.Thread):
         self.max_threads      = 1
         self.condition        = threading.Condition()
         self.debug            = 0
-        self.setDaemon(1)
+        self.daemon           = True
 
     def _dbg(self, level, msg):
         if self.debug >= level:
