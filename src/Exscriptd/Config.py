@@ -87,17 +87,16 @@ class Config(ConfigReader):
             name = element.get('name')
             print 'Loading service "%s"...' % name,
 
-            path        = element.find('path').text
+            module      = element.find('module').text
             daemon_name = element.find('daemon').text
             daemon      = self.init_daemon_from_name(daemon_name)
             queue_elem  = element.find('queue')
             queue_name  = queue_elem is not None and queue_elem.text
             logdir      = daemon.get_logdir()
             queue       = self.init_queue_from_name(queue_name, logdir)
-            filename    = os.path.join(path, 'service.py')
             service     = PythonService(daemon,
                                         name,
-                                        filename,
+                                        module,
                                         service_dir,
                                         queue = queue)
             daemon.add_service(name, service)

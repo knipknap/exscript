@@ -12,15 +12,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import __builtin__, sys, os
+import __builtin__, sys, os, imp
 from Exscript.util.decorator import bind
 from Service                 import Service
+
+def find_module_recursive(name, path = None):
+    if not '.' in name:
+        return imp.find_module(name, path)
+    parent, children = name.split('.', 1)
+    module = imp.find_module(parent)
+    path   = module[1]
+    return find_module_recursive(children, [path])
 
 class PythonService(Service):
     def __init__(self,
                  daemon,
                  name,
-                 filename,
+                 module,
                  cfg_dir,
                  queue = None):
         Service.__init__(self,
@@ -28,6 +36,11 @@ class PythonService(Service):
                          name,
                          cfg_dir,
                          queue = queue)
+        try:
+            fp, filename, description = find_module_recursive(module)
+        except ImportError:
+            raise Exception('invalid module name: %s' % module)
+        filename            = os.path.join(filename, 'service.py')
         content             = open(filename).read()
         code                = compile(content, filename, 'exec')
         vars                = {}
