@@ -18,13 +18,6 @@ but has some unique features that make it a lot easier to use and understand
 for non-developers.
 
 
-= Installation =
-
-1. Install python-crypto
-2. Install Exscript. For example, do this as root:
-    sudo python setup.py install --prefix /usr/local
-
-
 = Links =
 
 Mailing List: http://groups.google.com/group/exscript/

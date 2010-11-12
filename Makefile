@@ -1,7 +1,9 @@
 NAME=exscript
-VERSION=`python setup.py --version`
-PACKAGE=$(NAME)-$(VERSION)-1
+VERSION=`python setup.py --version | sed s/^v//`
 PREFIX=/usr/local/
+BIN_DIR=$(PREFIX)/bin
+LIB_DIR=$(PREFIX)/lib
+SITE_DIR=$(LIB_DIR)/python/site-packages
 DISTDIR=/pub/code/releases/$(NAME)
 
 ###################################################################
@@ -15,14 +17,20 @@ clean:
 
 .PHONY : dist-clean
 dist-clean: clean
-	rm -Rf dist $(PACKAGE)*
+	rm -Rf dist
 
 .PHONY : doc
 doc:
 	cd doc; make
 
 install:
-	python setup.py install --prefix $(PREFIX)
+	mkdir -p $(SITE_DIR)
+	./version.sh
+	export PYTHONPATH=$(SITE_DIR):$(PYTHONPATH); \
+	python setup.py install --prefix $(PREFIX) \
+	                        --install-scripts $(BIN_DIR) \
+	                        --install-lib $(SITE_DIR)
+	./version.sh --reset
 
 uninstall:
 	# Sorry, Python's distutils support no such action yet.
@@ -64,11 +72,3 @@ dist-publish: dist
 .PHONY : doc-publish
 doc-publish:
 	cd doc; make publish
-
-.PHONY : publish-local
-publish-local:
-	rm -Rf /nmc/code/exscript/
-	mkdir -p /nmc/code/exscript/
-	cp -r * /nmc/code/exscript/
-	chgrp -R nipscript /nmc/code/exscript/
-	chmod -R a+rX,g+rwX /nmc/code/exscript/
