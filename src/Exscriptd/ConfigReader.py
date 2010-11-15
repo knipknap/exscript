@@ -19,9 +19,10 @@ from util import resolve_variables
 
 class ConfigReader(object):
     def __init__(self, filename):
+        clsfile        = inspect.getfile(self.__class__)
         self.cfgtree   = etree.parse(filename)
         self.variables = os.environ.copy()
-        self.variables.set('INSTALL_DIR', inspect.getfile(self.__class__))
+        self.variables['INSTALL_DIR'] = os.path.dirname(clsfile)
         self._clean_tree()
 
     def _resolve(self, text):
