@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
+import inspect
 from lxml import etree
 from util import resolve_variables
 
@@ -20,6 +21,7 @@ class ConfigReader(object):
     def __init__(self, filename):
         self.cfgtree   = etree.parse(filename)
         self.variables = os.environ.copy()
+        self.variables.set('INSTALL_DIR', inspect.getfile(self.__class__))
         self._clean_tree()
 
     def _resolve(self, text):
