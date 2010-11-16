@@ -16,7 +16,7 @@
 import sys
 from optparse         import OptionParser
 from Exscript         import __version__
-from Exscriptd.Config import Config
+from Exscriptd.Config import Config, default_config_dir
 
 parser = OptionParser(usage = '%prog [options]', version = __version__)
 parser.add_option('--domain',
@@ -26,6 +26,7 @@ parser.add_option('--domain',
                   help    = 'The default domain name')
 parser.add_option('--config-dir',
                   dest    = 'config_dir',
+                  default = default_config_dir,
                   metavar = 'FILE',
                   help    = '''
 The XML config file for the Exscript daemon.

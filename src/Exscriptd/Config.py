@@ -23,8 +23,10 @@ from PythonService           import PythonService
 from ConfigReader            import ConfigReader
 from Exscript.AccountManager import AccountManager
 
+default_config_dir = os.path.join('/etc', 'exscriptd')
+
 class Config(ConfigReader):
-    def __init__(self, cfg_dir):
+    def __init__(self, cfg_dir = default_config_dir):
         ConfigReader.__init__(self, os.path.join(cfg_dir, 'main.xml'))
         self.daemons          = {}
         self.account_managers = {}
