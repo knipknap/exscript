@@ -12,7 +12,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import re, time, random
+import re
+import time
+import random
+import imp
 
 def resolve_variables(variables, string):
     def variable_sub_cb(match):
@@ -35,3 +38,11 @@ def resolve_variables(variables, string):
 
     string_re = re.compile(r'(\\?)\$([\w_]*)')
     return string_re.sub(variable_sub_cb, string)
+
+def find_module_recursive(name, path = None):
+    if not '.' in name:
+        return imp.find_module(name, path)
+    parent, children = name.split('.', 1)
+    module = imp.find_module(parent)
+    path   = module[1]
+    return find_module_recursive(children, [path])

@@ -12,17 +12,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import __builtin__, sys, os, imp
+import __builtin__
+import sys
+import os
 from Exscript.util.decorator import bind
 from Service                 import Service
-
-def find_module_recursive(name, path = None):
-    if not '.' in name:
-        return imp.find_module(name, path)
-    parent, children = name.split('.', 1)
-    module = imp.find_module(parent)
-    path   = module[1]
-    return find_module_recursive(children, [path])
+from util                    import find_module_recursive
 
 class PythonService(Service):
     def __init__(self,
