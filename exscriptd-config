@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+# Copyright (C) 2010 Samuel Abels.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+import os
+import sys
+from optparse         import OptionParser
+from Exscript         import __version__
+from Exscriptd.Config import default_config_dir
+from Exscriptd.config import modules
+
+__dirname__ = os.path.dirname(__file__)
+
+parser = OptionParser(usage   = '%prog section command [...]',
+                      version = __version__)
+parser.add_option('--config-dir',
+                  dest    = 'config_dir',
+                  default = default_config_dir,
+                  metavar = 'FILE',
+                  help    = '''
+The XML config file for the Exscript daemon.
+'''.strip())
+
+# Parse options.
+options, args = parser.parse_args(sys.argv)
+args.pop(0)
+
+try:
+    section = args.pop(0)
+except IndexError:
+    parser.error('section argument missing')
+
+try:
+    command = args.pop(0)
+except IndexError:
+    parser.error('command argument missing')
+
+try:
+    module = modules[section]
+except KeyError:
+    parser.error('no such section: %s' % section)
+
+handler = module(options, script_dir = __dirname__)
+
+try:
+    func = getattr(handler, command)
+except KeyError:
+    parser.error('no such command: %s' % command)
+
+func()
