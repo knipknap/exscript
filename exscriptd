@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys
+import os
 from optparse         import OptionParser
 from Exscript         import __version__
 from Exscriptd.Config import Config, default_config_dir
@@ -44,7 +45,14 @@ args.pop(0)
 if not options.config_dir:
     parser.error('Required option --config-dir not set')
 
-config = Config(options.config_dir)
+config  = Config(options.config_dir)
+daemons = config.init_daemons()
 
-for daemon in config.init_daemons():
+if not daemons:
+    dir = os.path.join(options.config_dir, 'services')
+    msg = 'error: %s contains no enabled services\n' % dir
+    sys.stderr.write(msg)
+    sys.exit(1)
+
+for daemon in daemons:
     daemon.run()
