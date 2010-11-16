@@ -16,14 +16,22 @@ import os
 import re
 from ConfigSection import ConfigSection
 
-__dirname__   = os.path.dirname(__file__)
-init_template = os.path.join(__dirname__, 'exscriptd.in')
+__dirname__ = os.path.dirname(__file__)
+log_dir     = os.path.join('/var', 'log', 'exscriptd')
+spool_dir   = os.path.join('/var', 'spool', 'exscriptd')
+init_dir    = os.path.join('/etc', 'init.d')
 
 class DaemonConfig(ConfigSection):
     def _generate(self, infilename, outfilename):
+        if os.path.isfile(outfilename):
+            self.info('file exists, skipping.\n')
+            return
+
         vars = {'@CFG_DIR@':    self.options.config_dir,
+                '@LOG_DIR@':    log_dir,
+                '@SPOOL_DIR@':  spool_dir,
                 '@SCRIPT_DIR@': self.script_dir,
-                '@INIT_DIR@':   os.path.join('/etc', 'init.d')}
+                '@INIT_DIR@':   init_dir}
         sub_re = re.compile('(' + '|'.join(vars.keys()) + ')+')
 
         content = open(infilename).read()
@@ -32,7 +40,35 @@ class DaemonConfig(ConfigSection):
         outfile = open(outfilename, 'w')
         outfile.write(content)
         outfile.close()
+        self.info('done.\n')
+
+    def _mkdir(self, dirname):
+        if os.path.isdir(dirname):
+            self.info('directory exists, skipping.\n')
+        else:
+            os.makedirs(dirname)
+            self.info('done.\n')
 
     def install(self):
-        self._generate(init_template, '/home/sab/exscriptd.test')
-        #self._generate(init_template, '/etc/init.d/exscriptd')
+        # Install the init script.
+        init_template = os.path.join(__dirname__, 'exscriptd.in')
+        init_file     = os.path.join('/etc', 'init.d', 'exscriptd')
+        self.info('creating init-file at %s... ' % init_file)
+        self._generate(init_template, init_file)
+
+        # Create directories.
+        self.info('creating log directory %s... ' % log_dir)
+        self._mkdir(log_dir)
+        self.info('creating spool directory %s... ' % spool_dir)
+        self._mkdir(spool_dir)
+        self.info('creating config directory %s... ' % self.options.config_dir)
+        self._mkdir(self.options.config_dir)
+        service_dir = os.path.join(self.options.config_dir, 'services')
+        self.info('creating service directory %s... ' % service_dir)
+        self._mkdir(service_dir)
+
+        # Install the default config file.
+        cfg_template = os.path.join(__dirname__, 'main.xml.in')
+        cfg_file     = os.path.join(self.options.config_dir, 'main.xml')
+        self.info('creating config file %s... ' % cfg_file)
+        self._generate(cfg_template, cfg_file)

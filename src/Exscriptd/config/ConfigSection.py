@@ -12,8 +12,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+import sys
 
 class ConfigSection(object):
     def __init__(self, options, script_dir):
         self.options    = options
         self.script_dir = script_dir
+
+    def info(self, *args):
+        sys.stdout.write(' '.join(str(a) for a in args))
+
+    def error(self, *args):
+        sys.stderr.write(' '.join(str(a) for a in args))

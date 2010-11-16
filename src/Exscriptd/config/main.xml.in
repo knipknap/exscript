@@ -12,25 +12,27 @@ This is the Exscript daemon configuration file.
      ssh://user:password@10.0.0.1
 
   If a hostname contains no user/password, Exscriptd falls back to using this
-  account pool.
+  account pool. Passwords must be base64 encrypted!
   -->
   <account-pool name="default">
+  <!--
     <account>
       <user>user1</user>
-      <password></password> <!-- Passwords are base64 encrypted! -->
+      <password></password>
     </account>
     <account>
       <user>user2</user>
       <password></password>
     </account>
+  -->
   </account-pool>
 
   <!--
   Another account pool that we use for defining users
-  that may log into the HTTP REST API.
+  that may log into the HTTP API.
   Passwords are base64 encrypted!
   -->
-  <account-pool name="rest-accounts">
+  <account-pool name="api-accounts">
     <account>
       <user>exscript-rest</user>
       <password>ZXhzY3JpcHQtcmVzdA==</password>
@@ -40,19 +42,20 @@ This is the Exscript daemon configuration file.
   <!--
   Database configuration. The following databases are supported:
     Tested: sqlite
-    Untested: Any other database supported by SQLAlchemy.
+    Untested, but should work: Any other database supported by
+    SQLAlchemy.
   -->
   <database name="default">
-    <dbn>sqlite:////var/spool/exscriptd/db.sqlite</dbn>
+    <dbn>sqlite:///@SPOOL_DIR@/db.sqlite</dbn>
   </database>
 
   <!--
-  Exscript queue configuration.
-  You may define any number of queues in this file.
+  You may define one or more Exscript.Queue here; each queue may
+  then be used by one or more installed services.
   -->
   <queue name="default-queue">
     <max-threads>5</max-threads>
-    <delete-logs/>
+    <delete-logs/>   <!-- Causes logs of completed tasks to be deleted. -->
     <account-pool>default</account-pool>
   </queue>
 
@@ -64,8 +67,8 @@ This is the Exscript daemon configuration file.
     <!-- An empty address binds to all. -->
     <address></address>
     <port>8123</port>
-    <logdir>/var/log/exscriptd</logdir>
-    <account-pool>rest-accounts</account-pool>
+    <logdir>@LOG_DIR@</logdir>
+    <account-pool>api-accounts</account-pool>
     <database>default</database>
   </daemon>
 </xml>
