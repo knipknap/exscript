@@ -4,13 +4,20 @@ This is the Exscript daemon configuration file.
 
 <xml>
   <!--
-  The user accounts used by the Exscript daemon.
-  Passwords are base64 encrypted!
+  The user accounts used by the Exscript daemon to log into the hosts
+  in your network. Note that using an account pool is optional, but if you
+  do not specify any users you need to make sure that the user and password
+  is included in the hostname of each host passed to exscriptd; e.g.
+
+     ssh://user:password@10.0.0.1
+
+  If a hostname contains no user/password, Exscriptd falls back to using this
+  account pool.
   -->
   <account-pool name="default">
     <account>
       <user>user1</user>
-      <password></password>
+      <password></password> <!-- Passwords are base64 encrypted! -->
     </account>
     <account>
       <user>user2</user>
@@ -21,6 +28,7 @@ This is the Exscript daemon configuration file.
   <!--
   Another account pool that we use for defining users
   that may log into the HTTP REST API.
+  Passwords are base64 encrypted!
   -->
   <account-pool name="rest-accounts">
     <account>
