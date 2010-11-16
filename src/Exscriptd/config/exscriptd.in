@@ -18,13 +18,12 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Exscript daemon"
 NAME=exscriptd
-CONFIG=/etc/exscriptd/config.xml
-DAEMON=/usr/local/bin/$NAME
-DAEMON_ARGS="--config $CONFIG"
+CONFIG_DIR=@CFG_DIR@
+DAEMON=@SCRIPT_DIR@/$NAME
+DAEMON_ARGS="--config-dir $CONFIG_DIR"
 PIDFILE=/var/run/$NAME.pid
-SCRIPTNAME=/etc/init.d/$NAME
+SCRIPTNAME=@INIT_DIR@/$NAME
 RUN_AS_USER=exscriptd:exscriptd
-export PYTHONPATH=/usr/local/lib/python/site-packages
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0

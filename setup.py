@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 from setuptools import setup, find_packages
 
 # Import the file that contains the version number.
@@ -20,11 +21,19 @@ setup(name             = 'Exscript',
       author           = 'Samuel Abels',
       author_email     = 'knipknap@gmail.com',
       license          = 'GPLv2',
-      package_dir      = {'': 'src'},
-      packages         = [p for p in find_packages('src')],
+      package_dir      = {'Exscript':   os.path.join('src', 'Exscript'),
+                          'Exscriptd':  os.path.join('src', 'Exscriptd'),
+                          'TkExscript': os.path.join('src', 'TkExscript')},
+      package_data     = {'Exscriptd': [
+                            os.path.join('config', 'exscriptd.in'),
+                         ]},
+      packages         = find_packages('src'),
       scripts          = ['exscript', 'exscriptd', 'exclaim'],
       install_requires = [],
-      extras_require   = {'Exscriptd': ['sqlalchemy', 'lxml']},
+      extras_require   = {
+                            'Exscriptd': ['sqlalchemy', 'lxml'],
+                            'TkExscript': ['tkinter'],
+                         },
       keywords         = ' '.join(['exscript',
                                    'exscripd',
                                    'exclaim',
