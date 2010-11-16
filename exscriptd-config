@@ -53,9 +53,21 @@ except KeyError:
 
 handler = module(options, script_dir = __dirname__)
 
+# Get the command handler.
 try:
-    func = getattr(handler, command)
-except KeyError:
+    start = getattr(handler, command)
+except AttributeError:
     parser.error('no such command: %s' % command)
 
-func()
+# Check the command specific arguments.
+try:
+    prepare = getattr(handler, 'prepare_' + command)
+except KeyError:
+    pass
+else:
+    try:
+        prepare(parser, *args)
+    except TypeError:
+        parser.error('invalid number of arguments for this command')
+
+start()
