@@ -42,13 +42,6 @@ class DaemonConfig(ConfigSection):
         outfile.close()
         self.info('done.\n')
 
-    def _mkdir(self, dirname):
-        if os.path.isdir(dirname):
-            self.info('directory exists, skipping.\n')
-        else:
-            os.makedirs(dirname)
-            self.info('done.\n')
-
     def install(self):
         # Install the init script.
         init_template = os.path.join(__dirname__, 'exscriptd.in')
