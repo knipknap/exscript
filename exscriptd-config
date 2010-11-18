@@ -29,7 +29,7 @@ usage = '''
 
 Sections:'''
 for module_name, module in modules.iteritems():
-    usage += '\n  ' + module_name + '\t' + module.get_description()
+    usage += '\n  ' + module_name.ljust(8) + '\t' + module.get_description()
 
 parser = OptionParser(usage = usage, version = __version__)
 parser.disable_interspersed_args()
