@@ -216,7 +216,7 @@ def run():
 
     # Run the template.
     queue.run(hosts, function)
-    queue.shutdown()
+    queue.destroy()
 
 # Define command line option value types.
 def check_assignment(option, opt, value):
