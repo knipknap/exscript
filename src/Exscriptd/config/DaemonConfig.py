@@ -35,7 +35,7 @@ class DaemonConfig(ConfigSection):
             self.info('file exists, skipping.\n')
             return
 
-        vars = {'@CFG_DIR@':    self.options.config_dir,
+        vars = {'@CFG_DIR@':    self.global_options.config_dir,
                 '@LOG_DIR@':    log_dir,
                 '@SPOOL_DIR@':  spool_dir,
                 '@SCRIPT_DIR@': self.script_dir,
@@ -62,14 +62,15 @@ class DaemonConfig(ConfigSection):
         self._mkdir(log_dir)
         self.info('creating spool directory %s... ' % spool_dir)
         self._mkdir(spool_dir)
-        self.info('creating config directory %s... ' % self.options.config_dir)
-        self._mkdir(self.options.config_dir)
-        service_dir = os.path.join(self.options.config_dir, 'services')
+        cfg_dir = self.global_options.config_dir
+        self.info('creating config directory %s... ' % cfg_dir)
+        self._mkdir(cfg_dir)
+        service_dir = os.path.join(cfg_dir, 'services')
         self.info('creating service directory %s... ' % service_dir)
         self._mkdir(service_dir)
 
         # Install the default config file.
         cfg_template = os.path.join(__dirname__, 'main.xml.in')
-        cfg_file     = os.path.join(self.options.config_dir, 'main.xml')
+        cfg_file     = os.path.join(cfg_dir, 'main.xml')
         self.info('creating config file %s... ' % cfg_file)
         self._generate(cfg_template, cfg_file)

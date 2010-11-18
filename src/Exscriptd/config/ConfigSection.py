@@ -17,8 +17,8 @@ import sys
 
 class ConfigSection(object):
     def __init__(self, options, script_dir):
-        self.options    = options
-        self.script_dir = script_dir
+        self.global_options = options
+        self.script_dir     = script_dir
 
     @staticmethod
     def get_description():

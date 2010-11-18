@@ -41,7 +41,7 @@ class ServiceConfig(ConfigSection):
             parser.error(msg)
 
     def start_add(self):
-        config = Config(self.options.config_dir)
+        config = Config(self.global_options.config_dir)
         if config.add_service(self.service_name, self.module_name):
             print 'Service added.'
         else:
