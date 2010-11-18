@@ -104,11 +104,25 @@ class Config(ConfigReader):
             daemon.add_service(name, service)
             print 'done.'
 
-    def load_services(self):
+    def get_service_files(self):
+        files       = []
         service_dir = os.path.join(self.cfg_dir, 'services')
         for file in os.listdir(service_dir):
             config_file = os.path.join(service_dir, file, 'config.xml')
-            service     = self.load_service(config_file)
+            files.append(config_file)
+        return files
+
+    def get_service_file_from_name(self, name):
+        for file in self.get_service_files():
+            xml     = etree.parse(file)
+            element = xml.find('service[@name="%s"]' % name)
+            if element is not None:
+                return file
+        return None
+
+    def load_services(self):
+        for file in self.get_service_files():
+            service = self.load_service(file)
 
     def init_rest_daemon(self, element):
         # Init the database for the daemon first, then
