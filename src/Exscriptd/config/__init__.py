@@ -1,5 +1,7 @@
-from DaemonConfig import DaemonConfig
+from DaemonConfig  import DaemonConfig
+from ServiceConfig import ServiceConfig
 
 modules = {
-    'daemon': DaemonConfig
+    'daemon':  DaemonConfig,
+    'service': ServiceConfig
 }

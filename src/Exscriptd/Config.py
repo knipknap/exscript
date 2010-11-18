@@ -132,6 +132,7 @@ class Config(ConfigReader):
         # Find the installation path of the module.
         file, module_path, desc = find_module_recursive(module_name)
         pathname = self.get_service_file_from_name(service_name)
+        changed  = False
 
         if not pathname:
             # Create a directory for the new service, if it does not
@@ -145,27 +146,36 @@ class Config(ConfigReader):
             pathname = os.path.join(service_dir, 'config.xml')
             if not os.path.isfile(pathname):
                 shutil.copy(cfg_file, pathname)
+            changed = True
 
         # Create an XML segment for the service.
         doc         = etree.parse(pathname)
         xml         = doc.getroot()
         service_ele = xml.find('service[@name="%s"]' % service_name)
         if service_ele is None:
+            changed = True
             service_ele = etree.SubElement(xml, 'service', name = service_name)
         if service_ele.find('daemon') is None:
+            changed = True
             daemon_name = self.cfgtree.find('daemon').get('name')
             etree.SubElement(service_ele, 'daemon').text = daemon_name
         if service_ele.find('module') is None:
+            changed = True
             etree.SubElement(service_ele, 'module').text = module_name
         if service_ele.find('queue') is None:
+            changed = True
             queue_name = self.cfgtree.find('queue').get('name')
             etree.SubElement(service_ele, 'queue').text = queue_name
+
+        if not changed:
+            return False
 
         # Write the resulting XML.
         shutil.move(pathname, pathname + '.old')
         fp = open(pathname, 'w')
         fp.write(etree.tostring(xml, pretty_print = True))
         fp.close()
+        return True
 
     def load_services(self):
         for file in self.get_service_files():
