@@ -24,6 +24,7 @@ from HTTPDaemon              import HTTPDaemon
 from PythonService           import PythonService
 from ConfigReader            import ConfigReader
 from Exscript.AccountManager import AccountManager
+from util                    import find_module_recursive
 
 default_config_dir = os.path.join('/etc', 'exscriptd')
 
@@ -126,6 +127,45 @@ class Config(ConfigReader):
             if element is not None:
                 return file
         return None
+
+    def add_service(self, service_name, module_name):
+        # Find the installation path of the module.
+        file, module_path, desc = find_module_recursive(module_name)
+        pathname = self.get_service_file_from_name(service_name)
+
+        if not pathname:
+            # Create a directory for the new service, if it does not
+            # already exist.
+            service_dir = os.path.join(self.service_dir, service_name)
+            if not os.path.isdir(service_dir):
+                os.makedirs(service_dir)
+
+            # Copy the default config file.
+            cfg_file = os.path.join(module_path, 'config.xml.tmpl')
+            pathname = os.path.join(service_dir, 'config.xml')
+            if not os.path.isfile(pathname):
+                shutil.copy(cfg_file, pathname)
+
+        # Create an XML segment for the service.
+        doc         = etree.parse(pathname)
+        xml         = doc.getroot()
+        service_ele = xml.find('service[@name="%s"]' % service_name)
+        if service_ele is None:
+            service_ele = etree.SubElement(xml, 'service', name = service_name)
+        if service_ele.find('daemon') is None:
+            daemon_name = self.cfgtree.find('daemon').get('name')
+            etree.SubElement(service_ele, 'daemon').text = daemon_name
+        if service_ele.find('module') is None:
+            etree.SubElement(service_ele, 'module').text = module_name
+        if service_ele.find('queue') is None:
+            queue_name = self.cfgtree.find('queue').get('name')
+            etree.SubElement(service_ele, 'queue').text = queue_name
+
+        # Write the resulting XML.
+        shutil.move(pathname, pathname + '.old')
+        fp = open(pathname, 'w')
+        fp.write(etree.tostring(xml, pretty_print = True))
+        fp.close()
 
     def load_services(self):
         for file in self.get_service_files():
