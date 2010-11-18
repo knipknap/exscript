@@ -12,7 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, base64, re
+import os
+import base64
+import shutil
 from sqlalchemy              import create_engine
 from Order                   import Order
 from OrderDB                 import OrderDB
@@ -32,6 +34,7 @@ class Config(ConfigReader):
         self.account_managers = {}
         self.queues           = {}
         self.cfg_dir          = cfg_dir
+        self.service_dir      = os.path.join(cfg_dir, 'services')
 
     def init_account_pool_from_name(self, name):
         accounts = []
@@ -105,10 +108,14 @@ class Config(ConfigReader):
             print 'done.'
 
     def get_service_files(self):
-        files       = []
-        service_dir = os.path.join(self.cfg_dir, 'services')
-        for file in os.listdir(service_dir):
-            config_file = os.path.join(service_dir, file, 'config.xml')
+        files = []
+        for file in os.listdir(self.service_dir):
+            config_dir = os.path.join(self.service_dir, file)
+            if not os.path.isdir(config_dir):
+                continue
+            config_file = os.path.join(config_dir, 'config.xml')
+            if not os.path.isfile(config_file):
+                continue
             files.append(config_file)
         return files
 
