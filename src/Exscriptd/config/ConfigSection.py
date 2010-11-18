@@ -16,8 +16,9 @@ import os
 import sys
 
 class ConfigSection(object):
-    def __init__(self, options, script_dir):
-        self.global_options = options
+    def __init__(self, global_options, script_dir):
+        self.global_options = global_options
+        self.options        = None
         self.script_dir     = script_dir
 
     @staticmethod

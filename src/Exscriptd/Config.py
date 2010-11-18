@@ -15,7 +15,6 @@
 import os
 import base64
 import shutil
-from sqlalchemy              import create_engine
 from Order                   import Order
 from OrderDB                 import OrderDB
 from lxml                    import etree
@@ -29,13 +28,16 @@ from util                    import find_module_recursive
 default_config_dir = os.path.join('/etc', 'exscriptd')
 
 class Config(ConfigReader):
-    def __init__(self, cfg_dir = default_config_dir):
-        ConfigReader.__init__(self, os.path.join(cfg_dir, 'main.xml'))
+    def __init__(self,
+                 cfg_dir           = default_config_dir,
+                 resolve_variables = True):
+        self.filename         = os.path.join(cfg_dir, 'main.xml')
         self.daemons          = {}
         self.account_managers = {}
         self.queues           = {}
         self.cfg_dir          = cfg_dir
         self.service_dir      = os.path.join(cfg_dir, 'services')
+        ConfigReader.__init__(self, self.filename, resolve_variables)
 
     def init_account_pool_from_name(self, name):
         accounts = []
@@ -53,6 +55,9 @@ class Config(ConfigReader):
         manager  = AccountManager(accounts)
         self.account_managers[name] = manager
         return manager
+
+    def has_queue(self, name):
+        return self.cfgtree.find('queue[@name="%s"]' % name) is not None
 
     def init_queue_from_name(self, name, logdir):
         if self.queues.has_key(name):
@@ -77,6 +82,7 @@ class Config(ConfigReader):
         return queue
 
     def init_database_from_name(self, name):
+        from sqlalchemy import create_engine
         element = self.cfgtree.find('database[@name="%s"]' % name)
         dbn     = element.find('dbn').text
         #print 'Creating database connection for', dbn
@@ -127,6 +133,63 @@ class Config(ConfigReader):
             if element is not None:
                 return file
         return None
+
+    def add_queue(self,
+                  queue_name,
+                  account_pool,
+                  max_threads,
+                  delete_logs):
+        # Create an XML segment for the queue.
+        changed    = False
+        xml        = self.cfgtree.getroot()
+        queue_elem = xml.find('queue[@name="%s"]' % queue_name)
+        if queue_elem is None:
+            changed    = True
+            queue_elem = etree.SubElement(xml, 'queue', name = queue_name)
+
+        # Create an XML reference to the account pool.
+        acc_elem = queue_elem.find('account-pool')
+        if account_pool is None and acc_elem is not None:
+            changed = True
+            queue_elem.remove(acc_elem)
+        elif acc_elem is None and account_pool is not None:
+            try:
+                self.init_account_pool_from_name(account_pool)
+            except AttributeError:
+                raise Exception('no such account pool: %s' % account_pool)
+
+            if acc_elem is None:
+                acc_elem = etree.SubElement(queue_elem, 'account-pool')
+            if str(acc_elem.text) != str(account_pool):
+                changed = True
+            acc_elem.text = account_pool
+
+        # Define the number of threads.
+        max_threads_elem = queue_elem.find('max-threads')
+        if max_threads_elem is None:
+            max_threads_elem = etree.SubElement(queue_elem, 'max-threads')
+        if str(max_threads_elem.text) != str(max_threads):
+            changed = True
+        max_threads_elem.text = str(max_threads)
+
+        delete_logs_elem = queue_elem.find('delete-logs')
+        has_flag         = delete_logs_elem is not None
+        if has_flag and not delete_logs:
+            changed = True
+            queue_elem.remove(delete_logs_elem)
+        elif delete_logs and not has_flag:
+            changed = True
+            etree.SubElement(queue_elem, 'delete-logs')
+
+        if not changed:
+            return False
+
+        # Write the resulting XML.
+        shutil.move(self.filename, self.filename + '.old')
+        fp = open(self.filename, 'w')
+        fp.write(etree.tostring(xml, pretty_print = True))
+        fp.close()
+        return True
 
     def add_service(self, service_name, module_name):
         # Find the installation path of the module.

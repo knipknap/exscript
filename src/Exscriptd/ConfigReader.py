@@ -18,14 +18,17 @@ from lxml import etree
 from util import resolve_variables
 
 class ConfigReader(object):
-    def __init__(self, filename):
+    def __init__(self, filename, resolve_variables = True):
         clsfile        = inspect.getfile(self.__class__)
+        self.resolve   = resolve_variables
         self.cfgtree   = etree.parse(filename)
         self.variables = os.environ.copy()
         self.variables['INSTALL_DIR'] = os.path.dirname(clsfile)
         self._clean_tree()
 
     def _resolve(self, text):
+        if not self.resolve:
+            return text
         if text is None:
             return None
         return resolve_variables(self.variables, text.strip())

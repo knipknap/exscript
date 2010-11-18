@@ -76,7 +76,7 @@ except AttributeError:
     pass
 else:
     optadd(parser)
-options, args = parser.parse_args(args)
+handler.options, args = parser.parse_args(args)
 
 # Check the command specific arguments.
 try:
@@ -85,7 +85,7 @@ except AttributeError:
     pass
 else:
     try:
-        prepare(parser, *args, **vars(options))
+        prepare(parser, *args)
     except TypeError:
         parser.error('invalid number of arguments for this command')
 
