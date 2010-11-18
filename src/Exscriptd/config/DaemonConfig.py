@@ -22,6 +22,14 @@ spool_dir   = os.path.join('/var', 'spool', 'exscriptd')
 init_dir    = os.path.join('/etc', 'init.d')
 
 class DaemonConfig(ConfigSection):
+    @staticmethod
+    def get_description():
+        return 'daemon-specific configuration'
+
+    @staticmethod
+    def get_commands():
+        return (('install', 'install the daemon'),)
+
     def _generate(self, infilename, outfilename):
         if os.path.isfile(outfilename):
             self.info('file exists, skipping.\n')

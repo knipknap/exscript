@@ -14,7 +14,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
 import sys
-from lxml             import etree
 from ConfigSection    import ConfigSection
 from Exscriptd.util   import find_module_recursive
 from Exscriptd.Config import Config
@@ -22,6 +21,14 @@ from Exscriptd.Config import Config
 class ServiceConfig(ConfigSection):
     service_name = None
     module_name  = None
+
+    @staticmethod
+    def get_description():
+        return 'add or configure services'
+
+    @staticmethod
+    def get_commands():
+        return (('add', 'configure a new service'),)
 
     def prepare_add(self, parser, service_name, module_name):
         self.service_name = service_name

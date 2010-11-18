@@ -22,8 +22,17 @@ from Exscriptd.config import modules
 
 __dirname__ = os.path.dirname(__file__)
 
-parser = OptionParser(usage   = '%prog section command [...]',
-                      version = __version__)
+subcommands = []
+
+usage = '''
+%prog [options] section command [...]
+
+Sections:'''
+for module_name, module in modules.iteritems():
+    usage += '\n  ' + module_name + '\t' + module.get_description()
+
+parser = OptionParser(usage = usage, version = __version__)
+parser.disable_interspersed_args()
 parser.add_option('--config-dir',
                   dest    = 'config_dir',
                   default = default_config_dir,
@@ -32,9 +41,8 @@ parser.add_option('--config-dir',
 The XML config file for the Exscript daemon.
 '''.strip())
 
-# Parse options.
-options, args = parser.parse_args(sys.argv)
-args.pop(0)
+# Parse all options before the first positional argument.
+options, args = parser.parse_args(sys.argv[1:])
 
 try:
     section = args.pop(0)
@@ -59,14 +67,25 @@ try:
 except AttributeError:
     parser.error('no such command: %s' % command)
 
+# Parse command-specific options.
+usage = '%prog [options] ' + section + ' ' + command + ' [options] [...]'
+parser = OptionParser(usage = usage)
+try:
+    optadd = getattr(handler, 'getopt_' + command)
+except AttributeError:
+    pass
+else:
+    optadd(parser)
+options, args = parser.parse_args(args)
+
 # Check the command specific arguments.
 try:
     prepare = getattr(handler, 'prepare_' + command)
-except KeyError:
+except AttributeError:
     pass
 else:
     try:
-        prepare(parser, *args)
+        prepare(parser, *args, **vars(options))
     except TypeError:
         parser.error('invalid number of arguments for this command')
 

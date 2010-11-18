@@ -20,6 +20,14 @@ class ConfigSection(object):
         self.options    = options
         self.script_dir = script_dir
 
+    @staticmethod
+    def get_description():
+        raise NotImplementedError()
+
+    @staticmethod
+    def get_commands():
+        raise NotImplementedError()
+
     def _mkdir(self, dirname):
         if os.path.isdir(dirname):
             self.info('directory exists, skipping.\n')
