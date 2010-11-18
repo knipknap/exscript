@@ -55,7 +55,7 @@ handler = module(options, script_dir = __dirname__)
 
 # Get the command handler.
 try:
-    start = getattr(handler, command)
+    start = getattr(handler, 'start_' + command)
 except AttributeError:
     parser.error('no such command: %s' % command)
 

@@ -42,7 +42,7 @@ class DaemonConfig(ConfigSection):
         outfile.close()
         self.info('done.\n')
 
-    def install(self):
+    def start_install(self):
         # Install the init script.
         init_template = os.path.join(__dirname__, 'exscriptd.in')
         init_file     = os.path.join('/etc', 'init.d', 'exscriptd')
