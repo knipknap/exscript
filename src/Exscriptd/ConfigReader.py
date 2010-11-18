@@ -41,6 +41,8 @@ class ConfigReader(object):
 
         # Resolve variables everywhere.
         for element in self.cfgtree.iter():
+            if element.tag is etree.Comment:
+                continue
             element.text = self._resolve(element.text)
             for attr in element.attrib:
                 value                = element.attrib[attr]
