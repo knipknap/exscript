@@ -307,6 +307,27 @@ class Config(ConfigReader):
         self._write_xml(xml, pathname)
         return True
 
+    def _get_service_var_elem(self, service_name):
+        pathname = self.get_service_file_from_name(service_name)
+        doc      = etree.parse(pathname)
+        xml      = doc.getroot()
+        return pathname, xml, xml.find('variables')
+
+    def set_service_variable(self, service_name, varname, value):
+        path, xml, var_elem = self._get_service_var_elem(service_name)
+        elem                = var_elem.find(varname)
+        if elem is None:
+            elem = etree.SubElement(var_elem, varname)
+        elem.text = value
+        self._write_xml(xml, path)
+
+    def unset_service_variable(self, service_name, varname):
+        path, xml, var_elem = self._get_service_var_elem(service_name)
+        elem                = var_elem.find(varname)
+        if elem is not None:
+            var_elem.remove(elem)
+        self._write_xml(xml, path)
+
     def load_services(self):
         for file in self.get_service_files():
             service = self.load_service(file)
