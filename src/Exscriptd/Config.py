@@ -198,13 +198,24 @@ class Config(ConfigReader):
         fp.close()
         return True
 
-    def add_service(self, service_name, module_name):
-        # Find the installation path of the module.
-        file, module_path, desc = find_module_recursive(module_name)
+    def has_service(self, service_name):
+        return self.get_service_file_from_name(service_name) is not None
+
+    def add_service(self,
+                    service_name,
+                    module_name = None,
+                    daemon_name = None,
+                    queue_name  = None):
         pathname = self.get_service_file_from_name(service_name)
         changed  = False
 
         if not pathname:
+            if not module_name:
+                raise Exception('module name is required')
+
+            # Find the installation path of the module.
+            file, module_path, desc = find_module_recursive(module_name)
+
             # Create a directory for the new service, if it does not
             # already exist.
             service_dir = os.path.join(self.service_dir, service_name)
@@ -225,17 +236,40 @@ class Config(ConfigReader):
         if service_ele is None:
             changed = True
             service_ele = etree.SubElement(xml, 'service', name = service_name)
-        if service_ele.find('daemon') is None:
-            changed = True
+
+        # By default, use the first daemon defined in the main config file.
+        if daemon_name is None:
             daemon_name = self.cfgtree.find('daemon').get('name')
+        daemon_node = service_ele.find('daemon')
+        if daemon_node is None:
+            changed = True
             etree.SubElement(service_ele, 'daemon').text = daemon_name
-        if service_ele.find('module') is None:
+        elif daemon_name != daemon_node.text:
             changed = True
-            etree.SubElement(service_ele, 'module').text = module_name
-        if service_ele.find('queue') is None:
-            changed = True
+            daemon_node.text = daemon_name
+
+        # Add an XML statement pointing to the module.
+        if module_name is not None:
+            module_node = service_ele.find('module')
+            if module_node is None:
+                changed = True
+                etree.SubElement(service_ele, 'module').text = module_name
+            elif module_name != module_node.text:
+                changed = True
+                module_node.text = module_name
+
+        # By default, use the first queue defined in the main config file.
+        if queue_name is None:
             queue_name = self.cfgtree.find('queue').get('name')
+        if not self.has_queue(queue_name):
+            raise Exception('no such queue: ' + queue_name)
+        queue_node = service_ele.find('queue')
+        if queue_node is None:
+            changed = True
             etree.SubElement(service_ele, 'queue').text = queue_name
+        elif queue_name != queue_node.text:
+            changed = True
+            queue_node.text = queue_name
 
         if not changed:
             return False

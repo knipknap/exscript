@@ -19,8 +19,11 @@ from Exscriptd.util   import find_module_recursive
 from Exscriptd.Config import Config
 
 class ServiceConfig(ConfigSection):
-    service_name = None
-    module_name  = None
+    def __init__(self, *args, **kwargs):
+        ConfigSection.__init__(self, *args, **kwargs)
+        self.service_name = None
+        self.module_name  = None
+        self.config       = Config(self.global_options.config_dir, False)
 
     @staticmethod
     def get_description():
@@ -28,11 +31,10 @@ class ServiceConfig(ConfigSection):
 
     @staticmethod
     def get_commands():
-        return (('add', 'configure a new service'),)
+        return (('add',  'configure a new service'),
+                ('edit', 'configure an existing service'))
 
-    def prepare_add(self, parser, service_name, module_name):
-        self.service_name = service_name
-        self.module_name  = module_name
+    def _assert_module_exists(self, parser, module_name):
         try:
             file, module_path, desc = find_module_recursive(module_name)
         except ImportError:
@@ -40,9 +42,43 @@ class ServiceConfig(ConfigSection):
             msg  = 'service %s not found. sys.path is %s' % args
             parser.error(msg)
 
+    def getopt_add(self, parser):
+        parser.add_option('--daemon',
+                          dest    = 'daemon',
+                          metavar = 'STRING',
+                          help    = 'the daemon that is used')
+        parser.add_option('--queue',
+                          dest    = 'queue',
+                          metavar = 'STRING',
+                          help    = 'the queue that is used')
+
+    def prepare_add(self, parser, service_name, module_name):
+        self.service_name = service_name
+        self.module_name  = module_name
+        self._assert_module_exists(parser, module_name)
+        if self.config.has_service(self.service_name):
+            parser.error('service already exists')
+
     def start_add(self):
-        config = Config(self.global_options.config_dir)
-        if config.add_service(self.service_name, self.module_name):
-            print 'Service added.'
+        self.config.add_service(self.service_name,
+                                self.module_name,
+                                self.options.daemon,
+                                self.options.queue)
+        print 'Service added.'
+
+    def getopt_edit(self, parser):
+        self.getopt_add(parser)
+
+    def prepare_edit(self, parser, service_name):
+        self.service_name = service_name
+        if not self.config.has_service(self.service_name):
+            parser.error('service not found')
+
+    def start_edit(self):
+        if self.config.add_service(self.service_name,
+                                   None,
+                                   self.options.daemon,
+                                   self.options.queue):
+            print 'Service configured.'
         else:
-            print 'Service already exists, no changes were made.'
+            print 'No changes were made.'
