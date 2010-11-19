@@ -22,12 +22,11 @@ from Exscriptd.config import modules
 
 __dirname__ = os.path.dirname(__file__)
 
-subcommands = []
+def get_usage(section = 'section', command = 'command'):
+    return '%%prog [options] %s [options] %s [...]\n' % (section, command)
 
-usage = '''
-%prog [options] section command [...]
-
-Sections:'''
+# Parse global options (all options before the first positional argument).
+usage = get_usage() + 'Sections:'
 for module_name, module in modules.iteritems():
     usage += '\n  ' + module_name.ljust(8) + '\t' + module.get_description()
 
@@ -41,25 +40,34 @@ parser.add_option('--config-dir',
 The XML config file for the Exscript daemon.
 '''.strip())
 
-# Parse all options before the first positional argument.
-options, args = parser.parse_args(sys.argv[1:])
+global_options, args = parser.parse_args()
 
+# Parse section-specific options (all options before the second positional
+# argument).
 try:
     section = args.pop(0)
 except IndexError:
     parser.error('section argument missing')
 
 try:
-    command = args.pop(0)
-except IndexError:
-    parser.error('command argument missing')
-
-try:
     module = modules[section]
 except KeyError:
     parser.error('no such section: %s' % section)
 
-handler = module(options, script_dir = __dirname__)
+handler = module(global_options, script_dir = __dirname__)
+usage   = get_usage(section) + 'Commands:'
+for command_name, command in handler.get_commands():
+    usage += '\n  ' + command_name.ljust(8) + '\t' + command
+
+parser = OptionParser(usage = usage)
+parser.disable_interspersed_args()
+section_options, args = parser.parse_args(args)
+
+# Parse command-specific options (all remaining options).
+try:
+    command = args.pop(0)
+except IndexError:
+    parser.error('command argument missing')
 
 # Get the command handler.
 try:
@@ -67,8 +75,7 @@ try:
 except AttributeError:
     parser.error('no such command: %s' % command)
 
-# Parse command-specific options.
-usage = '%prog [options] ' + section + ' ' + command + ' [options] [...]'
+usage  = get_usage(section, command) + 'Commands:'
 parser = OptionParser(usage = usage)
 try:
     optadd = getattr(handler, 'getopt_' + command)
