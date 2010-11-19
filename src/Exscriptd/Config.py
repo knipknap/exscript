@@ -39,6 +39,9 @@ class Config(ConfigReader):
         self.service_dir      = os.path.join(cfg_dir, 'services')
         ConfigReader.__init__(self, self.filename, resolve_variables)
 
+    def has_account_pool(self, name):
+        return self.cfgtree.find('account-pool[@name="%s"]' % name) is not None
+
     def init_account_pool_from_name(self, name):
         accounts = []
         element  = self.cfgtree.find('account-pool[@name="%s"]' % name)
@@ -80,6 +83,9 @@ class Config(ConfigReader):
 
         self.queues[name] = queue
         return queue
+
+    def has_database(self, name):
+        return self.cfgtree.find('database[@name="%s"]' % name) is not None
 
     def init_database_from_name(self, name):
         from sqlalchemy import create_engine
@@ -172,6 +178,7 @@ class Config(ConfigReader):
             changed = True
         max_threads_elem.text = str(max_threads)
 
+        # Set the delete-logs flag.
         delete_logs_elem = queue_elem.find('delete-logs')
         has_flag         = delete_logs_elem is not None
         if has_flag and not delete_logs:
