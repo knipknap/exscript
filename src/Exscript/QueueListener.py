@@ -13,7 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, traceback
-from AbstractMethod import AbstractMethod
 
 class QueueListener(object):
     """
@@ -29,4 +28,4 @@ class QueueListener(object):
         """
         Automatically called by the associated queue.
         """
-        AbstractMethod()
+        raise NotImplementedError()

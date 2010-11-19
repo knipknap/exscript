@@ -19,7 +19,6 @@ import string, re, sys, os
 from drivers                       import driver_map, isdriver
 from OsGuesser                     import OsGuesser
 from Exscript.external.SpiffSignal import Trackable
-from Exscript.AbstractMethod       import AbstractMethod
 from Exception                     import TransportException, \
                                           InvalidCommandException
 
@@ -498,7 +497,7 @@ class Transport(Trackable):
         @rtype:  Boolean
         @return: True on success, False otherwise.
         """
-        AbstractMethod()
+        raise NotImplementedError()
 
 
     def execute(self, command):
@@ -515,7 +514,7 @@ class Transport(Trackable):
         @type  command: string
         @param command: The data that is sent to the remote host.
         """
-        AbstractMethod()
+        raise NotImplementedError()
 
 
     def expect(self, prompt):
@@ -562,7 +561,7 @@ class Transport(Trackable):
         """
         Closes the connection with the remote host.
         """
-        AbstractMethod()
+        raise NotImplementedError()
 
 
     def get_host(self):

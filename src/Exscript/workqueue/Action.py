@@ -13,7 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.external.SpiffSignal import Trackable
-from Exscript.AbstractMethod       import AbstractMethod
 from Exscript.util.cast            import to_list
 
 class Action(Trackable):
