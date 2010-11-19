@@ -75,7 +75,7 @@ try:
 except AttributeError:
     parser.error('no such command: %s' % command)
 
-usage  = get_usage(section, command) + 'Commands:'
+usage  = get_usage(section, command)
 parser = OptionParser(usage = usage)
 try:
     optadd = getattr(handler, 'getopt_' + command)

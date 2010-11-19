@@ -84,8 +84,40 @@ class Config(ConfigReader):
         self.queues[name] = queue
         return queue
 
+    def _write_xml(self, tree, filename):
+        if os.path.isfile(filename):
+            shutil.move(filename, filename + '.old')
+        fp = open(filename, 'w')
+        fp.write(etree.tostring(tree, pretty_print = True))
+        fp.close()
+
     def has_database(self, name):
         return self.cfgtree.find('database[@name="%s"]' % name) is not None
+
+    def add_database(self, db_name, dbn):
+        # Create an XML segment for the database.
+        changed = False
+        xml     = self.cfgtree.getroot()
+        db_elem = xml.find('database[@name="%s"]' % db_name)
+        if db_elem is None:
+            changed = True
+            db_elem = etree.SubElement(xml, 'database', name = db_name)
+
+        # Add the dbn the the XML.
+        dbn_elem = db_elem.find('dbn')
+        if dbn_elem is None:
+            changed = True
+            etree.SubElement(db_elem, 'dbn').text = dbn
+        elif dbn_elem.text != dbn:
+            changed = True
+            dbn_elem.text = dbn
+
+        if not changed:
+            return False
+
+        # Write the resulting XML.
+        self._write_xml(xml, self.filename)
+        return True
 
     def init_database_from_name(self, name):
         from sqlalchemy import create_engine
@@ -192,10 +224,7 @@ class Config(ConfigReader):
             return False
 
         # Write the resulting XML.
-        shutil.move(self.filename, self.filename + '.old')
-        fp = open(self.filename, 'w')
-        fp.write(etree.tostring(xml, pretty_print = True))
-        fp.close()
+        self._write_xml(xml, self.filename)
         return True
 
     def has_service(self, service_name):
@@ -275,10 +304,7 @@ class Config(ConfigReader):
             return False
 
         # Write the resulting XML.
-        shutil.move(pathname, pathname + '.old')
-        fp = open(pathname, 'w')
-        fp.write(etree.tostring(xml, pretty_print = True))
-        fp.close()
+        self._write_xml(xml, pathname)
         return True
 
     def load_services(self):
