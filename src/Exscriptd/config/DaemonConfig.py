@@ -31,7 +31,7 @@ class DaemonConfig(ConfigSection):
         return (('install', 'install the daemon'),)
 
     def _generate(self, infilename, outfilename):
-        if os.path.isfile(outfilename):
+        if not self.options.overwrite and os.path.isfile(outfilename):
             self.info('file exists, skipping.\n')
             return
 
@@ -49,6 +49,13 @@ class DaemonConfig(ConfigSection):
         outfile.write(content)
         outfile.close()
         self.info('done.\n')
+
+    def getopt_install(self, parser):
+        parser.add_option('--overwrite',
+                          dest    = 'overwrite',
+                          action  = 'store_true',
+                          default = False,
+                          help    = 'overwrite existing files')
 
     def start_install(self):
         # Install the init script.
