@@ -24,6 +24,7 @@ from PythonService           import PythonService
 from ConfigReader            import ConfigReader
 from Exscript.AccountManager import AccountManager
 from util                    import find_module_recursive
+from Exscript.util.file      import get_accounts_from_file
 
 default_config_dir = os.path.join('/etc', 'exscriptd')
 
@@ -41,6 +42,23 @@ class Config(ConfigReader):
 
     def has_account_pool(self, name):
         return self.cfgtree.find('account-pool[@name="%s"]' % name) is not None
+
+    def add_account_pool_from_file(self, name, filename):
+        # Remove the pool if it exists.
+        xml       = self.cfgtree.getroot()
+        pool_elem = xml.find('account-pool[@name="%s"]' % name)
+        if pool_elem is not None:
+            xml.remove(pool_elem)
+
+        # Import the new pool from the given file.
+        pool_elem = etree.SubElement(xml, 'account-pool', name = name)
+        for account in get_accounts_from_file(filename):
+            b64password = base64.encodestring(account.get_password())
+            acc_elem    = etree.SubElement(pool_elem, 'account')
+            etree.SubElement(acc_elem, 'user').text = account.get_name()
+            etree.SubElement(acc_elem, 'password').text = b64password
+
+        self._write_xml(xml, self.filename)
 
     def init_account_pool_from_name(self, name):
         accounts = []
