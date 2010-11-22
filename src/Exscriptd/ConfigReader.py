@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
 import inspect
+import shutil
 from lxml import etree
 from util import resolve_variables
 
@@ -22,6 +23,7 @@ class ConfigReader(object):
         clsfile        = inspect.getfile(self.__class__)
         self.resolve   = resolve_variables
         self.cfgtree   = etree.parse(filename)
+        self.filename  = filename
         self.variables = os.environ.copy()
         self.variables['INSTALL_DIR'] = os.path.dirname(clsfile)
         self._clean_tree()
@@ -50,3 +52,24 @@ class ConfigReader(object):
             for attr in element.attrib:
                 value                = element.attrib[attr]
                 element.attrib[attr] = self._resolve(value)
+
+    def _add_or_update_elem(self, parent, name, text):
+        child_elem = parent.find(name)
+        changed    = False
+        if child_elem is None:
+            changed    = True
+            child_elem = etree.SubElement(parent, name)
+        if str(child_elem.text) != str(text):
+            changed         = True
+            child_elem.text = str(text)
+        return changed
+
+    def _write_xml(self, tree, filename):
+        if os.path.isfile(filename):
+            shutil.move(filename, filename + '.old')
+        fp = open(filename, 'w')
+        fp.write(etree.tostring(tree, pretty_print = True))
+        fp.close()
+
+    def save(self):
+        self._write_xml(self.cfgtree, self.filename)

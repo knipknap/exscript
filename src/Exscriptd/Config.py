@@ -32,13 +32,13 @@ class Config(ConfigReader):
     def __init__(self,
                  cfg_dir           = default_config_dir,
                  resolve_variables = True):
-        self.filename         = os.path.join(cfg_dir, 'main.xml')
         self.daemons          = {}
         self.account_managers = {}
         self.queues           = {}
         self.cfg_dir          = cfg_dir
         self.service_dir      = os.path.join(cfg_dir, 'services')
-        ConfigReader.__init__(self, self.filename, resolve_variables)
+        filename              = os.path.join(cfg_dir, 'main.xml')
+        ConfigReader.__init__(self, filename, resolve_variables)
 
     def has_account_pool(self, name):
         return self.cfgtree.find('account-pool[@name="%s"]' % name) is not None
@@ -58,7 +58,7 @@ class Config(ConfigReader):
             etree.SubElement(acc_elem, 'user').text = account.get_name()
             etree.SubElement(acc_elem, 'password').text = b64password
 
-        self._write_xml(xml, self.filename)
+        self.save()
 
     def init_account_pool_from_name(self, name):
         accounts = []
@@ -102,13 +102,6 @@ class Config(ConfigReader):
         self.queues[name] = queue
         return queue
 
-    def _write_xml(self, tree, filename):
-        if os.path.isfile(filename):
-            shutil.move(filename, filename + '.old')
-        fp = open(filename, 'w')
-        fp.write(etree.tostring(tree, pretty_print = True))
-        fp.close()
-
     def has_database(self, name):
         return self.cfgtree.find('database[@name="%s"]' % name) is not None
 
@@ -122,19 +115,13 @@ class Config(ConfigReader):
             db_elem = etree.SubElement(xml, 'database', name = db_name)
 
         # Add the dbn the the XML.
-        dbn_elem = db_elem.find('dbn')
-        if dbn_elem is None:
+        if self._add_or_update_elem(db_elem, 'dbn', dbn):
             changed = True
-            etree.SubElement(db_elem, 'dbn').text = dbn
-        elif dbn_elem.text != dbn:
-            changed = True
-            dbn_elem.text = dbn
-
-        if not changed:
-            return False
 
         # Write the resulting XML.
-        self._write_xml(xml, self.filename)
+        if not changed:
+            return False
+        self.save()
         return True
 
     def init_database_from_dbn(self, dbn):
@@ -211,25 +198,17 @@ class Config(ConfigReader):
         if account_pool is None and acc_elem is not None:
             changed = True
             queue_elem.remove(acc_elem)
-        elif acc_elem is None and account_pool is not None:
+        elif account_pool is not None:
             try:
                 self.init_account_pool_from_name(account_pool)
             except AttributeError:
                 raise Exception('no such account pool: %s' % account_pool)
 
-            if acc_elem is None:
-                acc_elem = etree.SubElement(queue_elem, 'account-pool')
-            if str(acc_elem.text) != str(account_pool):
-                changed = True
-            acc_elem.text = account_pool
+            self._add_or_update_elem(queue_elem, 'account-pool', account_pool)
 
         # Define the number of threads.
-        max_threads_elem = queue_elem.find('max-threads')
-        if max_threads_elem is None:
-            max_threads_elem = etree.SubElement(queue_elem, 'max-threads')
-        if str(max_threads_elem.text) != str(max_threads):
+        if self._add_or_update_elem(queue_elem, 'max-threads', max_threads):
             changed = True
-        max_threads_elem.text = str(max_threads)
 
         # Set the delete-logs flag.
         delete_logs_elem = queue_elem.find('delete-logs')
@@ -245,7 +224,7 @@ class Config(ConfigReader):
             return False
 
         # Write the resulting XML.
-        self._write_xml(xml, self.filename)
+        self.save()
         return True
 
     def has_service(self, service_name):
@@ -290,36 +269,21 @@ class Config(ConfigReader):
         # By default, use the first daemon defined in the main config file.
         if daemon_name is None:
             daemon_name = self.cfgtree.find('daemon').get('name')
-        daemon_node = service_ele.find('daemon')
-        if daemon_node is None:
+        if self._add_or_update_elem(service_ele, 'daemon', daemon_name):
             changed = True
-            etree.SubElement(service_ele, 'daemon').text = daemon_name
-        elif daemon_name != daemon_node.text:
-            changed = True
-            daemon_node.text = daemon_name
 
         # Add an XML statement pointing to the module.
         if module_name is not None:
-            module_node = service_ele.find('module')
-            if module_node is None:
+            if self._add_or_update_elem(service_ele, 'module', module_name):
                 changed = True
-                etree.SubElement(service_ele, 'module').text = module_name
-            elif module_name != module_node.text:
-                changed = True
-                module_node.text = module_name
 
         # By default, use the first queue defined in the main config file.
         if queue_name is None:
             queue_name = self.cfgtree.find('queue').get('name')
         if not self.has_queue(queue_name):
             raise Exception('no such queue: ' + queue_name)
-        queue_node = service_ele.find('queue')
-        if queue_node is None:
+        if self._add_or_update_elem(service_ele, 'queue', queue_name):
             changed = True
-            etree.SubElement(service_ele, 'queue').text = queue_name
-        elif queue_name != queue_node.text:
-            changed = True
-            queue_node.text = queue_name
 
         if not changed:
             return False
@@ -356,17 +320,6 @@ class Config(ConfigReader):
     def has_daemon(self, name):
         return self.cfgtree.find('daemon[@name="%s"]' % name) is not None
 
-    def _add_or_update_elem(self, parent, name, text):
-        child_elem = parent.find(name)
-        changed    = False
-        if child_elem is None:
-            changed    = True
-            child_elem = etree.SubElement(parent, name)
-        if child_elem.text != text:
-            changed         = True
-            child_elem.text = str(text)
-        return changed
-
     def add_daemon(self,
                    name,
                    address,
@@ -394,7 +347,9 @@ class Config(ConfigReader):
         if self._add_or_update_elem(daemon_elem, 'database', database):
             changed = True
 
-        self._write_xml(self.cfgtree, self.filename)
+        if not changed:
+            return False
+        self.save()
         return changed
 
     def init_rest_daemon(self, element):
