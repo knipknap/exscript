@@ -41,7 +41,7 @@ URL list:
 
 To test with curl:
 
-  curl --digest --user exscript-rest:exscript-rest --data @postorder localhost:8123/order/
+  curl --digest --user exscript-http:exscript-http --data @postorder localhost:8123/order/
 """
 
 class HTTPHandler(HTTPRequestHandler):

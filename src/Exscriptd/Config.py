@@ -333,7 +333,7 @@ class Config(ConfigReader):
             changed     = True
             daemon_elem = etree.SubElement(self.cfgtree.getroot(),
                                            'daemon',
-                                           type = 'rest',
+                                           type = 'http',
                                            name = name)
 
         if self._add_or_update_elem(daemon_elem, 'address', address):
@@ -352,7 +352,7 @@ class Config(ConfigReader):
         self.save()
         return changed
 
-    def init_rest_daemon(self, element):
+    def init_http_daemon(self, element):
         # Init the database for the daemon first, then
         # create the daemon (this does not start it).
         name    = element.get('name')
@@ -386,8 +386,8 @@ class Config(ConfigReader):
         # Create the daemon.
         element = self.cfgtree.find('daemon[@name="%s"]' % name)
         type    = element.get('type')
-        if type == 'rest':
-            daemon = self.init_rest_daemon(element)
+        if type == 'http':
+            daemon = self.init_http_daemon(element)
         else:
             raise Exception('No such daemon type: %s' % type)
 

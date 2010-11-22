@@ -34,8 +34,8 @@ This is the Exscript daemon configuration file.
   -->
   <account-pool name="api-accounts">
     <account>
-      <user>exscript-rest</user>
-      <password>ZXhzY3JpcHQtcmVzdA==</password>
+      <user>exscript-http</user>
+      <password>ZXhzY3JpcHQtaHR0cA==</password>
     </account>
   </account-pool>
 
@@ -63,7 +63,7 @@ This is the Exscript daemon configuration file.
   An HTTP daemon providing a REST API.
   You may define only one daemon at this time.
   -->
-  <daemon type="rest" name="rest-daemon">
+  <daemon type="http" name="http-daemon">
     <!-- An empty address binds to all. -->
     <address></address>
     <port>8123</port>
