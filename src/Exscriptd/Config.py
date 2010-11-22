@@ -137,16 +137,19 @@ class Config(ConfigReader):
         self._write_xml(xml, self.filename)
         return True
 
-    def init_database_from_name(self, name):
+    def init_database_from_dbn(self, dbn):
         from sqlalchemy import create_engine
-        element = self.cfgtree.find('database[@name="%s"]' % name)
-        dbn     = element.find('dbn').text
         #print 'Creating database connection for', dbn
         engine  = create_engine(dbn)
         db      = OrderDB(engine)
         #print 'Initializing database tables...'
         db.install()
         return db
+
+    def init_database_from_name(self, name):
+        element = self.cfgtree.find('database[@name="%s"]' % name)
+        dbn     = element.find('dbn').text
+        return self.init_database_from_dbn()
 
     def load_service(self, filename):
         service_dir = os.path.dirname(filename)
@@ -350,15 +353,62 @@ class Config(ConfigReader):
         for file in self.get_service_files():
             service = self.load_service(file)
 
+    def has_daemon(self, name):
+        return self.cfgtree.find('daemon[@name="%s"]' % name) is not None
+
+    def _add_or_update_elem(self, parent, name, text):
+        child_elem = parent.find(name)
+        changed    = False
+        if child_elem is None:
+            changed    = True
+            child_elem = etree.SubElement(parent, name)
+        if child_elem.text != text:
+            changed         = True
+            child_elem.text = str(text)
+        return changed
+
+    def add_daemon(self,
+                   name,
+                   address,
+                   port,
+                   logdir,
+                   account_pool,
+                   database):
+        daemon_elem = self.cfgtree.find('daemon[@name="%s"]' % name)
+        changed     = False
+        if daemon_elem is None:
+            changed     = True
+            daemon_elem = etree.SubElement(self.cfgtree.getroot(),
+                                           'daemon',
+                                           type = 'rest',
+                                           name = name)
+
+        if self._add_or_update_elem(daemon_elem, 'address', address):
+            changed = True
+        if self._add_or_update_elem(daemon_elem, 'port', port):
+            changed = True
+        if self._add_or_update_elem(daemon_elem, 'logdir', logdir):
+            changed = True
+        if self._add_or_update_elem(daemon_elem, 'account-pool', account_pool):
+            changed = True
+        if self._add_or_update_elem(daemon_elem, 'database', database):
+            changed = True
+
+        self._write_xml(self.cfgtree, self.filename)
+        return changed
+
     def init_rest_daemon(self, element):
         # Init the database for the daemon first, then
         # create the daemon (this does not start it).
         name    = element.get('name')
-        address = element.find('address').text or ''
+        address = element.findtext('address', '')
         port    = int(element.find('port').text)
-        db_name = element.find('database').text
+        db_name = element.find('database')
         logdir  = element.find('logdir').text
-        db      = self.init_database_from_name(db_name)
+        if db_elem is None:
+            db = self.database_from_dbn(':memory:')
+        else:
+            db = self.init_database_from_name(db_elem.text)
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
         daemon  = HTTPDaemon(name,
