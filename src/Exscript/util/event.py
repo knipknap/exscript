@@ -41,17 +41,21 @@ class Event(object):
         """
         return self.emit(*args, **kwargs)
 
-    def connect(self, callback):
+    def connect(self, callback, *args, **kwargs):
         """
         Connects the event with the given callback.
         When the signal is emitted, the callback is invoked.
 
         @type  callback: object
         @param callback: The callback function.
+        @type  args: tuple
+        @param args: Optional arguments passed to the callback.
+        @type  kwargs: dict
+        @param kwargs: Optional keyword arguments passed to the callback.
         """
-        if callback in self.subscribers:
+        if callback in [s[0] for s in self.subscribers]:
             raise AttributeError('callback is already connected')
-        self.subscribers.append(callback)
+        self.subscribers.append((callback, args, kwargs))
 
     def n_subscribers(self):
         """
@@ -71,19 +75,20 @@ class Event(object):
         @rtype:  bool
         @return: Whether the signal is connected to the given function.
         """
-        return callback in self.subscribers
+        return callback in [s[0] for s in self.subscribers]
 
     def emit(self, *args, **kwargs):
         """
         Emits the signal, passing the given arguments to the callbacks.
 
-        @type  args: list
-        @param args: Arguments passed to the callbacks.
-        @type  kwargs: list
-        @param kwargs: Arguments passed to the callbacks.
+        @type  args: tuple
+        @param args: Optional arguments passed to the callbacks.
+        @type  kwargs: dict
+        @param kwargs: Optional keyword arguments passed to the callbacks.
         """
-        for callback in self.subscribers:
-            callback(*args, **kwargs)
+        for callback, user_args, user_kwargs in self.subscribers:
+            kwargs.update(user_kwargs)
+            callback(*args + user_args, **kwargs)
 
     def disconnect(self, callback):
         """
@@ -92,7 +97,8 @@ class Event(object):
         @type  callback: object
         @param callback: The callback function.
         """
-        self.subscribers.remove(callback)
+        item = [s[0] for s in self.subscribers].index(callback)
+        self.subscribers.pop(item)
 
     def disconnect_all(self):
         """
