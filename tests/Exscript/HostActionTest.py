@@ -1,11 +1,10 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript.external.SpiffSignal import Trackable
-from Exscript                      import Queue, Host
-from Exscript.HostAction           import HostAction
-from Exscript.util.decorator       import bind
-from Exscript.protocols.Exception  import LoginFailure
+from Exscript                     import Queue, Host
+from Exscript.HostAction          import HostAction
+from Exscript.util.decorator      import bind
+from Exscript.protocols.Exception import LoginFailure
 
 class FakeHost(Host):
     def __init__(self):
@@ -34,7 +33,7 @@ class HostActionTest(unittest.TestCase):
         self.count_action = HostAction(Queue(), self.count_cb, FakeHost())
         self.fail_action  = HostAction(Queue(), self.fail_cb, FakeHost())
         self.failed       = False
-        self.fail_action.signal_connect('error', self.onFailActionError)
+        self.fail_action.error_event.connect(self.onFailActionError)
 
     def testConstructor(self):
         action = HostAction(Queue(), self.count_cb, FakeHost())

@@ -15,7 +15,8 @@
 """
 Logging to memory.
 """
-import os, traceback
+import os
+import traceback
 from Log           import Log
 from QueueListener import QueueListener
 
@@ -112,7 +113,7 @@ class Logger(QueueListener):
             self.done.append(action)
 
     def _action_enqueued(self, action):
-        action.signal_connect('started',   self._on_action_started)
-        action.signal_connect('error',     self._on_action_error)
-        action.signal_connect('succeeded', self._on_action_done)
-        action.signal_connect('aborted',   self._on_action_done)
+        action.started_event.connect(self._on_action_started)
+        action.error_event.connect(self._on_action_error)
+        action.succeeded_event.connect(self._on_action_done)
+        action.aborted_event.connect(self._on_action_done)

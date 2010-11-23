@@ -1,19 +1,19 @@
-from external.SpiffSignal import Trackable
+from util.event import Event
 
-class Task(Trackable):
+class Task(object):
     """
     Represents a batch of running actions.
     """
     def __init__(self, queue):
-        Trackable.__init__(self)
-        self.queue     = queue
-        self.actions   = []
-        self.completed = 0
+        self.done_event = Event()
+        self.queue      = queue
+        self.actions    = []
+        self.completed  = 0
 
     def _on_action_done(self, action):
         self.completed += 1
         if self.is_completed():
-            self.signal_emit('done')
+            self.done_event()
 
     def is_completed(self):
         return self.completed == len(self.actions)
@@ -33,5 +33,5 @@ class Task(Trackable):
         @param action: The action to be added.
         """
         self.actions.append(action)
-        action.signal_connect('aborted',   self._on_action_done)
-        action.signal_connect('succeeded', self._on_action_done)
+        action.aborted_event.connect(self._on_action_done)
+        action.succeeded_event.connect(self._on_action_done)

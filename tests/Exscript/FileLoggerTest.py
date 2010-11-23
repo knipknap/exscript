@@ -1,14 +1,13 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from tempfile                      import mkdtemp
-from shutil                        import rmtree
-from Exscript                      import Host
-from Exscript.HostAction           import HostAction
-from Exscript.external.SpiffSignal import Trackable
-from Exscript.FileLogger           import FileLogger
-from util.reportTest               import FakeQueue
-from LoggerTest                    import LoggerTest, FakeConnection
+from tempfile            import mkdtemp
+from shutil              import rmtree
+from Exscript            import Host
+from Exscript.HostAction import HostAction
+from Exscript.FileLogger import FileLogger
+from util.reportTest     import FakeQueue
+from LoggerTest          import LoggerTest, FakeConnection
 
 class FakeError(Exception):
     pass
@@ -39,7 +38,7 @@ class FileLoggerTest(LoggerTest):
         self.failIf(os.path.exists(errfile))
 
         # Test "started".
-        action.signal_emit('started', action, conn)
+        action.started_event(action, conn)
         self.assert_(os.path.isfile(logfile), 'No such file: ' + logfile)
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
@@ -57,13 +56,13 @@ class FileLoggerTest(LoggerTest):
             raise FakeError()
         except Exception, e:
             pass
-        action.signal_emit('error', action, e)
+        action.error_event(action, e)
         self.assert_(os.path.isfile(logfile))
         self.assert_(os.path.isfile(errfile))
         content = open(errfile).read()
         self.assert_('FakeError' in content)
 
-        action.signal_emit('aborted', action)
+        action.aborted_event(action)
         content = open(logfile).read()
 
         # Repeat all of the above, with failures = 1.
@@ -73,7 +72,7 @@ class FileLoggerTest(LoggerTest):
         errfile         = logfile + '.error'
         self.failIf(os.path.exists(logfile))
         self.failIf(os.path.exists(errfile))
-        action.signal_emit('started', action, conn)
+        action.started_event(action, conn)
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
@@ -87,7 +86,7 @@ class FileLoggerTest(LoggerTest):
         self.assertEqual(content, 'hello world')
 
         # Test "succeeded".
-        action.signal_emit('succeeded', action)
+        action.succeeded_event(action)
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
 

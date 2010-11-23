@@ -12,10 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript.external.SpiffSignal import Trackable
-from Exscript.util.cast            import to_list
+from Exscript.util.cast import to_list
 
-class Action(Trackable):
+class Action(object):
     """
     This class represents an executable action that may be handed to the 
     workqueue for processing. The default action is doing nothing, so you 
@@ -30,7 +29,6 @@ class Action(Trackable):
                  debug: The debug level (default is 0)
                  name: A human readable name for the action (string).
         """
-        Trackable.__init__(self)
         self.debug      = kwargs.get('debug', 0)
         self.name       = kwargs.get('name',  None)
         self.__mainloop = None

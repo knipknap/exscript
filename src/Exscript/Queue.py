@@ -422,9 +422,9 @@ class Queue(object):
         self._dbg(2, 'Enqueing Action.')
         action.set_times(self.times)
         action.set_login_times(self.login_times)
-        action.signal_connect('error',     self._on_action_error)
-        action.signal_connect('aborted',   self._on_action_aborted)
-        action.signal_connect('succeeded', self._on_action_succeeded)
+        action.error_event.connect(self._on_action_error)
+        action.aborted_event.connect(self._on_action_aborted)
+        action.succeeded_event.connect(self._on_action_succeeded)
         self.action_enqueued_event(action)
 
         # Done. Enqueue this.

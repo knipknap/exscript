@@ -16,6 +16,7 @@ import os, traceback, Crypto
 from workqueue             import Action
 from Log                   import Log
 from Logfile               import Logfile
+from util.event            import Event
 from protocols.Exception   import LoginFailure
 from interpreter.Exception import FailException
 from parselib.Exception    import SyntaxError
@@ -35,14 +36,18 @@ class CustomAction(Action):
         @param conn: The assoviated connection.
         """
         Action.__init__(self)
-        self.queue          = queue
-        self.function       = function
-        self.times          = 1
-        self.login_times    = 1
-        self.failures       = 0
-        self.login_failures = 0
-        self.aborted        = False
-        self.name           = name
+        self.started_event   = Event()
+        self.error_event     = Event()
+        self.aborted_event   = Event()
+        self.succeeded_event = Event()
+        self.queue           = queue
+        self.function        = function
+        self.times           = 1
+        self.login_times     = 1
+        self.failures        = 0
+        self.login_failures  = 0
+        self.aborted         = False
+        self.name            = name
 
         # Since each action is created in it's own thread, we must
         # re-initialize the random number generator to make sure that
@@ -100,25 +105,25 @@ class CustomAction(Action):
         while self.failures < self.times \
           and self.login_failures < self.login_times:
             conn = self._create_connection()
-            self.signal_emit('started', self, conn)
+            self.started_event(self, conn)
 
             # Execute the user-provided function.
             try:
                 self._call_function(conn)
             except LoginFailure, e:
-                self.signal_emit('error', self, e)
+                self.error_event(self, e)
                 self.login_failures += 1
                 continue
             except Exception, e:
-                self.signal_emit('error', self, e)
+                self.error_event(self, e)
                 self.failures += 1
                 if not self._is_recoverable_error(e):
                     break
                 continue
 
-            self.signal_emit('succeeded', self)
+            self.succeeded_event(self)
             return
 
         # Ending up here the function finally failed.
         self.aborted = True
-        self.signal_emit('aborted', self)
+        self.aborted_event(self)

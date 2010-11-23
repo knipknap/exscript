@@ -140,10 +140,10 @@ class QueueWidget(Frame):
         self.after(100, self._update)
 
     def _action_enqueued(self, action):
-        action.signal_connect('started',   self._on_action_started)
-        action.signal_connect('error',     self._on_action_error)
-        action.signal_connect('succeeded', self._on_action_succeeded)
-        action.signal_connect('aborted',   self._on_action_aborted)
+        action.started_event.connect(self._on_action_started)
+        action.error_event.connect(self._on_action_error)
+        action.succeeded_event.connect(self._on_action_succeeded)
+        action.aborted_event.connect(self._on_action_aborted)
 
     def _on_action_started(self, action, conn):
         watcher = _ConnectionWatcher(conn)

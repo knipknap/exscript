@@ -1,9 +1,8 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript.external.SpiffSignal import Trackable
-from Exscript.QueueListener        import QueueListener
-from util.reportTest               import FakeQueue
+from Exscript.QueueListener import QueueListener
+from util.reportTest        import FakeQueue
 
 class QueueListenerTest(unittest.TestCase):
     CORRELATE = QueueListener

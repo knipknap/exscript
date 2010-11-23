@@ -1,25 +1,30 @@
-import sys, unittest, re, os.path
+import sys, unittest, re, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import Exscript.util.report
-from Exscript                      import Host
-from Exscript.external.SpiffSignal import Trackable
-from Exscript.Logger               import Logger
-from Exscript.util.event           import Event
+from Exscript            import Host
+from Exscript.Logger     import Logger
+from Exscript.util.event import Event
 
 class FakeQueue(object):
     action_enqueued_event = Event()
 
-class FakeAction(Trackable):
+class FakeAction(object):
     failures = 0
     aborted  = False
 
     def __init__(self, name = 'fake'):
-        Trackable.__init__(self)
-        self.name = name
+        self.name            = name
+        self.started_event   = Event()
+        self.error_event     = Event()
+        self.aborted_event   = Event()
+        self.succeeded_event = Event()
 
     def get_name(self):
         return self.name
+
+    def get_logname(self):
+        return self.name + '.log'
 
     def n_failures(self):
         return self.failures
@@ -51,7 +56,7 @@ class reportTest(unittest.TestCase):
         action          = FakeAction(name)
         conn            = FakeConnection(name)
         self.logger._action_enqueued(action)
-        action.signal_emit('started', action, conn)
+        action.started_event(action, conn)
         conn.data_received_event('hello world')
         return action
 
@@ -61,18 +66,18 @@ class reportTest(unittest.TestCase):
             raise FakeError()
         except Exception, e:
             pass
-        action.signal_emit('error', action, e)
+        action.error_event(action, e)
         return action
 
     def createAbortedLog(self):
         action = self.createErrorLog()
         action.aborted = True
-        action.signal_emit('aborted', action)
+        action.aborted_event(action)
         return action
 
     def createSucceededLog(self):
         action = self.createLog()
-        action.signal_emit('succeeded', action)
+        action.succeeded_event(action)
         return action
 
     def testStatus(self):
@@ -106,7 +111,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 61, in createErrorLog
+  File "%s.py", line 66, in createErrorLog
     raise FakeError()
 FakeError
 
