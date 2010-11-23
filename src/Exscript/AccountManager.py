@@ -65,9 +65,9 @@ class AccountManager(object):
         """
         with self.unlock_cond:
             for account in to_list(accounts):
-                account.signal_connect('acquire_before',
-                                       self._on_account_acquire_before)
-                account.signal_connect('released', self._on_account_released)
+                account.acquire_before_event.connect(
+                                         self._on_account_acquire_before)
+                account.released_event.connect(self._on_account_released)
                 self.accounts.add(account)
                 self.unlocked_accounts.append(account)
             self.unlock_cond.notify_all()
@@ -85,9 +85,9 @@ class AccountManager(object):
                 raise Exception(msg)
             if account not in self.unlocked_accounts:
                 raise Exception('account %s should be unlocked' % account)
-            account.signal_disconnect('acquire_before',
+            account.acquire_before_event.disconnect(
                                       self._on_account_acquire_before)
-            account.signal_disconnect('released', self._on_account_released)
+            account.released_event.disconnect(self._on_account_released)
             self.accounts.remove(account)
             self.unlocked_accounts.remove(account)
 

@@ -16,9 +16,9 @@
 Representing user accounts.
 """
 import threading
-from external.SpiffSignal import Trackable
+from util.event import Event
 
-class Account(Trackable):
+class Account(object):
     """
     This class represents a user account.
     """
@@ -42,13 +42,15 @@ class Account(Trackable):
         @param kwargs: The following options are supported:
             - ssh_key_file: the key file that is used (SSH only).
         """
-        Trackable.__init__(self)
+        self.acquire_before_event   = Event()
+        self.acquired_event         = Event()
+        self.release_before_event   = Event()
+        self.released_event         = Event()
         self.name                   = name
         self.password               = password
         self.authorization_password = password2
         self.options                = kwargs
         self.lock                   = threading.Lock()
-
 
     def __str__(self):
         return self.name
@@ -57,10 +59,9 @@ class Account(Trackable):
         """
         Locks the account.
         """
-        self.signal_emit('acquire_before', self)
+        self.acquire_before_event.emit(self)
         self.lock.acquire()
-        self.signal_emit('acquired', self)
-
+        self.acquired_event.emit(self)
 
     def _acquire(self):
         """
@@ -68,15 +69,13 @@ class Account(Trackable):
         """
         self.lock.acquire()
 
-
     def release(self):
         """
         Unlocks the account.
         """
-        self.signal_emit('release_before', self)
+        self.release_before_event.emit(self)
         self.lock.release()
-        self.signal_emit('released', self)
-
+        self.released_event.emit(self)
 
     def get_name(self):
         """
@@ -87,7 +86,6 @@ class Account(Trackable):
         """
         return self.name
 
-
     def get_password(self):
         """
         Returns the password of the account.
@@ -96,7 +94,6 @@ class Account(Trackable):
         @return: The account password.
         """
         return self.password
-
 
     def get_authorization_password(self):
         """
