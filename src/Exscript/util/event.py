@@ -26,6 +26,7 @@ class Event(object):
         myevent = Event()
         myevent.connect(mycallback)
         myevent.emit('test', foo = 'bar')
+        # Or just: myevent('test', foo = 'bar')
     """
 
     def __init__(self):
@@ -33,6 +34,12 @@ class Event(object):
         Constructor.
         """
         self.subscribers = []
+
+    def __call__(self, *args, **kwargs):
+        """
+        Like emit().
+        """
+        return self.emit(*args, **kwargs)
 
     def connect(self, callback):
         """
