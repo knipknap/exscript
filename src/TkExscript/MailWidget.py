@@ -191,9 +191,9 @@ class MailWidget(Frame):
         @param mail: The email object to attach.
         """
         if self.mail:
-            self.mail.signal_disconnect('changed', self._update_ui)
+            self.mail.changed_event.disconnect(self._update_ui)
         self.mail = mail
-        self.mail.signal_connect('changed', self._update_ui)
+        self.mail.changed_event.connect(self._update_ui)
         self._update_ui()
 
     def get_mail(self):

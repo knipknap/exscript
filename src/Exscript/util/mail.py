@@ -15,14 +15,19 @@
 """
 Sending and formatting emails.
 """
-import os, time, re, socket, smtplib, mimetypes
-from email                         import encoders
-from email.mime.multipart          import MIMEMultipart
-from email.mime.audio              import MIMEAudio
-from email.mime.base               import MIMEBase
-from email.mime.image              import MIMEImage
-from email.mime.text               import MIMEText
-from Exscript.external.SpiffSignal import Trackable
+import os
+import time
+import re
+import socket
+import smtplib
+import mimetypes
+from email                import encoders
+from email.mime.multipart import MIMEMultipart
+from email.mime.audio     import MIMEAudio
+from email.mime.base      import MIMEBase
+from email.mime.image     import MIMEImage
+from email.mime.text      import MIMEText
+from event                import Event
 
 ###########################################################
 # Helpers. (non-public)
@@ -74,7 +79,7 @@ def _render_template(string, **vars):
 ###########################################################
 # Public.
 ###########################################################
-class Mail(Trackable):
+class Mail(object):
     """
     Represents an email.
     """
@@ -104,8 +109,8 @@ class Mail(Trackable):
         @type  body: string
         @param body: The email body, passed to set_body().
         """
-        Trackable.__init__(self)
-        self.files = []
+        self.changed_event = Event()
+        self.files         = []
         if not sender:
             domain = socket.getfqdn('localhost')
             sender = os.environ.get('USER') + '@' + domain
@@ -170,7 +175,7 @@ class Mail(Trackable):
         @param sender: The email address of the sender.
         """
         self.sender = sender
-        self.signal_emit('changed')
+        self.changed_event.emit()
 
     def get_sender(self):
         """
@@ -193,7 +198,7 @@ class Mail(Trackable):
         @param to: The email addresses for the 'to' field.
         """
         self.to = self._cleanup_mail_addresses(to)
-        self.signal_emit('changed')
+        self.changed_event.emit()
 
     def add_to(self, to):
         """
@@ -204,7 +209,7 @@ class Mail(Trackable):
         @param to: The list of email addresses.
         """
         self.to += self._cleanup_mail_addresses(to)
-        self.signal_emit('changed')
+        self.changed_event.emit()
 
     def get_to(self):
         """
@@ -223,7 +228,7 @@ class Mail(Trackable):
         @param cc: The email addresses for the 'cc' field.
         """
         self.cc = self._cleanup_mail_addresses(cc)
-        self.signal_emit('changed')
+        self.changed_event.emit()
 
     def add_cc(self, cc):
         """
@@ -233,7 +238,7 @@ class Mail(Trackable):
         @param cc: The list of email addresses.
         """
         self.cc += self._cleanup_mail_addresses(cc)
-        self.signal_emit('changed')
+        self.changed_event.emit()
 
     def get_cc(self):
         """
@@ -252,7 +257,7 @@ class Mail(Trackable):
         @param bcc: The email addresses for the 'bcc' field.
         """
         self.bcc = self._cleanup_mail_addresses(bcc)
-        self.signal_emit('changed')
+        self.changed_event.emit()
 
     def add_bcc(self, bcc):
         """
@@ -262,7 +267,7 @@ class Mail(Trackable):
         @param bcc: The list of email addresses.
         """
         self.bcc += self._cleanup_mail_addresses(bcc)
-        self.signal_emit('changed')
+        self.changed_event.emit()
 
     def get_bcc(self):
         """
@@ -290,7 +295,7 @@ class Mail(Trackable):
         @param subject: The new subject line.
         """
         self.subject = subject
-        self.signal_emit('changed')
+        self.changed_event.emit()
 
     def get_subject(self):
         """
@@ -309,7 +314,7 @@ class Mail(Trackable):
         @param body: The new email body.
         """
         self.body = body
-        self.signal_emit('changed')
+        self.changed_event.emit()
 
     def get_body(self):
         """
