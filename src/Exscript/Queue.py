@@ -105,10 +105,10 @@ class Queue(object):
             self.logger = None
 
         # Listen to what the workqueue is doing.
-        self.workqueue.signal_connect('job-started',   self._on_job_started)
-        self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
-        self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
-        self.workqueue.signal_connect('queue-empty',   self.queue_empty_event)
+        self.workqueue.job_started_event.connect(self._on_job_started)
+        self.workqueue.job_succeeded_event.connect(self._on_job_succeeded)
+        self.workqueue.job_aborted_event.connect(self._on_job_aborted)
+        self.workqueue.queue_empty_event.connect(self.queue_empty_event)
         self.workqueue.unpause()
 
 

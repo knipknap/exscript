@@ -12,10 +12,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript.external.SpiffSignal import Trackable
-from MainLoop                      import MainLoop
+from Exscript.util.event import Event
+from MainLoop            import MainLoop
 
-class WorkQueue(Trackable):
+class WorkQueue(object):
     """
     This class implements the asynchronous workqueue and is the main API
     for using the workqueue module.
@@ -29,72 +29,29 @@ class WorkQueue(Trackable):
                  debug: The debug level (default is 0)
                  max_threads: Number of concurrent connections (default is 1).
         """
-        Trackable.__init__(self)
-        self.debug       = kwargs.get('debug',       0)
-        self.max_threads = kwargs.get('max_threads', 1)
+        self.job_started_event   = Event()
+        self.job_succeeded_event = Event()
+        self.job_aborted_event   = Event()
+        self.job_completed_event = Event()
+        self.queue_empty_event   = Event()
+        self.debug               = kwargs.get('debug',       0)
+        self.max_threads         = kwargs.get('max_threads', 1)
         self._init()
 
     def _init(self):
         self.main_loop       = MainLoop()
         self.main_loop.debug = self.debug
         self.main_loop.set_max_threads(self.max_threads)
-        self.main_loop.signal_connect('job-started',   self._on_job_started)
-        self.main_loop.signal_connect('job-succeeded', self._on_job_succeeded)
-        self.main_loop.signal_connect('job-aborted',   self._on_job_aborted)
-        self.main_loop.signal_connect('job-completed', self._on_job_completed)
-        self.main_loop.signal_connect('queue-empty',   self._on_queue_empty)
+        self.main_loop.job_started_event.connect(self.job_started_event)
+        self.main_loop.job_succeeded_event.connect(self.job_succeeded_event)
+        self.main_loop.job_aborted_event.connect(self.job_aborted_event)
+        self.main_loop.job_completed_event.connect(self.job_completed_event)
+        self.main_loop.queue_empty_event.connect(self.queue_empty_event)
         self.main_loop.start()
 
     def _check_if_ready(self):
         if self.main_loop is None:
             raise Exception('main loop is already destroyed')
-
-    def _on_job_started(self, job):
-        """
-        Called whenever a new thread was started.
-
-        @type  job: Job
-        @param job: The job that was started.
-        """
-        self.signal_emit('job-started', job)
-
-    def _on_job_succeeded(self, job):
-        """
-        Called whenever a thread was succeeded.
-
-        @type  job: Job
-        @param job: The job that was succeeded.
-        """
-        self.signal_emit('job-succeeded', job)
-
-    def _on_job_aborted(self, job, exception):
-        """
-        Called whenever a thread was aborted.
-
-        @type  job: Job
-        @param job: The job that was aborted.
-        @type  exception: object
-        @param exception: The exception that was thrown.
-        """
-        self.signal_emit('job-aborted', job, exception)
-
-    def _on_job_completed(self, job):
-        """
-        Called whenever a thread was completed.
-
-        @type  job: Job
-        @param job: The job that was completed.
-        """
-        self.signal_emit('job-completed', job)
-
-    def _on_queue_empty(self):
-        """
-        Called as soon as the queue is empty.
-
-        @type  job: Job
-        @param job: The job that was completed.
-        """
-        self.signal_emit('queue-empty')
 
     def set_debug(self, debug = 1):
         """

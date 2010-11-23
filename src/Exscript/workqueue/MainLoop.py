@@ -13,25 +13,29 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading, time, gc
-from itertools                     import chain
-from collections                   import defaultdict
-from Exscript.external.SpiffSignal import Trackable
-from Job                           import Job
+from itertools           import chain
+from collections         import defaultdict
+from Exscript.util.event import Event
+from Job                 import Job
 
-class MainLoop(Trackable, threading.Thread):
+class MainLoop(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
-        Trackable.__init__(self)
-        self.queue            = []
-        self.force_start      = []
-        self.running_jobs     = []
-        self.sleeping_actions = []
-        self.paused           = True
-        self.shutdown_now     = False
-        self.max_threads      = 1
-        self.condition        = threading.Condition()
-        self.debug            = 0
-        self.daemon           = True
+        self.job_started_event   = Event()
+        self.job_succeeded_event = Event()
+        self.job_aborted_event   = Event()
+        self.job_completed_event = Event()
+        self.queue_empty_event   = Event()
+        self.queue               = []
+        self.force_start         = []
+        self.running_jobs        = []
+        self.sleeping_actions    = []
+        self.paused              = True
+        self.shutdown_now        = False
+        self.max_threads         = 1
+        self.condition           = threading.Condition()
+        self.debug               = 0
+        self.daemon              = True
 
     def _dbg(self, level, msg):
         if self.debug >= level:
@@ -188,7 +192,7 @@ class MainLoop(Trackable, threading.Thread):
         job.start()
         self._dbg(1, 'Job "%s" started.' % job.getName())
         try:
-            self.signal_emit('job-started', job)
+            self.job_started_event(job)
         except:
             pass
 
@@ -196,14 +200,14 @@ class MainLoop(Trackable, threading.Thread):
         try:
             if job.exception:
                 self._dbg(1, 'Job "%s" aborted.' % job.getName())
-                self.signal_emit('job-aborted', job, job.exception)
+                self.job_aborted_event(job, job.exception)
             else:
                 self._dbg(1, 'Job "%s" succeeded.' % job.getName())
-                self.signal_emit('job-succeeded', job)
+                self.job_succeeded_event(job)
         except:
             pass
         try:
-            self.signal_emit('job-completed', job)
+            self.job_completed_event(job)
         except:
             pass
 
@@ -230,7 +234,7 @@ class MainLoop(Trackable, threading.Thread):
         while not self.shutdown_now:
             self._update_running_jobs()
             if self.get_queue_length() == 0:
-                self.signal_emit('queue-empty')
+                self.queue_empty_event()
 
             # If there are any actions to be force_started, run them now.
             for action in self.force_start:
