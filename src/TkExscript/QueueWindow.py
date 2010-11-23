@@ -28,7 +28,7 @@ class QueueWindow(Frame):
         self.widget.pack(expand = True, fill = BOTH, padx = 6, pady = 6)
 
         if kwargs.get('autoclose', False):
-            queue.signal_connect('queue-empty', self._on_queue_empty)
+            queue.queue_empty_event.connect(self._on_queue_empty)
 
     def _on_queue_empty(self):
         self.after(1, self.quit)

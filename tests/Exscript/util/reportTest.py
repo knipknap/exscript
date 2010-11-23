@@ -5,9 +5,10 @@ import Exscript.util.report
 from Exscript                      import Host
 from Exscript.external.SpiffSignal import Trackable
 from Exscript.Logger               import Logger
+from Exscript.util.event           import Event
 
-class FakeQueue(Trackable):
-    pass
+class FakeQueue(object):
+    action_enqueued_event = Event()
 
 class FakeAction(Trackable):
     failures = 0
@@ -105,7 +106,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 60, in createErrorLog
+  File "%s.py", line 61, in createErrorLog
     raise FakeError()
 FakeError
 

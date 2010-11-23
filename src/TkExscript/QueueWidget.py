@@ -112,7 +112,7 @@ class QueueWidget(Frame):
         self.data_queue = Queue.Queue()
         self.pages      = {}
         self.queue      = queue
-        self.queue.signal_connect('action_enqueued', self._action_enqueued)
+        self.queue.action_enqueued_event.connect(self._action_enqueued)
         self._update()
 
     def _update_progress(self):

@@ -16,17 +16,17 @@
 The heart of Exscript.
 """
 import sys, os, gc, copy, traceback
-from external.SpiffSignal import Trackable
-from AccountManager       import AccountManager
-from CustomAction         import CustomAction
-from HostAction           import HostAction
-from FileLogger           import FileLogger
-from Task                 import Task
-from workqueue            import WorkQueue, Action
-from util.cast            import to_list, to_hosts
-from util.impl            import deprecation
+from AccountManager import AccountManager
+from CustomAction   import CustomAction
+from HostAction     import HostAction
+from FileLogger     import FileLogger
+from Task           import Task
+from workqueue      import WorkQueue, Action
+from util.cast      import to_list, to_hosts
+from util.impl      import deprecation
+from util.event     import Event
 
-class Queue(Trackable):
+class Queue(object):
     """
     Manages hosts/tasks, accounts, connections, and threads.
     """
@@ -73,7 +73,6 @@ class Queue(Trackable):
             - stdout: The output channel, defaults to sys.stdout.
             - stderr: The error channel, defaults to sys.stderr.
         """
-        Trackable.__init__(self)
         self.workqueue         = WorkQueue()
         self.account_manager   = AccountManager()
         self.domain            = kwargs.get('domain',        '')
@@ -92,6 +91,10 @@ class Queue(Trackable):
         self.protocol_map      = self.built_in_protocols.copy()
         self.set_max_threads(kwargs.get('max_threads', 1))
 
+        # Define events.
+        self.queue_empty_event     = Event()
+        self.action_enqueued_event = Event()
+
         # Enable logging.
         if kwargs.get('logdir'):
             overwrite   = kwargs.get('overwrite_logs', False)
@@ -105,7 +108,7 @@ class Queue(Trackable):
         self.workqueue.signal_connect('job-started',   self._on_job_started)
         self.workqueue.signal_connect('job-succeeded', self._on_job_succeeded)
         self.workqueue.signal_connect('job-aborted',   self._on_job_aborted)
-        self.workqueue.signal_connect('queue-empty',   self._on_queue_empty)
+        self.workqueue.signal_connect('queue-empty',   self.queue_empty_event)
         self.workqueue.unpause()
 
 
@@ -230,13 +233,6 @@ class Queue(Trackable):
         In other words, the workqueue does not notice if the action fails.
         """
         raise
-
-
-    def _on_queue_empty(self):
-        """
-        Called whenever the workqueue is empty.
-        """
-        self.signal_emit('queue-empty')
 
 
     def _get_protocol_from_name(self, name):
@@ -429,7 +425,7 @@ class Queue(Trackable):
         action.signal_connect('error',     self._on_action_error)
         action.signal_connect('aborted',   self._on_action_aborted)
         action.signal_connect('succeeded', self._on_action_succeeded)
-        self.signal_emit('action_enqueued', action)
+        self.action_enqueued_event(action)
 
         # Done. Enqueue this.
         if duplicate_check:

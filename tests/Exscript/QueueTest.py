@@ -3,7 +3,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 warnings.simplefilter('ignore', DeprecationWarning)
 
-import shutil, time
+import shutil
+import time
 from tempfile                       import mkdtemp
 from Exscript                       import Queue, Account
 from Exscript.Connection            import Connection
@@ -63,9 +64,9 @@ class QueueTest(unittest.TestCase):
     CORRELATE = Queue
 
     def createQueue(self, **kwargs):
-        self.out     = Log()
-        self.err     = Log()
-        self.queue   = Queue(stdout = self.out, stderr = self.err, **kwargs)
+        self.out   = Log()
+        self.err   = Log()
+        self.queue = Queue(stdout = self.out, stderr = self.err, **kwargs)
 
     def setUp(self):
         self.tempdir = mkdtemp()
