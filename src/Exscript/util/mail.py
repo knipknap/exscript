@@ -175,7 +175,7 @@ class Mail(object):
         @param sender: The email address of the sender.
         """
         self.sender = sender
-        self.changed_event.emit()
+        self.changed_event()
 
     def get_sender(self):
         """
@@ -198,7 +198,7 @@ class Mail(object):
         @param to: The email addresses for the 'to' field.
         """
         self.to = self._cleanup_mail_addresses(to)
-        self.changed_event.emit()
+        self.changed_event()
 
     def add_to(self, to):
         """
@@ -209,7 +209,7 @@ class Mail(object):
         @param to: The list of email addresses.
         """
         self.to += self._cleanup_mail_addresses(to)
-        self.changed_event.emit()
+        self.changed_event()
 
     def get_to(self):
         """
@@ -228,7 +228,7 @@ class Mail(object):
         @param cc: The email addresses for the 'cc' field.
         """
         self.cc = self._cleanup_mail_addresses(cc)
-        self.changed_event.emit()
+        self.changed_event()
 
     def add_cc(self, cc):
         """
@@ -238,7 +238,7 @@ class Mail(object):
         @param cc: The list of email addresses.
         """
         self.cc += self._cleanup_mail_addresses(cc)
-        self.changed_event.emit()
+        self.changed_event()
 
     def get_cc(self):
         """
@@ -257,7 +257,7 @@ class Mail(object):
         @param bcc: The email addresses for the 'bcc' field.
         """
         self.bcc = self._cleanup_mail_addresses(bcc)
-        self.changed_event.emit()
+        self.changed_event()
 
     def add_bcc(self, bcc):
         """
@@ -267,7 +267,7 @@ class Mail(object):
         @param bcc: The list of email addresses.
         """
         self.bcc += self._cleanup_mail_addresses(bcc)
-        self.changed_event.emit()
+        self.changed_event()
 
     def get_bcc(self):
         """
@@ -295,7 +295,7 @@ class Mail(object):
         @param subject: The new subject line.
         """
         self.subject = subject
-        self.changed_event.emit()
+        self.changed_event()
 
     def get_subject(self):
         """
@@ -314,7 +314,7 @@ class Mail(object):
         @param body: The new email body.
         """
         self.body = body
-        self.changed_event.emit()
+        self.changed_event()
 
     def get_body(self):
         """

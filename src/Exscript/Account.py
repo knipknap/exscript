@@ -60,9 +60,9 @@ class Account(object):
         """
         Locks the account.
         """
-        self.acquire_before_event.emit(self)
+        self.acquire_before_event(self)
         self.lock.acquire()
-        self.acquired_event.emit(self)
+        self.acquired_event(self)
 
     def _acquire(self):
         """
@@ -74,9 +74,9 @@ class Account(object):
         """
         Unlocks the account.
         """
-        self.release_before_event.emit(self)
+        self.release_before_event(self)
         self.lock.release()
-        self.released_event.emit(self)
+        self.released_event(self)
 
     def get_name(self):
         """
