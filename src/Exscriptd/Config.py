@@ -136,7 +136,7 @@ class Config(ConfigReader):
     def init_database_from_name(self, name):
         element = self.cfgtree.find('database[@name="%s"]' % name)
         dbn     = element.find('dbn').text
-        return self.init_database_from_dbn()
+        return self.init_database_from_dbn(dbn)
 
     def load_service(self, filename):
         service_dir = os.path.dirname(filename)
@@ -356,9 +356,9 @@ class Config(ConfigReader):
         # Init the database for the daemon first, then
         # create the daemon (this does not start it).
         name    = element.get('name')
-        address = element.findtext('address', '')
+        address = element.find('address').text or ''
         port    = int(element.find('port').text)
-        db_name = element.find('database')
+        db_elem = element.find('database')
         logdir  = element.find('logdir').text
         if db_elem is None:
             db = self.database_from_dbn(':memory:')
