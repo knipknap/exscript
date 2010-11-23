@@ -46,6 +46,7 @@ class Account(object):
         self.acquired_event         = Event()
         self.release_before_event   = Event()
         self.released_event         = Event()
+        self.otp_requested_event    = Event()
         self.name                   = name
         self.password               = password
         self.authorization_password = password2

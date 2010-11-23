@@ -27,10 +27,10 @@ class FakeAction(Trackable):
     def has_aborted(self):
         return self.aborted
 
-class FakeConnection(Trackable):
+class FakeConnection(object):
     def __init__(self, name = 'fake'):
-        Trackable.__init__(self)
-        self.name = name
+        self.name                = name
+        self.data_received_event = Event()
 
     def get_host(self):
         return Host(self.name)
@@ -52,7 +52,7 @@ class reportTest(unittest.TestCase):
         conn            = FakeConnection(name)
         self.logger._action_enqueued(action)
         action.signal_emit('started', action, conn)
-        conn.signal_emit('data_received', 'hello world')
+        conn.data_received_event('hello world')
         return action
 
     def createErrorLog(self):

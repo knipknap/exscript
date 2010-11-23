@@ -48,7 +48,7 @@ class Log(object):
         self.conn    = conn
         self._write('STARTED\n')
         if conn:
-            self.conn.signal_connect('data_received', self._write)
+            self.conn.data_received_event.connect(self._write)
 
     def _format_exc(self, exception):
         return ''.join(traceback.format_exception(*sys.exc_info()))

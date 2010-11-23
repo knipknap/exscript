@@ -27,7 +27,7 @@ def dummy_cb(conn, template_test):
         dirname = os.path.dirname(test_name)
     tmpl     = os.path.join(dirname, 'test.exscript')
     expected = os.path.join(dirname, 'expected')
-    conn.signal_connect('data_received', log.collect)
+    conn.data_received_event.connect(log.collect)
     conn.open()
     conn.authenticate(wait = True)
     try:

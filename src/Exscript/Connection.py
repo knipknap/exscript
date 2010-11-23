@@ -15,7 +15,8 @@
 """
 Accessing the connection to a remote host.
 """
-import threading, os
+import threading
+import os
 from Account import Account
 
 class Connection(object):
@@ -128,16 +129,15 @@ class Connection(object):
         return getattr(self.transport, name)
 
     def _on_otp_requested(self, key, seq, account):
-        account.signal_emit('otp_requested', account, key, seq)
+        account.otp_requested_event(account, key, seq)
 
     def _track_account(self, account):
-        self.transport.signal_connect('otp_requested',
-                                      self._on_otp_requested,
-                                      account)
+        cb = self._on_otp_requested
+        self.transport.otp_requested_event.connect(cb, account)
 
     def _untrack_accounts(self):
-        self.transport.signal_disconnect('otp_requested',
-                                         self._on_otp_requested)
+        cb = self._on_otp_requested
+        self.transport.otp_requested_event.disconnect(cb)
 
     def _acquire_account(self, account = None, lock = True):
         # Specific account requested?

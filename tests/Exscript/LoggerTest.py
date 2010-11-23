@@ -45,7 +45,7 @@ class LoggerTest(unittest.TestCase):
         action.signal_emit('started', action, conn)
         self.assertEqual(self.logger.get_logged_actions(), [action])
 
-        conn.signal_emit('data_received', 'hello world')
+        conn.data_received_event('hello world')
         self.assertEqual(self.logger.get_logged_actions(), [action])
 
         action.signal_emit('succeeded', action)
@@ -136,7 +136,7 @@ class LoggerTest(unittest.TestCase):
         self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
         self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
 
-        conn.signal_emit('data_received', 'hello world')
+        conn.data_received_event('hello world')
         self.assertEqual(len(self.logger.get_logs()), 1)
         self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
         self.assert_(isinstance(self.logger.get_logs()[action][0], Log))

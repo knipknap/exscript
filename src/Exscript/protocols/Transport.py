@@ -16,15 +16,14 @@
 An abstract base class for all protocols.
 """
 import string, re, sys, os
-from drivers                       import driver_map, isdriver
-from OsGuesser                     import OsGuesser
-from Exscript.external.SpiffSignal import Trackable
-from Exception                     import TransportException, \
-                                          InvalidCommandException
+from drivers             import driver_map, isdriver
+from OsGuesser           import OsGuesser
+from Exception           import TransportException, InvalidCommandException
+from Exscript.util.event import Event
 
-_skey_re    = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
+_skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
 
-class Transport(Trackable):
+class Transport(object):
     """
     This is the base class for all protocols; it defines the common portions 
     of the API.
@@ -33,11 +32,10 @@ class Transport(Trackable):
     def __init__(self, **kwargs):
         """
         Constructor.
-        The following signals are provided:
+        The following events are provided:
 
-          - data_received: Sent whenever a packet was received from the
-          connected host.
-          - otp_requested: Sent whenever the connected host requested a
+          - data_received_event: A packet was received from the connected host.
+          - otp_requested_event: The connected host requested a
           one-time-password to be entered.
 
         @type  kwargs: dict
@@ -52,7 +50,8 @@ class Transport(Trackable):
           - logfile: A file into which a log of the conversation with the 
           device is dumped.
         """
-        Trackable.__init__(self)
+        self.data_received_event   = Event()
+        self.otp_requested_event   = Event()
         self.os_guesser            = OsGuesser(self)
         self.auto_driver           = driver_map[self.guess_os()]
         self.authorized            = False
@@ -114,7 +113,7 @@ class Transport(Trackable):
         self.os_guesser.data_received(data)
         os               = self.guess_os()
         self.auto_driver = driver_map[os]
-        self.signal_emit('data_received', data)
+        self.data_received_event(data)
         return data
 
 
@@ -130,7 +129,7 @@ class Transport(Trackable):
 
 
     def _otp_cb(self, seq, seed):
-        self.signal_emit('otp_requested', seq, seed)
+        self.otp_requested_event(seq, seed)
 
 
     def _dbg(self, level, msg):
