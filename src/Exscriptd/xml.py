@@ -91,8 +91,10 @@ def get_dict_from_etree(node):
             args[name] = child.text.strip()
         elif child.tag == 'list':
             args[name] = get_list_from_etree(child)
+        elif child.tag == 'map':
+            args[name] = get_dict_from_etree(child)
         else:
-            raise Exception('Invalid XML tag: %s' % element.tag)
+            raise Exception('Invalid XML tag: %s' % child.tag)
     return args
 
 def add_dict_to_etree(root, tag, thedict, name = None):
@@ -119,6 +121,8 @@ def add_dict_to_etree(root, tag, thedict, name = None):
     for name, value in thedict.iteritems():
         if isinstance(value, list):
             add_list_to_etree(arg_elem, 'list', value, name = name)
+        elif isinstance(value, dict):
+            add_dict_to_etree(arg_elem, 'map', value, name = name)
         elif isinstance(value, str):
             variable = etree.SubElement(arg_elem, 'variable', name = name)
             variable.text = value
