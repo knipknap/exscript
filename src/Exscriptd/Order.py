@@ -21,7 +21,9 @@ from Exscript.util.file import get_hosts_from_csv
 from tempfile           import NamedTemporaryFile
 from lxml               import etree
 from DBObject           import DBObject
-from xml                import get_hosts_from_etree, add_hosts_to_etree
+from xml                import add_host_to_etree, \
+                               get_hosts_from_etree, \
+                               add_hosts_to_etree
 
 class Order(DBObject):
     """
@@ -41,11 +43,11 @@ class Order(DBObject):
         self.id         = None
         self.status     = 'new'
         self.service    = service_name
-        self.hosts      = []
         self.descr      = ''
         self.created    = datetime.utcnow()
         self.closed     = None
         self.created_by = os.environ.get('USER')
+        self.xml        = etree.Element('order', service = self.service)
 
     def __repr__(self):
         return "<Order('%s','%s','%s')>" % (self.id, self.service, self.status)
@@ -63,6 +65,7 @@ class Order(DBObject):
         # Parse required attributes.
         descr_node       = order_node.find('description')
         order            = Order(order_node.get('service'))
+        order.xml        = order_node
         order.id         = order_node.get('id')
         order.status     = order_node.get('status',     order.status)
         order.created_by = order_node.get('created-by', order.created_by)
@@ -78,7 +81,6 @@ class Order(DBObject):
             closed = closed.split('.', 1)[0]
             closed = datetime.strptime(closed, "%Y-%m-%d %H:%M:%S")
             order.closed = closed
-        order.hosts = get_hosts_from_etree(order_node)
         return order
 
     @staticmethod
@@ -133,21 +135,19 @@ class Order(DBObject):
         @rtype:  lxml.etree
         @return: The resulting tree.
         """
-        order = etree.Element('order', service = self.service)
         if self.id:
-            order.attrib['id'] = str(self.id)
+            self.xml.attrib['id'] = str(self.id)
         if self.status:
-            order.attrib['status'] = str(self.status)
+            self.xml.attrib['status'] = str(self.status)
         if self.created:
-            order.attrib['created'] = str(self.created)
+            self.xml.attrib['created'] = str(self.created)
         if self.closed:
-            order.attrib['closed'] = str(self.closed)
+            self.xml.attrib['closed'] = str(self.closed)
         if self.descr:
             etree.SubElement(order, 'description').text = str(self.descr)
         if self.created_by:
-            order.attrib['created-by'] = str(self.created_by)
-        add_hosts_to_etree(order, self.hosts)
-        return order
+            self.xml.attrib['created-by'] = str(self.created_by)
+        return self.xml
 
     def toxml(self, pretty = True):
         """
@@ -287,7 +287,7 @@ class Order(DBObject):
         @param host: A host object.
         """
         self.touch()
-        self.hosts.append(DBObject(host))
+        add_host_to_etree(self.xml, 'host', host)
 
     def add_hosts_from_csv(self, filename, encoding = 'utf-8'):
         """
@@ -311,4 +311,4 @@ class Order(DBObject):
         @rtype:  [Exscript.Host]
         @return: A list of hosts.
         """
-        return self.hosts
+        return get_hosts_from_etree(self.xml)
