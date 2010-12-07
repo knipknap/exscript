@@ -21,9 +21,7 @@ from Exscript.util.file import get_hosts_from_csv
 from tempfile           import NamedTemporaryFile
 from lxml               import etree
 from DBObject           import DBObject
-from xml                import add_host_to_etree, \
-                               get_hosts_from_etree, \
-                               add_hosts_to_etree
+from xml                import add_hosts_to_etree
 
 class Order(DBObject):
     """
@@ -125,7 +123,8 @@ class Order(DBObject):
         @return: A new instance of an order.
         """
         order = Order(service)
-        order.add_hosts_from_csv(filename, encoding = encoding)
+        hosts = get_hosts_from_csv(filename, encoding = encoding)
+        add_hosts_to_etree(order.xml, hosts)
         return order
 
     def toetree(self):
@@ -278,37 +277,3 @@ class Order(DBObject):
         Marks the order closed.
         """
         self.closed = datetime.utcnow()
-
-    def add_host(self, host):
-        """
-        Adds the given host to the order.
-
-        @type  host: Exscript.Host
-        @param host: A host object.
-        """
-        self.touch()
-        add_host_to_etree(self.xml, 'host', host)
-
-    def add_hosts_from_csv(self, filename, encoding = 'utf-8'):
-        """
-        Parses the given CSV file using
-        Exscript.util.file.get_hosts_from_csv(), and adds the resulting
-        Exscript.Host objects to the order.
-        Multi-column CSVs are supported, i.e. variables defined in the
-        Exscript.Host objects are preserved.
-
-        @type  filename: str
-        @param filename: A file containing a CSV formatted list of hosts.
-        """
-        for host in get_hosts_from_csv(filename, encoding = encoding):
-            self.add_host(host)
-
-    def get_hosts(self):
-        """
-        Returns Exscript.Host objects for all hosts that are
-        included in the order.
-
-        @rtype:  [Exscript.Host]
-        @return: A list of hosts.
-        """
-        return get_hosts_from_etree(self.xml)
