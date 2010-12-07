@@ -31,7 +31,7 @@ class Term(Token):
         type, token = lexer.token()
         if lexer.current_is('varname'):
             if not parent.is_defined(token):
-                lexer.error('Undeclared variable %s' % token, self)
+                lexer.error('Undeclared variable %s' % token, self, ValueError)
             self.term = Variable(lexer, parser, parent)
         elif lexer.current_is('open_function_call'):
             self.term = FunctionCall(lexer, parser, parent)

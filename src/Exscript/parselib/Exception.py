@@ -16,18 +16,18 @@ class LexerException(Exception):
     """
     Fallback exception that is called when the error type is not known.
     """
-    name = 'Error'
+    pass
 
 class SyntaxError(LexerException):
     """
     Raised during the compilation procedure if the template contained
     a syntax error.
     """
-    name = 'Syntax error'
+    pass
 
 class RuntimeError(LexerException):
     """
     Raised during the execution of the compiled template whenever any
     error occurs.
     """
-    name = 'Runtime error'
+    pass

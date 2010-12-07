@@ -79,9 +79,9 @@ class Lexer(object):
         line_end = self.input.find('\n', char)
         return line_start, line_end
 
-    def _error(self, error_type, error, sender = None):
+    def _error(self, exc_cls, error, sender = None):
         if not sender:
-            raise Exception('\n' + error_type.name + ':\n' + error)
+            raise exc_cls('\n' + error)
         start, end  = self._get_line_position_from_char(sender.end)
         line_number = self._get_line_number_from_char(sender.end)
         line        = self._get_line(line_number)
@@ -93,10 +93,10 @@ class Lexer(object):
         else:
             output += (' ' * offset) + "'" + ('-' * (token_len - 2)) + "'\n"
         output += '%s in %s:%s' % (error, self.filename, line_number)
-        raise Exception('\n' + error_type.name + ':\n' + output)
+        raise exc_cls('\n' + output)
 
-    def error(self, error, sender = None):
-        self._error(LexerException, error, sender)
+    def error(self, error, sender = None, exc_cls = LexerException):
+        self._error(exc_cls, error, sender)
 
     def syntax_error(self, error, sender = None):
         self._error(SyntaxError, error, sender)
