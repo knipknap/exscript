@@ -69,7 +69,10 @@ class Client(object):
         try:
             result = self.opener.open(url, data)
         except HTTPError, e:
-            raise Exception(str(e) + ' with ' + e.read())
+            if hasattr(e, 'read'):
+                raise Exception(str(e) + ' with ' + e.read())
+            else:
+                raise Exception(str(e))
         if result.getcode() != 200:
             raise Exception(result.read())
         order.id = int(result.read())
