@@ -15,13 +15,13 @@
 """
 Represents a call to a service.
 """
-import os, traceback, shutil
-import Exscript
+import os
 from datetime           import datetime
 from Exscript.util.file import get_hosts_from_csv
 from tempfile           import NamedTemporaryFile
 from lxml               import etree
 from DBObject           import DBObject
+from xml                import get_hosts_from_etree, add_hosts_to_etree
 
 class Order(DBObject):
     """
@@ -78,7 +78,7 @@ class Order(DBObject):
             closed = closed.split('.', 1)[0]
             closed = datetime.strptime(closed, "%Y-%m-%d %H:%M:%S")
             order.closed = closed
-        order._read_hosts_from_xml(order_node)
+        order.hosts = get_hosts_from_etree(order_node)
         return order
 
     @staticmethod
@@ -126,59 +126,6 @@ class Order(DBObject):
         order.add_hosts_from_csv(filename, encoding = encoding)
         return order
 
-    def _read_list_from_xml(self, list_elem):
-        items = list_elem.iterfind('list-item')
-        if items is None:
-            return []
-        return [i.text.strip() for i in items if i.text is not None]
-
-    def _read_arguments_from_xml(self, host_elem):
-        arg_elem = host_elem.find('argument-list')
-        if arg_elem is None:
-            return {}
-        args = {}
-        for child in arg_elem:
-            name = child.get('name').strip()
-            if child.tag == 'variable':
-                args[name] = child.text.strip()
-            elif child.tag == 'list':
-                args[name] = self._read_list_from_xml(child)
-            else:
-                raise Exception('Invalid XML tag: %s' % element.tag)
-        return args
-
-    def _read_hosts_from_xml(self, element):
-        for host_elem in element.iterfind('host'):
-            name    = host_elem.get('name', '').strip()
-            address = host_elem.get('address', name).strip()
-            args    = self._read_arguments_from_xml(host_elem)
-            host    = Exscript.Host(address)
-            if not address:
-                raise TypeError('host element without name or address')
-            if name:
-                host.set_name(name)
-            host.set_all(args)
-            self.add_host(host)
-
-    def _list_to_xml(self, root, name, thelist):
-        list_elem = etree.SubElement(root, 'list', name = name)
-        for value in thelist:
-            item = etree.SubElement(list_elem, 'list-item')
-            item.text = value
-        return list_elem
-
-    def _arguments_to_xml(self, root, args):
-        arg_elem = etree.SubElement(root, 'argument-list')
-        for name, value in args.iteritems():
-            if isinstance(value, list):
-                self._list_to_xml(arg_elem, name, value)
-            elif isinstance(value, str):
-                variable = etree.SubElement(arg_elem, 'variable', name = name)
-                variable.text = value
-            else:
-                raise Exception('unknown variable type')
-        return arg_elem
-
     def toetree(self):
         """
         Returns the order as an lxml etree.
@@ -199,12 +146,7 @@ class Order(DBObject):
             etree.SubElement(order, 'description').text = str(self.descr)
         if self.created_by:
             order.attrib['created-by'] = str(self.created_by)
-        for host in self.hosts:
-            elem = etree.SubElement(order,
-                                    'host',
-                                    address = host.get_address(),
-                                    name    = host.get_name())
-            self._arguments_to_xml(elem, host.get_all())
+        add_hosts_to_etree(order, self.hosts)
         return order
 
     def toxml(self, pretty = True):
