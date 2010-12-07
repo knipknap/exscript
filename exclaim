@@ -259,7 +259,7 @@ if options.csv:
 else:
     order = Order.from_xml_file(filename)
     if options.service:
-        order.set_service_name(service)
+        order.set_service_name(options.service)
 
 if options.test:
     print order.toxml()
