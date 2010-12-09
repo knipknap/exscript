@@ -22,8 +22,20 @@ from Exscript import Account
 def get_accounts_from_file(filename):
     """
     Reads a list of user/password combinations from the given file
-    and creates an Account instance for each of them.
-    Returns a list of accounts.
+    and returns a list of Account instances. The file content
+    has the following format::
+
+        [account-pool]
+        user1 = cGFzc3dvcmQ=
+        user2 = cGFzc3dvcmQ=
+
+    Note that "cGFzc3dvcmQ=" is a base64 encoded password.
+    If the input file contains extra config sections other than
+    "account-pool", they are ignored.
+    Each password needs to be base64 encrypted. To encrypt a password,
+    you may use the following command::
+
+        python -c 'import base64; print base64.b64encode("thepassword")'
 
     @type  filename: string
     @param filename: The name of the file containing the list of accounts.
