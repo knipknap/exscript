@@ -143,7 +143,7 @@ class Order(DBObject):
         if self.closed:
             self.xml.attrib['closed'] = str(self.closed)
         if self.descr:
-            etree.SubElement(order, 'description').text = str(self.descr)
+            etree.SubElement(self.xml, 'description').text = str(self.descr)
         if self.created_by:
             self.xml.attrib['created-by'] = str(self.created_by)
         return self.xml
