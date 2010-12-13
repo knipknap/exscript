@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import Expression
 from Exscript.parselib import Token
+from Exception         import PermissionError
 from Variable          import Variable
 
 class FunctionCall(Token):
@@ -40,6 +41,10 @@ class FunctionCall(Token):
             if not lexer.next_if('comma') and not lexer.current_is('close_bracket'):
                 error = 'Expected separator or argument list end but got %s' % type
                 lexer.syntax_error(error, self)
+
+        if parser.secure_only and not hasattr(function, '_is_secure'):
+            msg = 'Use of insecure function %s is not permitted' % self.funcname
+            lexer.error(msg, self, PermissionError)
 
         self.mark_end()
 

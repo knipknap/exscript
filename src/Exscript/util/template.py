@@ -67,6 +67,20 @@ def test(string, **kwargs):
     """
     _compile(None, None, string, {}, **kwargs)
 
+def test_secure(string, **kwargs):
+    """
+    Like test(), but makes sure that each function that is used in
+    the template has the Exscript.stdlib.util.safe_function decorator.
+    Raises Exscript.interpreter.Exception.PermissionError if any
+    function lacks the decorator.
+
+    @type  string: string
+    @param string: The template to compile.
+    @type  kwargs: dict
+    @param kwargs: Variables to define in the template.
+    """
+    _compile(None, None, string, {'secure': True}, **kwargs)
+
 def test_file(filename, **kwargs):
     """
     Convenience wrapper around test() that reads the template from a file

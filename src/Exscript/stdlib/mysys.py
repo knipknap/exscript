@@ -15,7 +15,9 @@
 import time, os
 from Exscript                import Host, util
 from Exscript.util.decorator import bind, autologin
+from util                    import secure_function
 
+@secure_function
 def message(scope, string):
     """
     Writes the given string to stdout.
@@ -27,6 +29,7 @@ def message(scope, string):
     exscript._print('debug', string[0] + '\n')
     return True
 
+@secure_function
 def tacacs_lock(scope, user):
     """
     Acquire an exclusive lock on the account of the user with the given
@@ -40,6 +43,7 @@ def tacacs_lock(scope, user):
     accm.acquire_account(account)
     return True
 
+@secure_function
 def tacacs_unlock(scope, user):
     """
     Release the exclusive lock on the account of the user with the given
@@ -87,6 +91,7 @@ def run(scope, hostnames, filename):
     action.wait_for(task.actions)
     return True
 
+@secure_function
 def wait(scope, seconds):
     """
     Waits for the given number of seconds.

@@ -13,7 +13,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.protocols.Exception import InvalidCommandException
+from util                         import secure_function
 
+@secure_function
 def authenticate(scope, user = [None], password = [None]):
     """
     Looks for any username/password prompts on the current connection
@@ -31,6 +33,7 @@ def authenticate(scope, user = [None], password = [None]):
     conn.transport.authenticate(user[0], password[0])
     return True
 
+@secure_function
 def authorize(scope, password = [None]):
     """
     Looks for a password prompt on the current connection
@@ -46,6 +49,7 @@ def authorize(scope, password = [None]):
     conn.transport.authorize(password[0])
     return True
 
+@secure_function
 def auto_authorize(scope, password = [None]):
     """
     Executes a command on the remote host that causes an authorization
@@ -63,6 +67,7 @@ def auto_authorize(scope, password = [None]):
     scope.get('__connection__').auto_authorize(password = password[0])
     return True
 
+@secure_function
 def autoinit(scope):
     """
     Make the remote host more script-friendly by automatically executing
@@ -77,6 +82,7 @@ def autoinit(scope):
     scope.get('__connection__').autoinit()
     return True
 
+@secure_function
 def close(scope):
     """
     Closes the existing connection with the remote host. This function is
@@ -88,6 +94,7 @@ def close(scope):
     scope.define(__response__ = conn.response)
     return True
 
+@secure_function
 def exec_(scope, data):
     """
     Sends the given data to the remote host and waits until the host
@@ -110,6 +117,7 @@ def exec_(scope, data):
     scope.define(__response__ = response)
     return True
 
+@secure_function
 def execline(scope, data):
     """
     Like exec(), but appends a newline to the command in data before sending
@@ -126,6 +134,7 @@ def execline(scope, data):
     scope.define(__response__ = response)
     return True
 
+@secure_function
 def guess_os(scope):
     """
     Guesses the operating system of the connected host.
@@ -140,6 +149,7 @@ def guess_os(scope):
     conn = scope.get('__connection__')
     return [conn.guess_os()]
 
+@secure_function
 def send(scope, data):
     """
     Like exec(), but does not wait for a response of the remote host after
@@ -153,6 +163,7 @@ def send(scope, data):
         conn.send(line)
     return True
 
+@secure_function
 def sendline(scope, data):
     """
     Like execline(), but does not wait for a response of the remote host after
@@ -166,6 +177,7 @@ def sendline(scope, data):
         conn.send(line + '\r')
     return True
 
+@secure_function
 def wait_for(scope, prompt):
     """
     Waits until the response of the remote host contains the given pattern.
@@ -178,6 +190,7 @@ def wait_for(scope, prompt):
     scope.define(__response__ = conn.response)
     return True
 
+@secure_function
 def set_prompt(scope, prompt = None):
     """
     Defines the pattern that is recognized at any future time when Exscript
@@ -197,6 +210,7 @@ def set_prompt(scope, prompt = None):
     conn.set_prompt(prompt)
     return True
 
+@secure_function
 def set_error(scope, error_re = None):
     """
     Defines a pattern that, whenever detected in the response of the remote
@@ -213,6 +227,7 @@ def set_error(scope, error_re = None):
     conn.set_error_prompt(error_re)
     return True
 
+@secure_function
 def set_timeout(scope, timeout):
     """
     Defines the time after which Exscript fails if it does not receive a

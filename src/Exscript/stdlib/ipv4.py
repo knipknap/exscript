@@ -13,7 +13,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.util import ipv4
+from util import secure_function
 
+@secure_function
 def in_network(scope, prefixes, destination, default_pfxlen = [24]):
     """
     Returns True if the given destination is in the network range that is
@@ -42,6 +44,7 @@ def in_network(scope, prefixes, destination, default_pfxlen = [24]):
             return [True]
     return [False]
 
+@secure_function
 def mask(scope, ips, mask):
     """
     Applies the given IP mask (e.g. 255.255.255.0) to the given IP address
@@ -57,6 +60,7 @@ def mask(scope, ips, mask):
     mask = ipv4.ip2int(mask[0])
     return [ipv4.int2ip(ipv4.ip2int(ip) & mask) for ip in ips]
 
+@secure_function
 def mask2pfxlen(scope, masks):
     """
     Converts the given IP mask(s) (e.g. 255.255.255.0) to prefix length(s).
@@ -68,6 +72,7 @@ def mask2pfxlen(scope, masks):
     """
     return [ipv4.mask2pfxlen(mask) for mask in masks]
 
+@secure_function
 def pfxlen2mask(scope, pfxlen):
     """
     Converts the given prefix length(s) (e.g. 30) to IP mask(s).
@@ -79,6 +84,7 @@ def pfxlen2mask(scope, pfxlen):
     """
     return [ipv4.pfxlen2mask(pfx) for pfx in pfxlen]
 
+@secure_function
 def pfxmask(scope, ips, pfxlen):
     """
     Applies the given prefix length to the given ips, resulting in a
@@ -94,6 +100,7 @@ def pfxmask(scope, ips, pfxlen):
     mask = ipv4.pfxlen2mask_int(pfxlen[0])
     return [ipv4.int2ip(ipv4.ip2int(ip) & mask) for ip in ips]
 
+@secure_function
 def remote_ip(scope, local_ips):
     """
     Given an IP address, this function calculates the remaining available

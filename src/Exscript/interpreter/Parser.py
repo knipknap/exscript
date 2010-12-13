@@ -19,8 +19,9 @@ from Program           import Program
 
 class Parser(object):
     def __init__(self, **kwargs):
-        self.no_prompt     = kwargs.get('no_prompt',     0)
-        self.strip_command = kwargs.get('strip_command', 1)
+        self.no_prompt     = kwargs.get('no_prompt',     False)
+        self.strip_command = kwargs.get('strip_command', True)
+        self.secure_only   = kwargs.get('secure',        False)
         self.debug         = kwargs.get('debug',         0)
         self.variables     = {}
 
