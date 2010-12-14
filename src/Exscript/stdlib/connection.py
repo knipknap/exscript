@@ -16,10 +16,18 @@ from Exscript.protocols.Exception import InvalidCommandException
 from util                         import secure_function
 
 @secure_function
-def authenticate(scope, user = [None], password = [None]):
+def authenticate(scope):
     """
     Looks for any username/password prompts on the current connection
-    and logs in using the given user and password.
+    and logs in using the login information that was passed to Exscript.
+    """
+    scope.get('__connection__').authenticate()
+    return True
+
+@secure_function
+def authenticate_user(scope, user = [None], password = [None]):
+    """
+    Like authenticate(), but logs in using the given user and password.
     If a user and password are not given, the function uses the same
     user and password that were used at the last login attempt; it is
     an error if no such attempt was made before.
