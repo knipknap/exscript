@@ -30,6 +30,9 @@ class Telnet(Transport):
         Transport.__init__(self, **kwargs)
         self.tn = None
 
+    def _driver_replaced_notify(self, old, new):
+        self.tn.cancel_expect = True
+        Transport._driver_replaced_notify(self, old, new)
 
     def _connect_hook(self, hostname, port):
         assert self.tn is None
@@ -42,7 +45,6 @@ class Telnet(Transport):
         if self.tn is None:
             return False
         return True
-
 
     def _authenticate_hook(self, user, password, wait, userwait):
         while True:
@@ -62,8 +64,13 @@ class Telnet(Transport):
                 self._dbg(1, 'Telnet.authenticate(): Error waiting for prompt')
                 raise
 
+            # Driver replaced, retry.
+            if which == -2:
+                self._dbg(1, 'Telnet.authenticate(): driver replaced')
+                continue
+
             # No match.
-            if which < 0:
+            elif which == -1:
                 if self.response is None:
                     self.response = ''
                 msg = "Timeout while waiting for prompt. Buffer: %s" % repr(self.response)

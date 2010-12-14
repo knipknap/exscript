@@ -183,6 +183,7 @@ class Telnet:
         self.host = host
         self.port = port
         self.sock = None
+        self.cancel_expect = False
         self.rawq = ''
         self.irawq = 0
         self.cookedq = ''
@@ -574,6 +575,10 @@ class Telnet:
         self.msg("Expecting %s" % [l.pattern for l in list])
         while 1:
             self.process_rawq()
+            if self.cancel_expect:
+                self.cancel_expect = False
+                self.msg('cancelling expect()')
+                return -2, None, ''
             #print "Queue: >>>%s<<<" % repr(self.cookedq)
             search_window = self.cookedq[search_window_size * -1:]
             #print "Search window: >>>%s<<<" % repr(search_window)

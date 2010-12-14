@@ -102,6 +102,9 @@ class Transport(object):
         """
         return self
 
+    def _driver_replaced_notify(self, old, new):
+        msg = 'Transport: driver replaced: %s -> %s' % (old.name, new.name)
+        self._dbg(1, msg)
 
     def _receive_cb(self, data, **kwargs):
         data = data.replace(chr(13) + chr(0), '')
@@ -110,9 +113,13 @@ class Transport(object):
         self.stdout.flush()
         if self.log is not None:
             self.log.write(text)
+        old_driver = self.get_driver()
         self.os_guesser.data_received(data)
         os               = self.guess_os()
         self.auto_driver = driver_map[os]
+        new_driver       = self.get_driver()
+        if old_driver != new_driver:
+            self._driver_replaced_notify(old_driver, new_driver)
         self.data_received_event(data)
         return data
 
