@@ -271,7 +271,7 @@ class Telnet:
         """
         if type(buffer) == type(0):
             buffer = chr(buffer)
-        if IAC in buffer:
+        elif isinstance(buffer, str) and IAC in buffer:
             buffer = buffer.replace(IAC, IAC+IAC)
         self.msg("send %s", `buffer`)
         self.sock.send(buffer)
