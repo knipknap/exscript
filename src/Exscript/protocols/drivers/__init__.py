@@ -10,6 +10,7 @@ from junos          import JunOSDriver
 from junos_erx      import JunOSERXDriver
 from one_os         import OneOSDriver
 from shell          import ShellDriver
+from smart_edge_os  import SmartEdgeOSDriver
 from vrp            import VRPDriver
 
 def isdriver(o):
