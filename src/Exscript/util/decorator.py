@@ -88,7 +88,9 @@ def connect(function):
     """
     def decorated(conn, *args, **kwargs):
         conn.open()
-        return function(conn, *args, **kwargs)
+        result = function(conn, *args, **kwargs)
+        conn.close(force = True)
+        return result
     return decorated
 
 def autologin(function, wait = True):
