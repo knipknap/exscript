@@ -34,18 +34,19 @@ class Logfile(Log):
     def __str__(self):
         data = ''
         if os.path.isfile(self.filename):
-            data += open(self.filename, 'r').read()
+            with open(self.filename, 'r') as file:
+                data += file.read()
         if os.path.isfile(self.errorname):
-            data += open(self.errorname, 'r').read()
+            with open(self.errorname, 'r') as file:
+                data += file.read()
         return data
 
     def _write_file(self, filename, *data):
         if not self.do_log:
             return
         try:
-            file = open(filename, self.mode)
-            file.write(' '.join(data))
-            file.flush()
+            with open(filename, self.mode) as file:
+                file.write(' '.join(data))
         except Exception, e:
             print 'Error writing to %s: %s' % (filename, e)
             self.do_log = False

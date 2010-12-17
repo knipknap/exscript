@@ -35,8 +35,9 @@ class PythonService(Service):
             fp, filename, description = find_module_recursive(module)
         except ImportError:
             raise Exception('invalid module name: %s' % module)
-        filename            = os.path.join(filename, 'service.py')
-        content             = open(filename).read()
+        filename = os.path.join(filename, 'service.py')
+        with open(filename) as file:
+            content = file.read()
         code                = compile(content, filename, 'exec')
         vars                = {}
         vars['__builtin__'] = __builtin__

@@ -107,7 +107,8 @@ class HTTPHandler(HTTPRequestHandler):
             task     = self.daemon.get_task_from_id(task_id)
             filename = task.get_logfile()
             if filename and os.path.isfile(filename):
-                return open(filename).read()
+                with open(filename) as file:
+                    return file.read()
             else:
                 return ''
         elif self.path == '/trace/':
@@ -115,7 +116,8 @@ class HTTPHandler(HTTPRequestHandler):
             task     = self.daemon.get_task_from_id(task_id)
             filename = task.get_tracefile()
             if filename and os.path.isfile(filename):
-                return open(filename).read()
+                with open(filename) as file:
+                    return file.read()
             else:
                 return ''
         else:
