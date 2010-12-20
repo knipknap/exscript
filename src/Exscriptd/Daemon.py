@@ -125,12 +125,18 @@ class Daemon(object):
 
         self.set_order_status(order, 'enter-start')
         try:
-            service.enter(order)
+            result = service.enter(order)
         except Exception, e:
             self.log(order, 'Exception: %s' % e)
             order.close()
             self.set_order_status(order, 'enter-error')
             raise
+
+        if not result:
+            self.log(order, 'Error: enter() returned False')
+            order.close()
+            self.set_order_status(order, 'enter-error')
+            return
 
         # If the service did not enqueue anything, it also
         # has no opportunity to mark the order 'done'. So mark
