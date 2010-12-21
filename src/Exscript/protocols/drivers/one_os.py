@@ -18,9 +18,10 @@ A driver for Cisco IOS (not IOS XR).
 import re
 from driver import Driver
 
-_user_re     = re.compile(r'[\r\n]Username:[^ ]', re.I)
-_password_re = re.compile(r'[\r\n]Password: $')
-_prompt_re   = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')
+_user_re         = re.compile(r'[\r\n]Username:$')
+_password_re     = re.compile(r'[\r\n]Password:$')
+_first_prompt_re = re.compile(r'[\r\n][\r\n][\-\w+\.]+[>#]$')
+_prompt_re       = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')
 
 class OneOSDriver(Driver):
     def __init__(self):
@@ -30,13 +31,12 @@ class OneOSDriver(Driver):
         self.prompt_re   = _prompt_re
 
     def check_head_for_os(self, string):
-        if _user_re.search(string):
-            return 20
+        if _first_prompt_re.search(string):
+            return 50
         return 0
 
     def init_terminal(self, conn):
         conn.execute('term len 0')
-        conn.execute('term width 0')
 
     def auto_authorize(self, conn, password, wait):
         conn.send('enable\r')

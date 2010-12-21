@@ -22,11 +22,14 @@ class OsGuesserTest(StreamAnalyzerTest):
         dirname    = os.path.dirname(__file__)
         banner_dir = os.path.join(dirname, 'banners')
         for file in os.listdir(banner_dir):
+            if file.startswith('.'):
+                continue
             osname = file.split('.')[0]
             file   = os.path.join(banner_dir, file)
             banner = open(file).read().rstrip('\n')
             osg    = OsGuesser(FakeConnection())
-            osg.data_received(banner)
+            for char in banner:
+                osg.data_received(char)
             self.assertEqual(osg.get('os'), osname)
 
 def suite():
