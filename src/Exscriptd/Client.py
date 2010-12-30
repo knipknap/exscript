@@ -15,6 +15,8 @@
 """
 Places orders and requests the status from a server.
 """
+import json
+import datetime
 from lxml             import etree
 from urllib           import urlencode
 from urllib2          import HTTPDigestAuthHandler, build_opener, HTTPError
@@ -95,14 +97,19 @@ class Client(object):
 
     def get_order_status_from_id(self, order_id):
         """
-        Returns the status of the order with the given id if it
-        exists. Returns 'not-found' otherwise.
-        Also returns the progress as a floating point number between
-        0.0 and 1.0.
+        Returns a tuple containing the status of the order with the given
+        id if it exists. Raises an exception otherwise. The tuple contains
+        the following elements::
+
+            status, progress, closed
+
+        where 'status' is a human readable string, progress is a
+        floating point number between 0.0 and 1.0, and closed is the
+        time at which the order was closed.
 
         @type  order_id: str
         @param order_id: The id of the order.
-        @rtype:  (str, float)
+        @rtype:  (str, float, datetime.timestamp)
         @return: The status and progress of the order.
         """
         url      = self.address + '/order/status/?id=%s' % order_id
@@ -110,8 +117,12 @@ class Client(object):
         response = result.read()
         if result.getcode() != 200:
             raise Exception(response)
-        status, progress = response.split()
-        return str(status), float(progress)
+        data   = json.loads(response)
+        try:
+            closed = datetime.strptime(closed, "%Y-%m-%d %H:%M:%S")
+        except:
+            closed = None
+        return data['status'], data['progress'], data['closed']
 
     def count_orders(self):
         """

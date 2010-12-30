@@ -12,7 +12,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, time, cgi, logging
+import os
+import time
+import cgi
+import logging
+import json
 from traceback               import format_exc
 from HTTPDigestServer        import HTTPRequestHandler, HTTPServer
 from lxml                    import etree
@@ -65,7 +69,10 @@ class HTTPHandler(HTTPRequestHandler):
             progress = self.daemon.get_order_progress_from_id(order_id)
             if not order:
                 raise Exception('no such order id')
-            return order.status + ' %f' % progress
+            response = {'status':   order.status,
+                        'progress': progress,
+                        'closed':   str(order.get_closed_timestamp())}
+            return 'application/json', json.dumps(response)
         elif self.path == '/order/list/':
             # Fetch the orders.
             offset = int(self.args.get('offset', 0))
@@ -136,8 +143,14 @@ class HTTPHandler(HTTPRequestHandler):
             self.daemon.logger.error('Exception: %s' % e)
         else:
             self.send_response(200)
+            try:
+                mime_type, response = response
+            except:
+                self.daemon.logger.debug('Sending HTTP/text response.')
+            else:
+                self.daemon.logger.debug('Sending HTTP/json response.')
+                self.send_header('Content-type', mime_type)
             self.end_headers()
-            self.daemon.logger.debug('Sending REST response.')
             self.wfile.write(response)
         self.daemon.logger.debug('REST call complete.')
 
