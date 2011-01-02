@@ -12,9 +12,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import threading, time, gc
+import threading
+import time
+import gc
 from itertools           import chain
-from collections         import defaultdict
+from collections         import defaultdict, deque
 from Exscript.util.event import Event
 from Job                 import Job
 
@@ -26,7 +28,7 @@ class MainLoop(threading.Thread):
         self.job_aborted_event   = Event()
         self.job_completed_event = Event()
         self.queue_empty_event   = Event()
-        self.queue               = []
+        self.queue               = deque()
         self.force_start         = []
         self.running_jobs        = []
         self.sleeping_actions    = []
@@ -86,7 +88,7 @@ class MainLoop(threading.Thread):
             if force_start:
                 self.force_start.append(action)
             else:
-                self.queue.insert(0, action)
+                self.queue.appendleft(action)
             self.condition.notify_all()
 
     def priority_enqueue_or_raise(self, action, force_start = False):
@@ -116,7 +118,7 @@ class MainLoop(threading.Thread):
             if force_start:
                 self.force_start.append(action)
             else:
-                self.queue.insert(0, action)
+                self.queue.appendleft(action)
 
             self.condition.notify_all()
         return existing is None
@@ -254,7 +256,7 @@ class MainLoop(threading.Thread):
                 continue
 
             # Take the next action and start it in a new thread.
-            action = self.queue.pop(0)
+            action = self.queue.popleft()
             self._start_action(action)
             self.condition.release()
 
