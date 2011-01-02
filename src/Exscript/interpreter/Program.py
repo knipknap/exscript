@@ -34,7 +34,7 @@ class Program(Scope):
 
     def execute(self, *args, **kwargs):
         self.variables = copy.copy(self.init_variables)
-        if kwargs.has_key('variables'):
+        if 'variables' in kwargs:
             self.variables.update(kwargs.get('variables'))
         self.value()
         return self.variables

@@ -90,8 +90,8 @@ class Logger(QueueListener):
         return self.logs[action][-1]
 
     def _remove_logs(self, action):
-        if self.logs.has_key(action):
-            del self.logs[action]
+        if action in self.logs:
+            self.logs.pop(action)
         if action in self.actions:
             self.actions.remove(action)
         if action in self.done:

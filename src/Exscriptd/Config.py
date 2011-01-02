@@ -70,7 +70,7 @@ class Config(ConfigReader):
         return accounts
 
     def init_account_manager_from_name(self, name):
-        if self.account_managers.has_key(name):
+        if name in self.account_managers:
             return self.account_managers[name]
         accounts = self.init_account_pool_from_name(name)
         manager  = AccountManager(accounts)
@@ -81,7 +81,7 @@ class Config(ConfigReader):
         return self.cfgtree.find('queue[@name="%s"]' % name) is not None
 
     def init_queue_from_name(self, name, logdir):
-        if self.queues.has_key(name):
+        if name in self.queues:
             return self.queues[name]
 
         # Create the queue first.
@@ -380,7 +380,7 @@ class Config(ConfigReader):
         return daemon
 
     def init_daemon_from_name(self, name):
-        if self.daemons.has_key(name):
+        if name in self.daemons:
             return self.daemons[name]
 
         # Create the daemon.

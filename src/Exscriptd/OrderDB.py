@@ -356,7 +356,7 @@ class OrderDB(object):
         # Search conditions.
         where = None
         for field in ('id', 'service', 'status'):
-            if kwargs.has_key(field):
+            if field in kwargs:
                 cond = None
                 for value in to_list(kwargs.get(field)):
                     cond = sa.or_(cond, tbl_o.c[field] == value)
@@ -497,7 +497,7 @@ class OrderDB(object):
         # Search conditions.
         where = None
         for field in ('id', 'order_id', 'name', 'status'):
-            if kwargs.has_key(field):
+            if field in kwargs:
                 cond = None
                 for value in to_list(kwargs.get(field)):
                     cond = sa.or_(cond, tbl_t.c[field] == value)

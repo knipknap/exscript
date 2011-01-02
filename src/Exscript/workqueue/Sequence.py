@@ -29,10 +29,8 @@ class Sequence(Action):
         """
         Action.__init__(self, **kwargs)
         self.actions = []
-        if kwargs.has_key('actions'):
-            assert type(kwargs['actions']) == type([])
-            for action in kwargs['actions']:
-                self.add(action)
+        for action in kwargs.get('actions', []):
+            self.add(action)
 
 
     def add(self, action):

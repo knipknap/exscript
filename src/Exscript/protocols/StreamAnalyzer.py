@@ -35,7 +35,7 @@ class StreamAnalyzer(object):
         """
         if value is None:
             return
-        if self.info.has_key(key):
+        if key in self.info:
             old_confidence, old_value = self.info.get(key)
             if old_confidence >= confidence:
                 return
@@ -70,7 +70,7 @@ class StreamAnalyzer(object):
         Returns the info with the given key, if it has at least the given
         confidence. Returns None otherwise.
         """
-        if not self.info.has_key(key):
+        if key not in self.info:
             return None
         conf, value = self.info.get(key)
         if conf >= confidence:

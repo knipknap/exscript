@@ -50,7 +50,7 @@ class Extract(Token):
             lexer.expect(self, 'whitespace')
             type, token = lexer.token()
             lexer.expect(self, 'varname')
-            if self.variables.has_key(token):
+            if token in self.variables:
                 lexer.syntax_error('Duplicate variable name %s', self)
             self.varnames.append(token)
             self.variables[token] = []

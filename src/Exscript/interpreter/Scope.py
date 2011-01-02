@@ -47,7 +47,7 @@ class Scope(Token):
 
 
     def is_defined(self, name):
-        if self.variables.has_key(name):
+        if name in self.variables:
             return 1
         if self.parent is not None:
             return self.parent.is_defined(name)
@@ -79,7 +79,7 @@ class Scope(Token):
 
 
     def get(self, name, default = None):
-        if self.variables.has_key(name):
+        if name in self.variables:
             return self.variables[name]
         if self.parent is None:
             return default

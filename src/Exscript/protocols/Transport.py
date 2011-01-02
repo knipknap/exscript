@@ -160,7 +160,7 @@ class Transport(object):
         if driver is None:
             self.manual_driver = None
         elif isinstance(driver, str):
-            if not driver_map.has_key(driver):
+            if driver not in driver_map:
                 raise TypeError('no such driver:' + repr(driver))
             self.manual_driver = driver_map[driver]
         elif isdriver(driver):

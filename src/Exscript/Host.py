@@ -315,7 +315,7 @@ class Host(object):
         @type  value: object
         @param value: The appended value.
         """
-        if self.vars.has_key(name):
+        if name in self.vars:
             self.vars[name].append(value)
         else:
             self.vars[name] = [value]
@@ -331,7 +331,7 @@ class Host(object):
         @type  value: object
         @param value: The value of the variable.
         """
-        if not self.vars.has_key(name):
+        if name not in self.vars:
             self.vars[name] = value
 
 
@@ -345,7 +345,7 @@ class Host(object):
         @rtype:  bool
         @return: Whether the variable is defined.
         """
-        return self.vars.has_key(name)
+        return name in self.vars
 
 
     def get(self, name, default = None):
