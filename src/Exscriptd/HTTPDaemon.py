@@ -69,9 +69,12 @@ class HTTPHandler(HTTPRequestHandler):
             progress = self.daemon.get_order_progress_from_id(order_id)
             if not order:
                 raise Exception('no such order id')
+            closed = order.get_closed_timestamp()
+            if closed is not None:
+                closed = str(closed)
             response = {'status':   order.status,
                         'progress': progress,
-                        'closed':   str(order.get_closed_timestamp())}
+                        'closed':   closed}
             return 'application/json', json.dumps(response)
         elif self.path == '/order/list/':
             # Fetch the orders.

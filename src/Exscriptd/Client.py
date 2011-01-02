@@ -16,7 +16,7 @@
 Places orders and requests the status from a server.
 """
 import json
-import datetime
+from datetime         import datetime
 from lxml             import etree
 from urllib           import urlencode
 from urllib2          import HTTPDigestAuthHandler, build_opener, HTTPError
@@ -118,11 +118,11 @@ class Client(object):
         if result.getcode() != 200:
             raise Exception(response)
         data   = json.loads(response)
-        try:
+        closed = data['closed']
+        if closed is not None:
+            closed = closed.split('.', 1)[0]
             closed = datetime.strptime(closed, "%Y-%m-%d %H:%M:%S")
-        except:
-            closed = None
-        return data['status'], data['progress'], data['closed']
+        return data['status'], data['progress'], closed
 
     def count_orders(self):
         """
