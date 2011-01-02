@@ -15,7 +15,6 @@
 """
 The default driver that is used when the OS is not recognized.
 """
-import re, string
 from driver import Driver
 
 class GenericDriver(Driver):

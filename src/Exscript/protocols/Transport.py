@@ -15,7 +15,9 @@
 """
 An abstract base class for all protocols.
 """
-import string, re, sys, os
+import re
+import sys
+import os
 from drivers             import driver_map, isdriver
 from OsGuesser           import OsGuesser
 from Exception           import TransportException, InvalidCommandException
