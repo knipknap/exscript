@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
+from collections        import deque
 from Exscript.util.cast import to_list
 from Account            import Account
 
@@ -29,7 +30,7 @@ class AccountManager(object):
         @param accounts: Passed to add_account()
         """
         self.accounts          = set()
-        self.unlocked_accounts = []
+        self.unlocked_accounts = deque()
         self.unlock_cond       = threading.Condition()
         if accounts:
             self.add_account(accounts)
@@ -137,7 +138,7 @@ class AccountManager(object):
         with self.unlock_cond:
             while len(self.unlocked_accounts) == 0:
                 self.unlock_cond.wait()
-            account = self.unlocked_accounts.pop(0)
+            account = self.unlocked_accounts.popleft()
             account._acquire()
         return account
 
