@@ -273,6 +273,6 @@ if options.wait:
         status, progress, closed = client.get_order_status_from_id(order.id)
         say('Status:', status)
         if closed is not None:
-            print 'Order closed in status', status, 'on', closed + '.'
+            print 'Order closed in status', status, 'on', str(closed) + '.'
             break
         time.sleep(1)
