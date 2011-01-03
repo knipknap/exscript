@@ -20,6 +20,7 @@ from driver import Driver
 
 _user_re     = re.compile(r'user ?name: ?$', re.I)
 _password_re = re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')
+_tacacs_re   = re.compile(r'[\r\n]s\/key[\S ]+\r?%s' % _password_re.pattern)
 _prompt_re   = re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')
 
 class IOSDriver(Driver):
@@ -30,6 +31,8 @@ class IOSDriver(Driver):
         self.prompt_re   = _prompt_re
 
     def check_head_for_os(self, string):
+        if _tacacs_re.search(string):
+            return 50
         if _user_re.search(string):
             return 40
         if 'User Access Verification' in string:
