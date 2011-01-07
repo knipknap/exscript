@@ -16,6 +16,7 @@ import os, logging
 from collections             import defaultdict
 from threading               import Lock
 from Exscriptd               import Task
+from ConfigReader            import ConfigReader
 from Exscript.util.decorator import bind
 
 class Service(object):
@@ -65,6 +66,10 @@ class Service(object):
 
     def config_file(self, name):
         return os.path.join(self.cfg_dir, name)
+
+    def config(self, name, parser = ConfigReader):
+        path = self.config_file(name)
+        return parser(path, parent = self.main_cfg)
 
     def _track_task(self, order, task):
         if not task:
