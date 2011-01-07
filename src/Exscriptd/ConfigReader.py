@@ -19,11 +19,12 @@ from lxml import etree
 from util import resolve_variables
 
 class ConfigReader(object):
-    def __init__(self, filename, resolve_variables = True):
+    def __init__(self, filename, resolve_variables = True, parent = None):
         clsfile        = inspect.getfile(self.__class__)
         self.resolve   = resolve_variables
         self.cfgtree   = etree.parse(filename)
         self.filename  = filename
+        self.parent    = parent
         self.variables = os.environ.copy()
         self.variables['INSTALL_DIR'] = os.path.dirname(clsfile)
         self._clean_tree()
@@ -70,6 +71,14 @@ class ConfigReader(object):
         fp = open(filename, 'w')
         fp.write(etree.tostring(tree, pretty_print = True))
         fp.close()
+
+    def _findelem(self, selector):
+        elem = self.cfgtree.find(selector)
+        if elem is not None:
+            return elem
+        if self.parent is None:
+            return None
+        return self.parent._findelem(selector)
 
     def save(self):
         self._write_xml(self.cfgtree, self.filename)
