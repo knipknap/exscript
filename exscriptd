@@ -46,7 +46,7 @@ if not options.config_dir:
     parser.error('Required option --config-dir not set')
 
 config  = Config(options.config_dir)
-daemons = config.init_daemons()
+daemons = config.get_daemons()
 
 if not daemons:
     dir = os.path.join(options.config_dir, 'services')
