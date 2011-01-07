@@ -83,11 +83,7 @@ class Config(ConfigReader):
     def _init_database_from_dbn(self, dbn):
         from sqlalchemy import create_engine
         #print 'Creating database connection for', dbn
-        engine  = create_engine(dbn)
-        db      = OrderDB(engine)
-        #print 'Initializing database tables...'
-        db.install()
-        return db
+        return create_engine(dbn)
 
     def _init_http_daemon(self, element):
         # Init the database for the daemon first, then
@@ -98,9 +94,12 @@ class Config(ConfigReader):
         db_elem = element.find('database')
         logdir  = element.find('logdir').text
         if db_elem is None:
-            db = self.database_from_dbn(':memory:')
+            engine = self._init_database_from_dbn(':memory:')
         else:
-            db = self.get_database_from_name(db_elem.text)
+            engine = self.get_database_from_name(db_elem.text)
+        db = OrderDB(engine)
+        #print 'Initializing database tables...'
+        db.install()
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
         daemon  = HTTPDaemon(name,
