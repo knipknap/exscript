@@ -23,7 +23,9 @@ class Service(object):
                  daemon,
                  name,
                  cfg_dir,
+                 main_cfg,
                  queue = None):
+        self.main_cfg  = main_cfg
         self.cfg_dir   = cfg_dir
         self.daemon    = daemon
         self.name      = name

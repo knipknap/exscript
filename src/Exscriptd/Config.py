@@ -168,6 +168,7 @@ class Config(ConfigReader):
                                         name,
                                         module,
                                         service_dir,
+                                        self,
                                         queue = queue)
             daemon.add_service(name, service)
             print 'done.'
