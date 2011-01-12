@@ -44,6 +44,11 @@ class HostTest(unittest.TestCase):
         self.assertEqual(self.host.get_name(),     'localhost')
         self.assertEqual(self.host.get_address(),  'test.org')
 
+        self.host.set_address('001.002.003.004')
+        self.assertEqual(self.host.get_protocol(), 'dummy')
+        self.assertEqual(self.host.get_name(),     'localhost')
+        self.assertEqual(self.host.get_address(),  '1.2.3.4')
+
     def testGetAddress(self):
         self.assertEqual(self.host.get_address(), 'localhost')
         # Additional tests are in testSetAddress().

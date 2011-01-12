@@ -46,6 +46,19 @@ def is_ip(string):
     """
     return re.match(r'\d+\.\d+\.\d+\.\d+', string) and True or False
 
+def clean_ip(ip):
+    """
+    Cleans the ip address up, useful for removing leading zeros, e.g.::
+
+        192.168.010.001 -> 192.168.10.1
+
+    @type  ip: string
+    @param ip: An IP address.
+    @rtype:  string
+    @return: The cleaned up IP.
+    """
+    return '.'.join(str(int(i)) for i in ip.split('.'))
+
 def ip2int(ip):
     """
     Converts the given IP address to a 4 byte integer value.

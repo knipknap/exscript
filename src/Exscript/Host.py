@@ -16,7 +16,7 @@
 Representing a device to connect with.
 """
 from util.cast import to_list
-from util.ipv4 import is_ip
+from util.ipv4 import is_ip, clean_ip
 from util.url  import parse_url, Url
 
 def _is_ip(string):
@@ -129,7 +129,10 @@ class Host(object):
         @type  address: string
         @param address: A hostname or IP name.
         """
-        self.address = address
+        if is_ip(address):
+            self.address = clean_ip(address)
+        else:
+            self.address = address
 
 
     def get_address(self):
