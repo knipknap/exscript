@@ -378,15 +378,9 @@ class OrderDB(object):
         """
         if orders is None:
             raise AttributeError('order argument must not be None')
-        transaction = self.engine.contextual_connect().begin()
-
-        try:
+        with self.engine.contextual_connect().begin():
             for order in to_list(orders):
                 self.__add_order(order)
-            transaction.commit()
-        except:
-            transaction.rollback()
-            raise
 
     def close_open_orders(self):
         """
@@ -411,15 +405,10 @@ class OrderDB(object):
         """
         if orders is None:
             raise AttributeError('order argument must not be None')
-        transaction = self.engine.contextual_connect().begin()
 
-        try:
+        with self.engine.contextual_connect().begin():
             for order in to_list(orders):
                 self.__save_order(order)
-            transaction.commit()
-        except:
-            transaction.rollback()
-            raise
 
     def get_order_progress_from_id(self, id):
         """

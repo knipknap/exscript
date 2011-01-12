@@ -60,8 +60,8 @@ class Telnet(Transport):
             try:
                 result = self.tn.expect(prompt, self.timeout)
                 which, matches, self.response = result
-            except:
-                self._dbg(1, 'Telnet.authenticate(): Error waiting for prompt')
+            except EOFError:
+                self._dbg(1, 'Telnet.authenticate(): EOF while waiting for prompt')
                 raise
 
             # Driver replaced, retry.
@@ -138,7 +138,7 @@ class Telnet(Transport):
         self._dbg(4, 'Sending %s' % repr(data))
         try:
             self.tn.write(data)
-        except:
+        except Exception:
             self._dbg(1, 'Error while writing to connection')
             raise
 
@@ -155,7 +155,7 @@ class Telnet(Transport):
         try:
             result, match, response = self.tn.expect([prompt], self.timeout)
             self.response           = response
-        except:
+        except Exception:
             self._dbg(1, 'Error while waiting for %s' % repr(prompt.pattern))
             raise
 
@@ -175,7 +175,7 @@ class Telnet(Transport):
         if not force:
             try:
                 self.tn.read_all()
-            except:
+            except Exception:
                 pass
         self.tn.close()
         self.tn = None

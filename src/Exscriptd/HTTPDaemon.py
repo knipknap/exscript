@@ -139,16 +139,17 @@ class HTTPHandler(HTTPRequestHandler):
         try:
             response = self.get_response()
         except Exception, e:
-            print format_exc()
+            tb = format_exc()
+            print tb
             self.send_response(500)
             self.end_headers()
-            self.wfile.write(format_exc().encode('utf8'))
-            self.daemon.logger.error('Exception: %s' % e)
+            self.wfile.write(tb.encode('utf8'))
+            self.daemon.logger.error('Exception: %s' % tb)
         else:
             self.send_response(200)
             try:
                 mime_type, response = response
-            except:
+            except ValueError:
                 self.daemon.logger.debug('Sending HTTP/text response.')
             else:
                 self.daemon.logger.debug('Sending HTTP/json response.')

@@ -100,7 +100,7 @@ class Extract(Token):
                 i += 1
                 try:
                     value = match.group(i)
-                except:
+                except IndexError:
                     # This happens if the user provided a regex with less 
                     # groups in it than the number of variables.
                     msg  = 'Extract: %s variables, but regular expression' % i

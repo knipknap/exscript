@@ -30,7 +30,7 @@ def get_user():
     # Read username and password.
     try:
         env_user = getpass.getuser()
-    except:
+    except KeyError:
         env_user = ''
     if env_user is None or env_user == '':
         user = raw_input('Please enter your user name: ')

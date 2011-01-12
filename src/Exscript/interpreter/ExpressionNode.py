@@ -108,11 +108,11 @@ class ExpressionNode(Token):
             error = 'Operand for %s is not a number' % (self.op)
             try:
                 lft = int(lft)
-            except:
+            except ValueError:
                 self.lexer.runtime_error(error, self.lft)
             try:
                 rgt = int(rgt)
-            except:
+            except ValueError:
                 self.lexer.runtime_error(error, self.rgt)
 
         # Two-term expressions.
@@ -124,7 +124,7 @@ class ExpressionNode(Token):
             # operand. The exception throws if "regex" does not have a match() method.
             try:
                 regex.match(str(lft))
-            except Exception, e:
+            except AttributeError:
                 error = 'Right hand operator is not a regular expression'
                 self.lexer.runtime_error(error, self.rgt)
             for line in lft_lst:

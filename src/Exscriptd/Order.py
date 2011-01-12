@@ -170,16 +170,14 @@ class Order(DBObject):
         @type  filename: str
         @param filename: XML
         """
-        dirname  = os.path.dirname(filename)
-        file     = NamedTemporaryFile(dir = dirname, prefix = '.') #delete = False)
-        file.write(self.toxml())
-        file.flush()
-        os.chmod(file.name, 0644)
-        os.rename(file.name, filename)
-        try:
-            file.close()
-        except:
-            pass
+        dirname = os.path.dirname(filename)
+        with NamedTemporaryFile(dir    = dirname,
+                                prefix = '.',
+                                delete = False) as file:
+            file.write(self.toxml())
+            file.flush()
+            os.chmod(file.name, 0644)
+            os.rename(file.name, filename)
 
     def is_valid(self):
         """

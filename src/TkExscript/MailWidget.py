@@ -19,7 +19,7 @@ from Tkinter            import *
 from Exscript.util.mail import Mail, send
 try:
     import tkMessageBox
-except:
+except ImportError:
     from compat import tkMessageBox
 
 class _ButtonBar(Frame):

@@ -1,6 +1,5 @@
 Exscript
 --------
-* Eliminate "catch all" statements like "except:" and "except Exception".
 * Add tests for Transport class debug levels.
 * Add API docs for Exscript.parselib.
 * Add a test for Exscript.Task.

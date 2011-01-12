@@ -1,6 +1,7 @@
 import sys, unittest, re, os.path, tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
+from getpass import getuser
 import Exscript.util.mail
 from Exscript.util.mail import Mail
 
@@ -37,7 +38,7 @@ class MailTest(unittest.TestCase):
         mail = Mail()
         self.failIfEqual(mail.get_sender(), None)
         self.failIfEqual(mail.get_sender(), '')
-        user = os.environ.get('USER')
+        user = getuser()
         self.assert_(mail.get_sender().startswith(user + '@'))
 
     def testSetFromTemplateString(self):
