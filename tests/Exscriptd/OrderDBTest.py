@@ -81,6 +81,35 @@ class OrderDBTest(unittest.TestCase):
         order2 = self.db.get_order(id = order1.get_id())
         self.assertEqual(order1.get_id(), order2.get_id())
 
+    def testGetOrderProgressFromId(self):
+        self.testInstall()
+
+        order = Order('fooservice')
+        self.db.save_order(order)
+        id = order.get_id()
+        self.assertEqual(self.db.get_order_progress_from_id(id), 1.0)
+
+        task1 = Task('my test task')
+        self.db.save_task(order, task1)
+        self.assertEqual(self.db.get_order_progress_from_id(id), .0)
+
+        task2 = Task('another test task')
+        self.db.save_task(order, task2)
+        self.assertEqual(self.db.get_order_progress_from_id(id), .0)
+
+        task1.set_progress(.5)
+        self.db.save_task(order, task1)
+        self.assertEqual(self.db.get_order_progress_from_id(id), .25)
+        task2.set_progress(.5)
+        self.db.save_task(order, task2)
+        self.assertEqual(self.db.get_order_progress_from_id(id), .5)
+        task1.set_progress(1.0)
+        self.db.save_task(order, task1)
+        self.assertEqual(self.db.get_order_progress_from_id(id), .75)
+        task2.set_progress(1.0)
+        self.db.save_task(order, task2)
+        self.assertEqual(self.db.get_order_progress_from_id(id), 1.0)
+
     def testGetOrder(self):
         self.testAddOrder()
 
