@@ -15,12 +15,12 @@
 """
 Sending and formatting emails.
 """
-import os
 import time
 import re
 import socket
 import smtplib
 import mimetypes
+from getpass              import getuser
 from email                import encoders
 from email.mime.multipart import MIMEMultipart
 from email.mime.audio     import MIMEAudio
@@ -71,7 +71,7 @@ class _TemplateParser(object):
 
 def _render_template(string, **vars):
     default = {'date': time.strftime('%Y-%m-%d'),
-               'user': os.environ.get('USER')}
+               'user': getuser()}
     default.update(vars)
     parser = _TemplateParser()
     return parser.parse(string, **default)
@@ -94,7 +94,7 @@ class Mail(object):
         """
         Creates a new email with the given values.
         If the given sender is None, one will be automatically chosen
-        from the USER environment variable.
+        using getpass.getuser().
 
         @type  sender: string
         @param sender: The email address of the sender.
@@ -113,7 +113,7 @@ class Mail(object):
         self.files         = []
         if not sender:
             domain = socket.getfqdn('localhost')
-            sender = os.environ.get('USER') + '@' + domain
+            sender = getuser() + '@' + domain
         self.set_sender(sender)
         self.set_to(to)
         self.set_cc(cc)

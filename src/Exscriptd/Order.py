@@ -16,6 +16,7 @@
 Represents a call to a service.
 """
 import os
+from getpass            import getuser
 from datetime           import datetime
 from Exscript.util.file import get_hosts_from_csv
 from tempfile           import NamedTemporaryFile
@@ -44,7 +45,7 @@ class Order(DBObject):
         self.descr      = ''
         self.created    = datetime.utcnow()
         self.closed     = None
-        self.created_by = os.environ.get('USER')
+        self.created_by = getuser()
         self.xml        = etree.Element('order', service = self.service)
 
     def __repr__(self):
@@ -265,7 +266,7 @@ class Order(DBObject):
     def get_created_by(self):
         """
         Returns the username of the user who opened the order. Defaults
-        to the USER environment variable.
+        to whatever getpass.getuser() returns.
 
         @rtype:  str
         @return: The value of the 'created-by' field.
