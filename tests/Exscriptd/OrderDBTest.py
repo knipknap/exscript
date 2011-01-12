@@ -1,6 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
+from getpass           import getuser
 from sqlalchemy        import create_engine
 from Exscriptd.Order   import Order
 from Exscriptd.Task    import Task
@@ -52,7 +53,7 @@ class OrderDBTest(unittest.TestCase):
         self.testInstall()
 
         order1 = Order('fooservice')
-        self.assertEqual(order1.get_created_by(), os.environ.get('USER'))
+        self.assertEqual(order1.get_created_by(), getuser())
         self.assertEqual(order1.get_description(), '')
         order1.created_by = 'this test'
         order1.set_description('my description')
