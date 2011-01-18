@@ -15,11 +15,20 @@
 """
 SSH version 2 support, based on paramiko.
 """
-import time, select
-from Exscript.external          import paramiko
-from Exscript.external.paramiko import util
-from Exception                  import TransportException, LoginFailure
-from Transport                  import Transport
+import os
+import time
+import select
+import socket
+import paramiko
+from functools              import partial
+from binascii               import hexlify
+from paramiko               import util
+from paramiko.resource      import ResourceManager
+from paramiko.ssh_exception import SSHException, \
+                                   AuthenticationException, \
+                                   BadHostKeyException
+from Exception              import TransportException, LoginFailure
+from Transport              import Transport
 
 # Workaround for paramiko error; avoids a warning message.
 util.log_to_file('/dev/null')
@@ -38,77 +47,222 @@ class SSH2(Transport):
         self.auto_verify = kwargs.get('auto_verify', False)
         self.port        = None
 
+        # Paramiko client stuff.
+        self._system_host_keys   = paramiko.HostKeys()
+        self._host_keys          = paramiko.HostKeys()
+        self._host_keys_filename = None
+
+        if self.auto_verify:
+            self._missing_host_key = self._add_host_key
+        else:
+            self._missing_host_key = self._reject_host_key
+
+    def _reject_host_key(self, key):
+        name = key.get_name()
+        fp   = hexlify(key.get_fingerprint())
+        msg  = 'Rejecting %s host key for %s: %s' % (name, self.host, fp)
+        self._dbg(1, msg)
+
+    def _add_host_key(self, key):
+        name = key.get_name()
+        fp   = hexlify(key.get_fingerprint())
+        msg  = 'Adding %s host key for %s: %s' % (name, self.host, fp)
+        self._dbg(1, msg)
+        #FIXME
+
+    def _load_system_host_keys(self, filename = None):
+        """
+        Load host keys from a system (read-only) file.  Host keys read with
+        this method will not be saved back by L{save_host_keys}.
+
+        This method can be called multiple times.  Each new set of host keys
+        will be merged with the existing set (new replacing old if there are
+        conflicts).
+
+        If C{filename} is left as C{None}, an attempt will be made to read
+        keys from the user's local "known hosts" file, as used by OpenSSH,
+        and no exception will be raised if the file can't be read.  This is
+        probably only useful on posix.
+
+        @param filename: the filename to read, or C{None}
+        @type filename: str
+
+        @raise IOError: if a filename was provided and the file could not be
+            read
+        """
+        if filename is None:
+            # try the user's .ssh key file, and mask exceptions
+            filename = os.path.expanduser('~/.ssh/known_hosts')
+            try:
+                self._system_host_keys.load(filename)
+            except IOError:
+                pass
+            return
+        self._system_host_keys.load(filename)
+
+    def _paramiko_connect(self):
+        # Find supported address families.
+        addrinfo = socket.getaddrinfo(self.host, self.port)
+        for family, socktype, proto, canonname, sockaddr in addrinfo:
+            af = family
+            addr = sockaddr
+            if socktype == socket.SOCK_STREAM:
+                break
+
+        # Open a socket.
+        sock = socket.socket(af, socket.SOCK_STREAM)
+        try:
+            sock.settimeout(self.timeout or None)
+        except:
+            pass
+        sock.connect(addr)
+
+        # Init the paramiko transport.
+        t = paramiko.Transport(sock)
+        t.start_client()
+        ResourceManager.register(self, t)
+
+        # Check system host keys.
+        server_key = t.get_remote_server_key()
+        keytype = server_key.get_name()
+        our_server_key = self._system_host_keys.get(self.host, {}).get(keytype, None)
+        if our_server_key is None:
+            our_server_key = self._host_keys.get(self.host, {}).get(keytype, None)
+        if our_server_key is None:
+            self._missing_host_key(server_key)
+            # if the callback returns, assume the key is ok
+            our_server_key = server_key
+        if server_key != our_server_key:
+            raise BadHostKeyException(self.host, server_key, our_server_key)
+
+        return t
+
+    def _paramiko_auth_none(self, username, password = None):
+        self.client.auth_none(username)
+
+    def _paramiko_auth_password(self, username, password):
+        self.client.auth_password(username, password)
+
+    def _paramiko_auth_agent(self, username, password = None):
+        keys = paramiko.Agent().get_keys()
+        if not keys:
+            raise AuthenticationException('auth agent found no keys')
+
+        for key in keys:
+            try:
+                fp = hexlify(key.get_fingerprint())
+                self._dbg(1, 'Trying SSH agent key %s' % fp)
+                self.client.auth_publickey(username, key)
+                return
+            except SSHException, e:
+                saved_exception = e
+        raise saved_exception
+
+    def _paramiko_auth_key(self, username, keys):
+        password = ''
+        for pkey_class, filename in keys:
+            try:
+                key = pkey_class.from_private_key_file(filename, password)
+                fp  = hexlify(key.get_fingerprint())
+                self._dbg(1, 'Trying key %s in %s' % (fp, filename))
+                self.client.auth_publickey(username, key)
+                return
+            except SSHException, e:
+                saved_exception = e
+            except IOError, e:
+                saved_exception = e
+        raise saved_exception
+
+    def _paramiko_auth_autokey(self, username, password):
+        # Unix.
+        rsa_key  = os.path.expanduser('~/.ssh/id_rsa')
+        dsa_key  = os.path.expanduser('~/.ssh/id_dsa')
+        keyfiles = []
+        if os.path.isfile(rsa_key):
+            keyfiles.append((paramiko.RSAKey, rsa_key))
+        if os.path.isfile(dsa_key):
+            keyfiles.append((paramiko.DSSKey, dsa_key))
+
+        # Windows.
+        rsa_key = os.path.expanduser('~/ssh/id_rsa')
+        dsa_key = os.path.expanduser('~/ssh/id_dsa')
+        if os.path.isfile(rsa_key):
+            keyfiles.append((RSAKey, rsa_key))
+        if os.path.isfile(dsa_key):
+            keyfiles.append((DSSKey, dsa_key))
+
+        self._paramiko_auth_key(username, keyfiles)
+
+    def _paramiko_auth(self, username, password):
+        for method in (self._paramiko_auth_password,
+                       self._paramiko_auth_agent,
+                       self._paramiko_auth_autokey,
+                       self._paramiko_auth_none):
+            self._dbg(1, 'Authenticating with %s' % method.__name__)
+            try:
+                method(username, password)
+                return
+            except BadHostKeyException, e:
+                self._dbg(1, 'Bad host key!')
+                last_exception = e
+            except AuthenticationException, e:
+                self._dbg(1, 'Authentication with %s failed' % method.__name__)
+                last_exception = e
+            except SSHException, e:
+                self._dbg(1, 'Missing host key.')
+                last_exception = e
+        raise LoginFailure('Login failed: ' + str(last_exception))
+
+    def _paramiko_shell(self):
+        try:
+            self.shell = self.client.open_session()
+            self.shell.get_pty('vt100', 80, 24)
+            self.shell.invoke_shell()
+        except SSHException, e:
+            self._dbg(1, 'Failed to open shell.')
+            raise LoginFailure('Failed to open shell: ' + str(e))
 
     def _connect_hook(self, hostname, port):
         self.host   = hostname
         self.port   = port or 22
-        self.client = paramiko.SSHClient()
-        self.client.load_system_host_keys()
-        if self.auto_verify:
-            policy = paramiko.AutoAddPolicy()
-            self.client.set_missing_host_key_policy(policy)
+        self.client = self._paramiko_connect()
+        self._load_system_host_keys()
         return True
-
 
     def _authenticate_hook(self, user, password, wait, userwait):
         if self.is_authenticated():
             return
-        try:
-            self.client.connect(self.host,
-                                self.port,
-                                user,
-                                password,
-                                timeout = self.timeout)
-        except paramiko.BadHostKeyException, e:
-            self._dbg(1, 'Bad host key!')
-            raise LoginFailure('Bad host key: ' + str(e))
-        except paramiko.SSHException, e:
-            self._dbg(1, 'Missing host key.')
-            raise LoginFailure('Missing host key: ' + str(e))
-        except paramiko.AuthenticationException, e:
-            self._dbg(1, 'Login failed.')
-            raise LoginFailure('Login failed: ' + str(e))
 
-        try:
-            self.shell = self.client.invoke_shell()
-        except paramiko.SSHException, e:
-            self._dbg(1, 'Failed to open shell.')
-            raise LoginFailure('Failed to open shell: ' + str(e))
+        self._paramiko_auth(user, password)
+        self._paramiko_shell()
+
         if wait:
             self.expect_prompt()
-
 
     def _authenticate_by_keyfile_hook(self, user, key_file, wait):
         if self.is_authenticated():
             return
-        try:
-            self.client.connect(self.host,
-                                self.port,
-                                user,
-                                key_filename = key_file,
-                                timeout      = self.timeout)
-        except paramiko.BadHostKeyException, e:
-            self._dbg(1, 'Bad host key!')
-            raise LoginFailure('Bad host key: ' + str(e))
-        except paramiko.SSHException, e:
-            self._dbg(1, 'Missing host key.')
-            raise LoginFailure('Missing host key: ' + str(e))
-        except paramiko.AuthenticationException, e:
-            self._dbg(1, 'Login failed.')
-            raise LoginFailure('Login failed: ' + str(e))
 
-        try:
-            self.shell = self.client.invoke_shell()
-        except paramiko.SSHException, e:
-            self._dbg(1, 'Failed to open shell.')
-            raise LoginFailure('Failed to open shell: ' + str(e))
+        # Allow multiple key files.
+        if key_file is None:
+            key_file = []
+        elif isinstance(key_file, (str, unicode)):
+            key_file = [key_file]
+
+        # Try each key.
+        keys = []
+        for file in key_file:
+            keys.append((paramiko.RSAKey, file))
+            keys.append((paramiko.DSSKey, file))
+        self._dbg(1, 'authenticating using _paramiko_auth_key().')
+        self._paramiko_auth_key(user, keys)
+
+        self._paramiko_shell()
         if wait:
             self.expect_prompt()
 
-
     def _authorize_hook(self, password, wait):
         pass
-
 
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))
@@ -144,7 +298,8 @@ class SSH2(Transport):
         return self.expect_prompt()
 
     def _expect_hook(self, prompt):
-        self._dbg(1, "Expecting " + prompt.pattern)
+        self._dbg(1, "Expecting a prompt")
+        self._dbg(2, "Excpected pattern: " + prompt.pattern)
         search_window_size = 150
         while True:
             # Check whether what's buffered matches the prompt.
