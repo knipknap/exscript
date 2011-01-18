@@ -24,7 +24,7 @@ except ImportError:
     import sys
     import warnings
     external_dir = os.path.join(os.path.dirname(__file__), 'external')
-    sys.path.insert(0, external_dir)
+    sys.path.append(external_dir)
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', category = DeprecationWarning)
         import paramiko
