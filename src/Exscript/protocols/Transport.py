@@ -29,6 +29,152 @@ class Transport(object):
     """
     This is the base class for all protocols; it defines the common portions 
     of the API.
+
+    The goal of all transport classes is to provide an interface that
+    is unified accross protocols, such that the adapters may be used
+    interchangably without changing any other code.
+
+    In order to achieve this, the main challenge are the differences
+    arising from the authentication methods that are used.
+    The reason is that many devices may support the following variety
+    authentification/authorization methods:
+
+    1. Protocol level authentification, such as SSH's built-in
+       authentication.
+
+            - p1: password only
+            - p2: username
+            - p3: username + password
+            - p4: username + key
+            - p5: username + key + password
+
+    2. App level authentification, such that the authentification may
+       happen long after a connection is already accepted.
+       This type of authentication is normally used in combination with
+       Telnet, but some SSH hosts also do this (users have reported
+       devices from Enterasys). These devices may also combine
+       protocol-level authentification with app-level authentification.
+       The following types of app-level authentication exist:
+
+            - a1: password only
+            - a2: username
+            - a3: username + password
+
+    3. App level authorization: In order to implement the AAA protocol,
+       some devices ask for two separate app-level logins, whereas the
+       first serves to authenticate the user, and the second serves to
+       authorize him.
+       App-level authorization may support the same methods as app-level
+       authentification:
+
+            - A1: password only
+            - A2: username
+            - A3: username + password
+
+    We are assuming that the following methods are used:
+
+        - Telnet:
+
+          - p1 - p5: never
+          - a1 - a3: optional
+          - A1 - A3: optional
+
+        - SSH:
+
+          - p1 - p5: optional
+          - a1 - a3: optional
+          - A1 - A3: optional
+
+    To achieve authentication method compatibility accross different
+    protocols, we must hide all this complexity behind one single API
+    call, and figure out which ones are supported.
+
+    As a use-case, our goal is that the following code will always work,
+    regardless of which combination of authentication methods a device
+    supports::
+
+            key = Key.from_file('~/.ssh/id_rsa', 'my_key_password')
+
+            # app_password2 defaults to app_password, which defaults to
+            # password. Usernames analogous. The key defaults to None,
+            # in which case key authentication is not attempted.
+            account = Account(user          = 'myuser',
+                              password      = 'mypassword',
+                              app_user      = 'myuser',
+                              app_password  = 'my_app_password',
+                              app_user2     = 'myuser',
+                              app_password2 = 'my_app_password2')
+                              key           = key)
+
+            conn.login(account, wait = True)
+
+    Another important consideration is that once the login is complete, the
+    device must be in a clearly defined state, i.e. we need to
+    have processed the data that was retrieved from the connected host.
+
+    More precisely, the buffer that contains the incoming data must be in
+    a state such that the following call to expect_prompt() will either
+    always work, or always fail.
+
+    So what can we hide behind the login() call? Assuming we always try every
+    method::
+
+        # Protocol level authentification.
+        conn.authenticate('myuser', password, key = key)
+        # App-level authentification.
+        conn.app_authenticate('myuser', password)
+        # App-level authorization.
+        conn.app_authorize('myuser', password)
+
+    The code could produce the following result::
+
+        Telnet:
+            conn.authenticate -> NOP
+            conn.app_authenticate
+                -> waits for username or password prompt, authenticates,
+                   returns after a CLI prompt was seen.
+            conn.app_authorize
+                -> calls driver.enable(), waits for username or password prompt,
+                   authorizes, returns after a CLI prompt was seen.
+
+        SSH:
+            conn.authenticate -> authenticates using user/key/password
+            conn.app_authenticate -> like Telnet
+            conn.app_authorize -> like Telnet
+
+    We can see the following:
+
+        - authenticate() must not wait for a prompt, because else
+          app_authenticate() has no way of knowing whether an app-level
+          login is even necessary.
+
+        - app_authenticate() must check the buffer first, to see if
+          authentication has already succeeded. In the case that
+          app_authenticate() is not necessary (i.e. the buffer contains a
+          CLI prompt), it just returns.
+
+          app_authenticate() must NOT eat the prompt from the buffer, because
+          else the result may be inconsistent with devices that do not do
+          any authentication; i.e., when app_authenticate() is not called.
+
+        - Since the prompt must still be contained in the buffer,
+          conn.driver.app_authorize() needs to eat it before it sends the
+          command for starting the authorization procedure.
+
+          This has a drawback - if a user attempts to call app_authenticate()
+          at a time where there is no prompt in the buffer, it would fail.
+          But this is actually good - the user is supposed to call send() in
+          such cases, because else a CLI prompt would be expected, while the
+          device responds with a username or password prompt.
+
+          However, app_authorize() must never eat the CLI prompt that follows.
+
+        - Once all logins are processed, it makes sense to eat the prompt
+          depending on the wait parameter. Wait should default to True,
+          because it's better that the connection stalls waiting forever,
+          than to risk that an error is not immediately discovered due to
+          timing issues (this is a race condition that I'm not going to
+          detail here).
     """
 
     def __init__(self, **kwargs):
@@ -80,7 +226,6 @@ class Transport(object):
         if self.logfile is not None:
             self.log = open(kwargs['logfile'], 'a')
 
-
     def __copy__(self):
         """
         Overwritten to return the very same object instead of copying the
@@ -90,7 +235,6 @@ class Transport(object):
         @return: self
         """
         return self
-
 
     def __deepcopy__(self, memo):
         """
@@ -125,7 +269,6 @@ class Transport(object):
         self.data_received_event(data)
         return data
 
-
     def is_dummy(self):
         """
         Returns True if the adapter implements a virtual device, i.e.
@@ -136,16 +279,13 @@ class Transport(object):
         """
         return False
 
-
     def _otp_cb(self, seq, seed):
         self.otp_requested_event(seq, seed)
-
 
     def _dbg(self, level, msg):
         if self.debug < level:
             return
         self.stderr.write(self.get_driver().name + ': ' + msg + '\n')
-
 
     def set_driver(self, driver = None):
         """
@@ -170,7 +310,6 @@ class Transport(object):
         else:
             raise TypeError('unsupported argument type:' + type(driver))
 
-
     def get_driver(self):
         """
         Returns the currently used driver.
@@ -181,7 +320,6 @@ class Transport(object):
         if self.manual_driver:
             return self.manual_driver
         return self.auto_driver
-
 
     def autoinit(self):
         """
@@ -196,7 +334,6 @@ class Transport(object):
         """
         self.get_driver().init_terminal(self)
 
-
     def set_username_prompt(self, regex = None):
         """
         Defines a pattern that is used to monitor the response of the
@@ -206,7 +343,6 @@ class Transport(object):
         @param regex: The pattern that, when matched, causes an error.
         """
         self.manual_user_re = regex
-
 
     def get_username_prompt(self):
         """
@@ -220,7 +356,6 @@ class Transport(object):
             return self.manual_user_re
         return self.get_driver().user_re
 
-
     def set_password_prompt(self, regex = None):
         """
         Defines a pattern that is used to monitor the response of the
@@ -230,7 +365,6 @@ class Transport(object):
         @param regex: The pattern that, when matched, causes an error.
         """
         self.manual_password_re = regex
-
 
     def get_password_prompt(self):
         """
@@ -243,7 +377,6 @@ class Transport(object):
         if self.manual_password_re:
             return self.manual_password_re
         return self.get_driver().password_re
-
 
     def set_prompt(self, prompt = None):
         """
@@ -258,7 +391,6 @@ class Transport(object):
         """
         self.manual_prompt_re = prompt
 
-
     def get_prompt(self):
         """
         Returns the regular expression that is matched against the host
@@ -271,7 +403,6 @@ class Transport(object):
             return self.manual_prompt_re
         return self.get_driver().prompt_re
 
-
     def set_error_prompt(self, error = None):
         """
         Defines a pattern that is used to monitor the response of the
@@ -282,7 +413,6 @@ class Transport(object):
         @param error: The pattern that, when matched, causes an error.
         """
         self.manual_error_re = error
-
 
     def get_error_prompt(self):
         """
@@ -296,7 +426,6 @@ class Transport(object):
             return self.manual_error_re
         return self.get_driver().error_re
 
-
     def set_login_error_prompt(self, error = None):
         """
         Defines a pattern that is used to monitor the response of the
@@ -307,7 +436,6 @@ class Transport(object):
         @param error: The pattern that, when matched, causes an error.
         """
         self.manual_login_error_re = error
-
 
     def get_login_error_prompt(self):
         """
@@ -322,7 +450,6 @@ class Transport(object):
             return self.manual_login_error_re
         return self.get_driver().login_error_re
 
-
     def set_timeout(self, timeout):
         """
         Defines the maximum time that the adapter waits before a call to 
@@ -333,7 +460,6 @@ class Transport(object):
         """
         self.timeout = int(timeout)
 
-
     def get_timeout(self):
         """
         Returns the current timeout in seconds.
@@ -342,7 +468,6 @@ class Transport(object):
         @return: The timeout in seconds.
         """
         return self.timeout
-
 
     def connect(self, hostname = None, port = None):
         """
@@ -356,7 +481,6 @@ class Transport(object):
         if hostname is not None:
             self.host = hostname
         return self._connect_hook(self.host, port)
-
 
     def authenticate(self,
                      user     = None,
@@ -392,7 +516,6 @@ class Transport(object):
         self._authenticate_hook(user, password, wait, userwait)
         self.authenticated = True
 
-
     def authenticate_by_key(self, user, key, wait = True):
         """
         Authenticates at the remote host using key authentification.
@@ -417,7 +540,6 @@ class Transport(object):
         self._authenticate_by_key_hook(user, key, wait)
         self.authenticated = True
 
-
     def is_authenticated(self):
         """
         Returns True if the authentication procedure was completed, False
@@ -427,7 +549,6 @@ class Transport(object):
         @return: Whether the authentication was completed.
         """
         return self.authenticated
-
 
     def authorize(self, password = None, wait = True):
         """
@@ -451,7 +572,6 @@ class Transport(object):
         self._dbg(1, "Attempting to authorize.")
         self._authorize_hook(password, wait)
         self.authorized = True
-
 
     def auto_authorize(self, password = None, wait = True):
         """
@@ -481,17 +601,15 @@ class Transport(object):
         self.get_driver().auto_authorize(self, password, wait)
         self.authorized = True
 
-
     def is_authorized(self):
         """
-        Returns True if the authentication procedure was completed, False
+        Returns True if the authorization procedure was completed, False
         otherwise.
 
         @rtype:  bool
         @return: Whether the authorization was completed.
         """
         return self.authorized
-
 
     def send(self, data):
         """
@@ -504,7 +622,6 @@ class Transport(object):
         @return: True on success, False otherwise.
         """
         raise NotImplementedError()
-
 
     def execute(self, command):
         """
@@ -522,7 +639,6 @@ class Transport(object):
         """
         raise NotImplementedError()
 
-
     def expect(self, prompt):
         """
         Monitors the data received from the remote host and waits until 
@@ -537,7 +653,6 @@ class Transport(object):
         """
         self._expect_hook(prompt)
         self.os_guesser.response_received()
-
 
     def expect_prompt(self):
         """
@@ -562,13 +677,11 @@ class Transport(object):
             self._dbg(5, "error prompt (%s) matches %s" % (error, repr(line)))
             raise InvalidCommandException('Device said:\n' + self.response)
 
-
     def close(self, force = False):
         """
         Closes the connection with the remote host.
         """
         raise NotImplementedError()
-
 
     def get_host(self):
         """
@@ -578,7 +691,6 @@ class Transport(object):
         @return: A name or an address.
         """
         return self.host
-
 
     def guess_os(self):
         """
