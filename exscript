@@ -17,6 +17,7 @@ import sys, os, re, getpass
 sys.path.append('src')
 from optparse                import OptionParser, Option, OptionValueError
 from Exscript                import Queue, Account, __version__
+from Exscript.protocols      import Key
 from Exscript.util           import template
 from Exscript.util.sigint    import SigIntWatcher
 from Exscript.util.cast      import to_list, to_host
@@ -184,7 +185,11 @@ def run():
     except KeyboardInterrupt:
         sys.exit(1)
     if user is not None:
-        account = Account(user, password, ssh_key_file = options.ssh_key)
+        if options.ssh_key:
+            key = Key.from_file(options.ssh_key, password)
+        else:
+            key = None
+        account = Account(user, password, key = key)
         account_manager.add_account(account)
 
     # Ask for values of marked variables.

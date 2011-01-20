@@ -3,7 +3,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from TransportTest         import TransportTest
 from Exscript.util.telnetd import Telnetd
-from Exscript.protocols    import Telnet
+from Exscript.protocols    import Telnet, Key
 from Exscript.emulators    import VirtualDevice
 
 class TelnetTest(TransportTest):
@@ -34,13 +34,13 @@ class TelnetTest(TransportTest):
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Telnet))
 
-    def testAuthenticateByKeyfile(self):
+    def testAuthenticateByKey(self):
         self.transport.connect(self.hostname, self.port)
         # Telnet does not support this.
         self.assertRaises(NotImplementedError,
-                          self.transport.authenticate_by_keyfile,
+                          self.transport.authenticate_by_key,
                           'test',
-                          'foo')
+                          Key.from_file('foo'))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TelnetTest)

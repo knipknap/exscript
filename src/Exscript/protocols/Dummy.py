@@ -140,7 +140,7 @@ class Dummy(Transport):
                 assert 0 # Not reached.
 
 
-    def _authenticate_by_keyfile_hook(self, user, key_file, wait):
+    def _authenticate_by_key_hook(self, user, key, wait):
         pass
 
 

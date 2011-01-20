@@ -3,6 +3,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 
 from ConfigParser                 import RawConfigParser
 from Exscript.protocols.Transport import Transport
+from Exscript.protocols           import Key
 
 class TransportTest(unittest.TestCase):
     """
@@ -228,16 +229,17 @@ class TransportTest(unittest.TestCase):
         self.assert_(self.transport.response is not None)
         self.assert_(len(self.transport.response) > 0)
 
-    def testAuthenticateByKeyfile(self):
+    def testAuthenticateByKey(self):
+        key = Key.from_file('foo')
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception,
-                              self.transport.authenticate_by_keyfile,
+                              self.transport.authenticate_by_key,
                               'test',
-                              'foo')
+                              key)
             return
         self.transport.connect(self.hostname, self.port)
-        self.transport.authenticate_by_keyfile(self.user, 'fake.id', False)
+        self.transport.authenticate_by_key(self.user, key, False)
 
     def testIsAuthenticated(self):
         self.failIf(self.transport.is_authenticated())

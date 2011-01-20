@@ -23,7 +23,7 @@ class Account(object):
     This class represents a user account.
     """
 
-    def __init__(self, name, password, password2 = None, **kwargs):
+    def __init__(self, name, password, password2 = None, key = None):
         """
         Constructor.
 
@@ -38,9 +38,8 @@ class Account(object):
         @param password: The authentication password.
         @type  password2: string
         @param password2: The authorization password, if required.
-        @type  kwargs: dict
-        @param kwargs: The following options are supported:
-            - ssh_key_file: the key file that is used (SSH only).
+        @type  key: Key
+        @param key: A private key, if required.
         """
         self.acquire_before_event   = Event()
         self.acquired_event         = Event()
@@ -50,7 +49,7 @@ class Account(object):
         self.name                   = name
         self.password               = password
         self.authorization_password = password2
-        self.options                = kwargs
+        self.key                    = key
         self.lock                   = threading.Lock()
 
     def __str__(self):
@@ -104,3 +103,12 @@ class Account(object):
         @return: The account password.
         """
         return self.authorization_password or self.password
+
+    def get_key(self):
+        """
+        Returns the key of the account, if any.
+
+        @rtype:  Key|None
+        @return: A key object.
+        """
+        return self.key

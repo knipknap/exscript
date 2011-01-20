@@ -123,7 +123,7 @@ class Telnet(Transport):
                 assert 0 # Not reached.
 
 
-    def _authenticate_by_keyfile_hook(self, user, key_file, wait):
+    def _authenticate_by_key_hook(self, user, key, wait):
         #TODO: add support for reading a password file
         msg = 'Telnet does not support key authentification'
         raise NotImplementedError(msg)

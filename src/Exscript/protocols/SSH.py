@@ -177,8 +177,8 @@ class SSH(Transport):
                 assert 0 # Not reached.
 
 
-    def _authenticate_by_keyfile_hook(self, user, key_file, wait):
-        self._spawn(user, key_file)
+    def _authenticate_by_key_hook(self, user, key, wait):
+        self._spawn(user, key.get_filename())
         self._authenticate_hook(user, '', wait, True)
 
 

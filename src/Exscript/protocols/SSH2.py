@@ -27,11 +27,17 @@ from paramiko.resource      import ResourceManager
 from paramiko.ssh_exception import SSHException, \
                                    AuthenticationException, \
                                    BadHostKeyException
+from Key                    import Key
 from Exception              import TransportException, LoginFailure
 from Transport              import Transport
 
 # Workaround for paramiko error; avoids a warning message.
 util.log_to_file('/dev/null')
+
+# Register supported key types.
+keymap = {'rsa': paramiko.RSAKey, 'dss': paramiko.DSSKey}
+for key in keymap:
+    Key.keytypes.add(key)
 
 class SSH2(Transport):
     """
@@ -158,8 +164,9 @@ class SSH2(Transport):
                 saved_exception = e
         raise saved_exception
 
-    def _paramiko_auth_key(self, username, keys):
-        password = ''
+    def _paramiko_auth_key(self, username, keys, password):
+        if password is None:
+            password = ''
         for pkey_class, filename in keys:
             try:
                 key = pkey_class.from_private_key_file(filename, password)
@@ -174,24 +181,15 @@ class SSH2(Transport):
         raise saved_exception
 
     def _paramiko_auth_autokey(self, username, password):
-        # Unix.
-        rsa_key  = os.path.expanduser('~/.ssh/id_rsa')
-        dsa_key  = os.path.expanduser('~/.ssh/id_dsa')
         keyfiles = []
-        if os.path.isfile(rsa_key):
-            keyfiles.append((paramiko.RSAKey, rsa_key))
-        if os.path.isfile(dsa_key):
-            keyfiles.append((paramiko.DSSKey, dsa_key))
-
-        # Windows.
-        rsa_key = os.path.expanduser('~/ssh/id_rsa')
-        dsa_key = os.path.expanduser('~/ssh/id_dsa')
-        if os.path.isfile(rsa_key):
-            keyfiles.append((RSAKey, rsa_key))
-        if os.path.isfile(dsa_key):
-            keyfiles.append((DSSKey, dsa_key))
-
-        self._paramiko_auth_key(username, keyfiles)
+        for cls, file in ((paramiko.RSAKey, '~/.ssh/id_rsa'), # Unix
+                          (paramiko.DSSKey, '~/.ssh/id_dsa'), # Unix
+                          (paramiko.RSAKey, '~/ssh/id_rsa'),  # Windows
+                          (paramiko.DSSKey, '~/ssh/id_dsa')): # Windows
+            file = os.path.expanduser(file)
+            if os.path.isfile(file):
+                keyfiles.append((cls, file))
+        self._paramiko_auth_key(username, keyfiles, password)
 
     def _paramiko_auth(self, username, password):
         for method in (self._paramiko_auth_password,
@@ -239,11 +237,12 @@ class SSH2(Transport):
         if wait:
             self.expect_prompt()
 
-    def _authenticate_by_keyfile_hook(self, user, key_file, wait):
+    def _authenticate_by_key_hook(self, user, key, wait):
         if self.is_authenticated():
             return
 
         # Allow multiple key files.
+        key_file = key.get_filename()
         if key_file is None:
             key_file = []
         elif isinstance(key_file, (str, unicode)):
@@ -252,10 +251,9 @@ class SSH2(Transport):
         # Try each key.
         keys = []
         for file in key_file:
-            keys.append((paramiko.RSAKey, file))
-            keys.append((paramiko.DSSKey, file))
+            keys.append((keymap[key.get_type()], file))
         self._dbg(1, 'authenticating using _paramiko_auth_key().')
-        self._paramiko_auth_key(user, keys)
+        self._paramiko_auth_key(user, keys, key.get_password())
 
         self._paramiko_shell()
         if wait:

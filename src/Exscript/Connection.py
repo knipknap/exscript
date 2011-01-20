@@ -221,15 +221,13 @@ class Connection(object):
         @rtype:  Account
         @return: The account that was used to log in.
         """
-        account  = self._acquire_account(account, lock)
-        key_file = account.options.get('ssh_key_file')
+        account = self._acquire_account(account, lock)
+        key     = account.get_key()
         self._track_account(account)
 
         try:
-            if key_file:
-                self.transport.authenticate_by_keyfile(account.get_name(),
-                                                       key_file,
-                                                       wait = wait)
+            if key:
+                self.transport.authenticate_by_key(key, wait = wait)
             else:
                 self.transport.authenticate(account.get_name(),
                                             account.get_password(),

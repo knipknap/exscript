@@ -1,7 +1,8 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript import Account
+from Exscript           import Account
+from Exscript.protocols import Key
 
 class AccountTest(unittest.TestCase):
     CORRELATE = Account
@@ -10,11 +11,16 @@ class AccountTest(unittest.TestCase):
         self.user      = 'testuser'
         self.password1 = 'test1'
         self.password2 = 'test2'
-        self.account   = Account(self.user, self.password1, self.password2)
+        self.key       = Key()
+        self.account   = Account(self.user,
+                                 self.password1,
+                                 self.password2,
+                                 self.key)
 
     def testConstructor(self):
-        account = Account(self.user, self.password1, myoption = True)
-        self.assertEqual(True, account.options.get('myoption'))
+        key     = Key()
+        account = Account(self.user, self.password1, key = key)
+        self.assertEqual(account.get_key(), key)
         self.assertEqual(account.get_password(),
                          account.get_authorization_password())
 
@@ -40,6 +46,9 @@ class AccountTest(unittest.TestCase):
     def testGetAuthorizationPassword(self):
         self.assertEqual(self.password2,
                          self.account.get_authorization_password())
+
+    def testGetKey(self):
+        self.assertEqual(self.key, self.account.get_key())
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountTest)
