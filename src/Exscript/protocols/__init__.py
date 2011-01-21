@@ -15,7 +15,6 @@
 from Transport import Transport
 from Key       import Key
 from Telnet    import Telnet
-from SSH       import SSH
 from SSH2      import SSH2
 from Dummy     import Dummy
 

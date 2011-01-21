@@ -15,7 +15,11 @@
 """
 The heart of Exscript.
 """
-import sys, os, gc, copy, traceback
+import sys
+import os
+import gc
+import copy
+import traceback
 from AccountManager import AccountManager
 from CustomAction   import CustomAction
 from HostAction     import HostAction
@@ -34,7 +38,6 @@ class Queue(object):
                           'telnet': 'Telnet',
                           'pseudo': 'Dummy',
                           'ssh':    'SSH2',
-                          'ssh1':   'SSH',
                           'ssh2':   'SSH2'}
 
     def __init__(self, **kwargs):

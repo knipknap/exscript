@@ -55,15 +55,13 @@ class Connection(object):
             self.__dict__['default_account'] = account
 
         # Define protocol specific options.
-        queue         = action.get_queue()
-        protocol_name = host.get_protocol()
-        if protocol_name == 'ssh1':
-            kwargs['ssh_version'] = 1
+        queue = action.get_queue()
         if host.get_tcp_port() is not None:
             kwargs['port'] = host.get_tcp_port()
 
         # Create an instance of the protocol adapter.
         kwargs['stdout'] = queue._get_channel('connection')
+        protocol_name    = host.get_protocol()
         protocol         = queue._get_protocol_from_name(protocol_name)
         transport        = protocol(**kwargs)
         self.__dict__['transport'] = transport
