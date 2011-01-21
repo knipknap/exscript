@@ -639,14 +639,40 @@ class Transport(object):
         """
         raise NotImplementedError()
 
-    def expect(self, prompt):
+    def waitfor(self, prompt):
         """
         Monitors the data received from the remote host and waits until 
         the response matches the given prompt. Raises a TransportException 
         on an error (such as a timeout).
 
+        Once a match has been found, the buffer containing incoming data
+        is NOT changed. In other words, consequitive calls to this function
+        will always work, e.g.::
+
+            conn.waitfor('myprompt>')
+            conn.waitfor('myprompt>')
+            conn.waitfor('myprompt>')
+
+        will always work. Hence in most cases, you probably want to use
+        expect() instead.
+
         This method also stores the received data in the response 
         attribute (self.response).
+
+        @type  prompt: RegEx
+        @param prompt: A regular expression.
+        """
+        self._waitfor_hook(prompt)
+        self.os_guesser.response_received()
+
+    def expect(self, prompt):
+        """
+        Like waitfor(), but also removes the matched string from the buffer
+        containing the incoming data. In other words, the following may not
+        alway complete::
+
+            conn.expect('myprompt>')
+            conn.expect('myprompt>') # timeout
 
         @type  prompt: RegEx
         @param prompt: A regular expression.

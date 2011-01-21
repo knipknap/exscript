@@ -44,7 +44,7 @@ class Dummy(Transport):
     def is_dummy(self):
         return True
 
-    def _expect_any(self, prompt_list):
+    def _expect_any(self, prompt_list, flush = True):
         # Send the banner, etc. To more correctly mimic the behavior of
         # a network device, we to this here instead of in connect(), as
         # connect would be too early.
@@ -58,7 +58,8 @@ class Dummy(Transport):
             matches = prompt.search(self.buffer)
             if matches is not None:
                 self.response = self.buffer[:matches.start()]
-                self.buffer   = self.buffer[matches.end():]
+                if flush:
+                    self.buffer = self.buffer[matches.end():]
                 return i, matches, self.response
             i += 1
         return None
@@ -139,10 +140,8 @@ class Dummy(Transport):
             else:
                 assert 0 # Not reached.
 
-
     def _authenticate_by_key_hook(self, user, key, wait):
         pass
-
 
     def _authorize_hook(self, password, wait):
         # The username should not be asked, so not passed.
@@ -157,13 +156,13 @@ class Dummy(Transport):
         self.send(data + '\r')
         return self.expect_prompt()
 
-    def _expect_hook(self, prompt):
+    def _domatch(self, prompt, flush):
         if not hasattr(prompt, 'match'):
             raise TypeError('prompt must be a compiled regular expression.')
 
         # Wait for a prompt.
         try:
-            res = self._expect_any([prompt])
+            res = self._expect_any([prompt], flush)
             if res is None:
                 self._dbg(2, "No prompt match")
                 raise Exception('no match')
@@ -180,6 +179,11 @@ class Dummy(Transport):
             error = 'Error while waiting for response from device'
             raise TransportException(error)
 
+    def _waitfor_hook(self, prompt):
+        self._domatch(prompt, False)
+
+    def _expect_hook(self, prompt):
+        self._domatch(prompt, True)
 
     def close(self, force = False):
         self._say('\n')

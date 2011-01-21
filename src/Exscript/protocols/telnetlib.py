@@ -542,28 +542,7 @@ class Telnet:
             if time.time() > end:
                 return False
 
-    def expect(self, list, timeout=None):
-        """Read until one from a list of a regular expressions matches.
-
-        The first argument is a list of regular expressions, either
-        compiled (re.RegexObject instances) or uncompiled (strings).
-        The optional second argument is a timeout, in seconds; default
-        is no timeout.
-
-        Return a tuple of three items: the index in the list of the
-        first regular expression that matches; the match object
-        returned; and the text read up till and including the match.
-
-        If EOF is read and no text was read, raise EOFError.
-        Otherwise, when nothing matches, return (-1, None, text) where
-        text is the text received so far (may be the empty string if a
-        timeout happened).
-
-        If a regular expression ends with a greedy match (e.g. '.*')
-        or if more than one expression can match the same input, the
-        results are undeterministic, and may depend on the I/O timing.
-
-        """
+    def _waitfor(self, list, timeout=None, flush=False):
         re = None
         list = list[:]
         indices = range(len(list))
@@ -586,13 +565,13 @@ class Telnet:
                 m = list[i].search(search_window)
                 if m is not None:
                     #print "Match End:", m.end()
-                    #e    = search_window_size - m.end() - 1
                     e    = len(m.group())
                     e    = len(self.cookedq) - e
                     text = self.cookedq[:e]
-                    self.cookedq = search_window[m.end():]
+                    if flush:
+                        self.cookedq = search_window[m.end():]
                     #print "END:", e, "MATCH:", i, m, repr(text)
-                    return (i, m, text)
+                    return i, m, text
             if self.eof:
                 break
             if timeout is not None:
@@ -608,7 +587,37 @@ class Telnet:
         text = self.read_very_lazy()
         if not text and self.eof:
             raise EOFError
-        return (-1, None, text)
+        return -1, None, text
+
+    def waitfor(self, list, timeout=None):
+        """Read until one from a list of a regular expressions matches.
+
+        The first argument is a list of regular expressions, either
+        compiled (re.RegexObject instances) or uncompiled (strings).
+        The optional second argument is a timeout, in seconds; default
+        is no timeout.
+
+        Return a tuple of three items: the index in the list of the
+        first regular expression that matches; the match object
+        returned; and the text read up till and including the match.
+
+        If EOF is read and no text was read, raise EOFError.
+        Otherwise, when nothing matches, return (-1, None, text) where
+        text is the text received so far (may be the empty string if a
+        timeout happened).
+
+        If a regular expression ends with a greedy match (e.g. '.*')
+        or if more than one expression can match the same input, the
+        results are undeterministic, and may depend on the I/O timing.
+        """
+        return self._waitfor(list, timeout, False)
+
+    def expect(self, list, timeout=None):
+        """
+        Like waitfor(), but removes the matched data from the incoming
+        buffer.
+        """
+        return self._waitfor(list, timeout, True)
 
 
 def test():

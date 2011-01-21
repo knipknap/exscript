@@ -149,11 +149,11 @@ class Telnet(Transport):
         return self.expect_prompt()
 
 
-    def _expect_hook(self, prompt):
+    def _tn_match(self, prompt, func):
         # Wait for a prompt.
         self.response = None
         try:
-            result, match, response = self.tn.expect([prompt], self.timeout)
+            result, match, response = func([prompt], self.timeout)
             self.response           = response
         except Exception:
             self._dbg(1, 'Error while waiting for %s' % repr(prompt.pattern))
@@ -168,6 +168,11 @@ class Telnet(Transport):
             error = 'Error while waiting for response from device'
             raise TransportException(error)
 
+    def _waitfor_hook(self, prompt):
+        self._tn_match(prompt, self.tn.waitfor)
+
+    def _expect_hook(self, prompt):
+        self._tn_match(prompt, self.tn.expect)
 
     def close(self, force = False):
         if self.tn is None:

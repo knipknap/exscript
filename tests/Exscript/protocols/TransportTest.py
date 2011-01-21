@@ -309,6 +309,21 @@ class TransportTest(unittest.TestCase):
         self.assert_(self.transport.response is not None)
         self.assert_(self.transport.response.startswith('ls'))
 
+    def testWaitfor(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.waitfor, 'ls')
+            return
+        self.doAuthenticate()
+        oldresponse = self.transport.response
+        self.transport.send('ls\r')
+        self.assertEqual(oldresponse, self.transport.response)
+        self.transport.waitfor(re.compile(r'[\r\n]'))
+        self.failIfEqual(oldresponse, self.transport.response)
+        oldresponse = self.transport.response
+        self.transport.waitfor(re.compile(r'[\r\n]'))
+        self.assertEqual(oldresponse, self.transport.response)
+
     def testExpect(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
