@@ -15,6 +15,7 @@
 """
 Handy shortcuts for converting types.
 """
+import re
 import Exscript
 from Exscript.Log     import Log
 from Exscript.Logfile import Logfile
@@ -99,3 +100,33 @@ def to_logs(logs):
     @return: A list of Log objects.
     """
     return [to_log(h) for h in to_list(logs)]
+
+def to_regex(regex, flags = 0):
+    """
+    Given a string, this function returns a new re.RegexObject.
+    Given a re.RegexObject, this function just returns the same object.
+
+    @type  regex: string|re.RegexObject
+    @param regex: A regex or a re.RegexObject
+    @type  flags: int
+    @param flags: See Python's re.compile().
+    @rtype:  re.RegexObject
+    @return: The Python regex object.
+    """
+    if regex is None:
+        raise TypeError('None can not be cast to re.RegexObject')
+    if hasattr(regex, 'match'):
+        return regex
+    return re.compile(regex, flags)
+
+def to_regexs(regexs):
+    """
+    Given a string or a re.RegexObject, or a list of strings or
+    re.RegexObjects, this function returns a list of re.RegexObjects.
+
+    @type  regexs: str|re.RegexObject|list(str|re.RegexObject)
+    @param regexs: One or more regexs or re.RegexObjects.
+    @rtype:  list(re.RegexObject)
+    @return: A list of re.RegexObjects.
+    """
+    return [to_regex(r) for r in to_list(regexs)]

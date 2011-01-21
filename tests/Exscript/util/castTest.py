@@ -2,6 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import Exscript.util.cast
+import re
 from Exscript         import Host
 from Exscript.Log     import Log
 from Exscript.Logfile import Logfile
@@ -80,6 +81,39 @@ class castTest(unittest.TestCase):
         self.assert_(len(result) == 2)
         self.assert_(isinstance(result[0], Logfile))
         self.assert_(isinstance(result[1], Log))
+
+    def testToRegex(self):
+        from Exscript.util.cast import to_regex
+        self.assert_(hasattr(to_regex('regex'), 'match'))
+        self.assert_(hasattr(to_regex(re.compile('regex')), 'match'))
+        self.assertRaises(TypeError, to_regex, None)
+
+    def testToRegexs(self):
+        from Exscript.util.cast import to_regexs
+        self.assertRaises(TypeError, to_regexs, None)
+
+        result = to_regexs([])
+        self.assert_(isinstance(result, list))
+        self.assert_(len(result) == 0)
+
+        result = to_regexs('regex')
+        self.assert_(isinstance(result, list))
+        self.assert_(len(result) == 1)
+        self.assert_(hasattr(result[0], 'match'))
+
+        result = to_regexs(re.compile('regex'))
+        self.assert_(isinstance(result, list))
+        self.assert_(len(result) == 1)
+        self.assert_(hasattr(result[0], 'match'))
+
+        regexs = ['regex1', re.compile('regex2')]
+        result = to_regexs(regexs)
+        self.assert_(isinstance(result, list))
+        self.assert_(len(result) == 2)
+        self.assert_(hasattr(result[0], 'match'))
+        self.assert_(hasattr(result[1], 'match'))
+        self.assertEqual(result[0].pattern, 'regex1')
+        self.assertEqual(result[1].pattern, 'regex2')
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(castTest)
