@@ -18,7 +18,10 @@ Emulating a device.
 import os, re
 from Exscript.util.crypt import otp
 from Exscript.emulators  import VirtualDevice
-from Exception           import TransportException, LoginFailure
+from Exception           import TransportException, \
+                                LoginFailure, \
+                                TimeoutException, \
+                                ExpectCancelledException
 from Transport           import Transport, _skey_re
 
 class Dummy(Transport):
@@ -37,6 +40,7 @@ class Dummy(Transport):
         self.device    = kwargs.get('device')
         self.init_done = False
         self.buffer    = ''
+        self.cancel    = False
         self.response  = None
         if not self.device:
             self.device = VirtualDevice('dummy', strict = False)
@@ -52,20 +56,28 @@ class Dummy(Transport):
             self.init_done = True
             self._say(self.device.init())
 
+        # Cancelled by a callback during self._say().
+        if self.cancel:
+            self.cancel = False
+            return -2, None, self.response
+
         # Look for a match in the buffer.
-        i = 0
-        for prompt in prompt_list:
+        for i, prompt in enumerate(prompt_list):
             matches = prompt.search(self.buffer)
             if matches is not None:
                 self.response = self.buffer[:matches.start()]
                 if flush:
                     self.buffer = self.buffer[matches.end():]
                 return i, matches, self.response
-            i += 1
-        return None
+
+        # "Timeout".
+        return -1, None, self.response
 
     def _say(self, string):
         self.buffer += self._receive_cb(string)
+
+    def cancel_expect(self):
+        self.cancel = True
 
     def _connect_hook(self, hostname, port):
         self.buffer = ''
@@ -122,7 +134,7 @@ class Dummy(Transport):
                 seed = matches.group(2)
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
-                self._expect_any([self.get_password_prompt()])
+                self._expect_any(self.get_password_prompt())
                 self.send(phrase + '\r\n')
                 self._dbg(1, "Password sent.")
                 if not wait:
@@ -163,23 +175,20 @@ class Dummy(Transport):
 
     def _domatch(self, prompt, flush):
         # Wait for a prompt.
-        try:
-            res = self._expect_any(prompt, flush)
-            if res is None:
-                self._dbg(2, "No prompt match")
-                raise Exception('no match')
-            result, match, self.response = res
-        except Exception:
-            msg = 'Error while waiting for %s' % repr(prompt.pattern)
-            raise TransportException(msg)
+        result, match, self.response = self._expect_any(prompt, flush)
 
         if match:
             self._dbg(2, "Got a prompt, match was %s" % repr(match.group()))
+        else:
+            self._dbg(2, "No prompt match")
+
         self._dbg(5, "Response was %s" % repr(self.buffer))
 
         if result == -1 or self.buffer is None:
             error = 'Error while waiting for response from device'
-            raise TransportException(error)
+            raise TimeoutException(error)
+        elif result == -2:
+            raise ExpectCancelledException()
 
         return result
 

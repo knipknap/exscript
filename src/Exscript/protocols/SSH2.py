@@ -28,7 +28,10 @@ from paramiko.ssh_exception import SSHException, \
                                    AuthenticationException, \
                                    BadHostKeyException
 from Key                    import Key
-from Exception              import TransportException, LoginFailure
+from Exception              import TransportException, \
+                                   LoginFailure, \
+                                   TimeoutException, \
+                                   ExpectCancelledException
 from Transport              import Transport
 
 # Workaround for paramiko error; avoids a warning message.
@@ -52,6 +55,7 @@ class SSH2(Transport):
         self.debug       = kwargs.get('debug', 0)
         self.auto_verify = kwargs.get('auto_verify', False)
         self.port        = None
+        self.cancel      = False
 
         # Paramiko client stuff.
         self._system_host_keys   = paramiko.HostKeys()
@@ -279,7 +283,7 @@ class SSH2(Transport):
         # Wait for a response of the device.
         if not self._wait_for_data():
             error = 'Timeout while waiting for response from device'
-            raise TransportException(error)
+            raise TimeoutException(error)
 
         # Read the response.
         data = self.shell.recv(200)
@@ -299,7 +303,7 @@ class SSH2(Transport):
         self._dbg(1, "Expecting a prompt")
         self._dbg(2, "Expected pattern: " + repr(p.pattern for p in prompt))
         search_window_size = 150
-        while True:
+        while not self.cancel:
             # Check whether what's buffered matches the prompt.
             search_window = self.buffer[-search_window_size:]
             match         = None
@@ -321,7 +325,13 @@ class SSH2(Transport):
                 self.buffer = search_window[match.end():]
             #print "END:", end, repr(self.response), repr(self.buffer)
             return n
-        assert False # not reached
+
+        # Ending up here, self.cancel_expect() was called.
+        self.cancel = False
+        raise ExpectCancelledException()
+
+    def cancel_expect(self):
+        self.cancel = True
 
     def close(self, force = False):
         if self.shell is None:

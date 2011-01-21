@@ -2,6 +2,8 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from ConfigParser                 import RawConfigParser
+from Exscript.protocols.Exception import TimeoutException, \
+                                         ExpectCancelledException
 from Exscript.protocols.Transport import Transport
 from Exscript.protocols           import Key
 
@@ -315,6 +317,23 @@ class TransportTest(unittest.TestCase):
         self.assertEqual(oldresponse, self.transport.response)
         self.transport.expect_prompt()
         self.failIfEqual(oldresponse, self.transport.response)
+
+    def _cancel_cb(self, data):
+        self.transport.cancel_expect()
+
+    def testCancelExpect(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.expect, 'ls')
+            return
+        self.doAuthenticate()
+        oldresponse = self.transport.response
+        self.transport.data_received_event.connect(self._cancel_cb)
+        self.transport.send('ls\r')
+        self.assertEqual(oldresponse, self.transport.response)
+        self.assertRaises(ExpectCancelledException,
+                          self.transport.expect,
+                          'notgoingtohappen')
 
     def testClose(self):
         # Test can not work on the abstract base.

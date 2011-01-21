@@ -22,6 +22,20 @@ class TransportException(Exception):
     """
     pass
 
+class TimeoutException(TransportException):
+    """
+    An exception that is thrown if the connected host did not
+    respond for too long.
+    """
+    pass
+
+class ExpectCancelledException(TransportException):
+    """
+    An exception that is thrown if Transport.cancel_expect()
+    was called.
+    """
+    pass
+
 class LoginFailure(TransportException):
     """
     An exception that is thrown if the response of a connected host looked

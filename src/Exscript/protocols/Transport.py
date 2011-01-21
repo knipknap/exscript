@@ -21,6 +21,11 @@ import os
 from drivers             import driver_map, isdriver
 from OsGuesser           import OsGuesser
 from Exception           import TransportException, InvalidCommandException
+from Exception           import TransportException, \
+                                LoginFailure, \
+                                TimeoutException, \
+                                ExpectCancelledException
+from Exscript.util.crypt import otp
 from Exscript.util.event import Event
 from Exscript.util.cast  import to_regexs
 
@@ -658,11 +663,9 @@ class Transport(object):
     def waitfor(self, prompt):
         """
         Monitors the data received from the remote host and waits until 
-        the response matches the given prompt. Raises a TransportException 
-        on an error (such as a timeout).
-
+        the response matches the given prompt.
         Once a match has been found, the buffer containing incoming data
-        is NOT changed. In other words, consequitive calls to this function
+        is NOT changed. In other words, consecuitive calls to this function
         will always work, e.g.::
 
             conn.waitfor('myprompt>')
@@ -674,6 +677,12 @@ class Transport(object):
 
         This method also stores the received data in the response 
         attribute (self.response).
+
+        Returns the index of the regular expression that matched.
+
+        Raises TimeoutException if the timeout was reached.
+        Raises ExpectCancelledException if cancel_expect() was called
+        through a callback.
 
         @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
         @param prompt: One or more regular expressions.
@@ -692,6 +701,12 @@ class Transport(object):
 
             conn.expect('myprompt>')
             conn.expect('myprompt>') # timeout
+
+        Returns the index of the regular expression that matched.
+
+        Raises TimeoutException if the timeout was reached.
+        Raises ExpectCancelledException if cancel_expect() was called
+        through a callback.
 
         @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
         @param prompt: One or more regular expressions.
@@ -727,6 +742,14 @@ class Transport(object):
             error = repr(prompt.pattern)
             self._dbg(5, "error prompt (%s) matches %s" % (error, repr(line)))
             raise InvalidCommandException('Device said:\n' + self.response)
+
+    def cancel_expect(self):
+        """
+        Cancel the current call to expect() as soon as control returns
+        to the protocol adapter. This method may be used in callbacks to
+        the events emitted by this class, e.g. Transport.data_received_event.
+        """
+        raise NotImplementedError()
 
     def close(self, force = False):
         """

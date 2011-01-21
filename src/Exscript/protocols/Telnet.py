@@ -18,7 +18,10 @@ The Telnet protocol.
 import os, re
 import telnetlib
 from Exscript.util.crypt import otp
-from Exception           import TransportException, LoginFailure
+from Exception           import TransportException, \
+                                LoginFailure, \
+                                TimeoutException, \
+                                ExpectCancelledException
 from Transport           import Transport, _skey_re
 
 class Telnet(Transport):
@@ -31,7 +34,7 @@ class Telnet(Transport):
         self.tn = None
 
     def _driver_replaced_notify(self, old, new):
-        self.tn.cancel_expect = True
+        self.cancel_expect()
         Transport._driver_replaced_notify(self, old, new)
 
     def _connect_hook(self, hostname, port):
@@ -177,9 +180,14 @@ class Telnet(Transport):
 
         if result == -1 or self.response is None:
             error = 'Error while waiting for response from device'
-            raise TransportException(error)
+            raise TimeoutException(error)
+        elif result == -2:
+            raise ExpectCancelledException()
 
         return result
+
+    def cancel_expect(self):
+        self.tn.cancel_expect = True
 
     def close(self, force = False):
         if self.tn is None:
