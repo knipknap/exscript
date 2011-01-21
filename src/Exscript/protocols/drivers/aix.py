@@ -18,9 +18,9 @@ A driver for Cisco IOS (not IOS XR).
 import re
 from driver import Driver
 
-_user_re     = re.compile(r'[\r\n]Authorized Login: $')
-_password_re = re.compile(r'[\r\n]\w+\'s Password: $')
-_prompt_re   = re.compile(r'[\r\n][\-\w+\._]+@[\-\w+\._~]+\$ $')
+_user_re     = [re.compile(r'[\r\n]Authorized Login: $')]
+_password_re = [re.compile(r'[\r\n]\w+\'s Password: $')]
+_prompt_re   = [re.compile(r'[\r\n][\-\w+\._]+@[\-\w+\._~]+\$ $')]
 _aix_re      = re.compile(r'\bAIX\b')
 
 class AIXDriver(Driver):
@@ -31,7 +31,7 @@ class AIXDriver(Driver):
         self.prompt_re   = _prompt_re
 
     def check_head_for_os(self, string):
-        if _user_re.search(string):
+        if _user_re[0].search(string):
             return 70
         if _aix_re.search(string):
             return 75

@@ -19,8 +19,8 @@ import re
 from driver import Driver
 from ios    import _prompt_re
 
-_user_re     = re.compile(r'[\r\n]User: $')
-_password_re = re.compile(r'[\r\n](Telnet password:|Password:) $')
+_user_re     = [re.compile(r'[\r\n]User: $')]
+_password_re = [re.compile(r'[\r\n](Telnet password:|Password:) $')]
 _junos_re    = re.compile(r'\bJuniper Networks\b', re.I)
 
 class JunOSERXDriver(Driver):

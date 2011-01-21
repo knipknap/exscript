@@ -18,9 +18,9 @@ A driver for Peakflow SP by Arbor Networks.
 import re
 from driver import Driver
 
-_user_re     = re.compile(r'(user|login): $', re.I)
-_password_re = re.compile(r'Password: $')
-_prompt_re   = re.compile(r'[\r\n][\-\w+\._]+@[\-\w+\._~]+:(?:/\w*)+[#%] $')
+_user_re     = [re.compile(r'(user|login): $', re.I)]
+_password_re = [re.compile(r'Password: $')]
+_prompt_re   = [re.compile(r'[\r\n][\-\w+\._]+@[\-\w+\._~]+:(?:/\w*)+[#%] $')]
 _os_re       = re.compile(r'\bpeakflow\b.*\barbor\b', re.I | re.S)
 
 class ArborPeakflowDriver(Driver):

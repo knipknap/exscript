@@ -22,6 +22,7 @@ from drivers             import driver_map, isdriver
 from OsGuesser           import OsGuesser
 from Exception           import TransportException, InvalidCommandException
 from Exscript.util.event import Event
+from Exscript.util.cast  import to_regexs
 
 _skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
 
@@ -342,7 +343,10 @@ class Transport(object):
         @type  regex: RegEx
         @param regex: The pattern that, when matched, causes an error.
         """
-        self.manual_user_re = regex
+        if regex is None:
+            self.manual_user_re = regex
+        else:
+            self.manual_user_re = to_regexs(regex)
 
     def get_username_prompt(self):
         """
@@ -364,7 +368,10 @@ class Transport(object):
         @type  regex: RegEx
         @param regex: The pattern that, when matched, causes an error.
         """
-        self.manual_password_re = regex
+        if regex is None:
+            self.manual_password_re = regex
+        else:
+            self.manual_password_re = to_regexs(regex)
 
     def get_password_prompt(self):
         """
@@ -389,15 +396,18 @@ class Transport(object):
         @type  prompt: RegEx
         @param prompt: The pattern that matches the prompt of the remote host.
         """
-        self.manual_prompt_re = prompt
+        if prompt is None:
+            self.manual_prompt_re = prompt
+        else:
+            self.manual_prompt_re = to_regexs(prompt)
 
     def get_prompt(self):
         """
-        Returns the regular expression that is matched against the host
+        Returns the regular expressions that is matched against the host
         response when calling the expect_prompt() method.
 
-        @rtype:  regex
-        @return: A regular expression.
+        @rtype:  list(re.RegexObject)
+        @return: A list of regular expression objects.
         """
         if self.manual_prompt_re:
             return self.manual_prompt_re
@@ -412,7 +422,10 @@ class Transport(object):
         @type  error: RegEx
         @param error: The pattern that, when matched, causes an error.
         """
-        self.manual_error_re = error
+        if error is None:
+            self.manual_error_re = error
+        else:
+            self.manual_error_re = to_regexs(error)
 
     def get_error_prompt(self):
         """
@@ -435,7 +448,10 @@ class Transport(object):
         @type  error: RegEx
         @param error: The pattern that, when matched, causes an error.
         """
-        self.manual_login_error_re = error
+        if error is None:
+            self.manual_login_error_re = error
+        else:
+            self.manual_login_error_re = to_regexs(error)
 
     def get_login_error_prompt(self):
         """
@@ -659,11 +675,14 @@ class Transport(object):
         This method also stores the received data in the response 
         attribute (self.response).
 
-        @type  prompt: RegEx
-        @param prompt: A regular expression.
+        @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
+        @param prompt: One or more regular expressions.
+        @rtype:  int
+        @return: The index of the regular expression that matched.
         """
-        self._waitfor_hook(prompt)
+        index = self._domatch(to_regexs(prompt), False)
         self.os_guesser.response_received()
+        return index
 
     def expect(self, prompt):
         """
@@ -674,11 +693,14 @@ class Transport(object):
             conn.expect('myprompt>')
             conn.expect('myprompt>') # timeout
 
-        @type  prompt: RegEx
-        @param prompt: A regular expression.
+        @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
+        @param prompt: One or more regular expressions.
+        @rtype:  int
+        @return: The index of the regular expression that matched.
         """
-        self._expect_hook(prompt)
+        index = self._domatch(to_regexs(prompt), True)
         self.os_guesser.response_received()
+        return index
 
     def expect_prompt(self):
         """
@@ -696,10 +718,13 @@ class Transport(object):
         # sent.
         self._dbg(5, "Checking %s for errors" % repr(self.response))
         for line in self.response.split('\n')[1:]:
-            match = self.get_error_prompt().match(line)
+            match = None
+            for prompt in self.get_error_prompt():
+                if prompt.match(line):
+                    break
             if match is None:
                 continue
-            error = repr(self.get_error_prompt().pattern)
+            error = repr(prompt.pattern)
             self._dbg(5, "error prompt (%s) matches %s" % (error, repr(line)))
             raise InvalidCommandException('Device said:\n' + self.response)
 

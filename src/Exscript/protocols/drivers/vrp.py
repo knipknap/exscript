@@ -18,9 +18,9 @@ A driver for devices running VRP (by Huawei).
 import re
 from driver import Driver
 
-_user_re     = re.compile(r'user ?name: ', re.I)
-_password_re = re.compile(r'[\r\n]Password: $')
-_prompt_re   = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')
+_user_re     = [re.compile(r'user ?name: ', re.I)]
+_password_re = [re.compile(r'[\r\n]Password: $')]
+_prompt_re   = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
 _huawei_re   = re.compile(r'\bhuawei\b', re.I)
 
 class VRPDriver(Driver):

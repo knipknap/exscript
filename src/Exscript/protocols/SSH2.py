@@ -297,12 +297,16 @@ class SSH2(Transport):
 
     def _domatch(self, prompt, flush):
         self._dbg(1, "Expecting a prompt")
-        self._dbg(2, "Expected pattern: " + prompt.pattern)
+        self._dbg(2, "Expected pattern: " + repr(p.pattern for p in prompt))
         search_window_size = 150
         while True:
             # Check whether what's buffered matches the prompt.
             search_window = self.buffer[-search_window_size:]
-            match         = prompt.search(search_window)
+            match         = None
+            for n, regex in enumerate(prompt):
+                match = regex.search(search_window)
+                if match is not None:
+                    break
 
             if not match:
                 if not self._fill_buffer():
@@ -316,13 +320,8 @@ class SSH2(Transport):
             if flush:
                 self.buffer = search_window[match.end():]
             #print "END:", end, repr(self.response), repr(self.buffer)
-            break
-
-    def _waitfor_hook(self, prompt):
-        self._domatch(prompt, False)
-
-    def _expect_hook(self, prompt):
-        self._domatch(prompt, True)
+            return n
+        assert False # not reached
 
     def close(self, force = False):
         if self.shell is None:

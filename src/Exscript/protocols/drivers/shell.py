@@ -18,8 +18,8 @@ A generic shell driver that handles unknown unix shells.
 import re
 from driver import Driver
 
-_user_re     = re.compile(r'(user|login): $', re.I)
-_password_re = re.compile(r'Password: $')
+_user_re     = [re.compile(r'(user|login): $', re.I)]
+_password_re = [re.compile(r'Password: $')]
 _linux_re    = re.compile(r'\blinux\b', re.I)
 
 class ShellDriver(Driver):
@@ -31,6 +31,6 @@ class ShellDriver(Driver):
     def check_head_for_os(self, string):
         if _linux_re.search(string):
             return 70
-        if _user_re.search(string):
+        if _user_re[0].search(string):
             return 20
         return 0

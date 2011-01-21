@@ -18,10 +18,10 @@ A driver for Cisco IOS (not IOS XR).
 import re
 from driver import Driver
 
-_user_re         = re.compile(r'[\r\n]Username:$')
-_password_re     = re.compile(r'[\r\n]Password:$')
+_user_re         = [re.compile(r'[\r\n]Username:$')]
+_password_re     = [re.compile(r'[\r\n]Password:$')]
 _first_prompt_re = re.compile(r'\r?\n\r?\n[\-\w+\.]+[>#]$')
-_prompt_re       = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')
+_prompt_re       = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
 
 class OneOSDriver(Driver):
     def __init__(self):

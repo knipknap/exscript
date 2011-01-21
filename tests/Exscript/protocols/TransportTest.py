@@ -32,6 +32,13 @@ class TransportTest(unittest.TestCase):
         self.password = cfg.get('testhost', 'password')
         self.createTransport()
 
+    def _trymatch(self, prompts, string):
+        for regex in prompts:
+            match = regex.search(string)
+            if match:
+                return match
+        return None
+
     def testPrompts(self):
         prompts = ('[sam123@home ~]$',
                    '[MyHost-A1]',
@@ -64,28 +71,28 @@ class TransportTest(unittest.TestCase):
                       '[edit one two]')
         prompt_re = self.transport.get_prompt()
         for prompt in prompts:
-            if not prompt_re.search('\n' + prompt):
+            if not self._trymatch(prompt_re, '\n' + prompt):
                 self.fail('Prompt %s does not match exactly.' % prompt)
-            if not prompt_re.search('this is a test\r\n' + prompt):
+            if not self._trymatch(prompt_re, 'this is a test\r\n' + prompt):
                 self.fail('Prompt %s does not match.' % prompt)
-            if prompt_re.search('some text ' + prompt):
+            if self._trymatch(prompt_re, 'some text ' + prompt):
                 self.fail('Prompt %s matches incorrectly.' % repr(prompt))
         for prompt in notprompts:
-            if prompt_re.search(prompt):
+            if self._trymatch(prompt_re, prompt):
                 self.fail('Prompt %s matches incorrecly.' % repr(prompt))
-            if prompt_re.search(prompt + ' '):
+            if self._trymatch(prompt_re, prompt + ' '):
                 self.fail('Prompt %s matches incorrecly.' % repr(prompt))
-            if prompt_re.search('\n' + prompt):
+            if self._trymatch(prompt_re, '\n' + prompt):
                 self.fail('Prompt %s matches incorrecly.' % repr(prompt))
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Transport))
 
     def testCopy(self):
-        self.assert_(self.transport == self.transport.__copy__())
+        self.assertEqual(self.transport, self.transport.__copy__())
 
     def testDeepcopy(self):
-        self.assert_(self.transport == self.transport.__deepcopy__({}))
+        self.assertEqual(self.transport, self.transport.__deepcopy__({}))
 
     def testIsDummy(self):
         self.assertEqual(self.transport.is_dummy(), False)
@@ -112,92 +119,53 @@ class TransportTest(unittest.TestCase):
     def testAutoinit(self):
         self.transport.autoinit()
 
-    def testSetUsernamePrompt(self):
-        initial_regex = self.transport.get_username_prompt()
-        self.assert_(hasattr(initial_regex, 'groups'))
+    def _test_prompt_setter(self, getter, setter):
+        initial_regex = getter()
+        self.assert_(isinstance(initial_regex, list))
+        self.assert_(hasattr(initial_regex[0], 'groups'))
 
         my_re = re.compile(r'% username')
-        self.transport.set_username_prompt(my_re)
-        regex = self.transport.get_username_prompt()
-        self.assert_(hasattr(regex, 'groups'))
-        self.assertEqual(regex, my_re)
+        setter(my_re)
+        regex = getter()
+        self.assert_(isinstance(regex, list))
+        self.assert_(hasattr(regex[0], 'groups'))
+        self.assertEqual(regex[0], my_re)
 
-        self.transport.set_username_prompt()
-        regex = self.transport.get_username_prompt()
-        self.assert_(hasattr(regex, 'groups'))
+        setter()
+        regex = getter()
         self.assertEqual(regex, initial_regex)
+
+    def testSetUsernamePrompt(self):
+        self._test_prompt_setter(self.transport.get_username_prompt,
+                                 self.transport.set_username_prompt)
 
     def testGetUsernamePrompt(self):
         pass # Already tested in testSetUsernamePrompt()
 
     def testSetPasswordPrompt(self):
-        initial_regex = self.transport.get_password_prompt()
-        self.assert_(hasattr(initial_regex, 'groups'))
-
-        my_re = re.compile(r'% foobar')
-        self.transport.set_password_prompt(my_re)
-        regex = self.transport.get_password_prompt()
-        self.assert_(hasattr(regex, 'groups'))
-        self.assertEqual(regex, my_re)
-
-        self.transport.set_password_prompt()
-        regex = self.transport.get_password_prompt()
-        self.assert_(hasattr(regex, 'groups'))
-        self.assertEqual(regex, initial_regex)
+        self._test_prompt_setter(self.transport.get_password_prompt,
+                                 self.transport.set_password_prompt)
 
     def testGetPasswordPrompt(self):
         pass # Already tested in testSetPasswordPrompt()
 
     def testSetPrompt(self):
-        initial_regex = self.transport.get_prompt()
-        self.assert_(hasattr(initial_regex, 'groups'))
-
-        my_re = re.compile(r'test>')
-        self.transport.set_prompt(my_re)
-        regex = self.transport.get_prompt()
-        self.assert_(hasattr(regex, 'groups'))
-        self.assert_(regex == my_re)
-
-        self.transport.set_prompt()
-        regex = self.transport.get_prompt()
-        self.assert_(hasattr(regex, 'groups'))
-        self.assert_(regex == initial_regex)
+        self._test_prompt_setter(self.transport.get_prompt,
+                                 self.transport.set_prompt)
 
     def testGetPrompt(self):
         pass # Already tested in testSetPrompt()
 
     def testSetErrorPrompt(self):
-        initial_regex = self.transport.get_error_prompt()
-        self.assert_(hasattr(initial_regex, 'groups'))
-
-        my_re = re.compile(r'% error')
-        self.transport.set_error_prompt(my_re)
-        regex = self.transport.get_error_prompt()
-        self.assert_(hasattr(regex, 'groups'))
-        self.assertEqual(regex, my_re)
-
-        self.transport.set_error_prompt()
-        regex = self.transport.get_error_prompt()
-        self.assert_(hasattr(regex, 'groups'))
-        self.assertEqual(regex, initial_regex)
+        self._test_prompt_setter(self.transport.get_error_prompt,
+                                 self.transport.set_error_prompt)
 
     def testGetErrorPrompt(self):
         pass # Already tested in testSetErrorPrompt()
 
     def testSetLoginErrorPrompt(self):
-        initial_regex = self.transport.get_login_error_prompt()
-        self.assert_(hasattr(initial_regex, 'groups'))
-
-        my_re = re.compile(r'% error')
-        self.transport.set_login_error_prompt(my_re)
-        regex = self.transport.get_login_error_prompt()
-        self.assert_(hasattr(regex, 'groups'))
-        self.assertEqual(regex, my_re)
-
-        self.transport.set_login_error_prompt()
-        regex = self.transport.get_login_error_prompt()
-        self.assert_(hasattr(regex, 'groups'))
-        self.assertEqual(regex, initial_regex)
+        self._test_prompt_setter(self.transport.get_login_error_prompt,
+                                 self.transport.set_login_error_prompt)
 
     def testGetLoginErrorPrompt(self):
         pass # Already tested in testSetLoginErrorPrompt()

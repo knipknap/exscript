@@ -48,17 +48,24 @@ class Telnet(Transport):
 
     def _authenticate_hook(self, user, password, wait, userwait):
         while True:
-            # Wait for the user prompt.
-            #print 'Waiting for prompt'
-            prompt  = [self.get_login_error_prompt(),
-                       self.get_username_prompt(),
-                       _skey_re,
-                       self.get_password_prompt(),
-                       self.get_prompt()]
+            # Wait for any prompt.
+            prompts = (('login-error', self.get_login_error_prompt()),
+                       ('username',    self.get_username_prompt()),
+                       ('skey',        [_skey_re]),
+                       ('password',    self.get_password_prompt()),
+                       ('cli',         self.get_prompt()))
+            prompt_map  = []
+            prompt_list = []
+            n           = 0
+            for section, sectionprompts in prompts:
+                for prompt in sectionprompts:
+                    prompt_map.append((section, prompt))
+                    prompt_list.append(prompt)
+
             which   = None
             matches = None
             try:
-                result = self.tn.expect(prompt, self.timeout)
+                result = self.tn.expect(prompt_list, self.timeout)
                 which, matches, self.response = result
             except EOFError:
                 self._dbg(1, 'Telnet.authenticate(): EOF while waiting for prompt')
@@ -69,19 +76,20 @@ class Telnet(Transport):
                 self._dbg(1, 'Telnet.authenticate(): driver replaced')
                 continue
 
-            # No match.
-            elif which == -1:
+            try:
+                section, prompt = prompt_map[which]
+            except IndexError:
                 if self.response is None:
                     self.response = ''
                 msg = "Timeout while waiting for prompt. Buffer: %s" % repr(self.response)
                 raise TransportException(msg)
 
             # Login error detected.
-            elif which == 0:
+            if section == 'login-error':
                 raise LoginFailure("Login failed")
 
             # User name prompt.
-            elif which == 1:
+            elif section == 'username':
                 self._dbg(1, "Username prompt %s received." % which)
                 self.send(user + '\r')
                 if not userwait:
@@ -90,7 +98,7 @@ class Telnet(Transport):
                 continue
 
             # s/key prompt.
-            elif which == 2:
+            elif section == 'skey':
                 self._dbg(1, "S/Key prompt received.")
                 seq  = int(matches.group(1))
                 seed = matches.group(2)
@@ -106,7 +114,7 @@ class Telnet(Transport):
                 continue
             
             # Cleartext password prompt.
-            elif which == 3:
+            elif section == 'password':
                 self._dbg(1, "Cleartext password prompt received.")
                 self.send(password + '\r')
                 if not wait:
@@ -115,12 +123,12 @@ class Telnet(Transport):
                 continue
 
             # Shell prompt.
-            elif which == 4:
+            elif section == 'cli':
                 self._dbg(1, 'Shell prompt received.')
                 break
 
             else:
-                assert 0 # Not reached.
+                assert False # No such section
 
 
     def _authenticate_by_key_hook(self, user, key, wait):
@@ -142,18 +150,21 @@ class Telnet(Transport):
             self._dbg(1, 'Error while writing to connection')
             raise
 
-
     def execute(self, data):
         # Send the command.
         self.send(data + '\r')
         return self.expect_prompt()
 
+    def _domatch(self, prompt, flush):
+        if flush:
+            func = self.tn.expect
+        else:
+            func = self.tn.waitfor
 
-    def _tn_match(self, prompt, func):
         # Wait for a prompt.
         self.response = None
         try:
-            result, match, response = func([prompt], self.timeout)
+            result, match, response = func(prompt, self.timeout)
             self.response           = response
         except Exception:
             self._dbg(1, 'Error while waiting for %s' % repr(prompt.pattern))
@@ -168,11 +179,7 @@ class Telnet(Transport):
             error = 'Error while waiting for response from device'
             raise TransportException(error)
 
-    def _waitfor_hook(self, prompt):
-        self._tn_match(prompt, self.tn.waitfor)
-
-    def _expect_hook(self, prompt):
-        self._tn_match(prompt, self.tn.expect)
+        return result
 
     def close(self, force = False):
         if self.tn is None:

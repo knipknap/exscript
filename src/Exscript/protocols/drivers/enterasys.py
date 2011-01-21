@@ -18,9 +18,9 @@ A driver for Enterasys devices.
 import re
 from driver import Driver
 
-_user_re      = re.compile(r'[\r\n]Username: $')
-_password_re  = re.compile(r'[\r\n]Password: $')
-_prompt_re    = re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?-?[>#] ?$')
+_user_re      = [re.compile(r'[\r\n]Username: $')]
+_password_re  = [re.compile(r'[\r\n]Password: $')]
+_prompt_re    = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?-?[>#] ?$')]
 _enterasys_re = re.compile(r'\benterasys\b', re.I)
 
 class EnterasysDriver(Driver):

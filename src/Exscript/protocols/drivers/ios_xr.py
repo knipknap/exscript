@@ -18,9 +18,9 @@ A driver for Cisco IOS XR.
 import re
 from driver import Driver
 
-_user_re     = re.compile(r'[\r\n]Username: $')
-_password_re = re.compile(r'[\r\n]Password: $')
-_prompt_re   = re.compile(r'[\r\n]RP/\d+/(?:RP)?\d+\/CPU\d+:[^#]+(?:\([^\)]+\))?#$')
+_user_re     = [re.compile(r'[\r\n]Username: $')]
+_password_re = [re.compile(r'[\r\n]Password: $')]
+_prompt_re   = [re.compile(r'[\r\n]RP/\d+/(?:RP)?\d+\/CPU\d+:[^#]+(?:\([^\)]+\))?#$')]
 
 class IOSXRDriver(Driver):
     def __init__(self):
@@ -30,7 +30,7 @@ class IOSXRDriver(Driver):
         self.prompt_re   = _prompt_re
 
     def check_response_for_os(self, string):
-        if _prompt_re.search(string):
+        if _prompt_re[0].search(string):
             return 95
         return 0
 

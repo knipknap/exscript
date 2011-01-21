@@ -18,10 +18,10 @@ A driver for Cisco IOS (not IOS XR).
 import re
 from driver import Driver
 
-_user_re     = re.compile(r'user ?name: ?$', re.I)
-_password_re = re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')
-_tacacs_re   = re.compile(r'[\r\n]s\/key[\S ]+\r?%s' % _password_re.pattern)
-_prompt_re   = re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')
+_user_re     = [re.compile(r'user ?name: ?$', re.I)]
+_password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
+_tacacs_re   = re.compile(r'[\r\n]s\/key[\S ]+\r?%s' % _password_re[0].pattern)
+_prompt_re   = [re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 
 class IOSDriver(Driver):
     def __init__(self):
@@ -33,7 +33,7 @@ class IOSDriver(Driver):
     def check_head_for_os(self, string):
         if _tacacs_re.search(string):
             return 50
-        if _user_re.search(string):
+        if _user_re[0].search(string):
             return 40
         if 'User Access Verification' in string:
             return 20

@@ -73,34 +73,42 @@ class Dummy(Transport):
 
     def _authenticate_hook(self, user, password, wait, userwait):
         while True:
-            # Wait for the user prompt.
-            prompt  = [self.get_login_error_prompt(),
-                       self.get_username_prompt(),
-                       _skey_re,
-                       self.get_password_prompt(),
-                       self.get_prompt()]
+            # Wait for any prompt.
+            prompts = (('login-error', self.get_login_error_prompt()),
+                       ('username',    self.get_username_prompt()),
+                       ('skey',        [_skey_re]),
+                       ('password',    self.get_password_prompt()),
+                       ('cli',         self.get_prompt()))
+            prompt_map  = []
+            prompt_list = []
+            n           = 0
+            for section, sectionprompts in prompts:
+                for prompt in sectionprompts:
+                    prompt_map.append((section, prompt))
+                    prompt_list.append(prompt)
+
             which    = None
             matches  = None
             response = None
             try:
-                which, matches, response = self._expect_any(prompt)
+                which, matches, response = self._expect_any(prompt_list)
             except Exception, e:
                 msg = 'Dummy.authenticate(): Error waiting for prompt: '
                 raise TransportException(msg + str(e))
 
-            # No match.
-            if which < 0:
+            try:
+                section, prompt = prompt_map[which]
+            except IndexError:
                 if response is None:
                     response = ''
                 msg = "Timeout while waiting for prompt. Buffer: %s" % repr(response)
                 raise TransportException(msg)
 
             # Login error detected.
-            elif which == 0:
+            if section == 'login-error':
                 raise LoginFailure("Login failed")
 
-            # User name prompt.
-            elif which <= 1:
+            elif section == 'username':
                 self._dbg(1, "Username prompt %s received." % which)
                 self.send(user + '\r\n')
                 if not userwait:
@@ -108,8 +116,7 @@ class Dummy(Transport):
                     break
                 continue
 
-            # s/key prompt.
-            elif which == 2:
+            elif section == 'skey':
                 self._dbg(1, "S/Key prompt received.")
                 seq  = int(matches.group(1))
                 seed = matches.group(2)
@@ -123,8 +130,7 @@ class Dummy(Transport):
                     break
                 continue
 
-            # Cleartext password prompt.
-            elif which == 3:
+            elif section == 'password':
                 self._dbg(1, "Cleartext password prompt received.")
                 self.send(password + '\r\n')
                 if not wait:
@@ -132,13 +138,12 @@ class Dummy(Transport):
                     break
                 continue
 
-            # Shell prompt.
-            elif which == 4:
+            elif section == 'cli':
                 self._dbg(1, 'Shell prompt received.')
                 break
 
             else:
-                assert 0 # Not reached.
+                assert False # No such section
 
     def _authenticate_by_key_hook(self, user, key, wait):
         pass
@@ -157,12 +162,9 @@ class Dummy(Transport):
         return self.expect_prompt()
 
     def _domatch(self, prompt, flush):
-        if not hasattr(prompt, 'match'):
-            raise TypeError('prompt must be a compiled regular expression.')
-
         # Wait for a prompt.
         try:
-            res = self._expect_any([prompt], flush)
+            res = self._expect_any(prompt, flush)
             if res is None:
                 self._dbg(2, "No prompt match")
                 raise Exception('no match')
@@ -179,11 +181,7 @@ class Dummy(Transport):
             error = 'Error while waiting for response from device'
             raise TransportException(error)
 
-    def _waitfor_hook(self, prompt):
-        self._domatch(prompt, False)
-
-    def _expect_hook(self, prompt):
-        self._domatch(prompt, True)
+        return result
 
     def close(self, force = False):
         self._say('\n')

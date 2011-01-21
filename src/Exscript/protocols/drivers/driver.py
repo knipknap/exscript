@@ -31,22 +31,22 @@ _any_path       = r'(?:' + _path + r'|~' + _path + r'?)'
 _host           = r'(?:[\w+\-\.]+)'
 _user           = r'(?:[\w+\-]+)'
 _user_host      = r'(?:(?:' + _user + r'\@)?' + _host + r')'
-_prompt_re      = re.compile(_prompt_start                 \
-                           + r'[\[\<]?'                    \
-                           + r'\w+'                        \
-                           + _user_host + r'?'             \
-                           + r':?'                         \
-                           + _any_path + r'?'              \
-                           + r'[: ]?'                      \
-                           + _any_path + r'?'              \
-                           + r'(?:\(' + _filename + '\))?' \
-                           + r'[\]\-]?'                    \
-                           + r'[#>%\$\]] ?'                \
-                           + _unprintable + r'*'           \
-                           + r'\Z', _flags)
+_prompt_re      = [re.compile(_prompt_start                 \
+                            + r'[\[\<]?'                    \
+                            + r'\w+'                        \
+                            + _user_host + r'?'             \
+                            + r':?'                         \
+                            + _any_path + r'?'              \
+                            + r'[: ]?'                      \
+                            + _any_path + r'?'              \
+                            + r'(?:\(' + _filename + '\))?' \
+                            + r'[\]\-]?'                    \
+                            + r'[#>%\$\]] ?'                \
+                            + _unprintable + r'*'           \
+                            + r'\Z', _flags)]
 
-_user_re    = re.compile(r'(user ?name|user|login): *$', _flags)
-_pass_re    = re.compile(r'password:? *$',               _flags)
+_user_re    = [re.compile(r'(user ?name|user|login): *$', _flags)]
+_pass_re    = [re.compile(r'password:? *$',               _flags)]
 _errors     = [r'error',
                r'invalid',
                r'incomplete',
@@ -54,7 +54,7 @@ _errors     = [r'error',
                r'unknown command',
                r'connection timed out',
                r'[^\r\n]+ not found']
-_error_re   = re.compile(r'^%?\s*(?:' + '|'.join(_errors) + r')', _flags)
+_error_re   = [re.compile(r'^%?\s*(?:' + '|'.join(_errors) + r')', _flags)]
 _login_fail = [r'bad secrets',
                r'denied',
                r'invalid',
@@ -62,9 +62,9 @@ _login_fail = [r'bad secrets',
                r'incorrect',
                r'connection timed out',
                r'failed']
-_login_fail_re = re.compile(_nl          \
-                          + r'[^\r\n]*'  \
-                          + r'(?:' + '|'.join(_login_fail) + r')', _flags)
+_login_fail_re = [re.compile(_nl          \
+                           + r'[^\r\n]*'  \
+                           + r'(?:' + '|'.join(_login_fail) + r')', _flags)]
 
 class Driver(object):
     def __init__(self, name):

@@ -18,9 +18,9 @@ A driver for Redback Smart Edge OS.
 import re
 from driver import Driver
 
-_user_re     = re.compile(r'[\r\n]login: ')
-_password_re = re.compile(r'[\r\n]Password: $')
-_prompt_re   = re.compile(r'[\r\n]\[\w+\][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')
+_user_re     = [re.compile(r'[\r\n]login: ')]
+_password_re = [re.compile(r'[\r\n]Password: $')]
+_prompt_re   = [re.compile(r'[\r\n]\[\w+\][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
 _model_re    = re.compile(r'[\r\n][^\r\n]+-se800[\r\n]')
 
 class SmartEdgeOSDriver(Driver):
@@ -33,7 +33,7 @@ class SmartEdgeOSDriver(Driver):
     def check_head_for_os(self, string):
         if _model_re.search(string):
             return 60
-        if self.user_re.search(string):
+        if self.user_re[0].search(string):
             return 20
         return 0
 
