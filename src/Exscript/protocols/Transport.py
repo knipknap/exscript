@@ -20,10 +20,11 @@ import sys
 import os
 from drivers             import driver_map, isdriver
 from OsGuesser           import OsGuesser
-from Exception           import TransportException, InvalidCommandException
 from Exception           import TransportException, \
+                                InvalidCommandException, \
                                 LoginFailure, \
                                 TimeoutException, \
+                                DriverReplacedException, \
                                 ExpectCancelledException
 from Exscript.util.crypt import otp
 from Exscript.util.event import Event
@@ -101,18 +102,21 @@ class Transport(object):
 
             key = Key.from_file('~/.ssh/id_rsa', 'my_key_password')
 
-            # app_password2 defaults to app_password, which defaults to
-            # password. Usernames analogous. The key defaults to None,
-            # in which case key authentication is not attempted.
-            account = Account(user          = 'myuser',
-                              password      = 'mypassword',
-                              app_user      = 'myuser',
-                              app_password  = 'my_app_password',
-                              app_user2     = 'myuser',
-                              app_password2 = 'my_app_password2')
-                              key           = key)
+            # The user account to use for protocol level authentification.
+            # The key defaults to None, in which case key authentication is
+            # not attempted.
+            account = Account(name     = 'myuser',
+                              password = 'mypassword',
+                              key      = key)
 
-            conn.login(account, flush = True)
+            # The account to use for app-level authentification.
+            # password2 defaults to password.
+            app_account = Account(name      = 'myuser',
+                                  password  = 'my_app_password',
+                                  password2 = 'my_app_password2')
+
+            # app_account defaults to account.
+            conn.login(account, app_account = None, flush = True)
 
     Another important consideration is that once the login is complete, the
     device must be in a clearly defined state, i.e. we need to
@@ -125,12 +129,14 @@ class Transport(object):
     So what can we hide behind the login() call? Assuming we always try every
     method::
 
+        if app_account is None:
+            app_account = account
         # Protocol level authentification.
-        conn.authenticate('myuser', password, key = key)
+        conn.authenticate(account, flush = False)
         # App-level authentification.
-        conn.app_authenticate('myuser', password)
+        conn.app_authenticate(app_account, flush = False)
         # App-level authorization.
-        conn.app_authorize('myuser', password)
+        conn.app_authorize(app_account, flush = False)
 
     The code could produce the following result::
 
@@ -208,23 +214,23 @@ class Transport(object):
         self.otp_requested_event   = Event()
         self.os_guesser            = OsGuesser(self)
         self.auto_driver           = driver_map[self.guess_os()]
-        self.authorized            = False
         self.authenticated         = False
+        self.app_authenticated     = False
+        self.app_authorized        = False
         self.manual_user_re        = None
         self.manual_password_re    = None
         self.manual_prompt_re      = None
         self.manual_error_re       = None
         self.manual_login_error_re = None
+        self.driver_replaced       = False
         self.manual_driver         = kwargs.get('driver')
-        self.host                  = kwargs.get('host',     None)
-        self.user                  = kwargs.get('user',     '')
-        self.password              = kwargs.get('password', '')
-        self.key                   = kwargs.get('key')
+        self.host                  = kwargs.get('host',    None)
+        self.last_account          = kwargs.get('account', None)
         self.stdout                = kwargs.get('stdout')
-        self.stderr                = kwargs.get('stderr',   sys.stderr)
-        self.debug                 = kwargs.get('debug',    0)
-        self.timeout               = kwargs.get('timeout',  30)
-        self.logfile               = kwargs.get('logfile',  None)
+        self.stderr                = kwargs.get('stderr',  sys.stderr)
+        self.debug                 = kwargs.get('debug',   0)
+        self.timeout               = kwargs.get('timeout', 30)
+        self.logfile               = kwargs.get('logfile', None)
         self.log                   = None
         self.response              = None
         if not self.stdout:
@@ -255,6 +261,8 @@ class Transport(object):
         return self
 
     def _driver_replaced_notify(self, old, new):
+        self.driver_replaced = True
+        self.cancel_expect()
         msg = 'Transport: driver replaced: %s -> %s' % (old.name, new.name)
         self._dbg(1, msg)
 
@@ -503,105 +511,76 @@ class Transport(object):
             self.host = hostname
         return self._connect_hook(self.host, port)
 
-    def authenticate(self,
-                     user     = None,
-                     password = None,
-                     flush    = True):
-        """
-        Authenticates at the remote host. Attempts to smartly recognize the 
-        user and password prompts; the following remote operating systems 
-        should be supported: Unix, IOS, IOS-XR, JunOS.
+    def _get_account(self, account):
+        if account is None:
+            account = self.last_account
+        if account is None:
+            raise TypeError('An account is required')
+        self.last_account = account
+        return account
 
-        @type  user: string
-        @param user: The remote username.
-        @type  password: string
-        @param password: The plain password.
+    def login(self, account = None, app_account = None, flush = True):
+        """
+        Log into the connected host using the best method available.
+        If an account is not given, default to the account that was
+        used during the last call to login(). If a previous call was not
+        made, use the account that was passed to the constructor. If that
+        also fails, raise a TypeError.
+
+        The app_account is passed to app_authenticate. If app_account is
+        not given, default to the value of the account argument.
+
+        @type  account: Account
+        @param account: The account for protocol level authentification.
+        @type  app_account: Account
+        @param app_account: The account for app level authentification.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         """
-        if user is None:
-            user = self.user
-        if password is None:
-            password = self.password
-        if user is None:
-            raise TypeError('A username is required')
-        if password is None:
-            raise TypeError('A password is required')
-        self.user     = user
-        self.password = password
+        account = self._get_account(account)
+        if app_account is None:
+            app_account = account
 
-        self._dbg(1, "Attempting to authenticate %s." % user)
-        self._authenticate_hook(user, password, flush)
+        self.authenticate(account, flush = False)
+        self.app_authenticate(app_account, flush = False)
+        self.auto_app_authorize(app_account, flush = flush)
+
+    def authenticate(self, account = None, flush = True):
+        """
+        Low-level API to perform protocol-level authentification on protocols
+        that support it.
+
+        @note In most cases, you want to use the login() method instead, as
+           it automatically chooses the best login method for each protocol.
+
+        @type  account: Account
+        @param account: An account object, like login().
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
+        """
+        account  = self._get_account(account)
+        user     = account.get_name()
+        password = account.get_password()
+        key      = account.get_key()
+        if key is None:
+            self._dbg(1, "Attempting to authenticate %s." % user)
+            self._authenticate_hook(user, password, flush)
+        else:
+            self._dbg(1, "Authenticate %s with key." % user)
+            self._authenticate_by_key_hook(user, key, flush)
         self.authenticated = True
 
-    def authenticate_by_key(self, user, key, flush = True):
+    def is_authenticated(self):
         """
-        Authenticates at the remote host using key authentification.
+        Returns True if the protocol-level authentication procedure was
+        completed, False otherwise.
 
-        @type  key: Key
-        @param key: A key object.
-        @type  flush: bool
-        @param flush: Whether to flush the last prompt from the buffer.
+        @rtype:  bool
+        @return: Whether the authentication was completed.
         """
-        if user is None:
-            user = self.user
-        if user is None:
-            raise TypeError('A user is required')
-        if key is None:
-            key = self.key
-        if key is None:
-            raise TypeError('A key is required')
-        self.user = user
-        self.key  = key
+        return self.authenticated
 
-        self._dbg(1, "Attempting to authenticate %s." % user)
-        self._authenticate_by_key_hook(user, key, flush)
-        self.authenticated = True
-
-    def app_authenticate(self, user = None, password = None, flush = True):
-        """
-        Attempt to perform application-level authentication. Application
-        level authentication is needed on devices where the username and
-        password are requested from the user after the connection was
-        already accepted by the remote device.
-
-        The difference between app-level authentication and protocol-level
-        authentication is that in the latter case, the prompting is handled
-        by the client, whereas app-level authentication is handled by the
-        remote device.
-
-        App-level authentication comes in a large variety of forms, and
-        while this method tries hard to support them all, there is no
-        guarantee that it will always work.
-
-        We attempt to smartly recognize the user and password prompts;
-        for a list of supported operating systems please check the
-        Exscript.protocols.drivers module.
-
-        Returns upon finding the first command line prompt. Depending
-        on whether the flush argument is True, it also removes *the
-        prompt from the incoming buffer*.
-
-        @type  user: string
-        @param user: The remote username.
-        @type  password: string
-        @param password: The plain password.
-        @type  flush: bool
-        @param flush: Whether to flush the last prompt from the buffer.
-        """
-        if user is None:
-            user = self.user
-        if password is None:
-            password = self.password
-        if user is None:
-            raise TypeError('A username is required')
-        if password is None:
-            raise TypeError('A password is required')
-        self.user     = user
-        self.password = password
-
-        self._dbg(1, "Attempting to app-authenticate %s." % user)
-
+    def _app_authenticate(self, user, password, flush = True):
         while True:
             # Wait for any prompt. Once a match is found, we need to be able
             # to find out which type of prompt was matched, so we build a
@@ -621,16 +600,19 @@ class Transport(object):
 
             # Wait for the prompt.
             try:
-                index = self.waitfor(prompt_list)
+                index, match = self._waitfor(prompt_list)
             except TimeoutException:
                 if self.response is None:
                     self.response = ''
                 msg = "Buffer: %s" % repr(self.response)
                 raise TimeoutException(msg)
-            except ExpectCancelledException:
+            except DriverReplacedException:
                 # Driver replaced, retry.
                 self._dbg(1, 'Transport.app_authenticate(): driver replaced')
                 continue
+            except ExpectCancelledException:
+                self._dbg(1, 'Transport.app_authenticate(): expect cancelled')
+                raise
             except EOFError:
                 self._dbg(1, 'Transport.app_authenticate(): EOF')
                 raise
@@ -651,8 +633,8 @@ class Transport(object):
             elif section == 'skey':
                 self._dbg(1, "S/Key prompt received.")
                 self.expect(prompt) # consume the prompt from the buffer
-                seq  = int(matches.group(1))
-                seed = matches.group(2)
+                seq  = int(match.group(1))
+                seed = match.group(2)
                 self._otp_cb(seq, seed)
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
@@ -681,43 +663,79 @@ class Transport(object):
         if flush:
             self.expect_prompt()
 
-    def is_authenticated(self):
+    def app_authenticate(self, account = None, flush = True):
         """
-        Returns True if the authentication procedure was completed, False
-        otherwise.
+        Attempt to perform application-level authentication. Application
+        level authentication is needed on devices where the username and
+        password are requested from the user after the connection was
+        already accepted by the remote device.
+
+        The difference between app-level authentication and protocol-level
+        authentication is that in the latter case, the prompting is handled
+        by the client, whereas app-level authentication is handled by the
+        remote device.
+
+        App-level authentication comes in a large variety of forms, and
+        while this method tries hard to support them all, there is no
+        guarantee that it will always work.
+
+        We attempt to smartly recognize the user and password prompts;
+        for a list of supported operating systems please check the
+        Exscript.protocols.drivers module.
+
+        Returns upon finding the first command line prompt. Depending
+        on whether the flush argument is True, it also removes the
+        prompt from the incoming buffer.
+
+        @type  account: Account
+        @param account: An account object, like login().
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
+        """
+        account  = self._get_account(account)
+        user     = account.get_name()
+        password = account.get_password()
+        self._dbg(1, "Attempting to app-authenticate %s." % user)
+        self._app_authenticate(user, password, flush)
+        self.app_authenticated = True
+
+    def is_app_authenticated(self):
+        """
+        Returns True if the application-level authentication procedure was
+        completed, False otherwise.
 
         @rtype:  bool
         @return: Whether the authentication was completed.
         """
-        return self.authenticated
+        return self.app_authenticated
 
-    def authorize(self, password = None, flush = True):
+    def app_authorize(self, account = None, flush = True):
         """
-        Authorizes at the remote host, if the remote host supports 
-        authorization. Does nothing otherwise.
+        Like app_authenticate(), but uses the authorization password
+        of the account.
 
         For the difference between authentication and authorization 
         please google for AAA.
 
-        @type  password: string
-        @param password: The plain password.
+        @type  account: Account
+        @param account: An account object, like login().
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         """
+        account  = self._get_account(account)
+        user     = account.get_name()
+        password = account.get_authorization_password()
         if password is None:
-            password = self.password
-        if password is None:
-            raise TypeError('A password is required')
-        self.password = password
+            password = account.get_password()
+        self._dbg(1, "Attempting to app-authorize %s." % user)
+        self._app_authenticate(user, password, flush)
+        self.app_authorized = True
 
-        self._dbg(1, "Attempting to authorize.")
-        self._authorize_hook(password, flush)
-        self.authorized = True
-
-    def auto_authorize(self, password = None, flush = True):
+    def auto_app_authorize(self, account = None, flush = True):
         """
-        Like authorize(), but instead of just waiting for a password
-        prompt, it automatically initiates the authorization procedure.
+        Like authorize(), but instead of just waiting for a user or
+        password prompt, it automatically initiates the authorization
+        procedure by sending a driver-specific command.
 
         In the case of devices that understand AAA, that means sending
         a command to the device. For example, on routers running Cisco
@@ -732,25 +750,19 @@ class Transport(object):
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         """
-        if password is None:
-            password = self.password
-        if password is None:
-            raise TypeError('A password is required')
-        self.password = password
-
+        account = self._get_account(account)
         self._dbg(1, 'Calling driver.auto_authorize().')
-        self.get_driver().auto_authorize(self, password, flush)
-        self.authorized = True
+        self.get_driver().auto_authorize(self, account, flush)
 
-    def is_authorized(self):
+    def is_app_authorized(self):
         """
-        Returns True if the authorization procedure was completed, False
-        otherwise.
+        Returns True if the application-level authorization procedure was
+        completed, False otherwise.
 
         @rtype:  bool
         @return: Whether the authorization was completed.
         """
-        return self.authorized
+        return self.app_authorized
 
     def send(self, data):
         """
@@ -780,12 +792,17 @@ class Transport(object):
         """
         raise NotImplementedError()
 
+    def _waitfor(self, prompt):
+        result = self._domatch(to_regexs(prompt), False)
+        self.os_guesser.response_received()
+        return result
+
     def waitfor(self, prompt):
         """
         Monitors the data received from the remote host and waits until 
         the response matches the given prompt.
         Once a match has been found, the buffer containing incoming data
-        is NOT changed. In other words, consecuitive calls to this function
+        is NOT changed. In other words, consecutive calls to this function
         will always work, e.g.::
 
             conn.waitfor('myprompt>')
@@ -806,12 +823,21 @@ class Transport(object):
 
         @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
         @param prompt: One or more regular expressions.
-        @rtype:  int
-        @return: The index of the regular expression that matched.
+        @rtype:  int, re.MatchObject
+        @return: The index of the regular expression that matched,
+          and the match object.
         """
-        index = self._domatch(to_regexs(prompt), False)
+        while True:
+            try:
+                result = self._waitfor(prompt)
+            except DriverReplacedException:
+                continue # retry
+            return result
+
+    def _expect(self, prompt):
+        result = self._domatch(to_regexs(prompt), True)
         self.os_guesser.response_received()
-        return index
+        return result
 
     def expect(self, prompt):
         """
@@ -830,12 +856,16 @@ class Transport(object):
 
         @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
         @param prompt: One or more regular expressions.
-        @rtype:  int
-        @return: The index of the regular expression that matched.
+        @rtype:  int, re.MatchObject
+        @return: The index of the regular expression that matched,
+          and the match object.
         """
-        index = self._domatch(to_regexs(prompt), True)
-        self.os_guesser.response_received()
-        return index
+        while True:
+            try:
+                result = self._expect(prompt)
+            except DriverReplacedException:
+                continue # retry
+            return result
 
     def expect_prompt(self):
         """

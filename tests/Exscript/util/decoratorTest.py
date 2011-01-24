@@ -10,13 +10,9 @@ class FakeConnection(object):
     def open(self):
         self.open = True
 
-    def authenticate(self, flush = True):
-        self.authenticated = True
-        self.authe_flushed = flush
-
-    def auto_authorize(self, flush):
-        self.authorized    = True
-        self.autho_flushed = flush
+    def login(self, flush = True):
+        self.logged_in     = True
+        self.login_flushed = flush
 
     def close(self, force):
         self.open         = False
@@ -66,18 +62,18 @@ class decoratorTest(unittest.TestCase):
         from Exscript.util.decorator import connect
         bound  = connect(self.connect_cb)
         result = bound(FakeConnection(), 'one', 'two', three = 3)
-        self.assert_(result == 123, result)
+        self.assertEqual(result, 123)
 
     def autologin_cb(self, conn, *args, **kwargs):
-        self.assert_(conn.authenticated == True)
-        self.assert_(conn.autho_flushed == False)
+        self.assert_(conn.logged_in == True)
+        self.assert_(conn.login_flushed == False)
         return self.connect_cb(conn, *args, **kwargs)
 
     def testAutologin(self):
         from Exscript.util.decorator import autologin
         bound  = autologin(self.autologin_cb, False)
         result = bound(FakeConnection(), 'one', 'two', three = 3)
-        self.assert_(result == 123, result)
+        self.assertEqual(result, 123)
 
     def testDeprecated(self):
         pass #not really needed.

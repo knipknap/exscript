@@ -2,6 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from ConfigParser                 import RawConfigParser
+from Exscript                     import Account
 from Exscript.protocols.Exception import TimeoutException, \
                                          ExpectCancelledException
 from Exscript.protocols.Transport import Transport
@@ -17,12 +18,19 @@ class TransportTest(unittest.TestCase):
     def createTransport(self):
         self.transport = Transport(echo = 0)
 
+    def doLogin(self, flush = True):
+        self.transport.connect(self.hostname, self.port)
+        self.transport.login(self.account, flush = flush)
+
     def doAuthenticate(self, flush = True):
         self.transport.connect(self.hostname, self.port)
-        self.transport.authenticate(self.user, self.password, flush = flush)
+        self.transport.authenticate(self.account, flush = flush)
 
-    def doAuthorize(self, flush = True):
-        self.transport.authorize(self.password, flush)
+    def doAppAuthenticate(self, flush = True):
+        self.transport.app_authenticate(self.account, flush)
+
+    def doAppAuthorize(self, flush = True):
+        self.transport.app_authorize(self.account, flush)
 
     def setUp(self):
         cfgfile = os.path.join(os.path.dirname(__file__), '..', 'unit_test.cfg')
@@ -32,6 +40,7 @@ class TransportTest(unittest.TestCase):
         self.port     = None
         self.user     = cfg.get('testhost', 'user')
         self.password = cfg.get('testhost', 'password')
+        self.account  = Account(self.user, password = self.password)
         self.createTransport()
 
     def _trymatch(self, prompts, string):
@@ -190,88 +199,121 @@ class TransportTest(unittest.TestCase):
         self.assertEqual(self.transport.response, None)
         self.assertEqual(self.transport.get_host(), self.hostname)
 
-    def testAuthenticate(self):
-        # Test can not work on the abstract base.
-        if self.transport.__class__ == Transport:
-            self.assertRaises(Exception, self.transport.authenticate, 'test')
-            return
-        self.doAuthenticate()
-        self.assert_(self.transport.response is not None)
-        self.assert_(len(self.transport.response) > 0)
-
-    def testAuthenticateByKey(self):
-        key = Key.from_file('foo')
+    def testLogin(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception,
-                              self.transport.authenticate_by_key,
-                              'test',
-                              key)
+                              self.transport.login,
+                              self.account)
             return
+        # Password login.
+        self.doLogin(flush = False)
+        self.assert_(self.transport.response is not None)
+        self.assert_(len(self.transport.response) > 0)
+        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.assert_(self.transport.is_app_authorized())
+
+        # Key login.
+        self.tearDown()
+        self.setUp()
+        key     = Key.from_file('foo')
+        account = Account(self.user, self.password, key = key)
         self.transport.connect(self.hostname, self.port)
-        self.transport.authenticate_by_key(self.user, key, False)
+        self.transport.login(account, flush = False)
+        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.assert_(self.transport.is_app_authorized())
+
+    def testAuthenticate(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception,
+                              self.transport.authenticate,
+                              self.account)
+            return
+        # There is no guarantee that the device provided any response
+        # during protocol level authentification.
+        self.doAuthenticate(flush = False)
+        self.assert_(self.transport.is_authenticated())
+        self.failIf(self.transport.is_app_authenticated())
+        self.failIf(self.transport.is_app_authorized())
+
+    def testIsAuthenticated(self):
+        pass # See testAuthenticate()
 
     def testAppAuthenticate(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
-            self.assertRaises(Exception, self.transport.app_authenticate, 'test')
+            self.assertRaises(Exception,
+                              self.transport.app_authenticate,
+                              self.account)
             return
-        #FIXME
-
-    def testIsAuthenticated(self):
-        self.failIf(self.transport.is_authenticated())
-        # Test can not work on the abstract base.
-        if self.transport.__class__ == Transport:
-            return
-        self.doAuthenticate()
+        self.testAuthenticate()
+        self.doAppAuthenticate(flush = False)
         self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.failIf(self.transport.is_app_authorized())
 
-    def testAuthorize(self):
+    def testIsAppAuthenticated(self):
+        pass # See testAppAuthenticate()
+
+    def testAppAuthorize(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
-            self.assertRaises(Exception, self.transport.authorize)
+            self.assertRaises(Exception, self.transport.app_authorize)
             return
         self.doAuthenticate(flush = False)
-        self.assert_(len(self.transport.response) > 0)
+        self.doAppAuthenticate(flush = False)
         response = self.transport.response
 
         # Authorize should see that a prompt is still in the buffer,
         # and do nothing.
-        self.doAuthorize(flush = False)
+        self.doAppAuthorize(flush = False)
         self.assertEqual(self.transport.response, response)
+        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.assert_(self.transport.is_app_authorized())
 
-        self.doAuthorize(flush = True)
+        self.doAppAuthorize(flush = True)
         self.failUnlessEqual(self.transport.response, response)
+        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.assert_(self.transport.is_app_authorized())
 
-    def testAutoAuthorize(self):
+    def testAutoAppAuthorize(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
-            self.assertRaises(Exception, self.transport.authorize)
+            self.assertRaises(TypeError, self.transport.auto_app_authorize)
             return
-        self.doAuthenticate(flush = False)
+
+        self.testAppAuthenticate()
         response = self.transport.response
+
         # This should do nothing, because our test host does not
         # support AAA. Can't think of a way to test against a
         # device using AAA.
-        self.transport.auto_authorize(self.user)
+        self.transport.auto_app_authorize(self.account, flush = False)
         self.failUnlessEqual(self.transport.response, response)
+        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.assert_(self.transport.is_app_authorized())
 
-    def testIsAuthorized(self):
-        self.failIf(self.transport.is_authorized())
-        # Test can not work on the abstract base.
-        if self.transport.__class__ == Transport:
-            return
-        self.doAuthenticate(flush = False)
-        self.failIf(self.transport.is_authorized())
-        self.doAuthorize()
-        self.assert_(self.transport.is_authorized())
+        self.transport.auto_app_authorize(self.account, flush = True)
+        self.failUnlessEqual(self.transport.response, response)
+        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.assert_(self.transport.is_app_authorized())
+
+    def testIsAppAuthorized(self):
+        pass # see testAppAuthorize()
 
     def testSend(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.send, 'ls')
             return
-        self.doAuthenticate()
+        self.doLogin()
         self.transport.execute('ls')
 
         self.transport.send('df\r')
@@ -287,7 +329,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.execute, 'ls')
             return
-        self.doAuthenticate()
+        self.doLogin()
         self.transport.execute('ls')
         self.assert_(self.transport.response is not None)
         self.assert_(self.transport.response.startswith('ls'))
@@ -297,7 +339,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.waitfor, 'ls')
             return
-        self.doAuthenticate()
+        self.doLogin()
         oldresponse = self.transport.response
         self.transport.send('ls\r')
         self.assertEqual(oldresponse, self.transport.response)
@@ -312,7 +354,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.expect, 'ls')
             return
-        self.doAuthenticate()
+        self.doLogin()
         oldresponse = self.transport.response
         self.transport.send('ls\r')
         self.assertEqual(oldresponse, self.transport.response)
@@ -324,7 +366,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.expect, 'ls')
             return
-        self.doAuthenticate()
+        self.doLogin()
         oldresponse = self.transport.response
         self.transport.send('ls\r')
         self.assertEqual(oldresponse, self.transport.response)
@@ -339,7 +381,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.expect, 'ls')
             return
-        self.doAuthenticate()
+        self.doLogin()
         oldresponse = self.transport.response
         self.transport.data_received_event.connect(self._cancel_cb)
         self.transport.send('ls\r')
@@ -371,7 +413,10 @@ class TransportTest(unittest.TestCase):
             return
         self.transport.connect(self.hostname, self.port)
         self.assertEqual('unknown', self.transport.guess_os())
-        self.transport.authenticate(self.user, self.password)
+        self.transport.login(self.account)
+        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.assert_(self.transport.is_app_authorized())
         self.assertEqual('shell', self.transport.guess_os())
 
 def suite():

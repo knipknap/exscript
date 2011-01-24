@@ -26,7 +26,7 @@ class OsGuesser(StreamAnalyzer):
         self.set('os', 'unknown', 0)
 
     def data_received(self, data):
-        if self.conn.is_authenticated():
+        if self.conn.is_app_authenticated():
             if self.get('os', 80) in ('unknown', None):
                 self.set_from_match('os', self.os_map, data)
             return

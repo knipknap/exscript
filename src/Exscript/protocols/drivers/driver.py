@@ -90,5 +90,5 @@ class Driver(object):
     def init_terminal(self, conn):
         pass
 
-    def auto_authorize(self, conn, password, wait):
-        pass
+    def auto_authorize(self, conn, account, flush):
+        conn.app_authorize(account, flush)

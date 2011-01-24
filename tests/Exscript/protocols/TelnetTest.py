@@ -2,6 +2,7 @@ import sys, unittest, re, os, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from TransportTest         import TransportTest
+from Exscript              import Account
 from Exscript.util.telnetd import Telnetd
 from Exscript.protocols    import Telnet, Key
 from Exscript.emulators    import VirtualDevice
@@ -14,6 +15,7 @@ class TelnetTest(TransportTest):
         self.port     = 1236
         self.user     = 'user'
         self.password = 'password'
+        self.account  = Account(self.user, password = self.password)
         self.device   = VirtualDevice(self.hostname, echo = True)
         self.daemon   = Telnetd(self.hostname, self.port, self.device)
         ls_response   = '-rw-r--r--  1 sab  nmc    1628 Aug 18 10:02 file'
@@ -33,14 +35,6 @@ class TelnetTest(TransportTest):
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Telnet))
-
-    def testAuthenticateByKey(self):
-        self.transport.connect(self.hostname, self.port)
-        # Telnet does not support this.
-        self.assertRaises(NotImplementedError,
-                          self.transport.authenticate_by_key,
-                          'test',
-                          Key.from_file('foo'))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TelnetTest)

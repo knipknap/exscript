@@ -47,7 +47,7 @@ class DummyTest(TransportTest):
         transport.connect('testhost')
         self.assertEqual(transport.buffer,   '')
         self.assertEqual(transport.response, None)
-        transport.authenticate('sab', 'test', flush = False)
+        transport.login(self.account, flush = False)
         self.assert_(transport.buffer.endswith(self.prompt))
         transport.close()
 
@@ -57,7 +57,7 @@ class DummyTest(TransportTest):
                                login_type = VirtualDevice.LOGIN_TYPE_USERONLY)
         transport = self._create_dummy_and_eat_banner(device)
         self.assertEqual(transport.buffer, 'User: ')
-        transport.authenticate('sab', '', flush = False)
+        transport.login(self.account, flush = False)
         self.assert_(transport.buffer.endswith(self.prompt), repr(transport.buffer))
         transport.close()
 
@@ -67,7 +67,7 @@ class DummyTest(TransportTest):
                                login_type = VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
         transport = self._create_dummy_and_eat_banner(device)
         self.assertEqual(transport.buffer, 'Password: ')
-        transport.authenticate(None, 'test', flush = False)
+        transport.login(self.account, flush = False)
         self.assert_(transport.buffer.endswith(self.prompt))
         transport.close()
 
@@ -85,9 +85,9 @@ class DummyTest(TransportTest):
                                login_type = VirtualDevice.LOGIN_TYPE_USERONLY)
         transport = self._create_dummy_and_eat_banner(device)
         self.assertEqual(transport.buffer, 'User: ')
-        transport.authenticate('sab', '')
+        transport.login(self.account)
         self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, 'sab\r')
+        self.assertEqual(transport.response, self.user + '\r')
         transport.close()
 
         # Test login with password prompt and wait parameter.
@@ -96,17 +96,17 @@ class DummyTest(TransportTest):
                                login_type = VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
         transport = self._create_dummy_and_eat_banner(device)
         self.assertEqual(transport.buffer, 'Password: ')
-        transport.authenticate(None, 'test')
+        transport.login(self.account)
         self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, 'test\r')
+        self.assertEqual(transport.response, self.password + '\r')
         transport.close()
 
         # Test login with port number.
         transport = self._create_dummy_and_eat_banner(device, 1234)
         self.assertEqual(transport.buffer, 'Password: ')
-        transport.authenticate('sab', 'test')
+        transport.login(self.account)
         self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, 'test\r')
+        self.assertEqual(transport.response, self.password + '\r')
         transport.close()
 
         # Test a custom response.

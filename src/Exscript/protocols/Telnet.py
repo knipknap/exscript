@@ -20,6 +20,7 @@ from Transport import Transport
 from Exception import TransportException, \
                       LoginFailure, \
                       TimeoutException, \
+                      DriverReplacedException, \
                       ExpectCancelledException
 
 class Telnet(Transport):
@@ -30,10 +31,6 @@ class Telnet(Transport):
     def __init__(self, **kwargs):
         Transport.__init__(self, **kwargs)
         self.tn = None
-
-    def _driver_replaced_notify(self, old, new):
-        self.cancel_expect()
-        Transport._driver_replaced_notify(self, old, new)
 
     def _connect_hook(self, hostname, port):
         assert self.tn is None
@@ -48,16 +45,10 @@ class Telnet(Transport):
         return True
 
     def _authenticate_hook(self, user, password, flush):
-        self.app_authenticate(user, password, flush)
+        pass # Telnet does not support protocol level authentification
 
     def _authenticate_by_key_hook(self, user, key, flush):
-        #TODO: add support for reading a password file
-        msg = 'Telnet does not support key authentification'
-        raise NotImplementedError(msg)
-
-    def _authorize_hook(self, password, flush):
-        # The username should not be asked, so not passed.
-        return self._authenticate_hook('', password, flush)
+        pass # Telnet does not support protocol level authentification
 
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))
@@ -92,13 +83,19 @@ class Telnet(Transport):
 
         self._dbg(5, "Response was %s" % repr(self.response))
 
-        if result == -1 or self.response is None:
+        if result == -1:
             error = 'Error while waiting for response from device'
             raise TimeoutException(error)
-        elif result == -2:
-            raise ExpectCancelledException()
+        if result == -2:
+            if self.driver_replaced:
+                self.driver_replaced = False
+                raise DriverReplacedException()
+            else:
+                raise ExpectCancelledException()
+        if self.response is None:
+            raise TransportException('whoops - response is None')
 
-        return result
+        return result, match
 
     def cancel_expect(self):
         self.tn.cancel_expect = True

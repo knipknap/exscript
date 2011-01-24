@@ -5,7 +5,7 @@ from Exscript.protocols.OsGuesser import OsGuesser
 from StreamAnalyzerTest           import StreamAnalyzerTest
 
 class FakeConnection(object):
-    def is_authenticated(self):
+    def is_app_authenticated(self):
         return False
 
 class OsGuesserTest(StreamAnalyzerTest):

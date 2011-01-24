@@ -43,6 +43,6 @@ class IOSDriver(Driver):
         conn.execute('term len 0')
         conn.execute('term width 0')
 
-    def auto_authorize(self, conn, password, wait):
+    def auto_authorize(self, conn, account, flush):
         conn.send('enable\r')
-        conn.authorize(password, wait)
+        conn.app_authorize(account, flush)

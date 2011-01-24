@@ -12,6 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+from Exscript                     import Account
 from Exscript.protocols.Exception import InvalidCommandException
 from util                         import secure_function
 
@@ -21,7 +22,7 @@ def authenticate(scope):
     Looks for any username/password prompts on the current connection
     and logs in using the login information that was passed to Exscript.
     """
-    scope.get('__connection__').authenticate()
+    scope.get('__connection__').app_authenticate()
     return True
 
 @secure_function
@@ -38,7 +39,12 @@ def authenticate_user(scope, user = [None], password = [None]):
     @param password: A password.
     """
     conn = scope.get('__connection__')
-    conn.transport.authenticate(user[0], password[0])
+    user = user[0]
+    if user is None:
+        conn.app_authenticate()
+    else:
+        account = Account(user, password[0])
+        conn.app_authenticate(account)
     return True
 
 @secure_function
@@ -53,8 +59,13 @@ def authorize(scope, password = [None]):
     @type  password: string
     @param password: A password.
     """
-    conn = scope.get('__connection__')
-    conn.transport.authorize(password[0])
+    conn     = scope.get('__connection__')
+    password = password[0]
+    if password is None:
+        conn.app_authorize()
+    else:
+        account = Account('', password)
+        conn.app_authorize(account)
     return True
 
 @secure_function
@@ -72,7 +83,13 @@ def auto_authorize(scope, password = [None]):
     @type  password: string
     @param password: A password.
     """
-    scope.get('__connection__').auto_authorize(password = password[0])
+    conn     = scope.get('__connection__')
+    password = password[0]
+    if password is None:
+        conn.auto_app_authorize()
+    else:
+        account = Account('', password)
+        conn.auto_app_authorize(account)
     return True
 
 @secure_function

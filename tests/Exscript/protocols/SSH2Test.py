@@ -13,18 +13,8 @@ class SSH2Test(TransportTest):
     def testConstructor(self):
         self.assert_(isinstance(self.transport, SSH2))
 
-    def testAuthorize(self):
-        self.doAuthenticate(flush = False)
-        old_response = self.transport.response
-        self.doAuthorize()  # Stub in SSH, no change in transport.response
-        self.assertEqual(self.transport.response, old_response)
-
-    def testAuthenticateByKey(self):
-        self.transport.connect(self.hostname, self.port)
-        self.assertRaises(IOError,
-                          self.transport.authenticate_by_key,
-                          'user',
-                          Key.from_file('test.id'))  # raises file-not-found
+    def testLogin(self):
+        self.assertRaises(IOError, TransportTest.testLogin, self)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(SSH2Test)

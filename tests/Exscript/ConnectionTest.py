@@ -23,8 +23,14 @@ class ConnectionTest(DummyTest):
         self.prompt    = self.device.prompt
         self.action    = HostAction(self.queue, object, self.host)
         self.transport = Connection(self.action)
-        self.account   = Account('user', 'test')
+        self.account   = Account(self.user, self.password)
         self.queue.add_account(self.account)
+
+    def doLogin(self, flush = True):
+        # This is overwritten do make the tests that are inherited from
+        # DummyTest happy.
+        self.transport.open()
+        self.transport.login(flush = flush)
 
     def doAuthenticate(self, flush = True):
         # This is overwritten do make the tests that are inherited from
@@ -60,18 +66,11 @@ class ConnectionTest(DummyTest):
         self.assertEqual(self.transport.response, None)
         self.assertEqual(self.transport.get_host(), self.host)
 
-    def testAutoAuthorize(self):
-        self.doAuthenticate()
-        response = self.transport.response
-        self.transport.auto_authorize()
-        self.assertEqual(self.transport.response, response)
-        self.assert_(len(self.transport.response) > 0)
-
     def testGuessOs(self):
         self.assertEqual('unknown', self.transport.guess_os())
         self.transport.open()
         self.assertEqual('unknown', self.transport.guess_os())
-        self.transport.authenticate()
+        self.transport.login()
         self.assertEqual('shell', self.transport.guess_os())
 
 def suite():

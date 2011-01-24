@@ -20,6 +20,7 @@ from Transport          import Transport
 from Exception          import TransportException, \
                                LoginFailure, \
                                TimeoutException, \
+                               DriverReplacedException, \
                                ExpectCancelledException
 
 class Dummy(Transport):
@@ -47,12 +48,7 @@ class Dummy(Transport):
         return True
 
     def _expect_any(self, prompt_list, flush = True):
-        # Send the banner, etc. To more correctly mimic the behavior of
-        # a network device, we to this here instead of in connect(), as
-        # connect would be too early.
-        if not self.init_done:
-            self.init_done = True
-            self._say(self.device.init())
+        self._doinit()
 
         # Cancelled by a callback during self._say().
         if self.cancel:
@@ -78,18 +74,21 @@ class Dummy(Transport):
         self.cancel = True
 
     def _connect_hook(self, hostname, port):
+        # To more correctly mimic the behavior of a network device, we
+        # do not send the banner here, but in authenticate() instead.
         self.buffer = ''
         return True
 
+    def _doinit(self):
+        if not self.init_done:
+            self.init_done = True
+            self._say(self.device.init())
+
     def _authenticate_hook(self, user, password, flush):
-        self.app_authenticate(user, password, flush)
+        self._doinit()
 
     def _authenticate_by_key_hook(self, user, key, flush):
-        pass
-
-    def _authorize_hook(self, password, flush):
-        # The username should not be asked, so not passed.
-        return self._authenticate_hook('', password, flush)
+        self._doinit()
 
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))
@@ -111,13 +110,19 @@ class Dummy(Transport):
 
         self._dbg(5, "Response was %s" % repr(self.buffer))
 
-        if result == -1 or self.buffer is None:
+        if result == -1:
             error = 'Error while waiting for response from device'
             raise TimeoutException(error)
-        elif result == -2:
-            raise ExpectCancelledException()
+        if result == -2:
+            if self.driver_replaced:
+                self.driver_replaced = False
+                raise DriverReplacedException()
+            else:
+                raise ExpectCancelledException()
+        if self.buffer is None:
+            raise TransportException('whoops - buffer is None')
 
-        return result
+        return result, match
 
     def close(self, force = False):
         self._say('\n')

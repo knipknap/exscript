@@ -38,6 +38,6 @@ class OneOSDriver(Driver):
     def init_terminal(self, conn):
         conn.execute('term len 0')
 
-    def auto_authorize(self, conn, password, wait):
+    def auto_authorize(self, conn, account, flush):
         conn.send('enable\r')
-        conn.authorize(password, wait)
+        conn.app_authorize(account, flush)

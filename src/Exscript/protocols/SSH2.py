@@ -31,6 +31,7 @@ from Key                    import Key
 from Exception              import TransportException, \
                                    LoginFailure, \
                                    TimeoutException, \
+                                   DriverReplacedException, \
                                    ExpectCancelledException
 from Transport              import Transport
 
@@ -263,9 +264,6 @@ class SSH2(Transport):
         if flush:
             self.expect_prompt()
 
-    def _authorize_hook(self, password, flush):
-        pass
-
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))
         self.shell.sendall(data)
@@ -324,10 +322,13 @@ class SSH2(Transport):
             if flush:
                 self.buffer = search_window[match.end():]
             #print "END:", end, repr(self.response), repr(self.buffer)
-            return n
+            return n, match
 
         # Ending up here, self.cancel_expect() was called.
         self.cancel = False
+        if self.driver_replaced:
+            self.driver_replaced = False
+            raise DriverReplacedException()
         raise ExpectCancelledException()
 
     def cancel_expect(self):

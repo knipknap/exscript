@@ -202,6 +202,34 @@ class Connection(object):
                                       self.get_host().get_tcp_port()):
             raise Exception('Connection failed.')
 
+    def login(self, account = None, flush = True, lock = True):
+        """
+        Like protocols.Transport.login(), but makes sure to
+        lock/release the account while it is used.
+        If an account is not given, one is acquired from the account
+        manager.
+        Returns the account that was used to log in.
+
+        @type  account: Account
+        @param account: The account to use for logging in.
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
+        @type  lock: bool
+        @param lock: Whether to lock the account while logging in.
+        @rtype:  Account
+        @return: The account that was used to log in.
+        """
+        account = self._acquire_account(account, lock)
+        self._track_account(account)
+
+        try:
+            self.transport.login(account, flush = flush)
+        finally:
+            if lock:
+                self._release_account(account)
+            self._untrack_accounts()
+        return account
+
     def authenticate(self, account = None, flush = True, lock = True):
         """
         Like protocols.Transport.authenticate(), but makes sure to
@@ -220,25 +248,23 @@ class Connection(object):
         @return: The account that was used to log in.
         """
         account = self._acquire_account(account, lock)
-        key     = account.get_key()
         self._track_account(account)
 
         try:
-            if key:
-                self.transport.authenticate_by_key(key, flush = flush)
-            else:
-                self.transport.authenticate(account.get_name(),
-                                            account.get_password(),
-                                            flush = flush)
+            self.transport.authenticate(account, flush = flush)
         finally:
             if lock:
                 self._release_account(account)
             self._untrack_accounts()
         return account
 
-    def authorize(self, account = None, flush = True, lock = True):
+    def app_authenticate(self, account = None, flush = True, lock = True):
         """
-        Like authenticate(), but uses the authorization password instead.
+        Like protocols.Transport.app_authenticate(), but makes sure to
+        lock/release the account while it is used.
+        If an account is not given, one is acquired from the account
+        manager.
+        Returns the account that was used to log in.
 
         @type  account: Account
         @param account: The account to use for logging in.
@@ -249,28 +275,50 @@ class Connection(object):
         @rtype:  Account
         @return: The account that was used to log in.
         """
-        account  = self._acquire_account(account, lock)
-        password = account.get_authorization_password()
+        account = self._acquire_account(account, lock)
         self._track_account(account)
 
         try:
-            self.transport.authorize(password, flush = flush)
+            self.transport.app_authenticate(account, flush = flush)
         finally:
             if lock:
                 self._release_account(account)
             self._untrack_accounts()
         return account
 
-    def auto_authorize(self,
-                       account  = None,
-                       flush    = True,
-                       lock     = True,
-                       password = None):
+    def app_authorize(self, account = None, flush = True, lock = True):
+        """
+        Like app_authenticate(), but uses the authorization password instead.
+
+        @type  account: Account
+        @param account: The account to use for logging in.
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
+        @type  lock: bool
+        @param lock: Whether to lock the account while logging in.
+        @rtype:  Account
+        @return: The account that was used to log in.
+        """
+        account = self._acquire_account(account, lock)
+        self._track_account(account)
+
+        try:
+            self.transport.app_authorize(account, flush = flush)
+        finally:
+            if lock:
+                self._release_account(account)
+            self._untrack_accounts()
+        return account
+
+    def auto_app_authorize(self,
+                           account  = None,
+                           flush    = True,
+                           lock     = True):
         """
         Executes a command on the remote host that causes an authorization
-        procedure to be started, then authorizes using authorize().
+        procedure to be started, then authorizes using app_authorize().
         For the meaning of the account, flush, and lock arguments see
-        authorize().
+        app_authorize().
         If the password argument is given, the given password is used
         instead of the given account.
 
@@ -288,8 +336,6 @@ class Connection(object):
         @param flush: Whether to flush the last prompt from the buffer.
         @type  lock: bool
         @param lock: Whether to lock the account while logging in.
-        @type  password: string
-        @param password: The optional password to use.
         @rtype:  Account
         @return: The account that was used to log in.
         """
@@ -297,11 +343,8 @@ class Connection(object):
         account  = self._acquire_account(account, lock)
         self._track_account(account)
 
-        if password is None:
-            password = account.get_authorization_password()
-
         try:
-            self.transport.auto_authorize(password, flush = flush)
+            self.transport.auto_app_authorize(account, flush = flush)
         finally:
             if lock:
                 self._release_account(account)

@@ -36,6 +36,13 @@ class ExpectCancelledException(TransportException):
     """
     pass
 
+class DriverReplacedException(TransportException):
+    """
+    An exception that is thrown if the transport driver
+    was switched during a call to expect().
+    """
+    pass
+
 class LoginFailure(TransportException):
     """
     An exception that is thrown if the response of a connected host looked

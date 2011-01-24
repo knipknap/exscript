@@ -29,7 +29,7 @@ def dummy_cb(conn, template_test):
     expected = os.path.join(dirname, 'expected')
     conn.data_received_event.connect(log.collect)
     conn.open()
-    conn.authenticate(flush = True)
+    conn.login(flush = True)
     try:
         template.eval_file(conn, tmpl, slot = 10)
     except Exception, e:

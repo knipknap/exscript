@@ -12,6 +12,7 @@ dummy line 2
 at 'dummy' port '/dev/vty0' from '12.34.56.78'
 Username: sab
 Password: 
+dummy#enable
 dummy#show diag 10
 SLOT 10  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC connector
   MAIN: type 79,  800-19733-08 rev A0

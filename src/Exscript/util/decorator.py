@@ -114,8 +114,7 @@ def autologin(function, flush = True):
     @return: The wrapped function.
     """
     def decorated(conn, *args, **kwargs):
-        conn.authenticate()
-        conn.auto_authorize(flush = flush)
+        conn.login(flush = flush)
         result = function(conn, *args, **kwargs)
         conn.close(force = True)
         return result

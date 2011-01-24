@@ -2,6 +2,7 @@ import sys, unittest, re, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 import time
+from Exscript              import Account
 from Exscript.emulators    import VirtualDevice
 from Exscript.util.telnetd import Telnetd
 from Exscript.protocols    import Telnet
@@ -44,7 +45,7 @@ class TelnetdTest(unittest.TestCase):
         client = Telnet()
         client.set_prompt(re.compile(r'\w+:\d+> ?'))
         client.connect(self.host, self.port)
-        client.authenticate('user', 'password')
+        client.login(Account('user', 'password'))
         client.execute('ls')
         self.assertEqual(client.response, 'ok1\n')
         client.execute('ll')
