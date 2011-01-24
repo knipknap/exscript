@@ -5,11 +5,6 @@ Exscript
 * Add a test for Exscript.Task.
 * Test the exscript executable.
 * Test Queue constructor kwargs.
-* Test the Transport wait parameters in several cases:
-   - Login with username only.
-   - Login with password only.
-   - Login with both.
-   - Login with key.
 * Create more stdlib tests like tests/templates/stdlib.crypt/.
 
 TkExscript

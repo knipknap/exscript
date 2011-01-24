@@ -15,14 +15,12 @@
 """
 Emulating a device.
 """
-import os, re
-from Exscript.util.crypt import otp
-from Exscript.emulators  import VirtualDevice
-from Exception           import TransportException, \
-                                LoginFailure, \
-                                TimeoutException, \
-                                ExpectCancelledException
-from Transport           import Transport, _skey_re
+from Exscript.emulators import VirtualDevice
+from Transport          import Transport
+from Exception          import TransportException, \
+                               LoginFailure, \
+                               TimeoutException, \
+                               ExpectCancelledException
 
 class Dummy(Transport):
     """
@@ -83,86 +81,15 @@ class Dummy(Transport):
         self.buffer = ''
         return True
 
-    def _authenticate_hook(self, user, password, wait, userwait):
-        while True:
-            # Wait for any prompt.
-            prompts = (('login-error', self.get_login_error_prompt()),
-                       ('username',    self.get_username_prompt()),
-                       ('skey',        [_skey_re]),
-                       ('password',    self.get_password_prompt()),
-                       ('cli',         self.get_prompt()))
-            prompt_map  = []
-            prompt_list = []
-            n           = 0
-            for section, sectionprompts in prompts:
-                for prompt in sectionprompts:
-                    prompt_map.append((section, prompt))
-                    prompt_list.append(prompt)
+    def _authenticate_hook(self, user, password, flush):
+        self.app_authenticate(user, password, flush)
 
-            which    = None
-            matches  = None
-            response = None
-            try:
-                which, matches, response = self._expect_any(prompt_list)
-            except Exception, e:
-                msg = 'Dummy.authenticate(): Error waiting for prompt: '
-                raise TransportException(msg + str(e))
-
-            try:
-                section, prompt = prompt_map[which]
-            except IndexError:
-                if response is None:
-                    response = ''
-                msg = "Timeout while waiting for prompt. Buffer: %s" % repr(response)
-                raise TransportException(msg)
-
-            # Login error detected.
-            if section == 'login-error':
-                raise LoginFailure("Login failed")
-
-            elif section == 'username':
-                self._dbg(1, "Username prompt %s received." % which)
-                self.send(user + '\r\n')
-                if not userwait:
-                    self._dbg(1, "Bailing out as requested.")
-                    break
-                continue
-
-            elif section == 'skey':
-                self._dbg(1, "S/Key prompt received.")
-                seq  = int(matches.group(1))
-                seed = matches.group(2)
-                self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
-                phrase = otp(password, seed, seq)
-                self._expect_any(self.get_password_prompt())
-                self.send(phrase + '\r\n')
-                self._dbg(1, "Password sent.")
-                if not wait:
-                    self._dbg(1, "Bailing out as requested.")
-                    break
-                continue
-
-            elif section == 'password':
-                self._dbg(1, "Cleartext password prompt received.")
-                self.send(password + '\r\n')
-                if not wait:
-                    self._dbg(1, "Bailing out as requested.")
-                    break
-                continue
-
-            elif section == 'cli':
-                self._dbg(1, 'Shell prompt received.')
-                break
-
-            else:
-                assert False # No such section
-
-    def _authenticate_by_key_hook(self, user, key, wait):
+    def _authenticate_by_key_hook(self, user, key, flush):
         pass
 
-    def _authorize_hook(self, password, wait):
+    def _authorize_hook(self, password, flush):
         # The username should not be asked, so not passed.
-        return self._authenticate_hook('', password, wait, True)
+        return self._authenticate_hook('', password, flush)
 
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))

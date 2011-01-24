@@ -231,17 +231,17 @@ class SSH2(Transport):
         self._load_system_host_keys()
         return True
 
-    def _authenticate_hook(self, user, password, wait, userwait):
+    def _authenticate_hook(self, user, password, flush):
         if self.is_authenticated():
             return
 
         self._paramiko_auth(user, password)
         self._paramiko_shell()
 
-        if wait:
+        if flush:
             self.expect_prompt()
 
-    def _authenticate_by_key_hook(self, user, key, wait):
+    def _authenticate_by_key_hook(self, user, key, flush):
         if self.is_authenticated():
             return
 
@@ -260,10 +260,10 @@ class SSH2(Transport):
         self._paramiko_auth_key(user, keys, key.get_password())
 
         self._paramiko_shell()
-        if wait:
+        if flush:
             self.expect_prompt()
 
-    def _authorize_hook(self, password, wait):
+    def _authorize_hook(self, password, flush):
         pass
 
     def send(self, data):

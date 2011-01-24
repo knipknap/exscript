@@ -170,10 +170,10 @@ class VirtualDevice(object):
         @return: The response of the virtual device.
         """
         echo = self.echo and command or ''
-        if self.logged_in:
-            response = self.commands.eval(command)
-            if response is None:
-                return echo + '\n' + self._get_prompt()
-            else:
-                return echo + response
-        return echo + self._get_prompt()
+        if not self.logged_in:
+            return echo + '\n' + self._get_prompt()
+
+        response = self.commands.eval(command)
+        if response is None:
+            return echo + '\n' + self._get_prompt()
+        return echo + response

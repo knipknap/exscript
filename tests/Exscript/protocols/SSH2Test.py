@@ -14,7 +14,7 @@ class SSH2Test(TransportTest):
         self.assert_(isinstance(self.transport, SSH2))
 
     def testAuthorize(self):
-        self.doAuthenticate(wait = False)
+        self.doAuthenticate(flush = False)
         old_response = self.transport.response
         self.doAuthorize()  # Stub in SSH, no change in transport.response
         self.assertEqual(self.transport.response, old_response)

@@ -47,7 +47,7 @@ class DummyTest(TransportTest):
         transport.connect('testhost')
         self.assertEqual(transport.buffer,   '')
         self.assertEqual(transport.response, None)
-        transport.authenticate('sab', 'test', wait = False)
+        transport.authenticate('sab', 'test', flush = False)
         self.assert_(transport.buffer.endswith(self.prompt))
         transport.close()
 
@@ -57,7 +57,7 @@ class DummyTest(TransportTest):
                                login_type = VirtualDevice.LOGIN_TYPE_USERONLY)
         transport = self._create_dummy_and_eat_banner(device)
         self.assertEqual(transport.buffer, 'User: ')
-        transport.authenticate('sab', '', userwait = False)
+        transport.authenticate('sab', '', flush = False)
         self.assert_(transport.buffer.endswith(self.prompt), repr(transport.buffer))
         transport.close()
 
@@ -67,7 +67,7 @@ class DummyTest(TransportTest):
                                login_type = VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
         transport = self._create_dummy_and_eat_banner(device)
         self.assertEqual(transport.buffer, 'Password: ')
-        transport.authenticate(None, 'test', wait = False)
+        transport.authenticate(None, 'test', flush = False)
         self.assert_(transport.buffer.endswith(self.prompt))
         transport.close()
 

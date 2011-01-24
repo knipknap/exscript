@@ -112,7 +112,7 @@ class Transport(object):
                               app_password2 = 'my_app_password2')
                               key           = key)
 
-            conn.login(account, wait = True)
+            conn.login(account, flush = True)
 
     Another important consideration is that once the login is complete, the
     device must be in a clearly defined state, i.e. we need to
@@ -506,8 +506,7 @@ class Transport(object):
     def authenticate(self,
                      user     = None,
                      password = None,
-                     wait     = True,
-                     userwait = True):
+                     flush    = True):
         """
         Authenticates at the remote host. Attempts to smartly recognize the 
         user and password prompts; the following remote operating systems 
@@ -517,10 +516,8 @@ class Transport(object):
         @param user: The remote username.
         @type  password: string
         @param password: The plain password.
-        @type  wait: bool
-        @param wait: Whether to wait for a prompt using expect_prompt().
-        @type  userwait: bool
-        @param userwait: When False, bail out after sending the username.
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
         """
         if user is None:
             user = self.user
@@ -534,17 +531,17 @@ class Transport(object):
         self.password = password
 
         self._dbg(1, "Attempting to authenticate %s." % user)
-        self._authenticate_hook(user, password, wait, userwait)
+        self._authenticate_hook(user, password, flush)
         self.authenticated = True
 
-    def authenticate_by_key(self, user, key, wait = True):
+    def authenticate_by_key(self, user, key, flush = True):
         """
         Authenticates at the remote host using key authentification.
 
         @type  key: Key
         @param key: A key object.
-        @type  wait: bool
-        @param wait: Whether to wait for a prompt using expect_prompt().
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
         """
         if user is None:
             user = self.user
@@ -558,8 +555,131 @@ class Transport(object):
         self.key  = key
 
         self._dbg(1, "Attempting to authenticate %s." % user)
-        self._authenticate_by_key_hook(user, key, wait)
+        self._authenticate_by_key_hook(user, key, flush)
         self.authenticated = True
+
+    def app_authenticate(self, user = None, password = None, flush = True):
+        """
+        Attempt to perform application-level authentication. Application
+        level authentication is needed on devices where the username and
+        password are requested from the user after the connection was
+        already accepted by the remote device.
+
+        The difference between app-level authentication and protocol-level
+        authentication is that in the latter case, the prompting is handled
+        by the client, whereas app-level authentication is handled by the
+        remote device.
+
+        App-level authentication comes in a large variety of forms, and
+        while this method tries hard to support them all, there is no
+        guarantee that it will always work.
+
+        We attempt to smartly recognize the user and password prompts;
+        for a list of supported operating systems please check the
+        Exscript.protocols.drivers module.
+
+        Returns upon finding the first command line prompt. Depending
+        on whether the flush argument is True, it also removes *the
+        prompt from the incoming buffer*.
+
+        @type  user: string
+        @param user: The remote username.
+        @type  password: string
+        @param password: The plain password.
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
+        """
+        if user is None:
+            user = self.user
+        if password is None:
+            password = self.password
+        if user is None:
+            raise TypeError('A username is required')
+        if password is None:
+            raise TypeError('A password is required')
+        self.user     = user
+        self.password = password
+
+        self._dbg(1, "Attempting to app-authenticate %s." % user)
+
+        while True:
+            # Wait for any prompt. Once a match is found, we need to be able
+            # to find out which type of prompt was matched, so we build a
+            # structure to allow for mapping the match index back to the
+            # prompt type.
+            prompts = (('login-error', self.get_login_error_prompt()),
+                       ('username',    self.get_username_prompt()),
+                       ('skey',        [_skey_re]),
+                       ('password',    self.get_password_prompt()),
+                       ('cli',         self.get_prompt()))
+            prompt_map  = []
+            prompt_list = []
+            for section, sectionprompts in prompts:
+                for prompt in sectionprompts:
+                    prompt_map.append((section, prompt))
+                    prompt_list.append(prompt)
+
+            # Wait for the prompt.
+            try:
+                index = self.waitfor(prompt_list)
+            except TimeoutException:
+                if self.response is None:
+                    self.response = ''
+                msg = "Buffer: %s" % repr(self.response)
+                raise TimeoutException(msg)
+            except ExpectCancelledException:
+                # Driver replaced, retry.
+                self._dbg(1, 'Transport.app_authenticate(): driver replaced')
+                continue
+            except EOFError:
+                self._dbg(1, 'Transport.app_authenticate(): EOF')
+                raise
+
+            # Login error detected.
+            section, prompt = prompt_map[index]
+            if section == 'login-error':
+                raise LoginFailure("Login failed")
+
+            # User name prompt.
+            elif section == 'username':
+                self._dbg(1, "Username prompt %s received." % index)
+                self.expect(prompt) # consume the prompt from the buffer
+                self.send(user + '\r')
+                continue
+
+            # s/key prompt.
+            elif section == 'skey':
+                self._dbg(1, "S/Key prompt received.")
+                self.expect(prompt) # consume the prompt from the buffer
+                seq  = int(matches.group(1))
+                seed = matches.group(2)
+                self._otp_cb(seq, seed)
+                self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
+                phrase = otp(password, seed, seq)
+
+                # A password prompt is now required.
+                self.expect(self.get_password_prompt())
+                self.send(phrase + '\r')
+                self._dbg(1, "Password sent.")
+                continue
+
+            # Cleartext password prompt.
+            elif section == 'password':
+                self._dbg(1, "Cleartext password prompt received.")
+                self.expect(prompt) # consume the prompt from the buffer
+                self.send(password + '\r')
+                continue
+
+            # Shell prompt.
+            elif section == 'cli':
+                self._dbg(1, 'Shell prompt received.')
+                break
+
+            else:
+                assert False # No such section
+
+        if flush:
+            self.expect_prompt()
 
     def is_authenticated(self):
         """
@@ -571,7 +691,7 @@ class Transport(object):
         """
         return self.authenticated
 
-    def authorize(self, password = None, wait = True):
+    def authorize(self, password = None, flush = True):
         """
         Authorizes at the remote host, if the remote host supports 
         authorization. Does nothing otherwise.
@@ -581,8 +701,8 @@ class Transport(object):
 
         @type  password: string
         @param password: The plain password.
-        @type  wait: bool
-        @param wait: Whether to wait for a prompt using expect_prompt().
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
         """
         if password is None:
             password = self.password
@@ -591,10 +711,10 @@ class Transport(object):
         self.password = password
 
         self._dbg(1, "Attempting to authorize.")
-        self._authorize_hook(password, wait)
+        self._authorize_hook(password, flush)
         self.authorized = True
 
-    def auto_authorize(self, password = None, wait = True):
+    def auto_authorize(self, password = None, flush = True):
         """
         Like authorize(), but instead of just waiting for a password
         prompt, it automatically initiates the authorization procedure.
@@ -609,8 +729,8 @@ class Transport(object):
 
         @type  password: string
         @param password: The plain password.
-        @type  wait: bool
-        @param wait: Whether to wait for a prompt using expect_prompt().
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
         """
         if password is None:
             password = self.password
@@ -619,7 +739,7 @@ class Transport(object):
         self.password = password
 
         self._dbg(1, 'Calling driver.auto_authorize().')
-        self.get_driver().auto_authorize(self, password, wait)
+        self.get_driver().auto_authorize(self, password, flush)
         self.authorized = True
 
     def is_authorized(self):

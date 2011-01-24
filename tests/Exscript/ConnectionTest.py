@@ -26,14 +26,14 @@ class ConnectionTest(DummyTest):
         self.account   = Account('user', 'test')
         self.queue.add_account(self.account)
 
-    def doAuthenticate(self, wait = True):
+    def doAuthenticate(self, flush = True):
         # This is overwritten do make the tests that are inherited from
         # DummyTest happy.
         self.transport.open()
-        self.transport.authenticate(wait = wait)
+        self.transport.authenticate(flush = flush)
 
-    def doAuthorize(self):
-        self.transport.authorize()
+    def doAuthorize(self, flush = True):
+        self.transport.authorize(flush = flush)
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Connection))

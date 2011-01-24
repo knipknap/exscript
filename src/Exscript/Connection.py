@@ -202,7 +202,7 @@ class Connection(object):
                                       self.get_host().get_tcp_port()):
             raise Exception('Connection failed.')
 
-    def authenticate(self, account = None, wait = True, lock = True):
+    def authenticate(self, account = None, flush = True, lock = True):
         """
         Like protocols.Transport.authenticate(), but makes sure to
         lock/release the account while it is used.
@@ -212,8 +212,8 @@ class Connection(object):
 
         @type  account: Account
         @param account: The account to use for logging in.
-        @type  wait: bool
-        @param wait: Whether to wait for a prompt after sending the password.
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
         @type  lock: bool
         @param lock: Whether to lock the account while logging in.
         @rtype:  Account
@@ -225,25 +225,25 @@ class Connection(object):
 
         try:
             if key:
-                self.transport.authenticate_by_key(key, wait = wait)
+                self.transport.authenticate_by_key(key, flush = flush)
             else:
                 self.transport.authenticate(account.get_name(),
                                             account.get_password(),
-                                            wait = wait)
+                                            flush = flush)
         finally:
             if lock:
                 self._release_account(account)
             self._untrack_accounts()
         return account
 
-    def authorize(self, account = None, wait = True, lock = True):
+    def authorize(self, account = None, flush = True, lock = True):
         """
         Like authenticate(), but uses the authorization password instead.
 
         @type  account: Account
         @param account: The account to use for logging in.
-        @type  wait: bool
-        @param wait: Whether to wait for a prompt after sending the password.
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
         @type  lock: bool
         @param lock: Whether to lock the account while logging in.
         @rtype:  Account
@@ -254,7 +254,7 @@ class Connection(object):
         self._track_account(account)
 
         try:
-            self.transport.authorize(password, wait = wait)
+            self.transport.authorize(password, flush = flush)
         finally:
             if lock:
                 self._release_account(account)
@@ -263,13 +263,13 @@ class Connection(object):
 
     def auto_authorize(self,
                        account  = None,
-                       wait     = True,
+                       flush    = True,
                        lock     = True,
                        password = None):
         """
         Executes a command on the remote host that causes an authorization
         procedure to be started, then authorizes using authorize().
-        For the meaning of the account, wait, and lock arguments see
+        For the meaning of the account, flush, and lock arguments see
         authorize().
         If the password argument is given, the given password is used
         instead of the given account.
@@ -284,8 +284,8 @@ class Connection(object):
 
         @type  account: Account
         @param account: The account to use for logging in.
-        @type  wait: bool
-        @param wait: Whether to wait for a prompt after sending the password.
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
         @type  lock: bool
         @param lock: Whether to lock the account while logging in.
         @type  password: string
@@ -301,7 +301,7 @@ class Connection(object):
             password = account.get_authorization_password()
 
         try:
-            self.transport.auto_authorize(password, wait = wait)
+            self.transport.auto_authorize(password, flush = flush)
         finally:
             if lock:
                 self._release_account(account)

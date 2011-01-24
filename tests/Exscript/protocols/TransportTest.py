@@ -17,12 +17,12 @@ class TransportTest(unittest.TestCase):
     def createTransport(self):
         self.transport = Transport(echo = 0)
 
-    def doAuthenticate(self, wait = True):
+    def doAuthenticate(self, flush = True):
         self.transport.connect(self.hostname, self.port)
-        self.transport.authenticate(self.user, self.password, wait = wait)
+        self.transport.authenticate(self.user, self.password, flush = flush)
 
-    def doAuthorize(self):
-        self.transport.authorize(self.user)
+    def doAuthorize(self, flush = True):
+        self.transport.authorize(self.password, flush)
 
     def setUp(self):
         cfgfile = os.path.join(os.path.dirname(__file__), '..', 'unit_test.cfg')
@@ -211,6 +211,13 @@ class TransportTest(unittest.TestCase):
         self.transport.connect(self.hostname, self.port)
         self.transport.authenticate_by_key(self.user, key, False)
 
+    def testAppAuthenticate(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception, self.transport.app_authenticate, 'test')
+            return
+        #FIXME
+
     def testIsAuthenticated(self):
         self.failIf(self.transport.is_authenticated())
         # Test can not work on the abstract base.
@@ -224,18 +231,24 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.authorize)
             return
-        self.doAuthenticate(wait = False)
-        response = self.transport.response
-        self.doAuthorize()
-        self.failIfEqual(self.transport.response, response)
+        self.doAuthenticate(flush = False)
         self.assert_(len(self.transport.response) > 0)
+        response = self.transport.response
+
+        # Authorize should see that a prompt is still in the buffer,
+        # and do nothing.
+        self.doAuthorize(flush = False)
+        self.assertEqual(self.transport.response, response)
+
+        self.doAuthorize(flush = True)
+        self.failUnlessEqual(self.transport.response, response)
 
     def testAutoAuthorize(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.authorize)
             return
-        self.doAuthenticate(wait = False)
+        self.doAuthenticate(flush = False)
         response = self.transport.response
         # This should do nothing, because our test host does not
         # support AAA. Can't think of a way to test against a
@@ -248,7 +261,7 @@ class TransportTest(unittest.TestCase):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
             return
-        self.doAuthenticate(wait = False)
+        self.doAuthenticate(flush = False)
         self.failIf(self.transport.is_authorized())
         self.doAuthorize()
         self.assert_(self.transport.is_authorized())

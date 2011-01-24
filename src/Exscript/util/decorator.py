@@ -93,7 +93,7 @@ def connect(function):
         return result
     return decorated
 
-def autologin(function, wait = True):
+def autologin(function, flush = True):
     """
     Wraps the given function such that...
 
@@ -108,14 +108,14 @@ def autologin(function, wait = True):
 
     @type  function: function
     @param function: The function that's ought to be wrapped.
-    @type  wait: bool
-    @param wait: Whether to wait for a prompt after logging in.
+    @type  flush: bool
+    @param flush: Whether to flush the last prompt from the buffer.
     @rtype:  function
     @return: The wrapped function.
     """
     def decorated(conn, *args, **kwargs):
         conn.authenticate()
-        conn.auto_authorize(wait = wait)
+        conn.auto_authorize(flush = flush)
         result = function(conn, *args, **kwargs)
         conn.close(force = True)
         return result
