@@ -27,7 +27,7 @@ from paramiko.resource      import ResourceManager
 from paramiko.ssh_exception import SSHException, \
                                    AuthenticationException, \
                                    BadHostKeyException
-from Key                    import Key
+from Exscript               import PrivateKey
 from Exception              import TransportException, \
                                    LoginFailure, \
                                    TimeoutException, \
@@ -41,7 +41,7 @@ util.log_to_file('/dev/null')
 # Register supported key types.
 keymap = {'rsa': paramiko.RSAKey, 'dss': paramiko.DSSKey}
 for key in keymap:
-    Key.keytypes.add(key)
+    PrivateKey.keytypes.add(key)
 
 class SSH2(Transport):
     """

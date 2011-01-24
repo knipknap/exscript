@@ -17,13 +17,13 @@ Represents a private key.
 """
 import paramiko
 
-class Key(object):
+class PrivateKey(object):
     keytypes = set()
 
     def __init__(self, keytype = 'rsa'):
         """
         Constructor. Supported key types are provided by their respective
-        protocol adapters and can be retrieved from the Key.keytypes
+        protocol adapters and can be retrieved from the PrivateKey.keytypes
         class attribute.
 
         @type  keytype: string
@@ -38,7 +38,7 @@ class Key(object):
     @staticmethod
     def from_file(filename, password = '', keytype = 'rsa'):
         """
-        Returns a new Key instance with the given attributes.
+        Returns a new PrivateKey instance with the given attributes.
 
         @type  filename: string
         @param filename: The key file name.
@@ -46,10 +46,10 @@ class Key(object):
         @param password: The key password.
         @type  keytype: string
         @param keytype: The key type.
-        @rtype:  Key
+        @rtype:  PrivateKey
         @return: The new key.
         """
-        key          = Key(keytype)
+        key          = PrivateKey(keytype)
         key.filename = filename
         key.password = password
         return key

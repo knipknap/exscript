@@ -2,11 +2,10 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from ConfigParser                 import RawConfigParser
-from Exscript                     import Account
+from Exscript                     import Account, PrivateKey
 from Exscript.protocols.Exception import TimeoutException, \
                                          ExpectCancelledException
 from Exscript.protocols.Transport import Transport
-from Exscript.protocols           import Key
 
 class TransportTest(unittest.TestCase):
     """
@@ -217,7 +216,7 @@ class TransportTest(unittest.TestCase):
         # Key login.
         self.tearDown()
         self.setUp()
-        key     = Key.from_file('foo')
+        key     = PrivateKey.from_file('foo')
         account = Account(self.user, self.password, key = key)
         self.transport.connect(self.hostname, self.port)
         self.transport.login(account, flush = False)

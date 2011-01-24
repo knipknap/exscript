@@ -100,7 +100,7 @@ class Transport(object):
     regardless of which combination of authentication methods a device
     supports::
 
-            key = Key.from_file('~/.ssh/id_rsa', 'my_key_password')
+            key = PrivateKey.from_file('~/.ssh/id_rsa', 'my_key_password')
 
             # The user account to use for protocol level authentification.
             # The key defaults to None, in which case key authentication is

@@ -13,7 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Transport import Transport
-from Key       import Key
 from Telnet    import Telnet
 from SSH2      import SSH2
 from Dummy     import Dummy

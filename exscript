@@ -16,8 +16,7 @@
 import sys, os, re, getpass
 sys.path.append('src')
 from optparse                import OptionParser, Option, OptionValueError
-from Exscript                import Queue, Account, __version__
-from Exscript.protocols      import Key
+from Exscript                import Queue, Account, PrivateKey, __version__
 from Exscript.util           import template
 from Exscript.util.sigint    import SigIntWatcher
 from Exscript.util.cast      import to_list, to_host
@@ -186,7 +185,7 @@ def run():
         sys.exit(1)
     if user is not None:
         if options.ssh_key:
-            key = Key.from_file(options.ssh_key, password)
+            key = PrivateKey.from_file(options.ssh_key, password)
         else:
             key = None
         account = Account(user, password, key = key)

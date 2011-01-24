@@ -2,7 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from TransportTest      import TransportTest
-from Exscript.protocols import SSH2, Key
+from Exscript.protocols import SSH2
 
 class SSH2Test(TransportTest):
     CORRELATE = SSH2

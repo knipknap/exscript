@@ -38,7 +38,7 @@ class Account(object):
         @param password: The authentication password.
         @type  password2: string
         @param password2: The authorization password, if required.
-        @type  key: Key
+        @type  key: PrivateKey
         @param key: A private key, if required.
         """
         self.acquire_before_event   = Event()
@@ -108,7 +108,7 @@ class Account(object):
         """
         Returns the key of the account, if any.
 
-        @rtype:  Key|None
+        @rtype:  PrivateKey|None
         @return: A key object.
         """
         return self.key

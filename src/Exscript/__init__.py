@@ -31,6 +31,7 @@ except ImportError:
 
 from version       import __version__
 from Account       import Account
+from PrivateKey    import PrivateKey
 from Queue         import Queue
 from QueueListener import QueueListener
 from Host          import Host

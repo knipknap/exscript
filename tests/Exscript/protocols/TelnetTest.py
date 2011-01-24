@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from TransportTest         import TransportTest
 from Exscript              import Account
 from Exscript.util.telnetd import Telnetd
-from Exscript.protocols    import Telnet, Key
+from Exscript.protocols    import Telnet
 from Exscript.emulators    import VirtualDevice
 
 class TelnetTest(TransportTest):

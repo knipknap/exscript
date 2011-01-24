@@ -1,10 +1,10 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript.protocols import Key
+from Exscript import PrivateKey
 
-class KeyTest(unittest.TestCase):
-    CORRELATE = Key
+class PrivateKeyTest(unittest.TestCase):
+    CORRELATE = PrivateKey
 
     def setUp(self):
         self.filename = 'my.key'
@@ -12,13 +12,13 @@ class KeyTest(unittest.TestCase):
         self.key      = None
 
     def testConstructor(self):
-        self.key = Key()
-        self.assertRaises(TypeError, Key, 'foo')
-        Key('rsa')
-        Key('dss')
+        self.key = PrivateKey()
+        self.assertRaises(TypeError, PrivateKey, 'foo')
+        PrivateKey('rsa')
+        PrivateKey('dss')
 
     def testFromFile(self):
-        self.key = Key.from_file(self.filename, self.password, 'dss')
+        self.key = PrivateKey.from_file(self.filename, self.password, 'dss')
         self.assertEqual(self.key.get_type(), 'dss')
         self.assertEqual(self.filename, self.key.get_filename())
         self.assertEqual(self.password, self.key.get_password())
@@ -26,7 +26,7 @@ class KeyTest(unittest.TestCase):
     def testGetType(self):
         self.testConstructor()
         self.assertEqual(self.key.get_type(), 'rsa')
-        self.key = Key('dss')
+        self.key = PrivateKey('dss')
         self.assertEqual(self.key.get_type(), 'dss')
 
     def testGetFilename(self):
@@ -48,6 +48,6 @@ class KeyTest(unittest.TestCase):
         self.testGetPassword()
 
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(KeyTest)
+    return unittest.TestLoader().loadTestsFromTestCase(PrivateKeyTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())
