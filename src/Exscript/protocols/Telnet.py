@@ -75,7 +75,7 @@ class Telnet(Transport):
             result, match, response = func(prompt, self.timeout)
             self.response           = response
         except Exception:
-            self._dbg(1, 'Error while waiting for %s' % repr(prompt.pattern))
+            self._dbg(1, 'Error while waiting for ' + repr(prompt))
             raise
 
         if match:
