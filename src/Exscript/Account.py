@@ -23,7 +23,7 @@ class Account(object):
     This class represents a user account.
     """
 
-    def __init__(self, name, password, password2 = None, key = None):
+    def __init__(self, name, password = '', password2 = None, key = None):
         """
         Constructor.
 
