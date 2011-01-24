@@ -76,16 +76,18 @@ class QueueTest(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def assertVerbosity(self, channel, expected):
+        data = channel.read()
         if expected == 'no_tb':
-            self.assert_('error' in channel.read(), channel.read())
-            self.assert_('Traceback' not in channel.read())
+            self.assert_('error' in data, data)
+            self.assert_('Traceback' not in data)
         elif expected == 'tb':
-            self.assert_('error' in channel.read(), channel.read())
-            self.assert_('Traceback' in channel.read())
+            self.assert_('error' in data, data)
+            self.assert_('Traceback' in data)
         elif expected == '':
-            self.assertEqual(channel.read(), '')
+            self.assertEqual(data, '')
         else:
-            self.assert_(expected in channel.read(), channel.read())
+            msg = repr(expected) + ' not in ' + repr(data)
+            self.assert_(expected in data, msg)
 
     def testConstructor(self):
         self.assertEqual(1, self.queue.get_max_threads())
