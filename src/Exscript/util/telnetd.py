@@ -34,14 +34,14 @@ class Telnetd(Process):
 
     def __init__(self, host, port, device):
         Process.__init__(self, target = self._run)
-        self.host     = host
-        self.port     = int(port)
-        self.timeout  = 1
-        self.running  = False
-        self.buf      = ''
-        self.socket   = None
-        self.conn     = None
-        self.device   = device
+        self.host    = host
+        self.port    = int(port)
+        self.timeout = 1
+        self.running = False
+        self.buf     = ''
+        self.socket  = None
+        self.conn    = None
+        self.device  = device
         self.parent_conn, self.child_conn = Pipe()
 
     def _recvline(self):
