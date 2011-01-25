@@ -232,20 +232,11 @@ class SSH2(Transport):
         self._load_system_host_keys()
         return True
 
-    def _authenticate_hook(self, user, password, flush):
-        if self.is_authenticated():
-            return
-
+    def _protocol_authenticate(self, user, password):
         self._paramiko_auth(user, password)
         self._paramiko_shell()
 
-        if flush:
-            self.expect_prompt()
-
-    def _authenticate_by_key_hook(self, user, key, flush):
-        if self.is_authenticated():
-            return
-
+    def _protocol_authenticate_by_key(self, user, key):
         # Allow multiple key files.
         key_file = key.get_filename()
         if key_file is None:
@@ -261,8 +252,6 @@ class SSH2(Transport):
         self._paramiko_auth_key(user, keys, key.get_password())
 
         self._paramiko_shell()
-        if flush:
-            self.expect_prompt()
 
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))

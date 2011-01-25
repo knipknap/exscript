@@ -43,12 +43,6 @@ class Telnet(Transport):
             return False
         return True
 
-    def _authenticate_hook(self, user, password, flush):
-        pass # Telnet does not support protocol level authentification
-
-    def _authenticate_by_key_hook(self, user, key, flush):
-        pass # Telnet does not support protocol level authentification
-
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))
         try:
@@ -66,8 +60,7 @@ class Telnet(Transport):
         # Wait for a prompt.
         self.response = None
         try:
-            result, match, response = func(prompt, self.timeout)
-            self.response           = response
+            result, match, self.response = func(prompt, self.timeout)
         except Exception:
             self._dbg(1, 'Error while waiting for ' + repr(prompt))
             raise

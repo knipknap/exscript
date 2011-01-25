@@ -84,10 +84,10 @@ class Dummy(Transport):
             self.init_done = True
             self._say(self.device.init())
 
-    def _authenticate_hook(self, user, password, flush):
+    def _protocol_authenticate(self, user, password):
         self._doinit()
 
-    def _authenticate_by_key_hook(self, user, key, flush):
+    def _protocol_authenticate_by_key(self, user, key):
         self._doinit()
 
     def send(self, data):

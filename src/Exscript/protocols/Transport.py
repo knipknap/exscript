@@ -545,6 +545,12 @@ class Transport(object):
         self.app_authenticate(app_account, flush = False)
         self.auto_app_authorize(app_account, flush = flush)
 
+    def _protocol_authenticate(self, user, password):
+        pass
+
+    def _protocol_authenticate_by_key(self, user, key):
+        pass
+
     def authenticate(self, account = None, flush = True):
         """
         Low-level API to perform protocol-level authentification on protocols
@@ -556,7 +562,7 @@ class Transport(object):
         @type  account: Account
         @param account: An account object, like login().
         @type  flush: bool
-        @param flush: Whether to flush the last prompt from the buffer.
+        @param flush: Whether to expect/flush the first prompt.
         """
         account  = self._get_account(account)
         user     = account.get_name()
@@ -564,11 +570,13 @@ class Transport(object):
         key      = account.get_key()
         if key is None:
             self._dbg(1, "Attempting to authenticate %s." % user)
-            self._authenticate_hook(user, password, flush)
+            self._protocol_authenticate(user, password)
         else:
             self._dbg(1, "Authenticate %s with key." % user)
-            self._authenticate_by_key_hook(user, key, flush)
+            self._protocol_authenticate_by_key(user, key)
         self.authenticated = True
+        if flush:
+            self.expect_prompt()
 
     def is_authenticated(self):
         """
