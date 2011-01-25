@@ -41,6 +41,9 @@ class SmartEdgeOSDriver(Driver):
         conn.execute('terminal length 0')
         conn.execute('terminal width 65536')
 
+    def supports_auto_authorize(self):
+        return True
+
     def auto_authorize(self, conn, account, flush):
         conn.send('enable\r')
         conn.app_authorize(account, flush)

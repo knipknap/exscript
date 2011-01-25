@@ -126,17 +126,14 @@ class Transport(object):
     a state such that the following call to expect_prompt() will either
     always work, or always fail.
 
-    So what can we hide behind the login() call? Assuming we always try every
-    method::
+    We jhide the following methods behind the login() call::
 
-        if app_account is None:
-            app_account = account
         # Protocol level authentification.
-        conn.authenticate(account, flush = False)
+        conn.authenticate(...)
         # App-level authentification.
-        conn.app_authenticate(app_account, flush = False)
+        conn.app_authenticate(...)
         # App-level authorization.
-        conn.app_authorize(app_account, flush = False)
+        conn.app_authorize(...)
 
     The code produces the following result::
 
@@ -173,13 +170,13 @@ class Transport(object):
           conn.driver.app_authorize() needs to eat it before it sends the
           command for starting the authorization procedure.
 
-          This has a drawback - if a user attempts to call app_authenticate()
+          This has a drawback - if a user attempts to call app_authorize()
           at a time where there is no prompt in the buffer, it would fail.
-          But this is actually good - the user is supposed to call send() in
-          such cases, because else a CLI prompt would be expected, while the
-          device responds with a username or password prompt.
+          So we need to eat the prompt only in cases where we know that
+          auto_app_authorize() will attempt to execute a command. Hence
+          the driver requires the Driver.supports_auto_authorize() method.
 
-          However, app_authorize() must never eat the CLI prompt that follows.
+          However, app_authorize() must not eat the CLI prompt that follows.
 
         - Once all logins are processed, it makes sense to eat the prompt
           depending on the wait parameter. Wait should default to True,
@@ -542,6 +539,8 @@ class Transport(object):
 
         self.authenticate(account, flush = False)
         self.app_authenticate(app_account, flush = False)
+        if self.get_driver().supports_auto_authorize():
+            self.expect_prompt()
         self.auto_app_authorize(app_account, flush = flush)
 
     def _protocol_authenticate(self, user, password):
@@ -662,13 +661,12 @@ class Transport(object):
             # Shell prompt.
             elif section == 'cli':
                 self._dbg(1, 'Shell prompt received.')
+                if flush:
+                    self.expect_prompt()
                 break
 
             else:
                 assert False # No such section
-
-        if flush:
-            self.expect_prompt()
 
     def app_authenticate(self, account = None, flush = True):
         """
