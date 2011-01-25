@@ -37,14 +37,14 @@ class VirtualDevice(object):
                  strict     = True,
                  banner     = None):
         """
-        @type  kwargs: dict
-        @param kwargs: In addition to the kwargs of Transport,
-        this adapter supports the following:
-         - banner: A string to show as soon as the connection is opened.
-         - login_type: integer constant, one of LOGIN_TYPE_PASSWORDONLY,
-           LOGIN_TYPE_USERONLY, LOGIN_TYPE_BOTH, LOGIN_TYPE_NONE.
-         - echo: whether to echo the command in a response.
-         - strict: Whether to raise when a given command has no handler.
+        @type  hostname: str
+        @param hostname: The hostname, used for the prompt.
+
+        @keyword banner: A string to show as soon as the connection is opened.
+        @keyword login_type: integer constant, one of LOGIN_TYPE_PASSWORDONLY,
+            LOGIN_TYPE_USERONLY, LOGIN_TYPE_BOTH, LOGIN_TYPE_NONE.
+        @keyword echo: whether to echo the command in a response.
+        @keyword strict: Whether to raise when a given command has no handler.
         """
         self.hostname        = hostname
         self.banner          = banner or 'Welcome to %s!\n' % str(hostname)

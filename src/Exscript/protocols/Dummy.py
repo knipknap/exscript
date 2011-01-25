@@ -18,7 +18,6 @@ Emulating a device.
 from Exscript.emulators import VirtualDevice
 from Transport          import Transport
 from Exception          import TransportException, \
-                               LoginFailure, \
                                TimeoutException, \
                                DriverReplacedException, \
                                ExpectCancelledException
@@ -30,10 +29,10 @@ class Dummy(Transport):
 
     def __init__(self, **kwargs):
         """
-        @type  device: Exscript.emulators.VirtualDevice
-        @param device: The virtual device with which to communicate.
-        @type  kwargs: dict
-        @param kwargs: See Transport.__init__().
+        @note: Also supports all keyword arguments that L{Transport} supports.
+
+        @keyword device: The L{Exscript.emulators.VirtualDevice} with
+            which to communicate.
         """
         Transport.__init__(self, **kwargs)
         self.device    = kwargs.get('device')

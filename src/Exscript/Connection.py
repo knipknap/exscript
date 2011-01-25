@@ -38,8 +38,7 @@ class Connection(object):
         @type  action: HostAction
         @param action: The associated HostAction instance.
         @type  kwargs: dict
-        @param kwargs: For a list of supported options please check the
-                       protocol adapter API documentation.
+        @param kwargs: Same as L{protocols.Transport}.
         """
         # Since we override setattr below, we can't access our properties
         # directly.

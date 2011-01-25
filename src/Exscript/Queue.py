@@ -62,19 +62,17 @@ class Queue(object):
           - verbose >=  2, max_threads = 1: stdout = DL, stderr = !F
           - verbose >=  2, max_threads = n: stdout = DS, stderr = !F
 
-        @type  kwargs: dict
-        @param kwargs: The following options are supported:
-            - domain: The default domain of the contacted hosts.
-            - verbose: The verbosity level, default 1.
-            - max_threads: The maximum number of concurrent threads, default 1
-            - times: The number of attempts on failure, default 1.
-            - login_times: The number of login attempts, default 1.
-            - logdir: The directory into which the logs are written.
-            - overwrite_logs: Whether existing logfiles are overwritten.
-            - delete_logs: Whether successful logfiles are deleted.
-            - protocol_args: dict, passed to the protocol adapter as kwargs.
-            - stdout: The output channel, defaults to sys.stdout.
-            - stderr: The error channel, defaults to sys.stderr.
+        @keyword domain: The default domain of the contacted hosts.
+        @keyword verbose: The verbosity level, default 1.
+        @keyword max_threads: The maximum number of concurrent threads, default 1
+        @keyword times: The number of attempts on failure, default 1.
+        @keyword login_times: The number of login attempts, default 1.
+        @keyword logdir: The directory into which the logs are written.
+        @keyword overwrite_logs: Whether existing logfiles are overwritten.
+        @keyword delete_logs: Whether successful logfiles are deleted.
+        @keyword protocol_args: dict, passed to the protocol adapter as kwargs.
+        @keyword stdout: The output channel, defaults to sys.stdout.
+        @keyword stderr: The error channel, defaults to sys.stderr.
         """
         self.workqueue         = WorkQueue()
         self.account_manager   = AccountManager()

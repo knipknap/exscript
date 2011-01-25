@@ -24,10 +24,8 @@ class WorkQueue(object):
         """
         Constructor.
 
-        @type  kwargs: dict
-        @param kwargs: The following keyword arguments are supported:
-                 debug: The debug level (default is 0)
-                 max_threads: Number of concurrent connections (default is 1).
+        @keyword debug: The debug level (default is 0)
+        @keyword max_threads: Number of concurrent connections (default is 1).
         """
         self.job_started_event   = Event()
         self.job_succeeded_event = Event()

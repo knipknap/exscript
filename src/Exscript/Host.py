@@ -267,8 +267,8 @@ class Host(object):
         (when a FileLogger is used).
         By default, the logname is the name of the host.
 
-        @type:  string
-        @param: The basename of the logfile.
+        @type  logname: string
+        @param logname: The basename of the logfile.
         """
         self.logname = logname
 

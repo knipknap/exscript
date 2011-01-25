@@ -23,9 +23,9 @@ class Sequence(Action):
         """
         Constructor.
 
-        @type  kwargs: dict
-        @param kwargs: In addition to the kwargs supported by the Action class:
-                 actions: A list of subactions.
+        @note: Also supports all keyword arguments that L{Action} supports.
+
+        @keyword actions: A list of subactions.
         """
         Action.__init__(self, **kwargs)
         self.actions = []

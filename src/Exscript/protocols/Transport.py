@@ -34,7 +34,7 @@ _skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
 
 class Transport(object):
     """
-    This is the base class for all protocols; it defines the common portions 
+    This is the base class for all protocols; it defines the common portions
     of the API.
 
     The goal of all transport classes is to provide an interface that
@@ -46,37 +46,37 @@ class Transport(object):
     The reason is that many devices may support the following variety
     authentification/authorization methods:
 
-    1. Protocol level authentification, such as SSH's built-in
-       authentication.
+        1. Protocol level authentification, such as SSH's built-in
+           authentication.
 
-            - p1: password only
-            - p2: username
-            - p3: username + password
-            - p4: username + key
-            - p5: username + key + password
+                - p1: password only
+                - p2: username
+                - p3: username + password
+                - p4: username + key
+                - p5: username + key + password
 
-    2. App level authentification, such that the authentification may
-       happen long after a connection is already accepted.
-       This type of authentication is normally used in combination with
-       Telnet, but some SSH hosts also do this (users have reported
-       devices from Enterasys). These devices may also combine
-       protocol-level authentification with app-level authentification.
-       The following types of app-level authentication exist:
+        2. App level authentification, such that the authentification may
+           happen long after a connection is already accepted.
+           This type of authentication is normally used in combination with
+           Telnet, but some SSH hosts also do this (users have reported
+           devices from Enterasys). These devices may also combine
+           protocol-level authentification with app-level authentification.
+           The following types of app-level authentication exist:
 
-            - a1: password only
-            - a2: username
-            - a3: username + password
+                - a1: password only
+                - a2: username
+                - a3: username + password
 
-    3. App level authorization: In order to implement the AAA protocol,
-       some devices ask for two separate app-level logins, whereas the
-       first serves to authenticate the user, and the second serves to
-       authorize him.
-       App-level authorization may support the same methods as app-level
-       authentification:
+        3. App level authorization: In order to implement the AAA protocol,
+           some devices ask for two separate app-level logins, whereas the
+           first serves to authenticate the user, and the second serves to
+           authorize him.
+           App-level authorization may support the same methods as app-level
+           authentification:
 
-            - A1: password only
-            - A2: username
-            - A3: username + password
+                - A1: password only
+                - A2: username
+                - A3: username + password
 
     We are assuming that the following methods are used:
 
@@ -100,23 +100,23 @@ class Transport(object):
     regardless of which combination of authentication methods a device
     supports::
 
-            key = PrivateKey.from_file('~/.ssh/id_rsa', 'my_key_password')
+        key = PrivateKey.from_file('~/.ssh/id_rsa', 'my_key_password')
 
-            # The user account to use for protocol level authentification.
-            # The key defaults to None, in which case key authentication is
-            # not attempted.
-            account = Account(name     = 'myuser',
-                              password = 'mypassword',
-                              key      = key)
+        # The user account to use for protocol level authentification.
+        # The key defaults to None, in which case key authentication is
+        # not attempted.
+        account = Account(name     = 'myuser',
+                          password = 'mypassword',
+                          key      = key)
 
-            # The account to use for app-level authentification.
-            # password2 defaults to password.
-            app_account = Account(name      = 'myuser',
-                                  password  = 'my_app_password',
-                                  password2 = 'my_app_password2')
+        # The account to use for app-level authentification.
+        # password2 defaults to password.
+        app_account = Account(name      = 'myuser',
+                              password  = 'my_app_password',
+                              password2 = 'my_app_password2')
 
-            # app_account defaults to account.
-            conn.login(account, app_account = None, flush = True)
+        # app_account defaults to account.
+        conn.login(account, app_account = None, flush = True)
 
     Another important consideration is that once the login is complete, the
     device must be in a clearly defined state, i.e. we need to
@@ -138,7 +138,7 @@ class Transport(object):
         # App-level authorization.
         conn.app_authorize(app_account, flush = False)
 
-    The code could produce the following result::
+    The code produces the following result::
 
         Telnet:
             conn.authenticate -> NOP
@@ -198,17 +198,16 @@ class Transport(object):
           - otp_requested_event: The connected host requested a
           one-time-password to be entered.
 
-        @type  kwargs: dict
-        @param kwargs: The following arguments are supported:
-          - driver: passed to set_driver().
-          - stdout: Where to write the device response. Defaults to os.devnull.
-          - stderr: Where to write debug info. Defaults to stderr.
-          - debug: An integer between 0 (no debugging) and 5 (very verbose 
-          debugging) that specifies the amount of debug info sent to the 
-          terminal. The default value is 0.
-          - timeout: See set_timeout(). The default value is 30.
-          - logfile: A file into which a log of the conversation with the 
-          device is dumped.
+        @keyword driver: passed to set_driver().
+        @keyword stdout: Where to write the device response. Defaults to
+            os.devnull.
+        @keyword stderr: Where to write debug info. Defaults to stderr.
+        @keyword debug: An integer between 0 (no debugging) and 5 (very
+            verbose debugging) that specifies the amount of debug info
+            sent to the terminal. The default value is 0.
+        @keyword timeout: See set_timeout(). The default value is 30.
+        @keyword logfile: A file into which a log of the conversation with the
+            device is dumped.
         """
         self.data_received_event   = Event()
         self.otp_requested_event   = Event()
@@ -400,10 +399,10 @@ class Transport(object):
 
     def set_prompt(self, prompt = None):
         """
-        Defines a pattern that is waited for when calling the expect_prompt() 
+        Defines a pattern that is waited for when calling the expect_prompt()
         method.
-        If the set_prompt() method is not called, or if it is called with the 
-        prompt argument set to None, a default prompt is used that should 
+        If the set_prompt() method is not called, or if it is called with the
+        prompt argument set to None, a default prompt is used that should
         work with many devices running Unix, IOS, IOS-XR, or Junos and others.
 
         @type  prompt: RegEx
@@ -481,7 +480,7 @@ class Transport(object):
 
     def set_timeout(self, timeout):
         """
-        Defines the maximum time that the adapter waits before a call to 
+        Defines the maximum time that the adapter waits before a call to
         expect() or expect_prompt() fails.
 
         @type  timeout: int
@@ -556,7 +555,7 @@ class Transport(object):
         Low-level API to perform protocol-level authentification on protocols
         that support it.
 
-        @note In most cases, you want to use the login() method instead, as
+        @note: In most cases, you want to use the login() method instead, as
            it automatically chooses the best login method for each protocol.
 
         @type  account: Account
@@ -722,7 +721,7 @@ class Transport(object):
         Like app_authenticate(), but uses the authorization password
         of the account.
 
-        For the difference between authentication and authorization 
+        For the difference between authentication and authorization
         please google for AAA.
 
         @type  account: Account
@@ -753,8 +752,8 @@ class Transport(object):
         In the case of a device that is not recognized to support AAA, this
         method does nothing.
 
-        @type  password: string
-        @param password: The plain password.
+        @type  account: Account
+        @param account: An account object, like login().
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         """
@@ -786,13 +785,13 @@ class Transport(object):
 
     def execute(self, command):
         """
-        Sends the given data to the remote host (with a newline appended) 
-        and waits for a prompt in the response. The prompt attempts to use 
-        a sane default that works with many devices running Unix, IOS, 
-        IOS-XR, or Junos and others. If that fails, a custom prompt may 
+        Sends the given data to the remote host (with a newline appended)
+        and waits for a prompt in the response. The prompt attempts to use
+        a sane default that works with many devices running Unix, IOS,
+        IOS-XR, or Junos and others. If that fails, a custom prompt may
         also be defined using the set_prompt() method.
-        This method also modifies the value of the response (self.response) 
-        attribute, for details please see the documentation of the 
+        This method also modifies the value of the response (self.response)
+        attribute, for details please see the documentation of the
         expect() method.
 
         @type  command: string
@@ -808,7 +807,7 @@ class Transport(object):
 
     def waitfor(self, prompt):
         """
-        Monitors the data received from the remote host and waits until 
+        Monitors the data received from the remote host and waits until
         the response matches the given prompt.
         Once a match has been found, the buffer containing incoming data
         is NOT changed. In other words, consecutive calls to this function
@@ -821,20 +820,23 @@ class Transport(object):
         will always work. Hence in most cases, you probably want to use
         expect() instead.
 
-        This method also stores the received data in the response 
+        This method also stores the received data in the response
         attribute (self.response).
 
         Returns the index of the regular expression that matched.
-
-        Raises TimeoutException if the timeout was reached.
-        Raises ExpectCancelledException if cancel_expect() was called
-        through a callback.
 
         @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
         @param prompt: One or more regular expressions.
         @rtype:  int, re.MatchObject
         @return: The index of the regular expression that matched,
           and the match object.
+
+        @raise TimeoutException: raised if the timeout was reached.
+        @raise ExpectCancelledException: raised when cancel_expect() was
+            called in a callback.
+        @raise TransportException: on other internal errors.
+        @raise Exception: May raise other exceptions that are caused
+            within the underlying protocol implementations.
         """
         while True:
             try:
@@ -859,9 +861,7 @@ class Transport(object):
 
         Returns the index of the regular expression that matched.
 
-        Raises TimeoutException if the timeout was reached.
-        Raises ExpectCancelledException if cancel_expect() was called
-        through a callback.
+        @note: May raise the same exceptions as L{waitfor}.
 
         @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
         @param prompt: One or more regular expressions.
@@ -878,12 +878,12 @@ class Transport(object):
 
     def expect_prompt(self):
         """
-        Monitors the data received from the remote host and waits for a 
-        prompt in the response. The prompt attempts to use 
-        a sane default that works with many devices running Unix, IOS, 
-        IOS-XR, or Junos and others. If that fails, a custom prompt may 
+        Monitors the data received from the remote host and waits for a
+        prompt in the response. The prompt attempts to use
+        a sane default that works with many devices running Unix, IOS,
+        IOS-XR, or Junos and others. If that fails, a custom prompt may
         also be defined using the set_prompt() method.
-        This method also stores the received data in the response 
+        This method also stores the received data in the response
         attribute (self.response).
         """
         self.expect(self.get_prompt())
@@ -927,12 +927,12 @@ class Transport(object):
 
     def guess_os(self):
         """
-        Returns an identifer that specifies the operating system that is 
-        running on the remote host. This OS is obtained by watching the 
-        response of the remote host, such as any messages retrieved during 
+        Returns an identifer that specifies the operating system that is
+        running on the remote host. This OS is obtained by watching the
+        response of the remote host, such as any messages retrieved during
         the login procedure.
 
-        The OS is also a wild guess that often depends on volatile 
+        The OS is also a wild guess that often depends on volatile
         information, so there is no guarantee that this will always work.
 
         @rtype:  string

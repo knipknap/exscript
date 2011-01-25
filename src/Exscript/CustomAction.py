@@ -30,10 +30,12 @@ class CustomAction(Action):
         """
         Constructor.
 
+        @type  queue: Queue
+        @param queue: The associated queue.
         @type  function: function
-        @param function: Called when the Action is executed.
-        @type  conn: Connection
-        @param conn: The assoviated connection.
+        @param function: Called when the action is executed.
+        @type  name: str
+        @param name: A name for the action.
         """
         Action.__init__(self)
         self.started_event   = Event()

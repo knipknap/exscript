@@ -24,10 +24,8 @@ class Action(object):
         """
         Constructor.
 
-        @type  kwargs: dict
-        @param kwargs: The following keyword arguments are supported:
-                 debug: The debug level (default is 0)
-                 name: A human readable name for the action (string).
+        @keyword debug: The debug level (default is 0)
+        @keyword name: A human readable name for the action (string).
         """
         self.debug      = kwargs.get('debug', 0)
         self.name       = kwargs.get('name',  None)
