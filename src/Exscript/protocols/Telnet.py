@@ -18,7 +18,6 @@ The Telnet protocol.
 import telnetlib
 from Transport import Transport
 from Exception import TransportException, \
-                      LoginFailure, \
                       TimeoutException, \
                       DriverReplacedException, \
                       ExpectCancelledException
@@ -57,11 +56,6 @@ class Telnet(Transport):
         except Exception:
             self._dbg(1, 'Error while writing to connection')
             raise
-
-    def execute(self, data):
-        # Send the command.
-        self.send(data + '\r')
-        return self.expect_prompt()
 
     def _domatch(self, prompt, flush):
         if flush:

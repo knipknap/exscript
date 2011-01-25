@@ -291,12 +291,6 @@ class SSH2(Transport):
         self.buffer += data
         return True
 
-    def execute(self, command):
-        self.response = ''
-        self.shell.sendall(command + '\r')
-        self._dbg(1, "Command sent: %s" % repr(command))
-        return self.expect_prompt()
-
     def _domatch(self, prompt, flush):
         self._dbg(1, "Expecting a prompt")
         self._dbg(2, "Expected pattern: " + repr(p.pattern for p in prompt))

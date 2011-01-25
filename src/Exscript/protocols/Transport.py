@@ -790,7 +790,8 @@ class Transport(object):
         @type  command: string
         @param command: The data that is sent to the remote host.
         """
-        raise NotImplementedError()
+        self.send(command + '\r')
+        return self.expect_prompt()
 
     def _waitfor(self, prompt):
         result = self._domatch(to_regexs(prompt), False)

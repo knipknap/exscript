@@ -94,11 +94,6 @@ class Dummy(Transport):
         self._dbg(4, 'Sending %s' % repr(data))
         self._say(self.device.do(data))
 
-    def execute(self, data):
-        # Send the command.
-        self.send(data + '\r')
-        return self.expect_prompt()
-
     def _domatch(self, prompt, flush):
         # Wait for a prompt.
         result, match, self.response = self._expect_any(prompt, flush)
