@@ -79,13 +79,13 @@ publish: apidocs
 	# Create a temporary copy of this repository.
 	# Switch it to the HTML repository branch and delete the old docs,
 	# then install the new ones in the right directory.
-	git clone .. cloned_repo
+	git clone git@github.com:knipknap/exscript.git cloned_repo
 	cd cloned_repo \
-	&& git checkout -b gh-pages remotes/origin/gh-pages \
+	&& git checkout gh-pages \
 	&& rm -Rf api/ \
+	&& git rm -rf api/; true \
 	&& mv ../api/ . \
 	&& git add api \
 	&& git commit -nam "Update API docs (automatically by doc/Makefile)." \
 	&& git push origin gh-pages
-	git push github gh-pages
 	make clean
