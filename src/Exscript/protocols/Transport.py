@@ -129,7 +129,7 @@ class Transport(object):
     We jhide the following methods behind the login() call::
 
         # Protocol level authentification.
-        conn.authenticate(...)
+        conn.protocol_authenticate(...)
         # App-level authentification.
         conn.app_authenticate(...)
         # App-level authorization.
@@ -138,22 +138,22 @@ class Transport(object):
     The code produces the following result::
 
         Telnet:
-            conn.authenticate -> NOP
+            conn.protocol_authenticate -> NOP
             conn.app_authenticate
                 -> waits for username or password prompt, authenticates,
                    returns after a CLI prompt was seen.
             conn.app_authorize
-                -> calls driver.enable(), waits for username or password prompt,
-                   authorizes, returns after a CLI prompt was seen.
+                -> calls driver.enable(), waits for username or password
+                   prompt, authorizes, returns after a CLI prompt was seen.
 
         SSH:
-            conn.authenticate -> authenticates using user/key/password
+            conn.protocol_authenticate -> authenticates using user/key/password
             conn.app_authenticate -> like Telnet
             conn.app_authorize -> like Telnet
 
     We can see the following:
 
-        - authenticate() must not wait for a prompt, because else
+        - protocol_authenticate() must not wait for a prompt, because else
           app_authenticate() has no way of knowing whether an app-level
           login is even necessary.
 
@@ -210,7 +210,7 @@ class Transport(object):
         self.otp_requested_event   = Event()
         self.os_guesser            = OsGuesser(self)
         self.auto_driver           = driver_map[self.guess_os()]
-        self.authenticated         = False
+        self.proto_authenticated   = False
         self.app_authenticated     = False
         self.app_authorized        = False
         self.manual_user_re        = None
@@ -466,7 +466,7 @@ class Transport(object):
         """
         Returns the regular expression that is used to monitor the response
         of the connected host for login errors; this is only used during
-        the login procedure, i.e. authenticate() or authorize().
+        the login procedure, i.e. app_authenticate() or app_authorize().
 
         @rtype:  regex
         @return: A regular expression.
@@ -537,7 +537,7 @@ class Transport(object):
         if app_account is None:
             app_account = account
 
-        self.authenticate(account, flush = False)
+        self.protocol_authenticate(account, flush = False)
         self.app_authenticate(app_account, flush = False)
         if self.get_driver().supports_auto_authorize():
             self.expect_prompt()
@@ -549,7 +549,7 @@ class Transport(object):
     def _protocol_authenticate_by_key(self, user, key):
         pass
 
-    def authenticate(self, account = None, flush = True):
+    def protocol_authenticate(self, account = None, flush = True):
         """
         Low-level API to perform protocol-level authentification on protocols
         that support it.
@@ -572,11 +572,11 @@ class Transport(object):
         else:
             self._dbg(1, "Authenticate %s with key." % user)
             self._protocol_authenticate_by_key(user, key)
-        self.authenticated = True
+        self.proto_authenticated = True
         if flush:
             self.expect_prompt()
 
-    def is_authenticated(self):
+    def is_protocol_authenticated(self):
         """
         Returns True if the protocol-level authentication procedure was
         completed, False otherwise.
@@ -584,7 +584,7 @@ class Transport(object):
         @rtype:  bool
         @return: Whether the authentication was completed.
         """
-        return self.authenticated
+        return self.proto_authenticated
 
     def _app_authenticate(self, user, password, flush = True):
         while True:

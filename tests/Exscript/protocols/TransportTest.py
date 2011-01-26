@@ -36,7 +36,7 @@ class TransportTest(unittest.TestCase):
 
     def doAuthenticate(self, flush = True):
         self.transport.connect(self.hostname, self.port)
-        self.transport.authenticate(self.account, flush = flush)
+        self.transport.protocol_authenticate(self.account, flush = flush)
 
     def doAppAuthenticate(self, flush = True):
         self.transport.app_authenticate(self.account, flush)
@@ -222,7 +222,7 @@ class TransportTest(unittest.TestCase):
         self.doLogin(flush = False)
         self.assert_(self.transport.response is not None)
         self.assert_(len(self.transport.response) > 0)
-        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_protocol_authenticated())
         self.assert_(self.transport.is_app_authenticated())
         self.assert_(self.transport.is_app_authorized())
 
@@ -233,26 +233,26 @@ class TransportTest(unittest.TestCase):
         account = Account(self.user, self.password, key = key)
         self.transport.connect(self.hostname, self.port)
         self.transport.login(account, flush = False)
-        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_protocol_authenticated())
         self.assert_(self.transport.is_app_authenticated())
         self.assert_(self.transport.is_app_authorized())
 
-    def testAuthenticate(self):
+    def testProtocolAuthenticate(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception,
-                              self.transport.authenticate,
+                              self.transport.protocol_authenticate,
                               self.account)
             return
         # There is no guarantee that the device provided any response
         # during protocol level authentification.
         self.doAuthenticate(flush = False)
-        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_protocol_authenticated())
         self.failIf(self.transport.is_app_authenticated())
         self.failIf(self.transport.is_app_authorized())
 
-    def testIsAuthenticated(self):
-        pass # See testAuthenticate()
+    def testIsProtocolAuthenticated(self):
+        pass # See testProtocolAuthenticate()
 
     def testAppAuthenticate(self):
         # Test can not work on the abstract base.
@@ -261,9 +261,9 @@ class TransportTest(unittest.TestCase):
                               self.transport.app_authenticate,
                               self.account)
             return
-        self.testAuthenticate()
+        self.testProtocolAuthenticate()
         self.doAppAuthenticate(flush = False)
-        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_protocol_authenticated())
         self.assert_(self.transport.is_app_authenticated())
         self.failIf(self.transport.is_app_authorized())
 
@@ -283,13 +283,13 @@ class TransportTest(unittest.TestCase):
         # and do nothing.
         self.doAppAuthorize(flush = False)
         self.assertEqual(self.transport.response, response)
-        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_protocol_authenticated())
         self.assert_(self.transport.is_app_authenticated())
         self.assert_(self.transport.is_app_authorized())
 
         self.doAppAuthorize(flush = True)
         self.failUnlessEqual(self.transport.response, response)
-        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_protocol_authenticated())
         self.assert_(self.transport.is_app_authenticated())
         self.assert_(self.transport.is_app_authorized())
 
@@ -307,13 +307,13 @@ class TransportTest(unittest.TestCase):
         # device using AAA.
         self.transport.auto_app_authorize(self.account, flush = False)
         self.failUnlessEqual(self.transport.response, response)
-        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_protocol_authenticated())
         self.assert_(self.transport.is_app_authenticated())
         self.assert_(self.transport.is_app_authorized())
 
         self.transport.auto_app_authorize(self.account, flush = True)
         self.failUnlessEqual(self.transport.response, response)
-        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_protocol_authenticated())
         self.assert_(self.transport.is_app_authenticated())
         self.assert_(self.transport.is_app_authorized())
 
@@ -433,7 +433,7 @@ class TransportTest(unittest.TestCase):
         self.transport.connect(self.hostname, self.port)
         self.assertEqual('unknown', self.transport.guess_os())
         self.transport.login(self.account)
-        self.assert_(self.transport.is_authenticated())
+        self.assert_(self.transport.is_protocol_authenticated())
         self.assert_(self.transport.is_app_authenticated())
         self.assert_(self.transport.is_app_authorized())
         self.assertEqual('shell', self.transport.guess_os())

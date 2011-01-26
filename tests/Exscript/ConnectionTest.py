@@ -36,10 +36,7 @@ class ConnectionTest(DummyTest):
         # This is overwritten do make the tests that are inherited from
         # DummyTest happy.
         self.transport.open()
-        self.transport.authenticate(flush = flush)
-
-    def doAuthorize(self, flush = True):
-        self.transport.authorize(flush = flush)
+        self.transport.protocol_authenticate(flush = flush)
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Connection))

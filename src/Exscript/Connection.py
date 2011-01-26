@@ -229,9 +229,9 @@ class Connection(object):
             self._untrack_accounts()
         return account
 
-    def authenticate(self, account = None, flush = True, lock = True):
+    def protocol_authenticate(self, account = None, flush = True, lock = True):
         """
-        Like protocols.Transport.authenticate(), but makes sure to
+        Like protocols.Transport.protocol_authenticate(), but makes sure to
         lock/release the account while it is used.
         If an account is not given, one is acquired from the account
         manager.
@@ -250,7 +250,7 @@ class Connection(object):
         self._track_account(account)
 
         try:
-            self.transport.authenticate(account, flush = flush)
+            self.transport.protocol_authenticate(account, flush = flush)
         finally:
             if lock:
                 self._release_account(account)
