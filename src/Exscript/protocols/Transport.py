@@ -523,8 +523,32 @@ class Transport(object):
         made, use the account that was passed to the constructor. If that
         also fails, raise a TypeError.
 
-        The app_account is passed to app_authenticate. If app_account is
-        not given, default to the value of the account argument.
+        The app_account is passed to L{app_authenticate()} and
+        L{app_authorize()}.
+        If app_account is not given, default to the value of the account
+        argument.
+
+        @type  account: Account
+        @param account: The account for protocol level authentification.
+        @type  app_account: Account
+        @param app_account: The account for app level authentification.
+        @type  flush: bool
+        @param flush: Whether to flush the last prompt from the buffer.
+        """
+        account = self._get_account(account)
+        if app_account is None:
+            app_account = account
+        self.authenticate(account, flush = False)
+        if self.get_driver().supports_auto_authorize():
+            self.expect_prompt()
+        self.auto_app_authorize(app_account, flush = flush)
+
+    def authenticate(self, account = None, app_account = None, flush = True):
+        """
+        Like login(), but skips the authorization procedure.
+
+        @note: If you are unsure whether to use L{authenticate()} or
+            L{login()}, stick with L{login}.
 
         @type  account: Account
         @param account: The account for protocol level authentification.
@@ -538,10 +562,7 @@ class Transport(object):
             app_account = account
 
         self.protocol_authenticate(account)
-        self.app_authenticate(app_account, flush = False)
-        if self.get_driver().supports_auto_authorize():
-            self.expect_prompt()
-        self.auto_app_authorize(app_account, flush = flush)
+        self.app_authenticate(app_account, flush = flush)
 
     def _protocol_authenticate(self, user, password):
         pass

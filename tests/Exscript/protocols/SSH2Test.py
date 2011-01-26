@@ -16,6 +16,9 @@ class SSH2Test(TransportTest):
     def testLogin(self):
         self.assertRaises(IOError, TransportTest.testLogin, self)
 
+    def testAuthenticate(self):
+        self.assertRaises(IOError, TransportTest.testAuthenticate, self)
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(SSH2Test)
 if __name__ == '__main__':

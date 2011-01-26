@@ -34,7 +34,7 @@ class TransportTest(unittest.TestCase):
         self.transport.connect(self.hostname, self.port)
         self.transport.login(self.account, flush = flush)
 
-    def doAuthenticate(self, flush = True):
+    def doProtocolAuthenticate(self, flush = True):
         self.transport.connect(self.hostname, self.port)
         self.transport.protocol_authenticate(self.account)
 
@@ -232,10 +232,47 @@ class TransportTest(unittest.TestCase):
         key     = PrivateKey.from_file('foo')
         account = Account(self.user, self.password, key = key)
         self.transport.connect(self.hostname, self.port)
+        self.failIf(self.transport.is_protocol_authenticated())
+        self.failIf(self.transport.is_app_authenticated())
+        self.failIf(self.transport.is_app_authorized())
         self.transport.login(account, flush = False)
         self.assert_(self.transport.is_protocol_authenticated())
         self.assert_(self.transport.is_app_authenticated())
         self.assert_(self.transport.is_app_authorized())
+
+    def testAuthenticate(self):
+        # Test can not work on the abstract base.
+        if self.transport.__class__ == Transport:
+            self.assertRaises(Exception,
+                              self.transport.authenticate,
+                              self.account)
+            return
+        self.transport.connect(self.hostname, self.port)
+
+        # Password login.
+        self.failIf(self.transport.is_protocol_authenticated())
+        self.failIf(self.transport.is_app_authenticated())
+        self.failIf(self.transport.is_app_authorized())
+        self.transport.authenticate(self.account, flush = False)
+        self.assert_(self.transport.response is not None)
+        self.assert_(len(self.transport.response) > 0)
+        self.assert_(self.transport.is_protocol_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.failIf(self.transport.is_app_authorized())
+
+        # Key login.
+        self.tearDown()
+        self.setUp()
+        key     = PrivateKey.from_file('foo')
+        account = Account(self.user, self.password, key = key)
+        self.transport.connect(self.hostname, self.port)
+        self.failIf(self.transport.is_protocol_authenticated())
+        self.failIf(self.transport.is_app_authenticated())
+        self.failIf(self.transport.is_app_authorized())
+        self.transport.authenticate(account, flush = False)
+        self.assert_(self.transport.is_protocol_authenticated())
+        self.assert_(self.transport.is_app_authenticated())
+        self.failIf(self.transport.is_app_authorized())
 
     def testProtocolAuthenticate(self):
         # Test can not work on the abstract base.
@@ -244,7 +281,7 @@ class TransportTest(unittest.TestCase):
             return
         # There is no guarantee that the device provided any response
         # during protocol level authentification.
-        self.doAuthenticate(flush = False)
+        self.doProtocolAuthenticate(flush = False)
         self.assert_(self.transport.is_protocol_authenticated())
         self.failIf(self.transport.is_app_authenticated())
         self.failIf(self.transport.is_app_authorized())
@@ -273,7 +310,7 @@ class TransportTest(unittest.TestCase):
         if self.transport.__class__ == Transport:
             self.assertRaises(Exception, self.transport.app_authorize)
             return
-        self.doAuthenticate(flush = False)
+        self.doProtocolAuthenticate(flush = False)
         self.doAppAuthenticate(flush = False)
         response = self.transport.response
 
