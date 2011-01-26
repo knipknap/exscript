@@ -9,15 +9,8 @@ class DummyTest(TransportTest):
     CORRELATE = Dummy
 
     def createTransport(self):
-        self.device    = VirtualDevice(self.hostname, echo = True)
+        self._init_virtual_device()
         self.transport = Dummy(device = self.device)
-        self.banner    = 'Welcome to %s!\n' % self.hostname
-        self.prompt    = self.hostname + '> '
-
-        ls_response = '-rw-r--r--  1 sab  nmc    1628 Aug 18 10:02 file'
-        self.device.add_command('ls',   ls_response)
-        self.device.add_command('df',   'foobar')
-        self.device.add_command('exit', '')
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Dummy))

@@ -3,7 +3,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 
 from ConfigParser                 import RawConfigParser
 from Exscript                     import Account, PrivateKey
+from Exscript.emulators           import VirtualDevice
 from Exscript.protocols.Exception import TimeoutException, \
+                                         InvalidCommandException, \
                                          ExpectCancelledException
 from Exscript.protocols.Transport import Transport
 
@@ -16,6 +18,17 @@ class TransportTest(unittest.TestCase):
 
     def createTransport(self):
         self.transport = Transport(echo = 0)
+
+    def _init_virtual_device(self):
+        self.banner = 'Welcome to %s!\n' % self.hostname
+        self.prompt = self.hostname + '> '
+        self.device = VirtualDevice(self.hostname, echo = True)
+        ls_response = '-rw-r--r--  1 sab  nmc    1628 Aug 18 10:02 file'
+        self.device.add_command('ls',   ls_response)
+        self.device.add_command('df',   'foobar')
+        self.device.add_command('exit', '')
+        self.device.add_command('this-command-causes-an-error',
+                                '\ncommand not found')
 
     def doLogin(self, flush = True):
         self.transport.connect(self.hostname, self.port)
@@ -332,6 +345,13 @@ class TransportTest(unittest.TestCase):
         self.transport.execute('ls')
         self.assert_(self.transport.response is not None)
         self.assert_(self.transport.response.startswith('ls'))
+
+        # Make sure that we raise an error if the device responds
+        # with something that matches any of the error prompts.
+        self.transport.set_error_prompt('.')
+        self.assertRaises(InvalidCommandException,
+                          self.transport.execute,
+                          'this-command-causes-an-error')
 
     def testWaitfor(self):
         # Test can not work on the abstract base.

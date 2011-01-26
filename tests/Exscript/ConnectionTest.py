@@ -18,9 +18,8 @@ class ConnectionTest(DummyTest):
         self.queue     = Queue(verbose = 0)
         self.host      = Host('dummy://localhost')
         self.hostname  = self.host.get_name()
-        self.device    = VirtualDevice(self.hostname, echo = True)
-        self.banner    = self.device.banner
-        self.prompt    = self.device.prompt
+        self._init_virtual_device()
+
         self.action    = HostAction(self.queue, object, self.host)
         self.transport = Connection(self.action)
         self.account   = Account(self.user, self.password)
@@ -30,6 +29,7 @@ class ConnectionTest(DummyTest):
         # This is overwritten do make the tests that are inherited from
         # DummyTest happy.
         self.transport.open()
+        self.transport.transport.device = self.device
         self.transport.login(flush = flush)
 
     def doAuthenticate(self, flush = True):

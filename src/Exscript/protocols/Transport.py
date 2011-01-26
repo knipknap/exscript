@@ -890,15 +890,12 @@ class Transport(object):
         # sent.
         self._dbg(5, "Checking %s for errors" % repr(self.response))
         for line in self.response.split('\n')[1:]:
-            match = None
             for prompt in self.get_error_prompt():
-                if prompt.match(line):
-                    break
-            if match is None:
-                continue
-            error = repr(prompt.pattern)
-            self._dbg(5, "error prompt (%s) matches %s" % (error, repr(line)))
-            raise InvalidCommandException('Device said:\n' + self.response)
+                if not prompt.match(line):
+                    continue
+                args = repr(prompt.pattern), repr(line)
+                self._dbg(5, "error prompt (%s) matches %s" % args)
+                raise InvalidCommandException('Device said:\n' + self.response)
 
     def cancel_expect(self):
         """

@@ -16,12 +16,9 @@ class TelnetTest(TransportTest):
         self.user     = 'user'
         self.password = 'password'
         self.account  = Account(self.user, password = self.password)
-        self.device   = VirtualDevice(self.hostname, echo = True)
-        self.daemon   = Telnetd(self.hostname, self.port, self.device)
-        ls_response   = '-rw-r--r--  1 sab  nmc    1628 Aug 18 10:02 file'
-        self.device.add_command('ls',   ls_response)
-        self.device.add_command('df',   'foobar')
-        self.device.add_command('exit', self.daemon.exit_command)
+
+        self._init_virtual_device()
+        self.daemon = Telnetd(self.hostname, self.port, self.device)
         self.daemon.start()
         self.createTransport()
         time.sleep(.2)
