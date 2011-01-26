@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-from Exscript             import Queue, Logger
-from Exscript.util.file   import get_hosts_from_file, get_accounts_from_file
-from Exscript.util.report import status, summarize
+from Exscript                import Queue, Logger
+from Exscript.util.decorator import autologin
+from Exscript.util.file      import get_hosts_from_file, get_accounts_from_file
+from Exscript.util.report    import status, summarize
 
+@autologin
 def do_something(conn):
-    conn.open()
-    conn.authenticate()
     conn.execute('show ip int brie')
 
 # Read input data.

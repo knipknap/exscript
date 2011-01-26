@@ -1,0 +1,4 @@
+localhost
+anotherhost
+ssh://foobar
+telnet://myuser:mypassword2:mypassword2@yetanotherhost
