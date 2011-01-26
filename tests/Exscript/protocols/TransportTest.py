@@ -36,7 +36,7 @@ class TransportTest(unittest.TestCase):
 
     def doAuthenticate(self, flush = True):
         self.transport.connect(self.hostname, self.port)
-        self.transport.protocol_authenticate(self.account, flush = flush)
+        self.transport.protocol_authenticate(self.account)
 
     def doAppAuthenticate(self, flush = True):
         self.transport.app_authenticate(self.account, flush)
@@ -240,9 +240,7 @@ class TransportTest(unittest.TestCase):
     def testProtocolAuthenticate(self):
         # Test can not work on the abstract base.
         if self.transport.__class__ == Transport:
-            self.assertRaises(Exception,
-                              self.transport.protocol_authenticate,
-                              self.account)
+            self.transport.protocol_authenticate(self.account)
             return
         # There is no guarantee that the device provided any response
         # during protocol level authentification.

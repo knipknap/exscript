@@ -229,7 +229,7 @@ class Connection(object):
             self._untrack_accounts()
         return account
 
-    def protocol_authenticate(self, account = None, flush = True, lock = True):
+    def protocol_authenticate(self, account = None, lock = True):
         """
         Like protocols.Transport.protocol_authenticate(), but makes sure to
         lock/release the account while it is used.
@@ -239,8 +239,6 @@ class Connection(object):
 
         @type  account: Account
         @param account: The account to use for logging in.
-        @type  flush: bool
-        @param flush: Whether to flush the last prompt from the buffer.
         @type  lock: bool
         @param lock: Whether to lock the account while logging in.
         @rtype:  Account
@@ -250,7 +248,7 @@ class Connection(object):
         self._track_account(account)
 
         try:
-            self.transport.protocol_authenticate(account, flush = flush)
+            self.transport.protocol_authenticate(account)
         finally:
             if lock:
                 self._release_account(account)
