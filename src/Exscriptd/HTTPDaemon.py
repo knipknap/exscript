@@ -97,7 +97,7 @@ class HTTPHandler(HTTPRequestHandler):
                 n_tasks = self.daemon.count_tasks(int(order_id))
             else:
                 n_tasks = self.daemon.count_tasks()
-            return str(n_tasks)
+            return 'application/json', json.dumps(n_tasks)
         elif self.path == '/task/list/':
             # Fetch the tasks.
             order_id = int(self.args.get('order_id'))

@@ -439,7 +439,7 @@ class OrderDB(object):
         """
         tbl_t = self._table_map['task']
         if order_id is not None:
-            query = tbl_t.count(tbl_t.c.order_id == order_id)
+            query = tbl_t.count(tbl_t.c.order_id == int(order_id))
         else:
             query = tbl_t.count()
         return query.execute().fetchone()[0]

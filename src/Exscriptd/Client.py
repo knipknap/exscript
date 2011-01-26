@@ -172,7 +172,7 @@ class Client(object):
         response = result.read()
         if result.getcode() != 200:
             raise Exception(response)
-        return int(response)
+        return json.loads(response)
 
     def get_task_list(self, order_id, offset = 0, limit = 0):
         """
