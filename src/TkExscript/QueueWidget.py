@@ -49,7 +49,7 @@ class _ConnectionWatcher(object):
         self.buffer = ''
         self.widget = None
         self.conn   = conn
-        self.conn.data_received_event(self._on_data_received)
+        self.conn.data_received_event.connect(self._on_data_received)
 
     def _show_data(self, data):
         data = data.replace('\r\n', '\n')
