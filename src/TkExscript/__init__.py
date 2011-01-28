@@ -15,6 +15,8 @@
 """
 Contains graphical user interfaces using Python's tkinter.
 """
+from LoginWidget import LoginWidget
+from LoginWindow import LoginWindow
 from MailWidget  import MailWidget
 from MailWindow  import MailWindow
 from Notebook    import Notebook

@@ -9,7 +9,6 @@ Exscript
 
 TkExscript
 ----------
-* Add TkExscript.LoginWidget and .LoginWindow.
 * Add docs for TkExscript.
 
 exscriptd
