@@ -50,8 +50,10 @@ class Telnetd(Server):
         return lines[0] + '\n'
 
     def _shutdown_notify(self):
-        if self.conn:
+        try:
             self.conn.send('Server is shutting down.\n')
+        except Exception:
+            pass
 
     def _run(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
