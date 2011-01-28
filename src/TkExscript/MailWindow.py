@@ -35,6 +35,8 @@ class MailWindow(Frame):
         Create a new editor window. All arguments are passed to the
         underlying MailWidget.
 
+        @type  mail: Exscript.util.mail.Mail
+        @param mail: An optional email object to attach.
         @type  server: string
         @param server: The address of the mailserver.
         @type  show_to: bool
