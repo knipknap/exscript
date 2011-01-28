@@ -9,7 +9,6 @@ class DummyTest(TransportTest):
     CORRELATE = Dummy
 
     def createTransport(self):
-        self._init_virtual_device()
         self.transport = Dummy(device = self.device)
 
     def testConstructor(self):

@@ -1,6 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
+import time
 from ConfigParser                 import RawConfigParser
 from Exscript                     import Account, PrivateKey
 from Exscript.emulators           import VirtualDevice
@@ -16,10 +17,27 @@ class TransportTest(unittest.TestCase):
     """
     CORRELATE = Transport
 
-    def createTransport(self):
-        self.transport = Transport(echo = 0)
+    def setUp(self):
+        self.hostname = 'localhost'
+        self.port     = 1236
+        self.user     = 'user'
+        self.password = 'password'
+        self.account  = Account(self.user, password = self.password)
+        self.daemon   = None
 
-    def _init_virtual_device(self):
+        self.createVirtualDevice()
+        self.createDaemon()
+        if self.daemon is not None:
+            self.daemon.start()
+            time.sleep(.2)
+        self.createTransport()
+
+    def tearDown(self):
+        if self.daemon is not None:
+            self.daemon.exit()
+            self.daemon.join()
+
+    def createVirtualDevice(self):
         self.banner = 'Welcome to %s!\n' % self.hostname
         self.prompt = self.hostname + '> '
         self.device = VirtualDevice(self.hostname, echo = True)
@@ -29,6 +47,12 @@ class TransportTest(unittest.TestCase):
         self.device.add_command('exit', '')
         self.device.add_command('this-command-causes-an-error',
                                 '\ncommand not found')
+
+    def createDaemon(self):
+        pass
+
+    def createTransport(self):
+        self.transport = Transport(echo = 0)
 
     def doLogin(self, flush = True):
         self.transport.connect(self.hostname, self.port)
@@ -43,17 +67,6 @@ class TransportTest(unittest.TestCase):
 
     def doAppAuthorize(self, flush = True):
         self.transport.app_authorize(self.account, flush)
-
-    def setUp(self):
-        cfgfile = os.path.join(os.path.dirname(__file__), '..', 'unit_test.cfg')
-        cfg     = RawConfigParser()
-        cfg.read(cfgfile)
-        self.hostname = cfg.get('testhost', 'hostname')
-        self.port     = None
-        self.user     = cfg.get('testhost', 'user')
-        self.password = cfg.get('testhost', 'password')
-        self.account  = Account(self.user, password = self.password)
-        self.createTransport()
 
     def _trymatch(self, prompts, string):
         for regex in prompts:

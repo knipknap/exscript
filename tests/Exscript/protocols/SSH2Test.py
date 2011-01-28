@@ -2,10 +2,14 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from TransportTest      import TransportTest
+from Exscript.servers   import SSHd
 from Exscript.protocols import SSH2
 
 class SSH2Test(TransportTest):
     CORRELATE = SSH2
+
+    def createDaemon(self):
+        self.daemon = SSHd(self.hostname, self.port, self.device)
 
     def createTransport(self):
         self.transport = SSH2(echo = 0)

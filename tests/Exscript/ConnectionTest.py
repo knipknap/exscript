@@ -16,13 +16,9 @@ class ConnectionTest(DummyTest):
 
     def createTransport(self):
         self.queue     = Queue(verbose = 0)
-        self.host      = Host('dummy://localhost')
-        self.hostname  = self.host.get_name()
-        self._init_virtual_device()
-
+        self.host      = Host('dummy://' + self.hostname)
         self.action    = HostAction(self.queue, object, self.host)
         self.transport = Connection(self.action)
-        self.account   = Account(self.user, self.password)
         self.queue.add_account(self.account)
 
     def doLogin(self, flush = True):

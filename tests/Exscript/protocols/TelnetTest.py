@@ -5,27 +5,12 @@ from TransportTest      import TransportTest
 from Exscript           import Account
 from Exscript.servers   import Telnetd
 from Exscript.protocols import Telnet
-from Exscript.emulators import VirtualDevice
 
 class TelnetTest(TransportTest):
     CORRELATE = Telnet
 
-    def setUp(self):
-        self.hostname = 'localhost'
-        self.port     = 1236
-        self.user     = 'user'
-        self.password = 'password'
-        self.account  = Account(self.user, password = self.password)
-
-        self._init_virtual_device()
+    def createDaemon(self):
         self.daemon = Telnetd(self.hostname, self.port, self.device)
-        self.daemon.start()
-        self.createTransport()
-        time.sleep(.2)
-
-    def tearDown(self):
-        self.daemon.exit()
-        self.daemon.join()
 
     def createTransport(self):
         self.transport = Telnet(echo = 0)
