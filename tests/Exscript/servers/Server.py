@@ -4,12 +4,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 import time
 from Exscript           import Account
 from Exscript.emulators import VirtualDevice
-from Exscript.servers   import Telnetd
-from Exscript.protocols import Telnet
 
-class TelnetdTest(unittest.TestCase):
-    CORRELATE = Telnetd
-
+class ServerTest(unittest.TestCase):
     def setUp(self):
         self.host   = 'localhost'
         self.port   = 1235
@@ -23,7 +19,10 @@ class TelnetdTest(unittest.TestCase):
             self.daemon.join()
 
     def _create_daemon(self):
-        self.daemon = Telnetd(self.host, self.port, self.device)
+        raise NotImplementedError()
+
+    def _create_client(self):
+        raise NotImplementedError()
 
     def _add_commands(self):
         self.device.add_command('exit', self.daemon.exit_command)
@@ -42,7 +41,7 @@ class TelnetdTest(unittest.TestCase):
         self.daemon.start()
         time.sleep(1)
 
-        client = Telnet()
+        client = self._create_client()
         client.set_prompt(re.compile(r'\w+:\d+> ?'))
         client.connect(self.host, self.port)
         client.login(Account('user', 'password'))
@@ -62,8 +61,3 @@ class TelnetdTest(unittest.TestCase):
         # self.daemon.exit().
         self.daemon.join()
         self.testConstructor()
-
-def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(TelnetdTest)
-if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
