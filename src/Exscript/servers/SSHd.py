@@ -20,6 +20,7 @@ import base64
 import socket
 import select
 import threading
+import Crypto
 import paramiko
 from binascii import hexlify
 from paramiko import ServerInterface
@@ -36,6 +37,18 @@ class ParamikoServer(ServerInterface):
 
     def __init__(self):
         self.event = threading.Event()
+
+        # Since each server is created in it's own thread, we must
+        # re-initialize the random number generator to make sure that
+        # child threads have no way of guessing the numbers of the parent.
+        # If we don't, PyCrypto generates an error message for security
+        # reasons.
+        try:
+            Crypto.Random.atfork()
+        except AttributeError:
+            # pycrypto versions that have no "Random" module also do not
+            # detect the missing atfork() call, so they do not raise.
+            pass
 
     def check_channel_request(self, kind, chanid):
         if kind == 'session':
