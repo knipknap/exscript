@@ -47,12 +47,18 @@ class Server(Process):
         self.host    = host
         self.port    = int(port)
         self.timeout = .5
+        self.dbg     = 0
         self.running = False
         self.buf     = ''
         self.socket  = None
         self.conn    = None
         self.device  = device
         self.parent_conn, self.child_conn = Pipe()
+
+    def _dbg(self, level, msg):
+        if self.dbg >= level:
+            print self.host + ':' + str(self.port), '-',
+            print msg
 
     def _poll_child_process(self):
         if not self.child_conn.poll():

@@ -81,7 +81,7 @@ class SSHd(Server):
     """
 
     def __init__(self, host, port, device, key = None):
-        Process.__init__(self, target = self._run)
+        Server.__init__(self, host, port, device)
         if key:
             keyfile = key.get_filename()
         else:
@@ -118,7 +118,7 @@ class SSHd(Server):
         self.running = True
 
         while self.running:
-            self._check_pipe()
+            self._poll_child_process()
             r, w, x = select.select([self.socket], [], [], self.timeout)
             if not r:
                 continue
@@ -129,24 +129,31 @@ class SSHd(Server):
             try:
                 t.load_server_moduli()
             except:
-                print '(Failed to load moduli -- gex will be unsupported.)'
+                self._dbg(1, 'Failed to load moduli, gex will be unsupported.')
                 raise
             t.add_server_key(self.host_key)
             server = ParamikoServer()
-            t.start_server(server=server)
+            t.start_server(server = server)
 
             # wait for auth
             self.channel = t.accept(20)
             if self.channel is None:
-                raise Exception('*** No channel.')
+                self._dbg(1, 'Client disappeared before requesting channel.')
+                t.close()
+                continue
+            self.channel.settimeout(self.timeout)
 
             # wait for shell request
             server.event.wait(10)
             if not server.event.isSet():
-                raise Exception('*** Client never asked for a shell.')
+                self._dbg(1, 'Client never asked for a shell.')
+                t.close()
+                continue
 
+            # send the banner
             self.channel.send(self.device.init())
 
+            # accept commands
             f = self.channel.makefile('rU')
             while self.running:
                 line = self._recvline()
@@ -155,6 +162,6 @@ class SSHd(Server):
                 response = self.device.do(line)
                 if response:
                     self.channel.send(response)
-            self.channel.close()
+            t.close()
 
         self.socket.close()
