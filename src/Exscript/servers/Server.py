@@ -15,13 +15,16 @@
 """
 A very simple Telnet server for emulating a device.
 """
-import socket, select
+import socket
+import select
 from multiprocessing    import Process, Pipe
 from Exscript.emulators import VirtualDevice
 
-class Telnetd(Process):
+class Server(Process):
     """
-    A Telnet server. Usage::
+    Base class of all servers. Servers are intended to be used for
+    tests and attempt to emulate a device using the behavior of the
+    associated L{Exscript.emulators.VirtualDevice}. Sample usage::
 
         device = VirtualDevice('myhost')
         daemon = Telnetd('localhost', 1234, device)
@@ -30,13 +33,20 @@ class Telnetd(Process):
         daemon.start() # Start the server.
         daemon.exit()  # Stop the server.
         daemon.join()  # Wait until it terminates.
+
+    @type  host: str
+    @param host: The address against whcih the daemon binds.
+    @type  port: str
+    @param port: The TCP port on which to listen.
+    @type  device: VirtualDevice
+    @param device: A virtual device instance.
     """
 
     def __init__(self, host, port, device):
         Process.__init__(self, target = self._run)
         self.host    = host
         self.port    = int(port)
-        self.timeout = 1
+        self.timeout = .5
         self.running = False
         self.buf     = ''
         self.socket  = None
@@ -44,69 +54,27 @@ class Telnetd(Process):
         self.device  = device
         self.parent_conn, self.child_conn = Pipe()
 
-    def _recvline(self):
-        while not '\n' in self.buf:
-            self._check_pipe()
-            r, w, x = select.select([self.conn], [], [], self.timeout)
-            if not self.running:
-                return None
-            if not r:
-                continue
-            buf = self.conn.recv(1024)
-            if not buf:
-                self.running = False
-                return None
-            self.buf += buf.replace('\r\n', '\n').replace('\r', '\n')
-        lines    = self.buf.split('\n')
-        self.buf = '\n'.join(lines[1:])
-        return lines[0] + '\n'
-
-    def _check_pipe(self):
+    def _poll_child_process(self):
         if not self.child_conn.poll():
-            return
+            return False
+        if not self.running:
+            return False
         try:
             msg = self.child_conn.recv()
-            if msg == 'shutdown':
-                self._exit()
         except socket.error, e:
             self.running = False
+            return False
+        if msg == 'shutdown':
+            self.running = False
+            self._shutdown_notify()
+            return False
+        return True
 
-    def _exit(self):
-        if self.conn:
-            self.conn.send('Server is shutting down.\n')
-        self.running = False
+    def _shutdown_notify(self):
+        raise NotImplementedError()
 
     def _run(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((self.host, self.port))
-        self.socket.listen(1)
-        self.running = True
-
-        while self.running:
-            self._check_pipe()
-            r, w, x = select.select([self.socket], [], [], self.timeout)
-            if not r:
-                continue
-
-            self.conn, addr = self.socket.accept()
-
-            try:
-                self.conn.send(self.device.init())
-
-                while self.running:
-                    line = self._recvline()
-                    if not line:
-                        continue
-                    response = self.device.do(line)
-                    if response:
-                        self.conn.send(response)
-            except socket.error, e:
-                pass # network error
-            finally:
-                self.conn.close()
-
-        self.socket.close()
+        raise NotImplementedError()
 
     def exit(self):
         """
