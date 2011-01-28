@@ -36,11 +36,27 @@ class AccountTest(unittest.TestCase):
     def testRelease(self):
         self.assertRaises(Exception, self.account.release)
 
+    def testSetName(self):
+        self.assertEqual(self.user, self.account.get_name())
+        self.account.set_name('foo')
+        self.assertEqual('foo', self.account.get_name())
+
     def testGetName(self):
         self.assertEqual(self.user, self.account.get_name())
 
+    def testSetPassword(self):
+        self.assertEqual(self.password1, self.account.get_password())
+        self.account.set_password('foo')
+        self.assertEqual('foo', self.account.get_password())
+
     def testGetPassword(self):
         self.assertEqual(self.password1, self.account.get_password())
+
+    def testSetAuthorizationPassword(self):
+        self.assertEqual(self.password2,
+                         self.account.get_authorization_password())
+        self.account.set_authorization_password('foo')
+        self.assertEqual('foo', self.account.get_authorization_password())
 
     def testGetAuthorizationPassword(self):
         self.assertEqual(self.password2,

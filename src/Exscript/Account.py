@@ -46,6 +46,7 @@ class Account(object):
         self.release_before_event   = Event()
         self.released_event         = Event()
         self.otp_requested_event    = Event()
+        self.changed_event          = Event()
         self.name                   = name
         self.password               = password
         self.authorization_password = password2
@@ -77,6 +78,16 @@ class Account(object):
         self.lock.release()
         self.released_event(self)
 
+    def set_name(self, name):
+        """
+        Changes the name of the account.
+
+        @type  name: string
+        @param name: The account name.
+        """
+        self.name = name
+        self.changed_event.emit(self)
+
     def get_name(self):
         """
         Returns the name of the account.
@@ -86,6 +97,16 @@ class Account(object):
         """
         return self.name
 
+    def set_password(self, password):
+        """
+        Changes the password of the account.
+
+        @type  password: string
+        @param password: The account password.
+        """
+        self.password = password
+        self.changed_event.emit(self)
+
     def get_password(self):
         """
         Returns the password of the account.
@@ -94,6 +115,16 @@ class Account(object):
         @return: The account password.
         """
         return self.password
+
+    def set_authorization_password(self, password):
+        """
+        Changes the authorization password of the account.
+
+        @type  password: string
+        @param password: The new authorization password.
+        """
+        self.authorization_password = password
+        self.changed_event.emit(self)
 
     def get_authorization_password(self):
         """
