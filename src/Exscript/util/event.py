@@ -13,12 +13,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-A simple signal/even mechanism.
+A simple signal/event mechanism.
 """
 
 class Event(object):
     """
-    A simple signal/even mechanism, to be used like this::
+    A simple signal/event mechanism, to be used like this::
 
         def mycallback(arg, **kwargs):
             print arg, kwargs['foo']
