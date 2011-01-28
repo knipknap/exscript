@@ -1,15 +1,14 @@
-#!/usr/bin/env python
-from Exscript.util.match    import any_match
-from Exscript.util.template import eval_file
-from Exscript.util.start    import quickstart
+from Exscript.util.interact import read_login
+from Exscript.protocols import SSH2
 
-def do_something(conn):
-    conn.execute('ls -1')
-    files = any_match(conn, r'(\S+)')
-    print "Files found:", files
+account = read_login()
 
-# Open a connection (Telnet, by default) to each of the hosts, and run
-# do_something(). To open the connection via SSH, you may prefix the
-# hostname by the protocol, e.g.: 'ssh://hostname', 'telnet://hostname',
-# etc.
-quickstart(('localhost', 'otherhost'), do_something)
+conn = SSH2()
+conn.connect('localhost')
+conn.login(account)
+conn.execute('ls -l')
+
+print "Response was:", repr(conn.response)
+
+conn.send('exit\r')
+conn.close()
