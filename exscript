@@ -20,6 +20,7 @@ import getpass
 sys.path.append('src')
 from optparse                import OptionParser, Option, OptionValueError
 from Exscript                import Queue, Account, PrivateKey, __version__
+from Exscript.protocols      import protocol_map
 from Exscript.util           import template
 from Exscript.util.sigint    import SigIntWatcher
 from Exscript.util.cast      import to_list, to_host
@@ -233,7 +234,7 @@ def check_assignment(option, opt, value):
     return value
 
 def check_protocol(option, opt, value):
-    if value not in Queue.built_in_protocols:
+    if value not in protocol_map:
         raise OptionValueError('option %s: invalid value: %r' % (opt, value))
     return value
 
@@ -405,7 +406,7 @@ Instructs Exscript to overwrite existing logfiles. The default
 is to append the output if a log already exists.
 '''.strip())
 
-protocols = Queue.built_in_protocols.keys()
+protocols = protocol_map.keys()
 protocols.sort()
 parser.add_option('--protocol', '-p',
                   dest    = 'protocol',
