@@ -12,7 +12,7 @@ class SSH2Test(TransportTest):
         self.daemon = SSHd(self.hostname, self.port, self.device)
 
     def createTransport(self):
-        self.transport = SSH2(echo = 0)
+        self.transport = SSH2()
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, SSH2))

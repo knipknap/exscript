@@ -52,7 +52,7 @@ class TransportTest(unittest.TestCase):
         pass
 
     def createTransport(self):
-        self.transport = Transport(echo = 0)
+        self.transport = Transport()
 
     def doLogin(self, flush = True):
         self.transport.connect(self.hostname, self.port)

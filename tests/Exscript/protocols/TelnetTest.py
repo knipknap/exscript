@@ -13,7 +13,7 @@ class TelnetTest(TransportTest):
         self.daemon = Telnetd(self.hostname, self.port, self.device)
 
     def createTransport(self):
-        self.transport = Telnet(echo = 0)
+        self.transport = Telnet()
 
     def testConstructor(self):
         self.assert_(isinstance(self.transport, Telnet))
