@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-Emulating a device.
+A client that talks to a L{Exscript.emulators.VirtualDevice}.
 """
 from Exscript.emulators import VirtualDevice
 from Transport          import Transport
@@ -24,7 +24,8 @@ from Exception          import TransportException, \
 
 class Dummy(Transport):
     """
-    A protocol adapter that talks to a VirtualDevice.
+    This protocol adapter does not open a network connection, but talks to
+    a L{Exscript.emulators.VirtualDevice} internally.
     """
 
     def __init__(self, **kwargs):

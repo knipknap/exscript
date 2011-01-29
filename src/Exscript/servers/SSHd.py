@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-A very simple Telnet server for emulating a device.
+An SSH2 server.
 """
 import os
 import base64
@@ -26,9 +26,8 @@ from binascii import hexlify
 from paramiko import ServerInterface
 from Server   import Server
 
-class ParamikoServer(ServerInterface):
+class _ParamikoServer(ServerInterface):
     # 'data' is the output of base64.encodestring(str(key))
-    # (using the "user_rsa_key" files)
     data = 'AAAAB3NzaC1yc2EAAAABIwAAAIEAyO4it3fHlmGZWJaGrfeHOVY7RWO3P9M7hp' + \
            'fAu7jJ2d7eothvfeuoRFtJwhUmZDluRdFyhFY/hFAh76PJKGAusIqIQKlkJxMC' + \
            'KDqIexkgHAfID/6mqvmnSJf0b5W8v5h2pI/stOSwTQ+pxVhwJ9ctYDhRSlF0iT' + \
@@ -145,7 +144,7 @@ class SSHd(Server):
                 self._dbg(1, 'Failed to load moduli, gex will be unsupported.')
                 raise
             t.add_server_key(self.host_key)
-            server = ParamikoServer()
+            server = _ParamikoServer()
             t.start_server(server = server)
 
             # wait for auth
