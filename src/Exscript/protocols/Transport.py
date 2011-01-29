@@ -186,7 +186,14 @@ class Transport(object):
           detail here).
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self,
+                 driver  = None,
+                 stdout  = None,
+                 stderr  = None,
+                 debug   = 0,
+                 timeout = 30,
+                 logfile = None,
+                 **kwargs):
         """
         Constructor.
         The following events are provided:
@@ -219,19 +226,25 @@ class Transport(object):
         self.manual_error_re       = None
         self.manual_login_error_re = None
         self.driver_replaced       = False
-        self.manual_driver         = kwargs.get('driver')
-        self.host                  = kwargs.get('host',    None)
-        self.last_account          = kwargs.get('account', None)
-        self.stdout                = kwargs.get('stdout')
-        self.stderr                = kwargs.get('stderr',  sys.stderr)
-        self.debug                 = kwargs.get('debug',   0)
-        self.timeout               = kwargs.get('timeout', 30)
-        self.logfile               = kwargs.get('logfile', None)
-        self.log                   = None
+        self.host                  = None
+        self.port                  = None
+        self.last_account          = None
+        self.manual_driver         = driver
+        self.debug                 = debug
+        self.timeout               = timeout
+        self.logfile               = logfile
         self.response              = None
-        if not self.stdout:
+        if stdout is None:
             self.stdout = open(os.devnull, 'w')
-        if self.logfile is not None:
+        else:
+            self.stdout = stdout
+        if stderr is None:
+            self.stderr = sys.stderr
+        else:
+            self.stderr = stderr
+        if logfile is None:
+            self.log = None
+        else:
             self.log = open(kwargs['logfile'], 'a')
 
     def __copy__(self):

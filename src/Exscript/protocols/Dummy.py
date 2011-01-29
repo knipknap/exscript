@@ -28,7 +28,7 @@ class Dummy(Transport):
     a L{Exscript.emulators.VirtualDevice} internally.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, device = None, **kwargs):
         """
         @note: Also supports all keyword arguments that L{Transport} supports.
 
@@ -36,7 +36,7 @@ class Dummy(Transport):
             which to communicate.
         """
         Transport.__init__(self, **kwargs)
-        self.device    = kwargs.get('device')
+        self.device    = device
         self.init_done = False
         self.buffer    = ''
         self.cancel    = False

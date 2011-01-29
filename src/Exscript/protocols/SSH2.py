@@ -48,22 +48,19 @@ class SSH2(Transport):
     The secure shell protocol version 2 adapter, based on Paramiko.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, auto_verify = False, **kwargs):
         Transport.__init__(self, **kwargs)
-        self.client      = None
-        self.shell       = None
-        self.buffer      = ''
-        self.debug       = kwargs.get('debug', 0)
-        self.auto_verify = kwargs.get('auto_verify', False)
-        self.port        = None
-        self.cancel      = False
+        self.client = None
+        self.shell  = None
+        self.buffer = ''
+        self.cancel = False
 
         # Paramiko client stuff.
         self._system_host_keys   = paramiko.HostKeys()
         self._host_keys          = paramiko.HostKeys()
         self._host_keys_filename = None
 
-        if self.auto_verify:
+        if auto_verify:
             self._missing_host_key = self._add_host_key
         else:
             self._missing_host_key = self._reject_host_key
