@@ -13,7 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, os, re, getpass
+import sys
+import os
+import re
+import getpass
 sys.path.append('src')
 from optparse                import OptionParser, Option, OptionValueError
 from Exscript                import Queue, Account, PrivateKey, __version__
@@ -148,7 +151,6 @@ def run():
 
     # Create Exscript.
     protocol_args = {
-        'echo':        not options.no_echo,
         'auto_verify': not options.ssh_auto_verify,
         'debug':       options.protocol_verbose
     }
@@ -352,17 +354,6 @@ Logs any communication into the directory with the given name.
 Each filename consists of the hostname with "_log" appended.
 Errors are written to a separate file, where the filename
 consists of the hostname with ".log.error" appended.
-'''.strip())
-
-parser.add_option('--no-echo',
-                  dest    = 'no_echo',
-                  action  = 'store_true',
-                  default = False,
-                  help    = '''
-Turns off the echo, such that the network activity is no longer
-written to stdout.
-This is already the default behavior if the -c option was given
-with a number greater than 1.
 '''.strip())
 
 parser.add_option('--no-authentication', '-n',
