@@ -1,5 +1,6 @@
 Exscript
 --------
+* Get rid of Exscript.Connection.
 * Add tests for Transport class debug levels.
 * Add API docs for Exscript.parselib.
 * Add a test for Exscript.Task.
@@ -14,4 +15,6 @@ TkExscript
 exscriptd
 ---------
 * Make daemons asynchronous.
+* Debug memory usage.
+* We probably should use weakref.proxy().
 * Add more tests.
