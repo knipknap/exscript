@@ -212,9 +212,7 @@ def run():
     if options.no_authentication:
         function = connect(function)
     else:
-        nip      = options.no_initial_prompt
-        nop      = options.no_prompt
-        function = autologin(function, not nip and not nop)
+        function = autologin(function)
 
     # Wait until the specified time.
     if options.sleep:
@@ -345,14 +343,18 @@ parser.add_option('--non-interactive', '-i',
                   dest    = 'non_interactive',
                   action  = 'store_true',
                   default = False,
-                  help    = 'Do not ask for a username or password.')
+                  help    = '''
+Do not ask for a username or password, but still try to authenticate.
+May be used if the login credentials are passed as part of a URI formatted
+hostname.
+'''.strip())
 
 parser.add_option('--logdir', '-l',
                   dest    = 'logdir',
                   metavar = 'DIR',
                   help    = '''
 Logs any communication into the directory with the given name.
-Each filename consists of the hostname with "_log" appended.
+Each filename consists of the hostname with ".log" appended.
 Errors are written to a separate file, where the filename
 consists of the hostname with ".log.error" appended.
 '''.strip())
@@ -362,7 +364,7 @@ parser.add_option('--no-authentication', '-n',
                   action  = 'store_true',
                   default = False,
                   help    = '''
-When given, the authentication procedure is skipped. Implies -i.
+When given, the automatic authentication procedure is skipped. Implies -i.
 '''.strip())
 
 parser.add_option('--no-auto-logout',
@@ -378,17 +380,9 @@ parser.add_option('--no-prompt',
                   action  = 'store_true',
                   default = False,
                   help    = '''
-Do not wait for a prompt anywhere. Note that this will also
-cause Exscript to disable commands that require a prompt, such
-as "extract".
-'''.strip())
-
-parser.add_option('--no-initial-prompt',
-                  dest    = 'no_initial_prompt',
-                  action  = 'store_true',
-                  default = False,
-                  help    = '''
-Do not wait for a prompt after sending the password.
+Do not wait for a prompt anywhere (except during the authentication
+procedure). Note that this will also cause Exscript to disable commands
+that require a prompt, such as "extract".
 '''.strip())
 
 parser.add_option('--no-strip',
