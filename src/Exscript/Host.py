@@ -47,7 +47,6 @@ class Host(object):
         self.logname   = None
         self.set_uri(uri) 
 
-
     def set_uri(self, uri):
         """
         Defines the protocol, hostname/address, TCP port number, username,
@@ -85,8 +84,15 @@ class Host(object):
         for key, val in uri.vars.iteritems():
             self.set(key, val)
 
-
     def get_uri(self):
+        """
+        Returns a URI formatted representation of the host, including all
+        of it's attributes except for the name and logname. Uses the
+        address, not the name of the host to build the URI.
+
+        @rtype:  str
+        @return: A URI.
+        """
         url = Url()
         url.protocol  = self.get_protocol()
         url.username  = self.get_username()
@@ -108,7 +114,6 @@ class Host(object):
         """
         self.name = name
 
-
     def get_name(self):
         """
         Returns the name.
@@ -117,7 +122,6 @@ class Host(object):
         @return: The hostname excluding the name.
         """
         return self.name
-
 
     def set_address(self, address):
         """
@@ -134,7 +138,6 @@ class Host(object):
         else:
             self.address = address
 
-
     def get_address(self):
         """
         Returns the address that is used to open the connection.
@@ -143,7 +146,6 @@ class Host(object):
         @return: The address that is used to open the connection.
         """
         return self.address
-
 
     def set_protocol(self, protocol):
         """
@@ -168,7 +170,6 @@ class Host(object):
         """
         self.protocol = protocol
 
-
     def get_protocol(self):
         """
         Returns the name of the protocol.
@@ -177,7 +178,6 @@ class Host(object):
         @return: The protocol name.
         """
         return self.protocol
-
 
     def set_tcp_port(self, tcp_port):
         """
@@ -188,7 +188,6 @@ class Host(object):
         """
         self.tcp_port = tcp_port
 
-
     def get_tcp_port(self):
         """
         Returns the TCP port number.
@@ -197,7 +196,6 @@ class Host(object):
         @return: The TCP port number.
         """
         return self.tcp_port
-
 
     def set_username(self, name):
         """
@@ -208,7 +206,6 @@ class Host(object):
         """
         self.username = name
 
-
     def get_username(self):
         """
         Returns the username of the account that is used to log in.
@@ -217,7 +214,6 @@ class Host(object):
         @return: The username.
         """
         return self.username
-
 
     def set_password(self, password):
         """
@@ -228,7 +224,6 @@ class Host(object):
         """
         self.password1 = password
 
-
     def get_password(self):
         """
         Returns the password of the account that is used to log in.
@@ -237,7 +232,6 @@ class Host(object):
         @return: The password.
         """
         return self.password1
-
 
     def set_password2(self, password):
         """
@@ -249,7 +243,6 @@ class Host(object):
         """
         self.password2 = password
 
-
     def get_password2(self):
         """
         Returns the password of the account that is used to log in.
@@ -258,7 +251,6 @@ class Host(object):
         @return: The password.
         """
         return self.password2
-
 
     def set_logname(self, logname):
         """
@@ -272,7 +264,6 @@ class Host(object):
         """
         self.logname = logname
 
-
     def get_logname(self):
         """
         Returns the basename of the logfile.
@@ -283,7 +274,6 @@ class Host(object):
         if self.logname:
             return self.logname
         return self.get_name()
-
 
     def set(self, name, value):
         """
@@ -296,7 +286,6 @@ class Host(object):
         """
         self.vars[name] = value
 
-
     def set_all(self, vars):
         """
         Like set(), but replaces all variables by using the given
@@ -307,7 +296,6 @@ class Host(object):
         @param vars: The dictionary with the variables.
         """
         self.vars = dict(vars)
-
 
     def append(self, name, value):
         """
@@ -323,7 +311,6 @@ class Host(object):
         else:
             self.vars[name] = [value]
 
-
     def set_default(self, name, value):
         """
         Like set(), but only sets the value if the variable is not already
@@ -337,7 +324,6 @@ class Host(object):
         if name not in self.vars:
             self.vars[name] = value
 
-
     def has_key(self, name):
         """
         Returns True if the variable with the given name is defined, False
@@ -349,7 +335,6 @@ class Host(object):
         @return: Whether the variable is defined.
         """
         return name in self.vars
-
 
     def get(self, name, default = None):
         """
@@ -364,7 +349,6 @@ class Host(object):
         @return: The value of the variable.
         """
         return self.vars.get(name, default)
-
 
     def get_all(self):
         """
