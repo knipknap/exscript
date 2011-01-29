@@ -364,8 +364,7 @@ class Connection(object):
         @rtype:  Account
         @return: The account that was used to log in.
         """
-        os       = self.guess_os()
-        account  = self._acquire_account(account, lock)
+        account = self._acquire_account(account, lock)
         self._track_account(account)
 
         try:
