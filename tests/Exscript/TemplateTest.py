@@ -1,7 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript                import Queue, Account, Logger
+from Exscript                import Queue, Account, Logger, protocols
 from Exscript.util           import template
 from Exscript.util.decorator import bind
 from Exscript.util.report    import format
@@ -48,13 +48,13 @@ class IOSDummy(Dummy):
     def __init__(self, *args, **kwargs):
         device = IOSEmulator('dummy', strict = False)
         Dummy.__init__(self, device = device)
+protocols.protocol_map['ios'] = IOSDummy
 
 class TemplateTest(unittest.TestCase):
     def setUp(self):
         account     = Account('sab', '')
         self.queue  = Queue(verbose = 0, max_threads = 1)
         self.logger = Logger(self.queue)
-        self.queue.add_protocol('ios', IOSDummy)
         self.queue.add_account(account)
 
     def tearDown(self):

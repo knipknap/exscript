@@ -131,11 +131,6 @@ class QueueTest(unittest.TestCase):
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
-    def testAddProtocol(self):
-        self.queue.add_protocol('test', MyProtocol)
-        self.queue.run('test://mytest', raise_if_not_myprotocol)
-        self.queue.join()
-
     def testSetMaxThreads(self):
         self.assertEqual(1, self.queue.get_max_threads())
         self.queue.set_max_threads(2)

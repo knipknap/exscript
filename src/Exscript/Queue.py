@@ -34,11 +34,6 @@ class Queue(object):
     """
     Manages hosts/tasks, accounts, connections, and threads.
     """
-    built_in_protocols = {'dummy':  'Dummy',
-                          'telnet': 'Telnet',
-                          'pseudo': 'Dummy',
-                          'ssh':    'SSH2',
-                          'ssh2':   'SSH2'}
 
     def __init__(self, **kwargs):
         """
@@ -89,7 +84,6 @@ class Queue(object):
         self.completed         = 0
         self.total             = 0
         self.status_bar_length = 0
-        self.protocol_map      = self.built_in_protocols.copy()
         self.set_max_threads(kwargs.get('max_threads', 1))
 
         # Define events.
@@ -234,37 +228,6 @@ class Queue(object):
         In other words, the workqueue does not notice if the action fails.
         """
         raise
-
-
-    def _get_protocol_from_name(self, name):
-        """
-        Returns the protocol adapter with the given name.
-        """
-        module = self.protocol_map.get(name)
-        if not module:
-            raise Exception('ERROR: Unsupported protocol "%s".' % name)
-        elif not isinstance(module, str):
-            return module
-        return __import__('protocols.' + module,
-                          globals(),
-                          locals(),
-                          module).__dict__[module]
-
-
-    def add_protocol(self, name, theclass):
-        """
-        Registers a new protocol in addition to the built-in
-        'ssh', 'telnet', and 'dummy' adapters.
-        The given adapter must implement the same interface as
-        protocols.Transport. Note that you need to pass a class,
-        not an instance.
-
-        @type  name: str
-        @param name: The protocol name
-        @type  theclass: protocols.Transport
-        @param theclass: The class that handles the protocol.
-        """
-        self.protocol_map[name] = theclass
 
 
     def set_max_threads(self, n_connections):

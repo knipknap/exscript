@@ -17,6 +17,30 @@ from Telnet    import Telnet
 from SSH2      import SSH2
 from Dummy     import Dummy
 
+protocol_map = {'dummy':  Dummy,
+                'pseudo': Dummy,
+                'telnet': Telnet,
+                'ssh':    SSH2,
+                'ssh2':   SSH2}
+
+def get_protocol_from_name(name):
+    """
+    Returns the transport class for the protocol with the given name.
+    """
+    cls = protocol_map.get(name)
+    if not cls:
+        raise ValueError('Unsupported protocol "%s".' % name)
+    return cls
+
+def create_protocol(name, **kwargs):
+    """
+    Returns an instance of the protocol with the given name.
+    """
+    cls = protocol_map.get(name)
+    if not cls:
+        raise ValueError('Unsupported protocol "%s".' % name)
+    return cls(**kwargs)
+
 import inspect 
 __all__ = [name for name, obj in locals().items()
            if not (name.startswith('_') or inspect.ismodule(obj))]
