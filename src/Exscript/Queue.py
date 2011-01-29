@@ -138,10 +138,7 @@ class Queue(object):
             self.channel_map['connection'] = self.devnull
             self.channel_map['errors']     = self.stderr
             self.channel_map['tracebacks'] = self.stderr
-
-
-    def _get_channel(self, channel):
-        return self.channel_map[channel]
+        self.protocol_args['stdout'] = self.channel_map['connection']
 
 
     def _write(self, channel, msg):

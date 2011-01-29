@@ -30,19 +30,20 @@ class Connection(object):
     documentation.
     """
 
-    def __init__(self, action, **kwargs):
+    def __init__(self, action, transport):
         """
         Do not call directly; Exscript creates the connection for you and
         passes it to the function that is invoked by Queue.run().
 
         @type  action: HostAction
         @param action: The associated HostAction instance.
-        @type  kwargs: dict
-        @param kwargs: Same as L{protocols.Transport}.
+        @type  transport: L{protocols.Transport}
+        @param transport: The Transport object that is decorated.
         """
         # Since we override setattr below, we can't access our properties
         # directly.
-        self.__dict__['action'] = action
+        self.__dict__['action']    = action
+        self.__dict__['transport'] = transport
 
         # If specified, use the host-specific login details.
         host = action.get_host()
@@ -53,21 +54,6 @@ class Connection(object):
                               host.get_password2())
             self.__dict__['default_account'] = account
 
-        # Create an instance of the protocol adapter.
-        queue            = action.get_queue()
-        kwargs['stdout'] = queue._get_channel('connection')
-        protocol_name    = host.get_protocol()
-        protocol         = queue._get_protocol_from_name(protocol_name)
-        transport        = protocol(**kwargs)
-        self.__dict__['transport'] = transport
-
-        # Define the behaviour of the pseudo protocol adapter.
-        if protocol_name == 'pseudo':
-            filename = host.get_address()
-            hostname = os.path.basename(filename)
-            transport.device.add_commands_from_file(filename)
-
-
     def __copy__(self):
         """
         Overwritten to return the very same object instead of copying the
@@ -77,7 +63,6 @@ class Connection(object):
         @return: self
         """
         return self
-
 
     def __deepcopy__(self, memo):
         """
@@ -90,7 +75,6 @@ class Connection(object):
         @return: self
         """
         return self
-
 
     def __setattr__(self, name, value):
         """

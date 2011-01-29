@@ -2,6 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from Exscript                import Host, Queue, Account
+from Exscript.protocols      import Dummy
 from Exscript.HostAction     import HostAction
 from Exscript.AccountManager import AccountManager
 from Exscript.Connection     import Connection
@@ -18,7 +19,8 @@ class ConnectionTest(DummyTest):
         self.queue     = Queue(verbose = 0)
         self.host      = Host('dummy://' + self.hostname)
         self.action    = HostAction(self.queue, object, self.host)
-        self.transport = Connection(self.action)
+        transport      = Dummy()
+        self.transport = Connection(self.action, transport)
         self.queue.add_account(self.account)
 
     def doLogin(self, flush = True):
