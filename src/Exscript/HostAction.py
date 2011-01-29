@@ -18,8 +18,8 @@ from Connection   import Connection
 
 class HostAction(CustomAction):
     """
-    An action that calls the associated function and implements retry and
-    logging.
+    An action that automatically opens a network connection to a host
+    before calling the associated function.
     """
     def __init__(self, queue, function, host, **conn_args):
         """
