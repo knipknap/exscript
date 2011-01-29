@@ -121,17 +121,6 @@ class Connection(object):
             return self.__dict__[name]
         return getattr(self.transport, name)
 
-    def _on_otp_requested(self, key, seq, account):
-        account.otp_requested_event(account, key, seq)
-
-    def _track_account(self, account):
-        cb = self._on_otp_requested
-        self.transport.otp_requested_event.connect(cb, account)
-
-    def _untrack_accounts(self):
-        cb = self._on_otp_requested
-        self.transport.otp_requested_event.disconnect(cb)
-
     def _acquire_account(self, account = None):
         # Specific account requested?
         if account:
@@ -209,13 +198,11 @@ class Connection(object):
         @return: The account that was used to log in.
         """
         account = self._acquire_account(account)
-        self._track_account(account)
 
         try:
             self.transport.login(account, flush = flush)
         finally:
             self._release_account(account)
-            self._untrack_accounts()
         return account
 
     def authenticate(self, account = None, flush = True):
@@ -234,13 +221,11 @@ class Connection(object):
         @return: The account that was used to log in.
         """
         account = self._acquire_account(account)
-        self._track_account(account)
 
         try:
             self.transport.authenticate(account, flush = flush)
         finally:
             self._release_account(account)
-            self._untrack_accounts()
         return account
 
     def protocol_authenticate(self, account = None):
@@ -257,13 +242,11 @@ class Connection(object):
         @return: The account that was used to log in.
         """
         account = self._acquire_account(account)
-        self._track_account(account)
 
         try:
             self.transport.protocol_authenticate(account)
         finally:
             self._release_account(account)
-            self._untrack_accounts()
         return account
 
     def app_authenticate(self, account = None, flush = True):
@@ -282,13 +265,11 @@ class Connection(object):
         @return: The account that was used to log in.
         """
         account = self._acquire_account(account)
-        self._track_account(account)
 
         try:
             self.transport.app_authenticate(account, flush = flush)
         finally:
             self._release_account(account)
-            self._untrack_accounts()
         return account
 
     def app_authorize(self, account = None, flush = True):
@@ -303,13 +284,11 @@ class Connection(object):
         @return: The account that was used to log in.
         """
         account = self._acquire_account(account)
-        self._track_account(account)
 
         try:
             self.transport.app_authorize(account, flush = flush)
         finally:
             self._release_account(account)
-            self._untrack_accounts()
         return account
 
     def auto_app_authorize(self, account = None, flush = True):
@@ -337,11 +316,9 @@ class Connection(object):
         @return: The account that was used to log in.
         """
         account = self._acquire_account(account)
-        self._track_account(account)
 
         try:
             self.transport.auto_app_authorize(account, flush = flush)
         finally:
             self._release_account(account)
-            self._untrack_accounts()
         return account

@@ -302,9 +302,6 @@ class Transport(object):
         """
         return False
 
-    def _otp_cb(self, seq, seed):
-        self.otp_requested_event(seq, seed)
-
     def _dbg(self, level, msg):
         if self.debug < level:
             return
@@ -616,7 +613,9 @@ class Transport(object):
         """
         return self.proto_authenticated
 
-    def _app_authenticate(self, user, password, flush = True):
+    def _app_authenticate(self, account, password, flush = True):
+        user = account.get_name()
+
         while True:
             # Wait for any prompt. Once a match is found, we need to be able
             # to find out which type of prompt was matched, so we build a
@@ -671,7 +670,8 @@ class Transport(object):
                 self.expect(prompt) # consume the prompt from the buffer
                 seq  = int(match.group(1))
                 seed = match.group(2)
-                self._otp_cb(seq, seed)
+                self.otp_requested_event(account, seq, seed)
+                account.otp_requested_event(account, seq, seed)
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
 
@@ -731,7 +731,7 @@ class Transport(object):
         user     = account.get_name()
         password = account.get_password()
         self._dbg(1, "Attempting to app-authenticate %s." % user)
-        self._app_authenticate(user, password, flush)
+        self._app_authenticate(account, password, flush)
         self.app_authenticated = True
 
     def is_app_authenticated(self):
@@ -763,7 +763,7 @@ class Transport(object):
         if password is None:
             password = account.get_password()
         self._dbg(1, "Attempting to app-authorize %s." % user)
-        self._app_authenticate(user, password, flush)
+        self._app_authenticate(account, password, flush)
         self.app_authorized = True
 
     def auto_app_authorize(self, account = None, flush = True):
