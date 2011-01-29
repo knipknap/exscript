@@ -824,6 +824,9 @@ class Transport(object):
 
         @type  command: string
         @param command: The data that is sent to the remote host.
+        @rtype:  int, re.MatchObject
+        @return: The index of the prompt regular expression that matched,
+          and the match object.
         """
         self.send(command + '\r')
         return self.expect_prompt()
@@ -913,8 +916,12 @@ class Transport(object):
         also be defined using the set_prompt() method.
         This method also stores the received data in the response
         attribute (self.response).
+
+        @rtype:  int, re.MatchObject
+        @return: The index of the prompt regular expression that matched,
+          and the match object.
         """
-        self.expect(self.get_prompt())
+        result = self.expect(self.get_prompt())
 
         # We skip the first line because it contains the echo of the command
         # sent.
@@ -926,6 +933,8 @@ class Transport(object):
                 args = repr(prompt.pattern), repr(line)
                 self._dbg(5, "error prompt (%s) matches %s" % args)
                 raise InvalidCommandException('Device said:\n' + self.response)
+
+        return result
 
     def cancel_expect(self):
         """
