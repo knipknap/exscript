@@ -17,9 +17,11 @@ import sys
 import os
 from optparse         import OptionParser
 from Exscript         import __version__
+from Exscriptd        import pidutil
 from Exscriptd.Config import Config, default_config_dir
 
-parser = OptionParser(usage = '%prog [options]', version = __version__)
+parser = OptionParser(usage = '%prog [options] [start|stop|restart]',
+                      version = __version__)
 parser.add_option('--domain',
                   dest    = 'domain',
                   metavar = 'DOMAIN',
@@ -28,6 +30,12 @@ parser.add_option('--domain',
 parser.add_option('--config-dir',
                   dest    = 'config_dir',
                   default = default_config_dir,
+                  metavar = 'FILE',
+                  help    = '''
+The XML config file for the Exscript daemon.
+'''.strip())
+parser.add_option('--pidfile',
+                  dest    = 'pidfile',
                   metavar = 'FILE',
                   help    = '''
 The XML config file for the Exscript daemon.
@@ -42,9 +50,31 @@ parser.add_option('--verbose',
 options, args = parser.parse_args(sys.argv)
 args.pop(0)
 
-if not options.config_dir:
-    parser.error('Required option --config-dir not set')
+try:
+    action = args.pop(0)
+except IndexError:
+    parser.error('action argument not specified')
 
+if not options.config_dir:
+    parser.error('required option --config-dir not set')
+
+# Make sure that the daemon is not already running.
+if not options.pidfile:
+    options.pidfile = os.path.join(options.config_dir, 'exscript.pid')
+
+if action == 'stop':
+    if not pidutil.isalive(options.pidfile):
+        parser.error('no running daemon found')
+    pidutil.kill(options.pidfile)
+    print "exscriptd stopped."
+    sys.exit(0)
+if action == 'start' and pidutil.isalive(options.pidfile):
+    parser.error('daemon is already running')
+if action == 'restart':
+    pidutil.kill(options.pidfile)
+    print "exscriptd stopped."
+
+# Read the config.
 config  = Config(options.config_dir)
 daemons = config.get_daemons()
 
@@ -54,5 +84,25 @@ if not daemons:
     sys.stderr.write(msg)
     sys.exit(1)
 
+# UNIX double-fork magic.
+pid = os.fork()
+if pid > 0:
+    # Exit first parent.
+    sys.exit(0)
+
+# Decouple from parent environment.
+os.chdir('/')
+os.setsid()
+os.umask(0)
+
+# Now fork again.
+pid = os.fork()
+if pid > 0:
+    # Exit second parent.
+    sys.exit(0)
+
+# Ending up here, we are in a new, decoupled daemon process.
+pidutil.write(options.pidfile)
 for daemon in daemons:
     daemon.run()
+pidutil.remove(options.pidfile)

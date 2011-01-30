@@ -20,8 +20,8 @@ DESC="Exscript daemon"
 NAME=exscriptd
 CONFIG_DIR=@CFG_DIR@
 DAEMON=@SCRIPT_DIR@/$NAME
-DAEMON_ARGS="--config-dir $CONFIG_DIR"
 PIDFILE=/var/run/$NAME.pid
+DAEMON_ARGS="--config-dir $CONFIG_DIR --pidfile $PIDFILE"
 SCRIPTNAME=@INIT_DIR@/$NAME
 RUN_AS_USER=exscriptd:exscriptd
 
@@ -47,10 +47,10 @@ do_start()
 	#   0 if daemon has been started
 	#   1 if daemon was already running
 	#   2 if daemon could not be started
-	start-stop-daemon -Sqmb --chuid $RUN_AS_USER --pidfile $PIDFILE --exec $DAEMON --name $NAME --test > /dev/null \
+	start-stop-daemon -Sq --chuid $RUN_AS_USER --pidfile $PIDFILE --exec $DAEMON --name $NAME --test > /dev/null \
 		|| return 1
-	start-stop-daemon -Sqmb --chuid $RUN_AS_USER --pidfile $PIDFILE --exec $DAEMON --name $NAME -- \
-		$DAEMON_ARGS \
+	start-stop-daemon -Sq --chuid $RUN_AS_USER --pidfile $PIDFILE --exec $DAEMON --name $NAME -- \
+		$DAEMON_ARGS start \
 		|| return 2
 	# Add code here, if necessary, that waits for the process to be ready
 	# to handle requests from services started subsequently which depend
