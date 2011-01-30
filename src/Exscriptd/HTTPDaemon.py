@@ -52,7 +52,7 @@ class HTTPHandler(HTTPRequestHandler):
     def get_response(self):
         data = parse_qs(self.data)
         if self.path == '/order/':
-            self.daemon.logger.debug('Parsing order from REST request.')
+            self.daemon.logger.debug('Parsing order from HTTP request.')
             order = Order.from_xml(data['xml'][0])
             self.daemon.logger.debug('XML order parsed complete.')
             self.daemon._place_order(order)
@@ -135,7 +135,7 @@ class HTTPHandler(HTTPRequestHandler):
 
     def handle_POST(self):
         self.daemon = self.server.user_data
-        self.daemon.logger.debug('Receiving REST request.')
+        self.daemon.logger.debug('Receiving HTTP request.')
         try:
             response = self.get_response()
         except Exception, e:
@@ -156,7 +156,7 @@ class HTTPHandler(HTTPRequestHandler):
                 self.send_header('Content-type', mime_type)
             self.end_headers()
             self.wfile.write(response)
-        self.daemon.logger.debug('REST call complete.')
+        self.daemon.logger.debug('HTTP call complete.')
 
     def handle_GET(self):
         self.handle_POST()
@@ -182,7 +182,7 @@ class HTTPDaemon(Daemon):
 
     def run(self):
         address = self.address + ':' + str(self.port)
-        self.logger.info('REST daemon "' + self.name + '" starting on ' + address)
+        self.logger.info('HTTP daemon "' + self.name + '" starting on ' + address)
         self.close_open_orders()
         try:
             print 'Daemon', repr(self.name), 'listening on', repr(address) + '.'
