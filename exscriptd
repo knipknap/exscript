@@ -15,6 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys
 import os
+import logging
 from optparse         import OptionParser
 from Exscript         import __version__
 from Exscriptd        import pidutil
@@ -123,7 +124,17 @@ def redirect_output(filename):
     os.dup2(err_log.fileno(), sys.stderr.fileno())
     os.dup2(dev_null.fileno(), sys.stdin.fileno())
 
-redirect_output(options.logfile)
+redirect_output(os.devnull)
+
+# Set up logfile rotation.
+logger = logging.getLogger('')
+logger.setLevel(logging.INFO)
+handler = logging.handlers.RotatingFileHandler(options.logfile,
+                                               maxBytes    = 200000,
+                                               backupCount = 5)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 # Ending up here, we are in a new, decoupled daemon process.
 pidutil.write(options.pidfile)
