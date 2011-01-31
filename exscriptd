@@ -16,10 +16,11 @@
 import sys
 import os
 import logging
-from optparse         import OptionParser
-from Exscript         import __version__
-from Exscriptd        import pidutil
-from Exscriptd.Config import Config, default_config_dir
+from optparse            import OptionParser
+from Exscript            import __version__
+from Exscriptd           import pidutil
+from Exscriptd.Config    import Config, default_config_dir
+from Exscriptd.daemonize import daemonize
 
 parser = OptionParser(usage = '%prog [options] [start|stop|restart]',
                       version = __version__)
@@ -83,49 +84,21 @@ if action == 'restart':
     pidutil.kill(options.pidfile)
     print "exscriptd stopped."
 
-# Read the config.
-config  = Config(options.config_dir)
-daemons = config.get_daemons()
+daemonize()
 
-if not daemons:
-    dir = os.path.join(options.config_dir, 'services')
-    msg = 'error: %s contains no enabled services\n' % dir
-    sys.stderr.write(msg)
-    sys.exit(1)
+class LoggingIO(object):
+    def __init__(self, channel = logging.INFO):
+        self.channel = channel
 
-sys.stdout.flush()
-sys.stderr.flush()
+    def write(self, data):
+        data = data.rstrip()
+        if data:
+            logging.log(self.channel, data)
 
-# UNIX double-fork magic.
-pid = os.fork()
-if pid > 0:
-    # Exit first parent.
-    sys.exit(0)
+sys.stdout = LoggingIO()
+sys.stderr = LoggingIO(logging.ERROR)
 
-# Decouple from parent environment.
-os.chdir('/')
-os.setsid()
-os.umask(0)
-
-# Now fork again.
-pid = os.fork()
-if pid > 0:
-    # Exit second parent.
-    sys.exit(0)
-
-def redirect_output(filename):
-    out_log = open(filename, 'a+', 0)
-    err_log = open(filename, 'a+', 0)
-    dev_null = open(os.devnull, 'r')
-    os.close(sys.stdin.fileno())
-    os.close(sys.stdout.fileno())
-    os.close(sys.stderr.fileno())
-    os.dup2(out_log.fileno(), sys.stdout.fileno())
-    os.dup2(err_log.fileno(), sys.stderr.fileno())
-    os.dup2(dev_null.fileno(), sys.stdin.fileno())
-
-redirect_output(os.devnull)
-
+# Ending up here, we are in a new, decoupled daemon process.
 # Set up logfile rotation.
 logger = logging.getLogger('')
 logger.setLevel(logging.INFO)
@@ -135,8 +108,22 @@ handler = logging.handlers.RotatingFileHandler(options.logfile,
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+logging.info('exscriptd daemonized')
 
-# Ending up here, we are in a new, decoupled daemon process.
+# Read the config.
+config  = Config(options.config_dir)
+daemons = config.get_daemons()
+
+logging.info('config read')
+
+if not daemons:
+    dir = os.path.join(options.config_dir, 'services')
+    msg = 'error: %s contains no enabled services\n' % dir
+    sys.stderr.write(msg)
+    sys.exit(1)
+
+logging.info('config is ok, starting daemons')
+
 pidutil.write(options.pidfile)
 for daemon in daemons:
     daemon.run()
