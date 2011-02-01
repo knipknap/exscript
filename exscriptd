@@ -86,6 +86,8 @@ if action == 'restart':
 
 daemonize()
 
+# Catch output that is written to stdout, and redirect it to
+# Python's logging.
 class LoggingIO(object):
     def __init__(self, channel = logging.INFO):
         self.channel = channel
@@ -98,13 +100,12 @@ class LoggingIO(object):
 sys.stdout = LoggingIO()
 sys.stderr = LoggingIO(logging.ERROR)
 
-# Ending up here, we are in a new, decoupled daemon process.
 # Set up logfile rotation.
 logger = logging.getLogger('')
 logger.setLevel(logging.INFO)
 handler = logging.handlers.RotatingFileHandler(options.logfile,
-                                               maxBytes    = 200000,
-                                               backupCount = 5)
+                                               maxBytes    = 2000000,
+                                               backupCount = 10)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
