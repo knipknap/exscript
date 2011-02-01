@@ -12,10 +12,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Transport import Transport
-from Telnet    import Telnet
-from SSH2      import SSH2
-from Dummy     import Dummy
+from Protocol import Protocol
+from Telnet   import Telnet
+from SSH2     import SSH2
+from Dummy    import Dummy
 
 protocol_map = {'dummy':  Dummy,
                 'pseudo': Dummy,
@@ -25,7 +25,7 @@ protocol_map = {'dummy':  Dummy,
 
 def get_protocol_from_name(name):
     """
-    Returns the transport class for the protocol with the given name.
+    Returns the protocol class for the protocol with the given name.
     """
     cls = protocol_map.get(name)
     if not cls:

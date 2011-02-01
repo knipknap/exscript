@@ -21,29 +21,29 @@ from Account import Account
 
 class Connection(object):
     """
-    This class is a decorator for protocols.Transport objects that
+    This class is a decorator for protocols.Protocol objects that
     adds thread safety by adding locking to the authenticate() and
     authorize() functions.
     It also provides access to the associated Queue and Host instances.
 
-    For complete documentation, please refer to the protocols.Transport
+    For complete documentation, please refer to the protocols.Protocol
     documentation.
     """
 
-    def __init__(self, action, transport):
+    def __init__(self, action, protocol):
         """
         Do not call directly; Exscript creates the connection for you and
         passes it to the function that is invoked by Queue.run().
 
         @type  action: HostAction
         @param action: The associated HostAction instance.
-        @type  transport: L{protocols.Transport}
-        @param transport: The Transport object that is decorated.
+        @type  protocol: L{protocols.Protocol}
+        @param protocol: The Protocol object that is decorated.
         """
         # Since we override setattr below, we can't access our properties
         # directly.
-        self.__dict__['action']    = action
-        self.__dict__['transport'] = transport
+        self.__dict__['action']   = action
+        self.__dict__['protocol'] = protocol
 
         # If specified, use the host-specific login details.
         host = action.get_host()
@@ -59,7 +59,7 @@ class Connection(object):
         Overwritten to return the very same object instead of copying the
         stream, because copying a network connection is impossible.
 
-        @rtype:  Transport
+        @rtype:  Protocol
         @return: self
         """
         return self
@@ -71,7 +71,7 @@ class Connection(object):
 
         @type  memo: object
         @param memo: Please refer to Python's standard library documentation.
-        @rtype:  Transport
+        @rtype:  Protocol
         @return: self
         """
         return self
@@ -89,7 +89,7 @@ class Connection(object):
         if name in self.__dict__.keys():
             self.__dict__[name] = value
         else:
-            setattr(self.transport, name, value)
+            setattr(self.protocol, name, value)
 
     def __getattr__(self, name):
         """
@@ -99,11 +99,11 @@ class Connection(object):
         @type  name: string
         @param name: The attribute name.
         @rtype:  object
-        @return: Whatever the transport adapter returns.
+        @return: Whatever the protocol adapter returns.
         """
         if name in self.__dict__.keys():
             return self.__dict__[name]
-        return getattr(self.transport, name)
+        return getattr(self.protocol, name)
 
     def _acquire_account(self, account = None):
         # Specific account requested?
@@ -162,13 +162,13 @@ class Connection(object):
         """
         Opens the connection to the remote host.
         """
-        if not self.transport.connect(self.get_host().get_address(),
-                                      self.get_host().get_tcp_port()):
+        if not self.protocol.connect(self.get_host().get_address(),
+                                     self.get_host().get_tcp_port()):
             raise Exception('Connection failed.')
 
     def login(self, account = None, flush = True):
         """
-        Like protocols.Transport.login(), but makes sure to
+        Like protocols.Protocol.login(), but makes sure to
         lock/release the account while it is used.
         If an account is not given, one is acquired from the account
         manager.
@@ -184,14 +184,14 @@ class Connection(object):
         account = self._acquire_account(account)
 
         try:
-            self.transport.login(account, flush = flush)
+            self.protocol.login(account, flush = flush)
         finally:
             self._release_account(account)
         return account
 
     def authenticate(self, account = None, flush = True):
         """
-        Like protocols.Transport.authenticate(), but makes sure to
+        Like protocols.Protocol.authenticate(), but makes sure to
         lock/release the account while it is used.
         If an account is not given, one is acquired from the account
         manager.
@@ -207,14 +207,14 @@ class Connection(object):
         account = self._acquire_account(account)
 
         try:
-            self.transport.authenticate(account, flush = flush)
+            self.protocol.authenticate(account, flush = flush)
         finally:
             self._release_account(account)
         return account
 
     def protocol_authenticate(self, account = None):
         """
-        Like protocols.Transport.protocol_authenticate(), but makes sure to
+        Like protocols.Protocol.protocol_authenticate(), but makes sure to
         lock/release the account while it is used.
         If an account is not given, one is acquired from the account
         manager.
@@ -228,14 +228,14 @@ class Connection(object):
         account = self._acquire_account(account)
 
         try:
-            self.transport.protocol_authenticate(account)
+            self.protocol.protocol_authenticate(account)
         finally:
             self._release_account(account)
         return account
 
     def app_authenticate(self, account = None, flush = True):
         """
-        Like protocols.Transport.app_authenticate(), but makes sure to
+        Like protocols.Protocol.app_authenticate(), but makes sure to
         lock/release the account while it is used.
         If an account is not given, one is acquired from the account
         manager.
@@ -251,7 +251,7 @@ class Connection(object):
         account = self._acquire_account(account)
 
         try:
-            self.transport.app_authenticate(account, flush = flush)
+            self.protocol.app_authenticate(account, flush = flush)
         finally:
             self._release_account(account)
         return account
@@ -270,7 +270,7 @@ class Connection(object):
         account = self._acquire_account(account)
 
         try:
-            self.transport.app_authorize(account, flush = flush)
+            self.protocol.app_authorize(account, flush = flush)
         finally:
             self._release_account(account)
         return account
@@ -302,7 +302,7 @@ class Connection(object):
         account = self._acquire_account(account)
 
         try:
-            self.transport.auto_app_authorize(account, flush = flush)
+            self.protocol.auto_app_authorize(account, flush = flush)
         finally:
             self._release_account(account)
         return account

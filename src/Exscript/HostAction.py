@@ -36,9 +36,9 @@ class HostAction(CustomAction):
         self.host      = host
         self.conn_args = conn_args
 
-        # Find the right transport class for connecting to the host.
-        protocol_name      = host.get_protocol()
-        self.transport_cls = get_protocol_from_name(protocol_name)
+        # Find the right protocol class for connecting to the host.
+        protocol_name     = host.get_protocol()
+        self.protocol_cls = get_protocol_from_name(protocol_name)
 
     def get_host(self):
         return self.host
@@ -51,15 +51,15 @@ class HostAction(CustomAction):
         return logname + '.log'
 
     def _create_connection(self):
-        transport = self.transport_cls(**self.conn_args)
+        protocol = self.protocol_cls(**self.conn_args)
 
         # Define the behaviour of the pseudo protocol adapter.
         if self.host.get_protocol() == 'pseudo':
             filename = self.host.get_address()
             hostname = os.path.basename(filename)
-            transport.device.add_commands_from_file(filename)
+            protocol.device.add_commands_from_file(filename)
 
-        return Connection(self, transport)
+        return Connection(self, protocol)
 
     def _call_function(self, conn):
         return self.function(conn)

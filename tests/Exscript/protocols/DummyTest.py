@@ -1,127 +1,127 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from TransportTest      import TransportTest
+from ProtocolTest       import ProtocolTest
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy
 
-class DummyTest(TransportTest):
+class DummyTest(ProtocolTest):
     CORRELATE = Dummy
 
-    def createTransport(self):
-        self.transport = Dummy(device = self.device)
+    def createProtocol(self):
+        self.protocol = Dummy(device = self.device)
 
     def testConstructor(self):
-        self.assert_(isinstance(self.transport, Dummy))
+        self.assert_(isinstance(self.protocol, Dummy))
 
     def testIsDummy(self):
-        self.assert_(self.transport.is_dummy())
+        self.assert_(self.protocol.is_dummy())
 
     def _create_dummy_and_eat_banner(self, device, port = None):
-        transport = Dummy(device = device)
-        transport.connect(device.hostname, port)
-        self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, None)
-        transport.expect(re.compile(re.escape(self.banner)))
-        self.assertEqual(transport.response, '')
-        return transport
+        protocol = Dummy(device = device)
+        protocol.connect(device.hostname, port)
+        self.assertEqual(protocol.buffer,   '')
+        self.assertEqual(protocol.response, None)
+        protocol.expect(re.compile(re.escape(self.banner)))
+        self.assertEqual(protocol.response, '')
+        return protocol
 
     def testDummy(self):
         # Test simple instance with banner.
-        transport = Dummy(device = self.device)
-        transport.connect('testhost')
-        self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, None)
-        transport.close()
+        protocol = Dummy(device = self.device)
+        protocol.connect('testhost')
+        self.assertEqual(protocol.buffer,   '')
+        self.assertEqual(protocol.response, None)
+        protocol.close()
 
         # Test login.
-        transport = Dummy(device = self.device)
-        transport.connect('testhost')
-        self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, None)
-        transport.login(self.account, flush = False)
-        self.assert_(transport.buffer.endswith(self.prompt))
-        transport.close()
+        protocol = Dummy(device = self.device)
+        protocol.connect('testhost')
+        self.assertEqual(protocol.buffer,   '')
+        self.assertEqual(protocol.response, None)
+        protocol.login(self.account, flush = False)
+        self.assert_(protocol.buffer.endswith(self.prompt))
+        protocol.close()
 
         # Test login with user prompt.
         device = VirtualDevice(self.hostname,
                                echo       = True,
                                login_type = VirtualDevice.LOGIN_TYPE_USERONLY)
-        transport = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(transport.buffer, 'User: ')
-        transport.login(self.account, flush = False)
-        self.assert_(transport.buffer.endswith(self.prompt), repr(transport.buffer))
-        transport.close()
+        protocol = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(protocol.buffer, 'User: ')
+        protocol.login(self.account, flush = False)
+        self.assert_(protocol.buffer.endswith(self.prompt), repr(protocol.buffer))
+        protocol.close()
 
         # Test login with password prompt.
         device = VirtualDevice(self.hostname,
                                echo       = True,
                                login_type = VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
-        transport = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(transport.buffer, 'Password: ')
-        transport.login(self.account, flush = False)
-        self.assert_(transport.buffer.endswith(self.prompt))
-        transport.close()
+        protocol = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(protocol.buffer, 'Password: ')
+        protocol.login(self.account, flush = False)
+        self.assert_(protocol.buffer.endswith(self.prompt))
+        protocol.close()
 
         # Test login without user/password prompt.
         device = VirtualDevice(self.hostname,
                                echo       = True,
                                login_type = VirtualDevice.LOGIN_TYPE_NONE)
-        transport = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(transport.buffer, self.prompt)
-        transport.close()
+        protocol = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(protocol.buffer, self.prompt)
+        protocol.close()
 
         # Test login with user prompt and wait parameter.
         device = VirtualDevice(self.hostname,
                                echo       = True,
                                login_type = VirtualDevice.LOGIN_TYPE_USERONLY)
-        transport = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(transport.buffer, 'User: ')
-        transport.login(self.account)
-        self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, self.user + '\r')
-        transport.close()
+        protocol = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(protocol.buffer, 'User: ')
+        protocol.login(self.account)
+        self.assertEqual(protocol.buffer,   '')
+        self.assertEqual(protocol.response, self.user + '\r')
+        protocol.close()
 
         # Test login with password prompt and wait parameter.
         device = VirtualDevice(self.hostname,
                                echo       = True,
                                login_type = VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
-        transport = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(transport.buffer, 'Password: ')
-        transport.login(self.account)
-        self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, self.password + '\r')
-        transport.close()
+        protocol = self._create_dummy_and_eat_banner(device)
+        self.assertEqual(protocol.buffer, 'Password: ')
+        protocol.login(self.account)
+        self.assertEqual(protocol.buffer,   '')
+        self.assertEqual(protocol.response, self.password + '\r')
+        protocol.close()
 
         # Test login with port number.
-        transport = self._create_dummy_and_eat_banner(device, 1234)
-        self.assertEqual(transport.buffer, 'Password: ')
-        transport.login(self.account)
-        self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, self.password + '\r')
-        transport.close()
+        protocol = self._create_dummy_and_eat_banner(device, 1234)
+        self.assertEqual(protocol.buffer, 'Password: ')
+        protocol.login(self.account)
+        self.assertEqual(protocol.buffer,   '')
+        self.assertEqual(protocol.response, self.password + '\r')
+        protocol.close()
 
         # Test a custom response.
         device = VirtualDevice(self.hostname,
                                echo       = True,
                                login_type = VirtualDevice.LOGIN_TYPE_NONE)
-        transport = Dummy(device = device)
-        command   = re.compile(r'testcommand')
-        response  = 'hello world\r\n%s> ' % self.hostname
+        protocol = Dummy(device = device)
+        command  = re.compile(r'testcommand')
+        response = 'hello world\r\n%s> ' % self.hostname
         device.add_command(command, response, prompt = False)
-        transport.set_prompt(re.compile(r'> $'))
-        transport.connect('testhost')
-        transport.expect(re.compile(re.escape(self.banner)))
-        self.assertEqual(transport.response, '')
-        self.assertEqual(transport.buffer, self.prompt)
-        transport.expect_prompt()
-        self.assertEqual(transport.buffer,   '')
-        self.assertEqual(transport.response, self.hostname)
-        transport.execute('testcommand')
+        protocol.set_prompt(re.compile(r'> $'))
+        protocol.connect('testhost')
+        protocol.expect(re.compile(re.escape(self.banner)))
+        self.assertEqual(protocol.response, '')
+        self.assertEqual(protocol.buffer, self.prompt)
+        protocol.expect_prompt()
+        self.assertEqual(protocol.buffer,   '')
+        self.assertEqual(protocol.response, self.hostname)
+        protocol.execute('testcommand')
         expected = 'testcommand\rhello world\r\n' + self.hostname
-        self.assertEqual(transport.response, expected)
-        self.assertEqual(transport.buffer,   '')
-        transport.close()
+        self.assertEqual(protocol.response, expected)
+        self.assertEqual(protocol.buffer,   '')
+        protocol.close()
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(DummyTest)

@@ -16,13 +16,13 @@
 A client that talks to a L{Exscript.emulators.VirtualDevice}.
 """
 from Exscript.emulators import VirtualDevice
-from Transport          import Transport
-from Exception          import TransportException, \
+from Protocol           import Protocol
+from Exception          import ProtocolException, \
                                TimeoutException, \
                                DriverReplacedException, \
                                ExpectCancelledException
 
-class Dummy(Transport):
+class Dummy(Protocol):
     """
     This protocol adapter does not open a network connection, but talks to
     a L{Exscript.emulators.VirtualDevice} internally.
@@ -30,12 +30,12 @@ class Dummy(Transport):
 
     def __init__(self, device = None, **kwargs):
         """
-        @note: Also supports all keyword arguments that L{Transport} supports.
+        @note: Also supports all keyword arguments that L{Protocol} supports.
 
         @keyword device: The L{Exscript.emulators.VirtualDevice} with
             which to communicate.
         """
-        Transport.__init__(self, **kwargs)
+        Protocol.__init__(self, **kwargs)
         self.device    = device
         self.init_done = False
         self.buffer    = ''
@@ -115,7 +115,7 @@ class Dummy(Transport):
             else:
                 raise ExpectCancelledException()
         if self.buffer is None:
-            raise TransportException('whoops - buffer is None')
+            raise ProtocolException('whoops - buffer is None')
 
         return result, match
 

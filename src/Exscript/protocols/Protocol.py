@@ -20,7 +20,7 @@ import sys
 import os
 from drivers             import driver_map, isdriver
 from OsGuesser           import OsGuesser
-from Exception           import TransportException, \
+from Exception           import ProtocolException, \
                                 InvalidCommandException, \
                                 LoginFailure, \
                                 TimeoutException, \
@@ -32,12 +32,12 @@ from Exscript.util.cast  import to_regexs
 
 _skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
 
-class Transport(object):
+class Protocol(object):
     """
     This is the base class for all protocols; it defines the common portions
     of the API.
 
-    The goal of all transport classes is to provide an interface that
+    The goal of all protocol classes is to provide an interface that
     is unified accross protocols, such that the adapters may be used
     interchangably without changing any other code.
 
@@ -252,7 +252,7 @@ class Transport(object):
         Overwritten to return the very same object instead of copying the
         stream, because copying a network connection is impossible.
 
-        @rtype:  Transport
+        @rtype:  Protocol
         @return: self
         """
         return self
@@ -264,7 +264,7 @@ class Transport(object):
 
         @type  memo: object
         @param memo: Please refer to Python's standard library documentation.
-        @rtype:  Transport
+        @rtype:  Protocol
         @return: self
         """
         return self
@@ -272,7 +272,7 @@ class Transport(object):
     def _driver_replaced_notify(self, old, new):
         self.driver_replaced = True
         self.cancel_expect()
-        msg = 'Transport: driver replaced: %s -> %s' % (old.name, new.name)
+        msg = 'Protocol: driver replaced: %s -> %s' % (old.name, new.name)
         self._dbg(1, msg)
 
     def _receive_cb(self, data, **kwargs):
@@ -643,13 +643,13 @@ class Transport(object):
                 raise TimeoutException(msg)
             except DriverReplacedException:
                 # Driver replaced, retry.
-                self._dbg(1, 'Transport.app_authenticate(): driver replaced')
+                self._dbg(1, 'Protocol.app_authenticate(): driver replaced')
                 continue
             except ExpectCancelledException:
-                self._dbg(1, 'Transport.app_authenticate(): expect cancelled')
+                self._dbg(1, 'Protocol.app_authenticate(): expect cancelled')
                 raise
             except EOFError:
-                self._dbg(1, 'Transport.app_authenticate(): EOF')
+                self._dbg(1, 'Protocol.app_authenticate(): EOF')
                 raise
 
             # Login error detected.
@@ -865,7 +865,7 @@ class Transport(object):
         @raise TimeoutException: raised if the timeout was reached.
         @raise ExpectCancelledException: raised when cancel_expect() was
             called in a callback.
-        @raise TransportException: on other internal errors.
+        @raise ProtocolException: on other internal errors.
         @raise Exception: May raise other exceptions that are caused
             within the underlying protocol implementations.
         """
@@ -940,7 +940,7 @@ class Transport(object):
         """
         Cancel the current call to expect() as soon as control returns
         to the protocol adapter. This method may be used in callbacks to
-        the events emitted by this class, e.g. Transport.data_received_event.
+        the events emitted by this class, e.g. Protocol.data_received_event.
         """
         raise NotImplementedError()
 

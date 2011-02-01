@@ -22,7 +22,7 @@ class DBObject(object):
 
     def __setattr__(self, name, value):
         """
-        Overwritten to proxy any calls to the associated protocol adapter
+        Overwritten to proxy any calls to the associated object
         (decorator pattern).
 
         @type  name: string
@@ -39,13 +39,13 @@ class DBObject(object):
 
     def __getattr__(self, name):
         """
-        Overwritten to proxy any calls to the associated protocol adapter
+        Overwritten to proxy any calls to the associated object
         (decorator pattern).
 
         @type  name: string
         @param name: The attribute name.
         @rtype:  object
-        @return: Whatever the transport adapter returns.
+        @return: Whatever the protocol adapter returns.
         """
         if self.__dict__.get('__object__') is None:
             return self.__dict__[name]

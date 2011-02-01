@@ -28,12 +28,12 @@ from paramiko.ssh_exception import SSHException, \
                                    AuthenticationException, \
                                    BadHostKeyException
 from Exscript               import PrivateKey
-from Exception              import TransportException, \
+from Exception              import ProtocolException, \
                                    LoginFailure, \
                                    TimeoutException, \
                                    DriverReplacedException, \
                                    ExpectCancelledException
-from Transport              import Transport
+from Protocol               import Protocol
 
 # Workaround for paramiko error; avoids a warning message.
 util.log_to_file('/dev/null')
@@ -43,13 +43,13 @@ keymap = {'rsa': paramiko.RSAKey, 'dss': paramiko.DSSKey}
 for key in keymap:
     PrivateKey.keytypes.add(key)
 
-class SSH2(Transport):
+class SSH2(Protocol):
     """
     The secure shell protocol version 2 adapter, based on Paramiko.
     """
 
     def __init__(self, auto_verify = False, **kwargs):
-        Transport.__init__(self, **kwargs)
+        Protocol.__init__(self, **kwargs)
         self.client = None
         self.shell  = None
         self.buffer = ''
@@ -125,7 +125,7 @@ class SSH2(Transport):
             pass
         sock.connect(addr)
 
-        # Init the paramiko transport.
+        # Init the paramiko protocol.
         t = paramiko.Transport(sock)
         t.start_client()
         ResourceManager.register(self, t)
@@ -293,7 +293,7 @@ class SSH2(Transport):
             if not match:
                 if not self._fill_buffer():
                     error = 'EOF while waiting for response from device'
-                    raise TransportException(error)
+                    raise ProtocolException(error)
                 continue
 
             #print "Match End:", match.end()

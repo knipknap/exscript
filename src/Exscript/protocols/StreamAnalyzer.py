@@ -15,7 +15,7 @@
 
 class StreamAnalyzer(object):
     """
-    A StreamAnalyzer monitors everything that happens on a Transport,
+    A StreamAnalyzer monitors everything that happens on a Protocol,
     and attempts to collect data out of the network activity.
     For example, a stream monitor may watch for specific patterns in the
     network traffic to decide what operating system a connected host is
@@ -79,7 +79,7 @@ class StreamAnalyzer(object):
 
     def data_received(self, data):
         """
-        Called by the transport whenever new data was received from the
+        Called by the protocol whenever new data was received from the
         connected host.
         """
         pass
@@ -93,7 +93,7 @@ class StreamAnalyzer(object):
 
     def data_sent(self, data):
         """
-        Called by the transport whenever anything was sent to the
+        Called by the protocol whenever anything was sent to the
         connected host.
         """
         pass

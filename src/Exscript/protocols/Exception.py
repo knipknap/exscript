@@ -16,34 +16,34 @@
 Network related error types.
 """
 
-class TransportException(Exception):
+class ProtocolException(Exception):
     """
-    Default exception that is thrown on most transport related errors.
+    Default exception that is thrown on most protocol related errors.
     """
     pass
 
-class TimeoutException(TransportException):
+class TimeoutException(ProtocolException):
     """
     An exception that is thrown if the connected host did not
     respond for too long.
     """
     pass
 
-class ExpectCancelledException(TransportException):
+class ExpectCancelledException(ProtocolException):
     """
-    An exception that is thrown if Transport.cancel_expect()
+    An exception that is thrown if Protocol.cancel_expect()
     was called.
     """
     pass
 
-class DriverReplacedException(TransportException):
+class DriverReplacedException(ProtocolException):
     """
-    An exception that is thrown if the transport driver
+    An exception that is thrown if the protocol driver
     was switched during a call to expect().
     """
     pass
 
-class LoginFailure(TransportException):
+class LoginFailure(ProtocolException):
     """
     An exception that is thrown if the response of a connected host looked
     like it was trying to signal a login error during the authentication
@@ -51,7 +51,7 @@ class LoginFailure(TransportException):
     """
     pass
 
-class InvalidCommandException(TransportException):
+class InvalidCommandException(ProtocolException):
     """
     An exception that is thrown if the response of a connected host contained
     a string that looked like an error.

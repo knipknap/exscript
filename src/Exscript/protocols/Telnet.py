@@ -16,19 +16,19 @@
 The Telnet protocol.
 """
 import telnetlib
-from Transport import Transport
-from Exception import TransportException, \
+from Protocol  import Protocol
+from Exception import ProtocolException, \
                       TimeoutException, \
                       DriverReplacedException, \
                       ExpectCancelledException
 
-class Telnet(Transport):
+class Telnet(Protocol):
     """
     The Telnet protocol adapter.
     """
 
     def __init__(self, **kwargs):
-        Transport.__init__(self, **kwargs)
+        Protocol.__init__(self, **kwargs)
         self.tn = None
 
     def _connect_hook(self, hostname, port):
@@ -80,7 +80,7 @@ class Telnet(Transport):
             else:
                 raise ExpectCancelledException()
         if self.response is None:
-            raise TransportException('whoops - response is None')
+            raise ProtocolException('whoops - response is None')
 
         return result, match
 

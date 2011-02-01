@@ -9,58 +9,58 @@ from Exscript.Connection     import Connection
 from Exscript.emulators      import VirtualDevice
 from protocols.DummyTest     import DummyTest
 
-# Connection proxies the calls to a protocols.Transport object,
-# so we can inherit from TransportTest here and have most of the
+# Connection proxies the calls to a protocols.Protocol object,
+# so we can inherit from ProtocolTest here and have most of the
 # tests working.
 class ConnectionTest(DummyTest):
     CORRELATE = Connection
 
-    def createTransport(self):
+    def createProtocol(self):
         self.queue     = Queue(verbose = 0)
         self.host      = Host('dummy://' + self.hostname)
         self.action    = HostAction(self.queue, object, self.host)
-        transport      = Dummy()
-        self.transport = Connection(self.action, transport)
+        protocol      = Dummy()
+        self.protocol = Connection(self.action, protocol)
         self.queue.add_account(self.account)
 
     def doLogin(self, flush = True):
         # This is overwritten do make the tests that are inherited from
         # DummyTest happy.
-        self.transport.open()
-        self.transport.transport.device = self.device
-        self.transport.login(flush = flush)
+        self.protocol.open()
+        self.protocol.protocol.device = self.device
+        self.protocol.login(flush = flush)
 
     def testConstructor(self):
-        self.assert_(isinstance(self.transport, Connection))
+        self.assert_(isinstance(self.protocol, Connection))
 
     def testGetAction(self):
-        self.assert_(isinstance(self.transport.get_action(), HostAction))
+        self.assert_(isinstance(self.protocol.get_action(), HostAction))
 
     def testGetQueue(self):
-        self.assert_(isinstance(self.transport.get_queue(), Queue))
+        self.assert_(isinstance(self.protocol.get_queue(), Queue))
 
     def testGetAccountManager(self):
-        self.assert_(isinstance(self.transport.get_account_manager(),
+        self.assert_(isinstance(self.protocol.get_account_manager(),
                                 AccountManager))
 
     def testGetHost(self):
-        self.assertEqual(self.transport.get_host(), self.host)
+        self.assertEqual(self.protocol.get_host(), self.host)
 
     def testOpen(self):
-        self.transport.open()
+        self.protocol.open()
 
     def testConnect(self):
-        self.assertEqual(self.transport.response, None)
-        self.transport.connect(self.hostname, self.port)
-        self.assertEqual(self.transport.response, None)
-        self.assertEqual(self.transport.get_host(), self.host)
+        self.assertEqual(self.protocol.response, None)
+        self.protocol.connect(self.hostname, self.port)
+        self.assertEqual(self.protocol.response, None)
+        self.assertEqual(self.protocol.get_host(), self.host)
 
     def testGuessOs(self):
-        self.assertEqual('unknown', self.transport.guess_os())
-        self.transport.open()
-        self.assertEqual('unknown', self.transport.guess_os())
-        self.transport.login()
-        self.assertEqual('shell', self.transport.guess_os())
+        self.assertEqual('unknown', self.protocol.guess_os())
+        self.protocol.open()
+        self.assertEqual('unknown', self.protocol.guess_os())
+        self.protocol.login()
+        self.assertEqual('shell', self.protocol.guess_os())
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ConnectionTest)

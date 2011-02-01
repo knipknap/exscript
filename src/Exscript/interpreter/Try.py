@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import Code
-from Exscript.protocols.Exception import TransportException
+from Exscript.protocols.Exception import ProtocolException
 from Scope                        import Scope
 
 class Try(Scope):
@@ -29,7 +29,7 @@ class Try(Scope):
     def value(self):
         try:
             self.block.value()
-        except TransportException, e:
+        except ProtocolException, e:
             return 1
         return 1
 
