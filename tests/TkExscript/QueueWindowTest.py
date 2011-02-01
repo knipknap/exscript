@@ -4,7 +4,7 @@ from Exscript.util.decorator import bind
 from TkExscript              import QueueWindow
 
 def do_something(conn, wait):
-    conn.open()
+    conn.connect()
     conn.authenticate()
     for i in range(100):
         conn.execute('test%d' % i)

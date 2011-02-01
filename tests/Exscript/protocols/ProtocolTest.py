@@ -54,12 +54,15 @@ class ProtocolTest(unittest.TestCase):
     def createProtocol(self):
         self.protocol = Protocol()
 
-    def doLogin(self, flush = True):
+    def doConnect(self):
         self.protocol.connect(self.hostname, self.port)
+
+    def doLogin(self, flush = True):
+        self.doConnect()
         self.protocol.login(self.account, flush = flush)
 
     def doProtocolAuthenticate(self, flush = True):
-        self.protocol.connect(self.hostname, self.port)
+        self.doConnect()
         self.protocol.protocol_authenticate(self.account)
 
     def doAppAuthenticate(self, flush = True):
@@ -220,7 +223,7 @@ class ProtocolTest(unittest.TestCase):
             self.assertRaises(Exception, self.protocol.connect)
             return
         self.assertEqual(self.protocol.response, None)
-        self.protocol.connect(self.hostname, self.port)
+        self.doConnect()
         self.assertEqual(self.protocol.response, None)
         self.assertEqual(self.protocol.get_host(), self.hostname)
 
@@ -244,7 +247,7 @@ class ProtocolTest(unittest.TestCase):
         self.setUp()
         key     = PrivateKey.from_file('foo')
         account = Account(self.user, self.password, key = key)
-        self.protocol.connect(self.hostname, self.port)
+        self.doConnect()
         self.failIf(self.protocol.is_protocol_authenticated())
         self.failIf(self.protocol.is_app_authenticated())
         self.failIf(self.protocol.is_app_authorized())
@@ -260,7 +263,7 @@ class ProtocolTest(unittest.TestCase):
                               self.protocol.authenticate,
                               self.account)
             return
-        self.protocol.connect(self.hostname, self.port)
+        self.doConnect()
 
         # Password login.
         self.failIf(self.protocol.is_protocol_authenticated())
@@ -278,7 +281,7 @@ class ProtocolTest(unittest.TestCase):
         self.setUp()
         key     = PrivateKey.from_file('foo')
         account = Account(self.user, self.password, key = key)
-        self.protocol.connect(self.hostname, self.port)
+        self.doConnect()
         self.failIf(self.protocol.is_protocol_authenticated())
         self.failIf(self.protocol.is_app_authenticated())
         self.failIf(self.protocol.is_app_authorized())
@@ -462,14 +465,14 @@ class ProtocolTest(unittest.TestCase):
         if self.protocol.__class__ == Protocol:
             self.assertRaises(Exception, self.protocol.close)
             return
-        self.protocol.connect(self.hostname, self.port)
+        self.doConnect()
         self.protocol.close(True)
 
     def testGetHost(self):
         self.assert_(self.protocol.get_host() is None)
         if self.protocol.__class__ == Protocol:
             return
-        self.protocol.connect(self.hostname, self.port)
+        self.doConnect()
         self.assertEqual(self.protocol.get_host(), self.hostname)
 
     def testGuessOs(self):
@@ -478,7 +481,7 @@ class ProtocolTest(unittest.TestCase):
         if self.protocol.__class__ == Protocol:
             self.assertRaises(Exception, self.protocol.close)
             return
-        self.protocol.connect(self.hostname, self.port)
+        self.doConnect()
         self.assertEqual('unknown', self.protocol.guess_os())
         self.protocol.login(self.account)
         self.assert_(self.protocol.is_protocol_authenticated())

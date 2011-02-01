@@ -7,15 +7,15 @@ class FakeConnection(object):
     def __init__(self, os = None):
         self.os = os
 
-    def open(self):
-        self.open = True
+    def connect(self):
+        self.connected = True
 
     def login(self, flush = True):
         self.logged_in     = True
         self.login_flushed = flush
 
     def close(self, force):
-        self.open         = False
+        self.connected    = False
         self.close_forced = force
 
     def guess_os(self):
@@ -55,7 +55,7 @@ class decoratorTest(unittest.TestCase):
         self.assertRaises(Exception, os_function_mapper, FakeConnection(), cb_map)
 
     def connect_cb(self, conn, *args, **kwargs):
-        self.assert_(conn.open == True)
+        self.assert_(conn.connected == True)
         return self.bind_cb(conn, *args, **kwargs)
 
     def testConnect(self):

@@ -158,7 +158,7 @@ class Connection(object):
         """
         return self.action.get_host()
 
-    def open(self):
+    def connect(self):
         """
         Opens the connection to the remote host.
         """

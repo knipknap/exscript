@@ -16,17 +16,20 @@ class ConnectionTest(DummyTest):
     CORRELATE = Connection
 
     def createProtocol(self):
-        self.queue     = Queue(verbose = 0)
-        self.host      = Host('dummy://' + self.hostname)
-        self.action    = HostAction(self.queue, object, self.host)
+        self.queue    = Queue(verbose = 0)
+        self.host     = Host('dummy://' + self.hostname)
+        self.action   = HostAction(self.queue, object, self.host)
         protocol      = Dummy()
         self.protocol = Connection(self.action, protocol)
         self.queue.add_account(self.account)
 
+    def doConnect(self):
+        self.protocol.connect()
+
     def doLogin(self, flush = True):
         # This is overwritten do make the tests that are inherited from
         # DummyTest happy.
-        self.protocol.open()
+        self.doConnect()
         self.protocol.protocol.device = self.device
         self.protocol.login(flush = flush)
 
@@ -46,18 +49,15 @@ class ConnectionTest(DummyTest):
     def testGetHost(self):
         self.assertEqual(self.protocol.get_host(), self.host)
 
-    def testOpen(self):
-        self.protocol.open()
-
     def testConnect(self):
         self.assertEqual(self.protocol.response, None)
-        self.protocol.connect(self.hostname, self.port)
+        self.doConnect()
         self.assertEqual(self.protocol.response, None)
         self.assertEqual(self.protocol.get_host(), self.host)
 
     def testGuessOs(self):
         self.assertEqual('unknown', self.protocol.guess_os())
-        self.protocol.open()
+        self.doConnect()
         self.assertEqual('unknown', self.protocol.guess_os())
         self.protocol.login()
         self.assertEqual('shell', self.protocol.guess_os())

@@ -87,7 +87,7 @@ def connect(function):
     @return: The wrapped function.
     """
     def decorated(conn, *args, **kwargs):
-        conn.open()
+        conn.connect()
         result = function(conn, *args, **kwargs)
         conn.close(force = True)
         return result
