@@ -15,7 +15,10 @@
 """
 The core module.
 """
-import paramiko
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings('ignore', category = DeprecationWarning)
+    import paramiko
 from version       import __version__
 from Account       import Account
 from PrivateKey    import PrivateKey
