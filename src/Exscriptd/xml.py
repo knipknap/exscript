@@ -16,6 +16,7 @@
 Utilities for serializing/deserializing XML.
 """
 from lxml import etree
+import base64
 import Exscript
 
 def get_list_from_etree(node):
@@ -144,7 +145,7 @@ def get_host_from_etree(node):
             </list>
           </argument-list>
         </host>
-    
+
     The arguments are parsed using get_dict_from_etree() and attached
     to the host using Exscript.Host.set_all().
 
@@ -176,7 +177,7 @@ def add_host_to_etree(root, tag, host):
     @type  tag: str
     @param tag: The tag name of the new node.
     @type  host: Exscript.Host
-    @param host: A dictionary containing strings or lists.
+    @param host: The host that is added.
     @rtype:  lxml.etree.ElementNode
     @return: The new node.
     """
@@ -205,7 +206,7 @@ def get_hosts_from_etree(node):
              </argument-list>
            </host>
         </root>
-    
+
     The arguments are parsed using get_arguments_from_etree() and attached
     to the host using Exscript.Host.set().
 
@@ -232,3 +233,110 @@ def add_hosts_to_etree(root, hosts):
     """
     for host in hosts:
         add_host_to_etree(root, 'host', host)
+
+def _get_password_from_node(node):
+    if node is None:
+        return None
+    thetype  = node.get('type', 'cleartext')
+    password = node.text
+    if thetype == 'base64':
+        return base64.decodestring(password)
+    elif thetype == 'cleartext':
+        return password
+    else:
+        raise ValueError('invalid password type: ' + thetype)
+
+def _add_password_node(parent, password, tag = 'password'):
+    node      = etree.SubElement(parent, tag, type = 'base64')
+    node.text = base64.encodestring(password).strip()
+    return node
+
+def get_account_from_etree(node):
+    """
+    Given a <account> node, this function returns a Exscript.Account instance.
+    The following XML syntax is expected, whereby the children of <account>
+    are all optional::
+
+        <account name="myaccount">
+          <password type="base64">Zm9v</password>
+          <authorization-password type="cleartext">bar</authorization-password>
+        </account>
+
+    The <password> and <authorization-password> tags have an optional type
+    attribute defaulting to 'cleartext'. Allowed values are 'cleartext'
+    and 'base64'.
+
+    @type  node: lxml.etree.ElementNode
+    @param node: A <account> element.
+    @rtype:  Exscript.Account
+    @return: The resulting account.
+    """
+    name           = node.get('name', '').strip()
+    password1_elem = node.find('password')
+    password2_elem = node.find('authorization-password')
+    account        = Exscript.Account(name)
+    account.set_password(_get_password_from_node(password1_elem))
+    account.set_authorization_password(_get_password_from_node(password2_elem))
+    return account
+
+def add_account_to_etree(root, tag, account):
+    """
+    Given an account object, this function creates the syntax shown in
+    get_host_from_etree() and adds it to the given node.
+    Returns the new host element.
+
+    @type  root: lxml.etree.ElementNode
+    @param root: The node under which the new element is added.
+    @type  tag: str
+    @param tag: The tag name of the new node.
+    @type  host: Exscript.Account
+    @param host: The account that is added.
+    @rtype:  lxml.etree.ElementNode
+    @return: The new node.
+    """
+    elem = etree.SubElement(root, tag, name = account.get_name())
+    _add_password_node(elem, account.get_password())
+    _add_password_node(elem,
+                       account.get_authorization_password(),
+                       tag = 'authorization-password')
+    return elem
+
+def get_accounts_from_etree(node):
+    """
+    Given an lxml.etree node, this function looks for <account> tags and
+    returns a list of Exscript.Account instances. The following XML syntax
+    is expected::
+
+        <root>
+           <account name="one"/>
+           <account name="two">
+             ...
+           </account>
+           ...
+        </root>
+
+    The individual accounts are parsed using L{get_account_from_etree()}.
+
+    @type  node: lxml.etree.ElementNode
+    @param node: A node containing <account> elements.
+    @rtype:  list(Exscript.Account)
+    @return: A list of accounts.
+    """
+    accounts = []
+    for account_elem in node.iterfind('account'):
+        account = get_account_from_etree(account_elem)
+        accounts.append(account)
+    return accounts
+
+def add_accounts_to_etree(root, accounts):
+    """
+    Given a list of accounts, this function creates the syntax shown in
+    get_accounts_from_etree() and adds it to the given node.
+
+    @type  root: lxml.etree.ElementNode
+    @param root: The node under which the new elements are added.
+    @type  accounts: list(Exscript.Account)
+    @param accounts: A list of accounts.
+    """
+    for account in accounts:
+        add_account_to_etree(root, 'account', account)
