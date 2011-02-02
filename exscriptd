@@ -97,6 +97,9 @@ class LoggingIO(object):
         if data:
             logging.log(self.channel, data)
 
+    def flush(self):
+        pass
+
 sys.stdout = LoggingIO()
 sys.stderr = LoggingIO(logging.ERROR)
 
