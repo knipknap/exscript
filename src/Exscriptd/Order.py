@@ -45,6 +45,7 @@ class Order(DBObject):
         self.descr      = ''
         self.created    = datetime.utcnow()
         self.closed     = None
+        self.progress   = .0
         self.created_by = getuser()
         self.xml        = etree.Element('order', service = self.service)
 
@@ -70,6 +71,7 @@ class Order(DBObject):
         order.created_by = order_node.get('created-by', order.created_by)
         created          = order_node.get('created')
         closed           = order_node.get('closed')
+        progress         = order_node.get('progress')
         if descr_node is not None:
             order.descr = descr_node.text
         if created:
@@ -80,6 +82,8 @@ class Order(DBObject):
             closed = closed.split('.', 1)[0]
             closed = datetime.strptime(closed, "%Y-%m-%d %H:%M:%S")
             order.closed = closed
+        if progress is not None:
+            order.progress = float(progress)
         return order
 
     @staticmethod
@@ -143,6 +147,8 @@ class Order(DBObject):
             self.xml.attrib['created'] = str(self.created)
         if self.closed:
             self.xml.attrib['closed'] = str(self.closed)
+        if self.progress:
+            self.xml.attrib['progress'] = str(self.progress)
         if self.descr:
             etree.SubElement(self.xml, 'description').text = str(self.descr)
         if self.created_by:
@@ -270,6 +276,24 @@ class Order(DBObject):
         @return: The value of the 'created-by' field.
         """
         return self.created_by
+
+    def get_progress(self):
+        """
+        Returns the progress of the order.
+
+        @rtype:  float|None
+        @return: The progress (1.0 is max).
+        """
+        return self.progress
+
+    def get_progress_percent(self):
+        """
+        Returns the progress as a string, in percent.
+
+        @rtype:  str
+        @return: The progress in percent.
+        """
+        return '%.1f' % (self.progress * 100.0)
 
     def close(self):
         """

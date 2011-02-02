@@ -296,6 +296,10 @@ class OrderDB(object):
         order.closed     = row[tbl_a.c.closed]
         order.created_by = row[tbl_a.c.created_by]
         order.set_description(row[tbl_a.c.description])
+        try:
+            order.progress = float(row.avg_progress)
+        except (TypeError, AttributeError):
+            order.progress = .0
         return order
 
     def __get_orders_from_query(self, query):
@@ -352,6 +356,7 @@ class OrderDB(object):
         @return: The list of orders.
         """
         tbl_o = self._table_map['order']
+        tbl_t = self._table_map['task']
 
         # Search conditions.
         where = None
@@ -362,10 +367,16 @@ class OrderDB(object):
                     cond = sa.or_(cond, tbl_o.c[field] == value)
                 where = sa.and_(where, cond)
 
-        select = tbl_o.select(where,
-                              order_by = [sa.desc(tbl_o.c.id)],
-                              offset   = offset,
-                              limit    = limit)
+        table  = tbl_o.outerjoin(tbl_t, tbl_t.c.order_id == tbl_o.c.id)
+        fields = list(tbl_o.c)
+        fields.append(sa.func.avg(tbl_t.c.progress).label('avg_progress'))
+        select = sa.select(fields,
+                           where,
+                           from_obj = [table],
+                           group_by = [tbl_o.c.id],
+                           order_by = [sa.desc(tbl_o.c.id)],
+                           offset   = offset,
+                           limit    = limit)
 
         return self.__get_orders_from_query(select)
 

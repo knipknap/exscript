@@ -190,9 +190,9 @@ class Task(DBObject):
 
     def get_progress_percent(self):
         """
-        Returns the progress as a float between 0.0 and 100.0.
+        Returns the progress as a string, in percent.
 
-        @rtype:  float
+        @rtype:  str
         @return: The progress in percent.
         """
         return '%.1f' % (self.progress * 100.0)

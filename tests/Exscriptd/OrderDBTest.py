@@ -55,19 +55,62 @@ class OrderDBTest(unittest.TestCase):
         order1 = Order('fooservice')
         self.assertEqual(order1.get_created_by(), getuser())
         self.assertEqual(order1.get_description(), '')
+        self.assertEqual(order1.get_progress(), .0)
         order1.created_by = 'this test'
         order1.set_description('my description')
         self.assertEqual(order1.get_created_by(), 'this test')
         self.assertEqual(order1.get_description(), 'my description')
 
+        # Save the order.
         self.assert_(order1.get_id() is None)
         self.db.add_order(order1)
+        order_id = order1.get_id()
+        self.assert_(order_id is not None)
 
         # Check that the order is stored.
-        order2 = self.db.get_order(id = order1.get_id())
-        self.assertEqual(order1.get_id(), order2.get_id())
-        self.assertEqual(order2.get_created_by(), 'this test')
-        self.assertEqual(order2.get_description(), 'my description')
+        order = self.db.get_order(id = order_id)
+        self.assertEqual(order.get_id(), order_id)
+        self.assertEqual(order.get_created_by(), 'this test')
+        self.assertEqual(order.get_description(), 'my description')
+        self.assertEqual(order.get_progress(), .0)
+
+        # Add some sub-tasks.
+        task1 = Task('my test task')
+        self.db.save_task(order, task1)
+        self.assertEqual(self.db.get_order_progress_from_id(order_id), .0)
+
+        task2 = Task('another test task')
+        self.db.save_task(order, task2)
+        self.assertEqual(self.db.get_order_progress_from_id(order_id), .0)
+
+        # Check the progress.
+        order = self.db.get_order(id = order_id)
+        self.assertEqual(order.get_progress(), .0)
+
+        # Change the progress, re-check.
+        task1.set_progress(.5)
+        self.db.save_task(order, task1)
+        self.assertEqual(self.db.get_order_progress_from_id(order_id), .25)
+        order = self.db.get_order(id = order_id)
+        self.assertEqual(order.get_progress(), .25)
+
+        task2.set_progress(.5)
+        self.db.save_task(order, task2)
+        self.assertEqual(self.db.get_order_progress_from_id(order_id), .5)
+        order = self.db.get_order(id = order_id)
+        self.assertEqual(order.get_progress(), .5)
+
+        task1.set_progress(1.0)
+        self.db.save_task(order, task1)
+        self.assertEqual(self.db.get_order_progress_from_id(order_id), .75)
+        order = self.db.get_order(id = order_id)
+        self.assertEqual(order.get_progress(), .75)
+
+        task2.set_progress(1.0)
+        self.db.save_task(order, task2)
+        self.assertEqual(self.db.get_order_progress_from_id(order_id), 1.0)
+        order = self.db.get_order(id = order_id)
+        self.assertEqual(order.get_progress(), 1.0)
 
     def testSaveOrder(self):
         self.testInstall()
