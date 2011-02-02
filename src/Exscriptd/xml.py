@@ -289,8 +289,8 @@ def add_account_to_etree(root, tag, account):
     @param root: The node under which the new element is added.
     @type  tag: str
     @param tag: The tag name of the new node.
-    @type  host: Exscript.Account
-    @param host: The account that is added.
+    @type  account: Exscript.Account
+    @param account: The account that is added.
     @rtype:  lxml.etree.ElementNode
     @return: The new node.
     """
