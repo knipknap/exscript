@@ -224,7 +224,7 @@ class Queue(object):
         Should, in theory, never be called, as HostAction never raises.
         In other words, the workqueue does not notice if the action fails.
         """
-        raise
+        raise e
 
 
     def set_max_threads(self, n_connections):
