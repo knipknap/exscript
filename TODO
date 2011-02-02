@@ -1,16 +1,11 @@
 Exscript
 --------
-* Get rid of Exscript.Connection.
 * Add tests for Transport class debug levels.
 * Add API docs for Exscript.parselib.
 * Add a test for Exscript.Task.
 * Test the exscript executable.
 * Test Queue constructor kwargs.
 * Create more stdlib tests like tests/templates/stdlib.crypt/.
-
-TkExscript
-----------
-* Add docs for TkExscript.
 
 exscriptd
 ---------
