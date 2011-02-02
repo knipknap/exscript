@@ -1,3 +1,0 @@
-[submodule "src/Exscript/external/paramiko.git"]
-	path = src/Exscript/external/paramiko.git
-	url = git://github.com/robey/paramiko.git

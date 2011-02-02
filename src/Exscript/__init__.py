@@ -15,20 +15,7 @@
 """
 The core module.
 """
-# If available, use globally installed paramiko. Fall back to the one
-# that is contained in the package's external/ directory.
-try:
-    import paramiko
-except ImportError:
-    import os
-    import sys
-    import warnings
-    external_dir = os.path.join(os.path.dirname(__file__), 'external')
-    sys.path.append(external_dir)
-    with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', category = DeprecationWarning)
-        import paramiko
-
+import paramiko
 from version       import __version__
 from Account       import Account
 from PrivateKey    import PrivateKey
