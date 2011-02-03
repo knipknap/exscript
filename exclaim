@@ -202,6 +202,7 @@ elif options.order_list:
              'Service',
              'Description',
              'Status',
+             'Progress',
              'Created by',
              'Created',
              'Closed')]
@@ -210,6 +211,7 @@ elif options.order_list:
                order.get_service_name(),
                order.get_description(),
                order.get_status(),
+               order.get_progress_percent(),
                order.get_created_by(),
                str(order.get_created_timestamp()),
                str(order.get_closed_timestamp() or 'open'))
