@@ -188,12 +188,13 @@ def prompt(key,
             value = raw_input('%s [%s]: ' % (message, default)) or default
         if strip:
             value = value.strip()
-        if check:
-            errors = check(value)
-            if errors:
-                print '\n'.join(to_list(errors))
-            else:
-                break
+        if not check:
+            break
+        errors = check(value)
+        if errors:
+            print '\n'.join(to_list(errors))
+        else:
+            break
     history.set(key, value)
     return value
 
