@@ -259,24 +259,6 @@ class Queue(object):
         self.account_manager.add_account(account)
 
 
-    def task_is_completed(self, task):
-        """
-        This method is deprecated, use Task.is_completed() instead.
-
-        Returns True if the given task is completed, False otherwise. The task
-        is an object as returned by the Queue.run() method.
-
-        @type  task: Task
-        @param task: The object that was returned by Queue.run().
-        @rtype:  bool
-        @return: Whether the task is completed.
-        """
-        deprecation('task_is_completed(): this method is deprecated.' \
-                  + ' Please use Task.is_completed() instead.')
-        assert task is not None
-        return task.is_completed()
-
-
     def wait_for(self, action):
         """
         Waits until the given action is completed. The action is an object as

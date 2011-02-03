@@ -157,19 +157,10 @@ class QueueTest(unittest.TestCase):
         self.assert_(task is not None)
         return task
 
-    def testTaskIsCompleted(self):
-        task = self.startTask()
-        while not self.queue.task_is_completed(task):
-            time.sleep(.1)
-        # The following function is not synchronous with the above, so add
-        # a timeout to avoid races.
-        time.sleep(.1)
-        self.assert_(self.queue.is_completed())
-
     def testWaitFor(self):
         task = self.startTask()
         self.queue.wait_for(task)
-        self.assert_(self.queue.task_is_completed(task))
+        self.assert_(task.is_completed())
         # The following function is not synchronous with the above, so add
         # a timeout to avoid races.
         time.sleep(.1)
@@ -180,26 +171,26 @@ class QueueTest(unittest.TestCase):
         task = self.startTask()
         self.failIf(self.queue.is_completed())
         self.queue.wait_for(task)
-        self.assert_(self.queue.task_is_completed(task))
+        self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
 
     def testJoin(self):
         task = self.startTask()
         self.queue.join()
-        self.assert_(self.queue.task_is_completed(task))
+        self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
 
     def testShutdown(self):
         task = self.startTask()   # this also adds an account
         self.queue.shutdown()
-        self.assert_(self.queue.task_is_completed(task))
+        self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
         self.assertEqual(self.queue.account_manager.n_accounts(), 1)
 
     def testDestroy(self):
         task = self.startTask()   # this also adds an account
         self.queue.destroy()
-        self.assert_(self.queue.task_is_completed(task))
+        self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
         self.assertEqual(self.queue.account_manager.n_accounts(), 0)
 
@@ -296,7 +287,15 @@ class QueueTest(unittest.TestCase):
 
     #FIXME: Not a method test; this should probably be elsewhere.
     def testLogging(self):
-        self.testTaskIsCompleted()
+        task = self.startTask()
+        while not task.is_completed():
+            time.sleep(.1)
+
+        # The following function is not synchronous with the above, so add
+        # a timeout to avoid races.
+        time.sleep(.1)
+        self.assert_(self.queue.is_completed())
+
         logfiles = os.listdir(self.tempdir)
         self.assertEqual(2, len(logfiles))
         self.assert_('dummy1.log' in logfiles)
