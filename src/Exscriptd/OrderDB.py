@@ -298,8 +298,11 @@ class OrderDB(object):
         order.set_description(row[tbl_a.c.description])
         try:
             order.progress = float(row.avg_progress)
-        except (TypeError, AttributeError):
-            order.progress = .0
+        except TypeError: # Order has no tasks
+            if order.closed:
+                order.progress = 1.0
+            else:
+                order.progress = .0
         return order
 
     def __get_orders_from_query(self, query):
@@ -430,14 +433,8 @@ class OrderDB(object):
         @rtype:  float
         @return: A float between 0.0 and 1.0
         """
-        tbl_t = self._table_map['task']
-        query = sa.select([sa.func.avg(tbl_t.c.progress)],
-                          sa.and_(tbl_t.c.order_id == id,
-                                  tbl_t.c.closed == None))
-        avg = query.execute().fetchone()[0]
-        if avg is None:
-            return 1.0
-        return avg
+        order = self.get_order(id = id)
+        return order.get_progress()
 
     def count_tasks(self, order_id = None):
         """

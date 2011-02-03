@@ -67,50 +67,51 @@ class OrderDBTest(unittest.TestCase):
         order_id = order1.get_id()
         self.assert_(order_id is not None)
 
+        def assert_progress(value):
+            progress = self.db.get_order_progress_from_id(order_id)
+            theorder = self.db.get_order(id = order_id)
+            self.assertEqual(progress, value)
+            self.assertEqual(theorder.get_progress(), value)
+
         # Check that the order is stored.
         order = self.db.get_order(id = order_id)
         self.assertEqual(order.get_id(), order_id)
         self.assertEqual(order.get_created_by(), 'this test')
+        self.assertEqual(order.get_closed_timestamp(), None)
         self.assertEqual(order.get_description(), 'my description')
-        self.assertEqual(order.get_progress(), .0)
+        assert_progress(.0)
+
+        # Check that an order that has no tasks show progress 100% when
+        # it is closed.
+        order.close()
+        self.db.save_order(order)
+        assert_progress(1.0)
 
         # Add some sub-tasks.
         task1 = Task('my test task')
         self.db.save_task(order, task1)
-        self.assertEqual(self.db.get_order_progress_from_id(order_id), .0)
+        assert_progress(.0)
 
         task2 = Task('another test task')
         self.db.save_task(order, task2)
-        self.assertEqual(self.db.get_order_progress_from_id(order_id), .0)
-
-        # Check the progress.
-        order = self.db.get_order(id = order_id)
-        self.assertEqual(order.get_progress(), .0)
+        assert_progress(.0)
 
         # Change the progress, re-check.
         task1.set_progress(.5)
         self.db.save_task(order, task1)
-        self.assertEqual(self.db.get_order_progress_from_id(order_id), .25)
-        order = self.db.get_order(id = order_id)
-        self.assertEqual(order.get_progress(), .25)
+        assert_progress(.25)
 
         task2.set_progress(.5)
         self.db.save_task(order, task2)
-        self.assertEqual(self.db.get_order_progress_from_id(order_id), .5)
-        order = self.db.get_order(id = order_id)
-        self.assertEqual(order.get_progress(), .5)
+        assert_progress(.5)
 
         task1.set_progress(1.0)
         self.db.save_task(order, task1)
-        self.assertEqual(self.db.get_order_progress_from_id(order_id), .75)
-        order = self.db.get_order(id = order_id)
-        self.assertEqual(order.get_progress(), .75)
+        assert_progress(.75)
 
         task2.set_progress(1.0)
         self.db.save_task(order, task2)
-        self.assertEqual(self.db.get_order_progress_from_id(order_id), 1.0)
-        order = self.db.get_order(id = order_id)
-        self.assertEqual(order.get_progress(), 1.0)
+        assert_progress(1.0)
 
     def testSaveOrder(self):
         self.testInstall()
@@ -130,6 +131,10 @@ class OrderDBTest(unittest.TestCase):
         order = Order('fooservice')
         self.db.save_order(order)
         id = order.get_id()
+        self.assertEqual(self.db.get_order_progress_from_id(id), .0)
+
+        order.close()
+        self.db.save_order(order)
         self.assertEqual(self.db.get_order_progress_from_id(id), 1.0)
 
         task1 = Task('my test task')
@@ -172,9 +177,10 @@ class OrderDBTest(unittest.TestCase):
         self.assertEqual(len(orders), 2)
 
     def testCloseOpenOrders(self):
-        self.testAddOrder()
-        self.assertEqual(self.db.count_orders(), 1)
+        self.testInstall()
 
+        order = Order('fooservice')
+        self.db.add_order(order)
         order = self.db.get_orders()[0]
         self.assertEqual(order.closed, None)
 
