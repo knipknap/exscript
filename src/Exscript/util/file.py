@@ -15,9 +15,12 @@
 """
 Utilities for reading data from files.
 """
-import re, os, base64, codecs
-from cast     import to_host
-from Exscript import Account
+import re
+import os
+import base64
+import codecs
+from Exscript           import Account
+from Exscript.util.cast import to_host
 
 def get_accounts_from_file(filename):
     """

@@ -15,8 +15,8 @@
 """
 Very simple servers, useful for emulating a device for testing.
 """
-from Telnetd import Telnetd
-from SSHd    import SSHd
+from Exscript.servers.Telnetd import Telnetd
+from Exscript.servers.SSHd    import SSHd
 
 import inspect
 __all__ = [name for name, obj in locals().items()

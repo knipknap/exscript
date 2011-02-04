@@ -16,9 +16,9 @@
 A simple email editor.
 """
 import Queue
-from Tkinter     import *
-from Notebook    import Notebook
-from ProgressBar import ProgressBar
+from Tkinter                import *
+from TkExscript.Notebook    import Notebook
+from TkExscript.ProgressBar import ProgressBar
 
 class _ConnectionWatcherWidget(Frame):
     def __init__(self, parent):

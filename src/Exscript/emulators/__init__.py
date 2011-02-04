@@ -12,9 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from CommandSet    import CommandSet
-from VirtualDevice import VirtualDevice
-from IOSEmulator   import IOSEmulator
+from Exscript.emulators.CommandSet    import CommandSet
+from Exscript.emulators.VirtualDevice import VirtualDevice
+from Exscript.emulators.IOSEmulator   import IOSEmulator
 
 import inspect 
 __all__ = [name for name, obj in locals().items()

@@ -15,9 +15,8 @@
 """
 A window containing a MailWatcher.
 """
-import Queue
-from Tkinter     import *
-from QueueWidget import QueueWidget
+from Tkinter                import *
+from TkExscript.QueueWidget import QueueWidget
 
 class QueueWindow(Frame):
     def __init__(self, queue, **kwargs):

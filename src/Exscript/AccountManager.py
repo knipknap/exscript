@@ -15,7 +15,6 @@
 import threading
 from collections        import deque
 from Exscript.util.cast import to_list
-from Account            import Account
 
 class AccountManager(object):
     """

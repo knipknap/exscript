@@ -15,7 +15,6 @@
 """
 Represents a private key.
 """
-import paramiko
 
 class PrivateKey(object):
     keytypes = set()

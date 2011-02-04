@@ -16,9 +16,7 @@
 Base class for all servers.
 """
 import socket
-import select
-from multiprocessing    import Process, Pipe
-from Exscript.emulators import VirtualDevice
+from multiprocessing import Process, Pipe
 
 class Server(Process):
     """

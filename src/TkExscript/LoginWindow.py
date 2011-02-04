@@ -15,8 +15,8 @@
 """
 A window containing a LoginWidget.
 """
-from LoginWidget import LoginWidget
-from Tkinter     import *
+from Tkinter                import *
+from TkExscript.LoginWidget import LoginWidget
 
 class _ButtonBar(Frame):
     def __init__(self, parent, on_cancel = None, on_start = None, **kwargs):

@@ -19,14 +19,14 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category = DeprecationWarning)
     import paramiko
-from version       import __version__
-from Account       import Account
-from PrivateKey    import PrivateKey
-from Queue         import Queue
-from QueueListener import QueueListener
-from Host          import Host
-from Logger        import Logger
-from FileLogger    import FileLogger
+from Exscript.version       import __version__
+from Exscript.Account       import Account
+from Exscript.PrivateKey    import PrivateKey
+from Exscript.Queue         import Queue
+from Exscript.QueueListener import QueueListener
+from Exscript.Host          import Host
+from Exscript.Logger        import Logger
+from Exscript.FileLogger    import FileLogger
 
 import inspect 
 __all__ = [name for name, obj in locals().items()

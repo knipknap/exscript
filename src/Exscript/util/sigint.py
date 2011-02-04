@@ -15,7 +15,9 @@
 """
 A class for catching SIGINT, such that CTRL+c works.
 """
-import os, sys, signal
+import os
+import sys
+import signal
 
 class SigIntWatcher(object):
     """

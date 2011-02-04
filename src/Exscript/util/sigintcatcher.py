@@ -27,5 +27,5 @@ systems, because a fork during an import may cause the following error:
 
 So in general it is recommended to use the class directly.
 """
-from sigint import SigIntWatcher
+from Exscript.util.sigint import SigIntWatcher
 _watcher = SigIntWatcher()

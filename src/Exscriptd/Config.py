@@ -15,16 +15,15 @@
 import os
 import base64
 import shutil
-from Order                   import Order
-from OrderDB                 import OrderDB
 from lxml                    import etree
 from Exscript                import Account, Queue
-from HTTPDaemon              import HTTPDaemon
-from PythonService           import PythonService
-from ConfigReader            import ConfigReader
 from Exscript.AccountManager import AccountManager
-from util                    import find_module_recursive
 from Exscript.util.file      import get_accounts_from_file
+from Exscriptd.OrderDB       import OrderDB
+from Exscriptd.HTTPDaemon    import HTTPDaemon
+from Exscriptd.PythonService import PythonService
+from Exscriptd.ConfigReader  import ConfigReader
+from Exscriptd.util          import find_module_recursive
 
 default_config_dir = os.path.join('/etc', 'exscriptd')
 

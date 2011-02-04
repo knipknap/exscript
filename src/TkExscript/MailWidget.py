@@ -20,7 +20,7 @@ from Exscript.util.mail import Mail, send
 try:
     import tkMessageBox
 except ImportError:
-    from compat import tkMessageBox
+    from TkExscript.compat import tkMessageBox
 
 class _ButtonBar(Frame):
     def __init__(self, parent, on_cancel = None, on_send = None, **kwargs):

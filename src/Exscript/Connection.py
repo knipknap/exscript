@@ -15,9 +15,7 @@
 """
 Accessing the connection to a remote host.
 """
-import threading
-import os
-from Account import Account
+from Exscript.Account import Account
 
 class Connection(object):
     """

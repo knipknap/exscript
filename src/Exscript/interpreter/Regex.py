@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-from String import String
+from Exscript.interpreter.String import String
 
 # Matches any opening parenthesis that is neither preceeded by a backslash
 # nor has a "?:" or "?<" appended.

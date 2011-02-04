@@ -15,8 +15,8 @@
 """
 A window containing a MailWidget.
 """
-from MailWidget import MailWidget
-from Tkinter    import *
+from Tkinter               import *
+from TkExscript.MailWidget import MailWidget
 
 class MailWindow(Frame):
     """

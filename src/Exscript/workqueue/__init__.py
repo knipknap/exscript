@@ -12,9 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Action    import Action
-from Sequence  import Sequence
-from WorkQueue import WorkQueue
+from Exscript.workqueue.Action    import Action
+from Exscript.workqueue.Sequence  import Sequence
+from Exscript.workqueue.WorkQueue import WorkQueue
 
 import inspect 
 __all__ = [name for name, obj in locals().items()

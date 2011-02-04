@@ -12,12 +12,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript.parselib import Token
-from Variable          import Variable
-from Number            import Number
-from FunctionCall      import FunctionCall
-from String            import String
-from Regex             import Regex
+from Exscript.parselib                 import Token
+from Exscript.interpreter.Variable     import Variable
+from Exscript.interpreter.Number       import Number
+from Exscript.interpreter.FunctionCall import FunctionCall
+from Exscript.interpreter.String       import String
+from Exscript.interpreter.Regex        import Regex
 
 class Term(Token):
     def __init__(self, lexer, parser, parent):

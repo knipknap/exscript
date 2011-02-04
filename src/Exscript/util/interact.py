@@ -20,9 +20,9 @@ import sys
 import getpass
 import ConfigParser
 import shutil
-from cast     import to_list
-from tempfile import NamedTemporaryFile
-from Exscript import Account
+from tempfile           import NamedTemporaryFile
+from Exscript           import Account
+from Exscript.util.cast import to_list
 
 class InputHistory(object):
     """

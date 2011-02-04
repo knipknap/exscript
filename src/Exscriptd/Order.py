@@ -18,11 +18,11 @@ Represents a call to a service.
 import os
 from getpass            import getuser
 from datetime           import datetime
-from Exscript.util.file import get_hosts_from_csv
 from tempfile           import NamedTemporaryFile
 from lxml               import etree
-from DBObject           import DBObject
-from xml                import add_hosts_to_etree
+from Exscript.util.file import get_hosts_from_csv
+from Exscriptd.DBObject import DBObject
+from Exscriptd.xml      import add_hosts_to_etree
 
 class Order(DBObject):
     """

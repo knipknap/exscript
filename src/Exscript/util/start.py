@@ -15,9 +15,9 @@
 """
 Quickstart methods for the Exscript queue.
 """
-from Exscript  import Queue
-from interact  import read_login
-from decorator import autologin
+from Exscript                import Queue
+from Exscript.util.interact  import read_login
+from Exscript.util.decorator import autologin
 
 def run(users, hosts, func, **kwargs):
     """

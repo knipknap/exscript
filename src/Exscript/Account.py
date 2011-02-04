@@ -16,7 +16,7 @@
 Representing user accounts.
 """
 import threading
-from util.event import Event
+from Exscript.util.event import Event
 
 class Account(object):
     """

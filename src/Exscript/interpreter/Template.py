@@ -13,9 +13,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-from Scope   import Scope
-from Code    import Code
-from Execute import Execute
+from Exscript.interpreter.Scope   import Scope
+from Exscript.interpreter.Code    import Code
+from Exscript.interpreter.Execute import Execute
 
 grammar = (
     ('escaped_data',        r'\\.'),

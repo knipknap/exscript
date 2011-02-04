@@ -15,7 +15,7 @@
 """
 Represents a batch of enqueued actions.
 """
-from util.event import Event
+from Exscript.util.event import Event
 
 class Task(object):
     """

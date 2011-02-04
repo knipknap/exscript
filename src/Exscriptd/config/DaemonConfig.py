@@ -14,8 +14,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
 import re
-from ConfigSection    import ConfigSection
-from Exscriptd.Config import Config
+from Exscriptd.Config               import Config
+from Exscriptd.config.ConfigSection import ConfigSection
 
 __dirname__ = os.path.dirname(__file__)
 log_dir     = os.path.join('/var', 'log', 'exscriptd')

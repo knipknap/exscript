@@ -13,12 +13,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
-import time
 import gc
-from itertools           import chain
-from collections         import defaultdict, deque
-from Exscript.util.event import Event
-from Job                 import Job
+from itertools              import chain
+from collections            import defaultdict, deque
+from Exscript.util.event    import Event
+from Exscript.workqueue.Job import Job
 
 class MainLoop(threading.Thread):
     def __init__(self):

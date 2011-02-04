@@ -15,7 +15,7 @@
 """
 The Exscript server
 """
-from ConfigReader import ConfigReader
-from Order        import Order
-from Task         import Task
-from Client       import Client
+from Exscriptd.ConfigReader import ConfigReader
+from Exscriptd.Order        import Order
+from Exscriptd.Task         import Task
+from Exscriptd.Client       import Client

@@ -15,12 +15,12 @@
 """
 The Telnet protocol.
 """
-import telnetlib
-from Protocol  import Protocol
-from Exception import ProtocolException, \
-                      TimeoutException, \
-                      DriverReplacedException, \
-                      ExpectCancelledException
+from Exscript.protocols           import telnetlib
+from Exscript.protocols.Protocol  import Protocol
+from Exscript.protocols.Exception import ProtocolException, \
+                                         TimeoutException, \
+                                         DriverReplacedException, \
+                                         ExpectCancelledException
 
 class Telnet(Protocol):
     """

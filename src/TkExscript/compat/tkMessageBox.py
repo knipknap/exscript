@@ -24,7 +24,7 @@
 #
 # - type: dialog type; that is, which buttons to display (see below)
 #
-from tkCommonDialog import Dialog
+from TkExscript.compat.tkCommonDialog import Dialog
 #
 # constants
 # icons

@@ -16,7 +16,7 @@
 A driver for Cisco IOS (not IOS XR).
 """
 import re
-from driver import Driver
+from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'user ?name: ?$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]

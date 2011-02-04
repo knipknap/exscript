@@ -15,7 +15,7 @@
 """
 Defines the behavior of commands by mapping commands to functions.
 """
-import os, re
+import re
 
 class CommandSet(object):
     """

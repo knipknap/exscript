@@ -16,8 +16,8 @@
 A driver for devices running Juniper ERX OS.
 """
 import re
-from driver import Driver
-from ios    import _prompt_re
+from Exscript.protocols.drivers.driver import Driver
+from Exscript.protocols.drivers.ios    import _prompt_re
 
 _user_re     = [re.compile(r'[\r\n]User: $')]
 _password_re = [re.compile(r'[\r\n](Telnet password:|Password:) $')]

@@ -12,12 +12,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, logging
-from collections             import defaultdict
-from threading               import Lock
-from Exscriptd               import Task
-from ConfigReader            import ConfigReader
-from Exscript.util.decorator import bind
+import os
+import logging
+from collections            import defaultdict
+from threading              import Lock
+from Exscriptd.Task         import Task
+from Exscriptd.ConfigReader import ConfigReader
 
 class Service(object):
     def __init__(self,

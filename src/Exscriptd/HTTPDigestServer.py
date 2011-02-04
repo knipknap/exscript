@@ -31,7 +31,6 @@ for instance, it can only handle GET and POST requests and actually
 treats them the same.
 """
 
-import base64
 import email
 import email.message
 import sys
@@ -46,7 +45,7 @@ if sys.version_info < (2, 6):
     from cgi import parse_qs
 else:
     from urlparse import parse_qs
-from SocketServer import ThreadingMixIn, TCPServer
+from SocketServer import ThreadingMixIn
 from urlparse import urlparse
 from traceback import format_exc
 

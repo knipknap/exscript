@@ -22,9 +22,8 @@ import select
 import threading
 import Crypto
 import paramiko
-from binascii import hexlify
-from paramiko import ServerInterface
-from Server   import Server
+from paramiko                import ServerInterface
+from Exscript.servers.Server import Server
 
 class _ParamikoServer(ServerInterface):
     # 'data' is the output of base64.encodestring(str(key))

@@ -12,8 +12,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Lexer import Lexer
-from Token import Token
+from Exscript.parselib.Lexer import Lexer
+from Exscript.parselib.Token import Token
 
 import inspect
 __all__ = [name for name, obj in locals().items()

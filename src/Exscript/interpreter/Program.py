@@ -13,8 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import copy
-from Template import Template
-from Scope    import Scope
+from Exscript.interpreter.Template import Template
+from Exscript.interpreter.Scope    import Scope
 
 class Program(Scope):
     def __init__(self, lexer, parser, variables, **kwargs):

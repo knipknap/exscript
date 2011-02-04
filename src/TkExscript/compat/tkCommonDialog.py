@@ -12,7 +12,6 @@
 # written by Fredrik Lundh, May 1997
 #
 from Tkinter import *
-import os
 class Dialog:
     command  = None
     def __init__(self, master=None, **options):

@@ -15,10 +15,8 @@
 """
 Logging to memory.
 """
-import os
-import traceback
-from Log           import Log
-from QueueListener import QueueListener
+from Exscript.Log           import Log
+from Exscript.QueueListener import QueueListener
 
 class Logger(QueueListener):
     """

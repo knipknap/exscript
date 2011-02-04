@@ -15,9 +15,9 @@
 """
 Representing a device to connect with.
 """
-from util.cast import to_list
-from util.ipv4 import is_ip, clean_ip
-from util.url  import parse_url, Url
+from Exscript.util.cast import to_list
+from Exscript.util.ipv4 import is_ip, clean_ip
+from Exscript.util.url  import parse_url, Url
 
 def _is_ip(string):
     # Adds IPv6 support.

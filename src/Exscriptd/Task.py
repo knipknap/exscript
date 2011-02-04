@@ -15,9 +15,9 @@
 """
 Represents an activity within an order.
 """
-from datetime import datetime
-from lxml     import etree
-from DBObject import DBObject
+from datetime           import datetime
+from lxml               import etree
+from Exscriptd.DBObject import DBObject
 
 class Task(DBObject):
     def __init__(self, name):

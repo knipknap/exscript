@@ -17,7 +17,7 @@ A Telnet server.
 """
 import socket
 import select
-from Server import Server
+from Exscript.servers.Server import Server
 
 class Telnetd(Server):
     """

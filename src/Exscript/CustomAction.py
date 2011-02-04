@@ -12,14 +12,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, traceback, Crypto
-from workqueue             import Action
-from Log                   import Log
-from Logfile               import Logfile
-from util.event            import Event
-from protocols.Exception   import LoginFailure
-from interpreter.Exception import FailException
-from parselib.Exception    import SyntaxError
+import Crypto
+from Exscript.workqueue             import Action
+from Exscript.util.event            import Event
+from Exscript.protocols.Exception   import LoginFailure
+from Exscript.interpreter.Exception import FailException
+from Exscript.parselib.Exception    import SyntaxError
 
 class CustomAction(Action):
     """

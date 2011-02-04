@@ -14,17 +14,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
 import Template
-from Scope        import Scope
-from Append       import Append
-from Assign       import Assign
-from Enter        import Enter
-from Extract      import Extract
-from Fail         import Fail
-from FunctionCall import FunctionCall
-from IfCondition  import IfCondition
-from Loop         import Loop
-from Try          import Try
-from String       import varname_re
+from Exscript.interpreter.Scope        import Scope
+from Exscript.interpreter.Append       import Append
+from Exscript.interpreter.Assign       import Assign
+from Exscript.interpreter.Enter        import Enter
+from Exscript.interpreter.Extract      import Extract
+from Exscript.interpreter.Fail         import Fail
+from Exscript.interpreter.FunctionCall import FunctionCall
+from Exscript.interpreter.IfCondition  import IfCondition
+from Exscript.interpreter.Loop         import Loop
+from Exscript.interpreter.Try          import Try
+from Exscript.interpreter.String       import varname_re
 
 varname  = varname_re.pattern
 keywords = ['append',

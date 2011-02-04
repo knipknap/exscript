@@ -18,17 +18,15 @@ The heart of Exscript.
 import sys
 import os
 import gc
-import copy
 import traceback
-from AccountManager import AccountManager
-from CustomAction   import CustomAction
-from HostAction     import HostAction
-from FileLogger     import FileLogger
-from Task           import Task
-from workqueue      import WorkQueue, Action
-from util.cast      import to_list, to_hosts
-from util.impl      import deprecation
-from util.event     import Event
+from Exscript.FileLogger     import FileLogger
+from Exscript.AccountManager import AccountManager
+from Exscript.CustomAction   import CustomAction
+from Exscript.HostAction     import HostAction
+from Exscript.Task           import Task
+from Exscript.workqueue      import WorkQueue, Action
+from Exscript.util.cast      import to_hosts
+from Exscript.util.event     import Event
 
 class Queue(object):
     """

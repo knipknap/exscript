@@ -16,7 +16,7 @@
 A driver for OneOS (OneAccess).
 """
 import re
-from driver import Driver
+from Exscript.protocols.drivers.driver import Driver
 
 _user_re         = [re.compile(r'[\r\n]Username:$')]
 _password_re     = [re.compile(r'[\r\n]Password:$')]

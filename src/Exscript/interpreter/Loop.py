@@ -13,9 +13,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import Code
-from Exscript.parselib import Token
-from Term              import Term
-from Expression        import Expression
+from Exscript.parselib               import Token
+from Exscript.interpreter.Term       import Term
+from Exscript.interpreter.Expression import Expression
 
 class Loop(Token):
     def __init__(self, lexer, parser, parent):

@@ -12,10 +12,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Protocol import Protocol
-from Telnet   import Telnet
-from SSH2     import SSH2
-from Dummy    import Dummy
+from Exscript.protocols.Protocol import Protocol
+from Exscript.protocols.Telnet   import Telnet
+from Exscript.protocols.SSH2     import SSH2
+from Exscript.protocols.Dummy    import Dummy
 
 protocol_map = {'dummy':  Dummy,
                 'pseudo': Dummy,

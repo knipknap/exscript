@@ -16,7 +16,7 @@
 A driver for Redback Smart Edge OS.
 """
 import re
-from driver import Driver
+from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'[\r\n]login: ')]
 _password_re = [re.compile(r'[\r\n]Password: $')]

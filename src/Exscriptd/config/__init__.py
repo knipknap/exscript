@@ -1,8 +1,8 @@
-from AccountPoolConfig import AccountPoolConfig
-from DaemonConfig      import DaemonConfig
-from DatabaseConfig    import DatabaseConfig
-from ServiceConfig     import ServiceConfig
-from QueueConfig       import QueueConfig
+from Exscriptd.config.AccountPoolConfig import AccountPoolConfig
+from Exscriptd.config.DaemonConfig      import DaemonConfig
+from Exscriptd.config.DatabaseConfig    import DatabaseConfig
+from Exscriptd.config.ServiceConfig     import ServiceConfig
+from Exscriptd.config.QueueConfig       import QueueConfig
 
 modules = {
     'account-pool': AccountPoolConfig,

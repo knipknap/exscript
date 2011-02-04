@@ -16,7 +16,7 @@
 A driver for devices running VRP (by Huawei).
 """
 import re
-from driver import Driver
+from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'user ?name: ', re.I)]
 _password_re = [re.compile(r'[\r\n]Password: $')]

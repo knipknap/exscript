@@ -15,7 +15,7 @@
 import time, os
 from Exscript                import Host, util
 from Exscript.util.decorator import bind, autologin
-from util                    import secure_function
+from Exscript.stdlib.util    import secure_function
 
 @secure_function
 def message(scope, string):

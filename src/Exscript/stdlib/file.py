@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
-from util import secure_function
+from Exscript.stdlib.util import secure_function
 
 def chmod(scope, filename, mode):
     """

@@ -15,9 +15,8 @@
 import __builtin__
 import sys
 import os
-from Exscript.util.decorator import bind
-from Service                 import Service
-from util                    import find_module_recursive
+from Exscriptd.Service import Service
+from Exscriptd.util    import find_module_recursive
 
 class PythonService(Service):
     def __init__(self,

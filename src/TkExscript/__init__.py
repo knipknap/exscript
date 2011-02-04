@@ -15,14 +15,14 @@
 """
 Contains graphical user interfaces using Python's tkinter.
 """
-from LoginWidget import LoginWidget
-from LoginWindow import LoginWindow
-from MailWidget  import MailWidget
-from MailWindow  import MailWindow
-from Notebook    import Notebook
-from ProgressBar import ProgressBar
-from QueueWidget import QueueWidget
-from QueueWindow import QueueWindow
+from TkExscript.LoginWidget import LoginWidget
+from TkExscript.LoginWindow import LoginWindow
+from TkExscript.MailWidget  import MailWidget
+from TkExscript.MailWindow  import MailWindow
+from TkExscript.Notebook    import Notebook
+from TkExscript.ProgressBar import ProgressBar
+from TkExscript.QueueWidget import QueueWidget
+from TkExscript.QueueWindow import QueueWindow
 
 import inspect
 __all__ = [name for name, obj in locals().items()

@@ -12,8 +12,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript.util import ipv4
-from util import secure_function
+from Exscript.util        import ipv4
+from Exscript.stdlib.util import secure_function
 
 @secure_function
 def in_network(scope, prefixes, destination, default_pfxlen = [24]):

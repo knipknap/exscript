@@ -12,13 +12,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import connection
-import crypt
-import file
-import ipv4
-import list
-import string
-import mysys
+from Exscript.stdlib import connection
+from Exscript.stdlib import crypt
+from Exscript.stdlib import file
+from Exscript.stdlib import ipv4
+from Exscript.stdlib import list
+from Exscript.stdlib import string
+from Exscript.stdlib import mysys
 
 functions = {
     'connection.authenticate':   connection.authenticate,

@@ -16,13 +16,13 @@
 Places orders and requests the status from a server.
 """
 import json
-from datetime         import datetime
-from lxml             import etree
-from urllib           import urlencode
-from urllib2          import HTTPDigestAuthHandler, build_opener, HTTPError
-from HTTPDigestServer import realm
-from Order            import Order
-from Task             import Task
+from datetime                   import datetime
+from urllib                     import urlencode
+from urllib2                    import HTTPDigestAuthHandler, build_opener, HTTPError
+from lxml                       import etree
+from Exscriptd.HTTPDigestServer import realm
+from Exscriptd.Order            import Order
+from Exscriptd.Task             import Task
 
 class Client(object):
     """

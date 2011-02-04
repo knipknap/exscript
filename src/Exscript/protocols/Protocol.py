@@ -18,17 +18,16 @@ An abstract base class for all protocols.
 import re
 import sys
 import os
-from drivers             import driver_map, isdriver
-from OsGuesser           import OsGuesser
-from Exception           import ProtocolException, \
-                                InvalidCommandException, \
-                                LoginFailure, \
-                                TimeoutException, \
-                                DriverReplacedException, \
-                                ExpectCancelledException
-from Exscript.util.crypt import otp
-from Exscript.util.event import Event
-from Exscript.util.cast  import to_regexs
+from Exscript.util.crypt          import otp
+from Exscript.util.event          import Event
+from Exscript.util.cast           import to_regexs
+from Exscript.protocols.drivers   import driver_map, isdriver
+from Exscript.protocols.OsGuesser import OsGuesser
+from Exscript.protocols.Exception import InvalidCommandException, \
+                                         LoginFailure, \
+                                         TimeoutException, \
+                                         DriverReplacedException, \
+                                         ExpectCancelledException
 
 _skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
 

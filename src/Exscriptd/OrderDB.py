@@ -12,12 +12,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from datetime           import datetime
-from Order              import Order
-from Task               import Task
+from datetime import datetime
+import sqlalchemy as sa
 from Exscript.util.cast import to_list
-import sqlalchemy                 as sa
-import sqlalchemy.databases.mysql as mysql
+from Exscriptd.Order    import Order
+from Exscriptd.Task     import Task
 
 def synchronized(func):
     """

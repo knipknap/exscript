@@ -13,8 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import copy
-from Exscript.parselib import Lexer
-from Program           import Program
+from Exscript.parselib            import Lexer
+from Exscript.interpreter.Program import Program
 
 class Parser(object):
     def __init__(self, **kwargs):

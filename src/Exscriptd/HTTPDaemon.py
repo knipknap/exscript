@@ -13,18 +13,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
-import time
-import cgi
-import logging
 import json
-from traceback               import format_exc
-from HTTPDigestServer        import HTTPRequestHandler, HTTPServer
-from lxml                    import etree
-from urlparse                import parse_qs
-from Daemon                  import Daemon
-from Order                   import Order
-from Exscript                import Host
-from Exscript.util.decorator import bind
+from traceback                  import format_exc
+from urlparse                   import parse_qs
+from lxml                       import etree
+from Exscript                   import Host
+from Exscriptd.HTTPDigestServer import HTTPRequestHandler, HTTPServer
+from Exscriptd.Daemon           import Daemon
+from Exscriptd.Order            import Order
 
 """
 URL list:

@@ -20,20 +20,19 @@ import time
 import select
 import socket
 import paramiko
-from functools              import partial
 from binascii               import hexlify
 from paramiko               import util
 from paramiko.resource      import ResourceManager
 from paramiko.ssh_exception import SSHException, \
                                    AuthenticationException, \
                                    BadHostKeyException
-from Exscript               import PrivateKey
-from Exception              import ProtocolException, \
-                                   LoginFailure, \
-                                   TimeoutException, \
-                                   DriverReplacedException, \
-                                   ExpectCancelledException
-from Protocol               import Protocol
+from Exscript.PrivateKey          import PrivateKey
+from Exscript.protocols.Protocol  import Protocol
+from Exscript.protocols.Exception import ProtocolException, \
+                                         LoginFailure, \
+                                         TimeoutException, \
+                                         DriverReplacedException, \
+                                         ExpectCancelledException
 
 # Workaround for paramiko error; avoids a warning message.
 util.log_to_file('/dev/null')

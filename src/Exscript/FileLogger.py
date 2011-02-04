@@ -15,9 +15,9 @@
 """
 Logging to the file system.
 """
-import os, traceback
-from Logfile import Logfile
-from Logger  import Logger
+import os
+from Exscript.Logfile import Logfile
+from Exscript.Logger  import Logger
 
 class FileLogger(Logger):
     """

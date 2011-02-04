@@ -17,10 +17,6 @@ A widget for entering username and password.
 """
 from Tkinter  import *
 from Exscript import Account
-try:
-    import tkMessageBox
-except ImportError:
-    from compat import tkMessageBox
 
 class LoginWidget(Frame):
     """

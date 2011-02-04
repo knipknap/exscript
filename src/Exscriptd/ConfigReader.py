@@ -15,8 +15,8 @@
 import os
 import inspect
 import shutil
-from lxml import etree
-from util import resolve_variables
+from lxml           import etree
+from Exscriptd.util import resolve_variables
 
 class ConfigReader(object):
     def __init__(self, filename, resolve_variables = True, parent = None):
