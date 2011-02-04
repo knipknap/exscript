@@ -69,12 +69,12 @@ def summarize(logger):
     """
     summary = []
     for action in logger.get_logged_actions():
-        for n, log in enumerate(logger.get_logs(action)):
-            status = log.has_error() and log.get_error(False) or 'ok'
-            name   = log.get_host().get_address()
-            if n > 0:
-                name += ' (retry %d)' % n
-            summary.append(name + ': ' + status)
+        for i, log in enumerate(logger.get_logs(action)):
+            thestatus = log.has_error() and log.get_error(False) or 'ok'
+            name      = log.get_host().get_address()
+            if i > 0:
+                name += ' (retry %d)' % i
+            summary.append(name + ': ' + thestatus)
     return '\n'.join(summary)
 
 def format(logger,
@@ -98,8 +98,8 @@ def format(logger,
     if show_errors and errors:
         output += _underline('Failed actions:')
         for action in errors:
-            for n, log in enumerate(logger.get_logs(action)):
-                name = _get_action_name(action, n)
+            for i, log in enumerate(logger.get_logs(action)):
+                name = _get_action_name(action, i)
                 if show_traceback:
                     output.append(name + ':')
                     output.append(log.get_error())
@@ -113,12 +113,12 @@ def format(logger,
         for action in logger.get_successful_actions():
             n_errors = len(_get_error_logs_from_action(logger, action))
             if n_errors == 0:
-                status = ''
+                thestatus = ''
             elif n_errors == 1:
-                status = ' (required one retry)'
+                thestatus = ' (required one retry)'
             else:
-                status = ' (required %d retries)' % n_errors
-            output.append(_get_action_name(action) + status)
+                thestatus = ' (required %d retries)' % n_errors
+            output.append(_get_action_name(action) + thestatus)
         output.append('')
 
     return '\n'.join(output).strip()

@@ -15,8 +15,6 @@
 """
 Executing Exscript templates on a connection.
 """
-import copy
-from inspect              import isfunction
 from Exscript             import stdlib
 from Exscript.interpreter import Parser
 
@@ -79,7 +77,7 @@ def test_file(filename, **kwargs):
     @type  kwargs: dict
     @param kwargs: Variables to define in the template.
     """
-    _compile(None, filename, string, {}, **kwargs)
+    _compile(None, filename, open(filename).read(), {}, **kwargs)
 
 def eval(conn, string, strip_command = True, **kwargs):
     """

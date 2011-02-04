@@ -17,7 +17,7 @@ Representing a device to connect with.
 """
 from Exscript.util.cast import to_list
 from Exscript.util.ipv4 import is_ip, clean_ip
-from Exscript.util.url  import parse_url, Url
+from Exscript.util.url  import Url
 
 def _is_ip(string):
     # Adds IPv6 support.
@@ -45,6 +45,9 @@ class Host(object):
         self.password1 = None
         self.password2 = None
         self.logname   = None
+        self.name      = None
+        self.address   = None
+        self.tcp_port  = None
         self.set_uri(uri) 
 
     def set_uri(self, uri):
@@ -68,8 +71,8 @@ class Host(object):
         @param uri: An URL formatted hostname.
         """
         try:
-            uri = parse_url(uri, self.protocol)
-        except ValueError, e:
+            uri = Url.from_string(uri, self.protocol)
+        except ValueError:
             raise ValueError('Hostname parse error: ' + repr(uri))
         hostname = uri.hostname or ''
         name     = uri.path and hostname + uri.path or hostname
@@ -286,16 +289,16 @@ class Host(object):
         """
         self.vars[name] = value
 
-    def set_all(self, vars):
+    def set_all(self, variables):
         """
         Like set(), but replaces all variables by using the given
         dictionary. In other words, passing an empty dictionary
         results in all variables being removed.
 
-        @type  vars: dict
-        @param vars: The dictionary with the variables.
+        @type  variables: dict
+        @param variables: The dictionary with the variables.
         """
-        self.vars = dict(vars)
+        self.vars = dict(variables)
 
     def append(self, name, value):
         """

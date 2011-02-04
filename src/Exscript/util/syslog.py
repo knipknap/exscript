@@ -15,6 +15,8 @@
 """
 Send messages to a syslog server.
 """
+import os
+import sys
 import imp
 import socket
 

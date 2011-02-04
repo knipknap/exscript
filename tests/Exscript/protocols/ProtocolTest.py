@@ -18,7 +18,7 @@ class ProtocolTest(unittest.TestCase):
     CORRELATE = Protocol
 
     def setUp(self):
-        self.hostname = 'localhost'
+        self.hostname = '127.0.0.1'
         self.port     = 1236
         self.user     = 'user'
         self.password = 'password'

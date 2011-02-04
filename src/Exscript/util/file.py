@@ -177,7 +177,7 @@ def get_hosts_from_csv(filename,
         for i, varname in enumerate(varnames):
             try:
                 value = values[i]
-            except IndexError, e:
+            except IndexError:
                 value = ''
             if varname == 'hostname':
                 host.set_name(value)

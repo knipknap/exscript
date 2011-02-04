@@ -34,6 +34,7 @@ class WorkQueue(object):
         self.queue_empty_event   = Event()
         self.debug               = kwargs.get('debug',       0)
         self.max_threads         = kwargs.get('max_threads', 1)
+        self.main_loop           = None
         self._init()
 
     def _init(self):

@@ -17,7 +17,7 @@ from Exscript.parselib import Token
 class Variable(Token):
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'Variable', lexer, parser, parent)
-        type, self.varname = lexer.token()
+        self.varname = lexer.token()[1]
         lexer.expect(self, 'varname')
         self.mark_end()
 
@@ -25,7 +25,8 @@ class Variable(Token):
     def value(self):
         val = self.parent.get(self.varname)
         if val is None:
-             self.lexer.runtime_error('Undefined variable %s' % name, self)
+            msg = 'Undefined variable %s' % self.varname
+            self.lexer.runtime_error(msg, self)
         return val
 
 

@@ -54,7 +54,6 @@ class HostAction(CustomAction):
         # Define the behaviour of the pseudo protocol adapter.
         if self.host.get_protocol() == 'pseudo':
             filename = self.host.get_address()
-            hostname = os.path.basename(filename)
             protocol.device.add_commands_from_file(filename)
 
         return Connection(self, protocol)

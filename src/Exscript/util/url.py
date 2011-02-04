@@ -20,12 +20,16 @@ from urllib      import urlencode, quote
 from urlparse    import urlparse, urlsplit
 from collections import defaultdict
 
-_hextochr = dict()
-for i in range(256):
-    _hextochr['%02x' % i] = chr(i)
-    _hextochr['%02X' % i] = chr(i)
+def _make_hexmap():
+    hexmap = dict()
+    for i in range(256):
+        hexmap['%02x' % i] = chr(i)
+        hexmap['%02X' % i] = chr(i)
+    return hexmap
 
-_well_known_ports = {
+_HEXTOCHR = _make_hexmap()
+
+_WELL_KNOWN_PORTS = {
     'ftp':    21,
     'ssh':    22,
     'ssh1':   22,
@@ -46,7 +50,7 @@ def _unquote(string):
     for i, item in enumerate(result[1:]):
         i += 1
         try:
-            result[i] = _hextochr[item[:2]] + item[2:]
+            result[i] = _HEXTOCHR[item[:2]] + item[2:]
         except KeyError:
             result[i] = '%' + item
         except UnicodeDecodeError:
@@ -66,7 +70,7 @@ def _urlparse_qs(url):
       - url: URL with query string to be parsed
     """
     # Extract the query part from the URL.
-    scheme, netloc, url, params, querystring, fragment = urlparse(url)
+    querystring = urlparse(url)[4]
 
     # Split the query into name/value pairs.
     pairs = [s2 for s1 in querystring.split('&') for s2 in s1.split(';')]
@@ -92,16 +96,23 @@ class Url(object):
     """
     Represents a URL.
     """
-    protocol  = None
-    username  = None
-    password1 = None
-    password2 = None
-    hostname  = None
-    port      = None
-    path      = None
-    vars      = None
+    def __init__(self):
+        self.protocol  = None
+        self.username  = None
+        self.password1 = None
+        self.password2 = None
+        self.hostname  = None
+        self.port      = None
+        self.path      = None
+        self.vars      = None
 
     def __str__(self):
+        """
+        Like L{to_string()}.
+
+        @rtype:  str
+        @return: A URL.
+        """
         url = ''
         if self.protocol is not None:
             url += self.protocol + '://'
@@ -131,70 +142,81 @@ class Url(object):
             url += '?' + urlencode(pairs)
         return url
 
-def parse_url(url, default_protocol = 'telnet'):
-    """
-    Parses the given URL and returns an URL object. There are some differences
-    to Python's built-in URL parser:
+    def to_string(self):
+        """
+        Returns the URL, including all attributes, as a string.
 
-      - It is less strict, many more inputs are accepted. This is necessary to
-      allow for passing a simple hostname as a URL.
-      - You may specify a default protocol that is used when the http://
-      portion is missing.
-      - The port number defaults to the well-known port of the given protocol.
-      - The query variables are parsed into a dictionary (Url.vars).
+        @rtype:  str
+        @return: A URL.
+        """
+        return str(self)
 
-    @type  url: string
-    @param url: A URL.
-    @type  default_protocol: string
-    @param default_protocol: A protocol name.
-    @rtype:  Url
-    @return: The Url object contructed from the given URL.
-    """
-    if url is None:
-        raise TypeError('Expected string but got' + type(url))
+    @staticmethod
+    def from_string(url, default_protocol = 'telnet'):
+        """
+        Parses the given URL and returns an URL object. There are some
+        differences to Python's built-in URL parser:
 
-    # Extract the protocol name from the URL.
-    result = Url()
-    match  = re.match(r'(\w+)://', url)
-    if match:
-        result.protocol = match.group(1)
-    else:
-        result.protocol = default_protocol
+          - It is less strict, many more inputs are accepted. This is
+          necessary to allow for passing a simple hostname as a URL.
+          - You may specify a default protocol that is used when the http://
+          portion is missing.
+          - The port number defaults to the well-known port of the given
+          protocol.
+          - The query variables are parsed into a dictionary (Url.vars).
 
-    # Now remove the query from the url.
-    query = ''
-    if '?' in url:
-        url, query = url.split('?', 1)
-    result.vars = _urlparse_qs('http://dummy/?' + query)
+        @type  url: string
+        @param url: A URL.
+        @type  default_protocol: string
+        @param default_protocol: A protocol name.
+        @rtype:  Url
+        @return: The Url object contructed from the given URL.
+        """
+        if url is None:
+            raise TypeError('Expected string but got' + type(url))
 
-    # Substitute the protocol name by 'http', because Python's urlsplit
-    # fails on our protocol names otherwise.
-    prefix = result.protocol + '://'
-    if url.startswith(prefix):
-        url = url[len(prefix):]
-    url = 'http://' + url
+        # Extract the protocol name from the URL.
+        result = Url()
+        match  = re.match(r'(\w+)://', url)
+        if match:
+            result.protocol = match.group(1)
+        else:
+            result.protocol = default_protocol
 
-    # Parse the remaining url.
-    parsed = urlsplit(url, 'http', False)
-    netloc = parsed[1]
+        # Now remove the query from the url.
+        query = ''
+        if '?' in url:
+            url, query = url.split('?', 1)
+        result.vars = _urlparse_qs('http://dummy/?' + query)
 
-    # Parse username and password.
-    auth = ''
-    if '@' in netloc:
-        auth, netloc = netloc.split('@')
-        auth = auth.split(':')
-        try:
-            result.username  = _unquote(auth[0])
-            result.password1 = _unquote(auth[1])
-            result.password2 = _unquote(auth[2])
-        except IndexError:
-            pass
+        # Substitute the protocol name by 'http', because Python's urlsplit
+        # fails on our protocol names otherwise.
+        prefix = result.protocol + '://'
+        if url.startswith(prefix):
+            url = url[len(prefix):]
+        url = 'http://' + url
 
-    # Parse hostname and port number.
-    result.hostname = netloc + parsed.path
-    result.port     = _well_known_ports.get(result.protocol)
-    if ':' in netloc:
-        result.hostname, port = netloc.split(':')
-        result.port           = int(port)
+        # Parse the remaining url.
+        parsed = urlsplit(url, 'http', False)
+        netloc = parsed[1]
 
-    return result
+        # Parse username and password.
+        auth = ''
+        if '@' in netloc:
+            auth, netloc = netloc.split('@')
+            auth = auth.split(':')
+            try:
+                result.username  = _unquote(auth[0])
+                result.password1 = _unquote(auth[1])
+                result.password2 = _unquote(auth[2])
+            except IndexError:
+                pass
+
+        # Parse hostname and port number.
+        result.hostname = netloc + parsed.path
+        result.port     = _WELL_KNOWN_PORTS.get(result.protocol)
+        if ':' in netloc:
+            result.hostname, port = netloc.split(':')
+            result.port           = int(port)
+
+        return result

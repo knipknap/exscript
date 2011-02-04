@@ -23,7 +23,7 @@ def _first_match(string, compiled):
     if match is None and compiled.groups <= 1:
         return None
     elif match is None:
-        return tuple([None for i in range(0, compiled.groups)])
+        return (None,) * compiled.groups
     elif compiled.groups == 0:
         return string
     elif compiled.groups == 1:

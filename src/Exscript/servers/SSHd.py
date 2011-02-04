@@ -165,7 +165,6 @@ class SSHd(Server):
             self.channel.send(self.device.init())
 
             # accept commands
-            f = self.channel.makefile('rU')
             while self.running:
                 line = self._recvline()
                 if not line:

@@ -65,7 +65,7 @@ class Server(Process):
             return False
         try:
             msg = self.child_conn.recv()
-        except socket.error, e:
+        except socket.error:
             self.running = False
             return False
         if msg == 'shutdown':

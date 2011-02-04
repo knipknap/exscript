@@ -283,8 +283,7 @@ class Protocol(object):
             self.log.write(text)
         old_driver = self.get_driver()
         self.os_guesser.data_received(data)
-        os               = self.guess_os()
-        self.auto_driver = driver_map[os]
+        self.auto_driver = driver_map[self.guess_os()]
         new_driver       = self.get_driver()
         if old_driver != new_driver:
             self._driver_replaced_notify(old_driver, new_driver)
@@ -502,6 +501,12 @@ class Protocol(object):
         @return: The timeout in seconds.
         """
         return self.timeout
+
+    def _connect_hook(self, host, port):
+        """
+        Should be overwritten.
+        """
+        raise NotImplementedError()
 
     def connect(self, hostname = None, port = None):
         """
@@ -829,6 +834,12 @@ class Protocol(object):
         """
         self.send(command + '\r')
         return self.expect_prompt()
+
+    def _domatch(self, prompt, flush):
+        """
+        Should be overwritten.
+        """
+        raise NotImplementedError()
 
     def _waitfor(self, prompt):
         result = self._domatch(to_regexs(prompt), False)

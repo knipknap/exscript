@@ -17,6 +17,10 @@ Represents a private key.
 """
 
 class PrivateKey(object):
+    """
+    Represents a cryptographic key, and may be used to authenticate
+    useing L{Exscript.protocols}.
+    """
     keytypes = set()
 
     def __init__(self, keytype = 'rsa'):

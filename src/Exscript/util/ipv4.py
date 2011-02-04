@@ -15,12 +15,15 @@
 """
 IPv4 address calculation and conversion.
 """
-import socket, struct, math, re
+import socket
+import struct
+import math
+import re
 
 def _least_bit(number):
-    for n in range(0, 32):
-        if number & (0x00000001l << n) != 0:
-            return n
+    for i in range(0, 32):
+        if number & (0x00000001l << i) != 0:
+            return i
     return 32
 
 def _highest_bit(number):

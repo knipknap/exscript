@@ -2,7 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from Exscript          import Host
-from Exscript.util.url import parse_url
+from Exscript.util.url import Url
 from util.urlTest      import urls
 
 class HostTest(unittest.TestCase):
@@ -20,21 +20,21 @@ class HostTest(unittest.TestCase):
 
         for url, result in urls:
             host = Host(url)
-            uri  = parse_url(url)
+            uri  = Url.from_string(url)
             self.assertEqual(host.get_name(),    uri.hostname)
             self.assertEqual(host.get_address(), uri.hostname)
 
     def testSetUri(self):
         for url, result in urls:
             self.host.set_uri(url)
-            uri = parse_url(url)
+            uri = Url.from_string(url)
             self.assertEqual(self.host.get_name(),    uri.hostname)
             self.assertEqual(self.host.get_address(), uri.hostname)
 
     def testGetUri(self):
         for url, result in urls:
             host = Host(url)
-            uri  = parse_url(url)
+            uri  = Url.from_string(url)
             self.assertEqual(host.get_uri(), str(uri))
 
     def testSetAddress(self):

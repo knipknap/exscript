@@ -107,11 +107,11 @@ class InputHistory(object):
             return None
 
         self.parser.set(self.section, key, value)
-        with NamedTemporaryFile(delete = False) as file:
-            self.parser.write(file)
+        with NamedTemporaryFile(delete = False) as tmpfile:
+            self.parser.write(tmpfile)
 
         self.file.close()
-        shutil.move(file.name, self.file.name)
+        shutil.move(tmpfile.name, self.file.name)
         self.file = open(self.file.name)
         return value
 
@@ -212,10 +212,10 @@ def get_filename(key, message, default = None, history = None):
     @type  history: L{InputHistory}|None
     @param history: The history used for recording default values, or None.
     """
-    def validate(input):
-        if not os.path.isfile(input):
+    def _validate(string):
+        if not os.path.isfile(string):
             return 'File not found. Please enter a filename.'
-    return prompt(key, message, default, True, validate, history)
+    return prompt(key, message, default, True, _validate, history)
 
 def get_user():
     """

@@ -76,6 +76,19 @@ def _render_template(string, **vars):
     parser = _TemplateParser()
     return parser.parse(string, **default)
 
+def _is_header_line(line):
+    return re.match(r'^\w+: .+$', line) is not None
+
+def _get_var_from_header_line(line):
+    match = re.match(r'^(\w+): (.+)$', line)
+    return match.group(1).strip().lower(), match.group(2).strip()
+
+def _cleanup_mail_addresses(receipients):
+    if not isinstance(receipients, str):
+        receipients = ','.join(receipients)
+    rcpt = re.split(r'\s*[,;]\s*', receipients.lower())
+    return [r for r in rcpt if r.strip()]
+
 ###########################################################
 # Public.
 ###########################################################
@@ -111,6 +124,12 @@ class Mail(object):
         """
         self.changed_event = Event()
         self.files         = []
+        self.sender        = None
+        self.cc            = None
+        self.bcc           = None
+        self.to            = None
+        self.subject       = None
+        self.body          = None
         if not sender:
             domain = socket.getfqdn('localhost')
             sender = getuser() + '@' + domain
@@ -135,11 +154,11 @@ class Mail(object):
             if not in_header:
                 body += line + '\n'
                 continue
-            if not self._is_header_line(line):
+            if not _is_header_line(line):
                 body += line + '\n'
                 in_header = False
                 continue
-            key, value = self._get_var_from_header_line(line)
+            key, value = _get_var_from_header_line(line)
             if key == 'from':
                 self.set_sender(value)
             elif key == 'to':
@@ -153,19 +172,6 @@ class Mail(object):
             else:
                 raise Exception('Invalid header field "%s"' % key)
         self.set_body(body.strip())
-
-    def _is_header_line(self, line):
-        return re.match(r'^\w+: .+$', line) is not None
-
-    def _get_var_from_header_line(self, line):
-        match = re.match(r'^(\w+): (.+)$', line)
-        return match.group(1).strip().lower(), match.group(2).strip()
-
-    def _cleanup_mail_addresses(self, receipients):
-        if not isinstance(receipients, str):
-            receipients = ','.join(receipients)
-        rcpt = re.split(r'\s*[,;]\s*', receipients.lower())
-        return [r for r in rcpt if r.strip()]
 
     def set_sender(self, sender):
         """
@@ -197,7 +203,7 @@ class Mail(object):
         @type  to: string|list(string)
         @param to: The email addresses for the 'to' field.
         """
-        self.to = self._cleanup_mail_addresses(to)
+        self.to = _cleanup_mail_addresses(to)
         self.changed_event()
 
     def add_to(self, to):
@@ -208,7 +214,7 @@ class Mail(object):
         @type  to: string|list(string)
         @param to: The list of email addresses.
         """
-        self.to += self._cleanup_mail_addresses(to)
+        self.to += _cleanup_mail_addresses(to)
         self.changed_event()
 
     def get_to(self):
@@ -227,7 +233,7 @@ class Mail(object):
         @type  cc: string|list(string)
         @param cc: The email addresses for the 'cc' field.
         """
-        self.cc = self._cleanup_mail_addresses(cc)
+        self.cc = _cleanup_mail_addresses(cc)
         self.changed_event()
 
     def add_cc(self, cc):
@@ -237,7 +243,7 @@ class Mail(object):
         @type  cc: string|list(string)
         @param cc: The list of email addresses.
         """
-        self.cc += self._cleanup_mail_addresses(cc)
+        self.cc += _cleanup_mail_addresses(cc)
         self.changed_event()
 
     def get_cc(self):
@@ -256,7 +262,7 @@ class Mail(object):
         @type  bcc: string|list(string)
         @param bcc: The email addresses for the 'bcc' field.
         """
-        self.bcc = self._cleanup_mail_addresses(bcc)
+        self.bcc = _cleanup_mail_addresses(bcc)
         self.changed_event()
 
     def add_bcc(self, bcc):
@@ -266,7 +272,7 @@ class Mail(object):
         @type  bcc: string|list(string)
         @param bcc: The list of email addresses.
         """
-        self.bcc += self._cleanup_mail_addresses(bcc)
+        self.bcc += _cleanup_mail_addresses(bcc)
         self.changed_event()
 
     def get_bcc(self):
@@ -369,33 +375,37 @@ class Mail(object):
         return self.files
 
 
-def from_template_string(string, **vars):
+def from_template_string(string, **kwargs):
     """
     Reads the given SMTP formatted template, and creates a new Mail object
     using the information.
 
-    @type  string: string
+    @type  string: str
     @param string: The SMTP formatted template.
+    @type  kwargs: str
+    @param kwargs: Variables to replace in the template.
     @rtype:  Mail
     @return: The resulting mail.
     """
-    tmpl = _render_template(string, **vars)
+    tmpl = _render_template(string, **kwargs)
     mail = Mail()
     mail.set_from_template_string(tmpl)
     return mail
 
-def from_template(filename, **vars):
+def from_template(filename, **kwargs):
     """
     Like from_template_string(), but reads the template from the file with
     the given name instead.
 
     @type  filename: string
     @param filename: The name of the template file.
+    @type  kwargs: str
+    @param kwargs: Variables to replace in the template.
     @rtype:  Mail
     @return: The resulting mail.
     """
     tmpl = open(filename).read()
-    return from_template_string(tmpl, **vars)
+    return from_template_string(tmpl, **kwargs)
 
 def _get_mime_object(filename):
     # Guess the content type based on the file's extension.  Encoding
@@ -448,7 +458,7 @@ def send(mail, server = 'localhost'):
     body.add_header('Content-Disposition', 'inline')
     message.attach(body)
 
-    for file in mail.get_attachments():
-        message.attach(_get_mime_object(file))
+    for filename in mail.get_attachments():
+        message.attach(_get_mime_object(filename))
 
-    result = session.sendmail(sender, rcpt, message.as_string())
+    session.sendmail(sender, rcpt, message.as_string())

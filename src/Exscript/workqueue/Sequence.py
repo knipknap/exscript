@@ -32,7 +32,6 @@ class Sequence(Action):
         for action in kwargs.get('actions', []):
             self.add(action)
 
-
     def add(self, action):
         """
         Appends a subaction to the sequence.
@@ -41,7 +40,6 @@ class Sequence(Action):
         @param action: The action that is added.
         """
         self.actions.append(action)
-
 
     def execute(self):
         for action in self.actions:

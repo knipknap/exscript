@@ -1,7 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-import Exscript.util.url
+from Exscript.util.url import Url
 
 urls = [
     # No protocol.
@@ -94,13 +94,23 @@ urls = [
 ]
 
 class urlTest(unittest.TestCase):
-    CORRELATE = Exscript.util.url
+    CORRELATE = Url
 
-    def testParseUrl(self):
-        from Exscript.util.url import parse_url, Url
+    def testConstructor(self):
+        self.assert_(isinstance(Url(), Url))
 
+    def testToString(self):
         for url, expected in urls:
-            result = parse_url(url)
+            result = Url.from_string(url)
+            error  = 'URL:      ' + url + '\n'
+            error += 'Result:   ' + str(result) + '\n'
+            error += 'Expected: ' + expected
+            self.assert_(isinstance(result, Url))
+            self.assert_(result.to_string() == expected, error)
+
+    def testFromString(self):
+        for url, expected in urls:
+            result = Url.from_string(url)
             error  = 'URL:      ' + url + '\n'
             error += 'Result:   ' + str(result) + '\n'
             error += 'Expected: ' + expected

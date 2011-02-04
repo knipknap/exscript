@@ -81,7 +81,7 @@ class Telnetd(Server):
                     response = self.device.do(line)
                     if response:
                         self.conn.send(response)
-            except socket.error, e:
+            except socket.error:
                 pass # network error
             finally:
                 self.conn.close()
