@@ -16,8 +16,9 @@
 Working with URLs (as used in URL formatted hostnames).
 """
 import re
-from urllib   import urlencode, quote
-from urlparse import urlparse, urlsplit
+from urllib      import urlencode, quote
+from urlparse    import urlparse, urlsplit
+from collections import defaultdict
 
 _hextochr = dict()
 for i in range(256):
@@ -39,18 +40,18 @@ _well_known_ports = {
 ###############################################################
 # utils
 ###############################################################
-def _unquote(s):
+def _unquote(string):
     """_unquote('abc%20def') -> 'abc def'."""
-    res = s.split('%')
-    for i in xrange(1, len(res)):
-        item = res[i]
+    result = string.split('%')
+    for i, item in enumerate(result[1:]):
+        i += 1
         try:
-            res[i] = _hextochr[item[:2]] + item[2:]
+            result[i] = _hextochr[item[:2]] + item[2:]
         except KeyError:
-            res[i] = '%' + item
+            result[i] = '%' + item
         except UnicodeDecodeError:
-            res[i] = unichr(int(item[:2], 16)) + item[2:]
-    return "".join(res)
+            result[i] = unichr(int(item[:2], 16)) + item[2:]
+    return ''.join(result)
 
 def _urlparse_qs(url, keep_blank_values=0, strict_parsing=0):
     """
