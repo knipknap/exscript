@@ -20,19 +20,7 @@ from inspect              import isfunction
 from Exscript             import stdlib
 from Exscript.interpreter import Parser
 
-def _copy_vars(dictionary):
-    #FIXME: Obsolete in Python >= 2.4. Required because deepcopy() does not
-    # support copying functions in prior versions.
-    vars = {}
-    for key, value in dictionary.iteritems():
-        if isfunction(value):
-            vars[key] = value
-            continue
-        vars[key] = copy.deepcopy(value)
-    return vars
-
 def _compile(conn, filename, template, parser_kwargs, **kwargs):
-    kwargs = _copy_vars(kwargs) #FIXME: Remove and let parser handle this in Python >= 2.4
     if conn:
         kwargs.update(conn.get_host().vars)
 

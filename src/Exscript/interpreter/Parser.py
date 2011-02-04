@@ -35,7 +35,7 @@ class Parser(object):
         self.variables.update(kwargs)
 
     def parse(self, string, filename = None):
-        variables = self.variables #FIXME: in Python >= 2.4: copy.deepcopy(self.variables)
+        variables = copy.deepcopy(self.variables)
         lexer     = Lexer(Program, self, variables, debug = self.debug)
         return lexer.parse(string, filename)
 
