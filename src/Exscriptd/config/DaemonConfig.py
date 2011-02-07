@@ -74,14 +74,18 @@ class DaemonConfig(ConfigSection):
                           default = log_dir,
                           help    = 'the path where the logs are stored')
 
+    def _make_executable(self, filename):
+        self.info('making %s executable...\n' % filename)
+        mode = os.stat(filename).st_mode
+        os.chmod(filename, mode|stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH)
+
     def start_install(self):
         # Install the init script.
         init_template = os.path.join(__dirname__, 'exscriptd.in')
         init_file     = os.path.join('/etc', 'init.d', 'exscriptd')
         self.info('creating init-file at %s... ' % init_file)
         self._generate(init_template, init_file)
-        mode = os.stat(init_file).st_mode
-        os.chmod(init_file, mode|stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH)
+        self._make_executable(init_file)
 
         # Create directories.
         self.info('creating log directory %s... ' % self.options.log_dir)
