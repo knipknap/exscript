@@ -54,7 +54,29 @@ try:
 except KeyError:
     parser.error('no such section: %s' % section)
 
-handler = module(global_options, script_dir = __dirname__)
+def which(program):
+    def is_exe(fpath):
+        return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
+
+exscript_binary = which('exscriptd')
+if exscript_binary is None:
+    path = repr(os.environ.get('PATH'))
+    parser.error('exscriptd executable not found. PATH was ' + path)
+print 'exscriptd found at ' + exscript_binary
+script_dir = os.path.dirname(exscript_binary)
+
+handler = module(global_options, script_dir = script_dir)
 usage   = get_usage(section) + 'Commands:'
 for command_name, command in handler.get_commands():
     usage += '\n  ' + command_name.ljust(8) + '\t' + command
