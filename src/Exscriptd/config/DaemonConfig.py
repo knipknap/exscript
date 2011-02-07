@@ -47,7 +47,7 @@ class DaemonConfig(ConfigSection):
             return
 
         vars = {'@CFG_DIR@':    self.global_options.config_dir,
-                '@LOG_DIR@':    log_dir,
+                '@LOG_DIR@':    self.options.log_dir,
                 '@SPOOL_DIR@':  spool_dir,
                 '@SCRIPT_DIR@': self.script_dir,
                 '@INIT_DIR@':   init_dir}
@@ -67,6 +67,11 @@ class DaemonConfig(ConfigSection):
                           action  = 'store_true',
                           default = False,
                           help    = 'overwrite existing files')
+        parser.add_option('--logdir',
+                          dest    = 'log_dir',
+                          metavar = 'STRING',
+                          default = log_dir,
+                          help    = 'the path where the logs are stored')
 
     def start_install(self):
         # Install the init script.
@@ -76,8 +81,8 @@ class DaemonConfig(ConfigSection):
         self._generate(init_template, init_file)
 
         # Create directories.
-        self.info('creating log directory %s... ' % log_dir)
-        self._mkdir(log_dir)
+        self.info('creating log directory %s... ' % self.options.log_dir)
+        self._mkdir(self.options.log_dir)
         self.info('creating spool directory %s... ' % spool_dir)
         self._mkdir(spool_dir)
         cfg_dir = self.global_options.config_dir
