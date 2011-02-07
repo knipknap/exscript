@@ -13,8 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.parselib.Exception import LexerException, \
-                                        SyntaxError, \
-                                        RuntimeError
+                                        CompileError, \
+                                        ExecuteError
 
 class Lexer(object):
     def __init__(self, parser_cls, *args, **kwargs):
@@ -100,10 +100,10 @@ class Lexer(object):
         self._error(exc_cls, error, sender)
 
     def syntax_error(self, error, sender = None):
-        self._error(SyntaxError, error, sender)
+        self._error(CompileError, error, sender)
 
     def runtime_error(self, error, sender = None):
-        self._error(RuntimeError, error, sender)
+        self._error(ExecuteError, error, sender)
 
     def forward(self, chars = 1):
         self.last_char     = self.current_char

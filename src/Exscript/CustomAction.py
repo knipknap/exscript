@@ -17,7 +17,7 @@ from Exscript.workqueue             import Action
 from Exscript.util.event            import Event
 from Exscript.protocols.Exception   import LoginFailure
 from Exscript.interpreter.Exception import FailException
-from Exscript.parselib.Exception    import SyntaxError
+from Exscript.parselib.Exception    import CompileError
 
 class CustomAction(Action):
     """
@@ -90,7 +90,7 @@ class CustomAction(Action):
         return self.aborted
 
     def _is_recoverable_error(self, exc):
-        for cls in (SyntaxError, FailException):
+        for cls in (CompileError, FailException):
             if isinstance(exc, cls):
                 return False
         return True

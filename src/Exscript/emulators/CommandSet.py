@@ -66,9 +66,9 @@ class CommandSet(object):
         @param handler_decorator: A function that is used to decorate
                each of the handlers in the file.
         """
-        vars = {}
-        execfile(filename, vars)
-        commands = vars.get('commands')
+        args = {}
+        execfile(filename, args)
+        commands = args.get('commands')
         if commands is None:
             raise Exception(filename + ' has no variable named "commands"')
         elif not hasattr(commands, '__iter__'):

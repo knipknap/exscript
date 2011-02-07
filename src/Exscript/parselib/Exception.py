@@ -18,14 +18,14 @@ class LexerException(Exception):
     """
     pass
 
-class SyntaxError(LexerException):
+class CompileError(LexerException):
     """
     Raised during the compilation procedure if the template contained
     a syntax error.
     """
     pass
 
-class RuntimeError(LexerException):
+class ExecuteError(LexerException):
     """
     Raised during the execution of the compiled template whenever any
     error occurs.
