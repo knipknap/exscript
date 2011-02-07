@@ -26,6 +26,7 @@ setup(name             = 'Exscript',
                           'TkExscript': os.path.join('src', 'TkExscript')},
       package_data     = {'Exscriptd': [
                             os.path.join('config', 'exscriptd.in'),
+                            os.path.join('config', 'main.xml.in'),
                          ]},
       packages         = find_packages('src'),
       scripts          = ['exscript',
