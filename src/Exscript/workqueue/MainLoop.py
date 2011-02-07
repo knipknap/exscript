@@ -177,7 +177,7 @@ class MainLoop(threading.Thread):
     def get_actions_from_name(self, name):
         actions = self.queue + self.force_start + self.running_jobs
         map     = defaultdict(list)
-        for action in self.workqueue.get_running_actions():
+        for action in self.get_running_actions():
             map[action.get_name()].append(action)
         return map[name]
 
