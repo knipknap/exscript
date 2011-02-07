@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
+import stat
 import re
 from Exscriptd.Config               import Config
 from Exscriptd.config.ConfigSection import ConfigSection
@@ -79,6 +80,8 @@ class DaemonConfig(ConfigSection):
         init_file     = os.path.join('/etc', 'init.d', 'exscriptd')
         self.info('creating init-file at %s... ' % init_file)
         self._generate(init_template, init_file)
+        mode = os.stat(init_file).st_mode
+        os.chmod(init_file, mode|stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH)
 
         # Create directories.
         self.info('creating log directory %s... ' % self.options.log_dir)
