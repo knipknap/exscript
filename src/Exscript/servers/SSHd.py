@@ -18,7 +18,6 @@ An SSH2 server.
 import os
 import base64
 import socket
-import select
 import threading
 import Crypto
 import paramiko
@@ -117,61 +116,45 @@ class SSHd(Server):
         self.buf = '\n'.join(lines[1:])
         return lines[0] + '\n'
 
-    def _shutdown_notify(self):
+    def _shutdown_notify(self, conn):
         if self.channel:
             self.channel.send('Server is shutting down.\n')
 
-    def _run(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((self.host, self.port))
-        self.socket.listen(1)
-        self.running = True
+    def _handle_connection(self, conn):
+        t = paramiko.Transport(conn)
+        try:
+            t.load_server_moduli()
+        except:
+            self._dbg(1, 'Failed to load moduli, gex will be unsupported.')
+            raise
+        t.add_server_key(self.host_key)
+        server = _ParamikoServer()
+        t.start_server(server = server)
 
-        while self.running:
-            self._poll_child_process()
-            r, w, x = select.select([self.socket], [], [], self.timeout)
-            if not r:
-                continue
-
-            self.conn, addr = self.socket.accept()
-
-            t = paramiko.Transport(self.conn)
-            try:
-                t.load_server_moduli()
-            except:
-                self._dbg(1, 'Failed to load moduli, gex will be unsupported.')
-                raise
-            t.add_server_key(self.host_key)
-            server = _ParamikoServer()
-            t.start_server(server = server)
-
-            # wait for auth
-            self.channel = t.accept(20)
-            if self.channel is None:
-                self._dbg(1, 'Client disappeared before requesting channel.')
-                t.close()
-                continue
-            self.channel.settimeout(self.timeout)
-
-            # wait for shell request
-            server.event.wait(10)
-            if not server.event.isSet():
-                self._dbg(1, 'Client never asked for a shell.')
-                t.close()
-                continue
-
-            # send the banner
-            self.channel.send(self.device.init())
-
-            # accept commands
-            while self.running:
-                line = self._recvline()
-                if not line:
-                    continue
-                response = self.device.do(line)
-                if response:
-                    self.channel.send(response)
+        # wait for auth
+        self.channel = t.accept(20)
+        if self.channel is None:
+            self._dbg(1, 'Client disappeared before requesting channel.')
             t.close()
+            return
+        self.channel.settimeout(self.timeout)
 
-        self.socket.close()
+        # wait for shell request
+        server.event.wait(10)
+        if not server.event.isSet():
+            self._dbg(1, 'Client never asked for a shell.')
+            t.close()
+            return
+
+        # send the banner
+        self.channel.send(self.device.init())
+
+        # accept commands
+        while self.running:
+            line = self._recvline()
+            if not line:
+                continue
+            response = self.device.do(line)
+            if response:
+                self.channel.send(response)
+        t.close()

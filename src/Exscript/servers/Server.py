@@ -15,6 +15,7 @@
 """
 Base class for all servers.
 """
+import select
 import socket
 from multiprocessing import Process, Pipe
 
@@ -49,7 +50,6 @@ class Server(Process):
         self.running = False
         self.buf     = ''
         self.socket  = None
-        self.conn    = None
         self.device  = device
         self.parent_conn, self.child_conn = Pipe()
 
@@ -70,15 +70,39 @@ class Server(Process):
             return False
         if msg == 'shutdown':
             self.running = False
-            self._shutdown_notify()
             return False
         return True
 
-    def _shutdown_notify(self):
+    def _shutdown_notify(self, conn):
+        raise NotImplementedError()
+
+    def _handle_connection(self, conn):
         raise NotImplementedError()
 
     def _run(self):
-        raise NotImplementedError()
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind((self.host, self.port))
+        self.socket.listen(1)
+        self.running = True
+
+        while self.running:
+            self._poll_child_process()
+
+            r, w, x = select.select([self.socket], [], [], self.timeout)
+            if not r:
+                continue
+
+            conn, addr = self.socket.accept()
+            try:
+                self._handle_connection(conn)
+            except socket.error:
+                pass # network error
+            finally:
+                self._shutdown_notify(conn)
+                conn.close()
+
+        self.socket.close()
 
     def exit(self):
         """

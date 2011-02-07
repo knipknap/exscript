@@ -32,15 +32,15 @@ class Telnetd(Server):
         daemon.join()  # Wait until it terminates.
     """
 
-    def _recvline(self):
+    def _recvline(self, conn):
         while not '\n' in self.buf:
             self._poll_child_process()
-            r, w, x = select.select([self.conn], [], [], self.timeout)
+            r, w, x = select.select([conn], [], [], self.timeout)
             if not self.running:
                 return None
             if not r:
                 continue
-            buf = self.conn.recv(1024)
+            buf = conn.recv(1024)
             if not buf:
                 self.running = False
                 return None
@@ -49,41 +49,19 @@ class Telnetd(Server):
         self.buf = '\n'.join(lines[1:])
         return lines[0] + '\n'
 
-    def _shutdown_notify(self):
+    def _shutdown_notify(self, conn):
         try:
-            self.conn.send('Server is shutting down.\n')
+            conn.send('Server is shutting down.\n')
         except Exception:
             pass
 
-    def _run(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((self.host, self.port))
-        self.socket.listen(1)
-        self.running = True
+    def _handle_connection(self, conn):
+        conn.send(self.device.init())
 
         while self.running:
-            self._poll_child_process()
-
-            r, w, x = select.select([self.socket], [], [], self.timeout)
-            if not r:
+            line = self._recvline(conn)
+            if not line:
                 continue
-
-            self.conn, addr = self.socket.accept()
-
-            try:
-                self.conn.send(self.device.init())
-
-                while self.running:
-                    line = self._recvline()
-                    if not line:
-                        continue
-                    response = self.device.do(line)
-                    if response:
-                        self.conn.send(response)
-            except socket.error:
-                pass # network error
-            finally:
-                self.conn.close()
-
-        self.socket.close()
+            response = self.device.do(line)
+            if response:
+                conn.send(response)
