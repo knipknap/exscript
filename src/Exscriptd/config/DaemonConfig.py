@@ -51,6 +51,7 @@ class DaemonConfig(ConfigSection):
                 '@LOG_DIR@':    self.options.log_dir,
                 '@SPOOL_DIR@':  spool_dir,
                 '@SCRIPT_DIR@': self.script_dir,
+                '@PYTHONPATH@': os.environ.get('PYTHONPATH'),
                 '@INIT_DIR@':   init_dir}
         sub_re = re.compile('(' + '|'.join(vars.keys()) + ')+')
 
