@@ -21,6 +21,7 @@ from Exscriptd.config.ConfigSection import ConfigSection
 __dirname__ = os.path.dirname(__file__)
 log_dir     = os.path.join('/var', 'log', 'exscriptd')
 spool_dir   = os.path.join('/var', 'spool', 'exscriptd')
+pidfile     = os.path.join('/var', 'run', 'exscriptd.pid')
 init_dir    = os.path.join('/etc', 'init.d')
 
 class DaemonConfig(ConfigSection):
@@ -52,6 +53,7 @@ class DaemonConfig(ConfigSection):
                 '@SPOOL_DIR@':  spool_dir,
                 '@SCRIPT_DIR@': self.script_dir,
                 '@PYTHONPATH@': os.environ.get('PYTHONPATH'),
+                '@PIDFILE@':    self.options.pidfile,
                 '@INIT_DIR@':   init_dir}
         sub_re = re.compile('(' + '|'.join(vars.keys()) + ')+')
 
@@ -74,6 +76,11 @@ class DaemonConfig(ConfigSection):
                           metavar = 'STRING',
                           default = log_dir,
                           help    = 'the path where the logs are stored')
+        parser.add_option('--pidfile',
+                          dest    = 'pidfile',
+                          metavar = 'STRING',
+                          default = pidfile,
+                          help    = 'the location of the pidfile')
 
     def _make_executable(self, filename):
         self.info('making %s executable...\n' % filename)
