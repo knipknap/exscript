@@ -253,7 +253,10 @@ class Config(ConfigReader):
             except AttributeError:
                 raise Exception('no such account pool: %s' % account_pool)
 
-            self._add_or_update_elem(queue_elem, 'account-pool', account_pool)
+            if self._add_or_update_elem(queue_elem,
+                                        'account-pool',
+                                        account_pool):
+                changed = True
 
         # Define the number of threads.
         if self._add_or_update_elem(queue_elem, 'max-threads', max_threads):
