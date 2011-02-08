@@ -65,9 +65,9 @@ class AccountManager(object):
         """
         with self.unlock_cond:
             for account in to_list(accounts):
-                account.acquire_before_event.connect(
+                account.acquire_before_event.listen(
                                          self._on_account_acquire_before)
-                account.released_event.connect(self._on_account_released)
+                account.released_event.listen(self._on_account_released)
                 self.accounts.add(account)
                 self.unlocked_accounts.append(account)
             self.unlock_cond.notify_all()

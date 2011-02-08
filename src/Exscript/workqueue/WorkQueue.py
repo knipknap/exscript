@@ -41,11 +41,11 @@ class WorkQueue(object):
         self.main_loop       = MainLoop()
         self.main_loop.debug = self.debug
         self.main_loop.set_max_threads(self.max_threads)
-        self.main_loop.job_started_event.connect(self.job_started_event)
-        self.main_loop.job_succeeded_event.connect(self.job_succeeded_event)
-        self.main_loop.job_aborted_event.connect(self.job_aborted_event)
-        self.main_loop.job_completed_event.connect(self.job_completed_event)
-        self.main_loop.queue_empty_event.connect(self.queue_empty_event)
+        self.main_loop.job_started_event.listen(self.job_started_event)
+        self.main_loop.job_succeeded_event.listen(self.job_succeeded_event)
+        self.main_loop.job_aborted_event.listen(self.job_aborted_event)
+        self.main_loop.job_completed_event.listen(self.job_completed_event)
+        self.main_loop.queue_empty_event.listen(self.queue_empty_event)
         self.main_loop.start()
 
     def _check_if_ready(self):

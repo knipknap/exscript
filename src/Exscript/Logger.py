@@ -111,7 +111,7 @@ class Logger(QueueListener):
             self.done.append(action)
 
     def _action_enqueued(self, action):
-        action.started_event.connect(self._on_action_started)
-        action.error_event.connect(self._on_action_error)
-        action.succeeded_event.connect(self._on_action_done)
-        action.aborted_event.connect(self._on_action_done)
+        action.started_event.listen(self._on_action_started)
+        action.error_event.listen(self._on_action_error)
+        action.succeeded_event.listen(self._on_action_done)
+        action.aborted_event.listen(self._on_action_done)

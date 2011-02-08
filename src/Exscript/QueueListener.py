@@ -21,7 +21,7 @@ class QueueListener(object):
     """
     def __init__(self, queue):
         self.queue = queue
-        self.queue.action_enqueued_event.connect(self._action_enqueued)
+        self.queue.action_enqueued_event.listen(self._action_enqueued)
 
     def _action_enqueued(self, action):
         """

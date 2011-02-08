@@ -11,5 +11,4 @@ exscriptd
 ---------
 * Make daemons asynchronous.
 * Debug memory usage.
-* We probably should use weakref.proxy().
 * Add more tests.

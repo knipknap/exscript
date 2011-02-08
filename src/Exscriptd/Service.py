@@ -75,7 +75,7 @@ class Service(object):
         if not task:
             return
         with self.task_lock:
-            task.done_event.connect(self._task_done, order, task)
+            task.done_event.listen(self._task_done, order, task)
             self.tasks[order.id].append(task)
 
     def _task_done(self, order, task):

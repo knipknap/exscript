@@ -63,7 +63,7 @@ class Logfile(Log):
         self._write('')  # Creates the file.
         self.conn = conn
         if conn:
-            self.conn.data_received_event.connect(self._write)
+            self.conn.data_received_event.listen(self._write)
 
     def error(self, exception):
         self.traceback = self._format_exc(exception)

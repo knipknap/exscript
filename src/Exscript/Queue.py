@@ -98,10 +98,10 @@ class Queue(object):
             self.logger = None
 
         # Listen to what the workqueue is doing.
-        self.workqueue.job_started_event.connect(self._on_job_started)
-        self.workqueue.job_succeeded_event.connect(self._on_job_succeeded)
-        self.workqueue.job_aborted_event.connect(self._on_job_aborted)
-        self.workqueue.queue_empty_event.connect(self.queue_empty_event)
+        self.workqueue.job_started_event.listen(self._on_job_started)
+        self.workqueue.job_succeeded_event.listen(self._on_job_succeeded)
+        self.workqueue.job_aborted_event.listen(self._on_job_aborted)
+        self.workqueue.queue_empty_event.listen(self.queue_empty_event)
         self.workqueue.unpause()
 
 
@@ -363,9 +363,9 @@ class Queue(object):
         self._dbg(2, 'Enqueing Action.')
         action.set_times(self.times)
         action.set_login_times(self.login_times)
-        action.error_event.connect(self._on_action_error)
-        action.aborted_event.connect(self._on_action_aborted)
-        action.succeeded_event.connect(self._on_action_succeeded)
+        action.error_event.listen(self._on_action_error)
+        action.aborted_event.listen(self._on_action_aborted)
+        action.succeeded_event.listen(self._on_action_succeeded)
         self.action_enqueued_event(action)
 
         # Done. Enqueue this.

@@ -58,5 +58,5 @@ class Task(object):
         @param action: The action to be added.
         """
         self.actions.append(action)
-        action.aborted_event.connect(self._on_action_done)
-        action.succeeded_event.connect(self._on_action_done)
+        action.aborted_event.listen(self._on_action_done)
+        action.succeeded_event.listen(self._on_action_done)
