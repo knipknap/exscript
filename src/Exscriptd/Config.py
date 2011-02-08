@@ -153,7 +153,7 @@ class Config(ConfigReader):
         cfgtree     = ConfigReader(filename).cfgtree
         for element in cfgtree.iterfind('service'):
             name = element.get('name')
-            print 'Loading service "%s"...' % name,
+            print 'Loading service "%s"...' % name
 
             module      = element.find('module').text
             daemon_name = element.find('daemon').text
@@ -169,7 +169,7 @@ class Config(ConfigReader):
                                         self,
                                         queue = queue)
             daemon.add_service(name, service)
-            print 'done.'
+            print 'Service "%s" initialized.' % name
 
     def _init_services(self):
         for file in self._get_service_files():

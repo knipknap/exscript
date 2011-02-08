@@ -86,26 +86,28 @@ if action == 'restart':
 
 daemonize()
 
+logger = logging.getLogger('exscript')
+logger.setLevel(logging.INFO)
+
 # Catch output that is written to stdout, and redirect it to
 # Python's logging.
 class LoggingIO(object):
-    def __init__(self, channel = logging.INFO):
+    def __init__(self, logger, channel = logging.INFO):
+        self.logger  = logger
         self.channel = channel
 
     def write(self, data):
         data = data.rstrip()
         if data:
-            logging.log(self.channel, data)
+            self.logger.log(self.channel, data)
 
     def flush(self):
         pass
 
-sys.stdout = LoggingIO()
-sys.stderr = LoggingIO(logging.ERROR)
+sys.stdout = LoggingIO(logger)
+sys.stderr = LoggingIO(logger, logging.ERROR)
 
 # Set up logfile rotation.
-logger = logging.getLogger('')
-logger.setLevel(logging.INFO)
 handler = logging.handlers.RotatingFileHandler(options.logfile,
                                                maxBytes    = 2000000,
                                                backupCount = 10)
@@ -118,7 +120,7 @@ logging.info('exscriptd daemonized')
 config  = Config(options.config_dir)
 daemons = config.get_daemons()
 
-logging.info('config read')
+logger.info('config read')
 
 if not daemons:
     dir = os.path.join(options.config_dir, 'services')
@@ -126,9 +128,10 @@ if not daemons:
     sys.stderr.write(msg)
     sys.exit(1)
 
-logging.info('config is ok, starting daemons')
+logger.info('config is ok, starting daemons')
 
 pidutil.write(options.pidfile)
 for daemon in daemons:
+    logger.info('starting daemon ' + repr(daemon.name))
     daemon.run()
 pidutil.remove(options.pidfile)

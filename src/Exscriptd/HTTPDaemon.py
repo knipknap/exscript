@@ -157,6 +157,10 @@ class HTTPHandler(HTTPRequestHandler):
     def handle_GET(self):
         self.handle_POST()
 
+    def log_message(self, format, *args):
+        daemon = self.server.user_data
+        daemon.logger.info(self.address_string() + ' - ' + format % args)
+
 class HTTPDaemon(Daemon):
     def __init__(self,
                  name,
@@ -177,11 +181,12 @@ class HTTPDaemon(Daemon):
         self.server.accounts[user] = password
 
     def run(self):
-        address = self.address + ':' + str(self.port)
-        self.logger.info('HTTP daemon "' + self.name + '" starting on ' + address)
+        address  = self.address + ':' + str(self.port)
+        nameaddr = self.name, address
+        self.logger.info('HTTPDaemon %s/%s starting.' % nameaddr)
         self.close_open_orders()
         try:
-            print 'Daemon', repr(self.name), 'listening on', repr(address) + '.'
+            self.logger.info('HTTPDaemon %s/%s listening' % nameaddr)
             self.server.serve_forever()
         except KeyboardInterrupt:
             print '^C received, shutting down server'
