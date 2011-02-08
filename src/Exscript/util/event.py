@@ -15,6 +15,8 @@
 """
 A simple signal/event mechanism.
 """
+from itertools     import chain
+from Exscript.util import weakmethod
 
 class Event(object):
     """
@@ -33,7 +35,8 @@ class Event(object):
         """
         Constructor.
         """
-        self.subscribers = []
+        self.weak_subscribers = []
+        self.hard_subscribers = []
 
     def __call__(self, *args, **kwargs):
         """
@@ -46,6 +49,10 @@ class Event(object):
         Connects the event with the given callback.
         When the signal is emitted, the callback is invoked.
 
+        @note: The signal handler is stored with a hard reference, so you
+        need to make sure to call L{disconnect()} if you want the handler
+        to be garbage collected.
+
         @type  callback: object
         @param callback: The callback function.
         @type  args: tuple
@@ -53,9 +60,35 @@ class Event(object):
         @type  kwargs: dict
         @param kwargs: Optional keyword arguments passed to the callback.
         """
-        if callback in [s[0] for s in self.subscribers]:
+        if self.is_connected(callback):
             raise AttributeError('callback is already connected')
-        self.subscribers.append((callback, args, kwargs))
+        self.hard_subscribers.append((callback, args, kwargs))
+
+    def listen(self, callback, *args, **kwargs):
+        """
+        Like L{connect()}, but uses a weak reference instead of a
+        normal reference.
+        The signal is automatically disconnected as soon as the handler
+        is garbage collected.
+
+        @note: Storing signal handlers as weak references means that if
+        your handler is a local function, it may be garbage collected. To
+        prevent this, use L{connect()} instead.
+
+        @type  callback: object
+        @param callback: The callback function.
+        @type  args: tuple
+        @param args: Optional arguments passed to the callback.
+        @type  kwargs: dict
+        @param kwargs: Optional keyword arguments passed to the callback.
+        @rtype:  L{Exscript.util.weakmethod.WeakMethod}
+        @return: The newly created weak reference to the callback.
+        """
+        if self.is_connected(callback):
+            raise AttributeError('callback is already connected')
+        ref = weakmethod.ref(callback, self._try_disconnect)
+        self.weak_subscribers.append((ref, args, kwargs))
+        return ref
 
     def n_subscribers(self):
         """
@@ -64,7 +97,16 @@ class Event(object):
         @rtype:  int
         @return: The number of subscribers.
         """
-        return len(self.subscribers)
+        return len(self.hard_subscribers) + len(self.weak_subscribers)
+
+    def _hard_callbacks(self):
+        return [s[0] for s in self.hard_subscribers]
+
+    def _weak_callbacks(self):
+        return [s[0].get_function() for s in self.weak_subscribers]
+
+    def _callbacks(self):
+        return self._hard_callbacks() + self._weak_callbacks()
 
     def is_connected(self, callback):
         """
@@ -75,7 +117,11 @@ class Event(object):
         @rtype:  bool
         @return: Whether the signal is connected to the given function.
         """
-        return callback in [s[0] for s in self.subscribers]
+        try:
+            index = self._callbacks().index(callback)
+        except ValueError:
+            return False
+        return True
 
     def emit(self, *args, **kwargs):
         """
@@ -86,9 +132,14 @@ class Event(object):
         @type  kwargs: dict
         @param kwargs: Optional keyword arguments passed to the callbacks.
         """
-        for callback, user_args, user_kwargs in self.subscribers:
+        subscribers = chain(self.hard_subscribers + self.weak_subscribers)
+        for callback, user_args, user_kwargs in subscribers:
             kwargs.update(user_kwargs)
             callback(*args + user_args, **kwargs)
+
+    def _try_disconnect(self, ref):
+        index = [s[0] for s in self.weak_subscribers].index(ref)
+        self.weak_subscribers.pop(index)
 
     def disconnect(self, callback):
         """
@@ -97,11 +148,23 @@ class Event(object):
         @type  callback: object
         @param callback: The callback function.
         """
-        item = [s[0] for s in self.subscribers].index(callback)
-        self.subscribers.pop(item)
+        try:
+            index = self._weak_callbacks().index(callback)
+        except ValueError:
+            pass
+        else:
+            self.weak_subscribers.pop(index)
+        try:
+            index = self._hard_callbacks().index(callback)
+        except ValueError:
+            pass
+        else:
+            self.hard_subscribers.pop(index)
+        return True
 
     def disconnect_all(self):
         """
         Disconnects all connected functions from all signals.
         """
-        self.subscribers = []
+        self.hard_subscribers = []
+        self.weak_subscribers = []

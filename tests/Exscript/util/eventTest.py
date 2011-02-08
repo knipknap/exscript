@@ -31,17 +31,34 @@ class eventTest(unittest.TestCase):
         self.event.connect(self.callback2)
         self.assertEqual(self.event.n_subscribers(), 2)
 
+    def testListen(self):
+        import gc
+        from Exscript.util.weakmethod import WeakMethod
+        def thefunction():
+            pass
+        ref = self.event.listen(thefunction)
+        self.assert_(isinstance(ref, WeakMethod))
+        self.assertEqual(self.event.n_subscribers(), 1)
+        self.assertRaises(AttributeError, self.event.listen, thefunction)
+        del thefunction
+        gc.collect()
+        self.assertEqual(self.event.n_subscribers(), 0)
+
     def testNSubscribers(self):
         self.assertEqual(self.event.n_subscribers(), 0)
         self.event.connect(self.callback)
         self.assertEqual(self.event.n_subscribers(), 1)
-        self.event.connect(self.callback2)
+        self.event.listen(self.callback2)
         self.assertEqual(self.event.n_subscribers(), 2)
 
     def testIsConnected(self):
         self.assertEqual(self.event.is_connected(self.callback), False)
         self.event.connect(self.callback)
         self.assertEqual(self.event.is_connected(self.callback), True)
+
+        self.assertEqual(self.event.is_connected(self.callback2), False)
+        self.event.listen(self.callback2)
+        self.assertEqual(self.event.is_connected(self.callback2), True)
 
     def testEmit(self):
         self.event.connect(self.callback)
@@ -59,6 +76,24 @@ class eventTest(unittest.TestCase):
         self.event.emit('test', foo = 'bar')
         self.assertEqual(self.args,   ('test',))
         self.assertEqual(self.kwargs, {'foo': 'bar'})
+        self.event.disconnect(self.callback)
+
+        self.event.listen(self.callback)
+        self.args   = None
+        self.kwargs = None
+
+        self.event.emit()
+        self.assertEqual(self.args,   ())
+        self.assertEqual(self.kwargs, {})
+
+        self.event.emit('test')
+        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.kwargs, {})
+
+        self.event.emit('test', foo = 'bar')
+        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.kwargs, {'foo': 'bar'})
+        self.event.disconnect(self.callback)
 
     def testDisconnect(self):
         self.assertEqual(self.event.n_subscribers(), 0)
