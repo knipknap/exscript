@@ -15,6 +15,7 @@
 """
 A simple signal/event mechanism.
 """
+from threading     import Lock
 from itertools     import chain
 from Exscript.util import weakmethod
 
@@ -35,6 +36,7 @@ class Event(object):
         """
         Constructor.
         """
+        self.lock             = Lock()
         self.weak_subscribers = []
         self.hard_subscribers = []
 
@@ -84,10 +86,11 @@ class Event(object):
         @rtype:  L{Exscript.util.weakmethod.WeakMethod}
         @return: The newly created weak reference to the callback.
         """
-        if self.is_connected(callback):
-            raise AttributeError('callback is already connected')
-        ref = weakmethod.ref(callback, self._try_disconnect)
-        self.weak_subscribers.append((ref, args, kwargs))
+        with self.lock:
+            if self.is_connected(callback):
+                raise AttributeError('callback is already connected')
+            ref = weakmethod.ref(callback, self._try_disconnect)
+            self.weak_subscribers.append((ref, args, kwargs))
         return ref
 
     def n_subscribers(self):
@@ -102,11 +105,12 @@ class Event(object):
     def _hard_callbacks(self):
         return [s[0] for s in self.hard_subscribers]
 
-    def _weak_callbacks(self):
-        return [s[0].get_function() for s in self.weak_subscribers]
-
-    def _callbacks(self):
-        return self._hard_callbacks() + self._weak_callbacks()
+    def _weakly_connected_index(self, callback):
+        weak = [s[0].get_function() for s in self.weak_subscribers]
+        try:
+            return weak.index(callback)
+        except ValueError:
+            return None
 
     def is_connected(self, callback):
         """
@@ -117,11 +121,10 @@ class Event(object):
         @rtype:  bool
         @return: Whether the signal is connected to the given function.
         """
-        try:
-            index = self._callbacks().index(callback)
-        except ValueError:
-            return False
-        return True
+        index = self._weakly_connected_index(callback)
+        if index is not None:
+            return True
+        return callback in self._hard_callbacks()
 
     def emit(self, *args, **kwargs):
         """
@@ -138,8 +141,15 @@ class Event(object):
             callback(*args + user_args, **kwargs)
 
     def _try_disconnect(self, ref):
-        index = [s[0] for s in self.weak_subscribers].index(ref)
-        self.weak_subscribers.pop(index)
+        with self.lock:
+            weak = [s[0] for s in self.weak_subscribers]
+            try:
+                index = weak.index(ref)
+            except ValueError:
+                # subscriber was already removed by a call to disconnect()
+                pass
+            else:
+                self.weak_subscribers.pop(index)
 
     def disconnect(self, callback):
         """
@@ -148,19 +158,16 @@ class Event(object):
         @type  callback: object
         @param callback: The callback function.
         """
-        try:
-            index = self._weak_callbacks().index(callback)
-        except ValueError:
-            pass
-        else:
-            self.weak_subscribers.pop(index)
+        with self.lock:
+            index = self._weakly_connected_index(callback)
+            if index is not None:
+                self.weak_subscribers.pop(index)[0]
         try:
             index = self._hard_callbacks().index(callback)
         except ValueError:
             pass
         else:
             self.hard_subscribers.pop(index)
-        return True
 
     def disconnect_all(self):
         """

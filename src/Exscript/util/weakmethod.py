@@ -16,9 +16,17 @@
 Weak references to bound and unbound methods.
 """
 import weakref
+from functools import partial
 
 class WeakMethod(object):
+    """
+    Do not create this class directly; use L{ref()} instead.
+    """
+
     def __init__(self, callback):
+        """
+        Constructor. Do not use directly, use L{ref()} instead.
+        """
         self.callback = callback
 
     def _dead(self, ref):
@@ -26,28 +34,51 @@ class WeakMethod(object):
             self.callback(self)
 
     def get_function(self):
+        """
+        Returns the referenced method/function if it is still alive.
+        Returns None otherwise.
+
+        @rtype:  callable|None
+        @return: The referenced function if it is still alive.
+        """
         return None
 
     def isalive(self):
+        """
+        Returns True if the referenced function is still alive, False
+        otherwise.
+
+        @rtype:  bool
+        @return: Whether the referenced function is still alive.
+        """
         return self.get_function() is not None
 
-class WeakMethodBound(WeakMethod):
+    def __call__(self, *args, **kwargs):
+        """
+        Proxied to the underlying function or method. Raises TypeError if
+        the referenced function is dead.
+
+        @rtype:  object
+        @return: Whatever the referenced function returned.
+        """
+        method = self.get_function()
+        if method is None:
+            raise TypeError, 'Method called on dead object'
+        method(*args, **kwargs)
+
+class _WeakMethodBound(WeakMethod):
     def __init__(self, f, callback):
         WeakMethod.__init__(self, callback)
-        self.f = f
+        self.f = f.__func__
         self.c = weakref.ref(f.__self__, self._dead)
 
     def get_function(self):
-        if self.c() is None:
+        cls = self.c()
+        if cls is None:
             return None
-        return self.f
+        return getattr(cls, self.f.__name__)
 
-    def __call__(self, *args, **kwargs):
-        if not self.isalive():
-            raise TypeError, 'Method called on dead object'
-        return self.f(*args, **kwargs)
-
-class WeakMethodFree(WeakMethod):
+class _WeakMethodFree(WeakMethod):
     def __init__(self, f, callback):
         WeakMethod.__init__(self, callback)
         self.f = weakref.ref(f, self._dead)
@@ -55,15 +86,19 @@ class WeakMethodFree(WeakMethod):
     def get_function(self):
         return self.f()
 
-    def __call__(self, *args, **kwargs):
-        method = self.f()
-        if method is None:
-            raise TypeError, 'Function no longer exist'
-        method(*args, **kwargs)
+def ref(function, callback = None):
+    """
+    Returns a weak reference to the given method or function.
+    If the callback argument is not None, it is called as soon
+    as the referenced function is garbage deleted.
 
-def ref(f, callback):
+    @type  function: callable
+    @param function: The function to reference.
+    @type  callback: callable
+    @param callback: Called when the function dies.
+    """
     try:
-        f.__func__
+        function.__func__
     except AttributeError:
-        return WeakMethodFree(f, callback)
-    return WeakMethodBound(f, callback)
+        return _WeakMethodFree(function, callback)
+    return _WeakMethodBound(function, callback)
