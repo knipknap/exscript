@@ -18,6 +18,7 @@ Utilities for serializing/deserializing XML.
 from lxml import etree
 import base64
 import Exscript
+from Exscript import PrivateKey
 
 def get_list_from_etree(node):
     """
@@ -260,6 +261,7 @@ def get_account_from_etree(node):
         <account name="myaccount">
           <password type="base64">Zm9v</password>
           <authorization-password type="cleartext">bar</authorization-password>
+          <keyfile>/path/to/my/ssh/key</keyfile>
         </account>
 
     The <password> and <authorization-password> tags have an optional type
@@ -274,7 +276,12 @@ def get_account_from_etree(node):
     name           = node.get('name', '').strip()
     password1_elem = node.find('password')
     password2_elem = node.find('authorization-password')
-    account        = Exscript.Account(name)
+    keyfile        = node.findtext('keyfile')
+    if keyfile is None:
+        key = None
+    else:
+        key = PrivateKey.from_file(keyfile)
+    account = Exscript.Account(name, key = key)
     account.set_password(_get_password_from_node(password1_elem))
     account.set_authorization_password(_get_password_from_node(password2_elem))
     return account
@@ -299,6 +306,9 @@ def add_account_to_etree(root, tag, account):
     _add_password_node(elem,
                        account.get_authorization_password(),
                        tag = 'authorization-password')
+    key = account.get_key()
+    if key is not None:
+        etree.SubElement(elem, 'keyfile').text = key.get_filename()
     return elem
 
 def get_accounts_from_etree(node):

@@ -17,10 +17,12 @@ This is the Exscript daemon configuration file.
   <account-pool name="default">
   <!--
     <account name="user1">
-      <password type="base64"></password>
+      <password type="base64">foo</password>
+      <authorization-password type="cleartext">bar</authorization-password>
+      <keyfile>/path/to/my/ssh/key</keyfile>
     </account>
     <account name="user2">
-      <password type="plaintext"></password>
+      <password type="plaintext">foobar</password>
     </account>
   -->
   </account-pool>
