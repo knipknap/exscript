@@ -22,6 +22,7 @@ _user_re     = [re.compile(r'[\r\n]login: $')]
 _password_re = [re.compile(r'[\r\n]Password: $')]
 _prompt_re   = [re.compile(r'(?:[\r\n]\[edit\])?[\r\n][\w\-]+@[\-\w+\.]+[>#] $')]
 _junos_re    = re.compile(r'\bjunos\b', re.I)
+_error_re    = re.compile('^(unknown|invalid|error)', re.I)
 
 class JunOSDriver(Driver):
     def __init__(self):
@@ -29,6 +30,7 @@ class JunOSDriver(Driver):
         self.user_re     = _user_re
         self.password_re = _password_re
         self.prompt_re   = _prompt_re
+        self.error_re    = _error_re
 
     def check_head_for_os(self, string):
         if _junos_re.search(string):
