@@ -17,7 +17,6 @@ import sys
 import os
 import re
 import getpass
-sys.path.append('src')
 from optparse                import OptionParser, Option, OptionValueError
 from Exscript                import Queue, Account, PrivateKey, __version__
 from Exscript.protocols      import protocol_map
@@ -178,19 +177,26 @@ def run():
         print msg % options.account_pool
 
     # Read username and password.
-    try:
-        if options.non_interactive or account_manager.n_accounts() > 0:
-            user     = None
-            password = None
-        else:
+    if options.non_interactive or account_manager.n_accounts() > 0:
+        user     = None
+        password = None
+    else:
+        try:
             user, password = get_login()
-    except KeyboardInterrupt:
-        sys.exit(1)
+        except KeyboardInterrupt:
+            sys.exit(1)
+
+    # Read the SSH key.
+    if options.ssh_key:
+        print "Reading key from", options.ssh_key
+        key = PrivateKey.from_file(options.ssh_key, password)
+        if user is None:
+            user = getpass.getuser()
+    else:
+        key = None
+
+    # Add the account to the pool.
     if user is not None:
-        if options.ssh_key:
-            key = PrivateKey.from_file(options.ssh_key, password)
-        else:
-            key = None
         account = Account(user, password, key = key)
         account_manager.add_account(account)
 
