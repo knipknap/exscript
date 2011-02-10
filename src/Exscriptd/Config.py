@@ -24,6 +24,8 @@ from Exscriptd.HTTPDaemon    import HTTPDaemon
 from Exscriptd.PythonService import PythonService
 from Exscriptd.ConfigReader  import ConfigReader
 from Exscriptd.util          import find_module_recursive
+from Exscriptd.xml           import get_accounts_from_etree, \
+                                    add_accounts_to_etree
 
 default_config_dir = os.path.join('/etc', 'exscriptd')
 
@@ -41,13 +43,8 @@ class Config(ConfigReader):
         ConfigReader.__init__(self, filename, resolve_variables)
 
     def _init_account_pool_from_name(self, name):
-        accounts = []
-        element  = self.cfgtree.find('account-pool[@name="%s"]' % name)
-        for child in element.iterfind('account'):
-            user     = child.find('user').text
-            password = child.find('password').text
-            accounts.append(Account(user, base64.decodestring(password)))
-        return accounts
+        element = self.cfgtree.find('account-pool[@name="%s"]' % name)
+        return get_accounts_from_etree(element)
 
     def _init_account_manager_from_name(self, name):
         if name in self.account_managers:
@@ -187,11 +184,8 @@ class Config(ConfigReader):
 
         # Import the new pool from the given file.
         pool_elem = etree.SubElement(xml, 'account-pool', name = name)
-        for account in get_accounts_from_file(filename):
-            b64password = base64.encodestring(account.get_password())
-            acc_elem    = etree.SubElement(pool_elem, 'account')
-            etree.SubElement(acc_elem, 'user').text = account.get_name()
-            etree.SubElement(acc_elem, 'password').text = b64password
+        accounts  = get_accounts_from_file(filename)
+        add_accounts_to_etree(pool_elem, accounts)
 
         self.save()
 
