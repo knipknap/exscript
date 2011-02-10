@@ -29,34 +29,6 @@ def message(scope, string):
     exscript._print('debug', string[0] + '\n')
     return True
 
-@secure_function
-def tacacs_lock(scope, user):
-    """
-    Acquire an exclusive lock on the account of the user with the given
-    name.
-
-    @type  user: string
-    @param user: A username.
-    """
-    accm    = scope.get('__connection__').get_account_manager()
-    account = accm.get_account_from_name(user[0])
-    accm.acquire_account(account)
-    return True
-
-@secure_function
-def tacacs_unlock(scope, user):
-    """
-    Release the exclusive lock on the account of the user with the given
-    name.
-
-    @type  user: string
-    @param user: A username.
-    """
-    accm    = scope.get('__connection__').get_account_manager()
-    account = accm.get_account_from_name(user[0])
-    account.release()
-    return True
-
 def run(scope, hostnames, filename):
     """
     Runs the template file with the given name on the host with the given
