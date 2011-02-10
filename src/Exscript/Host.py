@@ -15,6 +15,7 @@
 """
 Representing a device to connect with.
 """
+from Exscript.Account   import Account
 from Exscript.util.cast import to_list
 from Exscript.util.ipv4 import is_ip, clean_ip
 from Exscript.util.url  import Url
@@ -39,15 +40,13 @@ class Host(object):
         @type  default_protocol: string
         @param default_protocol: The protocol name.
         """
-        self.protocol  = default_protocol
-        self.vars      = {}
-        self.username  = None
-        self.password1 = None
-        self.password2 = None
-        self.logname   = None
-        self.name      = None
-        self.address   = None
-        self.tcp_port  = None
+        self.protocol = default_protocol
+        self.vars     = {}
+        self.account  = None
+        self.logname  = None
+        self.name     = None
+        self.address  = None
+        self.tcp_port = None
         self.set_uri(uri) 
 
     def set_uri(self, uri):
@@ -80,9 +79,12 @@ class Host(object):
         self.set_tcp_port(uri.port)
         self.set_name(name)
         self.set_address(name)
-        self.set_username(uri.username)
-        self.set_password(uri.password1)
-        self.set_password2(uri.password2)
+
+        if uri.username is not None \
+           or uri.password1 is not None \
+           or uri.password2:
+            account = Account(uri.username, uri.password1, uri.password2)
+            self.set_account(account)
 
         for key, val in uri.vars.iteritems():
             self.set(key, val)
@@ -97,14 +99,17 @@ class Host(object):
         @return: A URI.
         """
         url = Url()
-        url.protocol  = self.get_protocol()
-        url.username  = self.get_username()
-        url.password1 = self.get_password()
-        url.password2 = self.get_password2()
-        url.hostname  = self.get_address()
-        url.port      = self.get_tcp_port()
-        url.vars      = dict((k, to_list(v))
-                             for (k, v) in self.get_all().iteritems())
+        url.protocol = self.get_protocol()
+        url.hostname = self.get_address()
+        url.port     = self.get_tcp_port()
+        url.vars     = dict((k, to_list(v))
+                            for (k, v) in self.get_all().iteritems())
+
+        if self.account:
+            url.username  = self.account.get_name()
+            url.password1 = self.account.get_password()
+            url.password2 = self.account.authorization_password
+
         return str(url)
 
     def set_name(self, name):
@@ -200,60 +205,23 @@ class Host(object):
         """
         return self.tcp_port
 
-    def set_username(self, name):
+    def set_account(self, account):
         """
-        Defines the username of the account that is used to log in.
+        Defines the account that is used to log in.
 
-        @type  name: string
-        @param name: The username.
+        @type  account: L{Exscript.Account}
+        @param account: The account.
         """
-        self.username = name
+        self.account = account
 
-    def get_username(self):
+    def get_account(self):
         """
-        Returns the username of the account that is used to log in.
+        Returns the account that is used to log in.
 
-        @rtype:  string
-        @return: The username.
+        @rtype:  Account
+        @return: The account.
         """
-        return self.username
-
-    def set_password(self, password):
-        """
-        Defines the password of the account that is used to log in.
-
-        @type  password: string
-        @param password: The password.
-        """
-        self.password1 = password
-
-    def get_password(self):
-        """
-        Returns the password of the account that is used to log in.
-
-        @rtype:  string
-        @return: The password.
-        """
-        return self.password1
-
-    def set_password2(self, password):
-        """
-        Defines an alternate password. This is used, for example in any
-        place where auto_authorize() is called.
-
-        @type  password: string
-        @param password: The password.
-        """
-        self.password2 = password
-
-    def get_password2(self):
-        """
-        Returns the password of the account that is used to log in.
-
-        @rtype:  string
-        @return: The password.
-        """
-        return self.password2
+        return self.account
 
     def set_logname(self, logname):
         """

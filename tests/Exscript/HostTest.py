@@ -1,7 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript          import Host
+from Exscript          import Host, Account
 from Exscript.util.url import Url
 from util.urlTest      import urls
 
@@ -23,6 +23,7 @@ class HostTest(unittest.TestCase):
             uri  = Url.from_string(url)
             self.assertEqual(host.get_name(),    uri.hostname)
             self.assertEqual(host.get_address(), uri.hostname)
+            self.assertEqual(host.get_uri(), str(uri))
 
     def testSetUri(self):
         for url, result in urls:
@@ -84,33 +85,14 @@ class HostTest(unittest.TestCase):
     def testGetTcpPort(self):
         pass # Tested in testSetTcpPort().
 
-    def testSetUsername(self):
-        self.assertEqual(self.host.get_username(), None)
-        self.host.set_username('test')
-        self.assertEqual(self.host.get_username(), 'test')
+    def testSetAccount(self):
+        account = Account('test')
+        self.assertEqual(self.host.get_account(), None)
+        self.host.set_account(account)
+        self.assertEqual(self.host.get_account(), account)
 
-    def testGetUsername(self):
-        pass # Tested in testSetUsername().
-
-    def testSetPassword(self):
-        self.assertEqual(self.host.get_password(), None)
-        self.assertEqual(self.host.get_password2(), None)
-        self.host.set_password('test')
-        self.assertEqual(self.host.get_password(), 'test')
-        self.assertEqual(self.host.get_password2(), None)
-
-    def testGetPassword(self):
-        pass # Tested in testSetPassword().
-
-    def testSetPassword2(self):
-        self.assertEqual(self.host.get_password(), None)
-        self.assertEqual(self.host.get_password2(), None)
-        self.host.set_password2('test')
-        self.assertEqual(self.host.get_password(), None)
-        self.assertEqual(self.host.get_password2(), 'test')
-
-    def testGetPassword2(self):
-        pass # Tested in testSetPassword2().
+    def testGetAccount(self):
+        pass # Tested in testSetAccount().
 
     def testGetLogname(self):
         pass # Tested in testGetLogname().

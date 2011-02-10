@@ -45,12 +45,7 @@ class Connection(object):
 
         # If specified, use the host-specific login details.
         host = action.get_host()
-        self.__dict__['default_account'] = None
-        if host.get_username() is not None:
-            account = Account(host.get_username(),
-                              host.get_password(),
-                              host.get_password2())
-            self.__dict__['default_account'] = account
+        self.__dict__['default_account'] = host.get_account()
 
     def __copy__(self):
         """

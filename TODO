@@ -1,5 +1,7 @@
 Exscript
 --------
+* Improve support for mapping hosts to specific accounts:
+    Exscript.Queue.add_account(myaccount, match = lambda host: host.get_name().startswith('foo'))
 * Add tests for Transport class debug levels.
 * Add API docs for Exscript.parselib.
 * Add a test for Exscript.Task.
@@ -9,6 +11,11 @@ Exscript
 
 exscriptd
 ---------
+* Add support for this:
+      <queue name="default-queue">
+         ...
+         <account-pool for="hostname == 'myhost'">foobar</account-pool>
+      </queue>
 * Make daemons asynchronous.
 * Debug memory usage.
 * Add more tests.
