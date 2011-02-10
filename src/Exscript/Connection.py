@@ -109,8 +109,8 @@ class Connection(object):
             self.default_account.acquire()
             return self.default_account
 
-        # Else, choose an account from the account pool.
-        return self.get_account_manager().acquire_account()
+        # Else, choose an account from the default account pool.
+        return self.get_queue().default_accounts.acquire_account()
 
     def _release_account(self, account):
         account.release()
@@ -132,15 +132,6 @@ class Connection(object):
         @return: The associated Queue instance.
         """
         return self.action.get_queue()
-
-    def get_account_manager(self):
-        """
-        Returns the associated account manager.
-
-        @rtype:  AccountManager
-        @return: The associated account manager.
-        """
-        return self.get_queue().account_manager
 
     def get_host(self):
         """

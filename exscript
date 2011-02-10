@@ -163,21 +163,21 @@ def run():
                   overwrite_logs = options.overwrite_logs,
                   delete_logs    = options.delete_logs,
                   protocol_args  = protocol_args)
-    account_manager = queue.account_manager
+    account_pool = queue.default_accounts
 
     # Read the account pool file.
     try:
         if options.account_pool:
             accounts = get_accounts_from_file(options.account_pool)
-            account_manager.add_account(accounts)
+            account_pool.add_account(accounts)
     except IOError, e:
         parser.error(str(e))
-    if options.account_pool and account_manager.n_accounts() == 0:
+    if options.account_pool and account_pool.n_accounts() == 0:
         msg = r'WARNING: No accounts found in account pool file (%s)!'
         print msg % options.account_pool
 
     # Read username and password.
-    if options.non_interactive or account_manager.n_accounts() > 0:
+    if options.non_interactive or account_pool.n_accounts() > 0:
         user     = None
         password = None
     else:
@@ -198,7 +198,7 @@ def run():
     # Add the account to the pool.
     if user is not None:
         account = Account(user, password, key = key)
-        account_manager.add_account(account)
+        account_pool.add_account(account)
 
     # Ask for values of marked variables.
     for host in hosts:

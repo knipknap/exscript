@@ -1,13 +1,12 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript                import Host, Queue, Account
-from Exscript.protocols      import Dummy
-from Exscript.HostAction     import HostAction
-from Exscript.AccountManager import AccountManager
-from Exscript.Connection     import Connection
-from Exscript.emulators      import VirtualDevice
-from protocols.DummyTest     import DummyTest
+from Exscript            import Host, Queue, Account
+from Exscript.protocols  import Dummy
+from Exscript.HostAction import HostAction
+from Exscript.Connection import Connection
+from Exscript.emulators  import VirtualDevice
+from protocols.DummyTest import DummyTest
 
 # Connection proxies the calls to a protocols.Protocol object,
 # so we can inherit from ProtocolTest here and have most of the
@@ -41,10 +40,6 @@ class ConnectionTest(DummyTest):
 
     def testGetQueue(self):
         self.assert_(isinstance(self.protocol.get_queue(), Queue))
-
-    def testGetAccountManager(self):
-        self.assert_(isinstance(self.protocol.get_account_manager(),
-                                AccountManager))
 
     def testGetHost(self):
         self.assertEqual(self.protocol.get_host(), self.host)

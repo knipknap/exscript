@@ -17,7 +17,7 @@ import base64
 import shutil
 from lxml                    import etree
 from Exscript                import Account, Queue
-from Exscript.AccountManager import AccountManager
+from Exscript.AccountPool    import AccountPool
 from Exscript.util.file      import get_accounts_from_file
 from Exscriptd.OrderDB       import OrderDB
 from Exscriptd.HTTPDaemon    import HTTPDaemon
@@ -33,26 +33,22 @@ class Config(ConfigReader):
     def __init__(self,
                  cfg_dir           = default_config_dir,
                  resolve_variables = True):
-        self.daemons          = {}
-        self.account_managers = {}
-        self.queues           = {}
-        self.databases        = {}
-        self.cfg_dir          = cfg_dir
-        self.service_dir      = os.path.join(cfg_dir, 'services')
-        filename              = os.path.join(cfg_dir, 'main.xml')
+        self.daemons       = {}
+        self.account_pools = {}
+        self.queues        = {}
+        self.databases     = {}
+        self.cfg_dir       = cfg_dir
+        self.service_dir   = os.path.join(cfg_dir, 'services')
+        filename           = os.path.join(cfg_dir, 'main.xml')
         ConfigReader.__init__(self, filename, resolve_variables)
 
     def _init_account_pool_from_name(self, name):
-        element = self.cfgtree.find('account-pool[@name="%s"]' % name)
-        return get_accounts_from_etree(element)
-
-    def _init_account_manager_from_name(self, name):
-        if name in self.account_managers:
-            return self.account_managers[name]
-        accounts = self._init_account_pool_from_name(name)
-        manager  = AccountManager(accounts)
-        self.account_managers[name] = manager
-        return manager
+        if name in self.account_pools:
+            return self.account_pools[name]
+        element  = self.cfgtree.find('account-pool[@name="%s"]' % name)
+        accounts = get_accounts_from_etree(element)
+        pool     = self.account_pools[name] = AccountPool(accounts)
+        return pool
 
     def _init_queue_from_name(self, name, logdir):
         if name in self.queues:
@@ -70,8 +66,8 @@ class Config(ConfigReader):
         # Add some accounts, if any.
         account_pool = element.find('account-pool')
         if account_pool is not None:
-            manager = self._init_account_manager_from_name(account_pool.text)
-            queue.account_manager = manager
+            pool = self._init_account_pool_from_name(account_pool.text)
+            queue.default_accounts = pool
 
         self.queues[name] = queue
         return queue

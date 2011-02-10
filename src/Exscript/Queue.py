@@ -19,14 +19,14 @@ import sys
 import os
 import gc
 import traceback
-from Exscript.FileLogger     import FileLogger
-from Exscript.AccountManager import AccountManager
-from Exscript.CustomAction   import CustomAction
-from Exscript.HostAction     import HostAction
-from Exscript.Task           import Task
-from Exscript.workqueue      import WorkQueue, Action
-from Exscript.util.cast      import to_hosts
-from Exscript.util.event     import Event
+from Exscript.FileLogger   import FileLogger
+from Exscript.AccountPool  import AccountPool
+from Exscript.CustomAction import CustomAction
+from Exscript.HostAction   import HostAction
+from Exscript.Task         import Task
+from Exscript.workqueue    import WorkQueue, Action
+from Exscript.util.cast    import to_hosts
+from Exscript.util.event   import Event
 
 class Queue(object):
     """
@@ -68,7 +68,7 @@ class Queue(object):
         @keyword stderr: The error channel, defaults to sys.stderr.
         """
         self.workqueue         = WorkQueue()
-        self.account_manager   = AccountManager()
+        self.default_accounts  = AccountPool()
         self.domain            = kwargs.get('domain',        '')
         self.verbose           = kwargs.get('verbose',       1)
         self.times             = kwargs.get('times',         1)
@@ -248,13 +248,13 @@ class Queue(object):
 
     def add_account(self, account):
         """
-        Adds the given account to the account pool that Exscript uses to
-        log into hosts.
+        Adds the given account to the default account pool that Exscript uses
+        to log into all hosts that have no specific L{Account} attached.
 
         @type  account: Account
         @param account: The account that is added.
         """
-        self.account_manager.add_account(account)
+        self.default_accounts.add_account(account)
 
 
     def wait_for(self, action):
@@ -334,7 +334,7 @@ class Queue(object):
 
         self._dbg(2, 'Destroying queue...')
         self.workqueue.shutdown(False)
-        self.account_manager.reset()
+        self.default_accounts.reset()
         self.completed         = 0
         self.total             = 0
         self.status_bar_length = 0
@@ -347,7 +347,7 @@ class Queue(object):
         Remove all accounts, hosts, etc.
         """
         self._dbg(2, 'Resetting queue...')
-        self.account_manager.reset()
+        self.default_accounts.reset()
         self.workqueue.shutdown(True)
         self.completed         = 0
         self.total             = 0

@@ -1,12 +1,12 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript                import Account
-from Exscript.AccountManager import AccountManager
-from Exscript.util.file      import get_accounts_from_file
+from Exscript             import Account
+from Exscript.AccountPool import AccountPool
+from Exscript.util.file   import get_accounts_from_file
 
-class AccountManagerTest(unittest.TestCase):
-    CORRELATE = AccountManager
+class AccountPoolTest(unittest.TestCase):
+    CORRELATE = AccountPool
 
     def setUp(self):
         self.user1     = 'testuser1'
@@ -15,13 +15,13 @@ class AccountManagerTest(unittest.TestCase):
         self.user2     = 'testuser2'
         self.password2 = 'test2'
         self.account2  = Account(self.user2, self.password2)
-        self.accm      = AccountManager()
+        self.accm      = AccountPool()
 
     def testConstructor(self):
-        accm = AccountManager()
+        accm = AccountPool()
         self.assertEqual(accm.n_accounts(), 0)
 
-        accm = AccountManager([self.account1, self.account2])
+        accm = AccountPool([self.account1, self.account2])
         self.assertEqual(accm.n_accounts(), 2)
 
     def testAddAccount(self):
@@ -82,6 +82,6 @@ class AccountManagerTest(unittest.TestCase):
         self.assertRaises(Exception, self.accm.release_account, self.account1)
 
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(AccountManagerTest)
+    return unittest.TestLoader().loadTestsFromTestCase(AccountPoolTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

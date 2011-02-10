@@ -145,10 +145,10 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(100.0, self.queue.get_progress())
 
     def testAddAccount(self):
-        self.assertEqual(0, self.queue.account_manager.n_accounts())
+        self.assertEqual(0, self.queue.default_accounts.n_accounts())
         account = Account('user', 'test')
         self.queue.add_account(account)
-        self.assertEqual(1, self.queue.account_manager.n_accounts())
+        self.assertEqual(1, self.queue.default_accounts.n_accounts())
 
     def startTask(self):
         self.testAddAccount()
@@ -185,19 +185,19 @@ class QueueTest(unittest.TestCase):
         self.queue.shutdown()
         self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
-        self.assertEqual(self.queue.account_manager.n_accounts(), 1)
+        self.assertEqual(self.queue.default_accounts.n_accounts(), 1)
 
     def testDestroy(self):
         task = self.startTask()   # this also adds an account
         self.queue.destroy()
         self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
-        self.assertEqual(self.queue.account_manager.n_accounts(), 0)
+        self.assertEqual(self.queue.default_accounts.n_accounts(), 0)
 
     def testReset(self):
         self.testAddAccount()
         self.queue.reset()
-        self.assertEqual(self.queue.account_manager.n_accounts(), 0)
+        self.assertEqual(self.queue.default_accounts.n_accounts(), 0)
 
     def testRun(self):
         data  = {'n_calls': 0}

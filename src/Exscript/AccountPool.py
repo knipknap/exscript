@@ -16,7 +16,7 @@ import threading
 from collections        import deque
 from Exscript.util.cast import to_list
 
-class AccountManager(object):
+class AccountPool(object):
     """
     This class manages a collection of available accounts.
     """
