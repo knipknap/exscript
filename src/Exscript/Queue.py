@@ -245,11 +245,10 @@ class Queue(object):
             L{Host} object using L{Host.set_account()}), and uses that.
 
             # If the L{Host} has no account attached, Exscript walks
-            through the all pools that were passed to
-            L{Queue.add_account_pool()}. For each pool, it passes the
-            current L{Connection} to the function in the given match
-            argument. If the return value is True, the account pool is
-            used to acquire an account.
+            through all pools that were passed to L{Queue.add_account_pool()}.
+            For each pool, it passes the current L{Connection} to the
+            function in the given match argument. If the return value is
+            True, the account pool is used to acquire an account.
             (Accounts within each pool are taken in a round-robin
             fashion.)
 
