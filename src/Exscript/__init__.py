@@ -21,6 +21,7 @@ with warnings.catch_warnings():
     import paramiko
 from Exscript.version       import __version__
 from Exscript.Account       import Account
+from Exscript.AccountPool   import AccountPool
 from Exscript.PrivateKey    import PrivateKey
 from Exscript.Queue         import Queue
 from Exscript.QueueListener import QueueListener

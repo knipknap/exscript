@@ -5,8 +5,9 @@ warnings.simplefilter('ignore', DeprecationWarning)
 
 import shutil
 import time
+from functools                      import partial
 from tempfile                       import mkdtemp
-from Exscript                       import Queue, Account
+from Exscript                       import Queue, Account, AccountPool
 from Exscript.Connection            import Connection
 from Exscript.protocols             import Dummy
 from Exscript.interpreter.Exception import FailException
@@ -149,6 +150,43 @@ class QueueTest(unittest.TestCase):
         account = Account('user', 'test')
         self.queue.add_account(account)
         self.assertEqual(1, self.queue.default_accounts.n_accounts())
+
+    def testAddAccountPool(self):
+        self.assertEqual(0, self.queue.default_accounts.n_accounts())
+        account = Account('user', 'test')
+        self.queue.add_account(account)
+        self.assertEqual(1, self.queue.default_accounts.n_accounts())
+
+        def match_cb(data, conn):
+            data['match-called'] = True
+            return True
+
+        def start_cb(data, conn):
+            data['start-called'] = True
+            account = data['account'] = conn._acquire_account()
+            account.release()
+
+        # Replace the default pool.
+        pool1 = AccountPool()
+        self.queue.add_account_pool(pool1)
+        self.assertEqual(self.queue.default_accounts, pool1)
+
+        # Add another pool, making sure that it does not replace
+        # the default pool.
+        pool2    = AccountPool()
+        account2 = Account('user', 'test')
+        pool2.add_account(account2)
+        data = {}
+        self.queue.add_account_pool(pool2, partial(match_cb, data))
+        self.assertEqual(self.queue.default_accounts, pool1)
+
+        # Make sure that pool2 is chosen (because the match function
+        # returns True).
+        self.queue.run('dummy', partial(start_cb, data))
+        self.queue.shutdown()
+        self.assertEqual(data, {'match-called': True,
+                                'start-called': True,
+                                'account': account2})
 
     def startTask(self):
         self.testAddAccount()

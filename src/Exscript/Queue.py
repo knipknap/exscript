@@ -69,6 +69,7 @@ class Queue(object):
         """
         self.workqueue         = WorkQueue()
         self.default_accounts  = AccountPool()
+        self.account_pools     = []
         self.domain            = kwargs.get('domain',        '')
         self.verbose           = kwargs.get('verbose',       1)
         self.times             = kwargs.get('times',         1)
@@ -104,7 +105,6 @@ class Queue(object):
         self.workqueue.queue_empty_event.listen(self.queue_empty_event)
         self.workqueue.unpause()
 
-
     def _update_verbosity(self):
         if self.verbose < 0:
             self.channel_map['status_bar'] = self.devnull
@@ -138,18 +138,15 @@ class Queue(object):
             self.channel_map['tracebacks'] = self.stderr
         self.protocol_args['stdout'] = self.channel_map['connection']
 
-
     def _write(self, channel, msg):
         self.channel_map[channel].write(msg)
         self.channel_map[channel].flush()
-
 
     def _del_status_bar(self):
         if self.status_bar_length == 0:
             return
         self._write('status_bar', '\b \b' * self.status_bar_length)
         self.status_bar_length = 0
-
 
     def get_progress(self):
         """
@@ -162,7 +159,6 @@ class Queue(object):
             return 0.0
         return 100.0 / self.total * self.completed
 
-
     def _print_status_bar(self):
         if self.total == 0:
             return
@@ -174,29 +170,24 @@ class Queue(object):
         self._write('status_bar', text)
         self.status_bar_length = len(text)
 
-
     def _print(self, channel, msg):
         self._del_status_bar()
         self._write(channel, msg + '\n')
         self._print_status_bar()
-
 
     def _dbg(self, level, msg):
         if level > self.verbose:
             return
         self._print('debug', msg)
 
-
     def _on_job_started(self, job):
         self._del_status_bar()
         self._print_status_bar()
-
 
     def _on_job_succeeded(self, job):
         self._dbg(2, job.getName() + ' job is done.')
         self._del_status_bar()
         self._print_status_bar()
-
 
     def _on_action_error(self, action, e):
         msg = action.get_name() + ' error: ' + str(e)
@@ -206,16 +197,13 @@ class Queue(object):
         if action._is_recoverable_error(e):
             self._print('fatal_errors', tb)
 
-
     def _on_action_aborted(self, action):
         self.completed += 1
         self._print('errors', action.get_name() + ' finally failed.')
 
-
     def _on_action_succeeded(self, action):
         self.completed += 1
         self._print('status_bar', action.get_name() + ' succeeded.')
-
 
     def _on_job_aborted(self, job, e):
         """
@@ -223,7 +211,6 @@ class Queue(object):
         In other words, the workqueue does not notice if the action fails.
         """
         raise e
-
 
     def set_max_threads(self, n_connections):
         """
@@ -235,7 +222,6 @@ class Queue(object):
         self.workqueue.set_max_threads(n_connections)
         self._update_verbosity()
 
-
     def get_max_threads(self):
         """
         Returns the maximum number of concurrent threads.
@@ -245,6 +231,69 @@ class Queue(object):
         """
         return self.workqueue.get_max_threads()
 
+    def add_account_pool(self, pool, match = None):
+        """
+        Adds a new account pool to the queue. If the given match argument is
+        None, the pool the default pool. Otherwise, the match argument is
+        a callback function that is invoked to decide whether or not the
+        given pool should be used for a connection.
+
+        When Exscript logs into a host, the account is chosen in the following
+        order:
+
+            # Exscript checks whether an account was attached to the
+            L{Host} object using L{Host.set_account()}), and uses that.
+
+            # If the L{Host} has no account attached, Exscript walks
+            through the all pools that were passed to
+            L{Queue.add_account_pool()}. For each pool, it passes the
+            current L{Connection} to the function in the given match
+            argument. If the return value is True, the account pool is
+            used to acquire an account.
+            (Accounts within each pool are taken in a round-robin
+            fashion.)
+
+            # If no matching account pool is found, an account is taken
+            from the default account pool.
+
+            # Finally, if all that fails and the default account pool
+            contains no accounts, an error is raised.
+
+        Example usage::
+
+            def do_nothing(conn):
+                conn.autoinit()
+
+            def use_this_pool(conn):
+                return conn.get_host().get_name().startswith('foo')
+
+            default_pool = AccountPool()
+            default_pool.add_account(Account('default-user', 'password'))
+
+            other_pool = AccountPool()
+            other_pool.add_account(Account('user', 'password'))
+
+            queue = Queue()
+            queue.add_account_pool(default_pool)
+            queue.add_account_pool(other_pool, use_this_pool)
+
+            host = Host('localhost')
+            queue.run(host, do_nothing)
+
+        In the example code, the host has no account attached. As a result,
+        the queue checks whether use_this_pool() returns True. Because the
+        hostname does not start with 'foo', the function returns False, and
+        Exscript takes the 'default-user' account from the default pool.
+
+        @type  pool: AccountPool
+        @param pool: The account pool that is added.
+        @type  match: callable
+        @param match: A callback to check if the pool should be used.
+        """
+        if match is None:
+            self.default_accounts = pool
+        else:
+            self.account_pools.append((match, pool))
 
     def add_account(self, account):
         """
@@ -255,7 +304,6 @@ class Queue(object):
         @param account: The account that is added.
         """
         self.default_accounts.add_account(account)
-
 
     def wait_for(self, action):
         """
@@ -275,7 +323,6 @@ class Queue(object):
         else:
             raise ValueError('invalid type for argument "action"')
 
-
     def is_completed(self):
         """
         Returns True if the task is completed, False otherwise.
@@ -286,7 +333,6 @@ class Queue(object):
         """
         return self.workqueue.get_length() == 0
 
-
     def join(self):
         """
         Waits until all jobs are completed.
@@ -296,7 +342,6 @@ class Queue(object):
         self._del_status_bar()
         self._print_status_bar()
         gc.collect()
-
 
     def shutdown(self, force = False):
         """
@@ -319,7 +364,6 @@ class Queue(object):
         self._dbg(2, 'Queue shut down.')
         self._del_status_bar()
 
-
     def destroy(self, force = False):
         """
         Like shutdown(), but also removes all accounts, hosts, etc., and
@@ -341,7 +385,6 @@ class Queue(object):
         self._dbg(2, 'Queue destroyed.')
         self._del_status_bar()
 
-
     def reset(self):
         """
         Remove all accounts, hosts, etc.
@@ -354,7 +397,6 @@ class Queue(object):
         self.status_bar_length = 0
         self._dbg(2, 'Queue reset.')
         self._del_status_bar()
-
 
     def _enqueue1(self, action, prioritize, force, duplicate_check):
         """
@@ -381,7 +423,6 @@ class Queue(object):
             self.workqueue.enqueue(action)
         return True
 
-
     def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
@@ -389,7 +430,6 @@ class Queue(object):
         if self._enqueue1(action, prioritize, force, duplicate_check):
             return action
         return None
-
 
     def _run(self, hosts, function, duplicate_check):
         hosts       = to_hosts(hosts, default_domain = self.domain)
@@ -407,7 +447,6 @@ class Queue(object):
 
         self._dbg(2, 'All actions enqueued.')
         return task
-
 
     def run(self, hosts, function):
         """
@@ -428,7 +467,6 @@ class Queue(object):
         """
         return self._run(hosts, function, False)
 
-
     def run_or_ignore(self, hosts, function):
         """
         Like run(), but only appends hosts that are not already in the
@@ -442,7 +480,6 @@ class Queue(object):
         @return: A task object, or None if all hosts were duplicates.
         """
         return self._run(hosts, function, True)
-
 
     def priority_run(self, hosts, function):
         """
@@ -465,7 +502,6 @@ class Queue(object):
 
         self._dbg(2, 'All prioritized actions enqueued.')
         return task
-
 
     def priority_run_or_raise(self, hosts, function):
         """
@@ -496,7 +532,6 @@ class Queue(object):
         self._dbg(2, 'All prioritized actions enqueued.')
         return task
 
-
     def force_run(self, hosts, function):
         """
         Like priority_run(), but starts the task immediately even if that
@@ -519,7 +554,6 @@ class Queue(object):
 
         self._dbg(2, 'All forced actions enqueued.')
         return task
-
 
     def enqueue(self, function, name = 'CustomAction'):
         """

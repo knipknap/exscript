@@ -1,7 +1,7 @@
 Exscript
 --------
-* Improve support for mapping hosts to specific accounts:
-    Exscript.Queue.add_account(myaccount, match = lambda host: host.get_name().startswith('foo'))
+* Move some code from Exscript.Connection and Exscript.Queue to a new
+  AccountManager.
 * Add tests for Transport class debug levels.
 * Add API docs for Exscript.parselib.
 * Add a test for Exscript.Task.
