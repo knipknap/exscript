@@ -42,11 +42,14 @@ class Config(ConfigReader):
         filename           = os.path.join(cfg_dir, 'main.xml')
         ConfigReader.__init__(self, filename, resolve_variables)
 
+    def _get_account_list_from_name(self, name):
+        element = self.cfgtree.find('account-pool[@name="%s"]' % name)
+        return get_accounts_from_etree(element)
+
     def _init_account_pool_from_name(self, name):
         if name in self.account_pools:
             return self.account_pools[name]
-        element  = self.cfgtree.find('account-pool[@name="%s"]' % name)
-        accounts = get_accounts_from_etree(element)
+        accounts = self._get_account_list_from_name(name)
         pool     = self.account_pools[name] = AccountPool(accounts)
         return pool
 
@@ -63,11 +66,18 @@ class Config(ConfigReader):
                             logdir      = logdir,
                             delete_logs = delete_logs)
 
-        # Add some accounts, if any.
-        account_pool = element.find('account-pool')
-        if account_pool is not None:
-            pool = self._init_account_pool_from_name(account_pool.text)
-            queue.default_accounts = pool
+        # Assign account pools to the queue.
+        for pool_elem in element.iterfind('account-pool'):
+            pool = self._init_account_pool_from_name(pool_elem.text)
+            cond = pool_elem.get('for')
+            if cond is None:
+                queue.add_account_pool(pool)
+                continue
+
+            condition = compile(cond, 'config', 'eval')
+            def match_cb(host):
+                return eval(condition, host.get_dict())
+            queue.add_account_pool(pool, match_cb)
 
         self.queues[name] = queue
         return queue
@@ -102,7 +112,7 @@ class Config(ConfigReader):
 
         # Add some accounts, if any.
         account_pool = element.find('account-pool')
-        for account in self._init_account_pool_from_name(account_pool.text):
+        for account in self._get_account_list_from_name(account_pool.text):
             daemon.add_account(account)
 
         return daemon

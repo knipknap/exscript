@@ -11,11 +11,6 @@ Exscript
 
 exscriptd
 ---------
-* Add support for this:
-      <queue name="default-queue">
-         ...
-         <account-pool for="hostname == 'myhost'">foobar</account-pool>
-      </queue>
 * Make daemons asynchronous.
 * Debug memory usage.
 * Add more tests.
