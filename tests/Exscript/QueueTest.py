@@ -157,7 +157,7 @@ class QueueTest(unittest.TestCase):
         self.queue.add_account(account)
         self.assertEqual(1, self.queue.default_accounts.n_accounts())
 
-        def match_cb(data, conn):
+        def match_cb(data, host):
             data['match-called'] = True
             return True
 

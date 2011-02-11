@@ -111,7 +111,7 @@ class Connection(object):
 
         # Check whether a matching account pool exists.
         for match, pool in self.get_queue().account_pools:
-            if match(self) is True:
+            if match(self.get_host()) is True:
                 return pool.acquire_account()
 
         # Else, choose an account from the default account pool.

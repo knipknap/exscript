@@ -236,7 +236,7 @@ class Queue(object):
         Adds a new account pool to the queue. If the given match argument is
         None, the pool the default pool. Otherwise, the match argument is
         a callback function that is invoked to decide whether or not the
-        given pool should be used for a connection.
+        given pool should be used for a host.
 
         When Exscript logs into a host, the account is chosen in the following
         order:
@@ -246,9 +246,9 @@ class Queue(object):
 
             # If the L{Host} has no account attached, Exscript walks
             through all pools that were passed to L{Queue.add_account_pool()}.
-            For each pool, it passes the current L{Connection} to the
-            function in the given match argument. If the return value is
-            True, the account pool is used to acquire an account.
+            For each pool, it passes the L{Host} to the function in the
+            given match argument. If the return value is True, the account
+            pool is used to acquire an account.
             (Accounts within each pool are taken in a round-robin
             fashion.)
 
@@ -263,8 +263,8 @@ class Queue(object):
             def do_nothing(conn):
                 conn.autoinit()
 
-            def use_this_pool(conn):
-                return conn.get_host().get_name().startswith('foo')
+            def use_this_pool(host):
+                return host.get_name().startswith('foo')
 
             default_pool = AccountPool()
             default_pool.add_account(Account('default-user', 'password'))
