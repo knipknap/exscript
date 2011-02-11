@@ -20,7 +20,8 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'(user|login): $', re.I)]
 _password_re = [re.compile(r'Password: $')]
-_prompt_re   = [re.compile(r'[\r\n][\-\w+\._]+@[\-\w+\._~]+:(?:/\w*)+[#%] $')]
+_prompt_re   = [re.compile(r'[\r\n][\-\w+\._]+@[\-\w+\._~]+:(?:/\w*)+[#%] $'),
+                re.compile(r'Exit anyway\? \[.\] $')]
 _os_re       = re.compile(r'\bpeakflow\b.*\barbor\b', re.I | re.S)
 
 class ArborPeakflowDriver(Driver):
