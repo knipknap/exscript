@@ -77,7 +77,7 @@ class Client(object):
                 raise Exception(str(e))
         if result.getcode() != 200:
             raise Exception(result.read())
-        order.id = int(result.read())
+        order.id = json.loads(result.read())
 
     def get_order_from_id(self, id):
         """

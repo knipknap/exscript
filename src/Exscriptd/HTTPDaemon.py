@@ -52,7 +52,7 @@ class HTTPHandler(HTTPRequestHandler):
             order = Order.from_xml(data['xml'][0])
             self.daemon.logger.debug('XML order parsed complete.')
             self.daemon._place_order(order)
-            return str(order.get_id())
+            return 'application/json', json.dumps(order.get_id())
         elif self.path == '/order/get/':
             id    = int(self.args.get('id'))
             order = self.daemon.get_order_from_id(id)
