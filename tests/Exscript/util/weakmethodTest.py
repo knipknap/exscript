@@ -4,7 +4,7 @@ import re
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from Exscript.util.weakmethod import ref, WeakMethod
+from Exscript.util.weakmethod import ref, WeakMethod, DeadMethodCalled
 
 class TestClass(object):
     def callback(self, *args, **kwargs):
@@ -15,7 +15,7 @@ class weakmethodTest(unittest.TestCase):
     CORRELATE = WeakMethod
 
     def testConstructor(self):
-        WeakMethod(lambda x: x)
+        WeakMethod('foo', lambda x: x)
 
     def testGetFunction(self):
         # Test with a function.
@@ -65,6 +65,9 @@ class weakmethodTest(unittest.TestCase):
         m('one', two = True)
         self.assertEqual(c.args, ('one',))
         self.assertEqual(c.kwargs, {'two': True})
+
+        del c
+        self.assertRaises(DeadMethodCalled, m)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(weakmethodTest)

@@ -18,15 +18,23 @@ Weak references to bound and unbound methods.
 import weakref
 from functools import partial
 
+class DeadMethodCalled(Exception):
+    """
+    Raised by L{WeakMethod} if it is called when the referenced object
+    is already dead.
+    """
+    pass
+
 class WeakMethod(object):
     """
     Do not create this class directly; use L{ref()} instead.
     """
 
-    def __init__(self, callback):
+    def __init__(self, name, callback):
         """
         Constructor. Do not use directly, use L{ref()} instead.
         """
+        self.name     = name
         self.callback = callback
 
     def _dead(self, ref):
@@ -55,20 +63,21 @@ class WeakMethod(object):
 
     def __call__(self, *args, **kwargs):
         """
-        Proxied to the underlying function or method. Raises TypeError if
-        the referenced function is dead.
+        Proxied to the underlying function or method. Raises L{DeadMethodCalled}
+        if the referenced function is dead.
 
         @rtype:  object
         @return: Whatever the referenced function returned.
         """
         method = self.get_function()
         if method is None:
-            raise TypeError, 'Method called on dead object'
+            raise DeadMethodCalled('method called on dead object ' + self.name)
         method(*args, **kwargs)
 
 class _WeakMethodBound(WeakMethod):
     def __init__(self, f, callback):
-        WeakMethod.__init__(self, callback)
+        name = f.__self__.__class__.__name__ + '.' + f.__func__.__name__
+        WeakMethod.__init__(self, name, callback)
         self.f = f.__func__
         self.c = weakref.ref(f.__self__, self._dead)
 
@@ -80,7 +89,7 @@ class _WeakMethodBound(WeakMethod):
 
 class _WeakMethodFree(WeakMethod):
     def __init__(self, f, callback):
-        WeakMethod.__init__(self, callback)
+        WeakMethod.__init__(self, f.__class__.__name__, callback)
         self.f = weakref.ref(f, self._dead)
 
     def get_function(self):
