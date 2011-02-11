@@ -16,7 +16,6 @@
 A simple signal/event mechanism.
 """
 from threading     import Lock
-from itertools     import chain
 from Exscript.util import weakmethod
 
 class Event(object):
@@ -135,10 +134,26 @@ class Event(object):
         @type  kwargs: dict
         @param kwargs: Optional keyword arguments passed to the callbacks.
         """
-        subscribers = chain(self.hard_subscribers + self.weak_subscribers)
-        for callback, user_args, user_kwargs in subscribers:
+        for callback, user_args, user_kwargs in self.hard_subscribers:
             kwargs.update(user_kwargs)
             callback(*args + user_args, **kwargs)
+
+        for callback, user_args, user_kwargs in self.weak_subscribers:
+            kwargs.update(user_kwargs)
+
+            # Even though WeakMethod notifies us when the underlying
+            # function is destroyed, and we remove the item from the
+            # the list of subscribers, there is no guarantee that
+            # this notification has already happened because the garbage
+            # collector may run while this loop is executed.
+            # Disabling the garbage collector temporarily also does
+            # not work, because other threads may be trying to do
+            # the same, causing yet another race condition.
+            # So the only solution is to skip such functions.
+            function = callback.get_function()
+            if function is None:
+                continue
+            function(*args + user_args, **kwargs)
 
     def _try_disconnect(self, ref):
         with self.lock:
