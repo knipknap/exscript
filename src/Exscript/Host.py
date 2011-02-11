@@ -112,6 +112,24 @@ class Host(object):
 
         return str(url)
 
+    def get_dict(self):
+        """
+        Returns a dict containing the host's attributes. The following
+        keys are contained:
+
+            - hostname
+            - address
+            - protocol
+            - port
+
+        @rtype:  dict
+        @return: The resulting dictionary.
+        """
+        return {'hostname': self.get_name(),
+                'address':  self.get_address(),
+                'protocol': self.get_protocol(),
+                'port':     self.get_tcp_port()}
+
     def set_name(self, name):
         """
         Set the hostname of the remote host without

@@ -38,6 +38,14 @@ class HostTest(unittest.TestCase):
             uri  = Url.from_string(url)
             self.assertEqual(host.get_uri(), str(uri))
 
+    def testGetDict(self):
+        host = Host('foo')
+        host.set_address('foo2')
+        self.assertEqual(host.get_dict(), {'hostname': 'foo',
+                                           'address':  'foo2',
+                                           'protocol': 'telnet',
+                                           'port':     23})
+
     def testSetAddress(self):
         self.host.set_protocol('dummy')
         self.host.set_address('test.org')
