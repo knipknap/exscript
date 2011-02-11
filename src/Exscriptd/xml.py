@@ -194,8 +194,10 @@ def add_host_to_etree(root, tag, host):
                             tag,
                             address = host.get_address(),
                             name    = host.get_name())
-    etree.SubElement(elem, 'protocol').text = host.get_protocol()
-    etree.SubElement(elem, 'tcp-port').text = str(host.get_tcp_port())
+    if host.get_protocol() is not None:
+        etree.SubElement(elem, 'protocol').text = host.get_protocol()
+    if host.get_tcp_port() is not None:
+        etree.SubElement(elem, 'tcp-port').text = str(host.get_tcp_port())
     if host.get_all():
         add_dict_to_etree(elem, 'argument-list', host.get_all())
     return elem
