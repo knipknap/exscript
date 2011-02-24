@@ -20,7 +20,6 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'[\r\n]Authorized Login: $')]
 _password_re = [re.compile(r'[\r\n]\w+\'s Password: $')]
-_prompt_re   = [re.compile(r'[\r\n][\-\w+\._]+@[\-\w+\._~]+\$ $')]
 _aix_re      = re.compile(r'\bAIX\b')
 
 class AIXDriver(Driver):
@@ -28,7 +27,6 @@ class AIXDriver(Driver):
         Driver.__init__(self, 'aix')
         self.user_re     = _user_re
         self.password_re = _password_re
-        self.prompt_re   = _prompt_re
 
     def check_head_for_os(self, string):
         if _user_re[0].search(string):
