@@ -20,12 +20,13 @@ is the following statement::
 
   import Exscript.util.sigintcatcher
 
-Be warned that this way may of importing it breaks on some
-systems, because a fork during an import may cause the following error:
+Be warned that this way of importing breaks on some systems, because a
+fork during an import may cause the following error::
 
   RuntimeError: not holding the import lock
 
-So in general it is recommended to use the class directly.
+So in general it is recommended to use the L{sigint.SigIntWatcher()}
+class directly.
 """
 from Exscript.util.sigint import SigIntWatcher
 _watcher = SigIntWatcher()
