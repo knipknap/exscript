@@ -87,6 +87,9 @@ class Telnet(Protocol):
     def cancel_expect(self):
         self.tn.cancel_expect = True
 
+    def interact(self):
+        return self._open_shell(self.tn.sock)
+
     def close(self, force = False):
         if self.tn is None:
             return

@@ -449,7 +449,6 @@ class ProtocolTest(unittest.TestCase):
     def testCancelExpect(self):
         # Test can not work on the abstract base.
         if self.protocol.__class__ == Protocol:
-            self.assertRaises(Exception, self.protocol.expect, 'ls')
             return
         self.doLogin()
         oldresponse = self.protocol.response
@@ -459,6 +458,13 @@ class ProtocolTest(unittest.TestCase):
         self.assertRaises(ExpectCancelledException,
                           self.protocol.expect,
                           'notgoingtohappen')
+
+    def testInteract(self):
+        # Test can not work on the abstract base.
+        if self.protocol.__class__ == Protocol:
+            self.assertRaises(Exception, self.protocol.interact)
+            return
+        # Can't really be tested.
 
     def testClose(self):
         # Test can not work on the abstract base.

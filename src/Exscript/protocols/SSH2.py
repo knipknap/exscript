@@ -148,7 +148,7 @@ class SSH2(Protocol):
         self.client.auth_none(username)
 
     def _paramiko_auth_password(self, username, password):
-        self.client.auth_password(username, password)
+        self.client.auth_password(username, password or '')
 
     def _paramiko_auth_agent(self, username, password = None):
         keys = paramiko.Agent().get_keys()
@@ -312,6 +312,9 @@ class SSH2(Protocol):
 
     def cancel_expect(self):
         self.cancel = True
+
+    def interact(self):
+        return self._open_shell(self.shell)
 
     def close(self, force = False):
         if self.shell is None:

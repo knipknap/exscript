@@ -17,6 +17,7 @@ An abstract base class for all protocols.
 """
 import re
 import sys
+import select
 import os
 from Exscript.util.crypt          import otp
 from Exscript.util.event          import Event
@@ -28,6 +29,13 @@ from Exscript.protocols.Exception import InvalidCommandException, \
                                          TimeoutException, \
                                          DriverReplacedException, \
                                          ExpectCancelledException
+
+try:
+    import termios
+    import tty
+    _have_termios = True
+except ImportError:
+    _have_termios = False
 
 _skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
 
@@ -486,7 +494,7 @@ class Protocol(object):
     def set_timeout(self, timeout):
         """
         Defines the maximum time that the adapter waits before a call to
-        expect() or expect_prompt() fails.
+        L{expect()} or L{expect_prompt()} fails.
 
         @type  timeout: int
         @param timeout: The maximum time in seconds.
@@ -951,6 +959,73 @@ class Protocol(object):
         Cancel the current call to expect() as soon as control returns
         to the protocol adapter. This method may be used in callbacks to
         the events emitted by this class, e.g. Protocol.data_received_event.
+        """
+        raise NotImplementedError()
+
+    def _open_posix_shell(self, channel):
+        oldtty = termios.tcgetattr(sys.stdin)
+
+        try:
+            tty.setraw(sys.stdin.fileno())
+            tty.setcbreak(sys.stdin.fileno())
+            channel.settimeout(0.0)
+
+            while True:
+                r, w, e = select.select([channel, sys.stdin], [], [])
+                if channel in r:
+                    try:
+                        x = channel.recv(1024)
+                        if len(x) == 0:
+                            self._dbg(1, 'EOF from remote')
+                            break
+                        sys.stdout.write(x)
+                        sys.stdout.flush()
+                    except socket.timeout:
+                        pass
+                if sys.stdin in r:
+                    x = sys.stdin.read(1)
+                    if len(x) == 0:
+                        break
+                    channel.send(x)
+        finally:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
+
+    def _open_windows_shell(self, channel):
+        import threading
+
+        def writeall(sock):
+            while True:
+                data = sock.recv(256)
+                if not data:
+                    self._dbg(1, 'EOF from remote')
+                    sys.stdout.write('\r\n')
+                    sys.stdout.flush()
+                    break
+                sys.stdout.write(data)
+                sys.stdout.flush()
+
+        writer = threading.Thread(target=writeall, args=(channel,))
+        writer.start()
+
+        try:
+            while True:
+                d = sys.stdin.read(1)
+                if not d:
+                    break
+                channel.send(d)
+        except EOFError:
+            self._dbg(1, 'User hit ^Z or F6')
+
+    def _open_shell(self, channel):
+        if _have_termios:
+            return self._open_posix_shell(channel)
+        else:
+            return self._open_windows_shell(channel)
+
+    def interact(self):
+        """
+        Opens a simple interactive shell. Returns when the remote host
+        sends EOF.
         """
         raise NotImplementedError()
 
