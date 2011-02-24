@@ -313,8 +313,8 @@ class SSH2(Protocol):
     def cancel_expect(self):
         self.cancel = True
 
-    def interact(self):
-        return self._open_shell(self.shell)
+    def interact(self, key_handlers = None):
+        return self._open_shell(self.shell, key_handlers)
 
     def close(self, force = False):
         if self.shell is None:

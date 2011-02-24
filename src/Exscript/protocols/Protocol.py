@@ -1000,7 +1000,14 @@ class Protocol(object):
         """
         raise NotImplementedError()
 
-    def _open_posix_shell(self, channel):
+    def _call_key_handlers(self, key_handlers, data):
+        for key, func in key_handlers.iteritems():
+            if data == key:
+                func(self)
+                return True
+        return False
+
+    def _open_posix_shell(self, channel, key_handlers):
         oldtty = termios.tcgetattr(sys.stdin)
 
         try:
@@ -1023,11 +1030,12 @@ class Protocol(object):
                     data = sys.stdin.read(1)
                     if len(data) == 0:
                         break
-                    channel.send(data)
+                    if not self._call_key_handlers(key_handlers, data):
+                        channel.send(data)
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
 
-    def _open_windows_shell(self, channel):
+    def _open_windows_shell(self, channel, key_handlers):
         import threading
 
         def writeall(sock):
@@ -1043,23 +1051,31 @@ class Protocol(object):
 
         try:
             while True:
-                d = sys.stdin.read(1)
-                if not d:
+                data = sys.stdin.read(1)
+                if not data:
                     break
-                channel.send(d)
+                if not self._call_key_handlers(key_handlers, data):
+                    channel.send(data)
         except EOFError:
             self._dbg(1, 'User hit ^Z or F6')
 
-    def _open_shell(self, channel):
+    def _open_shell(self, channel, key_handlers):
         if _have_termios:
-            return self._open_posix_shell(channel)
+            return self._open_posix_shell(channel, key_handlers)
         else:
-            return self._open_windows_shell(channel)
+            return self._open_windows_shell(channel, key_handlers)
 
-    def interact(self):
+    def interact(self, key_handlers = None):
         """
         Opens a simple interactive shell. Returns when the remote host
         sends EOF.
+        The optional key handlers are functions that are called whenever
+        the user presses a specific key. For example, to catch CTRL+y::
+
+            conn.interact({'\031': mycallback})
+
+        @type  key_handlers: dict(str: callable)
+        @param key_handlers: A dictionary mapping chars to a functions.
         """
         raise NotImplementedError()
 
