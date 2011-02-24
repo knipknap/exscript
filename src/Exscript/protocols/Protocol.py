@@ -242,6 +242,7 @@ class Protocol(object):
         self.timeout               = timeout
         self.logfile               = logfile
         self.response              = None
+        self.monitors              = []
         if stdout is None:
             self.stdout = open(os.devnull, 'w')
         else:
@@ -307,6 +308,11 @@ class Protocol(object):
 
         # Send signals to subscribers.
         self.data_received_event(data)
+        for regex_list, callback in self.monitors:
+            for i, regex in enumerate(regex_list):
+                match = regex.search(data)
+                if match is not None:
+                    callback(self, i, match)
         return data
 
     def is_dummy(self):
@@ -967,6 +973,24 @@ class Protocol(object):
                 raise InvalidCommandException('Device said:\n' + self.response)
 
         return result
+
+    def add_monitor(self, pattern, callback):
+        """
+        Calls the given function whenever the given pattern matches the
+        incoming data.
+
+        @note: If you want to catch all incoming data regardless of a
+        pattern, use the L{Protocol.on_data_received} event instead.
+
+        Arguments passed to the callback are the protocol instance, the
+        index of the match, and the match object of the regular expression.
+
+        @type  pattern: str|re.RegexObject|list(str|re.RegexObject)
+        @param pattern: One or more regular expressions.
+        @type  callback: callable
+        @param callback: The function that is called.
+        """
+        self.monitors.append((to_regexs(pattern), callback))
 
     def cancel_expect(self):
         """
