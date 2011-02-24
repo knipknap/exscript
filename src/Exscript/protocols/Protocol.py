@@ -850,7 +850,10 @@ class Protocol(object):
         raise NotImplementedError()
 
     def _waitfor(self, prompt):
-        result = self._domatch(to_regexs(prompt), False)
+        re_list  = to_regexs(prompt)
+        patterns = [p.pattern for p in re_list]
+        self._dbg(2, 'waiting for: ' + repr(patterns))
+        result = self._domatch(re_list, False)
         self.os_guesser.response_received()
         return result
 
