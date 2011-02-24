@@ -1008,15 +1008,18 @@ class Protocol(object):
         return False
 
     def _open_posix_shell(self, channel, key_handlers):
-        oldtty = termios.tcgetattr(sys.stdin)
+        # We need to make sure to use an unbuffer stdin, else multi-byte
+        # chars (such as arrow key) won't work properly.
+        stdin  = os.fdopen(sys.stdin.fileno(), 'r', 0)
+        oldtty = termios.tcgetattr(stdin)
 
         try:
-            tty.setraw(sys.stdin.fileno())
-            tty.setcbreak(sys.stdin.fileno())
+            tty.setraw(stdin.fileno())
+            tty.setcbreak(stdin.fileno())
             channel.settimeout(0.0)
 
             while True:
-                r, w, e = select.select([channel, sys.stdin], [], [])
+                r, w, e = select.select([channel, stdin], [], [])
                 if channel in r:
                     try:
                         data = channel.recv(1024)
@@ -1026,14 +1029,14 @@ class Protocol(object):
                         self._dbg(1, 'EOF from remote')
                         break
                     self._receive_cb(data, False)
-                if sys.stdin in r:
-                    data = sys.stdin.read(1)
+                if stdin in r:
+                    data = stdin.read(1)
                     if len(data) == 0:
                         break
                     if not self._call_key_handlers(key_handlers, data):
                         channel.send(data)
         finally:
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
+            termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
 
     def _open_windows_shell(self, channel, key_handlers):
         import threading
