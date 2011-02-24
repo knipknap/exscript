@@ -18,6 +18,7 @@ An abstract base class for all protocols.
 import re
 import sys
 import select
+import socket
 import os
 from Exscript.util.crypt          import otp
 from Exscript.util.event          import Event
@@ -282,19 +283,29 @@ class Protocol(object):
         msg = 'Protocol: driver replaced: %s -> %s' % (old.name, new.name)
         self._dbg(1, msg)
 
-    def _receive_cb(self, data, **kwargs):
+    def _receive_cb(self, data, remove_cr = True):
+        # Clean the data up.
         data = data.replace(chr(13) + chr(0), '')
-        text = data.replace('\r', '')
+        if remove_cr:
+            text = data.replace('\r', '')
+        else:
+            text = data
+
+        # Write to a logfile.
         self.stdout.write(text)
         self.stdout.flush()
         if self.log is not None:
             self.log.write(text)
+
+        # Check whether a better driver is found based on the incoming data.
         old_driver = self.get_driver()
         self.os_guesser.data_received(data)
         self.auto_driver = driver_map[self.guess_os()]
         new_driver       = self.get_driver()
         if old_driver != new_driver:
             self._driver_replaced_notify(old_driver, new_driver)
+
+        # Send signals to subscribers.
         self.data_received_event(data)
         return data
 
@@ -959,7 +970,7 @@ class Protocol(object):
 
     def cancel_expect(self):
         """
-        Cancel the current call to expect() as soon as control returns
+        Cancel the current call to L{expect()} as soon as control returns
         to the protocol adapter. This method may be used in callbacks to
         the events emitted by this class, e.g. Protocol.data_received_event.
         """
@@ -977,19 +988,18 @@ class Protocol(object):
                 r, w, e = select.select([channel, sys.stdin], [], [])
                 if channel in r:
                     try:
-                        x = channel.recv(1024)
-                        if len(x) == 0:
-                            self._dbg(1, 'EOF from remote')
-                            break
-                        sys.stdout.write(x)
-                        sys.stdout.flush()
+                        data = channel.recv(1024)
                     except socket.timeout:
                         pass
-                if sys.stdin in r:
-                    x = sys.stdin.read(1)
-                    if len(x) == 0:
+                    if not data:
+                        self._dbg(1, 'EOF from remote')
                         break
-                    channel.send(x)
+                    self._receive_cb(data, False)
+                if sys.stdin in r:
+                    data = sys.stdin.read(1)
+                    if len(data) == 0:
+                        break
+                    channel.send(data)
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
 
@@ -1001,11 +1011,8 @@ class Protocol(object):
                 data = sock.recv(256)
                 if not data:
                     self._dbg(1, 'EOF from remote')
-                    sys.stdout.write('\r\n')
-                    sys.stdout.flush()
                     break
-                sys.stdout.write(data)
-                sys.stdout.flush()
+                self._receive_cb(data)
 
         writer = threading.Thread(target=writeall, args=(channel,))
         writer.start()
