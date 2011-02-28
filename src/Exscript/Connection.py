@@ -147,6 +147,14 @@ class Connection(object):
         """
         return self.action.get_host()
 
+    def add_monitor(self, pattern, callback):
+        """
+        Like L{protocols.Protocol.add_monitor}.
+        """
+        def the_callback(conn, index, match):
+            return callback(self, index, match)
+        return self.protocol.add_monitor(pattern, the_callback)
+
     def connect(self):
         """
         Opens the connection to the remote host.
