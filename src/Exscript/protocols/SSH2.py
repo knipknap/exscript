@@ -75,7 +75,17 @@ class SSH2(Protocol):
         fp   = hexlify(key.get_fingerprint())
         msg  = 'Adding %s host key for %s: %s' % (name, self.host, fp)
         self._dbg(1, msg)
-        #FIXME
+        self._host_keys.add(self.host, name, key)
+        if self._host_keys_filename is not None:
+            self._save_host_keys()
+
+    def _save_host_keys(self):
+        with open(self._host_keys_filename, 'w') as file:
+            file.write('# SSH host keys collected by Exscript\n')
+            for hostname, keys in self._host_keys.iteritems():
+                for keytype, key in keys.iteritems():
+                    line = ' '.join((hostname, keytype, key.get_base64()))
+                    file.write(line + '\n')
 
     def _load_system_host_keys(self, filename = None):
         """
