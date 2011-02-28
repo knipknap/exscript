@@ -2,6 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import time
+from functools import partial
 from ConfigParser                 import RawConfigParser
 from Exscript                     import Account, PrivateKey
 from Exscript.emulators           import VirtualDevice
@@ -442,6 +443,26 @@ class ProtocolTest(unittest.TestCase):
         self.assertEqual(oldresponse, self.protocol.response)
         self.protocol.expect_prompt()
         self.failIfEqual(oldresponse, self.protocol.response)
+
+    def testAddMonitor(self):
+        # Set the monitor callback up.
+        def monitor_cb(thedata, *args, **kwargs):
+            thedata['args']   = args
+            thedata['kwargs'] = kwargs
+        data = {}
+        self.protocol.add_monitor('abc', partial(monitor_cb, data))
+
+        # Simulate some non-matching data.
+        self.protocol._receive_cb('aaa')
+        self.assertEqual(data, {})
+
+        # Simulate some matching data.
+        self.protocol._receive_cb('abc')
+        self.assertEqual(len(data.get('args')), 3)
+        self.assertEqual(data.get('args')[0], self.protocol)
+        self.assertEqual(data.get('args')[1], 0)
+        self.assertEqual(data.get('args')[2].group(0), 'abc')
+        self.assertEqual(data.get('kwargs'), {})
 
     def _cancel_cb(self, data):
         self.protocol.cancel_expect()
