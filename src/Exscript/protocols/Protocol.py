@@ -293,7 +293,6 @@ class Protocol(object):
 
     def _receive_cb(self, data, remove_cr = True):
         # Clean the data up.
-        data = data.replace(chr(13) + chr(0), '')
         if remove_cr:
             text = data.replace('\r', '')
         else:
