@@ -121,6 +121,8 @@ SSPI_LOGON = chr(139) # TELOPT SSPI LOGON
 PRAGMA_HEARTBEAT = chr(140) # TELOPT PRAGMA HEARTBEAT
 EXOPL = chr(255) # Extended-Options-List
 
+SEND_TTYPE = chr(1)
+
 class Telnet:
     """Telnet interface class.
 
@@ -190,6 +192,7 @@ class Telnet:
         self.eof = 0
         self.stdout               = kwargs.get('stdout',           sys.stdout)
         self.stderr               = kwargs.get('stderr',           sys.stderr)
+        self.termtype             = kwargs.get('termtype',         'dumb')
         self.data_callback        = kwargs.get('receive_callback', None)
         self.data_callback_kwargs = {}
         self.option_callback      = None
@@ -400,43 +403,89 @@ class Telnet:
 
         Set self.eof when connection is closed.  Don't block unless in
         the midst of an IAC sequence.
-
         """
         buf = ''
         try:
             while self.rawq:
-                #print "RAWQ:", repr(self.rawq)
-                c = self.rawq_getchar()
-                if c != IAC:
-                    buf = buf + c
-                    #print "Got:", repr(buf)
+                # Handle non-IAC first (normal data).
+                char = self.rawq_getchar()
+                if char != IAC:
+                    buf = buf + char
                     continue
-                c = self.rawq_getchar()
-                #print "Char:", repr(c)
-                if c == theNULL:
+
+                # Interpret the command byte that follows after the IAC code.
+                command = self.rawq_getchar()
+                if command == theNULL:
                     self.msg('IAC NOP')
                     continue
-                opt = self.rawq_getchar()
-                #print "Opt:", repr(opt)
-                if c in (DO, DONT):
-                    self.msg('IAC %s %d', c == DO and 'DO' or 'DONT', ord(opt))
+                elif command == IAC:
+                    self.msg('IAC DATA')
+                    buf = buf + command
+                    continue
+
+                # DO: Indicates the request that the other party perform,
+                # or confirmation that you are expecting the other party
+                # to perform, the indicated option.
+                elif command == DO:
+                    opt = self.rawq_getchar()
+                    self.msg('IAC DO %s', ord(opt))
                     if self.option_callback:
-                        self.option_callback(self.sock, c, opt)
+                        self.option_callback(self.sock, command, opt)
                     elif opt == TTYPE:
                         self.sock.send(IAC + WILL + opt)
                     else:
                         self.sock.send(IAC + WONT + opt)
-                elif c == SB:
-                    self.msg('IAC SUBCOMMAND %d', ord(opt))
-                    while self.rawq_getchar() != SE:
-                        pass
-                    self.msg('IAC SUBCOMMAND_END')
-                    self.sock.send(IAC + SB + TTYPE + theNULL + 'dumb' + IAC + SE)
-                elif c in (WILL, WONT):
-                    self.msg('IAC %s %d',
-                             c == WILL and 'WILL' or 'WONT', ord(opt))
+
+                # DON'T: Indicates the demand that the other party stop
+                # performing, or confirmation that you are no longer
+                # expecting the other party to perform, the indicated
+                # option.
+                elif command == DONT:
+                    opt = self.rawq_getchar()
+                    self.msg('IAC DONT %s', ord(opt))
                     if self.option_callback:
-                        self.option_callback(self.sock, c, opt)
+                        self.option_callback(self.sock, command, opt)
+                    self.sock.send(IAC + WONT + opt)
+
+                # SB: Indicates that what follows is subnegotiation of the
+                # indicated option.
+                elif command == SB:
+                    opt = self.rawq_getchar()
+                    self.msg('IAC SUBCOMMAND %d', ord(opt))
+
+                    # We only handle the TTYPE command, so skip all other
+                    # commands.
+                    if opt != TTYPE:
+                        while self.rawq_getchar() != SE:
+                            pass
+                        continue
+
+                    # We also only handle the SEND_TTYPE option of TTYPE,
+                    # so skip everything else.
+                    subopt = self.rawq_getchar()
+                    if subopt != SEND_TTYPE:
+                        while self.rawq_getchar() != SE:
+                            pass
+                        continue
+
+                    # Mandatory end of the IAC subcommand.
+                    iac = self.rawq_getchar()
+                    end = self.rawq_getchar()
+                    if (iac, end) != (IAC, SE):
+                        # whoops, that's an unexpected response...
+                        self.msg('expected IAC SE, but got %d %d', ord(iac), ord(end))
+                    self.msg('IAC SUBCOMMAND_END')
+
+                    # Send the next supported terminal.
+                    ttype = self.termtype
+                    self.msg('indicating support for terminal type %s', ttype)
+                    self.sock.send(IAC + SB + TTYPE + theNULL + ttype + IAC + SE)
+                elif command in (WILL, WONT):
+                    opt = self.rawq_getchar()
+                    self.msg('IAC %s %d',
+                             command == WILL and 'WILL' or 'WONT', ord(opt))
+                    if self.option_callback:
+                        self.option_callback(self.sock, command, opt)
                     elif opt == ECHO:
                         self.sock.send(IAC + DO + opt)
                     else:
