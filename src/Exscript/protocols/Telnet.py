@@ -15,6 +15,7 @@
 """
 The Telnet protocol.
 """
+from Exscript.util.tty            import get_terminal_size
 from Exscript.protocols           import telnetlib
 from Exscript.protocols.Protocol  import Protocol
 from Exscript.protocols.Exception import ProtocolException, \
@@ -33,8 +34,10 @@ class Telnet(Protocol):
 
     def _connect_hook(self, hostname, port):
         assert self.tn is None
+        rows, cols = get_terminal_size()
         self.tn = telnetlib.Telnet(hostname,
                                    port or 23,
+                                   termsize         = (rows, cols),
                                    termtype         = self.termtype,
                                    stderr           = self.stderr,
                                    receive_callback = self._receive_cb)
@@ -87,6 +90,9 @@ class Telnet(Protocol):
 
     def cancel_expect(self):
         self.tn.cancel_expect = True
+
+    def _set_terminal_size(self, rows, cols):
+        self.tn.set_window_size(rows, cols)
 
     def interact(self, key_handlers = None):
         return self._open_shell(self.tn.sock, key_handlers)

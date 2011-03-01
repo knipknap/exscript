@@ -19,10 +19,13 @@ import re
 import sys
 import select
 import socket
+import signal
+import errno
 import os
 from Exscript.util.crypt          import otp
 from Exscript.util.event          import Event
 from Exscript.util.cast           import to_regexs
+from Exscript.util.tty            import get_terminal_size
 from Exscript.protocols.drivers   import driver_map, isdriver
 from Exscript.protocols.OsGuesser import OsGuesser
 from Exscript.protocols.Exception import InvalidCommandException, \
@@ -1011,19 +1014,39 @@ class Protocol(object):
                 return True
         return False
 
+    def _set_terminal_size(self, rows, cols):
+        raise NotImplementedError()
+
     def _open_posix_shell(self, channel, key_handlers):
-        # We need to make sure to use an unbuffer stdin, else multi-byte
-        # chars (such as arrow key) won't work properly.
+        # We need to make sure to use an unbuffered stdin, else multi-byte
+        # chars (such as arrow keys) won't work properly.
         stdin  = os.fdopen(sys.stdin.fileno(), 'r', 0)
         oldtty = termios.tcgetattr(stdin)
 
+        # Update the terminal size whenever the size changes.
+        def handle_sigwinch(signum, frame):
+            rows, cols = get_terminal_size()
+            self._set_terminal_size(rows, cols)
+        signal.signal(signal.SIGWINCH, handle_sigwinch)
+        handle_sigwinch(None, None)
+
+        # Read from stdin and write to the network, endlessly.
         try:
             tty.setraw(stdin.fileno())
             tty.setcbreak(stdin.fileno())
             channel.settimeout(0.0)
 
             while True:
-                r, w, e = select.select([channel, stdin], [], [])
+                try:
+                    r, w, e = select.select([channel, stdin], [], [])
+                except select.error, e:
+                    code, message = e
+                    if code == errno.EINTR:
+                        # This may happen when SIGWINCH is called
+                        # during the select; we just retry then.
+                        continue
+                    raise
+
                 if channel in r:
                     try:
                         data = channel.recv(1024)

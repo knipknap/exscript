@@ -26,6 +26,7 @@ from paramiko.resource      import ResourceManager
 from paramiko.ssh_exception import SSHException, \
                                    AuthenticationException, \
                                    BadHostKeyException
+from Exscript.util.tty            import get_terminal_size
 from Exscript.PrivateKey          import PrivateKey
 from Exscript.protocols.Protocol  import Protocol
 from Exscript.protocols.Exception import ProtocolException, \
@@ -223,9 +224,11 @@ class SSH2(Protocol):
         raise LoginFailure('Login failed: ' + str(last_exception))
 
     def _paramiko_shell(self):
+        rows, cols = get_terminal_size()
+
         try:
             self.shell = self.client.open_session()
-            self.shell.get_pty(self.termtype, 80, 24)
+            self.shell.get_pty(self.termtype, cols, rows)
             self.shell.invoke_shell()
         except SSHException, e:
             self._dbg(1, 'Failed to open shell.')
@@ -322,6 +325,9 @@ class SSH2(Protocol):
 
     def cancel_expect(self):
         self.cancel = True
+
+    def _set_terminal_size(self, rows, cols):
+        self.shell.resize_pty(cols, rows)
 
     def interact(self, key_handlers = None):
         return self._open_shell(self.shell, key_handlers)
