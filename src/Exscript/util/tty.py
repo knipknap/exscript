@@ -58,13 +58,17 @@ def get_terminal_size():
             return rows, cols
 
     # Try os.ctermid()
-    fd = os.open(os.ctermid(), os.O_RDONLY)
     try:
-        rows, cols = _get_terminal_size(fd)
-    except TypeError:
+        fd = os.open(os.ctermid(), os.O_RDONLY)
+    except OSError:
         pass
-    finally:
-        os.close(fd)
+    else:
+        try:
+            rows, cols = _get_terminal_size(fd)
+        except TypeError:
+            pass
+        finally:
+            os.close(fd)
 
     # Try `stty size`
     devnull = open(os.devnull, 'w')
