@@ -164,13 +164,6 @@ class Telnet:
     read_very_lazy()
         Reads all data in the cooked queue, without doing any socket
         I/O.
-
-    set_option_negotiation_callback(callback)
-        Each time a telnet option is read on the input flow, this callback
-        (if set) is called with the following parameters :
-        callback(telnet socket, command (DO/DONT/WILL/WONT), option)
-        No other action is done afterwards by telnetlib.
-
     """
 
     def __init__(self, host=None, port=0, **kwargs):
@@ -195,7 +188,6 @@ class Telnet:
         self.termtype             = kwargs.get('termtype',         'dumb')
         self.data_callback        = kwargs.get('receive_callback', None)
         self.data_callback_kwargs = {}
-        self.option_callback      = None
         if host:
             self.open(host, port)
 
@@ -394,10 +386,6 @@ class Telnet:
         self.data_callback        = callback
         self.data_callback_kwargs = kwargs
 
-    def set_option_negotiation_callback(self, callback):
-        """Provide a callback function called after each receipt of a telnet option."""
-        self.option_callback = callback
-
     def process_rawq(self):
         """Transfer from raw queue to cooked queue.
 
@@ -429,9 +417,7 @@ class Telnet:
                 elif command == DO:
                     opt = self.rawq_getchar()
                     self.msg('IAC DO %s', ord(opt))
-                    if self.option_callback:
-                        self.option_callback(self.sock, command, opt)
-                    elif opt == TTYPE:
+                    if opt == TTYPE:
                         self.sock.send(IAC + WILL + opt)
                     else:
                         self.sock.send(IAC + WONT + opt)
@@ -443,8 +429,6 @@ class Telnet:
                 elif command == DONT:
                     opt = self.rawq_getchar()
                     self.msg('IAC DONT %s', ord(opt))
-                    if self.option_callback:
-                        self.option_callback(self.sock, command, opt)
                     self.sock.send(IAC + WONT + opt)
 
                 # SB: Indicates that what follows is subnegotiation of the
@@ -484,9 +468,7 @@ class Telnet:
                     opt = self.rawq_getchar()
                     self.msg('IAC %s %d',
                              command == WILL and 'WILL' or 'WONT', ord(opt))
-                    if self.option_callback:
-                        self.option_callback(self.sock, command, opt)
-                    elif opt == ECHO:
+                    if opt == ECHO:
                         self.sock.send(IAC + DO + opt)
                     else:
                         self.sock.send(IAC + DONT + opt)
