@@ -52,7 +52,7 @@ def get_terminal_size():
                sys.stderr.fileno()):
         try:
             rows, cols = _get_terminal_size(fd)
-        except ValueError:
+        except TypeError:
             pass
         else:
             return rows, cols
@@ -61,7 +61,7 @@ def get_terminal_size():
     fd = os.open(os.ctermid(), os.O_RDONLY)
     try:
         rows, cols = _get_terminal_size(fd)
-    except ValueError:
+    except TypeError:
         pass
     finally:
         os.close(fd)
