@@ -225,7 +225,7 @@ class SSH2(Protocol):
     def _paramiko_shell(self):
         try:
             self.shell = self.client.open_session()
-            self.shell.get_pty('vt100', 80, 24)
+            self.shell.get_pty(self.termtype, 80, 24)
             self.shell.invoke_shell()
         except SSHException, e:
             self._dbg(1, 'Failed to open shell.')

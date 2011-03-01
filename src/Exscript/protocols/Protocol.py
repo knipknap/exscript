@@ -195,12 +195,13 @@ class Protocol(object):
     """
 
     def __init__(self,
-                 driver  = None,
-                 stdout  = None,
-                 stderr  = None,
-                 debug   = 0,
-                 timeout = 30,
-                 logfile = None,
+                 driver   = None,
+                 stdout   = None,
+                 stderr   = None,
+                 debug    = 0,
+                 timeout  = 30,
+                 logfile  = None,
+                 termtype = 'dumb',
                  **kwargs):
         """
         Constructor.
@@ -220,6 +221,8 @@ class Protocol(object):
         @keyword timeout: See set_timeout(). The default value is 30.
         @keyword logfile: A file into which a log of the conversation with the
             device is dumped.
+        @keyword termtype: The terminal type to request from the remote host,
+            e.g. 'vt100'.
         """
         self.data_received_event   = Event()
         self.otp_requested_event   = Event()
@@ -237,6 +240,7 @@ class Protocol(object):
         self.host                  = None
         self.port                  = None
         self.last_account          = None
+        self.termtype              = termtype
         self.manual_driver         = driver
         self.debug                 = debug
         self.timeout               = timeout

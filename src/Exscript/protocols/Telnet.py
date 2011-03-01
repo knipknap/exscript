@@ -35,6 +35,7 @@ class Telnet(Protocol):
         assert self.tn is None
         self.tn = telnetlib.Telnet(hostname,
                                    port or 23,
+                                   termtype         = self.termtype,
                                    stderr           = self.stderr,
                                    receive_callback = self._receive_cb)
         if self.debug >= 5:
