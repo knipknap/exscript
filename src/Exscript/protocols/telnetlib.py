@@ -41,6 +41,7 @@ import sys
 import time
 import socket
 import select
+import struct
 
 __all__ = ["Telnet"]
 
@@ -175,6 +176,7 @@ class Telnet:
 
         """
         self.debuglevel = DEBUGLEVEL
+        self.can_naws = False
         self.host = host
         self.port = port
         self.sock = None
@@ -183,6 +185,7 @@ class Telnet:
         self.irawq = 0
         self.cookedq = ''
         self.eof = 0
+        self.window_size          = kwargs.get('termsize')
         self.stdout               = kwargs.get('stdout',           sys.stdout)
         self.stderr               = kwargs.get('stderr',           sys.stderr)
         self.termtype             = kwargs.get('termtype',         'dumb')
@@ -386,6 +389,16 @@ class Telnet:
         self.data_callback        = callback
         self.data_callback_kwargs = kwargs
 
+    def set_window_size(self, rows, cols):
+        """
+        Change the size of the terminal window.
+        """
+        if not self.can_naws:
+            raise Exception('server does not support NAWS')
+        self.window_size = rows, cols
+        size = struct.pack('!HH', cols, rows)
+        self.sock.send(IAC + SB + NAWS + size + IAC + SE)
+
     def process_rawq(self):
         """Transfer from raw queue to cooked queue.
 
@@ -419,6 +432,11 @@ class Telnet:
                     self.msg('IAC DO %s', ord(opt))
                     if opt == TTYPE:
                         self.sock.send(IAC + WILL + opt)
+                    elif opt == NAWS:
+                        self.sock.send(IAC + WILL + opt)
+                        self.can_naws = True
+                        if self.window_size:
+                            self.set_window_size(*self.window_size)
                     else:
                         self.sock.send(IAC + WONT + opt)
 
