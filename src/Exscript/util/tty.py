@@ -18,12 +18,20 @@ TTY utilities.
 import os
 import sys
 import struct
+from subprocess import Popen, PIPE
 
-def _get_terminal_size(self):
-    import fcntl, termios
-    s  = struct.pack('HHHH', 0, 0, 0, 0)
-    x  = fcntl.ioctl(fd, termios.TIOCGWINSZ, s)
-    rows, cols, x_pixels, y_pixels = struct.unpack('HHHH', x)
+def _get_terminal_size(fd):
+    try:
+        import fcntl
+        import termios
+    except ImportError:
+        return None
+    s = struct.pack('HHHH', 0, 0, 0, 0)
+    x = fcntl.ioctl(fd, termios.TIOCGWINSZ, s)
+    try:
+        rows, cols, x_pixels, y_pixels = struct.unpack('HHHH', x)
+    except struct.error:
+        return None
     return rows, cols
 
 def get_terminal_size():
@@ -40,32 +48,38 @@ def get_terminal_size():
                sys.stdin.fileno(),
                sys.stderr.fileno()):
         try:
-            return _get_terminal_size(fd)
-        except:
+            rows, cols = _get_terminal_size(fd)
+        except ValueError:
             pass
+        else:
+            return rows, cols
 
     # Try os.ctermid()
+    fd = os.open(os.ctermid(), os.O_RDONLY)
     try:
-        fd = os.open(os.ctermid(), os.O_RDONLY)
-        try:
-            return _get_terminal_size(fd)
-        finally:
-            os.close(fd)
-    except:
+        rows, cols = _get_terminal_size(fd)
+    except ValueError:
         pass
+    finally:
+        os.close(fd)
 
     # Try `stty size`
+    devnull = open(os.devnull, 'w')
+    process = Popen(['stty', 'size'], stderr = devnull, stdout = PIPE)
+    errcode = process.wait()
+    output  = process.stdout.read()
+    devnull.close()
     try:
-        result = os.popen("stty size", "r").read()
-        return tuple(int(x) for x in result.split())
-    except:
+        rows, cols = output.split()
+        return int(rows), int(cols)
+    except (ValueError, TypeError):
         pass
 
     # Try environment variables.
     try:
-        return tuple(int(os.getenv(var)) for var in ("LINES", "COLUMNS"))
-    except:
+        return tuple(int(os.getenv(var)) for var in ('LINES', 'COLUMNS'))
+    except (ValueError, TypeError):
         pass
 
     # Give up.
-    return 80, 25
+    return 25, 80
