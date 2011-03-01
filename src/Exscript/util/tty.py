@@ -27,7 +27,10 @@ def _get_terminal_size(fd):
     except ImportError:
         return None
     s = struct.pack('HHHH', 0, 0, 0, 0)
-    x = fcntl.ioctl(fd, termios.TIOCGWINSZ, s)
+    try:
+        x = fcntl.ioctl(fd, termios.TIOCGWINSZ, s)
+    except IOError:
+        return None
     try:
         rows, cols, x_pixels, y_pixels = struct.unpack('HHHH', x)
     except struct.error:
