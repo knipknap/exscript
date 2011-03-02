@@ -29,7 +29,7 @@ def _get_terminal_size(fd):
     s = struct.pack('HHHH', 0, 0, 0, 0)
     try:
         x = fcntl.ioctl(fd, termios.TIOCGWINSZ, s)
-    except IOError:
+    except IOError: # Window size ioctl not supported.
         return None
     try:
         rows, cols, x_pixels, y_pixels = struct.unpack('HHHH', x)
@@ -46,13 +46,29 @@ def get_terminal_size():
     @rtype:  int, int
     @return: The rows and columns of the terminal.
     """
-    # Try stdin, stdout, stderr.
-    for fd in (sys.stdout.fileno(),
-               sys.stdin.fileno(),
-               sys.stderr.fileno()):
+    # Collect a list of viable input channels that may tell us something
+    # about the terminal dimensions.
+    fileno_list = []
+    try:
+        fileno_list.append(sys.stdout.fileno())
+    except AttributeError:
+        # Channel was redirected to an object that has no fileno()
+        pass
+    try:
+        fileno_list.append(sys.stdin.fileno())
+    except AttributeError:
+        pass
+    try:
+        fileno_list.append(sys.stderr.fileno())
+    except AttributeError:
+        pass
+
+    # Ask each channel for the terminal window size.
+    for fd in fileno_list:
         try:
             rows, cols = _get_terminal_size(fd)
         except TypeError:
+            # _get_terminal_size() returned None.
             pass
         else:
             return rows, cols
@@ -61,12 +77,16 @@ def get_terminal_size():
     try:
         fd = os.open(os.ctermid(), os.O_RDONLY)
     except OSError:
+        # The device pointed to by os.ctermid() does not exist.
         pass
     else:
         try:
             rows, cols = _get_terminal_size(fd)
         except TypeError:
+            # _get_terminal_size() returned None.
             pass
+        else:
+            return rows, cols
         finally:
             os.close(fd)
 
