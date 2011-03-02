@@ -37,7 +37,7 @@ def _get_terminal_size(fd):
         return None
     return rows, cols
 
-def get_terminal_size():
+def get_terminal_size(default_rows = 25, default_cols = 80):
     """
     Returns the number of lines and columns of the current terminal.
     It attempts several strategies to determine the size and if all fail,
@@ -92,15 +92,19 @@ def get_terminal_size():
 
     # Try `stty size`
     devnull = open(os.devnull, 'w')
-    process = Popen(['stty', 'size'], stderr = devnull, stdout = PIPE)
-    errcode = process.wait()
-    output  = process.stdout.read()
-    devnull.close()
     try:
-        rows, cols = output.split()
-        return int(rows), int(cols)
-    except (ValueError, TypeError):
+        process = Popen(['stty', 'size'], stderr = devnull, stdout = PIPE)
+    except OSError:
         pass
+    else:
+        errcode = process.wait()
+        output  = process.stdout.read()
+        devnull.close()
+        try:
+            rows, cols = output.split()
+            return int(rows), int(cols)
+        except (ValueError, TypeError):
+            pass
 
     # Try environment variables.
     try:
@@ -109,4 +113,4 @@ def get_terminal_size():
         pass
 
     # Give up.
-    return 25, 80
+    return default_rows, default_cols
