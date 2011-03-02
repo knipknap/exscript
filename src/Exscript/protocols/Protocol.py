@@ -1016,6 +1016,10 @@ class Protocol(object):
     def _set_terminal_size(self, rows, cols):
         raise NotImplementedError()
 
+    def _init_tty(self, fd):
+        tty.setraw(fd)
+        tty.setcbreak(fd)
+
     def _open_posix_shell(self, channel, key_handlers):
         # We need to make sure to use an unbuffered stdin, else multi-byte
         # chars (such as arrow keys) won't work properly.
@@ -1031,8 +1035,7 @@ class Protocol(object):
 
         # Read from stdin and write to the network, endlessly.
         try:
-            tty.setraw(stdin.fileno())
-            tty.setcbreak(stdin.fileno())
+            self._init_tty(stdin.fileno())
             channel.settimeout(0.0)
 
             while True:
@@ -1059,7 +1062,14 @@ class Protocol(object):
                     data = stdin.read(1)
                     if len(data) == 0:
                         break
-                    if not self._call_key_handlers(key_handlers, data):
+
+                    # Temporarily revert stdin behavior while callbacks are
+                    # active.
+                    termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
+                    is_handled = self._call_key_handlers(key_handlers, data)
+                    self._init_tty(stdin.fileno())
+
+                    if not is_handled:
                         channel.send(data)
         finally:
             termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
