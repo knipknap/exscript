@@ -102,7 +102,7 @@ class Telnet(Protocol):
             return
         if not force:
             try:
-                self.tn.read_all()
+                self.response = self.tn.read_all()
             except Exception:
                 pass
         self.tn.close()
