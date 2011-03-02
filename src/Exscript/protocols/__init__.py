@@ -59,7 +59,7 @@ def connect(uri, default_protocol = 'telnet', **kwargs):
     """
     url  = Url.from_string(uri, default_protocol)
     conn = create_protocol(url.protocol, **kwargs)
-    conn.connect(url.hostname)
+    conn.connect(url.hostname, url.port)
 
     if url.username is not None \
        or url.password1 is not None \
