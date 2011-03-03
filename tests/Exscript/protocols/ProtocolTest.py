@@ -453,16 +453,30 @@ class ProtocolTest(unittest.TestCase):
         self.protocol.add_monitor('abc', partial(monitor_cb, data))
 
         # Simulate some non-matching data.
-        self.protocol._receive_cb('aaa')
+        self.protocol.buffer.append('aaa')
         self.assertEqual(data, {})
 
         # Simulate some matching data.
-        self.protocol._receive_cb('abc')
+        self.protocol.buffer.append('abc')
         self.assertEqual(len(data.get('args')), 3)
         self.assertEqual(data.get('args')[0], self.protocol)
         self.assertEqual(data.get('args')[1], 0)
         self.assertEqual(data.get('args')[2].group(0), 'abc')
         self.assertEqual(data.get('kwargs'), {})
+
+    def testGetBuffer(self):
+        # Test can not work on the abstract base.
+        if self.protocol.__class__ == Protocol:
+            return
+        self.assertEqual(str(self.protocol.buffer), '')
+        self.doLogin()
+        # Depending on whether the connected host sends a banner,
+        # the buffer may or may not contain anything now.
+
+        before = str(self.protocol.buffer)
+        self.protocol.send('ls\r')
+        self.protocol.waitfor(self.protocol.get_prompt())
+        self.assertNotEqual(str(self.protocol.buffer), before)
 
     def _cancel_cb(self, data):
         self.protocol.cancel_expect()

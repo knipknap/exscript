@@ -32,6 +32,10 @@ class Telnet(Protocol):
         Protocol.__init__(self, **kwargs)
         self.tn = None
 
+    def _telnetlib_received(self, data):
+        self._receive_cb(data)
+        self.buffer.append(data)
+
     def _connect_hook(self, hostname, port):
         assert self.tn is None
         rows, cols = get_terminal_size()
@@ -40,7 +44,7 @@ class Telnet(Protocol):
                                    termsize         = (rows, cols),
                                    termtype         = self.termtype,
                                    stderr           = self.stderr,
-                                   receive_callback = self._receive_cb)
+                                   receive_callback = self._telnetlib_received)
         if self.debug >= 5:
             self.tn.set_debuglevel(1)
         if self.tn is None:
@@ -71,6 +75,7 @@ class Telnet(Protocol):
 
         if match:
             self._dbg(2, "Got a prompt, match was %s" % repr(match.group()))
+            self.buffer.pop(len(self.response))
 
         self._dbg(5, "Response was %s" % repr(self.response))
 

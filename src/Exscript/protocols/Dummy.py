@@ -38,7 +38,6 @@ class Dummy(Protocol):
         Protocol.__init__(self, **kwargs)
         self.device    = device
         self.init_done = False
-        self.buffer    = ''
         self.cancel    = False
         self.response  = None
         if not self.device:
@@ -57,18 +56,19 @@ class Dummy(Protocol):
 
         # Look for a match in the buffer.
         for i, prompt in enumerate(prompt_list):
-            matches = prompt.search(self.buffer)
+            matches = prompt.search(str(self.buffer))
             if matches is not None:
-                self.response = self.buffer[:matches.start()]
+                self.response = self.buffer.head(matches.start())
                 if flush:
-                    self.buffer = self.buffer[matches.end():]
+                    self.buffer.pop(matches.end())
                 return i, matches, self.response
 
         # "Timeout".
         return -1, None, self.response
 
     def _say(self, string):
-        self.buffer += self._receive_cb(string)
+        self._receive_cb(string)
+        self.buffer.append(string)
 
     def cancel_expect(self):
         self.cancel = True
@@ -76,7 +76,7 @@ class Dummy(Protocol):
     def _connect_hook(self, hostname, port):
         # To more correctly mimic the behavior of a network device, we
         # do not send the banner here, but in authenticate() instead.
-        self.buffer = ''
+        self.buffer.clear()
         return True
 
     def _doinit(self):
@@ -103,7 +103,7 @@ class Dummy(Protocol):
         else:
             self._dbg(2, "No prompt match")
 
-        self._dbg(5, "Response was %s" % repr(self.buffer))
+        self._dbg(5, "Response was %s" % repr(str(self.buffer)))
 
         if result == -1:
             error = 'Error while waiting for response from device'
@@ -114,8 +114,6 @@ class Dummy(Protocol):
                 raise DriverReplacedException()
             else:
                 raise ExpectCancelledException()
-        if self.buffer is None:
-            raise ProtocolException('whoops - buffer is None')
 
         return result, match
 

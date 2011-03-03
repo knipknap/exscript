@@ -494,9 +494,9 @@ class Telnet:
                     self.msg('IAC %d not recognized' % ord(opt))
         except EOFError: # raised by self.rawq_getchar()
             pass
+        self.cookedq += buf
         if self.data_callback is not None:
-            buf = self.data_callback(buf, **self.data_callback_kwargs)
-        self.cookedq = self.cookedq + buf
+            self.data_callback(buf, **self.data_callback_kwargs)
 
     def rawq_getchar(self):
         """Get next char from raw queue.

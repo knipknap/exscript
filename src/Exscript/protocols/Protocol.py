@@ -22,6 +22,8 @@ import socket
 import signal
 import errno
 import os
+from functools import partial
+from Exscript.util.buffer         import MonitoredBuffer
 from Exscript.util.crypt          import otp
 from Exscript.util.event          import Event
 from Exscript.util.cast           import to_regexs
@@ -249,7 +251,7 @@ class Protocol(object):
         self.timeout               = timeout
         self.logfile               = logfile
         self.response              = None
-        self.monitors              = []
+        self.buffer                = MonitoredBuffer()
         if stdout is None:
             self.stdout = open(os.devnull, 'w')
         else:
@@ -314,12 +316,6 @@ class Protocol(object):
 
         # Send signals to subscribers.
         self.data_received_event(data)
-        for regex_list, callback in self.monitors:
-            for i, regex in enumerate(regex_list):
-                match = regex.search(data)
-                if match is not None:
-                    callback(self, i, match)
-        return data
 
     def is_dummy(self):
         """
@@ -996,7 +992,7 @@ class Protocol(object):
         @type  callback: callable
         @param callback: The function that is called.
         """
-        self.monitors.append((to_regexs(pattern), callback))
+        self.buffer.add_monitor(pattern, partial(callback, self))
 
     def cancel_expect(self):
         """
@@ -1055,8 +1051,10 @@ class Protocol(object):
                         self._dbg(1, 'EOF from remote')
                         break
                     self._receive_cb(data, False)
+                    self.buffer.append(data)
                 if stdin in r:
                     data = stdin.read(1)
+                    self.buffer.clear()
                     if len(data) == 0:
                         break
 

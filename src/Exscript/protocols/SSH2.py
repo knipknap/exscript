@@ -52,7 +52,6 @@ class SSH2(Protocol):
         Protocol.__init__(self, **kwargs)
         self.client = None
         self.shell  = None
-        self.buffer = ''
         self.cancel = False
 
         # Paramiko client stuff.
@@ -286,7 +285,7 @@ class SSH2(Protocol):
         if not data:
             return False
         self._receive_cb(data)
-        self.buffer += data
+        self.buffer.append(data)
         return True
 
     def _domatch(self, prompt, flush):
@@ -295,7 +294,7 @@ class SSH2(Protocol):
         search_window_size = 150
         while not self.cancel:
             # Check whether what's buffered matches the prompt.
-            search_window = self.buffer[-search_window_size:]
+            search_window = self.buffer.tail(search_window_size)
             match         = None
             for n, regex in enumerate(prompt):
                 match = regex.search(search_window)
@@ -308,12 +307,11 @@ class SSH2(Protocol):
                     raise ProtocolException(error)
                 continue
 
-            #print "Match End:", match.end()
-            end           = len(match.group())
-            self.response = self.buffer[:-end]
+            end = self.buffer.size() - len(search_window) + match.end()
             if flush:
-                self.buffer = search_window[match.end():]
-            #print "END:", end, repr(self.response), repr(self.buffer)
+                self.response = self.buffer.pop(end)
+            else:
+                self.response = self.buffer.head(end)
             return n, match
 
         # Ending up here, self.cancel_expect() was called.
