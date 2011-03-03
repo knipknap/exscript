@@ -19,7 +19,7 @@ import re
 from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'(user|login): $', re.I)]
-_password_re = [re.compile(r'Password: $')]
+_password_re = [re.compile(r'Password: ?$')]
 _linux_re    = re.compile(r'\blinux\b', re.I)
 
 class ShellDriver(Driver):
