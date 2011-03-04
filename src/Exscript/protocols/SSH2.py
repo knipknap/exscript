@@ -339,3 +339,4 @@ class SSH2(Protocol):
         self.shell = None
         self.client.close()
         self.client = None
+        self.buffer.clear()

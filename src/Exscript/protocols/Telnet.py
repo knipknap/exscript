@@ -112,3 +112,4 @@ class Telnet(Protocol):
                 pass
         self.tn.close()
         self.tn = None
+        self.buffer.clear()
