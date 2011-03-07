@@ -391,7 +391,7 @@ class OrderDB(object):
         """
         if orders is None:
             raise AttributeError('order argument must not be None')
-        with self.engine.contextual_connect().begin():
+        with self.engine.contextual_connect(close_with_result = True).begin():
             for order in to_list(orders):
                 self.__add_order(order)
 
@@ -419,7 +419,7 @@ class OrderDB(object):
         if orders is None:
             raise AttributeError('order argument must not be None')
 
-        with self.engine.contextual_connect().begin():
+        with self.engine.contextual_connect(close_with_result = True).begin():
             for order in to_list(orders):
                 self.__save_order(order)
 
