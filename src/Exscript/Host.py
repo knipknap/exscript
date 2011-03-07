@@ -212,7 +212,7 @@ class Host(object):
         @type  tcp_port: int
         @param tcp_port: The TCP port number.
         """
-        self.tcp_port = tcp_port
+        self.tcp_port = int(tcp_port)
 
     def get_tcp_port(self):
         """
