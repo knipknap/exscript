@@ -94,8 +94,8 @@ class OrderDB(object):
             sa.Column('progress',  sa.Float,       default = 0.0),
             sa.Column('started',   sa.DateTime,    default = sa.func.now()),
             sa.Column('closed',    sa.DateTime),
-            sa.Column('logfile',   sa.String(80)),
-            sa.Column('tracefile', sa.String(80)),
+            sa.Column('logfile',   sa.String(250)),
+            sa.Column('tracefile', sa.String(250)),
             sa.ForeignKeyConstraint(['order_id'], [pfx + 'order.id'], ondelete = 'CASCADE'),
             mysql_engine = 'INNODB'
         ))
