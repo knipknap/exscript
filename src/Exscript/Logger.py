@@ -15,10 +15,9 @@
 """
 Logging to memory.
 """
-from Exscript.Log           import Log
-from Exscript.QueueListener import QueueListener
+from Exscript.Log import Log
 
-class Logger(QueueListener):
+class Logger(object):
     """
     A QueueListener that implements logging for the queue.
     Logs are kept in memory, and not written to the disk.
@@ -33,10 +32,10 @@ class Logger(QueueListener):
         @type  queue: Queue
         @param queue: The Queue that is watched.
         """
-        QueueListener.__init__(self, queue)
         self.actions = []
         self.logs    = {}
         self.done    = []
+        queue.action_enqueued_event.listen(self._action_enqueued)
 
     def get_logged_actions(self):
         """
