@@ -15,6 +15,7 @@
 """
 Logging to memory.
 """
+from collections import defaultdict
 from Exscript.Log import Log
 
 class Logger(object):
@@ -33,7 +34,7 @@ class Logger(object):
         @param queue: The Queue that is watched.
         """
         self.actions = []
-        self.logs    = {}
+        self.logs    = defaultdict(list)
         self.done    = []
         queue.action_enqueued_event.listen(self._action_enqueued)
 
@@ -73,15 +74,13 @@ class Logger(object):
 
     def get_logs(self, action = None):
         if action:
-            return self.logs.get(action, [])
+            return self.logs[action]
         return self.logs
 
     def _add_log(self, action, log):
-        if action in self.logs:
-            self.logs[action].append(log)
-        else:
+        if action not in self.logs:
             self.actions.append(action)
-            self.logs[action] = [log]
+        self.logs[action].append(log)
 
     def _get_log(self, action):
         return self.logs[action][-1]
