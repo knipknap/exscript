@@ -73,34 +73,6 @@ def to_hosts(hosts, default_protocol = 'telnet', default_domain = ''):
     return [to_host(h, default_protocol, default_domain)
             for h in to_list(hosts)]
 
-def to_log(log):
-    """
-    Given a string, this function returns a new Logfile object.
-    Given any other Log object, this function just returns the same object.
-
-    @type  log: string|Log
-    @param log: A logfile name or a Log object.
-    @rtype:  Log
-    @return: The Log object.
-    """
-    if log is None:
-        raise TypeError('None can not be cast to Log')
-    if isinstance(log, Log):
-        return log
-    return Logfile(log)
-
-def to_logs(logs):
-    """
-    Given a string or a Log object, or a list of strings or Log objects,
-    this function returns a list of Log objects.
-
-    @type  logs: string|Log|list(string)|list(Log)
-    @param logs: One or more logs or logfile names.
-    @rtype:  list[Log]
-    @return: A list of Log objects.
-    """
-    return [to_log(h) for h in to_list(logs)]
-
 def to_regex(regex, flags = 0):
     """
     Given a string, this function returns a new re.RegexObject.
