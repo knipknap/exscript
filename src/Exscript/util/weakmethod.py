@@ -16,7 +16,6 @@
 Weak references to bound and unbound methods.
 """
 import weakref
-from functools import partial
 
 class DeadMethodCalled(Exception):
     """

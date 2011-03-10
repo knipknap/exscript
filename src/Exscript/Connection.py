@@ -15,7 +15,6 @@
 """
 Accessing the connection to a remote host.
 """
-from Exscript.Account import Account
 
 class Connection(object):
     """

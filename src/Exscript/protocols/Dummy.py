@@ -17,8 +17,7 @@ A client that talks to a L{Exscript.emulators.VirtualDevice}.
 """
 from Exscript.emulators           import VirtualDevice
 from Exscript.protocols.Protocol  import Protocol
-from Exscript.protocols.Exception import ProtocolException, \
-                                         TimeoutException, \
+from Exscript.protocols.Exception import TimeoutException, \
                                          DriverReplacedException, \
                                          ExpectCancelledException
 

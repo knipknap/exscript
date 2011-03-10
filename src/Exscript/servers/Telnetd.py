@@ -15,7 +15,6 @@
 """
 A Telnet server.
 """
-import socket
 import select
 from Exscript.servers.Server import Server
 
