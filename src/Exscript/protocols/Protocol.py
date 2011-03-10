@@ -231,7 +231,7 @@ class Protocol(object):
         """
         self.data_received_event   = Event()
         self.otp_requested_event   = Event()
-        self.os_guesser            = OsGuesser(self)
+        self.os_guesser            = OsGuesser()
         self.auto_driver           = driver_map[self.guess_os()]
         self.proto_authenticated   = False
         self.app_authenticated     = False
@@ -308,7 +308,7 @@ class Protocol(object):
 
         # Check whether a better driver is found based on the incoming data.
         old_driver = self.get_driver()
-        self.os_guesser.data_received(data)
+        self.os_guesser.data_received(data, self.is_app_authenticated())
         self.auto_driver = driver_map[self.guess_os()]
         new_driver       = self.get_driver()
         if old_driver != new_driver:
@@ -873,7 +873,6 @@ class Protocol(object):
         patterns = [p.pattern for p in re_list]
         self._dbg(2, 'waiting for: ' + repr(patterns))
         result = self._domatch(re_list, False)
-        self.os_guesser.response_received()
         return result
 
     def waitfor(self, prompt):
@@ -918,7 +917,6 @@ class Protocol(object):
 
     def _expect(self, prompt):
         result = self._domatch(to_regexs(prompt), True)
-        self.os_guesser.response_received()
         return result
 
     def expect(self, prompt):
