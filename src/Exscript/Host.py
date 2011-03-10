@@ -212,6 +212,9 @@ class Host(object):
         @type  tcp_port: int
         @param tcp_port: The TCP port number.
         """
+        if tcp_port is None:
+            self.tcp_port = None
+            return
         self.tcp_port = int(tcp_port)
 
     def get_tcp_port(self):
