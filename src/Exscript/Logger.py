@@ -94,7 +94,7 @@ class Logger(object):
             self.done.remove(action)
 
     def _on_action_started(self, action, conn):
-        log = Log()
+        log = Log(action.get_name())
         log.started(conn)
         self._add_log(action, log)
 

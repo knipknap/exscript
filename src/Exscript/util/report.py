@@ -71,7 +71,7 @@ def summarize(logger):
     for action in logger.get_logged_actions():
         for i, log in enumerate(logger.get_logs(action)):
             thestatus = log.has_error() and log.get_error(False) or 'ok'
-            name      = log.get_host().get_address()
+            name      = log.get_name()
             if i > 0:
                 name += ' (retry %d)' % i
             summary.append(name + ': ' + thestatus)

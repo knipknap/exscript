@@ -16,9 +16,9 @@ import traceback
 import sys
 
 class Log(object):
-    def __init__(self):
+    def __init__(self, name):
+        self.name      = name
         self.data      = ''
-        self.conn      = None
         self.traceback = None
         self.exception = None
         self.did_end   = False
@@ -29,10 +29,8 @@ class Log(object):
     def __len__(self):
         return len(str(self))
 
-    def get_host(self):
-        if not self.conn:
-            return None
-        return self.conn.get_host()
+    def get_name(self):
+        return self.name
 
     def _write(self, *data):
         self.data += ' '.join(data)
@@ -45,22 +43,33 @@ class Log(object):
         return self.exception.__class__.__name__
 
     def started(self, conn):
-        self.did_end = False
-        self.conn    = conn
+        """
+        Called by a logger to inform us that a connection has
+        been opened and that logging may now begin.
+        """
         self._write('STARTED\n')
+        self.did_end = False
         if conn:
-            self.conn.data_received_event.listen(self._write)
+            conn.data_received_event.listen(self._write)
 
     def _format_exc(self, exception):
         return ''.join(traceback.format_exception(*sys.exc_info()))
 
     def error(self, exception):
+        """
+        Called by a logger to inform us that the connection had an
+        error.
+        """
         self.traceback = self._format_exc(exception)
         self.exception = exception
         self._write('ERROR:\n')
         self._write(self._format_exc(exception))
 
     def done(self):
+        """
+        Called by a logger to inform us that the connection was now
+        closed.
+        """
         self.did_end = True
         self._write('DONE\n')
 

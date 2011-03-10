@@ -12,13 +12,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+Represents the logfiles for one specific connection.
+"""
 import os
 import errno
 from Exscript.Log import Log
 
 class Logfile(Log):
-    def __init__(self, filename, mode = 'a', delete = False):
-        Log.__init__(self)
+    """
+    This class logs to two files: The raw log, and sometimes a separate
+    log containing the error message with a traceback.
+    """
+
+    def __init__(self, name, filename, mode = 'a', delete = False):
+        Log.__init__(self, name)
         self.filename  = filename
         self.errorname = filename + '.error'
         self.mode      = mode
@@ -61,9 +69,8 @@ class Logfile(Log):
 
     def started(self, conn):
         self._write('')  # Creates the file.
-        self.conn = conn
         if conn:
-            self.conn.data_received_event.listen(self._write)
+            conn.data_received_event.listen(self._write)
 
     def error(self, exception):
         self.traceback = self._format_exc(exception)

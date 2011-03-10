@@ -9,7 +9,7 @@ class LogTest(unittest.TestCase):
     CORRELATE = Log
 
     def setUp(self):
-        self.log = Log()
+        self.log = Log('testme')
 
     def testConstructor(self):
         self.assertEqual('', str(self.log))
@@ -24,10 +24,10 @@ class LogTest(unittest.TestCase):
             self.log.error(e)
         self.assert_('FakeError' in self.log.get_error())
 
-    def testGetHost(self):
-        self.assertEqual(self.log.get_host(), None)
+    def testGetName(self):
+        self.assertEqual(self.log.get_name(), 'testme')
         self.log.started(FakeConnection())
-        self.assert_(isinstance(self.log.get_host(), Host))
+        self.assertEqual(self.log.get_name(), 'testme')
 
     def testStarted(self):
         self.assertEqual('', str(self.log))

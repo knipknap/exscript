@@ -44,7 +44,8 @@ class FileLogger(Logger):
             filename = logname
         else:
             filename = os.path.join(self.logdir, action.get_logname())
-        log = Logfile(filename, self.mode, self.delete)
+        name = action.get_name()
+        log  = Logfile(name, filename, self.mode, self.delete)
         log.started(conn)
         self._add_log(action, log)
 

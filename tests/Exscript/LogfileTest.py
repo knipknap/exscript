@@ -13,12 +13,13 @@ class LogfileTest(LogTest):
         self.tempdir   = mkdtemp()
         self.logfile   = os.path.join(self.tempdir, 'test.log')
         self.errorfile = self.logfile + '.error'
-        self.log       = Logfile(self.logfile)
+        self.log       = Logfile('testme', self.logfile)
 
     def tearDown(self):
         rmtree(self.tempdir)
 
     def testConstructor(self):
+        self.assertEqual('testme', self.log.get_name())
         self.assertEqual('', str(self.log))
         self.failIf(os.path.exists(self.logfile))
         self.failIf(os.path.exists(self.errorfile))

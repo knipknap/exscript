@@ -17,8 +17,6 @@ Handy shortcuts for converting types.
 """
 import re
 import Exscript
-from Exscript.Log     import Log
-from Exscript.Logfile import Logfile
 
 def to_list(item):
     """
