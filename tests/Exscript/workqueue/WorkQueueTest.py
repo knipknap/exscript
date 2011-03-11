@@ -100,8 +100,12 @@ class WorkQueueTest(unittest.TestCase):
             self.wq.enqueue(action)
         self.assertEqual(4, self.wq.get_length())
         self.wq.unpause()
-        self.wq.wait_for(actions[0])
+
+        # Test that wait_for accepts an action hash.
+        self.wq.wait_for(actions[0].__hash__())
         self.assert_(self.wq.get_length() < 4)
+
+        # Test whether it accepts an action object.
         for action in actions:
             self.wq.wait_for(action)
         self.assertEqual(0, self.wq.get_length())

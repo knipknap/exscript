@@ -135,8 +135,25 @@ class MainLoop(threading.Thread):
     def is_paused(self):
         return self.paused
 
+    def _get_action_from_hash(self, thehash):
+        for action in chain(self.queue, self.force_start):
+            if action.__hash__() == thehash:
+                return action
+        for action in self.get_running_actions():
+            if action.__hash__() == thehash:
+                return action
+        return None
+
     def wait_for(self, action):
         with self.condition:
+            # If we were passed the hash of an action, look the action up
+            # first.
+            if isinstance(action, int):
+                action = self._get_action_from_hash(action)
+                if action is None:
+                    return
+
+            # Wait until the action completes.
             while self.in_queue(action):
                 self.condition.wait()
 

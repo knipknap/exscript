@@ -157,9 +157,10 @@ class WorkQueue(object):
 
     def wait_for(self, action):
         """
-        Waits until the given action is completed.
+        Waits until the given action is completed. Instead of an action,
+        this method also accepts the return value of action.__hash__().
 
-        @type  action: Action
+        @type  action: Action|int
         @param action: The action that is executed.
         """
         self._check_if_ready()
