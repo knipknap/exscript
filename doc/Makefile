@@ -79,7 +79,7 @@ publish: apidocs
 	# Create a temporary copy of this repository.
 	# Switch it to the HTML repository branch and delete the old docs,
 	# then install the new ones in the right directory.
-	git clone git@github.com:knipknap/exscript.git cloned_repo
+	git clone https://knipknap@github.com/knipknap/exscript.git cloned_repo
 	cd cloned_repo \
 	&& git checkout gh-pages \
 	&& rm -Rf api/ \
