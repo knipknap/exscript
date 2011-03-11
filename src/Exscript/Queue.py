@@ -316,7 +316,7 @@ class Queue(object):
         if isinstance(action, Task):
             self._dbg(2, 'Waiting for the task to finish.')
             return action.wait()
-        elif isinstance(action, Action):
+        elif isinstance(action, Action) or isinstance(action, int):
             self._dbg(2, 'Waiting for the action to finish.')
             return self.workqueue.wait_for(action)
         else:

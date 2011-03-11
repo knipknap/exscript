@@ -22,10 +22,10 @@ class Task(object):
     Represents a batch of running actions.
     """
     def __init__(self, queue):
-        self.done_event = Event()
-        self.queue      = queue
-        self.actions    = []
-        self.completed  = 0
+        self.done_event       = Event()
+        self.queue            = queue
+        self.action_hash_list = []
+        self.completed        = 0
 
     def _on_action_done(self, action):
         self.completed += 1
@@ -40,15 +40,15 @@ class Task(object):
         @rtype:  bool
         @return: Whether the task is completed.
         """
-        return self.completed == len(self.actions)
+        return self.completed == len(self.action_hash_list)
 
     def wait(self):
         """
         Waits until all actions in the task have completed.
         Does not use any polling.
         """
-        for action in self.actions:
-            self.queue.wait_for(action)
+        for thehash in self.action_hash_list:
+            self.queue.wait_for(thehash)
 
     def add_action(self, action):
         """
@@ -57,6 +57,6 @@ class Task(object):
         @type  action: Action
         @param action: The action to be added.
         """
-        self.actions.append(action)
+        self.action_hash_list.append(action.__hash__())
         action.aborted_event.listen(self._on_action_done)
         action.succeeded_event.listen(self._on_action_done)
