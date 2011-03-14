@@ -84,8 +84,9 @@ class Config(ConfigReader):
 
     def _init_database_from_dbn(self, dbn):
         from sqlalchemy import create_engine
+        from sqlalchemy.pool import NullPool
         #print 'Creating database connection for', dbn
-        return create_engine(dbn)
+        return create_engine(dbn, poolclass = NullPool)
 
     def _init_http_daemon(self, element):
         # Init the database for the daemon first, then

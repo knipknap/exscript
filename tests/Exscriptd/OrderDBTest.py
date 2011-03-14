@@ -1,6 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
+from tempfile          import NamedTemporaryFile
 from getpass           import getuser
 from sqlalchemy        import create_engine
 from Exscriptd.Order   import Order
@@ -11,8 +12,14 @@ class OrderDBTest(unittest.TestCase):
     CORRELATE = OrderDB
 
     def setUp(self):
-        self.engine = create_engine('sqlite://')
+        from sqlalchemy.pool import NullPool
+        self.dbfile = NamedTemporaryFile()
+        self.engine = create_engine('sqlite:///' + self.dbfile.name,
+                                    poolclass = NullPool)
         self.db     = OrderDB(self.engine)
+
+    def tearDown(self):
+        self.dbfile.close()
 
     def testConstructor(self):
         db = OrderDB(self.engine)
