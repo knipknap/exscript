@@ -39,7 +39,6 @@ def synchronized(func):
     wrapped.__doc__ = func.__doc__
     return wrapped
 
-
 class OrderDB(object):
     """
     The main interface for accessing the database.
@@ -340,7 +339,7 @@ class OrderDB(object):
             raise IndexError('Too many results')
         return result[0]
 
-    def get_orders(self, offset = 0, limit = 0, **kwargs):
+    def get_orders(self, offset = 0, limit = None, **kwargs):
         """
         Returns all orders that match the given criteria.
 
@@ -470,7 +469,7 @@ class OrderDB(object):
             raise IndexError('Too many results')
         return result[0]
 
-    def get_tasks(self, offset = 0, limit = 0, **kwargs):
+    def get_tasks(self, offset = 0, limit = None, **kwargs):
         """
         Returns all tasks that match the given criteria.
 
