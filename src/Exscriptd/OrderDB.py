@@ -78,7 +78,7 @@ class OrderDB(object):
             sa.Column('id',          sa.Integer,    primary_key = True),
             sa.Column('service',     sa.String(50), index = True),
             sa.Column('status',      sa.String(20), index = True),
-            sa.Column('description', sa.String(50)),
+            sa.Column('description', sa.String(150)),
             sa.Column('created',     sa.DateTime,   default = sa.func.now()),
             sa.Column('closed',      sa.DateTime),
             sa.Column('created_by',  sa.String(50)),
