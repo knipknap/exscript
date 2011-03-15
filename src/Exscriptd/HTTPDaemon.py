@@ -181,7 +181,7 @@ class HTTPDaemon(Daemon):
         self.server.accounts[user] = password
 
     def run(self):
-        address  = self.address + ':' + str(self.port)
+        address  = (self.address or '*') + ':' + str(self.port)
         nameaddr = self.name, address
         self.logger.info('HTTPDaemon %s/%s starting.' % nameaddr)
         self.close_open_orders()
