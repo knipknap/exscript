@@ -1,7 +1,5 @@
 Exscript
 --------
-* Move some code from Exscript.Connection and Exscript.Queue to a new
-  AccountManager.
 * Add tests for Transport class debug levels.
 * Add API docs for Exscript.parselib.
 * Add a test for Exscript.Task.

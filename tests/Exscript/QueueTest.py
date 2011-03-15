@@ -68,6 +68,7 @@ class QueueTest(unittest.TestCase):
         self.out   = Log()
         self.err   = Log()
         self.queue = Queue(stdout = self.out, stderr = self.err, **kwargs)
+        self.accm  = self.queue.account_manager
 
     def setUp(self):
         self.tempdir = mkdtemp()
@@ -146,16 +147,16 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(100.0, self.queue.get_progress())
 
     def testAddAccount(self):
-        self.assertEqual(0, self.queue.default_accounts.n_accounts())
+        self.assertEqual(0, self.accm.default_pool.n_accounts())
         account = Account('user', 'test')
         self.queue.add_account(account)
-        self.assertEqual(1, self.queue.default_accounts.n_accounts())
+        self.assertEqual(1, self.accm.default_pool.n_accounts())
 
     def testAddAccountPool(self):
-        self.assertEqual(0, self.queue.default_accounts.n_accounts())
+        self.assertEqual(0, self.accm.default_pool.n_accounts())
         account = Account('user', 'test')
         self.queue.add_account(account)
-        self.assertEqual(1, self.queue.default_accounts.n_accounts())
+        self.assertEqual(1, self.accm.default_pool.n_accounts())
 
         def match_cb(data, host):
             data['match-called'] = True
@@ -169,7 +170,7 @@ class QueueTest(unittest.TestCase):
         # Replace the default pool.
         pool1 = AccountPool()
         self.queue.add_account_pool(pool1)
-        self.assertEqual(self.queue.default_accounts, pool1)
+        self.assertEqual(self.accm.default_pool, pool1)
 
         # Add another pool, making sure that it does not replace
         # the default pool.
@@ -178,7 +179,7 @@ class QueueTest(unittest.TestCase):
         pool2.add_account(account2)
         data = {}
         self.queue.add_account_pool(pool2, partial(match_cb, data))
-        self.assertEqual(self.queue.default_accounts, pool1)
+        self.assertEqual(self.accm.default_pool, pool1)
 
         # Make sure that pool2 is chosen (because the match function
         # returns True).
@@ -223,19 +224,19 @@ class QueueTest(unittest.TestCase):
         self.queue.shutdown()
         self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
-        self.assertEqual(self.queue.default_accounts.n_accounts(), 1)
+        self.assertEqual(self.accm.default_pool.n_accounts(), 1)
 
     def testDestroy(self):
         task = self.startTask()   # this also adds an account
         self.queue.destroy()
         self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
-        self.assertEqual(self.queue.default_accounts.n_accounts(), 0)
+        self.assertEqual(self.accm.default_pool.n_accounts(), 0)
 
     def testReset(self):
         self.testAddAccount()
         self.queue.reset()
-        self.assertEqual(self.queue.default_accounts.n_accounts(), 0)
+        self.assertEqual(self.accm.default_pool.n_accounts(), 0)
 
     def testRun(self):
         data  = {'n_calls': 0}

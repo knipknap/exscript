@@ -19,14 +19,14 @@ import sys
 import os
 import gc
 import traceback
-from Exscript.FileLogger   import FileLogger
-from Exscript.AccountPool  import AccountPool
-from Exscript.CustomAction import CustomAction
-from Exscript.HostAction   import HostAction
-from Exscript.Task         import Task
-from Exscript.workqueue    import WorkQueue, Action
-from Exscript.util.cast    import to_hosts
-from Exscript.util.event   import Event
+from Exscript.FileLogger     import FileLogger
+from Exscript.AccountManager import AccountManager
+from Exscript.CustomAction   import CustomAction
+from Exscript.HostAction     import HostAction
+from Exscript.Task           import Task
+from Exscript.workqueue      import WorkQueue, Action
+from Exscript.util.cast      import to_hosts
+from Exscript.util.event     import Event
 
 class Queue(object):
     """
@@ -68,8 +68,7 @@ class Queue(object):
         @keyword stderr: The error channel, defaults to sys.stderr.
         """
         self.workqueue         = WorkQueue()
-        self.default_accounts  = AccountPool()
-        self.account_pools     = []
+        self.account_manager   = AccountManager()
         self.domain            = kwargs.get('domain',        '')
         self.verbose           = kwargs.get('verbose',       1)
         self.times             = kwargs.get('times',         1)
@@ -233,7 +232,7 @@ class Queue(object):
 
     def add_account_pool(self, pool, match = None):
         """
-        Adds a new account pool to the queue. If the given match argument is
+        Adds a new account pool. If the given match argument is
         None, the pool the default pool. Otherwise, the match argument is
         a callback function that is invoked to decide whether or not the
         given pool should be used for a host.
@@ -289,10 +288,7 @@ class Queue(object):
         @type  match: callable
         @param match: A callback to check if the pool should be used.
         """
-        if match is None:
-            self.default_accounts = pool
-        else:
-            self.account_pools.append((match, pool))
+        self.account_manager.add_pool(pool, match)
 
     def add_account(self, account):
         """
@@ -302,7 +298,7 @@ class Queue(object):
         @type  account: Account
         @param account: The account that is added.
         """
-        self.default_accounts.add_account(account)
+        self.account_manager.add_account(account)
 
     def wait_for(self, action):
         """
@@ -377,7 +373,7 @@ class Queue(object):
 
         self._dbg(2, 'Destroying queue...')
         self.workqueue.shutdown(False)
-        self.default_accounts.reset()
+        self.account_manager.reset()
         self.completed         = 0
         self.total             = 0
         self.status_bar_length = 0
@@ -389,7 +385,7 @@ class Queue(object):
         Remove all accounts, hosts, etc.
         """
         self._dbg(2, 'Resetting queue...')
-        self.default_accounts.reset()
+        self.account_manager.reset()
         self.workqueue.shutdown(True)
         self.completed         = 0
         self.total             = 0
