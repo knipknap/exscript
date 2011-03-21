@@ -27,6 +27,18 @@ class AccountTest(unittest.TestCase):
         self.failIfEqual(account.get_password(),
                          account.get_authorization_password())
 
+    def testContext(self):
+        with self.account as account:
+            account.release()
+            account.acquire()
+
+        self.account.acquire()
+        with self.account.context():
+            pass
+
+        with self.account:
+            pass
+
     def testAcquire(self):
         self.account.acquire()
         self.account.release()

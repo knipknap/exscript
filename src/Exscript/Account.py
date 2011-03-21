@@ -56,6 +56,27 @@ class Account(object):
     def __str__(self):
         return self.name
 
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def __exit__(self, thetype, value, traceback):
+        self.release()
+
+    def context(self):
+        """
+        When you need a 'with' context for an already-acquired account.
+        """
+        old_enter = self.__enter__
+        old_exit  = self.__exit__
+        def exit_context(thetype, value, traceback):
+            self.__enter__ = old_enter
+            self.__exit__  = old_exit
+            self.__exit__(thetype, value, traceback)
+        self.__enter__ = lambda: self
+        self.__exit__  = exit_context
+        return self
+
     def acquire(self):
         """
         Locks the account.
