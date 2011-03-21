@@ -50,6 +50,33 @@ class AccountManagerTest(unittest.TestCase):
         self.am.add_pool(pool2, match_cb)
         self.assertEqual(self.am.default_pool, pool1)
 
+    def testAcquireAccount(self):
+        account1 = Account('user1', 'test')
+        self.assertRaises(ValueError, self.am.acquire_account)
+        self.am.add_account(account1)
+        self.assertEqual(self.am.acquire_account(), account1)
+        account1.release()
+
+        account2 = Account('user2', 'test')
+        self.am.add_account(account2)
+        self.assertEqual(self.am.acquire_account(account2), account2)
+        account2.release()
+        account = self.am.acquire_account()
+        self.assertNotEqual(account, None)
+        account.release()
+
+        account3 = Account('user3', 'test')
+        pool = AccountPool()
+        pool.add_account(account3)
+        self.am.add_pool(pool)
+        self.assertEqual(self.am.acquire_account(account2), account2)
+        account2.release()
+        self.assertEqual(self.am.acquire_account(account3), account3)
+        account3.release()
+        account = self.am.acquire_account()
+        self.assertNotEqual(account, None)
+        account.release()
+
     def testAcquireAccountFor(self):
         self.testAddPool()
 
