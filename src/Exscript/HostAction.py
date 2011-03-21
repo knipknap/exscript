@@ -32,6 +32,7 @@ class HostAction(CustomAction):
         """
         CustomAction.__init__(self, queue, function, host.get_address())
         self.host      = host
+        self.account   = host.get_account()
         self.conn_args = conn_args
 
         # Find the right protocol class for connecting to the host.
@@ -40,6 +41,18 @@ class HostAction(CustomAction):
 
     def get_host(self):
         return self.host
+
+    def acquire_account(self, account = None):
+        # Specific account requested?
+        if account:
+            return self.queue.account_manager.acquire_account(account)
+
+        # Is a default account defined for this connection?
+        if self.account:
+            return self.queue.account_manager.acquire_account(self.account)
+
+        # Else, let the account manager assign an account.
+        return self.queue.account_manager.acquire_account_for(self.host)
 
     def get_logname(self):
         logname = self.host.get_logname()

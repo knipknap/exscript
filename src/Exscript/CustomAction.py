@@ -67,6 +67,12 @@ class CustomAction(Action):
     def get_queue(self):
         return self.queue
 
+    def acquire_account(self, account = None):
+        return self.queue.account_manager.acquire_account(account)
+
+    def release_account(self, account):
+        account.release()
+
     def get_logname(self):
         logname = self.get_name()
         retries = self.n_failures()

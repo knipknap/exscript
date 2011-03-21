@@ -1,7 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript                     import Queue, Host
+from Exscript                     import Queue, Host, Account
 from Exscript.HostAction          import HostAction
 from Exscript.util.decorator      import bind
 from Exscript.protocols.Exception import LoginFailure
@@ -53,6 +53,23 @@ class HostActionTest(unittest.TestCase):
                          self.count_action.get_name() + '.log')
         self.count_action.get_host().set_logname('test')
         self.assertEqual(self.count_action.get_logname(), 'test.log')
+
+    def testAcquireAccount(self):
+        queue   = Queue()
+        account = Account('foo')
+        queue.add_account(account)
+
+        def doit(conn, data):
+            data['account'] = conn.get_action().acquire_account()
+            data['account'].release()
+
+        data     = {}
+        callback = bind(doit, data)
+        action   = HostAction(queue, callback, FakeHost())
+        action.execute()
+        self.assertEqual(data.get('account'), account)
+
+        queue.destroy()
 
     def testSetTimes(self):
         # Run once.
