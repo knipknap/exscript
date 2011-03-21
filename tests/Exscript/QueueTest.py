@@ -164,7 +164,7 @@ class QueueTest(unittest.TestCase):
 
         def start_cb(data, conn):
             data['start-called'] = True
-            account = data['account'] = conn._acquire_account()
+            account = data['account'] = conn.action.acquire_account()
             account.release()
 
         # Replace the default pool.

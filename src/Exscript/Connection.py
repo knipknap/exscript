@@ -42,10 +42,6 @@ class Connection(object):
         self.__dict__['action']   = action
         self.__dict__['protocol'] = protocol
 
-        # If specified, use the host-specific login details.
-        host = action.get_host()
-        self.__dict__['default_account'] = host.get_account()
-
     def __copy__(self):
         """
         Overwritten to return the very same object instead of copying the
@@ -96,24 +92,6 @@ class Connection(object):
         if name in self.__dict__.keys():
             return self.__dict__[name]
         return getattr(self.protocol, name)
-
-    def _acquire_account(self, account = None):
-        # Specific account requested?
-        if account:
-            account.acquire()
-            return account
-
-        # Is a default account defined for this connection?
-        if self.default_account:
-            self.default_account.acquire()
-            return self.default_account
-
-        # Else, let the account manager assign an account.
-        host = self.get_host()
-        return self.get_queue().account_manager.acquire_account_for(host)
-
-    def _release_account(self, account):
-        account.release()
 
     def get_action(self):
         """
@@ -166,19 +144,15 @@ class Connection(object):
         manager.
         Returns the account that was used to log in.
 
-        @type  account: Account
+        @type  account: Account|None
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         @rtype:  Account
         @return: The account that was used to log in.
         """
-        account = self._acquire_account(account)
-
-        try:
+        with self.action.acquire_account(account).context() as account:
             self.protocol.login(account, flush = flush)
-        finally:
-            self._release_account(account)
         return account
 
     def authenticate(self, account = None, flush = True):
@@ -189,19 +163,15 @@ class Connection(object):
         manager.
         Returns the account that was used to log in.
 
-        @type  account: Account
+        @type  account: Account|None
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         @rtype:  Account
         @return: The account that was used to log in.
         """
-        account = self._acquire_account(account)
-
-        try:
+        with self.action.acquire_account(account).context() as account:
             self.protocol.authenticate(account, flush = flush)
-        finally:
-            self._release_account(account)
         return account
 
     def protocol_authenticate(self, account = None):
@@ -212,17 +182,13 @@ class Connection(object):
         manager.
         Returns the account that was used to log in.
 
-        @type  account: Account
+        @type  account: Account|None
         @param account: The account to use for logging in.
         @rtype:  Account
         @return: The account that was used to log in.
         """
-        account = self._acquire_account(account)
-
-        try:
+        with self.action.acquire_account(account).context() as account:
             self.protocol.protocol_authenticate(account)
-        finally:
-            self._release_account(account)
         return account
 
     def app_authenticate(self, account = None, flush = True):
@@ -233,38 +199,30 @@ class Connection(object):
         manager.
         Returns the account that was used to log in.
 
-        @type  account: Account
+        @type  account: Account|None
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         @rtype:  Account
         @return: The account that was used to log in.
         """
-        account = self._acquire_account(account)
-
-        try:
+        with self.action.acquire_account(account).context() as account:
             self.protocol.app_authenticate(account, flush = flush)
-        finally:
-            self._release_account(account)
         return account
 
     def app_authorize(self, account = None, flush = True):
         """
         Like app_authenticate(), but uses the authorization password instead.
 
-        @type  account: Account
+        @type  account: Account|None
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         @rtype:  Account
         @return: The account that was used to log in.
         """
-        account = self._acquire_account(account)
-
-        try:
+        with self.action.acquire_account(account).context() as account:
             self.protocol.app_authorize(account, flush = flush)
-        finally:
-            self._release_account(account)
         return account
 
     def auto_app_authorize(self, account = None, flush = True):
@@ -284,17 +242,13 @@ class Connection(object):
 
         Returns the account that was used to log in.
 
-        @type  account: Account
+        @type  account: Account|None
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         @rtype:  Account
         @return: The account that was used to log in.
         """
-        account = self._acquire_account(account)
-
-        try:
+        with self.action.acquire_account(account).context() as account:
             self.protocol.auto_app_authorize(account, flush = flush)
-        finally:
-            self._release_account(account)
         return account
