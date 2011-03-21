@@ -37,6 +37,11 @@ class AccountPoolTest(unittest.TestCase):
         self.accm.reset()
         self.assertEqual(self.accm.n_accounts(), 0)
 
+    def testHasAccount(self):
+        self.assertEqual(self.accm.has_account(self.account1), False)
+        self.accm.add_account(self.account1)
+        self.assertEqual(self.accm.has_account(self.account1), True)
+
     def testGetAccountFromName(self):
         self.testAddAccount()
         self.assertEqual(self.account2,

@@ -56,6 +56,16 @@ class AccountPool(object):
             self.unlock_cond.notify_all()
         return account
 
+    def has_account(self, account):
+        """
+        Returns True if the given account exists in the pool, returns False
+        otherwise.
+
+        @type  account: Account
+        @param account: The account object.
+        """
+        return account in self.accounts
+
     def add_account(self, accounts):
         """
         Adds one or more account instances to the pool.
@@ -119,7 +129,8 @@ class AccountPool(object):
 
     def _acquire_specific_account(self, account):
         assert account in self.accounts
-        account = account.acquire()
+        account.acquire()
+        return account
 
     def acquire_account(self, account = None):
         """
@@ -128,8 +139,8 @@ class AccountPool(object):
 
         @type  account: Account
         @param account: The account to be acquired, or None.
-        @rtype:  Account
-        @return: The account to be added.
+        @rtype:  L{Account}
+        @return: The account that was acquired.
         """
         if account:
             return self._acquire_specific_account(account)
