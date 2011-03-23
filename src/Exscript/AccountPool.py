@@ -56,6 +56,12 @@ class AccountPool(object):
             self.unlock_cond.notify_all()
         return account
 
+    def get_account_from_hash(self, account_hash):
+        for account in self.accounts:
+            if account.__hash__() == account_hash:
+                return account
+        return None
+
     def has_account(self, account):
         """
         Returns True if the given account exists in the pool, returns False

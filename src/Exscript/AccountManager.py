@@ -109,6 +109,20 @@ class AccountManager(object):
         """
         self.default_pool.add_account(account)
 
+    def get_account_from_hash(self, account_hash):
+        """
+        Returns the account with the given hash, if it is contained in any
+        of the pools. Returns None otherwise.
+
+        @type  account_hash: str
+        @param account_hash: The hash of an account object.
+        """
+        for match, pool in self.pools:
+            account = pool.get_account_from_hash(account_hash)
+            if account is not None:
+                return account
+        return self.default_pool.get_account_from_hash(account_hash)
+
     def acquire_account(self, account = None):
         """
         Acquires the given account. If no account is given, one is chosen
