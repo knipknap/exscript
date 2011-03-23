@@ -32,7 +32,7 @@ class AccountManager(object):
 
     def reset(self):
         self.default_pool.reset()
-        for pool in self.pools:
+        for match, pool in self.pools:
             pool.reset()
         self.pools = []
 
@@ -120,7 +120,7 @@ class AccountManager(object):
         @return: The account that was acquired.
         """
         if account is not None:
-            for pool in self.pools:
+            for match, pool in self.pools:
                 if pool.has_account(account):
                     return pool.acquire_account(account)
 
