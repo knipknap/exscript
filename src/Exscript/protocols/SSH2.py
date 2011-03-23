@@ -36,7 +36,7 @@ from Exscript.protocols.Exception import ProtocolException, \
                                          ExpectCancelledException
 
 # Workaround for paramiko error; avoids a warning message.
-util.log_to_file('/dev/null')
+util.log_to_file(os.devnull)
 
 # Register supported key types.
 keymap = {'rsa': paramiko.RSAKey, 'dss': paramiko.DSSKey}
