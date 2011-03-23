@@ -54,6 +54,5 @@ functions = {
     'string.replace':            string.replace,
     'string.tolower':            string.tolower,
     'sys.message':               mysys.message,
-    'sys.run':                   mysys.run,
     'sys.wait':                  mysys.wait,
 }
