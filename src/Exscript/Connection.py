@@ -139,7 +139,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -158,7 +158,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -175,7 +175,7 @@ class Connection(object):
 
         @type  account: Account|None
         @param account: The account to use for logging in.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -194,7 +194,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -209,7 +209,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -237,7 +237,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:

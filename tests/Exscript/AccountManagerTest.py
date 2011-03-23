@@ -16,6 +16,21 @@ class AccountManagerTest(unittest.TestCase):
     def testConstructor(self):
         self.assertEqual(0, self.am.default_pool.n_accounts())
 
+    def testCreatePipe(self):
+        self.am.add_account(self.account)
+        pipe = self.am.create_pipe()
+        pipe.send(('acquire-account', None))
+        response = pipe.recv()
+        expected = (self.account.__hash__(),
+                    self.account.get_name(),
+                    self.account.get_password(),
+                    self.account.get_authorization_password(),
+                    self.account.get_key())
+        self.assertEqual(response, expected)
+        pipe.send(('release-account', self.account.__hash__()))
+        response = pipe.recv()
+        self.assertEqual(response, 'ok')
+
     def testReset(self):
         self.testAddAccount()
         self.am.reset()

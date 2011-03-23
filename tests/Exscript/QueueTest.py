@@ -169,8 +169,9 @@ class QueueTest(unittest.TestCase):
             return True
 
         def start_cb(data, conn):
+            account = conn.action.acquire_account()
             data['start-called'] = True
-            account = data['account'] = conn.action.acquire_account()
+            data['account'] = account.__hash__()
             account.release()
 
         # Replace the default pool.
@@ -193,7 +194,7 @@ class QueueTest(unittest.TestCase):
         self.queue.shutdown()
         self.assertEqual(data, {'match-called': True,
                                 'start-called': True,
-                                'account': account2})
+                                'account': account2.__hash__()})
 
     def startTask(self):
         self.testAddAccount()

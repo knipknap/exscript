@@ -17,7 +17,8 @@ class ConnectionTest(DummyTest):
     def createProtocol(self):
         self.queue    = Queue(verbose = 0)
         self.host     = Host('dummy://' + self.hostname)
-        self.action   = HostAction(self.queue, object, self.host)
+        pipe          = self.queue.account_manager.create_pipe()
+        self.action   = HostAction(pipe, object, self.host)
         protocol      = Dummy()
         self.protocol = Connection(self.action, protocol)
         self.queue.add_account(self.account)

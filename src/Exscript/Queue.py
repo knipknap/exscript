@@ -421,7 +421,8 @@ class Queue(object):
     def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
-        action = HostAction(self, function, host, **self.protocol_args)
+        pipe   = self.account_manager.create_pipe()
+        action = HostAction(pipe, function, host, **self.protocol_args)
         if self._enqueue1(action, prioritize, force, duplicate_check):
             return action
         return None
@@ -567,7 +568,8 @@ class Queue(object):
 
         self._dbg(2, 'Building CustomAction for Queue.enqueue().')
         task   = Task(self)
-        action = CustomAction(self, function, name)
+        pipe   = self.account_manager.create_pipe()
+        action = CustomAction(pipe, function, name)
         task.add_action(action)
         self._enqueue1(action, False, False, False)
 

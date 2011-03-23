@@ -18,18 +18,19 @@ from Exscript.util.event            import Event
 from Exscript.protocols.Exception   import LoginFailure
 from Exscript.interpreter.Exception import FailException
 from Exscript.parselib.Exception    import CompileError
+from Exscript.AccountProxy          import AccountProxy
 
 class CustomAction(Action):
     """
     An action that calls the associated function and implements retry and
     logging.
     """
-    def __init__(self, queue, function, name):
+    def __init__(self, accm, function, name):
         """
         Constructor.
 
-        @type  queue: Queue
-        @param queue: The associated queue.
+        @type  accm: multiprocessing.Connection
+        @param accm: A pipe to the associated account manager.
         @type  function: function
         @param function: Called when the action is executed.
         @type  name: str
@@ -40,7 +41,7 @@ class CustomAction(Action):
         self.error_event     = Event()
         self.aborted_event   = Event()
         self.succeeded_event = Event()
-        self.queue           = queue
+        self.accm            = accm
         self.function        = function
         self.times           = 1
         self.login_times     = 1
@@ -64,8 +65,20 @@ class CustomAction(Action):
     def get_name(self):
         return self.name
 
-    def acquire_account(self, account = None):
-        return self.queue.account_manager.acquire_account(account)
+    def acquire_account(self, account_hash):
+        # Specific account requested?
+        if account:
+            return AccountProxy.for_account(self.accm, account)
+        else:
+            return AccountProxy.for_random_account(self.accm)
+
+        # Is a default account defined for this connection?
+        account = self.get_host().get_account()
+        if account:
+            return AccountProxy.for_account(self.accm, account)
+
+        # Else, let the account manager assign an account.
+        return AccountProxy.for_host(self.accm, self.get_host())
 
     def release_account(self, account):
         account.release()
@@ -105,28 +118,31 @@ class CustomAction(Action):
         return self.function()
 
     def execute(self):
-        while self.failures < self.times \
-          and self.login_failures < self.login_times:
-            conn = self._create_connection()
-            self.started_event(self, conn)
+        try:
+            while self.failures < self.times \
+              and self.login_failures < self.login_times:
+                conn = self._create_connection()
+                self.started_event(self, conn)
 
-            # Execute the user-provided function.
-            try:
-                self._call_function(conn)
-            except LoginFailure, e:
-                self.error_event(self, e)
-                self.login_failures += 1
-                continue
-            except Exception, e:
-                self.error_event(self, e)
-                self.failures += 1
-                if not self._is_recoverable_error(e):
-                    break
-                continue
+                # Execute the user-provided function.
+                try:
+                    self._call_function(conn)
+                except LoginFailure, e:
+                    self.error_event(self, e)
+                    self.login_failures += 1
+                    continue
+                except Exception, e:
+                    self.error_event(self, e)
+                    self.failures += 1
+                    if not self._is_recoverable_error(e):
+                        break
+                    continue
 
-            self.succeeded_event(self)
-            return
+                self.succeeded_event(self)
+                return
 
-        # Ending up here the function finally failed.
-        self.aborted = True
-        self.aborted_event(self)
+            # Ending up here the function finally failed.
+            self.aborted = True
+            self.aborted_event(self)
+        finally:
+            self.accm.close()

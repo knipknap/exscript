@@ -15,22 +15,25 @@
 from Exscript.protocols    import get_protocol_from_name
 from Exscript.CustomAction import CustomAction
 from Exscript.Connection   import Connection
+from Exscript.AccountProxy import AccountProxy
 
 class HostAction(CustomAction):
     """
     An action that automatically opens a network connection to a host
     before calling the associated function.
     """
-    def __init__(self, queue, function, host, **conn_args):
+    def __init__(self, accm, function, host, **conn_args):
         """
         Constructor.
 
+        @type  accm: multiprocessing.Connection
+        @param accm: A pipe to the associated account manager.
         @type  function: function
         @param function: Called when the Action is executed.
         @type  conn: Connection
         @param conn: The assoviated connection.
         """
-        CustomAction.__init__(self, queue, function, host.get_address())
+        CustomAction.__init__(self, accm, function, host.get_address())
         self.host      = host
         self.account   = host.get_account()
         self.conn_args = conn_args
@@ -45,14 +48,14 @@ class HostAction(CustomAction):
     def acquire_account(self, account = None):
         # Specific account requested?
         if account:
-            return self.queue.account_manager.acquire_account(account)
+            return AccountProxy.for_account(self.accm, account)
 
         # Is a default account defined for this connection?
         if self.account:
-            return self.queue.account_manager.acquire_account(self.account)
+            return AccountProxy.for_account(self.accm, self.account)
 
         # Else, let the account manager assign an account.
-        return self.queue.account_manager.acquire_account_for(self.host)
+        return AccountProxy.for_host(self.accm, self.host)
 
     def get_logname(self):
         logname = self.host.get_logname()
