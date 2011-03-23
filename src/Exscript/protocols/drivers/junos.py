@@ -20,7 +20,8 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'[\r\n]login: $')]
 _password_re = [re.compile(r'[\r\n]Password: $')]
-_prompt_re   = [re.compile(r'(?:[\r\n]\[edit\])?[\r\n][\w\-]+@[\-\w+\.]+[>#] $')]
+_prompt_re   = [re.compile(r'(?:[\r\n]\[edit\])?[\r\n][\w\-]+@[\-\w+\.]+[>#] $'),
+                re.compile(r'[\r\n][\w\-]+@[\-\w+\.:]+% $')]
 _error_re    = [re.compile('^(unknown|invalid|error)', re.I)]
 _junos_re    = re.compile(r'\bjunos\b', re.I)
 
