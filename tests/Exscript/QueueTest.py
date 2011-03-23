@@ -21,10 +21,9 @@ def count_calls2(conn, data, **kwargs):
     assert isinstance(conn, Connection)
     count_calls(data, **kwargs)
 
-def spawn_subtask(conn, data, **kwargs):
+def spawn_subtask(conn, queue, data, **kwargs):
     count_calls2(conn, data, **kwargs)
     func  = bind(count_calls2, data, testarg = 1)
-    queue = conn.get_queue()
     task  = queue.priority_run('subtask', func)
     queue.wait_for(task)
 
@@ -65,6 +64,8 @@ class QueueTest(unittest.TestCase):
     CORRELATE = Queue
 
     def createQueue(self, **kwargs):
+        if self.queue:
+            self.queue.destroy()
         self.out   = Log()
         self.err   = Log()
         self.queue = Queue(stdout = self.out, stderr = self.err, **kwargs)
@@ -72,10 +73,15 @@ class QueueTest(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = mkdtemp()
+        self.queue   = None
         self.createQueue(verbose = -1, logdir = self.tempdir)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
+        try:
+            self.queue.destroy()
+        except:
+            pass # queue already destroyed
 
     def assertVerbosity(self, channel, expected):
         data = channel.read()
@@ -269,7 +275,7 @@ class QueueTest(unittest.TestCase):
     def testPriorityRun(self):
         data  = {'n_calls': 0}
         hosts = ['dummy1', 'dummy2']
-        func  = bind(spawn_subtask, data, testarg = 1)
+        func  = bind(spawn_subtask, self.queue, data, testarg = 1)
 
         # Since the job (consisting of two connections) spawns a subtask,
         # we need at least two threads. But both subtasks could be waiting

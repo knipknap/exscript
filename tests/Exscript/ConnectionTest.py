@@ -38,9 +38,6 @@ class ConnectionTest(DummyTest):
     def testGetAction(self):
         self.assert_(isinstance(self.protocol.get_action(), HostAction))
 
-    def testGetQueue(self):
-        self.assert_(isinstance(self.protocol.get_queue(), Queue))
-
     def testGetHost(self):
         self.assertEqual(self.protocol.get_host(), self.host)
 

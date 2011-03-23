@@ -64,9 +64,6 @@ class CustomAction(Action):
     def get_name(self):
         return self.name
 
-    def get_queue(self):
-        return self.queue
-
     def acquire_account(self, account = None):
         return self.queue.account_manager.acquire_account(account)
 

@@ -102,15 +102,6 @@ class Connection(object):
         """
         return self.action
 
-    def get_queue(self):
-        """
-        Returns the associated Queue instance.
-
-        @rtype:  Queue
-        @return: The associated Queue instance.
-        """
-        return self.action.get_queue()
-
     def get_host(self):
         """
         Returns the host on which the job is performed.
