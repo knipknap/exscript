@@ -141,6 +141,9 @@ def get_host_from_etree(node):
         <host name="otherhost" address="10.0.0.2">
           <protocol>telnet</protocol>
           <tcp-port>23</tcp-port>
+          <account>
+            ...
+          </account>
           <argument-list>
             <list name="mylist">
               <list-item>foo</list-item>
@@ -162,6 +165,7 @@ def get_host_from_etree(node):
     protocol = node.findtext('protocol')
     tcp_port = node.findtext('tcp-port')
     arg_elem = node.find('argument-list')
+    acc_elem = node.find('account')
     args     = get_dict_from_etree(arg_elem)
     host     = Exscript.Host(address)
     if not address:
@@ -172,6 +176,9 @@ def get_host_from_etree(node):
         host.set_protocol(protocol)
     if tcp_port:
         host.set_tcp_port(int(tcp_port))
+    if acc_elem:
+        account = get_account_from_etree(acc_elem)
+        host.set_account(account)
     host.set_all(args)
     return host
 
@@ -198,6 +205,9 @@ def add_host_to_etree(root, tag, host):
         etree.SubElement(elem, 'protocol').text = host.get_protocol()
     if host.get_tcp_port() is not None:
         etree.SubElement(elem, 'tcp-port').text = str(host.get_tcp_port())
+    account = host.get_account()
+    if account:
+        add_account_to_etree(elem, 'account', account)
     if host.get_all():
         add_dict_to_etree(elem, 'argument-list', host.get_all())
     return elem
