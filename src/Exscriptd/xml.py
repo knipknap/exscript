@@ -176,7 +176,7 @@ def get_host_from_etree(node):
         host.set_protocol(protocol)
     if tcp_port:
         host.set_tcp_port(int(tcp_port))
-    if acc_elem:
+    if acc_elem is not None:
         account = get_account_from_etree(acc_elem)
         host.set_account(account)
     host.set_all(args)
