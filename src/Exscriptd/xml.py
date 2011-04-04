@@ -125,11 +125,11 @@ def add_dict_to_etree(root, tag, thedict, name = None):
             add_list_to_etree(arg_elem, 'list', value, name = name)
         elif isinstance(value, dict):
             add_dict_to_etree(arg_elem, 'map', value, name = name)
-        elif isinstance(value, str):
+        elif isinstance(value, str) or isinstance(value, unicode):
             variable = etree.SubElement(arg_elem, 'variable', name = name)
             variable.text = value
         else:
-            raise Exception('unknown variable type')
+            raise ValueError('unknown variable type: ' + repr(value))
     return arg_elem
 
 def get_host_from_etree(node):
