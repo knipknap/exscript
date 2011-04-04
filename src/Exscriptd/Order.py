@@ -169,21 +169,25 @@ class Order(DBObject):
         xml.append(order)
         return etree.tostring(xml, pretty_print = pretty)
 
-    def write(self, filename):
+    def write(self, thefile):
         """
         Export the order as an XML file.
 
-        @type  filename: str
-        @param filename: XML
+        @type  thefile: str or file object
+        @param thefile: XML
         """
-        dirname = os.path.dirname(filename)
+        if hasattr(thefile, 'write'):
+            thefile.write(self.toxml())
+            return
+
+        dirname = os.path.dirname(thefile)
         with NamedTemporaryFile(dir    = dirname,
                                 prefix = '.',
-                                delete = False) as file:
-            file.write(self.toxml())
-            file.flush()
-            os.chmod(file.name, 0644)
-            os.rename(file.name, filename)
+                                delete = False) as tmpfile:
+            tmpfile.write(self.toxml())
+            tmpfile.flush()
+            os.chmod(tmpfile.name, 0644)
+            os.rename(tmpfile.name, thefile)
 
     def is_valid(self):
         """
