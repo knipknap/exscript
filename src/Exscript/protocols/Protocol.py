@@ -966,7 +966,7 @@ class Protocol(object):
         self._dbg(5, "Checking %s for errors" % repr(self.response))
         for line in self.response.split('\n')[1:]:
             for prompt in self.get_error_prompt():
-                if not prompt.match(line):
+                if not prompt.search(line):
                     continue
                 args = repr(prompt.pattern), repr(line)
                 self._dbg(5, "error prompt (%s) matches %s" % args)
