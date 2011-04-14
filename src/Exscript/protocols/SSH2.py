@@ -327,8 +327,8 @@ class SSH2(Protocol):
     def _set_terminal_size(self, rows, cols):
         self.shell.resize_pty(cols, rows)
 
-    def interact(self, key_handlers = None):
-        return self._open_shell(self.shell, key_handlers)
+    def interact(self, key_handlers = None, handle_window_size = True):
+        return self._open_shell(self.shell, key_handlers, handle_window_size)
 
     def close(self, force = False):
         if self.shell is None:

@@ -1010,18 +1010,22 @@ class Protocol(object):
     def _set_terminal_size(self, rows, cols):
         raise NotImplementedError()
 
-    def _open_posix_shell(self, channel, key_handlers):
+    def _open_posix_shell(self,
+                          channel,
+                          key_handlers,
+                          handle_window_size):
         # We need to make sure to use an unbuffered stdin, else multi-byte
         # chars (such as arrow keys) won't work properly.
         stdin  = os.fdopen(sys.stdin.fileno(), 'r', 0)
         oldtty = termios.tcgetattr(stdin)
 
         # Update the terminal size whenever the size changes.
-        def handle_sigwinch(signum, frame):
-            rows, cols = get_terminal_size()
-            self._set_terminal_size(rows, cols)
-        signal.signal(signal.SIGWINCH, handle_sigwinch)
-        handle_sigwinch(None, None)
+        if handle_window_size:
+            def handle_sigwinch(signum, frame):
+                rows, cols = get_terminal_size()
+                self._set_terminal_size(rows, cols)
+            signal.signal(signal.SIGWINCH, handle_sigwinch)
+            handle_sigwinch(None, None)
 
         # Read from stdin and write to the network, endlessly.
         try:
@@ -1092,13 +1096,13 @@ class Protocol(object):
         except EOFError:
             self._dbg(1, 'User hit ^Z or F6')
 
-    def _open_shell(self, channel, key_handlers):
+    def _open_shell(self, channel, key_handlers, handle_window_size):
         if _have_termios:
-            return self._open_posix_shell(channel, key_handlers)
+            return self._open_posix_shell(channel, key_handlers, handle_window_size)
         else:
-            return self._open_windows_shell(channel, key_handlers)
+            return self._open_windows_shell(channel, key_handlers, handle_window_size)
 
-    def interact(self, key_handlers = None):
+    def interact(self, key_handlers = None, handle_window_size = True):
         """
         Opens a simple interactive shell. Returns when the remote host
         sends EOF.
@@ -1109,6 +1113,9 @@ class Protocol(object):
 
         @type  key_handlers: dict(str: callable)
         @param key_handlers: A dictionary mapping chars to a functions.
+        @type  handle_window_size: bool
+        @param handle_window_size: Whether the connected host is notified
+          when the terminal size changes.
         """
         raise NotImplementedError()
 
