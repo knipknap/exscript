@@ -644,7 +644,11 @@ class Protocol(object):
         """
         return self.proto_authenticated
 
-    def _app_authenticate(self, account, password, flush = True):
+    def _app_authenticate(self,
+                          account,
+                          password,
+                          flush   = True,
+                          bailout = False):
         user = account.get_name()
 
         while True:
@@ -710,6 +714,8 @@ class Protocol(object):
                 self.expect(self.get_password_prompt())
                 self.send(phrase + '\r')
                 self._dbg(1, "Password sent.")
+                if bailout:
+                    break
                 continue
 
             # Cleartext password prompt.
@@ -717,6 +723,8 @@ class Protocol(object):
                 self._dbg(1, "Cleartext password prompt received.")
                 self.expect(prompt) # consume the prompt from the buffer
                 self.send(password + '\r')
+                if bailout:
+                    break
                 continue
 
             # Shell prompt.
@@ -729,7 +737,7 @@ class Protocol(object):
             else:
                 assert False # No such section
 
-    def app_authenticate(self, account = None, flush = True):
+    def app_authenticate(self, account = None, flush = True, bailout = False):
         """
         Attempt to perform application-level authentication. Application
         level authentication is needed on devices where the username and
@@ -757,12 +765,14 @@ class Protocol(object):
         @param account: An account object, like login().
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
+        @type  bailout: bool
+        @param bailout: Whether to wait for a prompt after sending the password.
         """
         account  = self._get_account(account)
         user     = account.get_name()
         password = account.get_password()
         self._dbg(1, "Attempting to app-authenticate %s." % user)
-        self._app_authenticate(account, password, flush)
+        self._app_authenticate(account, password, flush, bailout)
         self.app_authenticated = True
 
     def is_app_authenticated(self):
@@ -775,7 +785,7 @@ class Protocol(object):
         """
         return self.app_authenticated
 
-    def app_authorize(self, account = None, flush = True):
+    def app_authorize(self, account = None, flush = True, bailout = False):
         """
         Like app_authenticate(), but uses the authorization password
         of the account.
@@ -787,6 +797,8 @@ class Protocol(object):
         @param account: An account object, like login().
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
+        @type  bailout: bool
+        @param bailout: Whether to wait for a prompt after sending the password.
         """
         account  = self._get_account(account)
         user     = account.get_name()
@@ -794,10 +806,10 @@ class Protocol(object):
         if password is None:
             password = account.get_password()
         self._dbg(1, "Attempting to app-authorize %s." % user)
-        self._app_authenticate(account, password, flush)
+        self._app_authenticate(account, password, flush, bailout)
         self.app_authorized = True
 
-    def auto_app_authorize(self, account = None, flush = True):
+    def auto_app_authorize(self, account = None, flush = True, bailout = False):
         """
         Like authorize(), but instead of just waiting for a user or
         password prompt, it automatically initiates the authorization
@@ -815,10 +827,12 @@ class Protocol(object):
         @param account: An account object, like login().
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
+        @type  bailout: bool
+        @param bailout: Whether to wait for a prompt after sending the password.
         """
         account = self._get_account(account)
         self._dbg(1, 'Calling driver.auto_authorize().')
-        self.get_driver().auto_authorize(self, account, flush)
+        self.get_driver().auto_authorize(self, account, flush, bailout)
 
     def is_app_authorized(self):
         """
