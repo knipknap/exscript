@@ -180,7 +180,7 @@ def prompt(key,
     """
     if history is None:
         history = InputHistory()
-    default = history.get(key, default)
+    default = history.get(key, str(default))
     while True:
         if default is None:
             value = raw_input('%s: ' % message)
