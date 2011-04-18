@@ -263,7 +263,7 @@ class Protocol(object):
         if logfile is None:
             self.log = None
         else:
-            self.log = open(kwargs['logfile'], 'a')
+            self.log = open(logfile, 'a')
 
     def __copy__(self):
         """
