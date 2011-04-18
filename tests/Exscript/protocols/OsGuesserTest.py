@@ -13,6 +13,11 @@ class OsGuesserTest(unittest.TestCase):
         osg = OsGuesser()
         self.assert_(isinstance(osg, OsGuesser))
 
+    def testReset(self):
+        self.testSet()
+        self.sa.reset()
+        self.testSet()
+
     def testSet(self):
         self.assertEqual(self.sa.get('test'),      None)
         self.assertEqual(self.sa.get('test', 0),   None)
