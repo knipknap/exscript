@@ -36,9 +36,6 @@ class ConnectionTest(DummyTest):
     def testConstructor(self):
         self.assert_(isinstance(self.protocol, Connection))
 
-    def testGetAction(self):
-        self.assert_(isinstance(self.protocol.get_action(), HostAction))
-
     def testGetHost(self):
         self.assertEqual(self.protocol.get_host(), self.host)
 

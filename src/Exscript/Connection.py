@@ -21,7 +21,7 @@ class Connection(object):
     This class is a decorator for protocols.Protocol objects that
     adds thread safety by adding locking to the authenticate() and
     authorize() functions.
-    It also provides access to the associated Queue and Host instances.
+    It also provides access to the associated Host instance.
 
     For complete documentation, please refer to the protocols.Protocol
     documentation.
@@ -92,15 +92,6 @@ class Connection(object):
         if name in self.__dict__.keys():
             return self.__dict__[name]
         return getattr(self.protocol, name)
-
-    def get_action(self):
-        """
-        Returns the associated HostAction instance.
-
-        @rtype:  HostAction
-        @return: The associated HostAction instance.
-        """
-        return self.action
 
     def get_host(self):
         """

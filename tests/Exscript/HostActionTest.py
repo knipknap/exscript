@@ -63,7 +63,7 @@ class HostActionTest(unittest.TestCase):
         self.queue.add_account(account)
 
         def doit(conn, data):
-            data['account'] = conn.get_action().acquire_account()
+            data['account'] = action.acquire_account()
             data['account'].release()
 
         data     = {}
