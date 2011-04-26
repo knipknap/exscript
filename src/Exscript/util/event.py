@@ -35,9 +35,14 @@ class Event(object):
         """
         Constructor.
         """
-        self.lock             = Lock()
-        self.weak_subscribers = []
-        self.hard_subscribers = []
+        # To save memory, we do NOT init the subscriber attributes with
+        # lists. Unfortunately this makes a lot of the code in this class
+        # more messy than it should be, but events are used so widely in
+        # Exscript that this change makes a huge difference to the memory
+        # footprint.
+        self.lock             = None
+        self.weak_subscribers = None
+        self.hard_subscribers = None
 
     def __call__(self, *args, **kwargs):
         """
@@ -63,6 +68,8 @@ class Event(object):
         """
         if self.is_connected(callback):
             raise AttributeError('callback is already connected')
+        if self.hard_subscribers is None:
+            self.hard_subscribers = []
         self.hard_subscribers.append((callback, args, kwargs))
 
     def listen(self, callback, *args, **kwargs):
@@ -85,9 +92,13 @@ class Event(object):
         @rtype:  L{Exscript.util.weakmethod.WeakMethod}
         @return: The newly created weak reference to the callback.
         """
+        if self.lock is None:
+            self.lock = Lock()
         with self.lock:
             if self.is_connected(callback):
                 raise AttributeError('callback is already connected')
+            if self.weak_subscribers is None:
+                self.weak_subscribers = []
             ref = weakmethod.ref(callback, self._try_disconnect)
             self.weak_subscribers.append((ref, args, kwargs))
         return ref
@@ -99,12 +110,16 @@ class Event(object):
         @rtype:  int
         @return: The number of subscribers.
         """
-        return len(self.hard_subscribers) + len(self.weak_subscribers)
+        hard = self.hard_subscribers and len(self.hard_subscribers) or 0
+        weak = self.weak_subscribers and len(self.weak_subscribers) or 0
+        return hard + weak
 
     def _hard_callbacks(self):
         return [s[0] for s in self.hard_subscribers]
 
     def _weakly_connected_index(self, callback):
+        if self.weak_subscribers is None:
+            return None
         weak = [s[0].get_function() for s in self.weak_subscribers]
         try:
             return weak.index(callback)
@@ -123,6 +138,8 @@ class Event(object):
         index = self._weakly_connected_index(callback)
         if index is not None:
             return True
+        if self.hard_subscribers is None:
+            return False
         return callback in self._hard_callbacks()
 
     def emit(self, *args, **kwargs):
@@ -134,28 +151,35 @@ class Event(object):
         @type  kwargs: dict
         @param kwargs: Optional keyword arguments passed to the callbacks.
         """
-        for callback, user_args, user_kwargs in self.hard_subscribers:
-            kwargs.update(user_kwargs)
-            callback(*args + user_args, **kwargs)
+        if self.hard_subscribers is not None:
+            for callback, user_args, user_kwargs in self.hard_subscribers:
+                kwargs.update(user_kwargs)
+                callback(*args + user_args, **kwargs)
 
-        for callback, user_args, user_kwargs in self.weak_subscribers:
-            kwargs.update(user_kwargs)
+        if self.weak_subscribers is not None:
+            for callback, user_args, user_kwargs in self.weak_subscribers:
+                kwargs.update(user_kwargs)
 
-            # Even though WeakMethod notifies us when the underlying
-            # function is destroyed, and we remove the item from the
-            # the list of subscribers, there is no guarantee that
-            # this notification has already happened because the garbage
-            # collector may run while this loop is executed.
-            # Disabling the garbage collector temporarily also does
-            # not work, because other threads may be trying to do
-            # the same, causing yet another race condition.
-            # So the only solution is to skip such functions.
-            function = callback.get_function()
-            if function is None:
-                continue
-            function(*args + user_args, **kwargs)
+                # Even though WeakMethod notifies us when the underlying
+                # function is destroyed, and we remove the item from the
+                # the list of subscribers, there is no guarantee that
+                # this notification has already happened because the garbage
+                # collector may run while this loop is executed.
+                # Disabling the garbage collector temporarily also does
+                # not work, because other threads may be trying to do
+                # the same, causing yet another race condition.
+                # So the only solution is to skip such functions.
+                function = callback.get_function()
+                if function is None:
+                    continue
+                function(*args + user_args, **kwargs)
 
     def _try_disconnect(self, ref):
+        """
+        Called by the weak reference when its target dies.
+        In other words, we can assert that self.weak_subscribers is not
+        None at this time.
+        """
         with self.lock:
             weak = [s[0] for s in self.weak_subscribers]
             try:
@@ -173,20 +197,22 @@ class Event(object):
         @type  callback: object
         @param callback: The callback function.
         """
-        with self.lock:
-            index = self._weakly_connected_index(callback)
-            if index is not None:
-                self.weak_subscribers.pop(index)[0]
-        try:
-            index = self._hard_callbacks().index(callback)
-        except ValueError:
-            pass
-        else:
-            self.hard_subscribers.pop(index)
+        if self.weak_subscribers is not None:
+            with self.lock:
+                index = self._weakly_connected_index(callback)
+                if index is not None:
+                    self.weak_subscribers.pop(index)[0]
+        if self.hard_subscribers is not None:
+            try:
+                index = self._hard_callbacks().index(callback)
+            except ValueError:
+                pass
+            else:
+                self.hard_subscribers.pop(index)
 
     def disconnect_all(self):
         """
         Disconnects all connected functions from all signals.
         """
-        self.hard_subscribers = []
-        self.weak_subscribers = []
+        self.hard_subscribers = None
+        self.weak_subscribers = None
