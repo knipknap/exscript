@@ -71,9 +71,6 @@ class CustomAction(Action):
             return AccountProxy.for_account(self.accm, account)
         return AccountProxy.for_random_account(self.accm)
 
-    def release_account(self, account):
-        account.release()
-
     def get_logname(self):
         logname = self.get_name()
         retries = self.n_failures()

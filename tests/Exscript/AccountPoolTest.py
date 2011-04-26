@@ -59,9 +59,9 @@ class AccountPoolTest(unittest.TestCase):
     def testAcquireAccount(self):
         self.testAddAccount()
         self.accm.acquire_account(self.account1)
-        self.accm.release_account(self.account1)
+        self.account1.release()
         self.accm.acquire_account(self.account1)
-        self.accm.release_account(self.account1)
+        self.account1.release()
 
         # Add three more accounts.
         filename = os.path.join(os.path.dirname(__file__), 'account_pool.cfg')
@@ -88,9 +88,6 @@ class AccountPoolTest(unittest.TestCase):
             # Release all accounts.
             for account in acquired.itervalues():
                 account.release()
-
-    def testReleaseAccount(self):
-        self.assertRaises(Exception, self.accm.release_account, self.account1)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountPoolTest)

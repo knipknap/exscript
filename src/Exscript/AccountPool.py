@@ -158,12 +158,3 @@ class AccountPool(object):
             account = self.unlocked_accounts.popleft()
             account._acquire()
         return account
-
-    def release_account(self, account):
-        """
-        Unlocks a previously locked account.
-
-        @type  account: Account
-        @param account: The account to be unlocked.
-        """
-        account.release()
