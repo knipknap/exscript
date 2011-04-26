@@ -69,16 +69,7 @@ class CustomAction(Action):
         # Specific account requested?
         if account:
             return AccountProxy.for_account(self.accm, account)
-        else:
-            return AccountProxy.for_random_account(self.accm)
-
-        # Is a default account defined for this connection?
-        account = self.get_host().get_account()
-        if account:
-            return AccountProxy.for_account(self.accm, account)
-
-        # Else, let the account manager assign an account.
-        return AccountProxy.for_host(self.accm, self.get_host())
+        return AccountProxy.for_random_account(self.accm)
 
     def release_account(self, account):
         account.release()
