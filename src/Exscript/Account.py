@@ -42,8 +42,6 @@ class Account(object):
         @param key: A private key, if required.
         """
         self.acquire_before_event   = Event()
-        self.acquired_event         = Event()
-        self.release_before_event   = Event()
         self.released_event         = Event()
         self.otp_requested_event    = Event()
         self.changed_event          = Event()
@@ -83,7 +81,6 @@ class Account(object):
         """
         self.acquire_before_event(self)
         self.lock.acquire()
-        self.acquired_event(self)
 
     def _acquire(self):
         """
@@ -95,7 +92,6 @@ class Account(object):
         """
         Unlocks the account.
         """
-        self.release_before_event(self)
         self.lock.release()
         self.released_event(self)
 
