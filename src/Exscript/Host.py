@@ -48,7 +48,7 @@ class Host(object):
         @param default_protocol: The protocol name.
         """
         self.protocol = default_protocol
-        self.vars     = {}
+        self.vars     = None    # To save memory, do not init with a dict.
         self.account  = None
         self.logname  = None
         self.name     = None
@@ -283,6 +283,8 @@ class Host(object):
         @type  value: object
         @param value: The value of the variable.
         """
+        if self.vars is None:
+            self.vars = {}
         self.vars[name] = value
 
     def set_all(self, variables):
@@ -305,6 +307,8 @@ class Host(object):
         @type  value: object
         @param value: The appended value.
         """
+        if self.vars is None:
+            self.vars = {}
         if name in self.vars:
             self.vars[name].append(value)
         else:
@@ -320,6 +324,8 @@ class Host(object):
         @type  value: object
         @param value: The value of the variable.
         """
+        if self.vars is None:
+            self.vars = {}
         if name not in self.vars:
             self.vars[name] = value
 
@@ -333,6 +339,8 @@ class Host(object):
         @rtype:  bool
         @return: Whether the variable is defined.
         """
+        if self.vars is None:
+            return False
         return name in self.vars
 
     def get(self, name, default = None):
@@ -347,6 +355,8 @@ class Host(object):
         @rtype:  object
         @return: The value of the variable.
         """
+        if self.vars is None:
+            return default
         return self.vars.get(name, default)
 
     def get_all(self):
@@ -356,4 +366,6 @@ class Host(object):
         @rtype:  dict
         @return: The dictionary with the variables.
         """
+        if self.vars is None:
+            self.vars = {}
         return self.vars
