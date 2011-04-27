@@ -28,6 +28,13 @@ class Host(object):
     """
     Represents a device on which to open a connection.
     """
+    __slots__ = ('protocol',
+                 'vars',
+                 'account',
+                 'logname',
+                 'name',
+                 'address',
+                 'tcp_port')
 
     def __init__(self, uri, default_protocol = 'telnet'):
         """
