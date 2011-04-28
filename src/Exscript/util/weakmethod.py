@@ -28,6 +28,7 @@ class WeakMethod(object):
     """
     Do not create this class directly; use L{ref()} instead.
     """
+    __slots__ = 'name', 'callback'
 
     def __init__(self, name, callback):
         """
@@ -74,6 +75,8 @@ class WeakMethod(object):
         method(*args, **kwargs)
 
 class _WeakMethodBound(WeakMethod):
+    __slots__ = 'name', 'callback', 'f', 'c'
+
     def __init__(self, f, callback):
         name = f.__self__.__class__.__name__ + '.' + f.__func__.__name__
         WeakMethod.__init__(self, name, callback)
@@ -87,6 +90,8 @@ class _WeakMethodBound(WeakMethod):
         return getattr(cls, self.f.__name__)
 
 class _WeakMethodFree(WeakMethod):
+    __slots__ = 'name', 'callback', 'f'
+
     def __init__(self, f, callback):
         WeakMethod.__init__(self, f.__class__.__name__, callback)
         self.f = weakref.ref(f, self._dead)
