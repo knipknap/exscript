@@ -122,7 +122,7 @@ class Daemon(object):
         except Exception, e:
             self.log(order, 'Exception in Service.enter: %s' % e)
             order.close()
-            self.set_order_status(order, 'enter-error')
+            self.set_order_status(order, 'enter-exception')
             raise
 
         if not result:
