@@ -30,15 +30,20 @@ from Exscriptd.xml           import get_accounts_from_etree, \
 default_config_dir = os.path.join('/etc', 'exscriptd')
 default_logdir     = os.path.join('/var', 'log', 'exscriptd')
 
+cache = {}
+def cache_result(func):
+    def wrapped(*args, **kwargs):
+        key = func.__name__, repr(args), repr(kwargs)
+        if key in cache:
+            return cache[key]
+        return func(*args, **kwargs)
+    return wrapped
+
 class Config(ConfigReader):
     def __init__(self,
                  cfg_dir           = default_config_dir,
                  resolve_variables = True):
         self.daemons       = {}
-        self.account_pools = {}
-        self.queues        = {}
-        self.loggers       = []
-        self.databases     = {}
         self.cfg_dir       = cfg_dir
         self.service_dir   = os.path.join(cfg_dir, 'services')
         filename           = os.path.join(cfg_dir, 'main.xml')
@@ -49,17 +54,13 @@ class Config(ConfigReader):
         element = self.cfgtree.find('account-pool[@name="%s"]' % name)
         return get_accounts_from_etree(element)
 
+    @cache_result
     def _init_account_pool_from_name(self, name):
-        if name in self.account_pools:
-            return self.account_pools[name]
         accounts = self._get_account_list_from_name(name)
-        pool     = self.account_pools[name] = AccountPool(accounts)
-        return pool
+        return AccountPool(accounts)
 
+    @cache_result
     def _init_queue_from_name(self, name):
-        if name in self.queues:
-            return self.queues[name]
-
         # Create the queue first.
         logdir = os.path.join(self.logdir, 'queues', name)
         if not os.path.isdir(logdir):
@@ -84,7 +85,6 @@ class Config(ConfigReader):
                 return eval(condition, host.get_dict())
             queue.add_account_pool(pool, match_cb)
 
-        self.queues[name] = queue
         return queue
 
     def _init_database_from_dbn(self, dbn):
@@ -221,14 +221,11 @@ class Config(ConfigReader):
         self.save()
         return True
 
+    @cache_result
     def get_database_from_name(self, name):
-        if name in self.databases:
-            return self.databases[name]
         element = self.cfgtree.find('database[@name="%s"]' % name)
         dbn     = element.find('dbn').text
-        db      = self._init_database_from_dbn(dbn)
-        self.databases[name] = db
-        return db
+        return self._init_database_from_dbn(dbn)
 
     def add_queue(self,
                   queue_name,
