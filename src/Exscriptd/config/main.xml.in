@@ -11,6 +11,7 @@ This is the Exscript daemon configuration file.
   <exscriptd>
     <logdir>@LOG_DIR@</logdir>
     <order-db>default</order-db>
+    <daemon>http-daemon</daemon>
   </exscriptd>
 
   <!--
@@ -69,10 +70,10 @@ This is the Exscript daemon configuration file.
   </queue>
 
   <!--
-  An HTTP daemon providing a REST API.
+  An HTTP daemon providing an HTTP/JSON API.
   You may define only one daemon at this time.
   -->
-  <daemon type="http" name="http-daemon">
+  <daemon name="http-daemon">
     <!-- An empty address binds to all. -->
     <address></address>
     <port>8123</port>

@@ -117,12 +117,12 @@ logger.addHandler(handler)
 logging.info('exscriptd daemonized')
 
 # Read the config.
-config  = Config(options.config_dir)
-daemons = config.get_daemons()
+config = Config(options.config_dir)
+daemon = config.get_daemon()
 
 logger.info('config read')
 
-if not daemons:
+if not services:
     dir = os.path.join(options.config_dir, 'services')
     msg = 'error: %s contains no enabled services\n' % dir
     sys.stderr.write(msg)
@@ -131,7 +131,6 @@ if not daemons:
 logger.info('config is ok, starting daemons')
 
 pidutil.write(options.pidfile)
-for daemon in daemons:
-    logger.info('starting daemon ' + repr(daemon.name))
-    daemon.run()
+logger.info('starting daemon ' + repr(daemon.name))
+daemon.run()
 pidutil.remove(options.pidfile)

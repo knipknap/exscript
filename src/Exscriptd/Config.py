@@ -94,7 +94,7 @@ class Config(ConfigReader):
         #print 'Creating database connection for', dbn
         return create_engine(dbn, poolclass = NullPool)
 
-    def _init_http_daemon(self, element):
+    def _init_daemon(self, element):
         # Init the order database for the daemon.
         name    = element.get('name')
         address = element.find('address').text or ''
@@ -130,13 +130,6 @@ class Config(ConfigReader):
             daemon.add_account(account)
 
         return daemon
-
-    def get_daemons(self):
-        daemons = []
-        for element in self.cfgtree.iterfind('daemon'):
-            name = element.get('name')
-            daemons.append(self.get_daemon_from_name(name))
-        return daemons
 
     def _get_service_files(self):
         """
@@ -406,7 +399,6 @@ class Config(ConfigReader):
             changed     = True
             daemon_elem = etree.SubElement(self.cfgtree.getroot(),
                                            'daemon',
-                                           type = 'http',
                                            name = name)
 
         if self._add_or_update_elem(daemon_elem, 'address', address):
@@ -425,9 +417,9 @@ class Config(ConfigReader):
     def get_daemon_from_name(self, name):
         # Create the daemon.
         element = self.cfgtree.find('daemon[@name="%s"]' % name)
-        type    = element.get('type')
-        if type == 'http':
-            daemon = self._init_http_daemon(element)
-        else:
-            raise Exception('No such daemon type: %s' % type)
-        return daemon
+        return self._init_daemon(element)
+
+    def get_daemon(self):
+        self._init_services()
+        name = self.cfgtree.find('exscriptd/daemon').text
+        return self.get_daemon_from_name(name)
