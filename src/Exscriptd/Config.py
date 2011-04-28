@@ -15,6 +15,8 @@
 import os
 import base64
 import shutil
+import logging
+import logging.handlers
 from lxml                    import etree
 from Exscript                import Account, Queue, FileLogger
 from Exscript.AccountPool    import AccountPool
@@ -106,12 +108,28 @@ class Config(ConfigReader):
         db = OrderDB(engine)
         db.install()
 
-        # Create the daemon (this does not start it).
+        # Create log directories for the daemon.
         logdir  = os.path.join(self.logdir, 'daemons', name)
         logfile = os.path.join(logdir, 'access.log')
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
-        daemon = HTTPDaemon(name, db, logfile, address, port)
+
+        # Set up logging.
+        logger = logging.getLogger('exscriptd_' + name)
+        logger.setLevel(logging.INFO)
+
+        # Set up logfile rotation.
+        handler = logging.handlers.RotatingFileHandler(logfile,
+                                                       maxBytes    = 200000,
+                                                       backupCount = 5)
+
+        # Define the log format.
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+        # Create the daemon (this does not start it).
+        daemon = HTTPDaemon(name, db, logger, address, port)
 
         # Add some accounts, if any.
         account_pool = element.find('account-pool')

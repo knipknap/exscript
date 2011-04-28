@@ -13,39 +13,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
-import logging
-import logging.handlers
 from threading import Thread
-
-class _AsyncFunction(Thread):
-    def __init__ (self, function, *args, **kwargs):
-        Thread.__init__(self)
-        self.function = function
-        self.args     = args
-        self.kwargs   = kwargs
-
-    def run(self):
-        self.function(*self.args, **self.kwargs)
+from Exscript.util.event import Event
 
 class Daemon(object):
-    def __init__(self, name, order_db, logfile):
+    def __init__(self, name, order_db, logger):
         self.name     = name
         self.db       = order_db
         self.services = {}
-
-        # Set up logging.
-        self.logger = logging.getLogger('exscriptd_' + name)
-        self.logger.setLevel(logging.INFO)
-
-        # Set up logfile rotation.
-        handler = logging.handlers.RotatingFileHandler(logfile,
-                                                       maxBytes    = 200000,
-                                                       backupCount = 5)
-
-        # Define the log format.
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
+        self.logger = logger
 
     def log(self, order, message):
         msg = '%s/%s/%s: %s' % (self.name,
