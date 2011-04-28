@@ -36,19 +36,18 @@ cache = {}
 def cache_result(func):
     def wrapped(*args, **kwargs):
         key = func.__name__, repr(args), repr(kwargs)
-        if key in cache:
-            return cache[key]
-        return func(*args, **kwargs)
+        if key not in cache:
+            cache[key] = func(*args, **kwargs)
+        return cache[key]
     return wrapped
 
 class Config(ConfigReader):
     def __init__(self,
                  cfg_dir           = default_config_dir,
                  resolve_variables = True):
-        self.daemons       = {}
-        self.cfg_dir       = cfg_dir
-        self.service_dir   = os.path.join(cfg_dir, 'services')
-        filename           = os.path.join(cfg_dir, 'main.xml')
+        self.cfg_dir     = cfg_dir
+        self.service_dir = os.path.join(cfg_dir, 'services')
+        filename         = os.path.join(cfg_dir, 'main.xml')
         ConfigReader.__init__(self, filename, resolve_variables)
         self.logdir = self.cfgtree.findtext('exscriptd/logdir', default_logdir)
 
@@ -138,10 +137,12 @@ class Config(ConfigReader):
 
         return daemon
 
-    def _init_daemons(self):
+    def get_daemons(self):
+        daemons = []
         for element in self.cfgtree.iterfind('daemon'):
             name = element.get('name')
-            self.get_daemon_from_name(name)
+            daemons.append(self.get_daemon_from_name(name))
+        return daemons
 
     def _get_service_files(self):
         """
@@ -415,10 +416,8 @@ class Config(ConfigReader):
         self.save()
         return changed
 
+    @cache_result
     def get_daemon_from_name(self, name):
-        if name in self.daemons:
-            return self.daemons[name]
-
         # Create the daemon.
         element = self.cfgtree.find('daemon[@name="%s"]' % name)
         type    = element.get('type')
@@ -426,11 +425,4 @@ class Config(ConfigReader):
             daemon = self._init_http_daemon(element)
         else:
             raise Exception('No such daemon type: %s' % type)
-
-        self.daemons[name] = daemon
         return daemon
-
-    def get_daemons(self):
-        self._init_daemons()
-        self._init_services()
-        return self.daemons.values()
