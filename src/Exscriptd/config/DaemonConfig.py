@@ -123,10 +123,6 @@ class DaemonConfig(ConfigSection):
                           metavar = 'STRING',
                           help    = 'the account pool used for authenticating' \
                                   + 'HTTP clients')
-        parser.add_option('--database',
-                          dest    = 'database',
-                          metavar = 'STRING',
-                          help    = 'the name of the database')
 
     def prepare_add(self, parser, daemon_name):
         self.daemon_name = daemon_name
@@ -138,8 +134,7 @@ class DaemonConfig(ConfigSection):
         self.config.add_daemon(self.daemon_name,
                                self.options.address,
                                self.options.port,
-                               self.options.account_pool,
-                               self.options.database)
+                               self.options.account_pool)
         print 'Daemon added.'
 
     def getopt_edit(self, parser):
@@ -155,6 +150,5 @@ class DaemonConfig(ConfigSection):
         self.config.add_daemon(self.daemon_name,
                                self.options.address,
                                self.options.port,
-                               self.options.account_pool,
-                               self.options.database)
+                               self.options.account_pool)
         print 'Daemon configured.'

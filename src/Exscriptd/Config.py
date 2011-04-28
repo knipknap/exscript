@@ -393,8 +393,7 @@ class Config(ConfigReader):
                    name,
                    address,
                    port,
-                   account_pool,
-                   database):
+                   account_pool):
         daemon_elem = self.cfgtree.find('daemon[@name="%s"]' % name)
         changed     = False
         if daemon_elem is None:
@@ -409,8 +408,6 @@ class Config(ConfigReader):
         if self._add_or_update_elem(daemon_elem, 'port', port):
             changed = True
         if self._add_or_update_elem(daemon_elem, 'account-pool', account_pool):
-            changed = True
-        if self._add_or_update_elem(daemon_elem, 'database', database):
             changed = True
 
         if not changed:

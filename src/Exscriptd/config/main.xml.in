@@ -77,6 +77,5 @@ This is the Exscript daemon configuration file.
     <address></address>
     <port>8123</port>
     <account-pool>api-accounts</account-pool>
-    <database>default</database>
   </daemon>
 </xml>
