@@ -105,11 +105,7 @@ class Config(ConfigReader):
         db.install()
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
-        daemon  = HTTPDaemon(name,
-                             address,
-                             port,
-                             database = db,
-                             logdir   = logdir)
+        daemon = HTTPDaemon(name, db, logdir, address, port)
 
         # Add some accounts, if any.
         account_pool = element.find('account-pool')

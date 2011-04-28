@@ -33,12 +33,9 @@ class _AsyncFunction(Thread):
         self.function(*self.args, **self.kwargs)
 
 class Daemon(object):
-    def __init__(self,
-                 name,
-                 database = None,
-                 logdir   = None):
+    def __init__(self, name, order_db, logdir):
         self.name     = name
-        self.db       = database
+        self.db       = order_db
         self.services = {}
         self.logdir   = os.path.join(logdir, name)
         self.logger   = logging.getLogger('exscriptd_' + name)

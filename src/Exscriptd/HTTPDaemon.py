@@ -164,11 +164,11 @@ class HTTPHandler(HTTPRequestHandler):
 class HTTPDaemon(Daemon):
     def __init__(self,
                  name,
-                 address    = '',
-                 port       = 80,
-                 database   = None,
-                 logdir     = None):
-        Daemon.__init__(self, name, database, logdir)
+                 order_db,
+                 logdir,
+                 address = '',
+                 port    = 80):
+        Daemon.__init__(self, name, order_db, logdir)
         self.address = address
         self.port    = port
         addr         = self.address, self.port
