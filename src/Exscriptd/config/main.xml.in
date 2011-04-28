@@ -4,6 +4,16 @@ This is the Exscript daemon configuration file.
 
 <xml>
   <!--
+  Global Exscriptd configuration statements.
+  If the <order-db> tag is not present, exscriptd stores the order
+  data in an in-memory sqlite database.
+  -->
+  <exscriptd>
+    <logdir>@LOG_DIR@</logdir>
+    <order-db>default</order-db>
+  </exscriptd>
+
+  <!--
   The user accounts used by the Exscript daemon to log into the hosts
   in your network. Note that using an account pool is optional, but if you
   do not specify any users you need to make sure that the user and password
@@ -66,7 +76,6 @@ This is the Exscript daemon configuration file.
     <!-- An empty address binds to all. -->
     <address></address>
     <port>8123</port>
-    <logdir>@LOG_DIR@</logdir>
     <account-pool>api-accounts</account-pool>
     <database>default</database>
   </daemon>

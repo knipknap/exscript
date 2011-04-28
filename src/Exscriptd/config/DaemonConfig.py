@@ -19,7 +19,6 @@ from Exscriptd.Config               import Config
 from Exscriptd.config.ConfigSection import ConfigSection
 
 __dirname__ = os.path.dirname(__file__)
-log_dir     = os.path.join('/var', 'log', 'exscriptd')
 spool_dir   = os.path.join('/var', 'spool', 'exscriptd')
 pidfile     = os.path.join('/var', 'run', 'exscriptd.pid')
 init_dir    = os.path.join('/etc', 'init.d')
@@ -49,7 +48,7 @@ class DaemonConfig(ConfigSection):
             return
 
         vars = {'@CFG_DIR@':    self.global_options.config_dir,
-                '@LOG_DIR@':    self.options.log_dir,
+                '@LOG_DIR@':    self.global_options.log_dir,
                 '@SPOOL_DIR@':  spool_dir,
                 '@SCRIPT_DIR@': self.script_dir,
                 '@PYTHONPATH@': os.environ.get('PYTHONPATH'),
@@ -91,8 +90,9 @@ class DaemonConfig(ConfigSection):
         self._make_executable(init_file)
 
         # Create directories.
-        self.info('creating log directory %s... ' % self.options.log_dir)
-        self._mkdir(self.options.log_dir)
+        log_dir = self.global_options.log_dir
+        self.info('creating log directory %s... ' % log_dir)
+        self._mkdir(log_dir)
         self.info('creating spool directory %s... ' % spool_dir)
         self._mkdir(spool_dir)
         cfg_dir = self.global_options.config_dir

@@ -17,7 +17,7 @@ import os
 import sys
 from optparse         import OptionParser
 from Exscript         import __version__
-from Exscriptd.Config import default_config_dir
+from Exscriptd.Config import default_config_dir, default_log_dir
 from Exscriptd.config import modules
 
 __dirname__ = os.path.dirname(__file__)
@@ -38,6 +38,13 @@ parser.add_option('--config-dir',
                   metavar = 'FILE',
                   help    = '''
 The XML config file for the Exscript daemon.
+'''.strip())
+parser.add_option('--log-dir',
+                  dest    = 'log_dir',
+                  default = default_log_dir,
+                  metavar = 'FILE',
+                  help    = '''
+The directory under which Exscript places all log files.
 '''.strip())
 
 global_options, args = parser.parse_args()

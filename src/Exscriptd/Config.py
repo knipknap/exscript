@@ -50,7 +50,7 @@ class Config(ConfigReader):
         self.service_dir   = os.path.join(cfg_dir, 'services')
         filename           = os.path.join(cfg_dir, 'main.xml')
         ConfigReader.__init__(self, filename, resolve_variables)
-        self.logdir = self.cfgtree.findtext('logging/logdir', default_logdir)
+        self.logdir = self.cfgtree.findtext('exscriptd/logdir', default_logdir)
 
     def _get_account_list_from_name(self, name):
         element = self.cfgtree.find('account-pool[@name="%s"]' % name)
@@ -100,7 +100,7 @@ class Config(ConfigReader):
         name    = element.get('name')
         address = element.find('address').text or ''
         port    = int(element.find('port').text)
-        db_elem = element.find('database')
+        db_elem = self.cfgtree.find('exscriptd/order-db')
         if db_elem is None:
             engine = self._init_database_from_dbn(':memory:')
         else:
