@@ -71,11 +71,6 @@ class DaemonConfig(ConfigSection):
                           action  = 'store_true',
                           default = False,
                           help    = 'overwrite existing files')
-        parser.add_option('--logdir',
-                          dest    = 'log_dir',
-                          metavar = 'STRING',
-                          default = log_dir,
-                          help    = 'the path where the logs are stored')
         parser.add_option('--pidfile',
                           dest    = 'pidfile',
                           metavar = 'STRING',
@@ -123,11 +118,6 @@ class DaemonConfig(ConfigSection):
                           metavar = 'INT',
                           default = 8132,
                           help    = 'the TCP port number')
-        parser.add_option('--logdir',
-                          dest    = 'logdir',
-                          metavar = 'STRING',
-                          default = os.devnull,
-                          help    = 'the path where the logs are stored')
         parser.add_option('--account-pool',
                           dest    = 'account_pool',
                           metavar = 'STRING',
@@ -148,7 +138,6 @@ class DaemonConfig(ConfigSection):
         self.config.add_daemon(self.daemon_name,
                                self.options.address,
                                self.options.port,
-                               self.options.logdir,
                                self.options.account_pool,
                                self.options.database)
         print 'Daemon added.'
@@ -166,7 +155,6 @@ class DaemonConfig(ConfigSection):
         self.config.add_daemon(self.daemon_name,
                                self.options.address,
                                self.options.port,
-                               self.options.logdir,
                                self.options.account_pool,
                                self.options.database)
         print 'Daemon configured.'

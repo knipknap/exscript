@@ -28,6 +28,7 @@ from Exscriptd.xml           import get_accounts_from_etree, \
                                     add_accounts_to_etree
 
 default_config_dir = os.path.join('/etc', 'exscriptd')
+default_logdir     = os.path.join('/var', 'log', 'exscriptd')
 
 class Config(ConfigReader):
     def __init__(self,
@@ -42,6 +43,7 @@ class Config(ConfigReader):
         self.service_dir   = os.path.join(cfg_dir, 'services')
         filename           = os.path.join(cfg_dir, 'main.xml')
         ConfigReader.__init__(self, filename, resolve_variables)
+        self.logdir = self.cfgtree.findtext('logging/logdir', default_logdir)
 
     def _get_account_list_from_name(self, name):
         element = self.cfgtree.find('account-pool[@name="%s"]' % name)
@@ -54,11 +56,14 @@ class Config(ConfigReader):
         pool     = self.account_pools[name] = AccountPool(accounts)
         return pool
 
-    def _init_queue_from_name(self, name, logdir):
+    def _init_queue_from_name(self, name):
         if name in self.queues:
             return self.queues[name]
 
         # Create the queue first.
+        logdir = os.path.join(self.logdir, 'queues', name)
+        if not os.path.isdir(logdir):
+            os.makedirs(logdir)
         element     = self.cfgtree.find('queue[@name="%s"]' % name)
         max_threads = element.find('max-threads').text
         delete_logs = element.find('delete-logs') is not None
@@ -95,7 +100,6 @@ class Config(ConfigReader):
         address = element.find('address').text or ''
         port    = int(element.find('port').text)
         db_elem = element.find('database')
-        logdir  = element.find('logdir').text
         if db_elem is None:
             engine = self._init_database_from_dbn(':memory:')
         else:
@@ -103,6 +107,7 @@ class Config(ConfigReader):
         db = OrderDB(engine)
         #print 'Initializing database tables...'
         db.install()
+        logdir = os.path.join(self.logdir, 'daemons', name)
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
         daemon = HTTPDaemon(name, db, logdir, address, port)
@@ -160,8 +165,7 @@ class Config(ConfigReader):
             daemon      = self.get_daemon_from_name(daemon_name)
             queue_elem  = element.find('queue')
             queue_name  = queue_elem is not None and queue_elem.text
-            logdir      = daemon.get_logdir()
-            queue       = self._init_queue_from_name(queue_name, logdir)
+            queue       = self._init_queue_from_name(queue_name)
             service     = PythonService(daemon,
                                         name,
                                         module,
@@ -369,7 +373,6 @@ class Config(ConfigReader):
                    name,
                    address,
                    port,
-                   logdir,
                    account_pool,
                    database):
         daemon_elem = self.cfgtree.find('daemon[@name="%s"]' % name)
@@ -384,8 +387,6 @@ class Config(ConfigReader):
         if self._add_or_update_elem(daemon_elem, 'address', address):
             changed = True
         if self._add_or_update_elem(daemon_elem, 'port', port):
-            changed = True
-        if self._add_or_update_elem(daemon_elem, 'logdir', logdir):
             changed = True
         if self._add_or_update_elem(daemon_elem, 'account-pool', account_pool):
             changed = True
