@@ -35,15 +35,13 @@ class _AsyncFunction(Thread):
 class Daemon(object):
     def __init__(self,
                  name,
-                 database   = None,
-                 processors = None,
-                 logdir     = None):
-        self.name       = name
-        self.db         = database
-        self.processors = processors
-        self.services   = {}
-        self.logdir     = os.path.join(logdir, name)
-        self.logger     = logging.getLogger('exscriptd_' + name)
+                 database = None,
+                 logdir   = None):
+        self.name     = name
+        self.db       = database
+        self.services = {}
+        self.logdir   = os.path.join(logdir, name)
+        self.logger   = logging.getLogger('exscriptd_' + name)
         self.logger.setLevel(logging.INFO)
         if not os.path.isdir(self.logdir):
             os.makedirs(self.logdir)

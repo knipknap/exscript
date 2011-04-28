@@ -167,9 +167,8 @@ class HTTPDaemon(Daemon):
                  address    = '',
                  port       = 80,
                  database   = None,
-                 processors = None,
                  logdir     = None):
-        Daemon.__init__(self, name, database, processors, logdir)
+        Daemon.__init__(self, name, database, logdir)
         self.address = address
         self.port    = port
         addr         = self.address, self.port
