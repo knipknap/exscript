@@ -24,10 +24,12 @@ class Service(object):
                  daemon,
                  name,
                  cfg_dir,
+                 logdir,
                  main_cfg,
                  queue = None):
         self.main_cfg  = main_cfg
         self.cfg_dir   = cfg_dir
+        self.logdir    = logdir
         self.daemon    = daemon
         self.name      = name
         self.queue     = queue

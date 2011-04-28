@@ -94,8 +94,7 @@ class Config(ConfigReader):
         return create_engine(dbn, poolclass = NullPool)
 
     def _init_http_daemon(self, element):
-        # Init the database for the daemon first, then
-        # create the daemon (this does not start it).
+        # Init the order database for the daemon.
         name    = element.get('name')
         address = element.find('address').text or ''
         port    = int(element.find('port').text)
@@ -105,12 +104,14 @@ class Config(ConfigReader):
         else:
             engine = self.get_database_from_name(db_elem.text)
         db = OrderDB(engine)
-        #print 'Initializing database tables...'
         db.install()
-        logdir = os.path.join(self.logdir, 'daemons', name)
+
+        # Create the daemon (this does not start it).
+        logdir  = os.path.join(self.logdir, 'daemons', name)
+        logfile = os.path.join(logdir, 'access.log')
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
-        daemon = HTTPDaemon(name, db, logdir, address, port)
+        daemon = HTTPDaemon(name, db, logfile, address, port)
 
         # Add some accounts, if any.
         account_pool = element.find('account-pool')
@@ -166,12 +167,16 @@ class Config(ConfigReader):
             queue_elem  = element.find('queue')
             queue_name  = queue_elem is not None and queue_elem.text
             queue       = self._init_queue_from_name(queue_name)
-            service     = PythonService(daemon,
-                                        name,
-                                        module,
-                                        service_dir,
-                                        self,
-                                        queue = queue)
+            logdir      = os.path.join(self.logdir, 'services', name)
+            if not os.path.isdir(logdir):
+                os.makedirs(logdir)
+            service = PythonService(daemon,
+                                    name,
+                                    module,
+                                    service_dir,
+                                    logdir,
+                                    self,
+                                    queue = queue)
             daemon.add_service(name, service)
             print 'Service "%s" initialized.' % name
 

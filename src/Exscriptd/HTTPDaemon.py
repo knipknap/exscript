@@ -165,10 +165,10 @@ class HTTPDaemon(Daemon):
     def __init__(self,
                  name,
                  order_db,
-                 logdir,
+                 logfile,
                  address = '',
                  port    = 80):
-        Daemon.__init__(self, name, order_db, logdir)
+        Daemon.__init__(self, name, order_db, logfile)
         self.address = address
         self.port    = port
         addr         = self.address, self.port

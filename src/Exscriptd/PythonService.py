@@ -24,12 +24,14 @@ class PythonService(Service):
                  name,
                  module,
                  cfg_dir,
+                 logdir,
                  main_cfg,
                  queue = None):
         Service.__init__(self,
                          daemon,
                          name,
                          cfg_dir,
+                         logdir,
                          main_cfg,
                          queue = queue)
         try:

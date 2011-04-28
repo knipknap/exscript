@@ -17,11 +17,6 @@ import logging
 import logging.handlers
 from threading import Thread
 
-# Logfile structure:
-# /var/log/exscriptd/mydaemon/access.log
-# /var/log/exscriptd/mydaemon/myservice/123/host2.log
-# /var/log/exscriptd/mydaemon/myservice/123/host3.log
-
 class _AsyncFunction(Thread):
     def __init__ (self, function, *args, **kwargs):
         Thread.__init__(self)
@@ -33,18 +28,16 @@ class _AsyncFunction(Thread):
         self.function(*self.args, **self.kwargs)
 
 class Daemon(object):
-    def __init__(self, name, order_db, logdir):
+    def __init__(self, name, order_db, logfile):
         self.name     = name
         self.db       = order_db
         self.services = {}
-        self.logdir   = logdir
-        self.logger   = logging.getLogger('exscriptd_' + name)
+
+        # Set up logging.
+        self.logger = logging.getLogger('exscriptd_' + name)
         self.logger.setLevel(logging.INFO)
-        if not os.path.isdir(self.logdir):
-            os.makedirs(self.logdir)
 
         # Set up logfile rotation.
-        logfile = os.path.join(self.logdir, 'access.log')
         handler = logging.handlers.RotatingFileHandler(logfile,
                                                        maxBytes    = 200000,
                                                        backupCount = 5)
@@ -60,9 +53,6 @@ class Daemon(object):
                                 order.get_id(),
                                 message)
         self.logger.info(msg)
-
-    def get_logdir(self):
-        return self.logdir
 
     def add_service(self, name, service):
         self.services[name] = service
