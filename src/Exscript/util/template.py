@@ -20,7 +20,7 @@ from Exscript.interpreter import Parser
 
 def _compile(conn, filename, template, parser_kwargs, **kwargs):
     if conn:
-        kwargs.update(conn.get_host().vars)
+        kwargs.update(conn.get_host().get_all())
 
     # Init the parser.
     parser = Parser(**parser_kwargs)
