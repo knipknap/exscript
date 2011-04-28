@@ -37,7 +37,7 @@ class Daemon(object):
         self.name     = name
         self.db       = order_db
         self.services = {}
-        self.logdir   = os.path.join(logdir, name)
+        self.logdir   = logdir
         self.logger   = logging.getLogger('exscriptd_' + name)
         self.logger.setLevel(logging.INFO)
         if not os.path.isdir(self.logdir):
