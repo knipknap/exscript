@@ -99,13 +99,7 @@ class Config(ConfigReader):
         name    = element.get('name')
         address = element.find('address').text or ''
         port    = int(element.find('port').text)
-        db_elem = self.cfgtree.find('exscriptd/order-db')
-        if db_elem is None:
-            engine = self._init_database_from_dbn(':memory:')
-        else:
-            engine = self.get_database_from_name(db_elem.text)
-        db = OrderDB(engine)
-        db.install()
+        db      = self.get_order_db()
 
         # Create log directories for the daemon.
         logdir  = os.path.join(self.logdir, 'daemons', name)
@@ -250,6 +244,17 @@ class Config(ConfigReader):
         element = self.cfgtree.find('database[@name="%s"]' % name)
         dbn     = element.find('dbn').text
         return self._init_database_from_dbn(dbn)
+
+    @cache_result
+    def get_order_db(self):
+        db_elem = self.cfgtree.find('exscriptd/order-db')
+        if db_elem is None:
+            engine = self._init_database_from_dbn(':memory:')
+        else:
+            engine = self.get_database_from_name(db_elem.text)
+        db = OrderDB(engine)
+        db.install()
+        return db
 
     def add_queue(self,
                   queue_name,
