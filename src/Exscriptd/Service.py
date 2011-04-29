@@ -13,7 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
-import logging
 from collections            import defaultdict
 from threading              import Lock
 from Exscriptd.Task         import Task
@@ -36,7 +35,6 @@ class Service(object):
         self.logdir    = os.path.join(self.daemon.get_logdir(), name)
         self.task_lock = Lock()
         self.tasks     = defaultdict(list) # Map order ids to lists of tasks.
-        self.loggers   = defaultdict(list) # Map order ids to loggers.
         self.parent.service_added(self)
 
     def log(self, order, message):
@@ -45,22 +43,8 @@ class Service(object):
     def get_logname(self, order, name = ''):
         return os.path.join(self.logdir, str(order.get_id()), name)
 
-    def create_logger(self, order, name, level = logging.INFO):
-        logfile   = self.get_logname(order, name)
-        logger    = logging.getLogger(logfile)
-        handler   = logging.FileHandler(logfile)
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        logger.setLevel(logging.INFO)
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        self.loggers[order.id].append(logger)
-        return logger
-
-    def _free_loggers(self, order):
-        for logger in self.loggers[order.id]:
-            del logger.manager.loggerDict[logger.name]
-            logger.manager = None
-        del self.loggers[order.id]
+    def _update_host_logname(self, order, host):
+        host.set_logname(self.get_logname(order, host.get_logname()))
 
     def config_file(self, name):
         return os.path.join(self.cfg_dir, name)
@@ -134,7 +118,6 @@ class Service(object):
         return True
 
     def done(self, order):
-        self._free_loggers(order)
         self.parent.set_order_status_done(order)
 
     def set_order_status(self, order, status):
