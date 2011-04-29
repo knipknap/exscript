@@ -44,7 +44,7 @@ def expand_bracket(value_name, value):
 
 def expand_host_variables(host):
     # Define host-specific variables.
-    for key, value in host.vars.iteritems():
+    for key, value in host.get_all().iteritems():
         if isinstance(value, str):
             value = expand_bracket(key, value)
         elif hasattr(value, '__iter__'):
@@ -141,7 +141,7 @@ def run():
     vars = options.define.copy()
     if filename:
         vars['__filename__'] = filename
-    vars.update(hosts[0].vars)
+    vars.update(hosts[0].get_all())
     try:
         template.test(script_content, **vars)
     except Exception, e:
