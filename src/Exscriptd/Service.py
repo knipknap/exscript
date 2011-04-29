@@ -21,25 +21,26 @@ from Exscriptd.ConfigReader import ConfigReader
 
 class Service(object):
     def __init__(self,
-                 daemon,
+                 parent,
                  name,
                  cfg_dir,
                  logdir,
                  main_cfg,
                  queue = None):
-        self.main_cfg  = main_cfg
+        self.parent    = parent
+        self.name      = name
         self.cfg_dir   = cfg_dir
         self.logdir    = logdir
-        self.daemon    = daemon
-        self.name      = name
+        self.main_cfg  = main_cfg
         self.queue     = queue
         self.logdir    = os.path.join(self.daemon.get_logdir(), name)
         self.task_lock = Lock()
         self.tasks     = defaultdict(list) # Map order ids to lists of tasks.
         self.loggers   = defaultdict(list) # Map order ids to loggers.
+        self.parent.service_added(self)
 
     def log(self, order, message):
-        self.daemon.log(order, message)
+        self.parent.log(order, message)
 
     def get_logname(self, order, name = ''):
         return os.path.join(self.logdir, str(order.get_id()), name)
@@ -134,13 +135,13 @@ class Service(object):
 
     def done(self, order):
         self._free_loggers(order)
-        self.daemon.set_order_status_done(order)
+        self.parent.set_order_status_done(order)
 
     def set_order_status(self, order, status):
-        self.daemon.set_order_status(order, status)
+        self.parent.set_order_status(order, status)
 
     def save_order(self, order):
-        self.daemon.save_order(order)
+        self.parent.save_order(order)
 
     def create_task(self, order, name):
         task = Task(name)
@@ -148,4 +149,4 @@ class Service(object):
         return task
 
     def save_task(self, order, task):
-        self.daemon.save_task(order, task)
+        self.parent.save_task(order, task)

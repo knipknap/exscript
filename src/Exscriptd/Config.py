@@ -48,8 +48,12 @@ class Config(ConfigReader):
         self.cfg_dir     = cfg_dir
         self.service_dir = os.path.join(cfg_dir, 'services')
         filename         = os.path.join(cfg_dir, 'main.xml')
+        self.logdir      = default_logdir
         ConfigReader.__init__(self, filename, resolve_variables)
-        self.logdir = self.cfgtree.findtext('exscriptd/logdir', default_logdir)
+
+        logdir_elem = self.cfgtree.find('exscriptd/logdir')
+        if logdir_elem is not None:
+            self.logdir = logdir_elem.text
 
     def _get_account_list_from_name(self, name):
         element = self.cfgtree.find('account-pool[@name="%s"]' % name)
@@ -88,18 +92,21 @@ class Config(ConfigReader):
 
         return queue
 
+    def get_queues(self):
+        names = [e.get('name') for e in self.cfgtree.iterfind('queue')]
+        return [self._init_queue_from_name(name) for name in names]
+
     def _init_database_from_dbn(self, dbn):
         from sqlalchemy import create_engine
         from sqlalchemy.pool import NullPool
         #print 'Creating database connection for', dbn
         return create_engine(dbn, poolclass = NullPool)
 
-    def _init_daemon(self, element):
+    def _init_daemon(self, element, dispatcher):
         # Init the order database for the daemon.
         name    = element.get('name')
         address = element.find('address').text or ''
         port    = int(element.find('port').text)
-        db      = self.get_order_db()
 
         # Create log directories for the daemon.
         logdir  = os.path.join(self.logdir, 'daemons', name)
@@ -122,7 +129,7 @@ class Config(ConfigReader):
         logger.addHandler(handler)
 
         # Create the daemon (this does not start it).
-        daemon = HTTPDaemon(name, db, logger, address, port)
+        daemon = HTTPDaemon(dispatcher, name, logger, address, port)
 
         # Add some accounts, if any.
         account_pool = element.find('account-pool')
@@ -160,7 +167,8 @@ class Config(ConfigReader):
                 return file
         return None
 
-    def _init_service(self, filename):
+    def _init_service_file(self, filename, dispatcher):
+        services    = []
         service_dir = os.path.dirname(filename)
         cfgtree     = ConfigReader(filename).cfgtree
         for element in cfgtree.iterfind('service'):
@@ -168,27 +176,28 @@ class Config(ConfigReader):
             print 'Loading service "%s"...' % name
 
             module      = element.find('module').text
-            daemon_name = element.find('daemon').text
-            daemon      = self.get_daemon_from_name(daemon_name)
             queue_elem  = element.find('queue')
             queue_name  = queue_elem is not None and queue_elem.text
             queue       = self._init_queue_from_name(queue_name)
             logdir      = os.path.join(self.logdir, 'services', name)
             if not os.path.isdir(logdir):
                 os.makedirs(logdir)
-            service = PythonService(daemon,
+            service = PythonService(dispatcher,
                                     name,
                                     module,
                                     service_dir,
                                     logdir,
                                     self,
-                                    queue = queue)
-            daemon.add_service(name, service)
+                                    queue)
             print 'Service "%s" initialized.' % name
+            services.append(service)
+        return services
 
-    def _init_services(self):
+    def get_services(self, dispatcher):
+        services = []
         for file in self._get_service_files():
-            service = self._init_service(file)
+            services += self._init_service_file(file, dispatcher)
+        return services
 
     def has_account_pool(self, name):
         return self.cfgtree.find('account-pool[@name="%s"]' % name) is not None
@@ -414,12 +423,11 @@ class Config(ConfigReader):
         return changed
 
     @cache_result
-    def get_daemon_from_name(self, name):
+    def get_daemon_from_name(self, name, dispatcher):
         # Create the daemon.
         element = self.cfgtree.find('daemon[@name="%s"]' % name)
-        return self._init_daemon(element)
+        return self._init_daemon(element, dispatcher)
 
-    def get_daemon(self):
-        self._init_services()
+    def get_daemon(self, dispatcher):
         name = self.cfgtree.find('exscriptd/daemon').text
-        return self.get_daemon_from_name(name)
+        return self.get_daemon_from_name(name, dispatcher)

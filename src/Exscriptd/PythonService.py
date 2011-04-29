@@ -20,7 +20,7 @@ from Exscriptd.util    import find_module_recursive
 
 class PythonService(Service):
     def __init__(self,
-                 daemon,
+                 parent,
                  name,
                  module,
                  cfg_dir,
@@ -28,7 +28,7 @@ class PythonService(Service):
                  main_cfg,
                  queue = None):
         Service.__init__(self,
-                         daemon,
+                         parent,
                          name,
                          cfg_dir,
                          logdir,

@@ -51,18 +51,18 @@ class HTTPHandler(RequestHandler):
             self.daemon.logger.debug('Parsing order from HTTP request.')
             order = Order.from_xml(data['xml'][0])
             self.daemon.logger.debug('XML order parsed complete.')
-            self.daemon._place_order(order)
+            self.daemon.order_incoming_event(order)
             return 'application/json', json.dumps(order.get_id())
         elif self.path == '/order/get/':
             id    = int(self.args.get('id'))
-            order = self.daemon.get_order_from_id(id)
+            order = self.daemon.parent.get_order_from_id(id)
             return order.toxml()
         elif self.path == '/order/count/':
             return str(self.daemon.count_orders())
         elif self.path == '/order/status/':
             order_id = int(self.args['id'])
-            order    = self.daemon.get_order_from_id(order_id)
-            progress = self.daemon.get_order_progress_from_id(order_id)
+            order    = self.daemon.parent.get_order_from_id(order_id)
+            progress = self.daemon.parent.get_order_progress_from_id(order_id)
             if not order:
                 raise Exception('no such order id')
             closed = order.get_closed_timestamp()
@@ -76,7 +76,8 @@ class HTTPHandler(RequestHandler):
             # Fetch the orders.
             offset = int(self.args.get('offset', 0))
             limit  = min(100, int(self.args.get('limit', 100)))
-            orders = self.daemon.get_order_list(offset = offset, limit = limit)
+            orders = self.daemon.parent.get_order_list(offset = offset,
+                                                       limit  = limit)
 
             # Assemble an XML document containing the orders.
             xml = etree.Element('xml')
@@ -85,23 +86,23 @@ class HTTPHandler(RequestHandler):
             return etree.tostring(xml, pretty_print = True)
         elif self.path == '/task/get/':
             id   = int(self.args.get('id'))
-            task = self.daemon.get_task_from_id(id)
+            task = self.daemon.parent.get_task_from_id(id)
             return task.toxml()
         elif self.path == '/task/count/':
             order_id = self.args.get('order_id')
             if order_id:
-                n_tasks = self.daemon.count_tasks(int(order_id))
+                n_tasks = self.daemon.parent.count_tasks(int(order_id))
             else:
-                n_tasks = self.daemon.count_tasks()
+                n_tasks = self.daemon.parent.count_tasks()
             return 'application/json', json.dumps(n_tasks)
         elif self.path == '/task/list/':
             # Fetch the tasks.
             order_id = int(self.args.get('order_id'))
             offset   = int(self.args.get('offset', 0))
             limit    = min(100, int(self.args.get('limit', 100)))
-            tasks    = self.daemon.get_task_list(order_id,
-                                                 offset = offset,
-                                                 limit = limit)
+            tasks    = self.daemon.parent.get_task_list(order_id,
+                                                        offset = offset,
+                                                        limit = limit)
 
             # Assemble an XML document containing the orders.
             xml = etree.Element('xml')
@@ -110,7 +111,7 @@ class HTTPHandler(RequestHandler):
             return etree.tostring(xml, pretty_print = True)
         elif self.path == '/log/':
             task_id  = int(self.args.get('task_id'))
-            task     = self.daemon.get_task_from_id(task_id)
+            task     = self.daemon.parent.get_task_from_id(task_id)
             filename = task.get_logfile()
             if filename and os.path.isfile(filename):
                 with open(filename) as file:
@@ -119,7 +120,7 @@ class HTTPHandler(RequestHandler):
                 return ''
         elif self.path == '/trace/':
             task_id  = int(self.args.get('task_id'))
-            task     = self.daemon.get_task_from_id(task_id)
+            task     = self.daemon.parent.get_task_from_id(task_id)
             filename = task.get_tracefile()
             if filename and os.path.isfile(filename):
                 with open(filename) as file:
@@ -163,12 +164,12 @@ class HTTPHandler(RequestHandler):
 
 class HTTPDaemon(Daemon):
     def __init__(self,
+                 parent,
                  name,
-                 order_db,
                  logger,
                  address = '',
                  port    = 80):
-        Daemon.__init__(self, name, order_db, logger)
+        Daemon.__init__(self, parent, name, logger)
         self.address = address
         self.port    = port
         addr         = self.address, self.port
@@ -183,7 +184,6 @@ class HTTPDaemon(Daemon):
         address  = (self.address or '*') + ':' + str(self.port)
         nameaddr = self.name, address
         self.logger.info('HTTPDaemon %s/%s starting.' % nameaddr)
-        self.close_open_orders()
         try:
             self.logger.info('HTTPDaemon %s/%s listening' % nameaddr)
             self.server.serve_forever()
