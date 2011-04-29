@@ -39,6 +39,7 @@ class Order(DBObject):
         @type  service_name: str
         @param service_name: The service that handles the order.
         """
+        DBObject.__init__(self)
         self.id         = None
         self.status     = 'new'
         self.service    = service_name
