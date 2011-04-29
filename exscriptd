@@ -37,13 +37,6 @@ parser.add_option('--config-dir',
                   help    = '''
 The XML config file for the Exscript daemon.
 '''.strip())
-parser.add_option('--logfile',
-                  dest    = 'logfile',
-                  default = os.devnull,
-                  metavar = 'FILE',
-                  help    = '''
-Daemon log location.
-'''.strip())
 parser.add_option('--pidfile',
                   dest    = 'pidfile',
                   metavar = 'FILE',
@@ -67,7 +60,6 @@ except IndexError:
 
 if not options.config_dir:
     parser.error('required option --config-dir not set')
-options.logfile = os.path.abspath(options.logfile)
 
 # Make sure that the daemon is not already running.
 if not options.pidfile:
@@ -108,8 +100,13 @@ class LoggingIO(object):
 sys.stdout = LoggingIO(logger)
 sys.stderr = LoggingIO(logger, logging.ERROR)
 
+# Read the config.
+config = Config(options.config_dir)
+logger.info('config read')
+logfile = os.path.join(config.get_logdir(), 'exscriptd.log')
+
 # Set up logfile rotation.
-handler = logging.handlers.RotatingFileHandler(options.logfile,
+handler = logging.handlers.RotatingFileHandler(logfile,
                                                maxBytes    = 2000000,
                                                backupCount = 10)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
@@ -117,16 +114,12 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logging.info('exscriptd daemonized')
 
-# Read the config.
-config = Config(options.config_dir)
-logger.info('config read')
-
 # Init.
 order_db = config.get_order_db()
 logger.info('order db initialized')
 queues = config.get_queues()
 logger.info('queues initialized')
-dispatcher = OrderDispatcher(order_db, queues, logger)
+dispatcher = OrderDispatcher(order_db, queues, logger, config.get_logdir())
 logger.info('dispatcher initialized')
 
 daemon = config.get_daemon(dispatcher)

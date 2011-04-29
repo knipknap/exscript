@@ -13,6 +13,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
+import logging
+from collections import defaultdict
 from threading import Thread
 
 class _AsyncFunction(Thread):
@@ -26,14 +28,43 @@ class _AsyncFunction(Thread):
         self.function(*self.args, **self.kwargs)
 
 class OrderDispatcher(object):
-    def __init__(self, order_db, queues, logger):
+    def __init__(self, order_db, queues, logger, logdir):
         self.order_db = order_db
         self.queues   = queues
         self.logger   = logger
+        self.logdir   = logdir
         self.services = {}
         self.daemons  = {}
+        self.loggers  = defaultdict(dict) # Map order id to name/logger pairs.
         self.logger.info('Closing all open orders.')
         self.order_db.close_open_orders()
+
+    def get_logger(self, order, name, level = logging.INFO):
+        """
+        Creates a logger that logs to a file in the order's log directory.
+        """
+        if name in self.loggers[order.id]:
+            return self.loggers[order.id][name]
+        service_logdir = os.path.join(self.logdir, order.get_service_name())
+        order_logdir   = os.path.join(service_logdir, str(order.get_id()))
+        logfile        = os.path.join(order_logdir, name)
+        logger         = logging.getLogger(logfile)
+        handler        = logging.FileHandler(logfile)
+        format         = r'%(asctime)s - %(levelname)s - %(message)s'
+        formatter      = logging.Formatter(format)
+        logger.setLevel(logging.INFO)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        self.loggers[order.id][name] = logger
+        return logger
+
+    def _free_loggers(self, order):
+        for logger in self.loggers[order.id]:
+            # hack to work around the fact that Python's logging module
+            # provides no documented way to delete loggers.
+            del logger.manager.loggerDict[logger.name]
+            logger.manager = None
+        del self.loggers[order.id]
 
     def service_added(self, service):
         """
@@ -78,6 +109,7 @@ class OrderDispatcher(object):
 
     def set_order_status_done(self, order):
         order.close()
+        self._free_loggers(order)
         self.set_order_status(order, 'completed')
 
     def save_task(self, order, task):

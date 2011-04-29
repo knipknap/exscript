@@ -92,6 +92,9 @@ class Config(ConfigReader):
 
         return queue
 
+    def get_logdir(self):
+        return self.logdir
+
     def get_queues(self):
         names = [e.get('name') for e in self.cfgtree.iterfind('queue')]
         return [self._init_queue_from_name(name) for name in names]
