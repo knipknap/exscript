@@ -81,6 +81,7 @@ class Queue(object):
                                   'debug':        self.stdout}
         self.completed         = 0
         self.total             = 0
+        self.failed            = 0
         self.status_bar_length = 0
         self.set_max_threads(kwargs.get('max_threads', 1))
 
@@ -198,6 +199,7 @@ class Queue(object):
 
     def _on_action_aborted(self, action):
         self.completed += 1
+        self.failed    += 1
         self._print('errors', action.get_name() + ' finally failed.')
 
     def _on_action_succeeded(self, action):
@@ -376,6 +378,7 @@ class Queue(object):
         self.account_manager.reset()
         self.completed         = 0
         self.total             = 0
+        self.failed            = 0
         self.status_bar_length = 0
         self._dbg(2, 'Queue destroyed.')
         self._del_status_bar()
@@ -389,6 +392,7 @@ class Queue(object):
         self.workqueue.shutdown(True)
         self.completed         = 0
         self.total             = 0
+        self.failed            = 0
         self.status_bar_length = 0
         self._dbg(2, 'Queue reset.')
         self._del_status_bar()
