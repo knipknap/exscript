@@ -21,16 +21,19 @@ from Exscriptd.DBObject import DBObject
 from Exscript.util.event import Event
 
 class Task(DBObject):
-    def __init__(self, name):
+    def __init__(self, name, func):
         DBObject.__init__(self)
         self.id            = None
         self.name          = name
+        self.func          = func
         self.status        = 'new'
         self.progress      = .0
         self.started       = datetime.utcnow()
         self.closed        = None
         self.logfile       = None
         self.tracefile     = None
+        self.go_event      = Event()
+        self.closed_event  = Event()
         self.changed_event = Event()
 
     @staticmethod
@@ -215,6 +218,7 @@ class Task(DBObject):
         """
         self.touch()
         self.set_status('go')
+        self.go_event(self)
 
     def close(self, status = None):
         """
@@ -227,6 +231,7 @@ class Task(DBObject):
         self.closed = datetime.utcnow()
         if status:
             self.set_status(status)
+        self.closed_event(self)
 
     def completed(self):
         """
@@ -283,3 +288,6 @@ class Task(DBObject):
         @return: A filename, or None.
         """
         return self.tracefile
+
+    def run(self):
+        self.func(self)
