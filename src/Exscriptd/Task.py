@@ -15,21 +15,23 @@
 """
 Represents an activity within an order.
 """
-from datetime           import datetime
-from lxml               import etree
+from datetime import datetime
+from lxml import etree
 from Exscriptd.DBObject import DBObject
+from Exscript.util.event import Event
 
 class Task(DBObject):
     def __init__(self, name):
         DBObject.__init__(self)
-        self.id        = None
-        self.name      = name
-        self.status    = 'new'
-        self.progress  = .0
-        self.started   = datetime.utcnow()
-        self.closed    = None
-        self.logfile   = None
-        self.tracefile = None
+        self.id            = None
+        self.name          = name
+        self.status        = 'new'
+        self.progress      = .0
+        self.started       = datetime.utcnow()
+        self.closed        = None
+        self.logfile       = None
+        self.tracefile     = None
+        self.changed_event = Event()
 
     @staticmethod
     def from_etree(task_node):
@@ -159,6 +161,7 @@ class Task(DBObject):
         """
         self.touch()
         self.status = status
+        self.changed_event(self)
 
     def get_status(self):
         """
@@ -205,6 +208,13 @@ class Task(DBObject):
         @return: The timestamp.
         """
         return self.started
+
+    def go(self):
+        """
+        Marks the task as being ready for execution.
+        """
+        self.touch()
+        self.set_status('go')
 
     def close(self, status = None):
         """
