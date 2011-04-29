@@ -26,14 +26,14 @@ class PythonService(Service):
                  cfg_dir,
                  logdir,
                  main_cfg,
-                 queue = None):
+                 queue_name = None):
         Service.__init__(self,
                          parent,
                          name,
                          cfg_dir,
                          logdir,
                          main_cfg,
-                         queue = queue)
+                         queue_name = queue_name)
         try:
             fp, filename, description = find_module_recursive(module)
         except ImportError:
