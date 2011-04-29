@@ -51,11 +51,11 @@ class SigIntWatcher(object):
 
     def watch(self):
         try:
-            os.wait()
+            pid, status = os.wait()
         except KeyboardInterrupt:
             print '********** SIGINT RECEIVED - SHUTTING DOWN! **********'
             self.kill()
-        sys.exit()
+        sys.exit(status >> 8)
 
     def kill(self):
         try:
