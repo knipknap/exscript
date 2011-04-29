@@ -150,7 +150,7 @@ def run():
                   mode        = 'multiprocessing',
                   verbose     = options.verbose,
                   max_threads = options.connections)
-    account_pool = queue.account_manager.default_pool
+    default_pool = queue.account_manager.default_pool
 
     # Read the account pool file.
     try:
