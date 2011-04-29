@@ -41,12 +41,13 @@ class PythonService(Service):
         filename = os.path.join(filename, 'service.py')
         with open(filename) as file:
             content = file.read()
-        code                 = compile(content, filename, 'exec')
-        vars                 = {}
-        vars['__builtin__']  = __builtin__
-        vars['__file__']     = filename
-        vars['__service__']  = self
-        vars['__main_cfg__'] = self.main_cfg
+        code                  = compile(content, filename, 'exec')
+        vars                  = {}
+        vars['__builtin__']   = __builtin__
+        vars['__file__']      = filename
+        vars['__service__']   = self
+        vars['__exscriptd__'] = parent
+        vars['__main_cfg__']  = self.main_cfg
 
         # Load the module using evil path manipulation, but oh well...
         # can't think of a sane way to do this.
