@@ -46,87 +46,99 @@ To test with curl:
 
 class HTTPHandler(RequestHandler):
     def get_response(self):
-        data = parse_qs(self.data)
+        data     = parse_qs(self.data)
+        logger   = self.daemon.logger
+        order_db = self.daemon.parent.get_order_db()
+
         if self.path == '/order/':
-            self.daemon.logger.debug('Parsing order from HTTP request.')
+            logger.debug('Parsing order from HTTP request.')
             order = Order.from_xml(data['xml'][0])
-            self.daemon.logger.debug('XML order parsed complete.')
+            logger.debug('XML order parsed complete.')
             self.daemon.order_incoming_event(order)
             return 'application/json', json.dumps(order.get_id())
+
         elif self.path == '/order/get/':
             id    = int(self.args.get('id'))
-            order = self.daemon.parent.get_order_from_id(id)
+            order = order_db.get_order(id = id)
             return order.toxml()
+
         elif self.path == '/order/count/':
-            return str(self.daemon.count_orders())
+            return str(order_db.count_orders())
+
         elif self.path == '/order/status/':
             order_id = int(self.args['id'])
-            order    = self.daemon.parent.get_order_from_id(order_id)
-            progress = self.daemon.parent.get_order_progress_from_id(order_id)
+            order    = order_db.get_order(id = order_id)
+            progress = order_db.get_order_progress_from_id(order_id)
             if not order:
                 raise Exception('no such order id')
             closed = order.get_closed_timestamp()
             if closed is not None:
                 closed = str(closed)
-            response = {'status':   order.status,
+            response = {'status':   order.get_status(),
                         'progress': progress,
                         'closed':   closed}
             return 'application/json', json.dumps(response)
+
         elif self.path == '/order/list/':
             # Fetch the orders.
             offset = int(self.args.get('offset', 0))
             limit  = min(100, int(self.args.get('limit', 100)))
-            orders = self.daemon.parent.get_order_list(offset = offset,
-                                                       limit  = limit)
+            orders = order_db.get_orders(offset = offset, limit = limit)
 
             # Assemble an XML document containing the orders.
             xml = etree.Element('xml')
             for order in orders:
                 xml.append(order.toetree())
             return etree.tostring(xml, pretty_print = True)
+
         elif self.path == '/task/get/':
             id   = int(self.args.get('id'))
-            task = self.daemon.parent.get_task_from_id(id)
+            task = order_db.get_task(id = id)
             return task.toxml()
+
         elif self.path == '/task/count/':
             order_id = self.args.get('order_id')
             if order_id:
-                n_tasks = self.daemon.parent.count_tasks(int(order_id))
+                n_tasks = order_db.count_tasks(order_id = int(order_id))
             else:
-                n_tasks = self.daemon.parent.count_tasks()
+                n_tasks = order_db.count_tasks()
             return 'application/json', json.dumps(n_tasks)
+
         elif self.path == '/task/list/':
             # Fetch the tasks.
             order_id = int(self.args.get('order_id'))
             offset   = int(self.args.get('offset', 0))
             limit    = min(100, int(self.args.get('limit', 100)))
-            tasks    = self.daemon.parent.get_task_list(order_id,
-                                                        offset = offset,
-                                                        limit = limit)
+            tasks    = order_db.get_tasks(order_id = order_id,
+                                          offset   = offset,
+                                          limit    = limit)
 
             # Assemble an XML document containing the orders.
             xml = etree.Element('xml')
             for task in tasks:
                 xml.append(task.toetree())
             return etree.tostring(xml, pretty_print = True)
+
         elif self.path == '/log/':
             task_id  = int(self.args.get('task_id'))
-            task     = self.daemon.parent.get_task_from_id(task_id)
+            task     = order_db.get_task(id = task_id)
             filename = task.get_logfile()
             if filename and os.path.isfile(filename):
                 with open(filename) as file:
                     return file.read()
             else:
                 return ''
+
         elif self.path == '/trace/':
             task_id  = int(self.args.get('task_id'))
-            task     = self.daemon.parent.get_task_from_id(task_id)
+            task     = order_db.get_task(id = task_id)
             filename = task.get_tracefile()
             if filename and os.path.isfile(filename):
                 with open(filename) as file:
                     return file.read()
             else:
                 return ''
+
         else:
             raise Exception('no such API call')
 

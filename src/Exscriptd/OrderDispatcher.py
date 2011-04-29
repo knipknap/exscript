@@ -87,25 +87,8 @@ class OrderDispatcher(object):
                              message)
         self.logger.info(msg)
 
-    def get_order_from_id(self, order_id):
-        return self.order_db.get_order(id = order_id)
-
-    def get_order_progress_from_id(self, order_id):
-        return self.order_db.get_order_progress_from_id(order_id)
-
-    def get_order_list(self, offset = 0, limit = 0):
-        return self.order_db.get_orders(offset = offset, limit = limit)
-
-    def count_tasks(self, order_id = None):
-        return self.order_db.count_tasks(order_id = order_id)
-
-    def get_task_list(self, order_id, offset = 0, limit = 0):
-        return self.order_db.get_tasks(order_id = order_id,
-                                       offset   = offset,
-                                       limit    = limit)
-
-    def get_task_from_id(self, id):
-        return self.order_db.get_task(id = id)
+    def get_order_db(self):
+        return self.order_db
 
     def set_order_status_done(self, order):
         order.close()
