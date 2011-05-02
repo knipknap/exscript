@@ -229,6 +229,23 @@ class OrderDB(object):
         result = query.execute()
         return [self.__get_task_from_row(row) for row in result]
 
+    def __get_tasks_query(self, offset, limit, **kwargs):
+        tbl_t = self._table_map['task']
+
+        # Search conditions.
+        where = None
+        for field in ('id', 'order_id', 'name', 'status'):
+            if field in kwargs:
+                cond = None
+                for value in to_list(kwargs.get(field)):
+                    cond = sa.or_(cond, tbl_t.c[field] == value)
+                where = sa.and_(where, cond)
+
+        return tbl_t.select(where,
+                            order_by = [sa.desc(tbl_t.c.id)],
+                            offset   = offset,
+                            limit    = limit)
+
     @synchronized
     def __add_order(self, order):
         """
@@ -480,23 +497,8 @@ class OrderDB(object):
         @rtype:  list[Task]
         @return: The list of tasks.
         """
-        tbl_t = self._table_map['task']
-
-        # Search conditions.
-        where = None
-        for field in ('id', 'order_id', 'name', 'status'):
-            if field in kwargs:
-                cond = None
-                for value in to_list(kwargs.get(field)):
-                    cond = sa.or_(cond, tbl_t.c[field] == value)
-                where = sa.and_(where, cond)
-
-        select = tbl_t.select(where,
-                              order_by = [sa.desc(tbl_t.c.id)],
-                              offset   = offset,
-                              limit    = limit)
-
-        return self.__get_tasks_from_query(select)
+        query = self.__get_tasks_query(offset, limit, **kwargs)
+        return self.__get_tasks_from_query(query)
 
     def save_task(self, order, task):
         """
