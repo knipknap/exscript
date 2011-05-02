@@ -15,6 +15,7 @@
 """
 Represents an activity within an order.
 """
+import sys
 from datetime import datetime
 from lxml import etree
 from Exscriptd.DBObject import DBObject
@@ -25,7 +26,8 @@ class Task(DBObject):
         DBObject.__init__(self)
         self.id            = None
         self.name          = name
-        self.func          = func
+        self.module_name   = func.__module__
+        self.func_name     = func.__name__
         self.status        = 'new'
         self.progress      = .0
         self.started       = datetime.utcnow()
@@ -125,7 +127,9 @@ class Task(DBObject):
                     started   = self.get_started_timestamp(),
                     closed    = self.get_closed_timestamp(),
                     logfile   = self.get_logfile(),
-                    tracefile = self.get_tracefile())
+                    tracefile = self.get_tracefile(),
+                    module    = self.module_name,
+                    function  = self.func_name)
 
     def get_id(self):
         """
@@ -290,4 +294,6 @@ class Task(DBObject):
         return self.tracefile
 
     def run(self):
-        self.func(self)
+        module = sys.modules[self.module_name]
+        func   = module[self.func_name]
+        func(self)
