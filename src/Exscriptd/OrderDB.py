@@ -78,6 +78,7 @@ class OrderDB(object):
             sa.Column('queue',     sa.String(50), index = True),
             sa.Column('module',    sa.String(250)),
             sa.Column('function',  sa.String(250)),
+            sa.Column('vars',      sa.PickleType()),
             sa.ForeignKeyConstraint(['order_id'], [pfx + 'order.id'], ondelete = 'CASCADE'),
             mysql_engine = 'INNODB'
         ))
@@ -211,6 +212,7 @@ class OrderDB(object):
         task.queue_name  = row[tbl_t.c.queue]
         task.module_name = row[tbl_t.c.module]
         task.func_name   = row[tbl_t.c.function]
+        task.vars        = row[tbl_t.c.vars]
         task.untouch()
         return task
 

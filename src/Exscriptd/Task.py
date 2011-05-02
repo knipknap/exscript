@@ -35,6 +35,7 @@ class Task(DBObject):
         self.closed        = None
         self.logfile       = None
         self.tracefile     = None
+        self.vars          = {}
         self.go_event      = Event()
         self.closed_event  = Event()
         self.changed_event = Event()
@@ -131,7 +132,8 @@ class Task(DBObject):
                     tracefile = self.get_tracefile(),
                     queue     = self.queue_name,
                     module    = self.module_name,
-                    function  = self.func_name)
+                    function  = self.func_name,
+                    vars      = self.vars)
 
     def get_id(self):
         """
@@ -296,6 +298,30 @@ class Task(DBObject):
         return self.tracefile
 
     def run(self):
+        """
+        Execute the user-provided function.
+        """
         module = sys.modules[self.module_name]
         func   = module[self.func_name]
-        func(self)
+
+        self.set_status('in-progress')
+        try:
+            func(self)
+        except Exception, e:
+            self.close('internal-error')
+            raise
+        else:
+            self.completed()
+
+    def set(self, key, value):
+        """
+        Defines a variable that is carried along with the task.
+        The value *must* be pickleable.
+        """
+        self.vars[key] = value
+
+    def get(self, key, default = None):
+        """
+        Returns the value as previously defined by L{Task.set()}.
+        """
+        return self.vars.get(key, default)
