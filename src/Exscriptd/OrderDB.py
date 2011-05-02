@@ -75,6 +75,7 @@ class OrderDB(object):
             sa.Column('closed',    sa.DateTime),
             sa.Column('logfile',   sa.String(250)),
             sa.Column('tracefile', sa.String(250)),
+            sa.Column('queue',     sa.String(50), index = True),
             sa.Column('module',    sa.String(250)),
             sa.Column('function',  sa.String(250)),
             sa.ForeignKeyConstraint(['order_id'], [pfx + 'order.id'], ondelete = 'CASCADE'),
@@ -207,6 +208,7 @@ class OrderDB(object):
         task.closed      = row[tbl_t.c.closed]
         task.logfile     = row[tbl_t.c.logfile]
         task.tracefile   = row[tbl_t.c.tracefile]
+        task.queue_name  = row[tbl_t.c.queue]
         task.module_name = row[tbl_t.c.module]
         task.func_name   = row[tbl_t.c.function]
         task.untouch()

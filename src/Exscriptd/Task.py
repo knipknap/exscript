@@ -22,10 +22,11 @@ from Exscriptd.DBObject import DBObject
 from Exscript.util.event import Event
 
 class Task(DBObject):
-    def __init__(self, name, func):
+    def __init__(self, name, queue_name, func):
         DBObject.__init__(self)
         self.id            = None
         self.name          = name
+        self.queue_name    = queue_name
         self.module_name   = func.__module__
         self.func_name     = func.__name__
         self.status        = 'new'
@@ -128,6 +129,7 @@ class Task(DBObject):
                     closed    = self.get_closed_timestamp(),
                     logfile   = self.get_logfile(),
                     tracefile = self.get_tracefile(),
+                    queue     = self.queue_name,
                     module    = self.module_name,
                     function  = self.func_name)
 
