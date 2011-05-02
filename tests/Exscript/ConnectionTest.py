@@ -17,7 +17,8 @@ class ConnectionTest(DummyTest):
     def createProtocol(self):
         self.queue    = Queue(verbose = 0)
         self.host     = Host('dummy://' + self.hostname)
-        self.action   = HostAction(self.queue, object, self.host)
+        pipe          = self.queue.account_manager.create_pipe()
+        self.action   = HostAction(pipe, object, self.host)
         protocol      = Dummy()
         self.protocol = Connection(self.action, protocol)
         self.queue.add_account(self.account)
@@ -34,12 +35,6 @@ class ConnectionTest(DummyTest):
 
     def testConstructor(self):
         self.assert_(isinstance(self.protocol, Connection))
-
-    def testGetAction(self):
-        self.assert_(isinstance(self.protocol.get_action(), HostAction))
-
-    def testGetQueue(self):
-        self.assert_(isinstance(self.protocol.get_queue(), Queue))
 
     def testGetHost(self):
         self.assertEqual(self.protocol.get_host(), self.host)

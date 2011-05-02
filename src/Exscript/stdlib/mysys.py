@@ -29,40 +29,6 @@ def message(scope, string):
     exscript._print('debug', string[0] + '\n')
     return True
 
-def run(scope, hostnames, filename):
-    """
-    Runs the template file with the given name on the host with the given
-    hostname. If the filename is not absolute, it is relative to the path
-    of the script that makes the call.
-    Any variables that are defined in the current scope of the calling
-    script are also passed to the template.
-
-    @type  hostnames: string
-    @param hostnames: A hostname, or a list of hostnames.
-    @type  filename: string
-    @param filename: The name of the Exscript file to be executed.
-    """
-    # The filename is relative to the file that makes the call.
-    exscript_file = scope.get('__filename__') or ''
-    exscript_dir  = os.path.dirname(exscript_file[0])
-    filename      = os.path.join(exscript_dir, filename[0])
-
-    # Copy the variables from the current scope into new host objects.
-    hosts = []
-    for hostname in hostnames:
-        host = Host(hostname)
-        host.set_all(scope.copy_public_vars())
-        hosts.append(host)
-
-    # Enqueue the new jobs.
-    strip  = scope.parser.strip_command
-    job    = bind(util.template.eval_file, filename, strip)
-    queue  = scope.get('__connection__').get_queue()
-    action = scope.get('__connection__').get_action()
-    task   = queue.force_run(hosts, autologin(job))
-    action.wait_for(task.action_hash_list)
-    return True
-
 @secure_function
 def wait(scope, seconds):
     """

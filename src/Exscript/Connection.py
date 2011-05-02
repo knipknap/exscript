@@ -21,7 +21,7 @@ class Connection(object):
     This class is a decorator for protocols.Protocol objects that
     adds thread safety by adding locking to the authenticate() and
     authorize() functions.
-    It also provides access to the associated Queue and Host instances.
+    It also provides access to the associated Host instance.
 
     For complete documentation, please refer to the protocols.Protocol
     documentation.
@@ -93,24 +93,6 @@ class Connection(object):
             return self.__dict__[name]
         return getattr(self.protocol, name)
 
-    def get_action(self):
-        """
-        Returns the associated HostAction instance.
-
-        @rtype:  HostAction
-        @return: The associated HostAction instance.
-        """
-        return self.action
-
-    def get_queue(self):
-        """
-        Returns the associated Queue instance.
-
-        @rtype:  Queue
-        @return: The associated Queue instance.
-        """
-        return self.action.get_queue()
-
     def get_host(self):
         """
         Returns the host on which the job is performed.
@@ -148,7 +130,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -167,7 +149,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -184,7 +166,7 @@ class Connection(object):
 
         @type  account: Account|None
         @param account: The account to use for logging in.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -203,7 +185,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -218,7 +200,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:
@@ -246,7 +228,7 @@ class Connection(object):
         @param account: The account to use for logging in.
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
-        @rtype:  Account
+        @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
         with self.action.acquire_account(account).context() as account:

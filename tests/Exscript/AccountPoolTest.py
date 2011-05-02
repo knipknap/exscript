@@ -42,6 +42,12 @@ class AccountPoolTest(unittest.TestCase):
         self.accm.add_account(self.account1)
         self.assertEqual(self.accm.has_account(self.account1), True)
 
+    def testGetAccountFromHash(self):
+        account = Account('user', 'test')
+        thehash = account.__hash__()
+        self.accm.add_account(account)
+        self.assertEqual(self.accm.get_account_from_hash(thehash), account)
+
     def testGetAccountFromName(self):
         self.testAddAccount()
         self.assertEqual(self.account2,
@@ -53,9 +59,9 @@ class AccountPoolTest(unittest.TestCase):
     def testAcquireAccount(self):
         self.testAddAccount()
         self.accm.acquire_account(self.account1)
-        self.accm.release_account(self.account1)
+        self.account1.release()
         self.accm.acquire_account(self.account1)
-        self.accm.release_account(self.account1)
+        self.account1.release()
 
         # Add three more accounts.
         filename = os.path.join(os.path.dirname(__file__), 'account_pool.cfg')
@@ -82,9 +88,6 @@ class AccountPoolTest(unittest.TestCase):
             # Release all accounts.
             for account in acquired.itervalues():
                 account.release()
-
-    def testReleaseAccount(self):
-        self.assertRaises(Exception, self.accm.release_account, self.account1)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountPoolTest)

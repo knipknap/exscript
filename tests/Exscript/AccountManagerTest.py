@@ -16,6 +16,21 @@ class AccountManagerTest(unittest.TestCase):
     def testConstructor(self):
         self.assertEqual(0, self.am.default_pool.n_accounts())
 
+    def testCreatePipe(self):
+        self.am.add_account(self.account)
+        pipe = self.am.create_pipe()
+        pipe.send(('acquire-account', None))
+        response = pipe.recv()
+        expected = (self.account.__hash__(),
+                    self.account.get_name(),
+                    self.account.get_password(),
+                    self.account.get_authorization_password(),
+                    self.account.get_key())
+        self.assertEqual(response, expected)
+        pipe.send(('release-account', self.account.__hash__()))
+        response = pipe.recv()
+        self.assertEqual(response, 'ok')
+
     def testReset(self):
         self.testAddAccount()
         self.am.reset()
@@ -50,6 +65,17 @@ class AccountManagerTest(unittest.TestCase):
         self.am.add_pool(pool2, match_cb)
         self.assertEqual(self.am.default_pool, pool1)
 
+    def testGetAccountFromHash(self):
+        pool1 = AccountPool()
+        acc1  = Account('user1')
+        pool1.add_account(acc1)
+        self.am.add_pool(pool1)
+
+        acc2 = Account('user2')
+        self.am.add_account(acc2)
+        self.assertEqual(self.am.get_account_from_hash(acc1.__hash__()), acc1)
+        self.assertEqual(self.am.get_account_from_hash(acc2.__hash__()), acc2)
+
     def testAcquireAccount(self):
         account1 = Account('user1', 'test')
         self.assertRaises(ValueError, self.am.acquire_account)
@@ -82,7 +108,6 @@ class AccountManagerTest(unittest.TestCase):
 
         def start_cb(data, conn):
             data['start-called'] = True
-
 
         # Make sure that pool2 is chosen (because the match function
         # returns True).

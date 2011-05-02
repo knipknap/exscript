@@ -30,19 +30,23 @@ class HostActionTest(unittest.TestCase):
         self.data         = {'n_calls': 0}
         self.count_cb     = bind(count_calls, self.data)
         self.fail_cb      = bind(fail_calls,  self.data, IntentionalError)
-        self.count_action = HostAction(Queue(), self.count_cb, FakeHost())
-        self.fail_action  = HostAction(Queue(), self.fail_cb, FakeHost())
+        self.queue        = Queue()
+        pipe              = self.queue.account_manager.create_pipe()
+        self.count_action = HostAction(pipe, self.count_cb, FakeHost())
+        pipe              = self.queue.account_manager.create_pipe()
+        self.fail_action  = HostAction(pipe, self.fail_cb, FakeHost())
         self.failed       = False
         self.fail_action.error_event.connect(self.onFailActionError)
 
+    def tearDown(self):
+        self.queue.destroy()
+
     def testConstructor(self):
-        action = HostAction(Queue(), self.count_cb, FakeHost())
+        pipe   = self.queue.account_manager.create_pipe()
+        action = HostAction(pipe, self.count_cb, FakeHost())
 
     def testGetName(self):
         self.assertEqual(self.count_action.get_name(), 'testaddress')
-
-    def testGetQueue(self):
-        self.assert_(isinstance(self.count_action.get_queue(), Queue))
 
     def testGetHost(self):
         self.assert_(isinstance(self.count_action.get_host(), Host))
@@ -55,21 +59,19 @@ class HostActionTest(unittest.TestCase):
         self.assertEqual(self.count_action.get_logname(), 'test.log')
 
     def testAcquireAccount(self):
-        queue   = Queue()
         account = Account('foo')
-        queue.add_account(account)
+        self.queue.add_account(account)
 
         def doit(conn, data):
-            data['account'] = conn.get_action().acquire_account()
+            data['account'] = action.acquire_account()
             data['account'].release()
 
         data     = {}
         callback = bind(doit, data)
-        action   = HostAction(queue, callback, FakeHost())
+        pipe     = self.queue.account_manager.create_pipe()
+        action   = HostAction(pipe, callback, FakeHost())
         action.execute()
-        self.assertEqual(data.get('account'), account)
-
-        queue.destroy()
+        self.assertEqual(data.get('account').__hash__(), account.__hash__())
 
     def testSetTimes(self):
         # Run once.
@@ -87,7 +89,8 @@ class HostActionTest(unittest.TestCase):
         # Run once.
         data     = {'n_calls' : 0}
         callback = bind(fail_calls, data, LoginFailure)
-        action   = HostAction(Queue(), callback, FakeHost())
+        pipe     = self.queue.account_manager.create_pipe()
+        action   = HostAction(pipe, callback, FakeHost())
         self.assertEqual(0, action.n_failures())
         self.assertEqual(False, action.has_aborted())
         action.execute()
@@ -98,7 +101,8 @@ class HostActionTest(unittest.TestCase):
         # Run *three* times.
         data     = {'n_calls' : 0}
         callback = bind(fail_calls, data, LoginFailure)
-        action   = HostAction(Queue(), callback, FakeHost())
+        pipe     = self.queue.account_manager.create_pipe()
+        action   = HostAction(pipe, callback, FakeHost())
         action.set_times(10)
         action.set_login_times(3)
         action.execute()
@@ -108,7 +112,8 @@ class HostActionTest(unittest.TestCase):
         # Should also run three times.
         data     = {'n_calls' : 0}
         callback = bind(fail_calls, data, LoginFailure)
-        action   = HostAction(Queue(), callback, FakeHost())
+        pipe     = self.queue.account_manager.create_pipe()
+        action   = HostAction(pipe, callback, FakeHost())
         action.set_times(1)
         action.set_login_times(3)
         action.execute()
