@@ -229,22 +229,26 @@ class OrderDB(object):
         result = query.execute()
         return [self.__get_task_from_row(row) for row in result]
 
-    def __get_tasks_query(self, offset, limit, **kwargs):
+    def __get_tasks_cond(self, **kwargs):
         tbl_t = self._table_map['task']
 
         # Search conditions.
         where = None
-        for field in ('id', 'order_id', 'name', 'status'):
+        for field in ('id', 'order_id', 'name', 'status', 'queue'):
             if field in kwargs:
                 cond = None
                 for value in to_list(kwargs.get(field)):
                     cond = sa.or_(cond, tbl_t.c[field] == value)
                 where = sa.and_(where, cond)
 
-        return tbl_t.select(where,
-                            order_by = [sa.desc(tbl_t.c.id)],
-                            offset   = offset,
-                            limit    = limit)
+    def __get_tasks_query(self, fields, offset, limit, **kwargs):
+        where = self.__get_tasks_cond(**kwargs)
+        return sa.select(fields,
+                         where,
+                         from_obj = [tbl_t],
+                         order_by = [sa.desc(tbl_t.c.id)],
+                         offset   = offset,
+                         limit    = limit)
 
     @synchronized
     def __add_order(self, order):
@@ -497,7 +501,9 @@ class OrderDB(object):
         @rtype:  list[Task]
         @return: The list of tasks.
         """
-        query = self.__get_tasks_query(offset, limit, **kwargs)
+        tbl_t  = self._table_map['task']
+        fields = list(tbl_t.c)
+        query  = self.__get_tasks_query(fields, offset, limit, **kwargs)
         return self.__get_tasks_from_query(query)
 
     def save_task(self, order, task):
@@ -520,3 +526,44 @@ class OrderDB(object):
             return
 
         return self.__save_task(order.id, task)
+
+    @synchronized
+    def mark_tasks(self, new_status, offset = 0, limit = None, **kwargs):
+        """
+        Returns all tasks that match the given criteria and changes
+        their status to the given value.
+
+        @type  new_status: str
+        @param new_status: The new status.
+        @type  offset: int
+        @param offset: The offset of the first item to be returned.
+        @type  limit: int
+        @param limit: The maximum number of items that is returned.
+        @type  kwargs: dict
+        @param kwargs: See L{get_tasks()}.
+        @rtype:  list[Task]
+        @return: The list of tasks.
+        """
+        tbl_t = self._table_map['task']
+
+        # Find the ids of the matching tasks.
+        where     = self.__get_tasks_cond(**kwargs)
+        id_select = sa.select([tbl_t.c.id],
+                              where,
+                              from_obj = [tbl_t],
+                              order_by = [tbl_t.c.id],
+                              offset   = offset,
+                              limit    = limit)
+
+        # Update the status of those tasks.
+        query  = tbl_t.update(tbl_t.c.id.in_(id_select))
+        result = query.execute(status = new_status)
+
+        # Now create a Task object for each of those tasks.
+        all_select = sa.select(list(tbl_t.c),
+                               where,
+                               from_obj = [tbl_t],
+                               order_by = [tbl_t.c.id],
+                               offset   = offset,
+                               limit    = limit)
+        return self.__get_tasks_from_query(all_select)
