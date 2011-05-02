@@ -43,7 +43,6 @@ class Account(object):
         """
         self.acquire_before_event   = Event()
         self.released_event         = Event()
-        self.otp_requested_event    = Event()
         self.changed_event          = Event()
         self.name                   = name
         self.password               = password

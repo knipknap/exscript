@@ -706,7 +706,6 @@ class Protocol(object):
                 seq  = int(match.group(1))
                 seed = match.group(2)
                 self.otp_requested_event(account, seq, seed)
-                account.otp_requested_event(account, seq, seed)
                 self._dbg(2, "Seq: %s, Seed: %s" % (seq, seed))
                 phrase = otp(password, seed, seq)
 
