@@ -297,7 +297,7 @@ class Task(DBObject):
         """
         return self.tracefile
 
-    def run(self):
+    def run(self, order):
         """
         Execute the user-provided function.
         """
@@ -306,12 +306,13 @@ class Task(DBObject):
 
         self.set_status('in-progress')
         try:
-            func(self)
+            func(order, self)
         except Exception, e:
             self.close('internal-error')
             raise
         else:
-            self.completed()
+            if not self.get_closed_timestamp():
+                self.completed()
 
     def set(self, key, value):
         """
