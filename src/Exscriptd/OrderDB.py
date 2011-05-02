@@ -19,6 +19,11 @@ from Exscript.util.impl import synchronized
 from Exscriptd.Order import Order
 from Exscriptd.Task import Task
 
+# Note: The synchronized decorator is used because
+# sqlite does not support concurrent writes, so we need to
+# do this to have graceful locking (rather than sqlite's
+# hard locking).
+
 class OrderDB(object):
     """
     The main interface for accessing the database.
