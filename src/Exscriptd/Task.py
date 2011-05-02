@@ -22,13 +22,14 @@ from Exscriptd.DBObject import DBObject
 from Exscript.util.event import Event
 
 class Task(DBObject):
-    def __init__(self, name, queue_name, func):
+    def __init__(self, order_id, name, queue_name, func = None):
         DBObject.__init__(self)
         self.id            = None
+        self.order_id      = order_id
         self.name          = name
         self.queue_name    = queue_name
-        self.module_name   = func.__module__
-        self.func_name     = func.__name__
+        self.module_name   = func is not None and func.__module__
+        self.func_name     = func is not None and func.__name__
         self.status        = 'new'
         self.progress      = .0
         self.started       = datetime.utcnow()
@@ -123,7 +124,8 @@ class Task(DBObject):
         return etree.tostring(xml, pretty_print = pretty)
 
     def todict(self):
-        return dict(name      = self.get_name(),
+        return dict(order_id  = self.order_id,
+                    name      = self.get_name(),
                     status    = self.get_status(),
                     progress  = self.get_progress(),
                     started   = self.get_started_timestamp(),

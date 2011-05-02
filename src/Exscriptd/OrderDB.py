@@ -156,42 +156,42 @@ class OrderDB(object):
         return self._table_prefix
 
     @synchronized
-    def __add_task(self, order_id, task):
+    def __add_task(self, task):
         """
         Inserts the given task into the database.
         """
-        if order_id is None:
-            raise AttributeError('order_id argument must not be None')
         if task is None:
             raise AttributeError('task argument must not be None')
+        if task.order_id is None:
+            raise AttributeError('order_id must not be None')
 
         if not task.is_dirty():
             return
 
         # Insert the task
         insert  = self._table_map['task'].insert()
-        result  = insert.execute(order_id = order_id, **task.todict())
+        result  = insert.execute(**task.todict())
         task_id = result.last_inserted_ids()[0]
 
         task.untouch()
         return task_id
 
     @synchronized
-    def __save_task(self, order_id, task):
+    def __save_task(self, task):
         """
         Inserts or updates the given task into the database.
         """
-        if order_id is None:
-            raise AttributeError('order_id argument must not be None')
         if task is None:
             raise AttributeError('task argument must not be None')
+        if task.order_id is None:
+            raise AttributeError('order_id must not be None')
 
         if not task.is_dirty():
             return
 
         # Insert or update the task.
         tbl_t  = self._table_map['task']
-        fields = dict(order_id = order_id, **task.todict())
+        fields = task.todict()
         if task.id is None:
             query   = tbl_t.insert()
             result  = query.execute(**fields)
@@ -206,7 +206,10 @@ class OrderDB(object):
     def __get_task_from_row(self, row):
         assert row is not None
         tbl_t            = self._table_map['task']
-        task             = Task(row[tbl_t.c.name])
+        task             = Task(row[tbl_t.c.order_id],
+                                row[tbl_t.c.name],
+                                row[tbl_t.c.queue],
+                                None)
         task.id          = row[tbl_t.c.id]
         task.status      = row[tbl_t.c.status]
         task.progress    = row[tbl_t.c.progress]
@@ -241,7 +244,10 @@ class OrderDB(object):
                     cond = sa.or_(cond, tbl_t.c[field] == value)
                 where = sa.and_(where, cond)
 
+        return where
+
     def __get_tasks_query(self, fields, offset, limit, **kwargs):
+        tbl_t = self._table_map['task']
         where = self.__get_tasks_cond(**kwargs)
         return sa.select(fields,
                          where,
@@ -506,7 +512,7 @@ class OrderDB(object):
         query  = self.__get_tasks_query(fields, offset, limit, **kwargs)
         return self.__get_tasks_from_query(query)
 
-    def save_task(self, order, task):
+    def save_task(self, task):
         """
         Inserts or updates the given task in the database.
 
@@ -515,17 +521,15 @@ class OrderDB(object):
         @type  task: Task
         @param task: The task to be saved.
         """
-        if order is None:
-            raise AttributeError('order argument must not be None')
-        if order.id is None:
-            raise AttributeError('order is not yet stored')
         if task is None:
             raise AttributeError('task argument must not be None')
+        if task.order_id is None:
+            raise AttributeError('order id must not be None')
 
         if not task.is_dirty():
             return
 
-        return self.__save_task(order.id, task)
+        return self.__save_task(task)
 
     @synchronized
     def mark_tasks(self, new_status, offset = 0, limit = None, **kwargs):

@@ -92,7 +92,7 @@ class OrderDispatcher(object):
 
     def set_order_status_done(self, order):
         order.close()
-        self._free_loggers(order)
+        self._free_loggers(order.id)
         self.set_order_status(order, 'completed')
 
     def _on_task_go(self, task, order):
@@ -100,17 +100,18 @@ class OrderDispatcher(object):
         task.changed_event.listen(self._on_task_changed, order)
         task.closed_event.listen(self._on_task_closed, order)
 
-    def _on_task_changed(self, task, order):
-        self.order_db.save_task(order, task)
+    def _on_task_changed(self, task):
+        self.order_db.save_task(task)
 
-    def _on_task_closed(self, task, order):
+    def _on_task_closed(self, task):
         task.go_event.disconnect_all()
         task.closed_event.disconnect_all()
         task.changed_event.disconnect_all()
 
     def create_task(self, order, name, queue_name, func):
-        task = Task(name, queue_name, func)
-        task.go_event.listen(self._on_task_go, order)
+        task = Task(order.id, name, queue_name, func)
+        task.go_event.listen(self._on_task_go)
+        task.changed_event.listen(self._on_task_changed)
         return task
 
     def set_order_status(self, order, status):

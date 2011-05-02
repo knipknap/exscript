@@ -8,6 +8,9 @@ from Exscriptd.Order   import Order
 from Exscriptd.Task    import Task
 from Exscriptd.OrderDB import OrderDB
 
+def testfunc(foo):
+    pass
+
 class OrderDBTest(unittest.TestCase):
     CORRELATE = OrderDB
 
@@ -95,29 +98,29 @@ class OrderDBTest(unittest.TestCase):
         assert_progress(1.0)
 
         # Add some sub-tasks.
-        task1 = Task('my test task')
-        self.db.save_task(order, task1)
+        task1 = Task(order.id, 'my test task', 'myqueue', testfunc)
+        self.db.save_task(task1)
         assert_progress(.0)
 
-        task2 = Task('another test task')
-        self.db.save_task(order, task2)
+        task2 = Task(order.id, 'another test task', 'myqueue2', testfunc)
+        self.db.save_task(task2)
         assert_progress(.0)
 
         # Change the progress, re-check.
         task1.set_progress(.5)
-        self.db.save_task(order, task1)
+        self.db.save_task(task1)
         assert_progress(.25)
 
         task2.set_progress(.5)
-        self.db.save_task(order, task2)
+        self.db.save_task(task2)
         assert_progress(.5)
 
         task1.set_progress(1.0)
-        self.db.save_task(order, task1)
+        self.db.save_task(task1)
         assert_progress(.75)
 
         task2.set_progress(1.0)
-        self.db.save_task(order, task2)
+        self.db.save_task(task2)
         assert_progress(1.0)
 
     def testSaveOrder(self):
@@ -144,25 +147,25 @@ class OrderDBTest(unittest.TestCase):
         self.db.save_order(order)
         self.assertEqual(self.db.get_order_progress_from_id(id), 1.0)
 
-        task1 = Task('my test task')
-        self.db.save_task(order, task1)
+        task1 = Task(order.id, 'my test task', 'myqueue', testfunc)
+        self.db.save_task(task1)
         self.assertEqual(self.db.get_order_progress_from_id(id), .0)
 
-        task2 = Task('another test task')
-        self.db.save_task(order, task2)
+        task2 = Task(order.id, 'another test task', 'myqueue', testfunc)
+        self.db.save_task(task2)
         self.assertEqual(self.db.get_order_progress_from_id(id), .0)
 
         task1.set_progress(.5)
-        self.db.save_task(order, task1)
+        self.db.save_task(task1)
         self.assertEqual(self.db.get_order_progress_from_id(id), .25)
         task2.set_progress(.5)
-        self.db.save_task(order, task2)
+        self.db.save_task(task2)
         self.assertEqual(self.db.get_order_progress_from_id(id), .5)
         task1.set_progress(1.0)
-        self.db.save_task(order, task1)
+        self.db.save_task(task1)
         self.assertEqual(self.db.get_order_progress_from_id(id), .75)
         task2.set_progress(1.0)
-        self.db.save_task(order, task2)
+        self.db.save_task(task2)
         self.assertEqual(self.db.get_order_progress_from_id(id), 1.0)
 
     def testGetOrder(self):
@@ -201,9 +204,9 @@ class OrderDBTest(unittest.TestCase):
         order = Order('fooservice')
         self.db.save_order(order)
 
-        task = Task('my test task')
+        task = Task(order.id, 'my test task', 'myqueue', testfunc)
         self.assert_(task.id is None)
-        self.db.save_task(order, task)
+        self.db.save_task(task)
         self.assert_(task.id is not None)
 
     def testGetTask(self):
@@ -212,12 +215,12 @@ class OrderDBTest(unittest.TestCase):
         order = Order('fooservice')
         self.db.save_order(order)
 
-        task1 = Task('my test task')
-        self.db.save_task(order, task1)
+        task1 = Task(order.id, 'my test task', 'myqueue', testfunc)
+        self.db.save_task(task1)
         self.assertEqual(task1.id, self.db.get_task().id)
 
-        task2 = Task('another test task')
-        self.db.save_task(order, task2)
+        task2 = Task(order.id, 'another test task', 'myqueue', testfunc)
+        self.db.save_task(task2)
         self.assertRaises(IndexError, self.db.get_task)
 
     def testGetTasks(self):
@@ -226,10 +229,10 @@ class OrderDBTest(unittest.TestCase):
         order = Order('fooservice')
         self.db.save_order(order)
 
-        task1 = Task('my test task')
-        task2 = Task('another test task')
-        self.db.save_task(order, task1)
-        self.db.save_task(order, task2)
+        task1 = Task(order.id, 'my test task', 'myqueue2', testfunc)
+        task2 = Task(order.id, 'another test task', 'myqueue2', testfunc)
+        self.db.save_task(task1)
+        self.db.save_task(task2)
 
         id_list1 = sorted([task1.id, task2.id])
         id_list2 = sorted([task.id for task in self.db.get_tasks()])
