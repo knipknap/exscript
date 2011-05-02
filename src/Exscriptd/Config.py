@@ -178,20 +178,15 @@ class Config(ConfigReader):
             name = element.get('name')
             print 'Loading service "%s"...' % name
 
-            module      = element.find('module').text
-            queue_elem  = element.find('queue')
-            queue_name  = queue_elem is not None and queue_elem.text
-            queue       = self._init_queue_from_name(queue_name)
-            logdir      = os.path.join(self.logdir, 'services', name)
-            if not os.path.isdir(logdir):
-                os.makedirs(logdir)
-            service = PythonService(dispatcher,
-                                    name,
-                                    module,
-                                    service_dir,
-                                    logdir,
-                                    self,
-                                    queue)
+            module     = element.find('module').text
+            queue_elem = element.find('queue')
+            queue_name = queue_elem is not None and queue_elem.text
+            service    = PythonService(dispatcher,
+                                       name,
+                                       module,
+                                       service_dir,
+                                       self,
+                                       queue_name)
             print 'Service "%s" initialized.' % name
             services.append(service)
         return services

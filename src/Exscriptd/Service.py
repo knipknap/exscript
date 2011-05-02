@@ -23,13 +23,11 @@ class Service(object):
                  parent,
                  name,
                  cfg_dir,
-                 logdir,
                  main_cfg,
                  queue_name = None):
         self.parent     = parent
         self.name       = name
         self.cfg_dir    = cfg_dir
-        self.logdir     = logdir
         self.main_cfg   = main_cfg
         self.queue_name = queue_name
         self.parent.service_added(self)
