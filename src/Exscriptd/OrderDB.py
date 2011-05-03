@@ -559,16 +559,13 @@ class OrderDB(object):
                               order_by = [tbl_t.c.id],
                               offset   = offset,
                               limit    = limit)
+        id_list = [row.id for row in id_select.execute()]
 
         # Update the status of those tasks.
-        query  = tbl_t.update(tbl_t.c.id.in_(id_select))
+        query  = tbl_t.update(tbl_t.c.id.in_(id_list))
         result = query.execute(status = new_status)
 
         # Now create a Task object for each of those tasks.
-        all_select = sa.select(list(tbl_t.c),
-                               where,
-                               from_obj = [tbl_t],
-                               order_by = [tbl_t.c.id],
-                               offset   = offset,
-                               limit    = limit)
+        all_select = tbl_t.select(tbl_t.c.id.in_(id_list),
+                                  order_by = [tbl_t.c.id])
         return self.__get_tasks_from_query(all_select)
