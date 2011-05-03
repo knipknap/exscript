@@ -35,12 +35,9 @@ class Service(object):
     def get_queue_name(self):
         return self.queue_name
 
-    def get_config_file(self, name):
-        return os.path.join(self.cfg_dir, name)
-
-    def load_config_file(self, name, parser = ConfigReader):
-        path = self.config_file(name)
-        return parser(path, parent = self.main_cfg)
+    def read_config(self, name, parser = ConfigReader):
+        filename = os.path.join(self.cfg_dir, name)
+        return parser(filename, parent = self.main_cfg)
 
     def check(self, order):
         return True
