@@ -50,9 +50,6 @@ class Account(object):
         self.key                    = key
         self.lock                   = threading.Lock()
 
-    def __str__(self):
-        return self.name
-
     def __enter__(self):
         self.acquire()
         return self
