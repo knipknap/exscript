@@ -237,7 +237,13 @@ class OrderDB(object):
 
         # Search conditions.
         where = None
-        for field in ('id', 'order_id', 'name', 'status', 'queue'):
+        for field in ('id',
+                      'order_id',
+                      'name',
+                      'status',
+                      'queue',
+                      'opened',
+                      'closed'):
             if field in kwargs:
                 cond = None
                 for value in to_list(kwargs.get(field)):
@@ -456,7 +462,7 @@ class OrderDB(object):
 
     def count_tasks(self, **kwargs):
         """
-        Returns the total number of tasks in the DB.
+        Returns the number of matching tasks in the DB.
 
         @type  kwargs: dict
         @param kwargs: See L{get_tasks()}.
