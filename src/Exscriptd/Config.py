@@ -97,7 +97,8 @@ class Config(ConfigReader):
 
     def get_queues(self):
         names = [e.get('name') for e in self.cfgtree.iterfind('queue')]
-        return [self._init_queue_from_name(name) for name in names]
+        return dict((name, self._init_queue_from_name(name))
+                    for name in names)
 
     def _init_database_from_dbn(self, dbn):
         from sqlalchemy import create_engine

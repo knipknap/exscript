@@ -216,8 +216,11 @@ class OrderDBTest(unittest.TestCase):
         self.db.save_order(order)
 
         task1 = Task(order.id, 'my test task', 'myqueue', testfunc)
+        self.assertEqual(task1.func_name, 'testfunc')
         self.db.save_task(task1)
-        self.assertEqual(task1.id, self.db.get_task().id)
+        loaded_task = self.db.get_task()
+        self.assertEqual(task1.id, loaded_task.id)
+        self.assertEqual(loaded_task.func_name, 'testfunc')
 
         task2 = Task(order.id, 'another test task', 'myqueue', testfunc)
         self.db.save_task(task2)

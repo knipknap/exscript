@@ -22,14 +22,12 @@ from Exscriptd.DBObject import DBObject
 from Exscript.util.event import Event
 
 class Task(DBObject):
-    def __init__(self, order_id, name, queue_name, func = None):
+    def __init__(self, order_id, name, queue_name, func):
         DBObject.__init__(self)
         self.id            = None
         self.order_id      = order_id
         self.name          = name
         self.queue_name    = queue_name
-        self.module_name   = func is not None and func.__module__
-        self.func_name     = func is not None and func.__name__
         self.status        = 'new'
         self.progress      = .0
         self.started       = datetime.utcnow()
@@ -40,6 +38,10 @@ class Task(DBObject):
         self.go_event      = Event()
         self.closed_event  = Event()
         self.changed_event = Event()
+        if hasattr(func, '__call__'):
+            self.func_name = func.__name__
+        else:
+            self.func_name = func
 
     @staticmethod
     def from_etree(task_node):
@@ -133,7 +135,6 @@ class Task(DBObject):
                     logfile   = self.get_logfile(),
                     tracefile = self.get_tracefile(),
                     queue     = self.queue_name,
-                    module    = self.module_name,
                     function  = self.func_name,
                     vars      = self.vars)
 
@@ -298,23 +299,6 @@ class Task(DBObject):
         @return: A filename, or None.
         """
         return self.tracefile
-
-    def run(self, order):
-        """
-        Execute the user-provided function.
-        """
-        module = sys.modules[self.module_name]
-        func   = module[self.func_name]
-
-        self.set_status('in-progress')
-        try:
-            func(order, self)
-        except Exception, e:
-            self.close('internal-error')
-            raise
-        else:
-            if not self.get_closed_timestamp():
-                self.completed()
 
     def set(self, key, value):
         """

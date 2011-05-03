@@ -81,7 +81,6 @@ class OrderDB(object):
             sa.Column('logfile',   sa.String(250)),
             sa.Column('tracefile', sa.String(250)),
             sa.Column('queue',     sa.String(50), index = True),
-            sa.Column('module',    sa.String(250)),
             sa.Column('function',  sa.String(250)),
             sa.Column('vars',      sa.PickleType()),
             sa.ForeignKeyConstraint(['order_id'], [pfx + 'order.id'], ondelete = 'CASCADE'),
@@ -206,21 +205,19 @@ class OrderDB(object):
     def __get_task_from_row(self, row):
         assert row is not None
         tbl_t            = self._table_map['task']
-        task             = Task(row[tbl_t.c.order_id],
-                                row[tbl_t.c.name],
-                                row[tbl_t.c.queue],
-                                None)
-        task.id          = row[tbl_t.c.id]
-        task.status      = row[tbl_t.c.status]
-        task.progress    = row[tbl_t.c.progress]
-        task.started     = row[tbl_t.c.started]
-        task.closed      = row[tbl_t.c.closed]
-        task.logfile     = row[tbl_t.c.logfile]
-        task.tracefile   = row[tbl_t.c.tracefile]
-        task.queue_name  = row[tbl_t.c.queue]
-        task.module_name = row[tbl_t.c.module]
-        task.func_name   = row[tbl_t.c.function]
-        task.vars        = row[tbl_t.c.vars]
+        task            = Task(row[tbl_t.c.order_id],
+                               row[tbl_t.c.name],
+                               row[tbl_t.c.queue],
+                               row[tbl_t.c.function])
+        task.id         = row[tbl_t.c.id]
+        task.status     = row[tbl_t.c.status]
+        task.progress   = row[tbl_t.c.progress]
+        task.started    = row[tbl_t.c.started]
+        task.closed     = row[tbl_t.c.closed]
+        task.logfile    = row[tbl_t.c.logfile]
+        task.tracefile  = row[tbl_t.c.tracefile]
+        task.queue_name = row[tbl_t.c.queue]
+        task.vars       = row[tbl_t.c.vars]
         task.untouch()
         return task
 
