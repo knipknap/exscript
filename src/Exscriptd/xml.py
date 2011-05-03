@@ -262,6 +262,8 @@ def _get_password_from_node(node):
         return None
     thetype  = node.get('type', 'cleartext')
     password = node.text
+    if password is None:
+        return None
     if thetype == 'base64':
         return base64.decodestring(password)
     elif thetype == 'cleartext':
@@ -270,8 +272,9 @@ def _get_password_from_node(node):
         raise ValueError('invalid password type: ' + thetype)
 
 def _add_password_node(parent, password, tag = 'password'):
-    node      = etree.SubElement(parent, tag, type = 'base64')
-    node.text = base64.encodestring(password).strip()
+    node = etree.SubElement(parent, tag, type = 'base64')
+    if password is not None:
+        node.text = base64.encodestring(password).strip()
     return node
 
 def get_account_from_etree(node):
