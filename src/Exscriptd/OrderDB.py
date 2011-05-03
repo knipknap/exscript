@@ -454,20 +454,18 @@ class OrderDB(object):
         order = self.get_order(id = id)
         return order.get_progress()
 
-    def count_tasks(self, order_id = None):
+    def count_tasks(self, **kwargs):
         """
         Returns the total number of tasks in the DB.
 
-        @type  order_id: int
-        @param order_id: The id of an order whose tasks are counted.
+        @type  kwargs: dict
+        @param kwargs: See L{get_tasks()}.
         @rtype:  int
         @return: The number of tasks.
         """
         tbl_t = self._table_map['task']
-        if order_id is not None:
-            query = tbl_t.count(tbl_t.c.order_id == int(order_id))
-        else:
-            query = tbl_t.count()
+        where = self.__get_tasks_cond(**kwargs)
+        query = tbl_t.count(where)
         return query.execute().fetchone()[0]
 
     def get_task(self, **kwargs):
