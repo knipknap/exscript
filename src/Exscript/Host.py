@@ -56,6 +56,12 @@ class Host(object):
         self.tcp_port = None
         self.set_uri(uri) 
 
+    def __copy__(self):
+        host = Host(self.get_uri())
+        host.set_logname(self.get_logname())
+        host.set_name(self.get_name())
+        return host
+
     def set_uri(self, uri):
         """
         Defines the protocol, hostname/address, TCP port number, username,
@@ -110,7 +116,8 @@ class Host(object):
         url.hostname = self.get_address()
         url.port     = self.get_tcp_port()
         url.vars     = dict((k, to_list(v))
-                            for (k, v) in self.get_all().iteritems())
+                            for (k, v) in self.get_all().iteritems()
+                            if isinstance(v, str) or isinstance(v, list))
 
         if self.account:
             url.username  = self.account.get_name()

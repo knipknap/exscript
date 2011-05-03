@@ -89,7 +89,7 @@ class AccountManager(object):
             pipe = manager.create_pipe()
 
             # Let the manager choose an account.
-            pipe.send(('acquire-account-for-host', host.id()))
+            pipe.send(('acquire-account-for-host', host))
             account = pipe.recv()
             ...
             pipe.send(('release-account', account.id()))

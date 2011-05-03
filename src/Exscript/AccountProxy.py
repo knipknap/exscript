@@ -27,7 +27,7 @@ class AccountProxy(object):
         """
         self.parent                 = parent
         self.account_hash           = None
-        self.host_hash              = None
+        self.host                   = None
         self.user                   = None
         self.password               = None
         self.authorization_password = None
@@ -36,7 +36,7 @@ class AccountProxy(object):
     @staticmethod
     def for_host(parent, host):
         account = AccountProxy(parent)
-        account.host_hash = host.__hash__()
+        account.host = host
         account.acquire()
         return account
 
@@ -80,10 +80,13 @@ class AccountProxy(object):
         """
         Locks the account.
         """
-        if self.host_hash:
-            self.parent.send(('acquire-account-for-host', self.host_hash))
-        else:
+        if self.account_hash:
             self.parent.send(('acquire-account', self.account_hash))
+        elif self.host:
+            host = self.host.__copy__()
+            self.parent.send(('acquire-account-for-host', host))
+        else:
+            raise Exception('bug: have neither account nor host')
 
         response = self.parent.recv()
         if isinstance(response, Exception):
