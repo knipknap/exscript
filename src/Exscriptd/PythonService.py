@@ -39,22 +39,23 @@ class PythonService(Service):
         filename = os.path.join(filename, 'service.py')
         with open(filename) as file:
             content = file.read()
-        code                  = compile(content, filename, 'exec')
-        vars                  = {}
-        vars['__builtin__']   = __builtin__
-        vars['__file__']      = filename
-        vars['__service__']   = self
-        vars['__exscriptd__'] = parent
-        vars['__main_cfg__']  = self.main_cfg
+        code                       = compile(content, filename, 'exec')
+        self.vars                  = {}
+        self.vars['__builtin__']   = __builtin__
+        self.vars['__file__']      = filename
+        self.vars['__module__']    = module
+        self.vars['__service__']   = self
+        self.vars['__exscriptd__'] = parent
+        self.vars['__main_cfg__']  = self.main_cfg
 
         # Load the module using evil path manipulation, but oh well...
         # can't think of a sane way to do this.
         sys.path.insert(0, os.path.dirname(filename))
-        result = eval(code, vars)
+        result = eval(code, self.vars)
         sys.path.pop(0)
 
-        self.check_func = vars.get('check')
-        self.enter_func = vars.get('enter')
+        self.check_func = self.vars.get('check')
+        self.enter_func = self.vars.get('enter')
 
         if not self.enter_func:
             msg = filename + ': required function enter() not found.'
@@ -67,3 +68,6 @@ class PythonService(Service):
 
     def enter(self, order):
         return self.enter_func(order)
+
+    def run_function(self, name, *args):
+        return self.vars.get(name)(*args)
