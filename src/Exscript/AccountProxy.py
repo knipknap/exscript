@@ -32,6 +32,7 @@ class AccountProxy(object):
         self.password               = None
         self.authorization_password = None
         self.key                    = None
+        self.thread_local           = False
 
     @staticmethod
     def for_host(parent, host):
@@ -42,10 +43,14 @@ class AccountProxy(object):
 
     @staticmethod
     def for_account(parent, account):
-        account = AccountProxy(parent)
-        account.account_hash = account.__hash__()
-        account.acquire()
-        return account
+        proxy = AccountProxy(parent)
+        proxy.account_hash = account.__hash__()
+        if not proxy.acquire():
+            proxy.user = account.get_name()
+            proxy.password = account.get_password()
+            proxy.authorization_password = account.get_authorization_password()
+            proxy.key = account.get_key()
+        return proxy
 
     @staticmethod
     def for_random_account(parent):
@@ -78,8 +83,11 @@ class AccountProxy(object):
 
     def acquire(self):
         """
-        Locks the account.
+        Locks the account. Returns True on success, False if the account
+        is thread-local and must not be locked.
         """
+        if self.thread_local:
+            return False
         if self.account_hash:
             self.parent.send(('acquire-account', self.account_hash))
         elif self.host:
@@ -91,17 +99,23 @@ class AccountProxy(object):
         response = self.parent.recv()
         if isinstance(response, Exception):
             raise response
+        if response is None:
+            self.thread_local = True
+            return False
 
         self.account_hash, \
         self.user, \
         self.password, \
         self.authorization_password, \
         self.key = response
+        return True
 
     def release(self):
         """
         Unlocks the account.
         """
+        if self.thread_local:
+            return False
         self.parent.send(('release-account', self.account_hash))
 
         response = self.parent.recv()

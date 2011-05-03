@@ -47,6 +47,13 @@ class _AccountManagerChild(threading.Thread):
                 self._send_account(account)
             elif command == 'acquire-account':
                 account = self.manager.get_account_from_hash(arg)
+                if arg is not None and account is None:
+                    # This happens when an account was requested that
+                    # is not known to the account manager. In this case,
+                    # we treat the account as thread-local and let the
+                    # thread use it without any locking.
+                    self.to_child.send(None)
+                    return
                 account = self.manager.acquire_account(account)
                 self._send_account(account)
             elif command == 'release-account':
