@@ -15,12 +15,12 @@ class ConnectionTest(DummyTest):
     CORRELATE = Connection
 
     def createProtocol(self):
-        self.queue    = Queue(verbose = 0)
-        self.host     = Host('dummy://' + self.hostname)
-        pipe          = self.queue.account_manager.create_pipe()
-        self.action   = HostAction(pipe, object, self.host)
-        protocol      = Dummy()
-        self.protocol = Connection(self.action, protocol)
+        self.queue       = Queue(verbose = 0)
+        self.host        = Host('dummy://' + self.hostname)
+        self.action      = HostAction(object, self.host)
+        self.action.accm = self.queue.account_manager.create_pipe()
+        protocol         = Dummy()
+        self.protocol    = Connection(self.action, protocol)
         self.queue.add_account(self.account)
 
     def doConnect(self):

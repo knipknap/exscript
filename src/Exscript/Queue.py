@@ -189,6 +189,9 @@ class Queue(object):
         self._del_status_bar()
         self._print_status_bar()
 
+    def _on_action_started(self, action, conn):
+        action.accm = self.account_manager.create_pipe()
+
     def _on_action_error(self, action, e):
         msg = action.get_name() + ' error: ' + str(e)
         tb  = ''.join(traceback.format_exception(*sys.exc_info()))
@@ -404,6 +407,7 @@ class Queue(object):
         self._dbg(2, 'Enqueing Action.')
         action.set_times(self.times)
         action.set_login_times(self.login_times)
+        action.started_event.listen(self._on_action_started)
         action.error_event.listen(self._on_action_error)
         action.aborted_event.listen(self._on_action_aborted)
         action.succeeded_event.listen(self._on_action_succeeded)
@@ -425,8 +429,7 @@ class Queue(object):
     def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
-        pipe   = self.account_manager.create_pipe()
-        action = HostAction(pipe, function, host, **self.protocol_args)
+        action = HostAction(function, host, **self.protocol_args)
         if self._enqueue1(action, prioritize, force, duplicate_check):
             return action
         return None
@@ -572,8 +575,7 @@ class Queue(object):
 
         self._dbg(2, 'Building CustomAction for Queue.enqueue().')
         task   = Task(self)
-        pipe   = self.account_manager.create_pipe()
-        action = CustomAction(pipe, function, name)
+        action = CustomAction(function, name)
         task.add_action(action)
         self._enqueue1(action, False, False, False)
 

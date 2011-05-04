@@ -25,12 +25,10 @@ class CustomAction(Action):
     An action that calls the associated function and implements retry and
     logging.
     """
-    def __init__(self, accm, function, name):
+    def __init__(self, function, name):
         """
         Constructor.
 
-        @type  accm: multiprocessing.Connection
-        @param accm: A pipe to the associated account manager.
         @type  function: function
         @param function: Called when the action is executed.
         @type  name: str
@@ -41,7 +39,7 @@ class CustomAction(Action):
         self.error_event     = Event()
         self.aborted_event   = Event()
         self.succeeded_event = Event()
-        self.accm            = accm
+        self.accm            = None
         self.function        = function
         self.times           = 1
         self.login_times     = 1
@@ -133,4 +131,5 @@ class CustomAction(Action):
             self.aborted = True
             self.aborted_event(self)
         finally:
-            self.accm.close()
+            if self.accm is not None:
+                self.accm.close()

@@ -28,8 +28,10 @@ class FileLoggerTest(LoggerTest):
         logger = FileLogger(FakeQueue(), self.logdir)
 
     def testActionEnqueued(self):
-        host    = Host('fake')
-        action  = HostAction(object, object, host)
+        host        = Host('fake')
+        action      = HostAction(object, host)
+        action.accm = object
+
         conn    = FakeConnection()
         logfile = os.path.join(self.logdir, 'fake.log')
         errfile = logfile + '.error'

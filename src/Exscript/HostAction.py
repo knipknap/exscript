@@ -22,18 +22,16 @@ class HostAction(CustomAction):
     An action that automatically opens a network connection to a host
     before calling the associated function.
     """
-    def __init__(self, accm, function, host, **conn_args):
+    def __init__(self, function, host, **conn_args):
         """
         Constructor.
 
-        @type  accm: multiprocessing.Connection
-        @param accm: A pipe to the associated account manager.
         @type  function: function
         @param function: Called when the Action is executed.
         @type  conn: Connection
         @param conn: The assoviated connection.
         """
-        CustomAction.__init__(self, accm, function, host.get_address())
+        CustomAction.__init__(self, function, host.get_address())
         self.host      = host
         self.account   = host.get_account()
         self.conn_args = conn_args
