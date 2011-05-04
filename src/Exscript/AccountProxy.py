@@ -71,15 +71,10 @@ class AccountProxy(object):
         """
         When you need a 'with' context for an already-acquired account.
         """
-        old_enter = self.__enter__
-        old_exit  = self.__exit__
-        def exit_context(thetype, value, traceback):
-            self.__enter__ = old_enter
-            self.__exit__  = old_exit
-            self.__exit__(thetype, value, traceback)
-        self.__enter__ = lambda: self
-        self.__exit__  = exit_context
-        return self
+        class Context(object):
+            __enter__ = lambda s: self
+            __exit__  = self.__exit__
+        return Context()
 
     def acquire(self):
         """
