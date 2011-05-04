@@ -48,6 +48,8 @@ functions = {
     'ipv4.mask2pfxlen':          ipv4.mask2pfxlen,
     'ipv4.pfxlen2mask':          ipv4.pfxlen2mask,
     'ipv4.pfxmask':              ipv4.pfxmask,
+    'ipv4.network':              ipv4.network,
+    'ipv4.broadcast':            ipv4.broadcast,
     'ipv4.remote_ip':            ipv4.remote_ip,
     'list.new':                  list.new,
     'list.unique':               list.unique,
