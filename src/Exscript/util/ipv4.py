@@ -140,6 +140,38 @@ def parse_prefix(prefix, default_length = 24):
         pfxlen  = default_length
     return network, int(pfxlen)
 
+def network(prefix, default_length = 24):
+    """
+    Given a prefix, this function returns the corresponding network
+    address.
+
+    @type  prefix: string
+    @param prefix: An IP prefix.
+    @type  default_length: long
+    @param default_length: The default ip prefix length.
+    @rtype:  string
+    @return: The IP network address.
+    """
+    address, pfxlen = parse_prefix(prefix, default_length)
+    ip              = ip2int(address)
+    return int2ip(ip & pfxlen2mask_int(pfxlen))
+
+def broadcast(prefix, default_length = 24):
+    """
+    Given a prefix, this function returns the corresponding broadcast
+    address.
+
+    @type  prefix: string
+    @param prefix: An IP prefix.
+    @type  default_length: long
+    @param default_length: The default ip prefix length.
+    @rtype:  string
+    @return: The IP broadcast address.
+    """
+    address, pfxlen = parse_prefix(prefix, default_length)
+    ip              = ip2int(address)
+    return int2ip(ip | ~pfxlen2mask_int(pfxlen))
+
 def remote_ip(local_ip):
     """
     Given an IP address, this function calculates the remaining available

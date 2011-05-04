@@ -77,6 +77,24 @@ class ipv4Test(unittest.TestCase):
         self.assertEqual(('1.2.3.4', 15), parse_prefix('1.2.3.4/15'))
         self.assertEqual(('1.2.3.4', 15), parse_prefix('1.2.3.4/15', 32))
 
+    def testNetwork(self):
+        from Exscript.util.ipv4 import network
+        self.assertEqual(network('10.0.0.0/30'), '10.0.0.0')
+        self.assertEqual(network('10.0.0.1/30'), '10.0.0.0')
+        self.assertEqual(network('10.0.0.2/30'), '10.0.0.0')
+        self.assertEqual(network('10.0.0.3/30'), '10.0.0.0')
+        self.assertEqual(network('10.0.0.0/24'), '10.0.0.0')
+        self.assertEqual(network('10.0.0.255/24'), '10.0.0.0')
+
+    def testBroadcast(self):
+        from Exscript.util.ipv4 import broadcast
+        self.assertEqual(broadcast('10.0.0.0/30'), '10.0.0.3')
+        self.assertEqual(broadcast('10.0.0.1/30'), '10.0.0.3')
+        self.assertEqual(broadcast('10.0.0.2/30'), '10.0.0.3')
+        self.assertEqual(broadcast('10.0.0.3/30'), '10.0.0.3')
+        self.assertEqual(broadcast('10.0.0.0/24'), '10.0.0.255')
+        self.assertEqual(broadcast('10.0.0.255/24'), '10.0.0.255')
+
     def testRemoteIp(self):
         from Exscript.util.ipv4 import remote_ip
         self.assertEqual(remote_ip('10.0.0.0'), '10.0.0.3')

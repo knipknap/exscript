@@ -85,6 +85,30 @@ def pfxlen2mask(scope, pfxlen):
     return [ipv4.pfxlen2mask(pfx) for pfx in pfxlen]
 
 @secure_function
+def network(scope, prefixes):
+    """
+    Given a prefix, this function returns the corresponding network address.
+
+    @type  prefixes: string
+    @param prefixes: An IP prefix.
+    @rtype:  string
+    @return: The network address(es) of the prefix length(s).
+    """
+    return [ipv4.network(pfx) for pfx in prefixes]
+
+@secure_function
+def broadcast(scope, prefixes):
+    """
+    Given a prefix, this function returns the corresponding broadcast address.
+
+    @type  prefixes: string
+    @param prefixes: An IP prefix.
+    @rtype:  string
+    @return: The broadcast address(es) of the prefix length(s).
+    """
+    return [ipv4.broadcast(pfx) for pfx in prefixes]
+
+@secure_function
 def pfxmask(scope, ips, pfxlen):
     """
     Applies the given prefix length to the given ips, resulting in a
