@@ -29,7 +29,7 @@ class HostAction(CustomAction):
         @type  function: function
         @param function: Called when the Action is executed.
         @type  conn: Connection
-        @param conn: The assoviated connection.
+        @param conn: The associated connection.
         """
         CustomAction.__init__(self, function, host.get_address())
         self.host      = host

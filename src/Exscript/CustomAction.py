@@ -133,3 +133,4 @@ class CustomAction(Action):
         finally:
             if self.accm is not None:
                 self.accm.close()
+                self.accm = None

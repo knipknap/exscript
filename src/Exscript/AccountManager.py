@@ -67,13 +67,16 @@ class _AccountManagerChild(threading.Thread):
             raise
 
     def run(self):
-        while True:
-            r, w, x = select.select([self.to_child], [], [], .2)
-            try:
-                request = self.to_child.recv()
-            except EOFError:
-                break
-            self._handle_request(request)
+        try:
+            while True:
+                r, w, x = select.select([self.to_child], [], [], .2)
+                try:
+                    request = self.to_child.recv()
+                except EOFError:
+                    break
+                self._handle_request(request)
+        finally:
+            self.to_child.close()
 
 class AccountManager(object):
     """
