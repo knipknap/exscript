@@ -55,6 +55,7 @@ class SigIntWatcher(object):
         except KeyboardInterrupt:
             print '********** SIGINT RECEIVED - SHUTTING DOWN! **********'
             self.kill()
+            sys.exit(1)
         sys.exit(status >> 8)
 
     def kill(self):
