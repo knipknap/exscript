@@ -411,6 +411,7 @@ class Queue(object):
         action.error_event.listen(self._on_action_error)
         action.aborted_event.listen(self._on_action_aborted)
         action.succeeded_event.listen(self._on_action_succeeded)
+        action.message_event.listen(self._print)
         self.action_enqueued_event(action)
 
         # Done. Enqueue this.

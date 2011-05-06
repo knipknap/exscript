@@ -25,8 +25,8 @@ def message(scope, string):
     @type  string: string
     @param string: A string, or a list of strings.
     """
-    exscript = scope.get('__connection__').get_queue()
-    exscript._print('debug', string[0] + '\n')
+    action = scope.get('__connection__').action
+    action.message('debug', string[0] + '\n')
     return True
 
 @secure_function

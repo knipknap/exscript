@@ -39,6 +39,7 @@ class CustomAction(Action):
         self.error_event     = Event()
         self.aborted_event   = Event()
         self.succeeded_event = Event()
+        self.message_event   = Event()
         self.accm            = None
         self.function        = function
         self.times           = 1
@@ -62,6 +63,9 @@ class CustomAction(Action):
 
     def get_name(self):
         return self.name
+
+    def message(self, channel, message):
+        self.message_event(channel, message)
 
     def acquire_account(self, account_hash):
         # Specific account requested?
