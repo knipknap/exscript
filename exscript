@@ -179,13 +179,19 @@ def run():
 
     # Read username and password.
     if options.non_interactive or default_pool.n_accounts() > 0:
-        user     = None
-        password = None
+        user      = None
+        password  = None
+        password2 = None
     else:
         try:
             user, password = get_login()
         except KeyboardInterrupt:
             sys.exit(1)
+        if options.authorization:
+            prompt    = 'Please enter your authorization password: '
+            password2 = getpass.getpass(prompt)
+        else:
+            password2 = password
 
     # Read the SSH key.
     if options.ssh_key:
@@ -198,7 +204,7 @@ def run():
 
     # Add the account to the pool.
     if user is not None:
-        account = Account(user, password, key = key)
+        account = Account(user, password, password2, key = key)
         default_pool.add_account(account)
 
     # Ask for values of marked variables.
@@ -375,6 +381,14 @@ parser.add_option('--no-authentication', '-n',
                   default = False,
                   help    = '''
 When given, the automatic authentication procedure is skipped. Implies -i.
+'''.strip())
+
+parser.add_option('--authorization',
+                  dest    = 'authorization',
+                  action  = 'store_true',
+                  default = False,
+                  help    = '''
+Ask for an authorization password in addition to the authentication password.
 '''.strip())
 
 parser.add_option('--no-auto-logout',
