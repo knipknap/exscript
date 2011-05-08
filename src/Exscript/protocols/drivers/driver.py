@@ -91,7 +91,7 @@ class Driver(object):
         pass
 
     def supports_auto_authorize(self):
-        return False
+        return self.__class__.auto_authorize != Driver.auto_authorize
 
     def auto_authorize(self, conn, account, flush, bailout):
         conn.app_authorize(account, flush, bailout)
