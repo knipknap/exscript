@@ -34,12 +34,6 @@ class Action(object):
     def _mainloop_added_notify(self, loop):
         self.__mainloop = loop
 
-    def wait_for(self, actions):
-        self.__mainloop._action_sleep_notify(self)
-        for action in to_list(actions):
-            self.__mainloop.wait_for(action)
-        self.__mainloop._action_wake_notify(self)
-
     def execute(self):
         """
         This method should be overwritten and made to do the actual work.
