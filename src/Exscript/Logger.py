@@ -95,7 +95,8 @@ class Logger(object):
 
     def _on_action_started(self, action, conn):
         log = Log(action.get_name())
-        log.started(conn)
+        log.started()
+        action.log_event.listen(log.write)
         self._add_log(action, log)
 
     def _on_action_error(self, action, e):

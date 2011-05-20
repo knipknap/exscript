@@ -5,8 +5,8 @@ from tempfile            import mkdtemp
 from shutil              import rmtree
 from Exscript.Log        import Log
 from Exscript.Logger     import Logger
-from LogTest             import FakeConnection, FakeError
-from util.reportTest     import FakeQueue, FakeAction
+from LogTest             import FakeError
+from util.reportTest     import FakeQueue, FakeAction, FakeConnection
 from Exscript.util.event import Event
 
 class LoggerTest(unittest.TestCase):

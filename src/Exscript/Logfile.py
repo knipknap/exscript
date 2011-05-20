@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-Represents the logfiles for one specific connection.
+Represents the logfiles for one specific action.
 """
 import os
 import errno
@@ -61,21 +61,19 @@ class Logfile(Log):
             self.do_log = False
             raise
 
-    def _write(self, *data):
+    def write(self, *data):
         return self._write_file(self.filename, *data)
 
     def _write_error(self, *data):
         return self._write_file(self.errorname, *data)
 
-    def started(self, conn):
-        self._write('')  # Creates the file.
-        if conn:
-            conn.data_received_event.listen(self._write)
+    def started(self):
+        self.write('')  # Creates the file.
 
     def error(self, exception):
         self.traceback = self._format_exc(exception)
         self.exception = exception
-        self._write('ERROR:', str(exception), '\n')
+        self.write('ERROR:', str(exception), '\n')
         self._write_error(self._format_exc(exception))
 
     def done(self):

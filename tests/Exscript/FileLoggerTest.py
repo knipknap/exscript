@@ -46,8 +46,8 @@ class FileLoggerTest(LoggerTest):
         content = open(logfile).read()
         self.assertEqual(content, '')
 
-        # Test traffic on the connection.
-        conn.data_received_event('hello world')
+        # Test data logging.
+        action.log_event('hello world')
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
@@ -80,8 +80,8 @@ class FileLoggerTest(LoggerTest):
         content = open(logfile).read()
         self.assertEqual(content, '')
 
-        # Test traffic on the connection.
-        conn.data_received_event('hello world')
+        # Test data logging.
+        action.log_event('hello world')
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()

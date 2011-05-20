@@ -32,7 +32,7 @@ class Log(object):
     def get_name(self):
         return self.name
 
-    def _write(self, *data):
+    def write(self, *data):
         self.data += ' '.join(data)
 
     def get_error(self, include_tb = True):
@@ -42,36 +42,31 @@ class Log(object):
             return str(self.exception)
         return self.exception.__class__.__name__
 
-    def started(self, conn):
+    def started(self):
         """
-        Called by a logger to inform us that a connection has
-        been opened and that logging may now begin.
+        Called by a logger to inform us that logging may now begin.
         """
-        self._write('STARTED\n')
+        self.write('STARTED\n')
         self.did_end = False
-        if conn:
-            conn.data_received_event.listen(self._write)
 
     def _format_exc(self, exception):
         return ''.join(traceback.format_exception(*sys.exc_info()))
 
     def error(self, exception):
         """
-        Called by a logger to inform us that the connection had an
-        error.
+        Called by a logger to log an exception.
         """
         self.traceback = self._format_exc(exception)
         self.exception = exception
-        self._write('ERROR:\n')
-        self._write(self._format_exc(exception))
+        self.write('ERROR:\n')
+        self.write(self._format_exc(exception))
 
     def done(self):
         """
-        Called by a logger to inform us that the connection was now
-        closed.
+        Called by a logger to inform us that logging is complete.
         """
         self.did_end = True
-        self._write('DONE\n')
+        self.write('DONE\n')
 
     def has_error(self):
         return self.exception is not None

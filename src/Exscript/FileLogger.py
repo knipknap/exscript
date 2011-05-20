@@ -46,7 +46,8 @@ class FileLogger(Logger):
             filename = os.path.join(self.logdir, action.get_logname())
         name = action.get_name()
         log  = Logfile(name, filename, self.mode, self.delete)
-        log.started(conn)
+        log.started()
+        action.log_event.listen(log.write)
         self._add_log(action, log)
 
     def _on_action_done(self, action):

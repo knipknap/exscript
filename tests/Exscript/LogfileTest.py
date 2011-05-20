@@ -3,7 +3,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from tempfile         import mkdtemp
 from shutil           import rmtree
-from LogTest          import LogTest, FakeConnection
+from LogTest          import LogTest
 from Exscript.Logfile import Logfile
 
 class LogfileTest(LogTest):
@@ -25,7 +25,7 @@ class LogfileTest(LogTest):
         self.failIf(os.path.exists(self.errorfile))
 
     def testStarted(self):
-        self.log.started(FakeConnection())
+        self.log.started()
         self.assertEqual('', str(self.log))
         self.assert_(os.path.exists(self.logfile))
         self.failIf(os.path.exists(self.errorfile))

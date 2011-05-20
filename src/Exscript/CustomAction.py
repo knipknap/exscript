@@ -40,6 +40,7 @@ class CustomAction(Action):
         self.aborted_event   = Event()
         self.succeeded_event = Event()
         self.message_event   = Event()
+        self.log_event       = Event()
         self.accm            = None
         self.function        = function
         self.times           = 1

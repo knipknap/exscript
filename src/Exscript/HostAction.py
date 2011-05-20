@@ -70,7 +70,9 @@ class HostAction(CustomAction):
             filename = self.host.get_address()
             protocol.device.add_commands_from_file(filename)
 
-        return Connection(self, protocol)
+        conn = Connection(self, protocol)
+        conn.data_received_event.listen(self.log_event)
+        return conn
 
     def _call_function(self, conn):
         return self.function(conn)

@@ -15,6 +15,7 @@ class FakeAction(object):
 
     def __init__(self, name = 'fake'):
         self.name            = name
+        self.log_event       = Event()
         self.started_event   = Event()
         self.error_event     = Event()
         self.aborted_event   = Event()
@@ -57,7 +58,7 @@ class reportTest(unittest.TestCase):
         conn            = FakeConnection(name)
         self.logger._action_enqueued(action)
         action.started_event(action, conn)
-        conn.data_received_event('hello world')
+        action.log_event('hello world')
         return action
 
     def createErrorLog(self):
@@ -111,7 +112,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 66, in createErrorLog
+  File "%s.py", line 67, in createErrorLog
     raise FakeError()
 FakeError
 
