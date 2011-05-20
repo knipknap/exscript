@@ -64,12 +64,14 @@ class MainLoop(threading.Thread):
             self.max_threads = int(max_threads)
             self.condition.notify_all()
 
-    def enqueue(self, action):
+    def enqueue(self, action, times):
+        action.times = times
         with self.condition:
             self.queue.append(action)
             self.condition.notify_all()
 
-    def enqueue_or_ignore(self, action):
+    def enqueue_or_ignore(self, action, times):
+        action.times = times
         with self.condition:
             if not self.get_first_action_from_name(action.name):
                 self.queue.append(action)
@@ -79,7 +81,8 @@ class MainLoop(threading.Thread):
             self.condition.notify_all()
         return enqueued
 
-    def priority_enqueue(self, action, force_start = False):
+    def priority_enqueue(self, action, force_start, times):
+        action.times = times
         with self.condition:
             if force_start:
                 self.force_start.append(action)
@@ -87,7 +90,8 @@ class MainLoop(threading.Thread):
                 self.queue.appendleft(action)
             self.condition.notify_all()
 
-    def priority_enqueue_or_raise(self, action, force_start = False):
+    def priority_enqueue_or_raise(self, action, force_start, times):
+        action.times = times
         with self.condition:
             # If the action is already running (or about to be forced),
             # there is nothing to be done.

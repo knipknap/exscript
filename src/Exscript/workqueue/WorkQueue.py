@@ -86,32 +86,39 @@ class WorkQueue(object):
         self.max_threads = max_threads
         self.main_loop.set_max_threads(max_threads)
 
-    def enqueue(self, action):
+    def enqueue(self, action, times = 1):
         """
-        Appends an action to the queue for execution.
+        Appends an action to the queue for execution. The times argument
+        specifies the number of attempts if the execution of the action
+        raises an exception.
 
         @type  action: Action
         @param action: The action that is executed.
+        @type  times: int
+        @param times: The maximum number of times the action is attempted.
         """
         self._check_if_ready()
-        self.main_loop.enqueue(action)
+        self.main_loop.enqueue(action, times)
 
-    def enqueue_or_ignore(self, action):
+    def enqueue_or_ignore(self, action, times = 1):
         """
         Like enqueue(), but does nothing if an action with the same name
         is already in the queue.
 
         @type  action: Action
         @param action: The action that is executed.
+        @type  times: int
+        @param times: The maximum number of times the action is attempted.
         @rtype:  bool
         @return: True if the action was enqueued, False otherwise.
         """
         self._check_if_ready()
-        return self.main_loop.enqueue_or_ignore(action)
+        return self.main_loop.enqueue_or_ignore(action, times)
 
-    def priority_enqueue(self, action, force_start = False):
+    def priority_enqueue(self, action, force_start = False, times = 1):
         """
-        Add the given action at the top of the queue.
+        Like L{enqueue()}, but adds the given action at the top of the
+        queue.
         If force_start is True, the action is immediately started even when 
         the maximum number of concurrent threads is already reached.
 
@@ -119,11 +126,16 @@ class WorkQueue(object):
         @param action: The action that is executed.
         @type  force_start: bool
         @param force_start: Whether to start execution immediately.
+        @type  times: int
+        @param times: The maximum number of times the action is attempted.
         """
         self._check_if_ready()
-        self.main_loop.priority_enqueue(action, force_start)
+        self.main_loop.priority_enqueue(action, force_start, times)
 
-    def priority_enqueue_or_raise(self, action, force_start = False):
+    def priority_enqueue_or_raise(self,
+                                  action,
+                                  force_start = False,
+                                  times       = 1):
         """
         Like priority_enqueue(), but if an action with the same name is
         already in the queue, the existing action is moved to the top of
@@ -131,11 +143,15 @@ class WorkQueue(object):
 
         @type  action: Action
         @param action: The action that is executed.
+        @type  times: int
+        @param times: The maximum number of times the action is attempted.
         @rtype:  bool
         @return: True if the action was enqueued, False otherwise.
         """
         self._check_if_ready()
-        return self.main_loop.priority_enqueue_or_raise(action, force_start)
+        return self.main_loop.priority_enqueue_or_raise(action,
+                                                        force_start,
+                                                        times)
 
     def unpause(self):
         """

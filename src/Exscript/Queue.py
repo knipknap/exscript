@@ -407,7 +407,6 @@ class Queue(object):
         Returns True if the action was enqueued, False otherwise.
         """
         self._dbg(2, 'Enqueing Action.')
-        action.set_times(self.times)
         action.set_login_times(self.login_times)
         action.started_event.listen(self._on_action_started)
         action.error_event.listen(self._on_action_error)
@@ -419,14 +418,16 @@ class Queue(object):
         # Done. Enqueue this.
         if duplicate_check:
             if prioritize:
-                return self.workqueue.priority_enqueue_or_raise(action, force)
+                return self.workqueue.priority_enqueue_or_raise(action,
+                                                                force,
+                                                                self.times)
             else:
-                return self.workqueue.enqueue_or_ignore(action)
+                return self.workqueue.enqueue_or_ignore(action, self.times)
 
         if prioritize:
-            self.workqueue.priority_enqueue(action, force)
+            self.workqueue.priority_enqueue(action, force, self.times)
         else:
-            self.workqueue.enqueue(action)
+            self.workqueue.enqueue(action, self.times)
         return True
 
     def _run1(self, host, function, prioritize, force, duplicate_check):

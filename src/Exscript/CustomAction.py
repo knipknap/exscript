@@ -80,9 +80,6 @@ class CustomAction(Action):
             logname += '_retry%d' % retries
         return logname + '.log'
 
-    def set_times(self, times):
-        self.times = int(times)
-
     def set_login_times(self, times):
         """
         The number of login attempts.

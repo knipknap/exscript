@@ -23,18 +23,13 @@ def fail_calls(conn, data, exception):
 class HostActionTest(unittest.TestCase):
     CORRELATE = HostAction
 
-    def onFailActionError(self, action, e):
-        self.failed = e
-
     def setUp(self):
         self.data         = {'n_calls': 0}
         self.count_cb     = bind(count_calls, self.data)
-        self.fail_cb      = bind(fail_calls,  self.data, IntentionalError)
+        self.fail_cb      = bind(fail_calls, self.data)
         self.queue        = Queue()
         self.count_action = HostAction(self.count_cb, FakeHost())
         self.fail_action  = HostAction(self.fail_cb, FakeHost())
-        self.failed       = False
-        self.fail_action.error_event.connect(self.onFailActionError)
 
     def tearDown(self):
         self.queue.destroy()
@@ -70,18 +65,6 @@ class HostActionTest(unittest.TestCase):
         action.execute()
         self.assertEqual(data.get('account').__hash__(), account.__hash__())
 
-    def testSetTimes(self):
-        # Run once.
-        self.fail_action.execute()
-        self.assert_(isinstance(self.failed, IntentionalError))
-        self.assertEqual(1, self.data['n_calls'])
-
-        # Run four more times.
-        self.fail_action.set_times(4)
-        self.fail_action.execute()
-        self.assert_(isinstance(self.failed, IntentionalError))
-        self.assertEqual(4, self.data['n_calls'])
-
     def testSetLoginTimes(self):
         # Run once.
         data     = {'n_calls' : 0}
@@ -98,7 +81,6 @@ class HostActionTest(unittest.TestCase):
         data     = {'n_calls' : 0}
         callback = bind(fail_calls, data, LoginFailure)
         action   = HostAction(callback, FakeHost())
-        action.set_times(10)
         action.set_login_times(3)
         action.execute()
         self.assertEqual(3, data['n_calls'])
@@ -108,7 +90,6 @@ class HostActionTest(unittest.TestCase):
         data     = {'n_calls' : 0}
         callback = bind(fail_calls, data, LoginFailure)
         action   = HostAction(callback, FakeHost())
-        action.set_times(1)
         action.set_login_times(3)
         action.execute()
         self.assertEqual(3, data['n_calls'])
