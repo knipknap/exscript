@@ -18,14 +18,16 @@ class FileLoggerTest(LoggerTest):
     def setUp(self):
         self.tempdir = mkdtemp()
         self.logdir  = os.path.join(self.tempdir, 'non-existent')
-        self.logger  = FileLogger(FakeQueue(), self.logdir, clearmem = False)
+        self.queue   = FakeQueue()
+        self.logger  = FileLogger(self.queue, self.logdir, clearmem = False)
 
     def tearDown(self):
+        LoggerTest.tearDown(self)
         rmtree(self.tempdir)
 
     def testConstructor(self):
         self.assert_(os.path.isdir(self.tempdir))
-        logger = FileLogger(FakeQueue(), self.logdir)
+        logger = FileLogger(self.queue, self.logdir)
 
     def testActionEnqueued(self):
         host        = Host('fake')

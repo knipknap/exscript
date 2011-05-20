@@ -13,7 +13,12 @@ class LoggerTest(unittest.TestCase):
     CORRELATE = Logger
 
     def setUp(self):
-        self.logger = Logger(FakeQueue())
+        self.queue  = FakeQueue()
+        self.logger = Logger(self.queue)
+
+    def tearDown(self):
+        # Needed to make sure that events are disconnected.
+        self.logger = None
 
     def testConstructor(self):
         logger = Logger(FakeQueue())
