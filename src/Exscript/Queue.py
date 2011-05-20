@@ -88,6 +88,7 @@ class Queue(object):
         # Define events.
         self.queue_empty_event     = Event()
         self.action_enqueued_event = Event()
+        self.action_started_event  = Event()
 
         # Enable logging.
         if kwargs.get('logdir'):
@@ -183,6 +184,7 @@ class Queue(object):
     def _on_job_started(self, action):
         self._del_status_bar()
         self._print_status_bar()
+        self.action_started_event(action)
 
     def _on_job_succeeded(self, action):
         self._dbg(2, action.name + ' job is done.')

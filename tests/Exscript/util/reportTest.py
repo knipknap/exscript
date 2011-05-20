@@ -7,6 +7,7 @@ from Exscript.Logger     import Logger
 from Exscript.util.event import Event
 
 class FakeQueue(object):
+    action_started_event  = Event()
     action_enqueued_event = Event()
 
 class FakeAction(object):
