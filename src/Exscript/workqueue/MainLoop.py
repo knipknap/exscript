@@ -64,17 +64,21 @@ class MainLoop(threading.Thread):
             self.max_threads = int(max_threads)
             self.condition.notify_all()
 
+    def _create_job(self, action, times):
+        return Job(self.condition, action, action.name)
+
     def enqueue(self, action, times):
         action.times = times
         with self.condition:
-            self.queue.append(action)
+            self.queue.append(self._create_job(action, times))
             self.condition.notify_all()
 
     def enqueue_or_ignore(self, action, times):
         action.times = times
         with self.condition:
-            if not self.get_first_action_from_name(action.name):
-                self.queue.append(action)
+            if self.get_first_job_from_name(action.name) is None:
+                job = self._create_job(action, times)
+                self.queue.append(job)
                 enqueued = True
             else:
                 enqueued = False
@@ -84,10 +88,11 @@ class MainLoop(threading.Thread):
     def priority_enqueue(self, action, force_start, times):
         action.times = times
         with self.condition:
+            job = self._create_job(action, times)
             if force_start:
-                self.force_start.append(action)
+                self.force_start.append(job)
             else:
-                self.queue.appendleft(action)
+                self.queue.appendleft(job)
             self.condition.notify_all()
 
     def priority_enqueue_or_raise(self, action, force_start, times):
@@ -95,28 +100,28 @@ class MainLoop(threading.Thread):
         with self.condition:
             # If the action is already running (or about to be forced),
             # there is nothing to be done.
-            running_actions = self.get_running_actions()
-            for queue_action in chain(self.force_start, running_actions):
-                if queue_action.name == action.name:
+            for job in chain(self.force_start, self.running_jobs):
+                if job.name == action.name:
                     self.condition.notify_all()
                     return False
 
             # If the action is already in the queue, remove it so it can be
             # re-added later.
             existing = None
-            for queue_action in self.queue:
-                if queue_action.name == action.name:
-                    existing = queue_action
+            for job in self.queue:
+                if job.name == action.name:
+                    existing = job
                     break
             if existing:
                 self.queue.remove(existing)
-                action = existing
+                action = existing.action
 
             # Now add the action to the queue.
+            job = self._create_job(action, times)
             if force_start:
-                self.force_start.append(action)
+                self.force_start.append(job)
             else:
-                self.queue.appendleft(action)
+                self.queue.appendleft(job)
 
             self.condition.notify_all()
         return existing is None
@@ -135,12 +140,9 @@ class MainLoop(threading.Thread):
         return self.paused
 
     def _get_action_from_hash(self, thehash):
-        for action in chain(self.queue, self.force_start):
-            if action.__hash__() == thehash:
-                return action
-        for action in self.get_running_actions():
-            if action.__hash__() == thehash:
-                return action
+        for job in chain(self.queue, self.force_start, self.running_jobs):
+            if job.action.__hash__() == thehash:
+                return job.action
         return None
 
     def wait_for(self, action):
@@ -171,12 +173,11 @@ class MainLoop(threading.Thread):
             self.condition.notify_all()
         for job in self.running_jobs:
             job.join()
-            self._dbg(1, 'Job "%s" finished' % job.getName())
+            self._dbg(1, 'Job "%s" finished' % job.name)
 
     def in_queue(self, action):
-        return action in self.queue \
-            or action in self.force_start \
-            or self.in_progress(action)
+        jobs = chain(self.queue, self.force_start, self.running_jobs)
+        return action in [j.action for j in jobs]
 
     def in_progress(self, action):
         return action in self.get_running_actions()
@@ -185,31 +186,42 @@ class MainLoop(threading.Thread):
         return [job.action for job in self.running_jobs]
 
     def get_queue_length(self):
-        #print "Queue length:", len(self.queue)
         return len(self.queue) \
              + len(self.force_start) \
              + len(self.running_jobs)
 
     def get_actions_from_name(self, name):
-        actions = self.queue + self.force_start + self.running_jobs
-        map     = defaultdict(list)
+        map = defaultdict(list)
         for action in self.get_running_actions():
             map[action.get_name()].append(action)
         return map[name]
 
-    def get_first_action_from_name(self, action_name):
-        for action in chain(self.queue, self.force_start, self.running_jobs):
-            if action.name == action_name:
-                return action
+    def get_first_job_from_name(self, job_name):
+        if job_name is None:
+            return None
+        for job in chain(self.queue, self.force_start, self.running_jobs):
+            if job.name == job_name:
+                return job
         return None
+
+    def _restart_job(self, job):
+        job = copy(job)
+        self.running_jobs.append(job)
+        job.start()
+
+    def _start_job(self, job):
+        self.running_jobs.append(job)
+        self.job_started_event(job.action)
+        job.start()
+        self._dbg(1, 'Job "%s" started.' % job.name)
 
     def _start_action(self, action):
         action.debug = self.debug
-        job          = Job(self.condition, action, action.name)
+        job          = self._create_job(action)
         self.running_jobs.append(job)
         self.job_started_event(action)
         job.start()
-        self._dbg(1, 'Job "%s" started.' % job.getName())
+        self._dbg(1, 'Job "%s" started.' % job.name)
 
     def _on_job_completed(self, job):
         if job.exception:
@@ -246,8 +258,8 @@ class MainLoop(threading.Thread):
                 self.queue_empty_event()
 
             # If there are any actions to be force_started, run them now.
-            for action in self.force_start:
-                self._start_action(action)
+            for job in self.force_start:
+                self._start_job(job)
             self.force_start = []
             self.condition.notify_all()
 
@@ -263,8 +275,8 @@ class MainLoop(threading.Thread):
                 continue
 
             # Take the next action and start it in a new thread.
-            action = self.queue.popleft()
-            self._start_action(action)
+            job = self.queue.popleft()
+            self._start_job(job)
             self.condition.release()
 
             if len(self.queue) <= 0:

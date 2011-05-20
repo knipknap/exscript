@@ -61,10 +61,12 @@ class WorkQueueTest(unittest.TestCase):
 
     def testEnqueueOrIgnore(self):
         self.assertEqual(0, self.wq.get_length())
-        self.wq.enqueue_or_ignore(Action())
+        self.wq.enqueue_or_ignore(Action(name = 'one'))
         self.assertEqual(1, self.wq.get_length())
-        self.wq.enqueue_or_ignore(Action())
-        self.assertEqual(1, self.wq.get_length())
+        self.wq.enqueue_or_ignore(Action(name = 'two'))
+        self.assertEqual(2, self.wq.get_length())
+        self.wq.enqueue_or_ignore(Action(name = 'one'))
+        self.assertEqual(2, self.wq.get_length())
         self.wq.shutdown(True)
         self.assertEqual(0, self.wq.get_length())
 
