@@ -205,16 +205,16 @@ class MainLoop(threading.Thread):
         self.running_jobs.append(job)
         job.start()
         self._dbg(1, 'Job "%s" started.' % job.getName())
-        self.job_started_event(job)
+        self.job_started_event(action)
 
     def _on_job_completed(self, job):
         if job.exception:
             self._dbg(1, 'Job "%s" aborted.' % job.getName())
-            self.job_aborted_event(job, job.exception)
+            self.job_aborted_event(job.action, job.exception)
         else:
             self._dbg(1, 'Job "%s" succeeded.' % job.getName())
-            self.job_succeeded_event(job)
-        self.job_completed_event(job)
+            self.job_succeeded_event(job.action)
+        self.job_completed_event(job.action)
 
     def _update_running_jobs(self):
         # Update the list of running jobs.

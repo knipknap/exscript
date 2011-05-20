@@ -180,12 +180,12 @@ class Queue(object):
             return
         self._print('debug', msg)
 
-    def _on_job_started(self, job):
+    def _on_job_started(self, action):
         self._del_status_bar()
         self._print_status_bar()
 
-    def _on_job_succeeded(self, job):
-        self._dbg(2, job.getName() + ' job is done.')
+    def _on_job_succeeded(self, action):
+        self._dbg(2, action.name + ' job is done.')
         self._del_status_bar()
         self._print_status_bar()
 
@@ -209,7 +209,7 @@ class Queue(object):
         self.completed += 1
         self._print('status_bar', action.get_name() + ' succeeded.')
 
-    def _on_job_aborted(self, job, e):
+    def _on_job_aborted(self, action, e):
         """
         Should, in theory, never be called, as HostAction never raises.
         In other words, the workqueue does not notice if the action fails.
