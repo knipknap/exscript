@@ -1,7 +1,7 @@
 import sys, unittest, re, os.path, threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from Exscript.workqueue import Job, Action, MainLoop
+from Exscript.workqueue import MainLoop
 from ActionTest         import TestAction
 
 class MainLoopTest(unittest.TestCase):
