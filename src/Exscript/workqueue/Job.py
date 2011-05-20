@@ -15,15 +15,13 @@
 import threading
 
 class Job(threading.Thread):
-    def __init__(self, condition, action, name, **kwargs):
+    def __init__(self, condition, action, name):
         threading.Thread.__init__(self)
-        self.condition    = condition
-        self.action       = action
-        self.debug        = kwargs.get('debug', 0)
-        self.action.debug = self.debug
-        self.exception    = None
-        self.completed    = False
-        self.name         = name
+        self.condition = condition
+        self.action    = action
+        self.exception = None
+        self.completed = False
+        self.name      = name
 
     def _completed(self, exception = None):
         with self.condition:
@@ -36,8 +34,6 @@ class Job(threading.Thread):
         Start the actions that are associated with the thread.
         """
         self.exception = None
-        if self.debug:
-            print "Job running: %s" % self.getName()
         try:
             self.action.execute()
         except Exception, e:

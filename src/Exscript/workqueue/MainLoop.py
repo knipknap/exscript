@@ -200,7 +200,8 @@ class MainLoop(threading.Thread):
         return None
 
     def _start_action(self, action):
-        job = Job(self.condition, action, action.name, debug = self.debug)
+        action.debug = self.debug
+        job          = Job(self.condition, action, action.name)
         self.running_jobs.append(job)
         job.start()
         self._dbg(1, 'Job "%s" started.' % job.getName())
