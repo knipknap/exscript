@@ -27,12 +27,8 @@ class Action(object):
         @keyword debug: The debug level (default is 0)
         @keyword name: A human readable name for the action (string).
         """
-        self.debug      = kwargs.get('debug', 0)
-        self.name       = kwargs.get('name',  None)
-        self.__mainloop = None
-
-    def _mainloop_added_notify(self, loop):
-        self.__mainloop = loop
+        self.debug = kwargs.get('debug', 0)
+        self.name  = kwargs.get('name',  None)
 
     def execute(self):
         """

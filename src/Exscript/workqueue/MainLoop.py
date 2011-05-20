@@ -65,13 +65,11 @@ class MainLoop(threading.Thread):
             self.condition.notify_all()
 
     def enqueue(self, action):
-        action._mainloop_added_notify(self)
         with self.condition:
             self.queue.append(action)
             self.condition.notify_all()
 
     def enqueue_or_ignore(self, action):
-        action._mainloop_added_notify(self)
         with self.condition:
             if not self.get_first_action_from_name(action.name):
                 self.queue.append(action)
@@ -82,7 +80,6 @@ class MainLoop(threading.Thread):
         return enqueued
 
     def priority_enqueue(self, action, force_start = False):
-        action._mainloop_added_notify(self)
         with self.condition:
             if force_start:
                 self.force_start.append(action)
@@ -110,8 +107,6 @@ class MainLoop(threading.Thread):
             if existing:
                 self.queue.remove(existing)
                 action = existing
-            else:
-                action._mainloop_added_notify(self)
 
             # Now add the action to the queue.
             if force_start:
