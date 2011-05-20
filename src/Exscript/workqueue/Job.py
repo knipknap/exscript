@@ -15,7 +15,7 @@
 import threading
 
 class Job(threading.Thread):
-    def __init__(self, condition, action, **kwargs):
+    def __init__(self, condition, action, name, **kwargs):
         threading.Thread.__init__(self)
         self.condition    = condition
         self.action       = action
@@ -23,7 +23,7 @@ class Job(threading.Thread):
         self.action.debug = self.debug
         self.exception    = None
         self.completed    = False
-        self.setName(self.action.name)
+        self.name         = name
 
     def _completed(self, exception = None):
         with self.condition:

@@ -14,12 +14,12 @@ class JobTest(unittest.TestCase):
         self.action    = TestAction(self.lock, self.data)
 
     def testConstructor(self):
-        job = Job.Job(self.condition, self.action, debug = 1)
+        job = Job.Job(self.condition, self.action, 'myaction', debug = 1)
         self.assertEqual(1,           job.debug)
         self.assertEqual(self.action, job.action)
 
     def testRun(self):
-        job = Job.Job(self.condition, self.action)
+        job = Job.Job(self.condition, self.action, 'myaction')
         job.start()
         while job.isAlive():
             pass
