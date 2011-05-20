@@ -112,8 +112,8 @@ class CustomAction(Action):
         try:
             while self.failures < self.times \
               and self.login_failures < self.login_times:
+                self.started_event(self)
                 conn = self._create_connection()
-                self.started_event(self, conn)
 
                 # Execute the user-provided function.
                 try:

@@ -38,7 +38,7 @@ class FileLogger(Logger):
         if not os.path.exists(self.logdir):
             os.mkdir(self.logdir)
 
-    def _on_action_started(self, action, conn):
+    def _on_action_started(self, action):
         logname = action.get_logname()
         if logname.startswith('/'):
             filename = logname

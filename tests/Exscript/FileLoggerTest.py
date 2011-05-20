@@ -7,7 +7,7 @@ from Exscript            import Host
 from Exscript.HostAction import HostAction
 from Exscript.FileLogger import FileLogger
 from util.reportTest     import FakeQueue
-from LoggerTest          import LoggerTest, FakeConnection
+from LoggerTest          import LoggerTest
 
 class FakeError(Exception):
     pass
@@ -40,7 +40,7 @@ class FileLoggerTest(LoggerTest):
         self.failIf(os.path.exists(errfile))
 
         # Test "started".
-        action.started_event(action, conn)
+        action.started_event(action)
         self.assert_(os.path.isfile(logfile), 'No such file: ' + logfile)
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
@@ -74,7 +74,7 @@ class FileLoggerTest(LoggerTest):
         errfile         = logfile + '.error'
         self.failIf(os.path.exists(logfile))
         self.failIf(os.path.exists(errfile))
-        action.started_event(action, conn)
+        action.started_event(action)
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()

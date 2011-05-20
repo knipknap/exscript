@@ -6,7 +6,7 @@ from shutil              import rmtree
 from Exscript.Log        import Log
 from Exscript.Logger     import Logger
 from LogTest             import FakeError
-from util.reportTest     import FakeQueue, FakeAction, FakeConnection
+from util.reportTest     import FakeQueue, FakeAction
 from Exscript.util.event import Event
 
 class LoggerTest(unittest.TestCase):
@@ -22,14 +22,13 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(self.logger.get_logged_actions(), [])
 
         action = FakeAction()
-        conn   = FakeConnection()
         self.logger._action_enqueued(action)
         self.assertEqual(self.logger.get_logged_actions(), [])
 
-        action.started_event(action, conn)
+        action.started_event(action)
         self.assertEqual(self.logger.get_logged_actions(), [action])
 
-        conn.data_received_event('hello world')
+        action.log_event('hello world')
         self.assertEqual(self.logger.get_logged_actions(), [action])
 
         action.succeeded_event(action)
@@ -40,13 +39,12 @@ class LoggerTest(unittest.TestCase):
 
         action1 = FakeAction()
         action2 = FakeAction()
-        conn    = FakeConnection()
         self.logger._action_enqueued(action1)
         self.logger._action_enqueued(action2)
         self.assertEqual(self.logger.get_successful_actions(), [])
 
-        action1.started_event(action1, conn)
-        action2.started_event(action2, conn)
+        action1.started_event(action1)
+        action2.started_event(action2)
         self.assertEqual(self.logger.get_successful_actions(), [])
 
         action2.succeeded_event(action1)
@@ -65,11 +63,10 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(self.logger.get_error_actions(), [])
 
         action = FakeAction()
-        conn   = FakeConnection()
         self.logger._action_enqueued(action)
         self.assertEqual(self.logger.get_error_actions(), [])
 
-        action.started_event(action, conn)
+        action.started_event(action)
         self.assertEqual(self.logger.get_error_actions(), [])
 
         action.succeeded_event(action)
@@ -87,11 +84,10 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(self.logger.get_aborted_actions(), [])
 
         action = FakeAction()
-        conn   = FakeConnection()
         self.logger._action_enqueued(action)
         self.assertEqual(self.logger.get_aborted_actions(), [])
 
-        action.started_event(action, conn)
+        action.started_event(action)
         self.assertEqual(self.logger.get_aborted_actions(), [])
 
         action.succeeded_event(action)
@@ -110,17 +106,16 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(self.logger.get_logs(), {})
 
         action = FakeAction()
-        conn   = FakeConnection()
         self.logger._action_enqueued(action)
         self.assertEqual(self.logger.get_logs(), {})
         self.assertEqual(self.logger.get_logs(action), [])
 
-        action.started_event(action, conn)
+        action.started_event(action)
         self.assertEqual(len(self.logger.get_logs()), 1)
         self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
         self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
 
-        conn.data_received_event('hello world')
+        action.log_event('hello world')
         self.assertEqual(len(self.logger.get_logs()), 1)
         self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
         self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
@@ -132,7 +127,6 @@ class LoggerTest(unittest.TestCase):
 
     def testActionEnqueued(self):
         action = FakeAction()
-        conn   = FakeConnection()
         self.logger._action_enqueued(action)
 
 def suite():

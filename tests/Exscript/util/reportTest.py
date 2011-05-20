@@ -33,14 +33,6 @@ class FakeAction(object):
     def has_aborted(self):
         return self.aborted
 
-class FakeConnection(object):
-    def __init__(self, name = 'fake'):
-        self.name                = name
-        self.data_received_event = Event()
-
-    def get_host(self):
-        return Host(self.name)
-
 class FakeError(Exception):
     pass
 
@@ -55,9 +47,8 @@ class reportTest(unittest.TestCase):
         self.n_actions += 1
         name            = 'fake' + str(self.n_actions)
         action          = FakeAction(name)
-        conn            = FakeConnection(name)
         self.logger._action_enqueued(action)
-        action.started_event(action, conn)
+        action.started_event(action)
         action.log_event('hello world')
         return action
 
@@ -112,7 +103,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 67, in createErrorLog
+  File "%s.py", line 58, in createErrorLog
     raise FakeError()
 FakeError
 

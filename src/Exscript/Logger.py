@@ -93,7 +93,7 @@ class Logger(object):
         if action in self.done:
             self.done.remove(action)
 
-    def _on_action_started(self, action, conn):
+    def _on_action_started(self, action):
         log = Log(action.get_name())
         log.started()
         action.log_event.listen(log.write)
