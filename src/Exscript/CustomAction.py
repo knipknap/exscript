@@ -35,7 +35,6 @@ class CustomAction(Action):
         @param name: A name for the action.
         """
         Action.__init__(self)
-        self.started_event   = Event()
         self.error_event     = Event()
         self.aborted_event   = Event()
         self.succeeded_event = Event()
@@ -112,7 +111,6 @@ class CustomAction(Action):
         try:
             while self.failures < self.times \
               and self.login_failures < self.login_times:
-                self.started_event(self)
                 conn = self._create_connection()
 
                 # Execute the user-provided function.

@@ -17,7 +17,6 @@ class FakeAction(object):
     def __init__(self, name = 'fake'):
         self.name            = name
         self.log_event       = Event()
-        self.started_event   = Event()
         self.error_event     = Event()
         self.aborted_event   = Event()
         self.succeeded_event = Event()
@@ -49,7 +48,7 @@ class reportTest(unittest.TestCase):
         name            = 'fake' + str(self.n_actions)
         action          = FakeAction(name)
         self.logger._on_action_enqueued(action)
-        action.started_event(action)
+        self.logger._on_action_started(action)
         action.log_event('hello world')
         return action
 

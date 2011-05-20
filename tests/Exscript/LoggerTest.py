@@ -30,7 +30,7 @@ class LoggerTest(unittest.TestCase):
         self.logger._on_action_enqueued(action)
         self.assertEqual(self.logger.get_logged_actions(), [])
 
-        action.started_event(action)
+        self.queue.action_started_event(action)
         self.assertEqual(self.logger.get_logged_actions(), [action])
 
         action.log_event('hello world')
@@ -48,8 +48,8 @@ class LoggerTest(unittest.TestCase):
         self.logger._on_action_enqueued(action2)
         self.assertEqual(self.logger.get_successful_actions(), [])
 
-        action1.started_event(action1)
-        action2.started_event(action2)
+        self.queue.action_started_event(action1)
+        self.queue.action_started_event(action2)
         self.assertEqual(self.logger.get_successful_actions(), [])
 
         action2.succeeded_event(action1)
@@ -71,7 +71,7 @@ class LoggerTest(unittest.TestCase):
         self.logger._on_action_enqueued(action)
         self.assertEqual(self.logger.get_error_actions(), [])
 
-        action.started_event(action)
+        self.queue.action_started_event(action)
         self.assertEqual(self.logger.get_error_actions(), [])
 
         action.succeeded_event(action)
@@ -92,7 +92,7 @@ class LoggerTest(unittest.TestCase):
         self.logger._on_action_enqueued(action)
         self.assertEqual(self.logger.get_aborted_actions(), [])
 
-        action.started_event(action)
+        self.queue.action_started_event(action)
         self.assertEqual(self.logger.get_aborted_actions(), [])
 
         action.succeeded_event(action)
@@ -115,7 +115,7 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(self.logger.get_logs(), {})
         self.assertEqual(self.logger.get_logs(action), [])
 
-        action.started_event(action)
+        self.queue.action_started_event(action)
         self.assertEqual(len(self.logger.get_logs()), 1)
         self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
         self.assert_(isinstance(self.logger.get_logs()[action][0], Log))

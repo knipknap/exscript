@@ -203,9 +203,9 @@ class MainLoop(threading.Thread):
         action.debug = self.debug
         job          = Job(self.condition, action, action.name)
         self.running_jobs.append(job)
+        self.job_started_event(action)
         job.start()
         self._dbg(1, 'Job "%s" started.' % job.getName())
-        self.job_started_event(action)
 
     def _on_job_completed(self, job):
         if job.exception:
