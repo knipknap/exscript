@@ -36,7 +36,7 @@ class Logger(object):
         self.actions = []
         self.logs    = defaultdict(list)
         self.done    = []
-        queue.action_enqueued_event.listen(self._action_enqueued)
+        queue.action_enqueued_event.listen(self._on_action_enqueued)
 
     def get_logged_actions(self):
         """
@@ -109,7 +109,7 @@ class Logger(object):
         if action not in self.done:
             self.done.append(action)
 
-    def _action_enqueued(self, action):
+    def _on_action_enqueued(self, action):
         action.started_event.listen(self._on_action_started)
         action.error_event.listen(self._on_action_error)
         action.succeeded_event.listen(self._on_action_done)

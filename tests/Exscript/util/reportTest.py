@@ -47,7 +47,7 @@ class reportTest(unittest.TestCase):
         self.n_actions += 1
         name            = 'fake' + str(self.n_actions)
         action          = FakeAction(name)
-        self.logger._action_enqueued(action)
+        self.logger._on_action_enqueued(action)
         action.started_event(action)
         action.log_event('hello world')
         return action

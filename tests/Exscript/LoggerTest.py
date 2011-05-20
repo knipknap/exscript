@@ -22,7 +22,7 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(self.logger.get_logged_actions(), [])
 
         action = FakeAction()
-        self.logger._action_enqueued(action)
+        self.logger._on_action_enqueued(action)
         self.assertEqual(self.logger.get_logged_actions(), [])
 
         action.started_event(action)
@@ -39,8 +39,8 @@ class LoggerTest(unittest.TestCase):
 
         action1 = FakeAction()
         action2 = FakeAction()
-        self.logger._action_enqueued(action1)
-        self.logger._action_enqueued(action2)
+        self.logger._on_action_enqueued(action1)
+        self.logger._on_action_enqueued(action2)
         self.assertEqual(self.logger.get_successful_actions(), [])
 
         action1.started_event(action1)
@@ -63,7 +63,7 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(self.logger.get_error_actions(), [])
 
         action = FakeAction()
-        self.logger._action_enqueued(action)
+        self.logger._on_action_enqueued(action)
         self.assertEqual(self.logger.get_error_actions(), [])
 
         action.started_event(action)
@@ -84,7 +84,7 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(self.logger.get_aborted_actions(), [])
 
         action = FakeAction()
-        self.logger._action_enqueued(action)
+        self.logger._on_action_enqueued(action)
         self.assertEqual(self.logger.get_aborted_actions(), [])
 
         action.started_event(action)
@@ -106,7 +106,7 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(self.logger.get_logs(), {})
 
         action = FakeAction()
-        self.logger._action_enqueued(action)
+        self.logger._on_action_enqueued(action)
         self.assertEqual(self.logger.get_logs(), {})
         self.assertEqual(self.logger.get_logs(action), [])
 
@@ -127,7 +127,7 @@ class LoggerTest(unittest.TestCase):
 
     def testActionEnqueued(self):
         action = FakeAction()
-        self.logger._action_enqueued(action)
+        self.logger._on_action_enqueued(action)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LoggerTest)

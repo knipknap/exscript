@@ -35,7 +35,7 @@ class FileLoggerTest(LoggerTest):
         conn    = FakeConnection()
         logfile = os.path.join(self.logdir, 'fake.log')
         errfile = logfile + '.error'
-        self.logger._action_enqueued(action)
+        self.logger._on_action_enqueued(action)
         self.failIf(os.path.exists(logfile))
         self.failIf(os.path.exists(errfile))
 
