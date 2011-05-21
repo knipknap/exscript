@@ -7,6 +7,7 @@ from Exscript            import Host
 from Exscript.HostAction import HostAction
 from Exscript.FileLogger import FileLogger
 from util.reportTest     import FakeQueue
+from util.decoratorTest  import FakeConnection
 from LoggerTest          import LoggerTest
 
 class FakeError(Exception):
@@ -58,9 +59,8 @@ class FileLoggerTest(LoggerTest):
         # Test "error".
         try:
             raise FakeError()
-        except Exception, e:
-            pass
-        action.error_event(action, e)
+        except Exception:
+            action.error_event(action, sys.exc_info())
         self.assert_(os.path.isfile(logfile))
         self.assert_(os.path.isfile(errfile))
         content = open(errfile).read()

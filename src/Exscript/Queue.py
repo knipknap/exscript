@@ -194,12 +194,12 @@ class Queue(object):
     def _on_action_started(self, action, conn):
         action.accm = self.account_manager.create_pipe()
 
-    def _on_action_error(self, action, e):
-        msg = action.get_name() + ' error: ' + str(e)
-        tb  = ''.join(traceback.format_exception(*sys.exc_info()))
+    def _on_action_error(self, action, exc_info):
+        msg = action.get_name() + ' error: ' + str(exc_info[1])
+        tb  = ''.join(traceback.format_exception(*exc_info))
         self._print('errors',     msg)
         self._print('tracebacks', tb)
-        if action._is_recoverable_error(e):
+        if action._is_recoverable_error(exc_info[0]):
             self._print('fatal_errors', tb)
 
     def _on_action_aborted(self, action):

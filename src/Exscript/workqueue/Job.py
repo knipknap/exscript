@@ -12,6 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+import sys
 import threading
 
 class Job(threading.Thread):
@@ -19,7 +20,7 @@ class Job(threading.Thread):
         threading.Thread.__init__(self)
         self.condition = condition
         self.action    = action
-        self.exception = None
+        self.exc_info  = None
         self.completed = False
         self.name      = name
 
@@ -33,11 +34,10 @@ class Job(threading.Thread):
         """
         Start the actions that are associated with the thread.
         """
-        self.exception = None
         try:
             self.action.execute()
-        except Exception, e:
-            self._completed(e)
+        except:
+            self._completed(sys.exc_info())
             raise
         self._completed()
 

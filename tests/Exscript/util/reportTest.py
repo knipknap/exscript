@@ -56,9 +56,8 @@ class reportTest(unittest.TestCase):
         action = self.createLog()
         try:
             raise FakeError()
-        except Exception, e:
-            pass
-        action.error_event(action, e)
+        except Exception:
+            action.error_event(action, sys.exc_info())
         return action
 
     def createAbortedLog(self):

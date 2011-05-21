@@ -20,8 +20,8 @@ class LogTest(unittest.TestCase):
         self.assertEqual(self.log.get_error(), None)
         try:
             raise FakeError()
-        except FakeError, e:
-            self.log.error(FakeError())
+        except FakeError:
+            self.log.error(sys.exc_info())
         self.assert_('FakeError' in self.log.get_error())
 
     def testGetName(self):
@@ -44,8 +44,8 @@ class LogTest(unittest.TestCase):
         before = str(self.log)
         try:
             raise FakeError()
-        except FakeError, e:
-            self.log.error(e)
+        except FakeError:
+            self.log.error(sys.exc_info())
         self.assert_(str(self.log).startswith(before))
         self.assert_('FakeError' in str(self.log), str(self.log))
 

@@ -57,9 +57,8 @@ class LoggerTest(unittest.TestCase):
 
         try:
             raise FakeError()
-        except FakeError, e:
-            pass
-        action2.error_event(action2, e)
+        except FakeError:
+            action2.error_event(action2, sys.exc_info())
         self.assertEqual(self.logger.get_successful_actions(), [action1])
         action2.aborted_event(action2)
         self.assertEqual(self.logger.get_successful_actions(), [action1])
@@ -79,8 +78,8 @@ class LoggerTest(unittest.TestCase):
 
         try:
             raise FakeError()
-        except FakeError, e:
-            action.error_event(action, e)
+        except FakeError:
+            action.error_event(action, sys.exc_info())
         self.assertEqual(self.logger.get_error_actions(), [action])
         action.aborted_event(action)
         self.assertEqual(self.logger.get_error_actions(), [action])
@@ -100,8 +99,8 @@ class LoggerTest(unittest.TestCase):
 
         try:
             raise FakeError()
-        except FakeError, e:
-            action.error_event(action, e)
+        except FakeError:
+            action.error_event(action, sys.exc_info())
         self.assertEqual(self.logger.get_aborted_actions(), [])
         action.aborted = True
         action.aborted_event(action)

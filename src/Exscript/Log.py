@@ -17,11 +17,10 @@ import sys
 
 class Log(object):
     def __init__(self, name):
-        self.name      = name
-        self.data      = ''
-        self.traceback = None
-        self.exception = None
-        self.did_end   = False
+        self.name     = name
+        self.data     = ''
+        self.exc_info = None
+        self.did_end  = False
 
     def __str__(self):
         return self.data
@@ -36,11 +35,13 @@ class Log(object):
         self.data += ' '.join(data)
 
     def get_error(self, include_tb = True):
+        if self.exc_info is None:
+            return None
         if include_tb:
-            return self.traceback
-        if str(self.exception):
-            return str(self.exception)
-        return self.exception.__class__.__name__
+            return self._format_exc()
+        if str(self.exc_info[1]):
+            return str(self.exc_info[1])
+        return self.exc_info[0].__name__
 
     def started(self):
         """
@@ -49,17 +50,16 @@ class Log(object):
         self.write('STARTED\n')
         self.did_end = False
 
-    def _format_exc(self, exception):
-        return ''.join(traceback.format_exception(*sys.exc_info()))
+    def _format_exc(self):
+        return ''.join(traceback.format_exception(*self.exc_info))
 
-    def error(self, exception):
+    def error(self, exc_info):
         """
         Called by a logger to log an exception.
         """
-        self.traceback = self._format_exc(exception)
-        self.exception = exception
+        self.exc_info = exc_info
         self.write('ERROR:\n')
-        self.write(self._format_exc(exception))
+        self.write(self._format_exc())
 
     def done(self):
         """
@@ -69,7 +69,7 @@ class Log(object):
         self.write('DONE\n')
 
     def has_error(self):
-        return self.exception is not None
+        return self.exc_info is not None
 
     def has_ended(self):
         return self.did_end

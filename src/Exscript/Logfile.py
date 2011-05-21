@@ -70,11 +70,10 @@ class Logfile(Log):
     def started(self):
         self.write('')  # Creates the file.
 
-    def error(self, exception):
-        self.traceback = self._format_exc(exception)
-        self.exception = exception
-        self.write('ERROR:', str(exception), '\n')
-        self._write_error(self._format_exc(exception))
+    def error(self, exc_info):
+        self.exc_info = exc_info
+        self.write('ERROR:', str(exc_info[1]), '\n')
+        self._write_error(self._format_exc())
 
     def done(self):
         if self.delete and not self.has_error():

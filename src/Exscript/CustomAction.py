@@ -12,13 +12,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+import sys
 import Crypto
-from Exscript.workqueue             import Action
-from Exscript.util.event            import Event
-from Exscript.protocols.Exception   import LoginFailure
-from Exscript.interpreter.Exception import FailException
-from Exscript.parselib.Exception    import CompileError
-from Exscript.AccountProxy          import AccountProxy
+from Exscript.workqueue import Action
+from Exscript.util.event import Event
+from Exscript.protocols.Exception import LoginFailure
+from Exscript.AccountProxy import AccountProxy
 
 class CustomAction(Action):
     """
@@ -35,6 +34,7 @@ class CustomAction(Action):
         @param name: A name for the action.
         """
         Action.__init__(self)
+        self.started_event   = Event()
         self.error_event     = Event()
         self.aborted_event   = Event()
         self.succeeded_event = Event()
@@ -92,11 +92,8 @@ class CustomAction(Action):
     def has_aborted(self):
         return self.aborted
 
-    def _is_recoverable_error(self, exc):
-        for cls in (CompileError, FailException):
-            if isinstance(exc, cls):
-                return False
-        return True
+    def _is_recoverable_error(self, cls):
+        return cls.__name__ not in ('CompileError', 'FailException')
 
     def _create_connection(self):
         return None
@@ -109,18 +106,19 @@ class CustomAction(Action):
             while self.failures < self.times \
               and self.login_failures < self.login_times:
                 conn = self._create_connection()
+                self.started_event(self, conn)
 
                 # Execute the user-provided function.
                 try:
                     self._call_function(conn)
-                except LoginFailure, e:
-                    self.error_event(self, e)
+                except LoginFailure:
+                    self.error_event(self, sys.exc_info())
                     self.login_failures += 1
                     continue
-                except Exception, e:
-                    self.error_event(self, e)
+                except Exception:
+                    self.error_event(self, sys.exc_info())
                     self.failures += 1
-                    if not self._is_recoverable_error(e):
+                    if not self._is_recoverable_error(sys.exc_info()[0]):
                         break
                     continue
 

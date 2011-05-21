@@ -100,9 +100,9 @@ class Logger(object):
         action.log_event.listen(log.write)
         self._add_log(action, log)
 
-    def _on_action_error(self, action, e):
+    def _on_action_error(self, action, exc_info):
         log = self._get_log(action)
-        log.error(e)
+        log.error(exc_info)
 
     def _on_action_done(self, action):
         log = self._get_log(action)
