@@ -25,7 +25,6 @@ class MainLoop(threading.Thread):
         self.job_started_event   = Event()
         self.job_succeeded_event = Event()
         self.job_aborted_event   = Event()
-        self.job_completed_event = Event()
         self.queue_empty_event   = Event()
         self.queue               = deque()
         self.force_start         = []
@@ -230,7 +229,6 @@ class MainLoop(threading.Thread):
         else:
             self._dbg(1, 'Job "%s" succeeded.' % job.getName())
             self.job_succeeded_event(job.action)
-        self.job_completed_event(job.action)
 
     def _update_running_jobs(self):
         # Update the list of running jobs.

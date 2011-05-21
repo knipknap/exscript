@@ -30,7 +30,6 @@ class WorkQueue(object):
         self.job_started_event   = Event()
         self.job_succeeded_event = Event()
         self.job_aborted_event   = Event()
-        self.job_completed_event = Event()
         self.queue_empty_event   = Event()
         self.debug               = kwargs.get('debug',       0)
         self.max_threads         = kwargs.get('max_threads', 1)
@@ -44,7 +43,6 @@ class WorkQueue(object):
         self.main_loop.job_started_event.listen(self.job_started_event)
         self.main_loop.job_succeeded_event.listen(self.job_succeeded_event)
         self.main_loop.job_aborted_event.listen(self.job_aborted_event)
-        self.main_loop.job_completed_event.listen(self.job_completed_event)
         self.main_loop.queue_empty_event.listen(self.queue_empty_event)
         self.main_loop.start()
 
