@@ -58,7 +58,7 @@ class TemplateTest(unittest.TestCase):
         self.queue.add_account(account)
 
     def tearDown(self):
-        self.queue.shutdown()
+        self.queue.destroy()
 
     def testTemplates(self):
         callback = bind(dummy_cb, self)
