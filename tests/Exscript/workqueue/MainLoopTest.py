@@ -17,7 +17,7 @@ class MainLoopTest(unittest.TestCase):
 
         for i in range(12345):
             action = TestAction(lock, data)
-            ml.enqueue(action, times = 1)
+            ml.enqueue(action, times = 1, data = None)
 
         self.assertEqual(0, data['sum'])
 

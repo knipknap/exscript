@@ -16,19 +16,23 @@ import sys
 import threading
 
 class Job(threading.Thread):
-    def __init__(self, condition, action, name):
+    def __init__(self, condition, action, name, times, data):
         threading.Thread.__init__(self)
         self.condition = condition
         self.action    = action
         self.exc_info  = None
         self.completed = False
         self.name      = name
-        self.times     = 1
+        self.times     = times
         self.failures  = 0
+        self.data      = data
 
     def __copy__(self):
-        job          = Job(self.condition, self.action, self.name)
-        job.times    = self.times
+        job = Job(self.condition,
+                  self.action,
+                  self.name,
+                  self.times,
+                  self.data)
         job.failures = self.failures
         return job
 

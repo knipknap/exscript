@@ -64,20 +64,18 @@ class MainLoop(threading.Thread):
             self.max_threads = int(max_threads)
             self.condition.notify_all()
 
-    def _create_job(self, action, times):
-        job = Job(self.condition, action, action.name)
-        job.times = times
-        return job
+    def _create_job(self, action, times, data):
+        return Job(self.condition, action, action.name, times, data)
 
-    def enqueue(self, action, times):
+    def enqueue(self, action, times, data):
         with self.condition:
-            self.queue.append(self._create_job(action, times))
+            self.queue.append(self._create_job(action, times, data))
             self.condition.notify_all()
 
-    def enqueue_or_ignore(self, action, times):
+    def enqueue_or_ignore(self, action, times, data):
         with self.condition:
             if self.get_first_job_from_name(action.name) is None:
-                job = self._create_job(action, times)
+                job = self._create_job(action, times, data)
                 self.queue.append(job)
                 enqueued = True
             else:
@@ -85,16 +83,16 @@ class MainLoop(threading.Thread):
             self.condition.notify_all()
         return enqueued
 
-    def priority_enqueue(self, action, force_start, times):
+    def priority_enqueue(self, action, force_start, times, data):
         with self.condition:
-            job = self._create_job(action, times)
+            job = self._create_job(action, times, data)
             if force_start:
                 self.force_start.append(job)
             else:
                 self.queue.appendleft(job)
             self.condition.notify_all()
 
-    def priority_enqueue_or_raise(self, action, force_start, times):
+    def priority_enqueue_or_raise(self, action, force_start, times, data):
         with self.condition:
             # If the action is already running (or about to be forced),
             # there is nothing to be done.
@@ -115,7 +113,7 @@ class MainLoop(threading.Thread):
                 action = existing.action
 
             # Now add the action to the queue.
-            job = self._create_job(action, times)
+            job = self._create_job(action, times, data)
             if force_start:
                 self.force_start.append(job)
             else:
