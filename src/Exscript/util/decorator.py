@@ -15,6 +15,7 @@
 """
 Decorators for callbacks passed to Queue.run().
 """
+from Exscript.protocols.Exception import LoginFailure
 
 def bind(function, *args, **kwargs):
     """
@@ -93,7 +94,7 @@ def connect(function):
         return result
     return decorated
 
-def autologin(function, flush = True):
+def autologin(function, flush = True, attempts = 1):
     """
     Wraps the given function such that...
 
@@ -110,11 +111,22 @@ def autologin(function, flush = True):
     @param function: The function that's ought to be wrapped.
     @type  flush: bool
     @param flush: Whether to flush the last prompt from the buffer.
+    @type  attempts: int
+    @param attempts: The number of login attempts if login fails.
     @rtype:  function
     @return: The wrapped function.
     """
     def decorated(conn, *args, **kwargs):
-        conn.login(flush = flush)
+        failed = 0
+        while True:
+            try:
+                conn.login(flush = flush)
+            except LoginFailure, e:
+                failed += 1
+                if failed >= attempts:
+                    raise
+                continue
+            break
         result = function(conn, *args, **kwargs)
         conn.close(force = True)
         return result

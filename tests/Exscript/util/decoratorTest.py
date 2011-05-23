@@ -2,10 +2,12 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import Exscript.util.decorator
+from Exscript.protocols.Exception import LoginFailure
 
 class FakeConnection(object):
     def __init__(self, os = None):
-        self.os = os
+        self.os   = os
+        self.data = {}
 
     def connect(self):
         self.connected = True
@@ -71,9 +73,24 @@ class decoratorTest(unittest.TestCase):
 
     def testAutologin(self):
         from Exscript.util.decorator import autologin
+
+        # Test simple login.
         bound  = autologin(self.autologin_cb, False)
         result = bound(FakeConnection(), 'one', 'two', three = 3)
         self.assertEqual(result, 123)
+
+        # Monkey patch the fake connection such that the login fails.
+        conn = FakeConnection()
+        conn.data = 0
+        def fail(*args, **kwargs):
+            conn.data += 1
+            raise LoginFailure('intended login failure')
+        conn.login = fail
+
+        # Test retry functionality.
+        bound = autologin(self.autologin_cb, False, attempts = 5)
+        self.assertRaises(LoginFailure, bound, conn, 'one', 'two', three = 3)
+        self.assertEqual(conn.data, 5)
 
     def testDeprecated(self):
         pass #not really needed.
