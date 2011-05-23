@@ -59,6 +59,8 @@ def connect(uri, default_protocol = 'telnet', **kwargs):
     """
     url  = Url.from_string(uri, default_protocol)
     conn = create_protocol(url.protocol, **kwargs)
+    if url.protocol == 'pseudo':
+        conn.device.add_commands_from_file(url.hostname)
     conn.connect(url.hostname, url.port)
 
     if url.username is not None \
