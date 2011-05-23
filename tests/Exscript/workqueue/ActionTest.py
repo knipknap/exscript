@@ -17,7 +17,7 @@ class TestAction(Action):
         self.lock = lock
         self.data = data
 
-    def execute(self):
+    def execute(self, job):
         # Init the data, if it isn't already initialized.
         self.lock.acquire()
         if not self.data.has_key('sum'):
@@ -55,13 +55,13 @@ class ActionTest(unittest.TestCase):
 
     def testExecute(self):
         action = Action()
-        action.execute()
+        action.execute(object)
 
         data   = {'sum': 0, 'randsum': 0}
         action = TestAction(threading.Lock(), data)
         self.assertEqual(action.name, 'action 1')
         self.assertEqual(action.debug, 0)
-        action.execute()
+        action.execute(object)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ActionTest)

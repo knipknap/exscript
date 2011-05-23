@@ -49,7 +49,7 @@ class Job(threading.Thread):
         Start the actions that are associated with the thread.
         """
         try:
-            self.action.execute()
+            self.action.execute(self)
         except:
             self._completed(sys.exc_info())
         else:

@@ -15,6 +15,7 @@
 import sys
 import Crypto
 from Exscript.workqueue import Action
+from Exscript.workqueue.util import test_takes_job
 from Exscript.util.event import Event
 
 class CustomAction(Action):
@@ -59,6 +60,9 @@ class CustomAction(Action):
             logname += '_retry%d' % (self.attempt - 1)
         return logname + '.log'
 
-    def execute(self):
+    def execute(self, job):
         if self.function is not None:
-            return self.function()
+            if test_takes_job(self.function):
+                return self.function(job)
+            else:
+                return self.function()

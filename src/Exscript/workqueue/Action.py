@@ -30,7 +30,7 @@ class Action(object):
         self.debug = kwargs.get('debug', 0)
         self.name  = kwargs.get('name',  None)
 
-    def execute(self):
+    def execute(self, job):
         """
         This method should be overwritten and made to do the actual work.
         """

@@ -41,9 +41,9 @@ class Sequence(Action):
         """
         self.actions.append(action)
 
-    def execute(self):
+    def execute(self, job):
         for action in self.actions:
             action.debug = self.debug
-            if not action.execute():
+            if not action.execute(job):
                 return False
         return True

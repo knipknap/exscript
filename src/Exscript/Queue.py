@@ -29,6 +29,7 @@ from Exscript.AccountManager import AccountManager
 from Exscript.CustomAction import CustomAction
 from Exscript.Task import Task
 from Exscript.workqueue import WorkQueue, Action
+from Exscript.workqueue.util import takes_job, test_takes_job
 from Exscript.protocols import get_protocol_from_name
 from Exscript.Connection import Connection
 
@@ -44,7 +45,8 @@ def _connector(func,
     protocol_name = host.get_protocol()
     protocol_cls  = get_protocol_from_name(protocol_name)
 
-    def wrapped(*args, **kwargs):
+    @takes_job
+    def wrapped(job, *args, **kwargs):
         protocol = protocol_cls(**protocol_args)
 
         # Define the behaviour of the pseudo protocol adapter.
@@ -56,7 +58,10 @@ def _connector(func,
         try:
             conn = Connection(accm, host, protocol)
             conn.data_received_event.listen(log_event)
-            return func(conn)
+            if test_takes_job(func):
+                return func(job, conn)
+            else:
+                return func(conn)
         finally:
             accm.close()
 
@@ -219,7 +224,7 @@ class Queue(object):
         self._print_status_bar()
 
     def _on_job_error(self, job, exc_info):
-        msg = job.action.get_name() + ' error: ' + str(exc_info[1])
+        msg = job.name + ' error: ' + str(exc_info[1])
         tb  = ''.join(traceback.format_exception(*exc_info))
         self._print('errors', msg)
         if self._is_recoverable_error(exc_info[0]):
@@ -230,14 +235,14 @@ class Queue(object):
 
     def _on_job_succeeded(self, job):
         self.completed += 1
-        self._print('status_bar', job.action.get_name() + ' succeeded.')
-        self._dbg(2, job.action.name + ' job is done.')
+        self._print('status_bar', job.name + ' succeeded.')
+        self._dbg(2, job.name + ' job is done.')
         self._del_status_bar()
         self._print_status_bar()
 
     def _on_job_aborted(self, job):
         self.completed += 1
-        self._print('errors', job.action.get_name() + ' finally failed.')
+        self._print('errors', job.name + ' finally failed.')
 
     def set_max_threads(self, n_connections):
         """
