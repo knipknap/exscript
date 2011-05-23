@@ -163,8 +163,7 @@ def run():
                   overwrite_logs = options.overwrite_logs,
                   delete_logs    = options.delete_logs,
                   protocol_args  = protocol_args)
-    account_manager = queue.account_manager
-    default_pool    = account_manager.default_pool
+    account_pool = queue.account_manager.default_pool
 
     # Read the account pool file.
     try:
