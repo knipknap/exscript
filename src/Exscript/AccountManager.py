@@ -15,68 +15,7 @@
 """
 Manages user accounts.
 """
-import select
-import threading
-from multiprocessing import Pipe
 from AccountPool import AccountPool
-
-class _AccountManagerChild(threading.Thread):
-    """
-    Holds an open pipe to communicate with another process, to allow
-    it to acquire/release accounts from the AccountManager.
-    """
-    def __init__(self, manager):
-        threading.Thread.__init__(self)
-        self.daemon  = True
-        self.manager = manager
-        self.to_child, self.to_parent = Pipe()
-
-    def _send_account(self, account):
-        response = (account.__hash__(),
-                    account.get_name(),
-                    account.get_password(),
-                    account.get_authorization_password(),
-                    account.get_key())
-        self.to_child.send(response)
-
-    def _handle_request(self, request):
-        try:
-            command, arg = request
-            if command == 'acquire-account-for-host':
-                account = self.manager.acquire_account_for(arg)
-                self._send_account(account)
-            elif command == 'acquire-account':
-                account = self.manager.get_account_from_hash(arg)
-                if arg is not None and account is None:
-                    # This happens when an account was requested that
-                    # is not known to the account manager. In this case,
-                    # we treat the account as thread-local and let the
-                    # thread use it without any locking.
-                    self.to_child.send(None)
-                    return
-                account = self.manager.acquire_account(account)
-                self._send_account(account)
-            elif command == 'release-account':
-                account = self.manager.get_account_from_hash(arg)
-                account.release()
-                self.to_child.send('ok')
-            else:
-                raise Exception('invalid request from worker process')
-        except Exception, e:
-            self.to_child.send(e)
-            raise
-
-    def run(self):
-        try:
-            while True:
-                r, w, x = select.select([self.to_child], [], [], .2)
-                try:
-                    request = self.to_child.recv()
-                except EOFError:
-                    break
-                self._handle_request(request)
-        finally:
-            self.to_child.close()
 
 class AccountManager(object):
     """
@@ -90,31 +29,6 @@ class AccountManager(object):
         """
         self.default_pool = AccountPool()
         self.pools        = []
-
-    def create_pipe(self):
-        """
-        Creates a new pipe and returns the child end of the connection.
-        To request an account from the pipe, use::
-
-            pipe = manager.create_pipe()
-
-            # Let the manager choose an account.
-            pipe.send(('acquire-account-for-host', host))
-            account = pipe.recv()
-            ...
-            pipe.send(('release-account', account.id()))
-
-            # Or acquire a specific account.
-            pipe.send(('acquire-account', account.id()))
-            account = pipe.recv()
-            ...
-            pipe.send(('release-account', account.id()))
-
-            pipe.close()
-        """
-        child = _AccountManagerChild(self)
-        child.start()
-        return child.to_parent
 
     def reset(self):
         self.default_pool.reset()

@@ -19,6 +19,9 @@ import sys
 import os
 import gc
 import traceback
+import select
+import threading
+from multiprocessing import Pipe
 from functools import wraps
 from Exscript.parselib.Exception import CompileError
 from Exscript.interpreter.Exception import FailException
@@ -36,7 +39,6 @@ from Exscript.Connection import Connection
 def _connector(func,
                host,
                protocol_args,
-               create_pipe_to_accm,
                log_event):
     """
     A decorator that connects to the given host using the given
@@ -54,18 +56,62 @@ def _connector(func,
             filename = host.get_address()
             protocol.device.add_commands_from_file(filename)
 
-        accm = create_pipe_to_accm()
-        try:
-            conn = Connection(accm, host, protocol)
-            conn.data_received_event.listen(log_event)
-            if test_takes_job(func):
-                return func(job, conn)
-            else:
-                return func(conn)
-        finally:
-            accm.close()
+        conn = Connection(job.data, host, protocol)
+        conn.data_received_event.listen(log_event)
+        if test_takes_job(func):
+            return func(job, conn)
+        else:
+            return func(conn)
 
     return wrapped
+
+class _PipeHandler(threading.Thread):
+    """
+    Each PipeHandler holds an open pipe to a subprocess, to allow the
+    sub-process to acquire accounts and communicate status information.
+    """
+    def __init__(self, queue):
+        threading.Thread.__init__(self)
+        self.daemon  = True
+        self.manager = queue.account_manager
+        self.to_child, self.to_parent = Pipe()
+
+    def _send_account(self, account):
+        response = (account.__hash__(),
+                    account.get_name(),
+                    account.get_password(),
+                    account.get_authorization_password(),
+                    account.get_key())
+        self.to_child.send(response)
+
+    def _handle_request(self, request):
+        try:
+            command, arg = request
+            if command == 'acquire-account-for-host':
+                account = self.manager.acquire_account_for(arg)
+                self._send_account(account)
+            elif command == 'acquire-account':
+                account = self.manager.get_account_from_hash(arg)
+                account = self.manager.acquire_account(account)
+                self._send_account(account)
+            elif command == 'release-account':
+                account = self.manager.get_account_from_hash(arg)
+                account.release()
+                self.to_child.send('ok')
+            else:
+                raise Exception('invalid request from worker process')
+        except Exception, e:
+            self.to_child.send(e)
+            raise
+
+    def run(self):
+        while True:
+            r, w, x = select.select([self.to_child], [], [], .2)
+            try:
+                request = self.to_child.recv()
+            except EOFError:
+                break
+            self._handle_request(request)
 
 class Queue(object):
     """
@@ -132,6 +178,7 @@ class Queue(object):
             self.logger = None
 
         # Listen to what the workqueue is doing.
+        self.workqueue.job_init_event.listen(self._on_job_init)
         self.workqueue.job_started_event.listen(self._on_job_started)
         self.workqueue.job_error_event.listen(self._on_job_error)
         self.workqueue.job_succeeded_event.listen(self._on_job_succeeded)
@@ -174,6 +221,31 @@ class Queue(object):
     def _write(self, channel, msg):
         self.channel_map[channel].write(msg)
         self.channel_map[channel].flush()
+
+    def _create_pipe(self):
+        """
+        Creates a new pipe and returns the child end of the connection.
+        To request an account from the pipe, use::
+
+            pipe = queue._create_pipe()
+
+            # Let the account manager choose an account.
+            pipe.send(('acquire-account-for-host', host.id()))
+            account = pipe.recv()
+            ...
+            pipe.send(('release-account', account.id()))
+
+            # Or acquire a specific account.
+            pipe.send(('acquire-account', account.id()))
+            account = pipe.recv()
+            ...
+            pipe.send(('release-account', account.id()))
+
+            pipe.close()
+        """
+        child = _PipeHandler(self)
+        child.start()
+        return child.to_parent
 
     def _del_status_bar(self):
         if self.status_bar_length == 0:
@@ -219,6 +291,9 @@ class Queue(object):
         # will cause isinstance() to return False.
         return cls.__name__ in ('CompileError', 'FailException')
 
+    def _on_job_init(self, job):
+        job.data = self._create_pipe()
+
     def _on_job_started(self, job):
         self._del_status_bar()
         self._print_status_bar()
@@ -234,6 +309,7 @@ class Queue(object):
         job.action.attempt += 1
 
     def _on_job_succeeded(self, job):
+        job.data.close()
         self.completed += 1
         self._print('status_bar', job.name + ' succeeded.')
         self._dbg(2, job.name + ' job is done.')
@@ -241,6 +317,7 @@ class Queue(object):
         self._print_status_bar()
 
     def _on_job_aborted(self, job):
+        job.data.close()
         self.completed += 1
         self._print('errors', job.name + ' finally failed.')
 
@@ -456,7 +533,6 @@ class Queue(object):
         action.function = _connector(function,
                                      host,
                                      self.protocol_args,
-                                     self.account_manager.create_pipe,
                                      action.log_event)
         if self._enqueue1(action, prioritize, force, duplicate_check):
             return action

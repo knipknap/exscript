@@ -22,6 +22,7 @@ from Exscript.workqueue.Job import Job
 class MainLoop(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
+        self.job_init_event      = Event()
         self.job_started_event   = Event()
         self.job_error_event     = Event()
         self.job_succeeded_event = Event()
@@ -65,7 +66,9 @@ class MainLoop(threading.Thread):
             self.condition.notify_all()
 
     def _create_job(self, action, times, data):
-        return Job(self.condition, action, action.name, times, data)
+        job = Job(self.condition, action, action.name, times, data)
+        self.job_init_event(job)
+        return job
 
     def enqueue(self, action, times, data):
         with self.condition:
