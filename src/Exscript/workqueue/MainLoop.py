@@ -188,12 +188,6 @@ class MainLoop(threading.Thread):
              + len(self.force_start) \
              + len(self.running_jobs)
 
-    def get_actions_from_name(self, name):
-        map = defaultdict(list)
-        for action in self.get_running_actions():
-            map[action.get_name()].append(action)
-        return map[name]
-
     def get_first_job_from_name(self, job_name):
         if job_name is None:
             return None
