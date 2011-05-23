@@ -7,7 +7,7 @@ from Exscript import Host
 from Exscript.CustomAction import CustomAction
 from Exscript.FileLogger import FileLogger
 from util.reportTest import FakeQueue
-from LoggerTest import LoggerTest
+from LoggerTest import LoggerTest, FakeJob
 
 class FakeError(Exception):
     pass
@@ -28,23 +28,23 @@ class FileLoggerTest(LoggerTest):
     def testConstructor(self):
         self.assert_(os.path.isdir(self.tempdir))
 
-    def testActionEnqueued(self):
-        host    = Host('fake')
-        action  = CustomAction(host.get_name(), host.get_logname())
-        logfile = os.path.join(self.logdir, 'fake.log')
-        errfile = logfile + '.error'
+        job        = FakeJob()
+        host       = Host('fake')
+        job.action = CustomAction(host.get_name(), host.get_logname())
+        logfile    = os.path.join(self.logdir, 'fake.log')
+        errfile    = logfile + '.error'
         self.failIf(os.path.exists(logfile))
         self.failIf(os.path.exists(errfile))
 
         # Test "started".
-        self.queue.workqueue.job_started_event(action)
+        self.queue.workqueue.job_started_event(job)
         self.assert_(os.path.isfile(logfile), 'No such file: ' + logfile)
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
         self.assertEqual(content, '')
 
         # Test data logging.
-        action.log_event('hello world')
+        job.action.log_event('hello world')
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
@@ -54,37 +54,37 @@ class FileLoggerTest(LoggerTest):
         try:
             raise FakeError()
         except Exception:
-            self.queue.workqueue.job_error_event(action, sys.exc_info())
+            self.queue.workqueue.job_error_event(job, sys.exc_info())
         self.assert_(os.path.isfile(logfile))
         self.assert_(os.path.isfile(errfile))
         content = open(errfile).read()
         self.assert_('FakeError' in content)
 
-        self.queue.workqueue.job_aborted_event(action)
+        self.queue.workqueue.job_aborted_event(job)
         content = open(logfile).read()
 
         # Repeat all of the above, with failures = 1.
         # Test "started".
-        action.attempt = 2
-        logfile        = os.path.join(self.logdir, action.get_logname())
+        job.action.attempt = 2
+        logfile        = os.path.join(self.logdir, job.action.get_logname())
         errfile        = logfile + '.error'
         self.failIf(os.path.exists(logfile))
         self.failIf(os.path.exists(errfile))
-        self.queue.workqueue.job_started_event(action)
+        self.queue.workqueue.job_started_event(job)
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
         self.assertEqual(content, '')
 
         # Test data logging.
-        action.log_event('hello world')
+        job.action.log_event('hello world')
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
         self.assertEqual(content, 'hello world')
 
         # Test "succeeded".
-        self.queue.workqueue.job_succeeded_event(action)
+        self.queue.workqueue.job_succeeded_event(job)
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
 

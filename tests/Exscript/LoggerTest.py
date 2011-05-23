@@ -7,7 +7,7 @@ from shutil import rmtree
 from Exscript.Log import Log
 from Exscript.Logger import Logger
 from LogTest import FakeError
-from util.reportTest import FakeQueue, FakeAction
+from util.reportTest import FakeQueue, FakeJob
 from Exscript.util.event import Event
 
 def count(iterable):
@@ -34,123 +34,123 @@ class LoggerTest(unittest.TestCase):
     def testGetSucceededActions(self):
         self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
-        action1 = FakeAction()
-        action2 = FakeAction()
+        job1 = FakeJob()
+        job2 = FakeJob()
         self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
-        self.queue.workqueue.job_started_event(action1)
-        self.queue.workqueue.job_started_event(action2)
+        self.queue.workqueue.job_started_event(job1)
+        self.queue.workqueue.job_started_event(job2)
         self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
-        self.queue.workqueue.job_succeeded_event(action1)
+        self.queue.workqueue.job_succeeded_event(job1)
         self.assertEqual(self.logger.get_succeeded_actions(), 1)
 
         try:
             raise FakeError()
         except FakeError:
-            self.queue.workqueue.job_error_event(action2, sys.exc_info())
+            self.queue.workqueue.job_error_event(job2, sys.exc_info())
         self.assertEqual(self.logger.get_succeeded_actions(), 1)
-        self.queue.workqueue.job_aborted_event(action2)
+        self.queue.workqueue.job_aborted_event(job2)
         self.assertEqual(self.logger.get_succeeded_actions(), 1)
 
     def testGetAbortedActions(self):
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
-        action = FakeAction()
+        job = FakeJob()
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
-        self.queue.workqueue.job_started_event(action)
+        self.queue.workqueue.job_started_event(job)
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
-        self.queue.workqueue.job_succeeded_event(action)
+        self.queue.workqueue.job_succeeded_event(job)
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
         try:
             raise FakeError()
         except FakeError:
-            self.queue.workqueue.job_error_event(action, sys.exc_info())
+            self.queue.workqueue.job_error_event(job, sys.exc_info())
         self.assertEqual(self.logger.get_aborted_actions(), 0)
-        self.queue.workqueue.job_aborted_event(action)
+        self.queue.workqueue.job_aborted_event(job)
         self.assertEqual(self.logger.get_aborted_actions(), 1)
 
     def testGetLogs(self):
         self.assertEqual(count(self.logger.get_logs()), 0)
 
-        action = FakeAction()
+        job = FakeJob()
         self.assertEqual(count(self.logger.get_logs()), 0)
-        self.assertEqual(count(self.logger.get_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_logs(job)), 0)
 
-        self.queue.workqueue.job_started_event(action)
+        self.queue.workqueue.job_started_event(job)
         self.assertEqual(count(self.logger.get_logs()), 1)
         self.assert_(isinstance(nth(self.logger.get_logs(), 0), Log))
-        self.assertEqual(count(self.logger.get_logs(action)), 1)
-        self.assert_(isinstance(nth(self.logger.get_logs(action), 0), Log))
+        self.assertEqual(count(self.logger.get_logs(job.action)), 1)
+        self.assert_(isinstance(nth(self.logger.get_logs(job.action), 0), Log))
 
-        action.log_event('hello world')
+        job.action.log_event('hello world')
         self.assertEqual(count(self.logger.get_logs()), 1)
-        self.assertEqual(count(self.logger.get_logs(action)), 1)
+        self.assertEqual(count(self.logger.get_logs(job.action)), 1)
 
-        self.queue.workqueue.job_succeeded_event(action)
+        self.queue.workqueue.job_succeeded_event(job)
         self.assertEqual(count(self.logger.get_logs()), 1)
-        self.assertEqual(count(self.logger.get_logs(action)), 1)
+        self.assertEqual(count(self.logger.get_logs(job.action)), 1)
 
         try:
             raise FakeError()
         except FakeError:
-            self.queue.workqueue.job_error_event(action, sys.exc_info())
+            self.queue.workqueue.job_error_event(job, sys.exc_info())
         self.assertEqual(count(self.logger.get_logs()), 1)
-        self.queue.workqueue.job_aborted_event(action)
+        self.queue.workqueue.job_aborted_event(job)
         self.assertEqual(count(self.logger.get_logs()), 1)
 
     def testGetSucceededLogs(self):
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
 
-        action = FakeAction()
+        job = FakeJob()
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
-        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_succeeded_logs(job.action)), 0)
 
-        self.queue.workqueue.job_started_event(action)
+        self.queue.workqueue.job_started_event(job)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
-        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_succeeded_logs(job.action)), 0)
 
-        action.log_event('hello world')
+        job.action.log_event('hello world')
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
-        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_succeeded_logs(job.action)), 0)
 
-        self.queue.workqueue.job_succeeded_event(action)
+        self.queue.workqueue.job_succeeded_event(job)
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
-        self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_aborted_logs(job.action)), 0)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 1)
         self.assert_(isinstance(nth(self.logger.get_succeeded_logs(), 0), Log))
-        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 1)
-        self.assert_(isinstance(nth(self.logger.get_succeeded_logs(action), 0), Log))
+        self.assertEqual(count(self.logger.get_succeeded_logs(job.action)), 1)
+        self.assert_(isinstance(nth(self.logger.get_succeeded_logs(job.action), 0), Log))
 
     def testGetAbortedLogs(self):
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
 
-        action = FakeAction()
+        job = FakeJob()
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
-        self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_aborted_logs(job.action)), 0)
 
-        self.queue.workqueue.job_started_event(action)
+        self.queue.workqueue.job_started_event(job)
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
-        self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_aborted_logs(job.action)), 0)
 
-        action.log_event('hello world')
+        job.action.log_event('hello world')
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
-        self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_aborted_logs(job.action)), 0)
 
         try:
             raise FakeError()
         except FakeError:
-            self.queue.workqueue.job_error_event(action, sys.exc_info())
-        self.queue.workqueue.job_aborted_event(action)
+            self.queue.workqueue.job_error_event(job, sys.exc_info())
+        self.queue.workqueue.job_aborted_event(job)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
-        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_succeeded_logs(job.action)), 0)
         self.assertEqual(count(self.logger.get_aborted_logs()), 1)
         self.assert_(isinstance(nth(self.logger.get_aborted_logs(), 0), Log))
-        self.assertEqual(count(self.logger.get_aborted_logs(action)), 1)
-        self.assert_(isinstance(nth(self.logger.get_aborted_logs(action), 0), Log))
+        self.assertEqual(count(self.logger.get_aborted_logs(job.action)), 1)
+        self.assert_(isinstance(nth(self.logger.get_aborted_logs(job.action), 0), Log))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LoggerTest)

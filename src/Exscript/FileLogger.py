@@ -38,15 +38,16 @@ class FileLogger(Logger):
         if not os.path.exists(self.logdir):
             os.mkdir(self.logdir)
 
-    def _on_action_started(self, action):
-        name     = action.get_name()
+    def _on_job_started(self, job):
+        action   = job.action
+        name     = job.name
         filename = os.path.join(self.logdir, action.get_logname())
         log      = Logfile(name, filename, self.mode, self.delete)
         log.started()
         action.log_event.listen(log.write)
         self.logs[action.__hash__()].append(log)
 
-    def _on_action_done(self, action):
-        Logger._on_action_done(self, action)
+    def _on_job_done(self, job):
+        Logger._on_job_done(self, job.action)
         if self.clearmem:
             self._reset()

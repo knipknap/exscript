@@ -38,10 +38,10 @@ class Logger(object):
         self.started = 0
         self.success = 0
         self.failed  = 0
-        queue.workqueue.job_started_event.listen(self._on_action_started)
-        queue.workqueue.job_error_event.listen(self._on_action_error)
-        queue.workqueue.job_succeeded_event.listen(self._on_action_succeeded)
-        queue.workqueue.job_aborted_event.listen(self._on_action_aborted)
+        queue.workqueue.job_started_event.listen(self._on_job_started)
+        queue.workqueue.job_error_event.listen(self._on_job_error)
+        queue.workqueue.job_succeeded_event.listen(self._on_job_succeeded)
+        queue.workqueue.job_aborted_event.listen(self._on_job_aborted)
 
     def _reset(self):
         self.logs = defaultdict(list)
@@ -74,23 +74,24 @@ class Logger(object):
     def _get_log(self, action):
         return self.logs[action.__hash__()][-1]
 
-    def _on_action_started(self, action):
-        log = Log(action.get_logname())
+    def _on_job_started(self, job):
+        action = job.action
+        log    = Log(action.get_logname())
         log.started()
         action.log_event.listen(log.write)
         self.logs[action.__hash__()].append(log)
         self.started += 1
 
-    def _on_action_error(self, action, exc_info):
-        log = self._get_log(action)
+    def _on_job_error(self, job, exc_info):
+        log = self._get_log(job.action)
         log.error(exc_info)
 
-    def _on_action_succeeded(self, action):
-        log = self._get_log(action)
+    def _on_job_succeeded(self, job):
+        log = self._get_log(job.action)
         log.done()
         self.success += 1
 
-    def _on_action_aborted(self, action):
-        log = self._get_log(action)
+    def _on_job_aborted(self, job):
+        log = self._get_log(job.action)
         log.done()
         self.failed += 1

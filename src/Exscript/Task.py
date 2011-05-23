@@ -26,11 +26,11 @@ class Task(object):
         self.queue         = queue
         self.action_hashes = set()
         self.completed     = 0
-        self.queue.workqueue.job_succeeded_event.listen(self._on_action_done)
-        self.queue.workqueue.job_aborted_event.listen(self._on_action_done)
+        self.queue.workqueue.job_succeeded_event.listen(self._on_job_done)
+        self.queue.workqueue.job_aborted_event.listen(self._on_job_done)
 
-    def _on_action_done(self, action):
-        if action.__hash__() not in self.action_hashes:
+    def _on_job_done(self, job):
+        if job.action.__hash__() not in self.action_hashes:
             return
         self.completed += 1
         if self.is_completed():

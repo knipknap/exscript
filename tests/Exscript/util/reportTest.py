@@ -30,6 +30,11 @@ class FakeAction(object):
     def n_failures(self):
         return self.failures
 
+class FakeJob(object):
+    def __init__(self, action = None):
+        self.action = action is not None and action or FakeAction()
+        self.name   = self.action.name
+
 class FakeError(Exception):
     pass
 
@@ -44,28 +49,28 @@ class reportTest(unittest.TestCase):
     def createLog(self):
         self.n_actions += 1
         name            = 'fake' + str(self.n_actions)
-        action          = FakeAction(name)
-        self.queue.workqueue.job_started_event(action)
-        action.log_event('hello world')
-        return action
+        job             = FakeJob(FakeAction(name))
+        self.queue.workqueue.job_started_event(job)
+        job.action.log_event('hello world')
+        return job
 
     def createErrorLog(self):
-        action = self.createLog()
+        job = self.createLog()
         try:
             raise FakeError()
         except Exception:
-            self.queue.workqueue.job_error_event(action, sys.exc_info())
-        return action
+            self.queue.workqueue.job_error_event(job, sys.exc_info())
+        return job
 
     def createAbortedLog(self):
-        action = self.createErrorLog()
-        self.queue.workqueue.job_aborted_event(action)
-        return action
+        job = self.createErrorLog()
+        self.queue.workqueue.job_aborted_event(job)
+        return job
 
     def createSucceededLog(self):
-        action = self.createLog()
-        self.queue.workqueue.job_succeeded_event(action)
-        return action
+        job = self.createLog()
+        self.queue.workqueue.job_succeeded_event(job)
+        return job
 
     def testStatus(self):
         from Exscript.util.report import status
@@ -99,7 +104,7 @@ Failed actions:
 ---------------
 fake2.log:
 Traceback (most recent call last):
-  File "%s.py", line 55, in createErrorLog
+  File "%s.py", line 60, in createErrorLog
     raise FakeError()
 FakeError
 

@@ -214,30 +214,30 @@ class Queue(object):
         # will cause isinstance() to return False.
         return cls.__name__ in ('CompileError', 'FailException')
 
-    def _on_job_started(self, action):
+    def _on_job_started(self, job):
         self._del_status_bar()
         self._print_status_bar()
 
-    def _on_job_error(self, action, exc_info):
-        msg = action.get_name() + ' error: ' + str(exc_info[1])
+    def _on_job_error(self, job, exc_info):
+        msg = job.action.get_name() + ' error: ' + str(exc_info[1])
         tb  = ''.join(traceback.format_exception(*exc_info))
         self._print('errors', msg)
         if self._is_recoverable_error(exc_info[0]):
             self._print('tracebacks', tb)
         else:
             self._print('fatal_errors', tb)
-        action.attempt += 1
+        job.action.attempt += 1
 
-    def _on_job_succeeded(self, action):
+    def _on_job_succeeded(self, job):
         self.completed += 1
-        self._print('status_bar', action.get_name() + ' succeeded.')
-        self._dbg(2, action.name + ' job is done.')
+        self._print('status_bar', job.action.get_name() + ' succeeded.')
+        self._dbg(2, job.action.name + ' job is done.')
         self._del_status_bar()
         self._print_status_bar()
 
-    def _on_job_aborted(self, action):
+    def _on_job_aborted(self, job):
         self.completed += 1
-        self._print('errors', action.get_name() + ' finally failed.')
+        self._print('errors', job.action.get_name() + ' finally failed.')
 
     def set_max_threads(self, n_connections):
         """
