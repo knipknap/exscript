@@ -16,10 +16,6 @@ class IntentionalError(Exception):
 def count_calls(conn, data):
     data['n_calls'] += 1
 
-def fail_calls(conn, data, exception):
-    count_calls(conn, data)
-    raise exception('intentional error')
-
 class HostActionTest(unittest.TestCase):
     CORRELATE = HostAction
 
@@ -66,38 +62,6 @@ class HostActionTest(unittest.TestCase):
         action      = HostAction(pipe, callback, FakeHost())
         action.execute()
         self.assertEqual(data.get('account').__hash__(), account.__hash__())
-
-    def testSetLoginTimes(self):
-        # Run once.
-        data     = {'n_calls' : 0}
-        callback = bind(fail_calls, data, LoginFailure)
-        pipe     = self.queue.account_manager.create_pipe()
-        action   = HostAction(pipe, callback, FakeHost())
-        self.assertEqual(1, action.attempt)
-        self.assertEqual(False, action.has_aborted())
-        self.assertRaises(LoginFailure, action.execute)
-        self.assertEqual(1, data['n_calls'])
-        self.assertEqual(1, action.attempt)
-
-        # Run *three* times.
-        data     = {'n_calls' : 0}
-        callback = bind(fail_calls, data, LoginFailure)
-        action   = HostAction(pipe, callback, FakeHost())
-        action.set_login_times(3)
-        self.assertEqual(1, action.attempt)
-        self.assertRaises(LoginFailure, action.execute)
-        self.assertEqual(3, data['n_calls'])
-        self.assertEqual(1, action.attempt)
-
-        # Should also run three times.
-        data     = {'n_calls' : 0}
-        callback = bind(fail_calls, data, LoginFailure)
-        action   = HostAction(pipe, callback, FakeHost())
-        action.set_login_times(3)
-        self.assertEqual(1, action.attempt)
-        self.assertRaises(LoginFailure, action.execute)
-        self.assertEqual(3, data['n_calls'])
-        self.assertEqual(1, action.attempt)
 
     def testHasAborted(self):
         self.assertEqual(False, self.count_action.has_aborted())

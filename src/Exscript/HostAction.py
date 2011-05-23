@@ -13,7 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.protocols import get_protocol_from_name
-from Exscript.protocols.Exception import LoginFailure
 from Exscript.CustomAction import CustomAction
 from Exscript.Connection import Connection
 from Exscript.AccountProxy import AccountProxy
@@ -78,17 +77,7 @@ class HostAction(CustomAction):
 
     def execute(self):
         try:
-            while True:
-                conn = self._create_connection()
-
-                # Execute the user-provided function.
-                try:
-                    self.function(conn)
-                except LoginFailure, e:
-                    self.login_failures += 1
-                    if self.login_failures >= self.login_times:
-                        raise
-                    continue
-                break
+            conn = self._create_connection()
+            self.function(conn)
         finally:
             self.accm.close()

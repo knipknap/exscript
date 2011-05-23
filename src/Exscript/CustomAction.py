@@ -35,14 +35,12 @@ class CustomAction(Action):
         @param name: A name for the action.
         """
         Action.__init__(self)
-        self.log_event      = Event()
-        self.accm           = accm
-        self.function       = function
-        self.attempt        = 1
-        self.login_times    = 1
-        self.login_failures = 0
-        self.aborted        = False
-        self.name           = name
+        self.log_event = Event()
+        self.accm      = accm
+        self.function  = function
+        self.attempt   = 1
+        self.aborted   = False
+        self.name      = name
 
         # Since each action is created in it's own thread, we must
         # re-initialize the random number generator to make sure that
@@ -73,12 +71,6 @@ class CustomAction(Action):
         if self.attempt > 1:
             logname += '_retry%d' % (self.attempt - 1)
         return logname + '.log'
-
-    def set_login_times(self, times):
-        """
-        The number of login attempts.
-        """
-        self.login_times = int(times)
 
     def has_aborted(self):
         return self.aborted

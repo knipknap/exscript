@@ -61,7 +61,6 @@ class Queue(object):
         @keyword verbose: The verbosity level, default 1.
         @keyword max_threads: The maximum number of concurrent threads, default 1
         @keyword times: The number of attempts on failure, default 1.
-        @keyword login_times: The number of login attempts, default 1.
         @keyword logdir: The directory into which the logs are written.
         @keyword overwrite_logs: Whether existing logfiles are overwritten.
         @keyword delete_logs: Whether successful logfiles are deleted.
@@ -74,7 +73,6 @@ class Queue(object):
         self.domain            = kwargs.get('domain',        '')
         self.verbose           = kwargs.get('verbose',       1)
         self.times             = kwargs.get('times',         1)
-        self.login_times       = kwargs.get('login_times',   1)
         self.protocol_args     = kwargs.get('protocol_args', {})
         self.stdout            = kwargs.get('stdout',        sys.stdout)
         self.stderr            = kwargs.get('stderr',        sys.stderr)
@@ -399,7 +397,6 @@ class Queue(object):
         Returns True if the action was enqueued, False otherwise.
         """
         self._dbg(2, 'Enqueing Action.')
-        action.set_login_times(self.login_times)
 
         # Done. Enqueue this.
         if duplicate_check:

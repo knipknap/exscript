@@ -158,7 +158,6 @@ def run():
                   verbose        = options.verbose,
                   max_threads    = options.connections,
                   times          = options.retry + 1,
-                  login_times    = options.retry_login + 1,
                   logdir         = options.logdir,
                   overwrite_logs = options.overwrite_logs,
                   delete_logs    = options.delete_logs,
@@ -224,7 +223,7 @@ def run():
     if options.no_authentication:
         function = connect(function)
     else:
-        function = autologin(function)
+        function = autologin(function, attempts = options.retry_login + 1)
 
     # Wait until the specified time.
     if options.sleep:
