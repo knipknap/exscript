@@ -28,22 +28,18 @@ class FileLoggerTest(LoggerTest):
 
     def testConstructor(self):
         self.assert_(os.path.isdir(self.tempdir))
-        logger = FileLogger(self.queue, self.logdir)
 
     def testActionEnqueued(self):
-        host        = Host('fake')
-        action      = HostAction(object, host)
-        action.accm = object
-
+        host    = Host('fake')
+        action  = HostAction(object, object, host)
         conn    = FakeConnection()
         logfile = os.path.join(self.logdir, 'fake.log')
         errfile = logfile + '.error'
-        self.logger._on_action_enqueued(action)
         self.failIf(os.path.exists(logfile))
         self.failIf(os.path.exists(errfile))
 
         # Test "started".
-        self.queue.action_started_event(action)
+        self.queue.workqueue.job_started_event(action)
         self.assert_(os.path.isfile(logfile), 'No such file: ' + logfile)
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
@@ -60,23 +56,23 @@ class FileLoggerTest(LoggerTest):
         try:
             raise FakeError()
         except Exception:
-            action.error_event(action, sys.exc_info())
+            self.queue.workqueue.job_error_event(action, sys.exc_info())
         self.assert_(os.path.isfile(logfile))
         self.assert_(os.path.isfile(errfile))
         content = open(errfile).read()
         self.assert_('FakeError' in content)
 
-        action.aborted_event(action)
+        self.queue.workqueue.job_aborted_event(action)
         content = open(logfile).read()
 
         # Repeat all of the above, with failures = 1.
         # Test "started".
-        action.failures = 1
-        logfile         = os.path.join(self.logdir, 'fake_retry1.log')
-        errfile         = logfile + '.error'
+        action.attempt = 2
+        logfile        = os.path.join(self.logdir, action.get_logname())
+        errfile        = logfile + '.error'
         self.failIf(os.path.exists(logfile))
         self.failIf(os.path.exists(errfile))
-        self.queue.action_started_event(action)
+        self.queue.workqueue.job_started_event(action)
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
@@ -90,7 +86,7 @@ class FileLoggerTest(LoggerTest):
         self.assertEqual(content, 'hello world')
 
         # Test "succeeded".
-        action.succeeded_event(action)
+        self.queue.workqueue.job_succeeded_event(action)
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
 

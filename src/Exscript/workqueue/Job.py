@@ -23,10 +23,20 @@ class Job(threading.Thread):
         self.exc_info  = None
         self.completed = False
         self.name      = name
+        self.times     = 1
+        self.failures  = 0
 
-    def _completed(self, exception = None):
+    def __copy__(self):
+        job          = Job(self.condition, self.action, self.name)
+        job.times    = self.times
+        job.failures = self.failures
+        return job
+
+    def _completed(self, exc_info = None):
         with self.condition:
-            self.exception = exception
+            if exc_info:
+                self.failures += 1
+            self.exc_info  = exc_info
             self.completed = True
             self.condition.notifyAll()
 
@@ -38,8 +48,8 @@ class Job(threading.Thread):
             self.action.execute()
         except:
             self._completed(sys.exc_info())
-            raise
-        self._completed()
+        else:
+            self._completed()
 
     def is_alive(self):
         return not self.completed

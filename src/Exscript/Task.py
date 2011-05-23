@@ -26,8 +26,12 @@ class Task(object):
         self.queue         = queue
         self.action_hashes = set()
         self.completed     = 0
+        self.queue.workqueue.job_succeeded_event.listen(self._on_action_done)
+        self.queue.workqueue.job_aborted_event.listen(self._on_action_done)
 
     def _on_action_done(self, action):
+        if action.__hash__() not in self.action_hashes:
+            return
         self.completed += 1
         if self.is_completed():
             self.done_event()
@@ -58,5 +62,3 @@ class Task(object):
         @param action: The action to be added.
         """
         self.action_hashes.add(action.__hash__())
-        action.aborted_event.listen(self._on_action_done)
-        action.succeeded_event.listen(self._on_action_done)

@@ -36,56 +36,51 @@ class LoggerTest(unittest.TestCase):
 
         action1 = FakeAction()
         action2 = FakeAction()
-        self.logger._on_action_enqueued(action1)
-        self.logger._on_action_enqueued(action2)
         self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
-        self.queue.action_started_event(action1)
-        self.queue.action_started_event(action2)
+        self.queue.workqueue.job_started_event(action1)
+        self.queue.workqueue.job_started_event(action2)
         self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
-        action2.succeeded_event(action1)
+        self.queue.workqueue.job_succeeded_event(action1)
         self.assertEqual(self.logger.get_succeeded_actions(), 1)
 
         try:
             raise FakeError()
         except FakeError:
-            action2.error_event(action2, sys.exc_info())
+            self.queue.workqueue.job_error_event(action2, sys.exc_info())
         self.assertEqual(self.logger.get_succeeded_actions(), 1)
-        action2.aborted_event(action2)
+        self.queue.workqueue.job_aborted_event(action2)
         self.assertEqual(self.logger.get_succeeded_actions(), 1)
 
     def testGetAbortedActions(self):
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
         action = FakeAction()
-        self.logger._on_action_enqueued(action)
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
-        self.queue.action_started_event(action)
+        self.queue.workqueue.job_started_event(action)
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
-        action.succeeded_event(action)
+        self.queue.workqueue.job_succeeded_event(action)
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
         try:
             raise FakeError()
         except FakeError:
-            action.error_event(action, sys.exc_info())
+            self.queue.workqueue.job_error_event(action, sys.exc_info())
         self.assertEqual(self.logger.get_aborted_actions(), 0)
-        action.aborted = True
-        action.aborted_event(action)
+        self.queue.workqueue.job_aborted_event(action)
         self.assertEqual(self.logger.get_aborted_actions(), 1)
 
     def testGetLogs(self):
         self.assertEqual(count(self.logger.get_logs()), 0)
 
         action = FakeAction()
-        self.logger._on_action_enqueued(action)
         self.assertEqual(count(self.logger.get_logs()), 0)
         self.assertEqual(count(self.logger.get_logs(action)), 0)
 
-        self.queue.action_started_event(action)
+        self.queue.workqueue.job_started_event(action)
         self.assertEqual(count(self.logger.get_logs()), 1)
         self.assert_(isinstance(nth(self.logger.get_logs(), 0), Log))
         self.assertEqual(count(self.logger.get_logs(action)), 1)
@@ -95,19 +90,26 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(count(self.logger.get_logs()), 1)
         self.assertEqual(count(self.logger.get_logs(action)), 1)
 
-        action.succeeded_event(action)
+        self.queue.workqueue.job_succeeded_event(action)
         self.assertEqual(count(self.logger.get_logs()), 1)
         self.assertEqual(count(self.logger.get_logs(action)), 1)
+
+        try:
+            raise FakeError()
+        except FakeError:
+            self.queue.workqueue.job_error_event(action, sys.exc_info())
+        self.assertEqual(count(self.logger.get_logs()), 1)
+        self.queue.workqueue.job_aborted_event(action)
+        self.assertEqual(count(self.logger.get_logs()), 1)
 
     def testGetSucceededLogs(self):
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
 
         action = FakeAction()
-        self.logger._on_action_enqueued(action)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
         self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
 
-        self.queue.action_started_event(action)
+        self.queue.workqueue.job_started_event(action)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
         self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
 
@@ -115,7 +117,7 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
         self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
 
-        action.succeeded_event(action)
+        self.queue.workqueue.job_succeeded_event(action)
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
         self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 1)
@@ -127,11 +129,10 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
 
         action = FakeAction()
-        self.logger._on_action_enqueued(action)
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
         self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
 
-        self.queue.action_started_event(action)
+        self.queue.workqueue.job_started_event(action)
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
         self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
 
@@ -142,18 +143,14 @@ class LoggerTest(unittest.TestCase):
         try:
             raise FakeError()
         except FakeError:
-            action.error_event(action, sys.exc_info())
-        action.aborted_event(action)
+            self.queue.workqueue.job_error_event(action, sys.exc_info())
+        self.queue.workqueue.job_aborted_event(action)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
         self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
         self.assertEqual(count(self.logger.get_aborted_logs()), 1)
         self.assert_(isinstance(nth(self.logger.get_aborted_logs(), 0), Log))
         self.assertEqual(count(self.logger.get_aborted_logs(action)), 1)
         self.assert_(isinstance(nth(self.logger.get_aborted_logs(action), 0), Log))
-
-    def testActionEnqueued(self):
-        action = FakeAction()
-        self.logger._on_action_enqueued(action)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LoggerTest)

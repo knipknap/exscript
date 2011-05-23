@@ -28,14 +28,16 @@ class HostActionTest(unittest.TestCase):
         self.count_cb     = bind(count_calls, self.data)
         self.fail_cb      = bind(fail_calls, self.data)
         self.queue        = Queue()
-        self.count_action = HostAction(self.count_cb, FakeHost())
-        self.fail_action  = HostAction(self.fail_cb, FakeHost())
+        pipe              = self.queue.account_manager.create_pipe()
+        self.count_action = HostAction(pipe, self.count_cb, FakeHost())
+        pipe              = self.queue.account_manager.create_pipe()
+        self.fail_action  = HostAction(pipe, self.fail_cb, FakeHost())
 
     def tearDown(self):
         self.queue.destroy()
 
     def testConstructor(self):
-        action = HostAction(self.count_cb, FakeHost())
+        action = HostAction(object, self.count_cb, FakeHost())
 
     def testGetName(self):
         self.assertEqual(self.count_action.get_name(), 'testaddress')
@@ -60,8 +62,8 @@ class HostActionTest(unittest.TestCase):
 
         data        = {}
         callback    = bind(doit, data)
-        action      = HostAction(callback, FakeHost())
-        action.accm = self.queue.account_manager.create_pipe()
+        pipe        = self.queue.account_manager.create_pipe()
+        action      = HostAction(pipe, callback, FakeHost())
         action.execute()
         self.assertEqual(data.get('account').__hash__(), account.__hash__())
 
@@ -69,37 +71,38 @@ class HostActionTest(unittest.TestCase):
         # Run once.
         data     = {'n_calls' : 0}
         callback = bind(fail_calls, data, LoginFailure)
-        action   = HostAction(callback, FakeHost())
-        self.assertEqual(0, action.n_failures())
+        pipe     = self.queue.account_manager.create_pipe()
+        action   = HostAction(pipe, callback, FakeHost())
+        self.assertEqual(1, action.attempt)
         self.assertEqual(False, action.has_aborted())
-        action.execute()
+        self.assertRaises(LoginFailure, action.execute)
         self.assertEqual(1, data['n_calls'])
-        self.assertEqual(1, action.n_failures())
-        self.assertEqual(True, action.has_aborted())
+        self.assertEqual(1, action.attempt)
 
         # Run *three* times.
         data     = {'n_calls' : 0}
         callback = bind(fail_calls, data, LoginFailure)
-        action   = HostAction(callback, FakeHost())
+        action   = HostAction(pipe, callback, FakeHost())
         action.set_login_times(3)
-        action.execute()
+        self.assertEqual(1, action.attempt)
+        self.assertRaises(LoginFailure, action.execute)
         self.assertEqual(3, data['n_calls'])
-        self.assertEqual(3, action.n_failures())
+        self.assertEqual(1, action.attempt)
 
         # Should also run three times.
         data     = {'n_calls' : 0}
         callback = bind(fail_calls, data, LoginFailure)
-        action   = HostAction(callback, FakeHost())
+        action   = HostAction(pipe, callback, FakeHost())
         action.set_login_times(3)
-        action.execute()
+        self.assertEqual(1, action.attempt)
+        self.assertRaises(LoginFailure, action.execute)
         self.assertEqual(3, data['n_calls'])
-        self.assertEqual(3, action.n_failures())
-
-    def testNFailures(self):
-        pass # Tested in testSetLoginTimes().
+        self.assertEqual(1, action.attempt)
 
     def testHasAborted(self):
-        pass # Tested in testSetLoginTimes().
+        self.assertEqual(False, self.count_action.has_aborted())
+        self.count_action.aborted = True
+        self.assertEqual(True, self.count_action.has_aborted())
 
     def testExecute(self):
         pass # Tested in testSetLoginTimes().

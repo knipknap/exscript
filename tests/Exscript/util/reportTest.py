@@ -5,10 +5,10 @@ import Exscript.util.report
 from Exscript            import Host
 from Exscript.Logger     import Logger
 from Exscript.util.event import Event
+from Exscript.workqueue  import WorkQueue
 
 class FakeQueue(object):
-    action_started_event  = Event()
-    action_enqueued_event = Event()
+    workqueue = WorkQueue()
 
 class FakeAction(object):
     failures = 0
@@ -40,15 +40,15 @@ class reportTest(unittest.TestCase):
     CORRELATE = Exscript.util.report
 
     def setUp(self):
-        self.logger    = Logger(FakeQueue())
+        self.queue     = FakeQueue()
+        self.logger    = Logger(self.queue)
         self.n_actions = 0
 
     def createLog(self):
         self.n_actions += 1
         name            = 'fake' + str(self.n_actions)
         action          = FakeAction(name)
-        self.logger._on_action_enqueued(action)
-        self.logger._on_action_started(action)
+        self.queue.workqueue.job_started_event(action)
         action.log_event('hello world')
         return action
 
@@ -57,18 +57,18 @@ class reportTest(unittest.TestCase):
         try:
             raise FakeError()
         except Exception:
-            action.error_event(action, sys.exc_info())
+            self.queue.workqueue.job_error_event(action, sys.exc_info())
         return action
 
     def createAbortedLog(self):
         action = self.createErrorLog()
         action.aborted = True
-        action.aborted_event(action)
+        self.queue.workqueue.job_aborted_event(action)
         return action
 
     def createSucceededLog(self):
         action = self.createLog()
-        action.succeeded_event(action)
+        self.queue.workqueue.job_succeeded_event(action)
         return action
 
     def testStatus(self):

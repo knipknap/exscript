@@ -28,6 +28,7 @@ class WorkQueue(object):
         @keyword max_threads: Number of concurrent connections (default is 1).
         """
         self.job_started_event   = Event()
+        self.job_error_event     = Event()
         self.job_succeeded_event = Event()
         self.job_aborted_event   = Event()
         self.queue_empty_event   = Event()
@@ -41,6 +42,7 @@ class WorkQueue(object):
         self.main_loop.debug = self.debug
         self.main_loop.set_max_threads(self.max_threads)
         self.main_loop.job_started_event.listen(self.job_started_event)
+        self.main_loop.job_error_event.listen(self.job_error_event)
         self.main_loop.job_succeeded_event.listen(self.job_succeeded_event)
         self.main_loop.job_aborted_event.listen(self.job_aborted_event)
         self.main_loop.queue_empty_event.listen(self.queue_empty_event)

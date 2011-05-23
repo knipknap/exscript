@@ -38,8 +38,10 @@ class Logger(object):
         self.started = 0
         self.success = 0
         self.failed  = 0
-        queue.action_started_event.listen(self._on_action_started)
-        queue.action_enqueued_event.listen(self._on_action_enqueued)
+        queue.workqueue.job_started_event.listen(self._on_action_started)
+        queue.workqueue.job_error_event.listen(self._on_action_error)
+        queue.workqueue.job_succeeded_event.listen(self._on_action_succeeded)
+        queue.workqueue.job_aborted_event.listen(self._on_action_aborted)
 
     def _reset(self):
         self.logs = defaultdict(list)
@@ -92,8 +94,3 @@ class Logger(object):
         log = self._get_log(action)
         log.done()
         self.failed += 1
-
-    def _on_action_enqueued(self, action):
-        action.error_event.listen(self._on_action_error)
-        action.succeeded_event.listen(self._on_action_succeeded)
-        action.aborted_event.listen(self._on_action_aborted)

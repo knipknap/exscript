@@ -19,14 +19,16 @@ import sys
 import os
 import gc
 import traceback
-from Exscript.FileLogger     import FileLogger
+from Exscript.parselib.Exception import CompileError
+from Exscript.interpreter.Exception import FailException
+from Exscript.util.cast import to_hosts
+from Exscript.util.event import Event
+from Exscript.FileLogger import FileLogger
 from Exscript.AccountManager import AccountManager
-from Exscript.CustomAction   import CustomAction
-from Exscript.HostAction     import HostAction
-from Exscript.Task           import Task
-from Exscript.workqueue      import WorkQueue, Action
-from Exscript.util.cast      import to_hosts
-from Exscript.util.event     import Event
+from Exscript.CustomAction import CustomAction
+from Exscript.HostAction import HostAction
+from Exscript.Task import Task
+from Exscript.workqueue import WorkQueue, Action
 
 class Queue(object):
     """
@@ -85,11 +87,6 @@ class Queue(object):
         self.status_bar_length = 0
         self.set_max_threads(kwargs.get('max_threads', 1))
 
-        # Define events.
-        self.queue_empty_event     = Event()
-        self.action_enqueued_event = Event()
-        self.action_started_event  = Event()
-
         # Enable logging.
         if kwargs.get('logdir'):
             overwrite   = kwargs.get('overwrite_logs', False)
@@ -101,9 +98,9 @@ class Queue(object):
 
         # Listen to what the workqueue is doing.
         self.workqueue.job_started_event.listen(self._on_job_started)
+        self.workqueue.job_error_event.listen(self._on_job_error)
         self.workqueue.job_succeeded_event.listen(self._on_job_succeeded)
         self.workqueue.job_aborted_event.listen(self._on_job_aborted)
-        self.workqueue.queue_empty_event.listen(self.queue_empty_event)
         self.workqueue.unpause()
 
     def _update_verbosity(self):
@@ -181,42 +178,37 @@ class Queue(object):
             return
         self._print('debug', msg)
 
+    def _is_recoverable_error(self, cls):
+        # Hack: We can't use isinstance(), because the classes may
+        # have been created by another python process; apparently this
+        # will cause isinstance() to return False.
+        return cls.__name__ in ('CompileError', 'FailException')
+
     def _on_job_started(self, action):
         self._del_status_bar()
         self._print_status_bar()
-        self.action_started_event(action)
+
+    def _on_job_error(self, action, exc_info):
+        msg = action.get_name() + ' error: ' + str(exc_info[1])
+        tb  = ''.join(traceback.format_exception(*exc_info))
+        self._print('errors', msg)
+        if self._is_recoverable_error(exc_info[0]):
+            self._print('tracebacks', tb)
+        else:
+            self._print('fatal_errors', tb)
+        action.attempt += 1
 
     def _on_job_succeeded(self, action):
+        self.completed += 1
+        self._print('status_bar', action.get_name() + ' succeeded.')
         self._dbg(2, action.name + ' job is done.')
         self._del_status_bar()
         self._print_status_bar()
 
-    def _on_action_started(self, action, conn):
-        action.accm = self.account_manager.create_pipe()
-
-    def _on_action_error(self, action, exc_info):
-        msg = action.get_name() + ' error: ' + str(exc_info[1])
-        tb  = ''.join(traceback.format_exception(*exc_info))
-        self._print('errors',     msg)
-        self._print('tracebacks', tb)
-        if action._is_recoverable_error(exc_info[0]):
-            self._print('fatal_errors', tb)
-
-    def _on_action_aborted(self, action):
+    def _on_job_aborted(self, action):
+        action.aborted = True
         self.completed += 1
-        self.failed    += 1
         self._print('errors', action.get_name() + ' finally failed.')
-
-    def _on_action_succeeded(self, action):
-        self.completed += 1
-        self._print('status_bar', action.get_name() + ' succeeded.')
-
-    def _on_job_aborted(self, action, e):
-        """
-        Should, in theory, never be called, as HostAction never raises.
-        In other words, the workqueue does not notice if the action fails.
-        """
-        raise e
 
     def set_max_threads(self, n_connections):
         """
@@ -408,12 +400,6 @@ class Queue(object):
         """
         self._dbg(2, 'Enqueing Action.')
         action.set_login_times(self.login_times)
-        action.started_event.listen(self._on_action_started)
-        action.error_event.listen(self._on_action_error)
-        action.aborted_event.listen(self._on_action_aborted)
-        action.succeeded_event.listen(self._on_action_succeeded)
-        action.message_event.listen(self._print)
-        self.action_enqueued_event(action)
 
         # Done. Enqueue this.
         if duplicate_check:
@@ -433,7 +419,8 @@ class Queue(object):
     def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
-        action = HostAction(function, host, **self.protocol_args)
+        pipe   = self.account_manager.create_pipe()
+        action = HostAction(pipe, function, host, **self.protocol_args)
         if self._enqueue1(action, prioritize, force, duplicate_check):
             return action
         return None
@@ -579,7 +566,8 @@ class Queue(object):
 
         self._dbg(2, 'Building CustomAction for Queue.enqueue().')
         task   = Task(self)
-        action = CustomAction(function, name)
+        pipe   = self.account_manager.create_pipe()
+        action = CustomAction(pipe, function, name)
         task.add_action(action)
         self._enqueue1(action, False, False, False)
 

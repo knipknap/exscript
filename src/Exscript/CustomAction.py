@@ -16,7 +16,6 @@ import sys
 import Crypto
 from Exscript.workqueue import Action
 from Exscript.util.event import Event
-from Exscript.protocols.Exception import LoginFailure
 from Exscript.AccountProxy import AccountProxy
 
 class CustomAction(Action):
@@ -24,30 +23,26 @@ class CustomAction(Action):
     An action that calls the associated function and implements retry and
     logging.
     """
-    def __init__(self, function, name):
+    def __init__(self, accm, function, name):
         """
         Constructor.
 
+        @type  accm: multiprocessing.Connection
+        @param accm: A pipe to the associated account manager.
         @type  function: function
         @param function: Called when the action is executed.
         @type  name: str
         @param name: A name for the action.
         """
         Action.__init__(self)
-        self.started_event   = Event()
-        self.error_event     = Event()
-        self.aborted_event   = Event()
-        self.succeeded_event = Event()
-        self.message_event   = Event()
-        self.log_event       = Event()
-        self.accm            = None
-        self.function        = function
-        self.times           = 1
-        self.login_times     = 1
-        self.failures        = 0
-        self.login_failures  = 0
-        self.aborted         = False
-        self.name            = name
+        self.log_event      = Event()
+        self.accm           = accm
+        self.function       = function
+        self.attempt        = 1
+        self.login_times    = 1
+        self.login_failures = 0
+        self.aborted        = False
+        self.name           = name
 
         # Since each action is created in it's own thread, we must
         # re-initialize the random number generator to make sure that
@@ -75,9 +70,8 @@ class CustomAction(Action):
 
     def get_logname(self):
         logname = self.get_name()
-        retries = self.n_failures()
-        if retries > 0:
-            logname += '_retry%d' % retries
+        if self.attempt > 1:
+            logname += '_retry%d' % (self.attempt - 1)
         return logname + '.log'
 
     def set_login_times(self, times):
@@ -86,48 +80,12 @@ class CustomAction(Action):
         """
         self.login_times = int(times)
 
-    def n_failures(self):
-        return self.failures + self.login_failures
-
     def has_aborted(self):
         return self.aborted
 
-    def _is_recoverable_error(self, cls):
-        return cls.__name__ not in ('CompileError', 'FailException')
-
-    def _create_connection(self):
-        return None
-
-    def _call_function(self, conn):
-        return self.function()
-
     def execute(self):
         try:
-            while self.failures < self.times \
-              and self.login_failures < self.login_times:
-                conn = self._create_connection()
-                self.started_event(self, conn)
-
-                # Execute the user-provided function.
-                try:
-                    self._call_function(conn)
-                except LoginFailure:
-                    self.error_event(self, sys.exc_info())
-                    self.login_failures += 1
-                    continue
-                except Exception:
-                    self.error_event(self, sys.exc_info())
-                    self.failures += 1
-                    if not self._is_recoverable_error(sys.exc_info()[0]):
-                        break
-                    continue
-
-                self.succeeded_event(self)
-                return
-
-            # Ending up here the function finally failed.
-            self.aborted = True
-            self.aborted_event(self)
+            self.function()
         finally:
             if self.accm is not None:
                 self.accm.close()

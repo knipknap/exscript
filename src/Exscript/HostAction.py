@@ -12,9 +12,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript.protocols    import get_protocol_from_name
+from Exscript.protocols import get_protocol_from_name
+from Exscript.protocols.Exception import LoginFailure
 from Exscript.CustomAction import CustomAction
-from Exscript.Connection   import Connection
+from Exscript.Connection import Connection
 from Exscript.AccountProxy import AccountProxy
 
 class HostAction(CustomAction):
@@ -22,16 +23,18 @@ class HostAction(CustomAction):
     An action that automatically opens a network connection to a host
     before calling the associated function.
     """
-    def __init__(self, function, host, **conn_args):
+    def __init__(self, accm, function, host, **conn_args):
         """
         Constructor.
 
+        @type  accm: multiprocessing.Connection
+        @param accm: A pipe to the associated account manager.
         @type  function: function
         @param function: Called when the Action is executed.
         @type  conn: Connection
         @param conn: The associated connection.
         """
-        CustomAction.__init__(self, function, host.get_address())
+        CustomAction.__init__(self, accm, function, host.get_address())
         self.host      = host
         self.account   = host.get_account()
         self.conn_args = conn_args
@@ -57,9 +60,8 @@ class HostAction(CustomAction):
 
     def get_logname(self):
         logname = self.host.get_logname()
-        retries = self.n_failures()
-        if retries > 0:
-            logname += '_retry%d' % retries
+        if self.attempt > 1:
+            logname += '_retry%d' % (self.attempt - 1)
         return logname + '.log'
 
     def _create_connection(self):
@@ -74,5 +76,19 @@ class HostAction(CustomAction):
         conn.data_received_event.listen(self.log_event)
         return conn
 
-    def _call_function(self, conn):
-        return self.function(conn)
+    def execute(self):
+        try:
+            while True:
+                conn = self._create_connection()
+
+                # Execute the user-provided function.
+                try:
+                    self.function(conn)
+                except LoginFailure, e:
+                    self.login_failures += 1
+                    if self.login_failures >= self.login_times:
+                        raise
+                    continue
+                break
+        finally:
+            self.accm.close()

@@ -23,6 +23,7 @@ class MainLoop(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.job_started_event   = Event()
+        self.job_error_event     = Event()
         self.job_succeeded_event = Event()
         self.job_aborted_event   = Event()
         self.queue_empty_event   = Event()
@@ -34,7 +35,7 @@ class MainLoop(threading.Thread):
         self.shutdown_now        = False
         self.max_threads         = 1
         self.condition           = threading.Condition()
-        self.debug               = 0
+        self.debug               = 5
         self.daemon              = True
 
     def _dbg(self, level, msg):
@@ -64,16 +65,16 @@ class MainLoop(threading.Thread):
             self.condition.notify_all()
 
     def _create_job(self, action, times):
-        return Job(self.condition, action, action.name)
+        job = Job(self.condition, action, action.name)
+        job.times = times
+        return job
 
     def enqueue(self, action, times):
-        action.times = times
         with self.condition:
             self.queue.append(self._create_job(action, times))
             self.condition.notify_all()
 
     def enqueue_or_ignore(self, action, times):
-        action.times = times
         with self.condition:
             if self.get_first_job_from_name(action.name) is None:
                 job = self._create_job(action, times)
@@ -85,7 +86,6 @@ class MainLoop(threading.Thread):
         return enqueued
 
     def priority_enqueue(self, action, force_start, times):
-        action.times = times
         with self.condition:
             job = self._create_job(action, times)
             if force_start:
@@ -95,7 +95,6 @@ class MainLoop(threading.Thread):
             self.condition.notify_all()
 
     def priority_enqueue_or_raise(self, action, force_start, times):
-        action.times = times
         with self.condition:
             # If the action is already running (or about to be forced),
             # there is nothing to be done.
@@ -203,29 +202,25 @@ class MainLoop(threading.Thread):
                 return job
         return None
 
-    def _restart_job(self, job):
-        job = copy(job)
-        self.running_jobs.append(job)
-        job.start()
-
     def _start_job(self, job):
         self.running_jobs.append(job)
         self.job_started_event(job.action)
         job.start()
         self._dbg(1, 'Job "%s" started.' % job.name)
 
-    def _start_action(self, action):
-        action.debug = self.debug
-        job          = self._create_job(action)
-        self.running_jobs.append(job)
-        self.job_started_event(action)
-        job.start()
-        self._dbg(1, 'Job "%s" started.' % job.name)
+    def _restart_job(self, job):
+        self._start_job(copy(job))
 
     def _on_job_completed(self, job):
-        if job.exception:
-            self._dbg(1, 'Job "%s" aborted.' % job.getName())
-            self.job_aborted_event(job.action, job.exception)
+        if job.exc_info:
+            self._dbg(1, 'Error in job "%s"' % job.name)
+            self.job_error_event(job.action, job.exc_info)
+            if job.failures >= job.times:
+                self._dbg(1, 'Job "%s" finally failed' % job.name)
+                self.job_aborted_event(job.action)
+            else:
+                self._dbg(1, 'Restarting job "%s"' % job.name)
+                self._restart_job(job)
         else:
             self._dbg(1, 'Job "%s" succeeded.' % job.getName())
             self.job_succeeded_event(job.action)
