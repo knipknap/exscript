@@ -31,8 +31,7 @@ class FileLoggerTest(LoggerTest):
 
     def testActionEnqueued(self):
         host    = Host('fake')
-        action  = HostAction(object, object, host)
-        conn    = FakeConnection()
+        action  = HostAction(host)
         logfile = os.path.join(self.logdir, 'fake.log')
         errfile = logfile + '.error'
         self.failIf(os.path.exists(logfile))

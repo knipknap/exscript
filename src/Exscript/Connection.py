@@ -15,6 +15,7 @@
 """
 Accessing the connection to a remote host.
 """
+from Exscript.AccountProxy import AccountProxy
 
 class Connection(object):
     """
@@ -27,19 +28,22 @@ class Connection(object):
     documentation.
     """
 
-    def __init__(self, action, protocol):
+    def __init__(self, accm, host, protocol):
         """
         Do not call directly; Exscript creates the connection for you and
         passes it to the function that is invoked by Queue.run().
 
-        @type  action: HostAction
-        @param action: The associated HostAction instance.
+        @type  host: Host
+        @param host: The associated Host instance.
         @type  protocol: L{protocols.Protocol}
         @param protocol: The Protocol object that is decorated.
+        @type  account_factory: callable
+        @param account_factory: A function that returns an account proxy.
         """
         # Since we override setattr below, we can't access our properties
         # directly.
-        self.__dict__['action']   = action
+        self.__dict__['accm']     = accm
+        self.__dict__['host']     = host
         self.__dict__['protocol'] = protocol
 
     def __copy__(self):
@@ -100,7 +104,7 @@ class Connection(object):
         @rtype:  Host
         @return: The Host instance.
         """
-        return self.action.get_host()
+        return self.host
 
     def add_monitor(self, pattern, callback):
         """
@@ -109,6 +113,19 @@ class Connection(object):
         def the_callback(conn, index, match):
             return callback(self, index, match)
         return self.protocol.add_monitor(pattern, the_callback)
+
+    def acquire_account(self, account = None):
+        # Specific account requested?
+        if account:
+            return AccountProxy.for_account(self.accm, account)
+
+        # Is a default account defined for this connection?
+        account = self.host.get_account()
+        if account:
+            return AccountProxy.for_account(self.accm, account)
+
+        # Else, let the account manager assign an account.
+        return AccountProxy.for_host(self.accm, self.host)
 
     def connect(self):
         """
@@ -133,7 +150,7 @@ class Connection(object):
         @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
-        with self.action.acquire_account(account).context() as account:
+        with self.acquire_account(account).context() as account:
             self.protocol.login(account, flush = flush)
         return account
 
@@ -152,7 +169,7 @@ class Connection(object):
         @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
-        with self.action.acquire_account(account).context() as account:
+        with self.acquire_account(account).context() as account:
             self.protocol.authenticate(account, flush = flush)
         return account
 
@@ -169,7 +186,7 @@ class Connection(object):
         @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
-        with self.action.acquire_account(account).context() as account:
+        with self.acquire_account(account).context() as account:
             self.protocol.protocol_authenticate(account)
         return account
 
@@ -188,7 +205,7 @@ class Connection(object):
         @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
-        with self.action.acquire_account(account).context() as account:
+        with self.acquire_account(account).context() as account:
             self.protocol.app_authenticate(account, flush = flush)
         return account
 
@@ -203,7 +220,7 @@ class Connection(object):
         @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
-        with self.action.acquire_account(account).context() as account:
+        with self.acquire_account(account).context() as account:
             self.protocol.app_authorize(account, flush = flush)
         return account
 
@@ -231,6 +248,6 @@ class Connection(object):
         @rtype:  AccountProxy
         @return: The account that was used to log in.
         """
-        with self.action.acquire_account(account).context() as account:
+        with self.acquire_account(account).context() as account:
             self.protocol.auto_app_authorize(account, flush = flush)
         return account

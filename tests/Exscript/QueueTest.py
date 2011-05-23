@@ -169,7 +169,7 @@ class QueueTest(unittest.TestCase):
             return True
 
         def start_cb(data, conn):
-            account = conn.action.acquire_account()
+            account = conn.acquire_account()
             data['start-called'] = True
             data['account'] = account.__hash__()
             account.release()

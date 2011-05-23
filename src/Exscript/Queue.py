@@ -19,6 +19,7 @@ import sys
 import os
 import gc
 import traceback
+from functools import wraps
 from Exscript.parselib.Exception import CompileError
 from Exscript.interpreter.Exception import FailException
 from Exscript.util.cast import to_hosts
@@ -29,6 +30,38 @@ from Exscript.CustomAction import CustomAction
 from Exscript.HostAction import HostAction
 from Exscript.Task import Task
 from Exscript.workqueue import WorkQueue, Action
+from Exscript.protocols import get_protocol_from_name
+from Exscript.Connection import Connection
+
+def _connector(func,
+               host,
+               protocol_args,
+               create_pipe_to_accm,
+               log_event):
+    """
+    A decorator that connects to the given host using the given
+    protocol arguments.
+    """
+    protocol_name = host.get_protocol()
+    protocol_cls  = get_protocol_from_name(protocol_name)
+
+    def wrapped(*args, **kwargs):
+        protocol = protocol_cls(**protocol_args)
+
+        # Define the behaviour of the pseudo protocol adapter.
+        if protocol_name == 'pseudo':
+            filename = host.get_address()
+            protocol.device.add_commands_from_file(filename)
+
+        accm = create_pipe_to_accm()
+        try:
+            conn = Connection(accm, host, protocol)
+            conn.data_received_event.listen(log_event)
+            return func(conn)
+        finally:
+            accm.close()
+
+    return wrapped
 
 class Queue(object):
     """
@@ -415,8 +448,12 @@ class Queue(object):
     def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
         self._dbg(2, 'Building HostAction for %s.' % host.get_name())
-        pipe   = self.account_manager.create_pipe()
-        action = HostAction(pipe, function, host, **self.protocol_args)
+        action          = HostAction(host)
+        action.function = _connector(function,
+                                     host,
+                                     self.protocol_args,
+                                     self.account_manager.create_pipe,
+                                     action.log_event)
         if self._enqueue1(action, prioritize, force, duplicate_check):
             return action
         return None
@@ -562,8 +599,8 @@ class Queue(object):
 
         self._dbg(2, 'Building CustomAction for Queue.enqueue().')
         task   = Task(self)
-        pipe   = self.account_manager.create_pipe()
-        action = CustomAction(pipe, function, name)
+        action = CustomAction(name)
+        action.function = function
         task.add_action(action)
         self._enqueue1(action, False, False, False)
 

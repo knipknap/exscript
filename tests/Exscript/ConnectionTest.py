@@ -1,11 +1,12 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript            import Host, Queue, Account
+from Exscript import Host, Queue, Account
 from Exscript.protocols  import Dummy
 from Exscript.HostAction import HostAction
 from Exscript.Connection import Connection
-from Exscript.emulators  import VirtualDevice
+from Exscript.emulators import VirtualDevice
+from Exscript.util.decorator import bind
 from protocols.DummyTest import DummyTest
 
 # Connection proxies the calls to a protocols.Protocol object,
@@ -15,12 +16,11 @@ class ConnectionTest(DummyTest):
     CORRELATE = Connection
 
     def createProtocol(self):
-        self.queue       = Queue(verbose = 0)
-        self.host        = Host('dummy://' + self.hostname)
-        pipe             = self.queue.account_manager.create_pipe()
-        self.action      = HostAction(pipe, object, self.host)
-        protocol         = Dummy()
-        self.protocol    = Connection(self.action, protocol)
+        self.queue    = Queue(verbose = 0)
+        self.host     = Host('dummy://' + self.hostname)
+        pipe          = self.queue.account_manager.create_pipe()
+        protocol      = Dummy()
+        self.protocol = Connection(pipe, self.host, protocol)
         self.queue.add_account(self.account)
 
     def doConnect(self):
@@ -38,6 +38,11 @@ class ConnectionTest(DummyTest):
 
     def testGetHost(self):
         self.assertEqual(self.protocol.get_host(), self.host)
+
+    def testAcquireAccount(self):
+        account = self.protocol.acquire_account()
+        self.assertEqual(account.__hash__(), self.account.__hash__())
+        account.release()
 
     def testConnect(self):
         self.assertEqual(self.protocol.response, None)

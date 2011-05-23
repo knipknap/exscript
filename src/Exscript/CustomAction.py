@@ -16,30 +16,26 @@ import sys
 import Crypto
 from Exscript.workqueue import Action
 from Exscript.util.event import Event
-from Exscript.AccountProxy import AccountProxy
 
 class CustomAction(Action):
     """
     An action that calls the associated function and implements retry and
     logging.
     """
-    def __init__(self, accm, function, name):
+    def __init__(self, name):
         """
         Constructor.
 
-        @type  accm: multiprocessing.Connection
-        @param accm: A pipe to the associated account manager.
         @type  function: function
         @param function: Called when the action is executed.
         @type  name: str
         @param name: A name for the action.
         """
         Action.__init__(self)
-        self.log_event = Event()
-        self.accm      = accm
-        self.function  = function
-        self.attempt   = 1
         self.name      = name
+        self.log_event = Event()
+        self.attempt   = 1
+        self.function  = None
 
         # Since each action is created in it's own thread, we must
         # re-initialize the random number generator to make sure that
@@ -56,12 +52,6 @@ class CustomAction(Action):
     def get_name(self):
         return self.name
 
-    def acquire_account(self, account):
-        # Specific account requested?
-        if account:
-            return AccountProxy.for_account(self.accm, account)
-        return AccountProxy.for_random_account(self.accm)
-
     def get_logname(self):
         logname = self.get_name()
         if self.attempt > 1:
@@ -69,9 +59,5 @@ class CustomAction(Action):
         return logname + '.log'
 
     def execute(self):
-        try:
-            self.function()
-        finally:
-            if self.accm is not None:
-                self.accm.close()
-                self.accm = None
+        if self.function is not None:
+            return self.function()

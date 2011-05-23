@@ -1,9 +1,9 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from Exscript                     import Queue, Host, Account
-from Exscript.HostAction          import HostAction
-from Exscript.util.decorator      import bind
+from Exscript import Queue, Host
+from Exscript.HostAction import HostAction
+from Exscript.util.decorator import bind
 from Exscript.protocols.Exception import LoginFailure
 
 class FakeHost(Host):
@@ -22,18 +22,16 @@ class HostActionTest(unittest.TestCase):
     def setUp(self):
         self.data         = {'n_calls': 0}
         self.count_cb     = bind(count_calls, self.data)
-        self.fail_cb      = bind(fail_calls, self.data)
         self.queue        = Queue()
         pipe              = self.queue.account_manager.create_pipe()
-        self.count_action = HostAction(pipe, self.count_cb, FakeHost())
-        pipe              = self.queue.account_manager.create_pipe()
-        self.fail_action  = HostAction(pipe, self.fail_cb, FakeHost())
+        self.count_action = HostAction(FakeHost())
+        self.count_action.function = self.count_cb
 
     def tearDown(self):
         self.queue.destroy()
 
     def testConstructor(self):
-        action = HostAction(object, self.count_cb, FakeHost())
+        action = HostAction(FakeHost())
 
     def testGetName(self):
         self.assertEqual(self.count_action.get_name(), 'testaddress')
@@ -47,21 +45,6 @@ class HostActionTest(unittest.TestCase):
                          self.count_action.get_name() + '.log')
         self.count_action.get_host().set_logname('test')
         self.assertEqual(self.count_action.get_logname(), 'test.log')
-
-    def testAcquireAccount(self):
-        account = Account('foo')
-        self.queue.add_account(account)
-
-        def doit(conn, data):
-            data['account'] = action.acquire_account()
-            data['account'].release()
-
-        data        = {}
-        callback    = bind(doit, data)
-        pipe        = self.queue.account_manager.create_pipe()
-        action      = HostAction(pipe, callback, FakeHost())
-        action.execute()
-        self.assertEqual(data.get('account').__hash__(), account.__hash__())
 
     def testExecute(self):
         pass # Tested in testSetLoginTimes().
