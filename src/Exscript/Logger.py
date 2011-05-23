@@ -15,6 +15,7 @@
 """
 Logging to memory.
 """
+from itertools import chain, ifilter
 from collections import defaultdict
 from Exscript.Log import Log
 
@@ -33,84 +34,66 @@ class Logger(object):
         @type  queue: Queue
         @param queue: The Queue that is watched.
         """
-        self.actions = []
         self.logs    = defaultdict(list)
-        self.done    = []
+        self.started = 0
+        self.success = 0
+        self.failed  = 0
         queue.action_started_event.listen(self._on_action_started)
         queue.action_enqueued_event.listen(self._on_action_enqueued)
 
-    def get_logged_actions(self):
-        """
-        Returns a list of all completed (aborted or succeeded) actions, in
-        the order in which they were started.
-        """
-        return self.actions
+    def _reset(self):
+        self.logs = defaultdict(list)
 
-    def get_successful_actions(self):
+    def get_succeeded_actions(self):
         """
-        Returns a list of all actions that were completed successfully.
+        Returns the number of actions that were completed successfully.
         """
-        successful = []
-        for action in self.done:
-            if [l for l in self.logs[action] if not l.has_error()]:
-                successful.append(action)
-        return successful
-
-    def get_error_actions(self):
-        """
-        Returns a list of all actions that have at least one error.
-        """
-        failed = []
-        for action in self.done:
-            if [l for l in self.logs[action] if l.has_error()]:
-                failed.append(action)
-        return failed
+        return self.success
 
     def get_aborted_actions(self):
         """
-        Returns a list of all actions that were never completed
-        successfully.
+        Returns the number of actions that were aborted.
         """
-        return [a for a in self.actions if a.has_aborted()]
+        return self.failed
 
     def get_logs(self, action = None):
         if action:
-            return self.logs[action]
-        return self.logs
+            return self.logs[action.__hash__()]
+        return chain.from_iterable(self.logs.itervalues())
 
-    def _add_log(self, action, log):
-        if action not in self.logs:
-            self.actions.append(action)
-        self.logs[action].append(log)
+    def get_succeeded_logs(self, action = None):
+        func = lambda x: x.has_ended() and not x.has_error()
+        return ifilter(func, self.get_logs(action))
+
+    def get_aborted_logs(self, action = None):
+        func = lambda x: x.has_ended() and x.has_error()
+        return ifilter(func, self.get_logs(action))
 
     def _get_log(self, action):
-        return self.logs[action][-1]
-
-    def _remove_logs(self, action):
-        if action in self.logs:
-            self.logs.pop(action)
-        if action in self.actions:
-            self.actions.remove(action)
-        if action in self.done:
-            self.done.remove(action)
+        return self.logs[action.__hash__()][-1]
 
     def _on_action_started(self, action):
-        log = Log(action.get_name())
+        log = Log(action.get_logname())
         log.started()
         action.log_event.listen(log.write)
-        self._add_log(action, log)
+        self.logs[action.__hash__()].append(log)
+        self.started += 1
 
     def _on_action_error(self, action, exc_info):
         log = self._get_log(action)
         log.error(exc_info)
 
-    def _on_action_done(self, action):
+    def _on_action_succeeded(self, action):
         log = self._get_log(action)
         log.done()
-        if action not in self.done:
-            self.done.append(action)
+        self.success += 1
+
+    def _on_action_aborted(self, action):
+        log = self._get_log(action)
+        log.done()
+        self.failed += 1
 
     def _on_action_enqueued(self, action):
         action.error_event.listen(self._on_action_error)
-        action.succeeded_event.listen(self._on_action_done)
-        action.aborted_event.listen(self._on_action_done)
+        action.succeeded_event.listen(self._on_action_succeeded)
+        action.aborted_event.listen(self._on_action_aborted)

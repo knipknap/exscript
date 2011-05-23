@@ -24,12 +24,6 @@ def _get_action_name(action, retry = 0):
         return action.get_name()
     return action.get_name() + ' (retry %d)' % retry
 
-def _get_successful_logs_from_action(logger, action):
-    return [l for l in logger.get_logs(action) if not l.has_error()]
-
-def _get_error_logs_from_action(logger, action):
-    return [l for l in logger.get_logs(action) if l.has_error()]
-
 def status(logger):
     """
     Creates a one-line summary on the actions that were logged by the given
@@ -40,9 +34,9 @@ def status(logger):
     @rtype:  string
     @return: A string summarizing the status.
     """
-    total     = len(logger.get_logged_actions())
-    aborted   = len(logger.get_aborted_actions())
-    succeeded = total - aborted
+    aborted   = logger.get_aborted_actions()
+    succeeded = logger.get_succeeded_actions()
+    total     = aborted + succeeded
     if total == 0:
         return 'No actions done'
     elif total == 1 and succeeded == 1:
@@ -68,13 +62,10 @@ def summarize(logger):
     @return: A string summarizing the status of every performed task.
     """
     summary = []
-    for action in logger.get_logged_actions():
-        for i, log in enumerate(logger.get_logs(action)):
-            thestatus = log.has_error() and log.get_error(False) or 'ok'
-            name      = log.get_name()
-            if i > 0:
-                name += ' (retry %d)' % i
-            summary.append(name + ': ' + thestatus)
+    for log in logger.get_logs():
+        thestatus = log.has_error() and log.get_error(False) or 'ok'
+        name      = log.get_name()
+        summary.append(name + ': ' + thestatus)
     return '\n'.join(summary)
 
 def format(logger,
@@ -97,28 +88,19 @@ def format(logger,
     errors = logger.get_aborted_actions()
     if show_errors and errors:
         output += _underline('Failed actions:')
-        for action in errors:
-            for i, log in enumerate(logger.get_logs(action)):
-                name = _get_action_name(action, i)
-                if show_traceback:
-                    output.append(name + ':')
-                    output.append(log.get_error())
-                else:
-                    output.append(name + ': ' + log.get_error(False))
-            output.append('')
+        for log in logger.get_aborted_logs():
+            if show_traceback:
+                output.append(log.get_name() + ':')
+                output.append(log.get_error())
+            else:
+                output.append(log.get_name() + ': ' + log.get_error(False))
+        output.append('')
 
     # Print successful actions.
     if show_successful:
         output += _underline('Successful actions:')
-        for action in logger.get_successful_actions():
-            n_errors = len(_get_error_logs_from_action(logger, action))
-            if n_errors == 0:
-                thestatus = ''
-            elif n_errors == 1:
-                thestatus = ' (required one retry)'
-            else:
-                thestatus = ' (required %d retries)' % n_errors
-            output.append(_get_action_name(action) + thestatus)
+        for log in logger.get_succeeded_logs():
+            output.append(log.get_name())
         output.append('')
 
     return '\n'.join(output).strip()

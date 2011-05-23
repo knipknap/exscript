@@ -72,7 +72,7 @@ class TemplateTest(unittest.TestCase):
 
         # Unfortunately, unittest.TestCase does not fail if self.assert()
         # was called from a subthread, so this is our workaround...
-        failed = self.logger.get_error_actions()
+        failed = list(self.logger.get_aborted_logs())
         report = format(self.logger, show_successful = False)
         self.assert_(not failed, report)
 

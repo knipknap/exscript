@@ -1,13 +1,21 @@
 import sys, unittest, re, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from tempfile            import mkdtemp
-from shutil              import rmtree
-from Exscript.Log        import Log
-from Exscript.Logger     import Logger
-from LogTest             import FakeError
-from util.reportTest     import FakeQueue, FakeAction
+from itertools import islice
+from tempfile import mkdtemp
+from shutil import rmtree
+from Exscript.Log import Log
+from Exscript.Logger import Logger
+from LogTest import FakeError
+from util.reportTest import FakeQueue, FakeAction
 from Exscript.util.event import Event
+
+def count(iterable):
+    return sum(1 for _ in iterable)
+
+def nth(iterable, n, default = None):
+    "Returns the nth item or a default value"
+    return next(islice(iterable, n, None), default)
 
 class LoggerTest(unittest.TestCase):
     CORRELATE = Logger
@@ -23,111 +31,125 @@ class LoggerTest(unittest.TestCase):
     def testConstructor(self):
         logger = Logger(FakeQueue())
 
-    def testGetLoggedActions(self):
-        self.assertEqual(self.logger.get_logged_actions(), [])
-
-        action = FakeAction()
-        self.logger._on_action_enqueued(action)
-        self.assertEqual(self.logger.get_logged_actions(), [])
-
-        self.queue.action_started_event(action)
-        self.assertEqual(self.logger.get_logged_actions(), [action])
-
-        action.log_event('hello world')
-        self.assertEqual(self.logger.get_logged_actions(), [action])
-
-        action.succeeded_event(action)
-        self.assertEqual(self.logger.get_logged_actions(), [action])
-
-    def testGetSuccessfulActions(self):
-        self.assertEqual(self.logger.get_successful_actions(), [])
+    def testGetSucceededActions(self):
+        self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
         action1 = FakeAction()
         action2 = FakeAction()
         self.logger._on_action_enqueued(action1)
         self.logger._on_action_enqueued(action2)
-        self.assertEqual(self.logger.get_successful_actions(), [])
+        self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
         self.queue.action_started_event(action1)
         self.queue.action_started_event(action2)
-        self.assertEqual(self.logger.get_successful_actions(), [])
+        self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
         action2.succeeded_event(action1)
-        self.assertEqual(self.logger.get_successful_actions(), [action1])
+        self.assertEqual(self.logger.get_succeeded_actions(), 1)
 
         try:
             raise FakeError()
         except FakeError:
             action2.error_event(action2, sys.exc_info())
-        self.assertEqual(self.logger.get_successful_actions(), [action1])
+        self.assertEqual(self.logger.get_succeeded_actions(), 1)
         action2.aborted_event(action2)
-        self.assertEqual(self.logger.get_successful_actions(), [action1])
-
-    def testGetErrorActions(self):
-        self.assertEqual(self.logger.get_error_actions(), [])
-
-        action = FakeAction()
-        self.logger._on_action_enqueued(action)
-        self.assertEqual(self.logger.get_error_actions(), [])
-
-        self.queue.action_started_event(action)
-        self.assertEqual(self.logger.get_error_actions(), [])
-
-        action.succeeded_event(action)
-        self.assertEqual(self.logger.get_error_actions(), [])
-
-        try:
-            raise FakeError()
-        except FakeError:
-            action.error_event(action, sys.exc_info())
-        self.assertEqual(self.logger.get_error_actions(), [action])
-        action.aborted_event(action)
-        self.assertEqual(self.logger.get_error_actions(), [action])
+        self.assertEqual(self.logger.get_succeeded_actions(), 1)
 
     def testGetAbortedActions(self):
-        self.assertEqual(self.logger.get_aborted_actions(), [])
+        self.assertEqual(self.logger.get_aborted_actions(), 0)
 
         action = FakeAction()
         self.logger._on_action_enqueued(action)
-        self.assertEqual(self.logger.get_aborted_actions(), [])
+        self.assertEqual(self.logger.get_aborted_actions(), 0)
 
         self.queue.action_started_event(action)
-        self.assertEqual(self.logger.get_aborted_actions(), [])
+        self.assertEqual(self.logger.get_aborted_actions(), 0)
 
         action.succeeded_event(action)
-        self.assertEqual(self.logger.get_aborted_actions(), [])
+        self.assertEqual(self.logger.get_aborted_actions(), 0)
 
         try:
             raise FakeError()
         except FakeError:
             action.error_event(action, sys.exc_info())
-        self.assertEqual(self.logger.get_aborted_actions(), [])
+        self.assertEqual(self.logger.get_aborted_actions(), 0)
         action.aborted = True
         action.aborted_event(action)
-        self.assertEqual(self.logger.get_aborted_actions(), [action])
+        self.assertEqual(self.logger.get_aborted_actions(), 1)
 
     def testGetLogs(self):
-        self.assertEqual(self.logger.get_logs(), {})
+        self.assertEqual(count(self.logger.get_logs()), 0)
 
         action = FakeAction()
         self.logger._on_action_enqueued(action)
-        self.assertEqual(self.logger.get_logs(), {})
-        self.assertEqual(self.logger.get_logs(action), [])
+        self.assertEqual(count(self.logger.get_logs()), 0)
+        self.assertEqual(count(self.logger.get_logs(action)), 0)
 
         self.queue.action_started_event(action)
-        self.assertEqual(len(self.logger.get_logs()), 1)
-        self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
-        self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
+        self.assertEqual(count(self.logger.get_logs()), 1)
+        self.assert_(isinstance(nth(self.logger.get_logs(), 0), Log))
+        self.assertEqual(count(self.logger.get_logs(action)), 1)
+        self.assert_(isinstance(nth(self.logger.get_logs(action), 0), Log))
 
         action.log_event('hello world')
-        self.assertEqual(len(self.logger.get_logs()), 1)
-        self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
-        self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
+        self.assertEqual(count(self.logger.get_logs()), 1)
+        self.assertEqual(count(self.logger.get_logs(action)), 1)
 
         action.succeeded_event(action)
-        self.assertEqual(len(self.logger.get_logs()), 1)
-        self.assert_(isinstance(self.logger.get_logs(action)[0], Log))
-        self.assert_(isinstance(self.logger.get_logs()[action][0], Log))
+        self.assertEqual(count(self.logger.get_logs()), 1)
+        self.assertEqual(count(self.logger.get_logs(action)), 1)
+
+    def testGetSucceededLogs(self):
+        self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
+
+        action = FakeAction()
+        self.logger._on_action_enqueued(action)
+        self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
+        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
+
+        self.queue.action_started_event(action)
+        self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
+        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
+
+        action.log_event('hello world')
+        self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
+        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
+
+        action.succeeded_event(action)
+        self.assertEqual(count(self.logger.get_aborted_logs()), 0)
+        self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_succeeded_logs()), 1)
+        self.assert_(isinstance(nth(self.logger.get_succeeded_logs(), 0), Log))
+        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 1)
+        self.assert_(isinstance(nth(self.logger.get_succeeded_logs(action), 0), Log))
+
+    def testGetAbortedLogs(self):
+        self.assertEqual(count(self.logger.get_aborted_logs()), 0)
+
+        action = FakeAction()
+        self.logger._on_action_enqueued(action)
+        self.assertEqual(count(self.logger.get_aborted_logs()), 0)
+        self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
+
+        self.queue.action_started_event(action)
+        self.assertEqual(count(self.logger.get_aborted_logs()), 0)
+        self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
+
+        action.log_event('hello world')
+        self.assertEqual(count(self.logger.get_aborted_logs()), 0)
+        self.assertEqual(count(self.logger.get_aborted_logs(action)), 0)
+
+        try:
+            raise FakeError()
+        except FakeError:
+            action.error_event(action, sys.exc_info())
+        action.aborted_event(action)
+        self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
+        self.assertEqual(count(self.logger.get_succeeded_logs(action)), 0)
+        self.assertEqual(count(self.logger.get_aborted_logs()), 1)
+        self.assert_(isinstance(nth(self.logger.get_aborted_logs(), 0), Log))
+        self.assertEqual(count(self.logger.get_aborted_logs(action)), 1)
+        self.assert_(isinstance(nth(self.logger.get_aborted_logs(action), 0), Log))
 
     def testActionEnqueued(self):
         action = FakeAction()

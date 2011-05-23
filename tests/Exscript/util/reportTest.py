@@ -89,7 +89,8 @@ class reportTest(unittest.TestCase):
         from Exscript.util.report import summarize
         self.createSucceededLog()
         self.createAbortedLog()
-        self.assertEqual(summarize(self.logger), 'fake1: ok\nfake2: FakeError')
+        expected = 'fake1.log: ok\nfake2.log: FakeError'
+        self.assertEqual(summarize(self.logger), expected)
 
     def testFormat(self):
         from Exscript.util.report import format
@@ -100,7 +101,7 @@ class reportTest(unittest.TestCase):
         expected = '''
 Failed actions:
 ---------------
-fake2:
+fake2.log:
 Traceback (most recent call last):
   File "%s.py", line 58, in createErrorLog
     raise FakeError()
@@ -109,8 +110,8 @@ FakeError
 
 Successful actions:
 -------------------
-fake1
-fake3'''.strip() % file
+fake1.log
+fake3.log'''.strip() % file
         self.assertEqual(format(self.logger), expected)
 
 def suite():

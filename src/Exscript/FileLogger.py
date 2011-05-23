@@ -39,18 +39,14 @@ class FileLogger(Logger):
             os.mkdir(self.logdir)
 
     def _on_action_started(self, action):
-        logname = action.get_logname()
-        if logname.startswith('/'):
-            filename = logname
-        else:
-            filename = os.path.join(self.logdir, action.get_logname())
-        name = action.get_name()
-        log  = Logfile(name, filename, self.mode, self.delete)
+        name     = action.get_name()
+        filename = os.path.join(self.logdir, action.get_logname())
+        log      = Logfile(name, filename, self.mode, self.delete)
         log.started()
         action.log_event.listen(log.write)
-        self._add_log(action, log)
+        self.logs[action.__hash__()].append(log)
 
     def _on_action_done(self, action):
         Logger._on_action_done(self, action)
         if self.clearmem:
-            self._remove_logs(action)
+            self._reset()
