@@ -1,14 +1,13 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from tempfile            import mkdtemp
-from shutil              import rmtree
-from Exscript            import Host
-from Exscript.HostAction import HostAction
+from tempfile import mkdtemp
+from shutil import rmtree
+from Exscript import Host
+from Exscript.CustomAction import CustomAction
 from Exscript.FileLogger import FileLogger
-from util.reportTest     import FakeQueue
-from util.decoratorTest  import FakeConnection
-from LoggerTest          import LoggerTest
+from util.reportTest import FakeQueue
+from LoggerTest import LoggerTest
 
 class FakeError(Exception):
     pass
@@ -31,7 +30,7 @@ class FileLoggerTest(LoggerTest):
 
     def testActionEnqueued(self):
         host    = Host('fake')
-        action  = HostAction(host)
+        action  = CustomAction(host.get_name(), host.get_logname())
         logfile = os.path.join(self.logdir, 'fake.log')
         errfile = logfile + '.error'
         self.failIf(os.path.exists(logfile))

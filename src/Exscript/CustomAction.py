@@ -22,7 +22,7 @@ class CustomAction(Action):
     An action that calls the associated function and implements retry and
     logging.
     """
-    def __init__(self, name):
+    def __init__(self, name, logname = None):
         """
         Constructor.
 
@@ -33,6 +33,7 @@ class CustomAction(Action):
         """
         Action.__init__(self)
         self.name      = name
+        self.logname   = logname is not None and logname or name
         self.log_event = Event()
         self.attempt   = 1
         self.function  = None
@@ -53,7 +54,7 @@ class CustomAction(Action):
         return self.name
 
     def get_logname(self):
-        logname = self.get_name()
+        logname = self.logname
         if self.attempt > 1:
             logname += '_retry%d' % (self.attempt - 1)
         return logname + '.log'

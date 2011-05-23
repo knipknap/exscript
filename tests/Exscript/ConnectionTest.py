@@ -3,7 +3,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from Exscript import Host, Queue, Account
 from Exscript.protocols  import Dummy
-from Exscript.HostAction import HostAction
 from Exscript.Connection import Connection
 from Exscript.emulators import VirtualDevice
 from Exscript.util.decorator import bind

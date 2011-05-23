@@ -27,7 +27,6 @@ from Exscript.util.event import Event
 from Exscript.FileLogger import FileLogger
 from Exscript.AccountManager import AccountManager
 from Exscript.CustomAction import CustomAction
-from Exscript.HostAction import HostAction
 from Exscript.Task import Task
 from Exscript.workqueue import WorkQueue, Action
 from Exscript.protocols import get_protocol_from_name
@@ -447,8 +446,8 @@ class Queue(object):
 
     def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
-        self._dbg(2, 'Building HostAction for %s.' % host.get_name())
-        action          = HostAction(host)
+        self._dbg(2, 'Building CustomAction for %s.' % host.get_name())
+        action          = CustomAction(host.get_address(), host.get_logname())
         action.function = _connector(function,
                                      host,
                                      self.protocol_args,
