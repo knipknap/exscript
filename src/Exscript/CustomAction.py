@@ -56,10 +56,7 @@ class CustomAction(Action):
     def get_name(self):
         return self.name
 
-    def message(self, channel, message):
-        self.message_event(channel, message)
-
-    def acquire_account(self, account_hash):
+    def acquire_account(self, account):
         # Specific account requested?
         if account:
             return AccountProxy.for_account(self.accm, account)
