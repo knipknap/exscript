@@ -19,11 +19,6 @@ Formatting logs into human readable reports.
 def _underline(text, line = '-'):
     return [text, line * len(text)]
 
-def _get_action_name(action, retry = 0):
-    if retry == 0:
-        return action.get_name()
-    return action.get_name() + ' (retry %d)' % retry
-
 def status(logger):
     """
     Creates a one-line summary on the actions that were logged by the given
