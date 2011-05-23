@@ -39,7 +39,6 @@ class CustomAction(Action):
         self.accm      = accm
         self.function  = function
         self.attempt   = 1
-        self.aborted   = False
         self.name      = name
 
         # Since each action is created in it's own thread, we must
@@ -71,9 +70,6 @@ class CustomAction(Action):
         if self.attempt > 1:
             logname += '_retry%d' % (self.attempt - 1)
         return logname + '.log'
-
-    def has_aborted(self):
-        return self.aborted
 
     def execute(self):
         try:

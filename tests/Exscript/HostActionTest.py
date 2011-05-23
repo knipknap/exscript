@@ -63,11 +63,6 @@ class HostActionTest(unittest.TestCase):
         action.execute()
         self.assertEqual(data.get('account').__hash__(), account.__hash__())
 
-    def testHasAborted(self):
-        self.assertEqual(False, self.count_action.has_aborted())
-        self.count_action.aborted = True
-        self.assertEqual(True, self.count_action.has_aborted())
-
     def testExecute(self):
         pass # Tested in testSetLoginTimes().
 

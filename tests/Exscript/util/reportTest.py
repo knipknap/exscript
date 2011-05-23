@@ -30,9 +30,6 @@ class FakeAction(object):
     def n_failures(self):
         return self.failures
 
-    def has_aborted(self):
-        return self.aborted
-
 class FakeError(Exception):
     pass
 
@@ -62,7 +59,6 @@ class reportTest(unittest.TestCase):
 
     def createAbortedLog(self):
         action = self.createErrorLog()
-        action.aborted = True
         self.queue.workqueue.job_aborted_event(action)
         return action
 
@@ -103,7 +99,7 @@ Failed actions:
 ---------------
 fake2.log:
 Traceback (most recent call last):
-  File "%s.py", line 58, in createErrorLog
+  File "%s.py", line 55, in createErrorLog
     raise FakeError()
 FakeError
 

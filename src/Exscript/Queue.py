@@ -204,7 +204,6 @@ class Queue(object):
         self._print_status_bar()
 
     def _on_job_aborted(self, action):
-        action.aborted = True
         self.completed += 1
         self._print('errors', action.get_name() + ' finally failed.')
 
