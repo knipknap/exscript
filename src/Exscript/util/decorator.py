@@ -31,8 +31,8 @@ def bind(function, *args, **kwargs):
     @rtype:  function
     @return: The wrapped function.
     """
-    def decorated(conn):
-        return function(conn, *args, **kwargs)
+    def decorated(*inner_args):
+        return function(*(inner_args + args), **kwargs)
     return decorated
 
 def os_function_mapper(conn, map, *args, **kwargs):
