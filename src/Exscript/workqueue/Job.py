@@ -14,10 +14,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys
 import threading
+import weakref
+
+job_registry = weakref.WeakValueDictionary() # Map id(job) to Job.
 
 class Job(threading.Thread):
     def __init__(self, condition, action, name, times, data):
         threading.Thread.__init__(self)
+        job_registry[id(self)] = self
         self.condition = condition
         self.action    = action
         self.exc_info  = None
