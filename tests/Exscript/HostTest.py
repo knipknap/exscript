@@ -102,15 +102,6 @@ class HostTest(unittest.TestCase):
     def testGetAccount(self):
         pass # Tested in testSetAccount().
 
-    def testGetLogname(self):
-        pass # Tested in testGetLogname().
-
-    def testSetLogname(self):
-        self.assert_(self.host.get_logname())
-        self.assertEqual(self.host.get_logname(), self.host.get_address())
-        self.host.set_logname('test')
-        self.assertEqual(self.host.get_logname(), 'test')
-
     def testSet(self):
         self.assertEqual(self.host.get('test'), None)
         self.host.set('test', 3)

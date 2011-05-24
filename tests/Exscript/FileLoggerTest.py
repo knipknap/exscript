@@ -30,7 +30,7 @@ class FileLoggerTest(LoggerTest):
 
         job        = FakeJob()
         host       = Host('fake')
-        job.action = CustomAction(host.get_name(), host.get_logname())
+        job.action = CustomAction(host.get_name())
         logfile    = os.path.join(self.logdir, 'fake.log')
         errfile    = logfile + '.error'
         self.failIf(os.path.exists(logfile))

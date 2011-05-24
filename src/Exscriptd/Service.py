@@ -31,6 +31,7 @@ class Service(object):
         self.daemon    = daemon
         self.name      = name
         self.queue     = queue
+        self.logdir    = os.path.join(self.daemon.get_logdir(), name)
         self.task_lock = Lock()
         self.tasks     = defaultdict(list) # Map order ids to lists of tasks.
         self.loggers   = defaultdict(list) # Map order ids to loggers.
@@ -39,10 +40,7 @@ class Service(object):
         self.daemon.log(order, message)
 
     def get_logname(self, order, name = ''):
-        return os.path.join(self.daemon.get_logdir(),
-                            self.name,
-                            str(order.get_id()),
-                            name)
+        return os.path.join(self.logdir, str(order.get_id()), name)
 
     def create_logger(self, order, name, level = logging.INFO):
         logfile   = self.get_logname(order, name)
@@ -60,9 +58,6 @@ class Service(object):
             del logger.manager.loggerDict[logger.name]
             logger.manager = None
         del self.loggers[order.id]
-
-    def _update_host_logname(self, order, host):
-        host.set_logname(self.get_logname(order, host.get_logname()))
 
     def config_file(self, name):
         return os.path.join(self.cfg_dir, name)
@@ -94,9 +89,6 @@ class Service(object):
                       hosts,
                       callback,
                       handle_duplicates = False):
-        for host in hosts:
-            self._update_host_logname(order, host)
-
         # For performance reasons, we defer the starting of further
         # threads by pausing the queue.
         # We also need to pause to avoid getting a 'done' signal before
@@ -115,9 +107,6 @@ class Service(object):
                                hosts,
                                callback,
                                handle_duplicates = False):
-        for host in hosts:
-            self._update_host_logname(order, host)
-
         self.queue.workqueue.pause()
         if handle_duplicates:
             task = self.queue.priority_run_or_raise(hosts, callback)

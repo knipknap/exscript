@@ -516,7 +516,7 @@ class Queue(object):
     def _run1(self, host, function, prioritize, force, duplicate_check):
         # Build an object that represents the actual task.
         self._dbg(2, 'Building CustomAction for %s.' % host.get_name())
-        action          = CustomAction(host.get_address(), host.get_logname())
+        action          = CustomAction(host.get_name())
         action.function = _connector(function, host, self.protocol_args)
         if self._enqueue1(action, prioritize, force, duplicate_check):
             return action

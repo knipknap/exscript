@@ -50,7 +50,6 @@ class Host(object):
         self.protocol = default_protocol
         self.vars     = None    # To save memory, do not init with a dict.
         self.account  = None
-        self.logname  = None
         self.name     = None
         self.address  = None
         self.tcp_port = None
@@ -105,7 +104,7 @@ class Host(object):
     def get_uri(self):
         """
         Returns a URI formatted representation of the host, including all
-        of it's attributes except for the name and logname. Uses the
+        of it's attributes except for the name. Uses the
         address, not the name of the host to build the URI.
 
         @rtype:  str
@@ -257,29 +256,6 @@ class Host(object):
         @return: The account.
         """
         return self.account
-
-    def set_logname(self, logname):
-        """
-        Defines the basename of the log name. The name may include a slash,
-        in which case the logs for this host are placed in a subdirectory
-        (when a FileLogger is used).
-        By default, the logname is the name of the host.
-
-        @type  logname: string
-        @param logname: The basename of the logfile.
-        """
-        self.logname = logname
-
-    def get_logname(self):
-        """
-        Returns the basename of the logfile.
-
-        @rtype:  string
-        @return: The basename of the logfile.
-        """
-        if self.logname:
-            return self.logname
-        return self.get_name()
 
     def set(self, name, value):
         """
