@@ -79,9 +79,14 @@ class Logger(object):
     def _on_job_started(self, job):
         log = Log(job.action.get_logname())
         log.started()
-        job.action.log_event.listen(log.write)
         self.logs[id(job)].append(log)
         self.started += 1
+
+    def _on_job_log_message(self, job, message):
+        # This method is called whenever a sub thread sends a log message
+        # via a pipe. (See LoggerProxy and Queue.PipeHandler)
+        log = self._get_log(job)
+        log.write(message)
 
     def _on_job_error(self, job, exc_info):
         log = self._get_log(job)

@@ -25,19 +25,19 @@ from multiprocessing import Pipe
 from functools import wraps
 from Exscript.parselib.Exception import CompileError
 from Exscript.interpreter.Exception import FailException
+from Exscript.Logger import logger_registry
 from Exscript.util.cast import to_hosts
 from Exscript.util.event import Event
 from Exscript.AccountManager import AccountManager
 from Exscript.CustomAction import CustomAction
 from Exscript.Task import Task
-from Exscript.workqueue import WorkQueue, Action
+from Exscript.workqueue import WorkQueue, Action, job_registry
 from Exscript.protocols import get_protocol_from_name
 from Exscript.Connection import Connection
 
 def _connector(func,
                host,
-               protocol_args,
-               log_event):
+               protocol_args):
     """
     A decorator that connects to the given host using the given
     protocol arguments.
@@ -54,7 +54,6 @@ def _connector(func,
             protocol.device.add_commands_from_file(filename)
 
         conn = Connection(job.data, host, protocol)
-        conn.data_received_event.listen(log_event)
         return func(job, conn)
 
     return wrapped
@@ -92,6 +91,12 @@ class _PipeHandler(threading.Thread):
                 account = self.manager.get_account_from_hash(arg)
                 account.release()
                 self.to_child.send('ok')
+            elif command == 'log':
+                logger_id, job_id, string = arg
+                logger = logger_registry.get(logger_id)
+                job    = job_registry.get(job_id)
+                if logger:
+                    logger._on_job_log_message(job, string)
             else:
                 raise Exception('invalid request from worker process')
         except Exception, e:
@@ -512,10 +517,7 @@ class Queue(object):
         # Build an object that represents the actual task.
         self._dbg(2, 'Building CustomAction for %s.' % host.get_name())
         action          = CustomAction(host.get_address(), host.get_logname())
-        action.function = _connector(function,
-                                     host,
-                                     self.protocol_args,
-                                     action.log_event)
+        action.function = _connector(function, host, self.protocol_args)
         if self._enqueue1(action, prioritize, force, duplicate_check):
             return action
         return None

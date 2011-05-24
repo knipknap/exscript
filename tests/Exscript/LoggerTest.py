@@ -84,7 +84,7 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(count(self.logger.get_logs()), 1)
         self.assert_(isinstance(nth(self.logger.get_logs(), 0), Log))
 
-        job.action.log_event('hello world')
+        self.logger._on_job_log_message(job, 'hello world')
         self.assertEqual(count(self.logger.get_logs()), 1)
 
         self.queue.workqueue.job_succeeded_event(job)
@@ -107,7 +107,7 @@ class LoggerTest(unittest.TestCase):
         self.queue.workqueue.job_started_event(job)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
 
-        job.action.log_event('hello world')
+        self.logger._on_job_log_message(job, 'hello world')
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
 
         self.queue.workqueue.job_succeeded_event(job)
@@ -124,7 +124,7 @@ class LoggerTest(unittest.TestCase):
         self.queue.workqueue.job_started_event(job)
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
 
-        job.action.log_event('hello world')
+        self.logger._on_job_log_message(job, 'hello world')
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
 
         try:

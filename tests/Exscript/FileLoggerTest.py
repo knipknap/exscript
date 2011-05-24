@@ -44,7 +44,7 @@ class FileLoggerTest(LoggerTest):
         self.assertEqual(content, '')
 
         # Test data logging.
-        job.action.log_event('hello world')
+        self.logger._on_job_log_message(job, 'hello world')
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()
@@ -77,7 +77,7 @@ class FileLoggerTest(LoggerTest):
         self.assertEqual(content, '')
 
         # Test data logging.
-        job.action.log_event('hello world')
+        self.logger._on_job_log_message(job, 'hello world')
         self.assert_(os.path.isfile(logfile))
         self.failIf(os.path.exists(errfile))
         content = open(logfile).read()

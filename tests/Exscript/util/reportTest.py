@@ -16,7 +16,6 @@ class FakeAction(object):
 
     def __init__(self, name = 'fake'):
         self.name            = name
-        self.log_event       = Event()
         self.error_event     = Event()
         self.aborted_event   = Event()
         self.succeeded_event = Event()
@@ -51,7 +50,7 @@ class reportTest(unittest.TestCase):
         name            = 'fake' + str(self.n_actions)
         job             = FakeJob(FakeAction(name))
         self.queue.workqueue.job_started_event(job)
-        job.action.log_event('hello world')
+        self.logger._on_job_log_message(job, 'hello world')
         return job
 
     def createErrorLog(self):
@@ -104,7 +103,7 @@ Failed actions:
 ---------------
 fake2.log:
 Traceback (most recent call last):
-  File "%s.py", line 60, in createErrorLog
+  File "%s.py", line 59, in createErrorLog
     raise FakeError()
 FakeError
 

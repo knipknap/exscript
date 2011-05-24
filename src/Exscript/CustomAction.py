@@ -32,11 +32,10 @@ class CustomAction(Action):
         @param name: A name for the action.
         """
         Action.__init__(self)
-        self.name      = name
-        self.logname   = logname is not None and logname or name
-        self.log_event = Event()
-        self.attempt   = 1
-        self.function  = None
+        self.name     = name
+        self.logname  = logname is not None and logname or name
+        self.attempt  = 1
+        self.function = None
 
         # Since each action is created in it's own thread, we must
         # re-initialize the random number generator to make sure that

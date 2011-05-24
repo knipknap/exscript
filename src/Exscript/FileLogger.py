@@ -43,7 +43,6 @@ class FileLogger(Logger):
         filename = os.path.join(self.logdir, action.get_logname())
         log      = Logfile(job.name, filename, self.mode, self.delete)
         log.started()
-        action.log_event.listen(log.write)
         self.logs[id(job)].append(log)
 
     def _on_job_succeeded(self, job):
