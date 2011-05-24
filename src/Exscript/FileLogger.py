@@ -38,9 +38,13 @@ class FileLogger(Logger):
         if not os.path.exists(self.logdir):
             os.mkdir(self.logdir)
 
+    def _get_logname(self, job):
+        if job.failures > 0:
+            return job.name + '_retry%d.log' % job.failures
+        return job.name + '.log'
+
     def _on_job_started(self, job):
-        action   = job.action
-        filename = os.path.join(self.logdir, action.get_logname())
+        filename = os.path.join(self.logdir, self._get_logname(job))
         log      = Logfile(job.name, filename, self.mode, self.delete)
         log.started()
         self.logs[id(job)].append(log)

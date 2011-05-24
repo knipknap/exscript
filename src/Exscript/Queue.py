@@ -293,7 +293,6 @@ class Queue(object):
             self._print('tracebacks', tb)
         else:
             self._print('fatal_errors', tb)
-        job.action.attempt += 1
 
     def _on_job_succeeded(self, job):
         job.data.close()

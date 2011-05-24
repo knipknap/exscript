@@ -33,7 +33,6 @@ class CustomAction(Action):
         """
         Action.__init__(self)
         self.name     = name
-        self.attempt  = 1
         self.function = None
 
         # Since each action is created in it's own thread, we must
@@ -50,12 +49,6 @@ class CustomAction(Action):
 
     def get_name(self):
         return self.name
-
-    def get_logname(self):
-        logname = self.name
-        if self.attempt > 1:
-            logname += '_retry%d' % (self.attempt - 1)
-        return logname + '.log'
 
     def execute(self, job):
         if self.function is not None:

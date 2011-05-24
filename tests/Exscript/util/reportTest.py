@@ -15,24 +15,19 @@ class FakeAction(object):
     aborted  = False
 
     def __init__(self, name = 'fake'):
-        self.name            = name
-        self.error_event     = Event()
-        self.aborted_event   = Event()
-        self.succeeded_event = Event()
+        self.name = name
 
     def get_name(self):
         return self.name
-
-    def get_logname(self):
-        return self.name + '.log'
 
     def n_failures(self):
         return self.failures
 
 class FakeJob(object):
     def __init__(self, action = None):
-        self.action = action is not None and action or FakeAction()
-        self.name   = self.action.name
+        self.action   = action is not None and action or FakeAction()
+        self.name     = self.action.name
+        self.failures = 0
 
 class FakeError(Exception):
     pass
@@ -89,7 +84,7 @@ class reportTest(unittest.TestCase):
         from Exscript.util.report import summarize
         self.createSucceededLog()
         self.createAbortedLog()
-        expected = 'fake1.log: ok\nfake2.log: FakeError'
+        expected = 'fake1: ok\nfake2: FakeError'
         self.assertEqual(summarize(self.logger), expected)
 
     def testFormat(self):
@@ -101,17 +96,17 @@ class reportTest(unittest.TestCase):
         expected = '''
 Failed actions:
 ---------------
-fake2.log:
+fake2:
 Traceback (most recent call last):
-  File "%s.py", line 59, in createErrorLog
+  File "%s.py", line 54, in createErrorLog
     raise FakeError()
 FakeError
 
 
 Successful actions:
 -------------------
-fake1.log
-fake3.log'''.strip() % file
+fake1
+fake3'''.strip() % file
         self.assertEqual(format(self.logger), expected)
 
 def suite():

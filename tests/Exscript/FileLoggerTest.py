@@ -65,9 +65,9 @@ class FileLoggerTest(LoggerTest):
 
         # Repeat all of the above, with failures = 1.
         # Test "started".
-        job.action.attempt = 2
-        logfile        = os.path.join(self.logdir, job.action.get_logname())
-        errfile        = logfile + '.error'
+        job.failures = 1
+        logfile      = os.path.join(self.logdir, self.logger._get_logname(job))
+        errfile      = logfile + '.error'
         self.failIf(os.path.exists(logfile))
         self.failIf(os.path.exists(errfile))
         self.queue.workqueue.job_started_event(job)

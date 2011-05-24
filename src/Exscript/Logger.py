@@ -77,7 +77,7 @@ class Logger(object):
         return self.logs[id(job)][-1]
 
     def _on_job_started(self, job):
-        log = Log(job.action.get_logname())
+        log = Log(job.name)
         log.started()
         self.logs[id(job)].append(log)
         self.started += 1
