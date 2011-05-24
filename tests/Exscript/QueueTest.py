@@ -141,6 +141,22 @@ class QueueTest(unittest.TestCase):
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
+    def testCreatePipe(self):
+        account = Account('user', 'test')
+        self.accm.add_account(account)
+        pipe = self.queue._create_pipe()
+        pipe.send(('acquire-account', None))
+        response = pipe.recv()
+        expected = (account.__hash__(),
+                    account.get_name(),
+                    account.get_password(),
+                    account.get_authorization_password(),
+                    account.get_key())
+        self.assertEqual(response, expected)
+        pipe.send(('release-account', account.__hash__()))
+        response = pipe.recv()
+        self.assertEqual(response, 'ok')
+
     def testSetMaxThreads(self):
         self.assertEqual(1, self.queue.get_max_threads())
         self.queue.set_max_threads(2)
