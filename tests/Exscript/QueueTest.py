@@ -7,7 +7,7 @@ import shutil
 import time
 from functools import partial
 from tempfile import mkdtemp
-from Exscript import Queue, Account, AccountPool
+from Exscript import Queue, Account, AccountPool, FileLogger
 from Exscript.Connection import Connection
 from Exscript.protocols import Dummy
 from Exscript.interpreter.Exception import FailException
@@ -65,17 +65,20 @@ class Log(object):
 class QueueTest(unittest.TestCase):
     CORRELATE = Queue
 
-    def createQueue(self, **kwargs):
+    def createQueue(self, logdir = None, **kwargs):
         if self.queue:
             self.queue.destroy()
         self.out   = Log()
         self.err   = Log()
         self.queue = Queue(stdout = self.out, stderr = self.err, **kwargs)
         self.accm  = self.queue.account_manager
+        if logdir:
+            self.logger = FileLogger(self.queue, logdir)
 
     def setUp(self):
         self.tempdir = mkdtemp()
         self.queue   = None
+        self.logger  = None
         self.createQueue(verbose = -1, logdir = self.tempdir)
 
     def tearDown(self):

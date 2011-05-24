@@ -36,6 +36,7 @@ class Config(ConfigReader):
         self.daemons       = {}
         self.account_pools = {}
         self.queues        = {}
+        self.loggers       = []
         self.databases     = {}
         self.cfg_dir       = cfg_dir
         self.service_dir   = os.path.join(cfg_dir, 'services')
@@ -61,10 +62,9 @@ class Config(ConfigReader):
         element     = self.cfgtree.find('queue[@name="%s"]' % name)
         max_threads = element.find('max-threads').text
         delete_logs = element.find('delete-logs') is not None
-        queue       = Queue(verbose     = 0,
-                            max_threads = max_threads,
-                            logdir      = logdir,
-                            delete_logs = delete_logs)
+        queue       = Queue(verbose = 0, max_threads = max_threads)
+        logger      = FileLogger(queue, logdir, 'a', delete_logs)
+        self.loggers.append(logger) # needed to hold them alive
 
         # Assign account pools to the queue.
         for pool_elem in element.iterfind('account-pool'):

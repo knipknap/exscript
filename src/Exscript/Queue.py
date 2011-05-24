@@ -27,7 +27,6 @@ from Exscript.parselib.Exception import CompileError
 from Exscript.interpreter.Exception import FailException
 from Exscript.util.cast import to_hosts
 from Exscript.util.event import Event
-from Exscript.FileLogger import FileLogger
 from Exscript.AccountManager import AccountManager
 from Exscript.CustomAction import CustomAction
 from Exscript.Task import Task
@@ -139,9 +138,6 @@ class Queue(object):
         @keyword verbose: The verbosity level, default 1.
         @keyword max_threads: The maximum number of concurrent threads, default 1
         @keyword times: The number of attempts on failure, default 1.
-        @keyword logdir: The directory into which the logs are written.
-        @keyword overwrite_logs: Whether existing logfiles are overwritten.
-        @keyword delete_logs: Whether successful logfiles are deleted.
         @keyword protocol_args: dict, passed to the protocol adapter as kwargs.
         @keyword stdout: The output channel, defaults to sys.stdout.
         @keyword stderr: The error channel, defaults to sys.stderr.
@@ -162,15 +158,6 @@ class Queue(object):
         self.failed            = 0
         self.status_bar_length = 0
         self.set_max_threads(kwargs.get('max_threads', 1))
-
-        # Enable logging.
-        if kwargs.get('logdir'):
-            overwrite   = kwargs.get('overwrite_logs', False)
-            delete      = kwargs.get('delete_logs',    False)
-            mode        = overwrite and 'w' or 'a'
-            self.logger = FileLogger(self, kwargs.get('logdir'), mode, delete)
-        else:
-            self.logger = None
 
         # Listen to what the workqueue is doing.
         self.workqueue.job_init_event.listen(self._on_job_init)

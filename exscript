@@ -17,16 +17,16 @@ import sys
 import os
 import re
 import getpass
-from optparse                import OptionParser, Option, OptionValueError
-from Exscript                import Queue, Account, PrivateKey, __version__
-from Exscript.protocols      import protocol_map
-from Exscript.util           import template
-from Exscript.util.sigint    import SigIntWatcher
-from Exscript.util.cast      import to_list, to_host
-from Exscript.util.interact  import get_login
-from Exscript.util.file      import get_accounts_from_file, \
-                                    get_hosts_from_file, \
-                                    get_hosts_from_csv
+from optparse import OptionParser, Option, OptionValueError
+from Exscript import Queue, FileLogger, Account, PrivateKey, __version__
+from Exscript.protocols import protocol_map
+from Exscript.util import template
+from Exscript.util.sigint import SigIntWatcher
+from Exscript.util.cast import to_list, to_host
+from Exscript.util.interact import get_login
+from Exscript.util.file import get_accounts_from_file, \
+                               get_hosts_from_file, \
+                               get_hosts_from_csv
 from Exscript.util.decorator import autologin, bind, connect
 
 bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
@@ -105,15 +105,6 @@ def run():
             print 'Warning: %s is empty.' % options.hosts
         hosts += txt_hosts
 
-    # Create the log directory.
-    if options.logdir:
-        if not os.path.exists(options.logdir):
-            print 'Creating log directory (%s)...' % options.logdir
-            try:
-                os.makedirs(options.logdir)
-            except IOError, e:
-                parser.error(str(e))
-
     # Make sure that all mandatory options are present.
     if not hosts:
         parser.error('No hosts to connect to')
@@ -154,15 +145,25 @@ def run():
         'auto_verify': not options.ssh_auto_verify,
         'debug':       options.protocol_verbose
     }
-    queue = Queue(domain         = options.default_domain,
-                  verbose        = options.verbose,
-                  max_threads    = options.connections,
-                  times          = options.retry + 1,
-                  logdir         = options.logdir,
-                  overwrite_logs = options.overwrite_logs,
-                  delete_logs    = options.delete_logs,
-                  protocol_args  = protocol_args)
+    queue = Queue(domain        = options.default_domain,
+                  verbose       = options.verbose,
+                  max_threads   = options.connections,
+                  times         = options.retry + 1,
+                  protocol_args = protocol_args)
     account_pool = queue.account_manager.default_pool
+
+    if options.logdir:
+        # Create the log directory.
+        if not os.path.exists(options.logdir):
+            print 'Creating log directory (%s)...' % options.logdir
+            try:
+                os.makedirs(options.logdir)
+            except IOError, e:
+                parser.error(str(e))
+
+        # Enable logging.
+        mode   = options.overwrite_logs and 'w' or 'a'
+        logger = FileLogger(queue, options.logdir, mode, options.delete_logs)
 
     # Read the account pool file.
     try:
