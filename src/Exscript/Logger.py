@@ -62,18 +62,16 @@ class Logger(object):
         """
         return self.failed
 
-    def get_logs(self, action = None):
-        if action:
-            return self.logs[action.__hash__()]
+    def get_logs(self):
         return chain.from_iterable(self.logs.itervalues())
 
-    def get_succeeded_logs(self, action = None):
+    def get_succeeded_logs(self):
         func = lambda x: x.has_ended() and not x.has_error()
-        return ifilter(func, self.get_logs(action))
+        return ifilter(func, self.get_logs())
 
-    def get_aborted_logs(self, action = None):
+    def get_aborted_logs(self):
         func = lambda x: x.has_ended() and x.has_error()
-        return ifilter(func, self.get_logs(action))
+        return ifilter(func, self.get_logs())
 
     def _get_log(self, action):
         return self.logs[action.__hash__()][-1]
