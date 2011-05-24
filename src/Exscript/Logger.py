@@ -73,27 +73,26 @@ class Logger(object):
         func = lambda x: x.has_ended() and x.has_error()
         return ifilter(func, self.get_logs())
 
-    def _get_log(self, action):
-        return self.logs[action.__hash__()][-1]
+    def _get_log(self, job):
+        return self.logs[id(job)][-1]
 
     def _on_job_started(self, job):
-        action = job.action
-        log    = Log(action.get_logname())
+        log = Log(job.action.get_logname())
         log.started()
-        action.log_event.listen(log.write)
-        self.logs[action.__hash__()].append(log)
+        job.action.log_event.listen(log.write)
+        self.logs[id(job)].append(log)
         self.started += 1
 
     def _on_job_error(self, job, exc_info):
-        log = self._get_log(job.action)
+        log = self._get_log(job)
         log.error(exc_info)
 
     def _on_job_succeeded(self, job):
-        log = self._get_log(job.action)
+        log = self._get_log(job)
         log.done()
         self.success += 1
 
     def _on_job_aborted(self, job):
-        log = self._get_log(job.action)
+        log = self._get_log(job)
         log.done()
         self.failed += 1

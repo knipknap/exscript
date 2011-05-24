@@ -40,14 +40,18 @@ class FileLogger(Logger):
 
     def _on_job_started(self, job):
         action   = job.action
-        name     = job.name
         filename = os.path.join(self.logdir, action.get_logname())
-        log      = Logfile(name, filename, self.mode, self.delete)
+        log      = Logfile(job.name, filename, self.mode, self.delete)
         log.started()
         action.log_event.listen(log.write)
-        self.logs[action.__hash__()].append(log)
+        self.logs[id(job)].append(log)
 
-    def _on_job_done(self, job):
-        Logger._on_job_done(self, job.action)
+    def _on_job_succeeded(self, job):
+        Logger._on_job_succeeded(self, job)
         if self.clearmem:
-            self._reset()
+            self.logs.pop(id(job))
+
+    def _on_job_aborted(self, job):
+        Logger._on_job_aborted(self, job)
+        if self.clearmem:
+            self.logs.pop(id(job))
