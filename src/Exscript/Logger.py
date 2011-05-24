@@ -15,9 +15,12 @@
 """
 Logging to memory.
 """
+import weakref
 from itertools import chain, ifilter
 from collections import defaultdict
 from Exscript.Log import Log
+
+logger_registry = weakref.WeakValueDictionary() # Map id(logger) to Logger.
 
 class Logger(object):
     """
@@ -34,6 +37,7 @@ class Logger(object):
         @type  queue: Queue
         @param queue: The Queue that is watched.
         """
+        logger_registry[id(self)] = self
         self.logs    = defaultdict(list)
         self.started = 0
         self.success = 0

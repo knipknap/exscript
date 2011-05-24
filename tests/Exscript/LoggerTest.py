@@ -1,11 +1,12 @@
 import sys, unittest, re, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
+import gc
 from itertools import islice
 from tempfile import mkdtemp
 from shutil import rmtree
 from Exscript.Log import Log
-from Exscript.Logger import Logger
+from Exscript.Logger import Logger, logger_registry
 from LogTest import FakeError
 from util.reportTest import FakeQueue, FakeJob
 from Exscript.util.event import Event
@@ -151,6 +152,14 @@ class LoggerTest(unittest.TestCase):
         self.assert_(isinstance(nth(self.logger.get_aborted_logs(), 0), Log))
         self.assertEqual(count(self.logger.get_aborted_logs(job.action)), 1)
         self.assert_(isinstance(nth(self.logger.get_aborted_logs(job.action), 0), Log))
+
+    def testLoggerRegistry(self):
+        logger    = Logger(self.queue)
+        logger_id = id(logger)
+        self.assert_(logger_id in logger_registry)
+        del logger
+        gc.collect()
+        self.assert_(logger_id not in logger_registry)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LoggerTest)
