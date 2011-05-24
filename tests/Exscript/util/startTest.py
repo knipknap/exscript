@@ -14,7 +14,7 @@ class startTest(unittest.TestCase):
         self.callback = bind(self.count_calls, self.data, testarg = 1)
         self.account  = Account('test', 'test')
 
-    def count_calls(self, conn, data, **kwargs):
+    def count_calls(self, job, conn, data, **kwargs):
         # Warning: Assertions raised in this function happen in a subprocess!
         import Exscript
 

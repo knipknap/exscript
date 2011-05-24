@@ -3,6 +3,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 
 import Exscript.util.decorator
 from Exscript.protocols.Exception import LoginFailure
+from util.reportTest import FakeJob
 
 class FakeConnection(object):
     def __init__(self, os = None):
@@ -26,7 +27,8 @@ class FakeConnection(object):
 class decoratorTest(unittest.TestCase):
     CORRELATE = Exscript.util.decorator
 
-    def bind_cb(self, conn, bound_arg1, bound_arg2, **kwargs):
+    def bind_cb(self, job, conn, bound_arg1, bound_arg2, **kwargs):
+        self.assert_(isinstance(job, FakeJob))
         self.assert_(isinstance(conn, FakeConnection))
         self.assert_(bound_arg1 == 'one', bound_arg1)
         self.assert_(bound_arg2 == 'two', bound_arg2)
@@ -36,47 +38,55 @@ class decoratorTest(unittest.TestCase):
     def testBind(self):
         from Exscript.util.decorator import bind
         bound  = bind(self.bind_cb, 'one', 'two', three = 3)
-        result = bound(FakeConnection())
+        result = bound(FakeJob(), FakeConnection())
         self.assert_(result == 123, result)
 
-    def ios_cb(self, conn):
+    def ios_cb(self, job, conn):
         return 'hello ios'
 
-    def junos_cb(self, conn):
+    def junos_cb(self, job, conn):
         return 'hello junos'
 
     def testOsFunctionMapper(self):
         from Exscript.util.decorator import os_function_mapper
         cb_map = {'ios': self.ios_cb, 'junos': self.junos_cb}
-        result = os_function_mapper(FakeConnection(os = 'ios'), cb_map)
+        result = os_function_mapper(FakeJob(),
+                                    FakeConnection(os = 'ios'),
+                                    cb_map)
         self.assertEqual(result, 'hello ios')
 
-        result = os_function_mapper(FakeConnection(os = 'junos'), cb_map)
+        result = os_function_mapper(FakeJob(),
+                                    FakeConnection(os = 'junos'),
+                                    cb_map)
         self.assertEqual(result, 'hello junos')
 
-        self.assertRaises(Exception, os_function_mapper, FakeConnection(), cb_map)
+        self.assertRaises(Exception,
+                          os_function_mapper,
+                          FakeJob(),
+                          FakeConnection(),
+                          cb_map)
 
-    def connect_cb(self, conn, *args, **kwargs):
+    def connect_cb(self, job, conn, *args, **kwargs):
         self.assert_(conn.connected == True)
-        return self.bind_cb(conn, *args, **kwargs)
+        return self.bind_cb(job, conn, *args, **kwargs)
 
     def testConnect(self):
         from Exscript.util.decorator import connect
         bound  = connect(self.connect_cb)
-        result = bound(FakeConnection(), 'one', 'two', three = 3)
+        result = bound(FakeJob(), FakeConnection(), 'one', 'two', three = 3)
         self.assertEqual(result, 123)
 
-    def autologin_cb(self, conn, *args, **kwargs):
+    def autologin_cb(self, job, conn, *args, **kwargs):
         self.assert_(conn.logged_in == True)
         self.assert_(conn.login_flushed == False)
-        return self.connect_cb(conn, *args, **kwargs)
+        return self.connect_cb(job, conn, *args, **kwargs)
 
     def testAutologin(self):
         from Exscript.util.decorator import autologin
 
         # Test simple login.
         bound  = autologin(self.autologin_cb, False)
-        result = bound(FakeConnection(), 'one', 'two', three = 3)
+        result = bound(FakeJob(), FakeConnection(), 'one', 'two', three = 3)
         self.assertEqual(result, 123)
 
         # Monkey patch the fake connection such that the login fails.
@@ -89,7 +99,8 @@ class decoratorTest(unittest.TestCase):
 
         # Test retry functionality.
         bound = autologin(self.autologin_cb, False, attempts = 5)
-        self.assertRaises(LoginFailure, bound, conn, 'one', 'two', three = 3)
+        job   = FakeJob()
+        self.assertRaises(LoginFailure, bound, job, conn, 'one', 'two', three = 3)
         self.assertEqual(conn.data, 5)
 
     def testDeprecated(self):

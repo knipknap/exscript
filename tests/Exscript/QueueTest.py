@@ -5,46 +5,48 @@ warnings.simplefilter('ignore', DeprecationWarning)
 
 import shutil
 import time
-from functools                      import partial
-from tempfile                       import mkdtemp
-from Exscript                       import Queue, Account, AccountPool
-from Exscript.Connection            import Connection
-from Exscript.protocols             import Dummy
+from functools import partial
+from tempfile import mkdtemp
+from Exscript import Queue, Account, AccountPool
+from Exscript.Connection import Connection
+from Exscript.protocols import Dummy
 from Exscript.interpreter.Exception import FailException
-from Exscript.util.decorator        import bind
+from Exscript.util.decorator import bind
+from Exscript.workqueue.Job import Job
 
-def count_calls(data, **kwargs):
+def count_calls(job, data, **kwargs):
+    assert isinstance(job, Job)
     assert kwargs.has_key('testarg')
     data['n_calls'] += 1
 
-def count_calls2(conn, data, **kwargs):
+def count_calls2(job, conn, data, **kwargs):
     assert isinstance(conn, Connection)
-    count_calls(data, **kwargs)
+    count_calls(job, data, **kwargs)
 
-def spawn_subtask(conn, queue, data, **kwargs):
-    count_calls2(conn, data, **kwargs)
+def spawn_subtask(job, conn, queue, data, **kwargs):
+    count_calls2(job, conn, data, **kwargs)
     func  = bind(count_calls2, data, testarg = 1)
     task  = queue.priority_run('subtask', func)
     queue.wait_for(task)
 
-def do_nothing(conn):
+def do_nothing(job, conn):
     pass
 
-def say_hello(conn):
+def say_hello(job, conn):
     conn.send('hello')
 
-def error(conn):
-    say_hello(conn)
+def error(job, conn):
+    say_hello(job, conn)
     raise FailException('intentional error')
 
-def fatal_error(conn):
-    say_hello(conn)
+def fatal_error(job, conn):
+    say_hello(job, conn)
     raise Exception('intentional fatal error')
 
 class MyProtocol(Dummy):
     pass
 
-def raise_if_not_myprotocol(conn):
+def raise_if_not_myprotocol(job, conn):
     if not isinstance(conn, MyProtocol):
         raise Exception('not a MyProtocol instance')
 
@@ -168,7 +170,7 @@ class QueueTest(unittest.TestCase):
             data['match-called'] = True
             return True
 
-        def start_cb(data, conn):
+        def start_cb(data, job, conn):
             account = conn.acquire_account()
             data['start-called'] = True
             data['account'] = account.__hash__()
@@ -321,7 +323,7 @@ class QueueTest(unittest.TestCase):
     def testEnqueue(self):
         from functools import partial
         data = {'n_calls': 0}
-        func = partial(count_calls, data, testarg = 1)
+        func = bind(count_calls, data, testarg = 1)
         self.queue.enqueue(func)
         self.queue.enqueue(func)
         self.queue.shutdown()

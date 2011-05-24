@@ -32,7 +32,6 @@ from Exscript.AccountManager import AccountManager
 from Exscript.CustomAction import CustomAction
 from Exscript.Task import Task
 from Exscript.workqueue import WorkQueue, Action
-from Exscript.workqueue.util import takes_job, test_takes_job
 from Exscript.protocols import get_protocol_from_name
 from Exscript.Connection import Connection
 
@@ -47,7 +46,6 @@ def _connector(func,
     protocol_name = host.get_protocol()
     protocol_cls  = get_protocol_from_name(protocol_name)
 
-    @takes_job
     def wrapped(job, *args, **kwargs):
         protocol = protocol_cls(**protocol_args)
 
@@ -58,10 +56,7 @@ def _connector(func,
 
         conn = Connection(job.data, host, protocol)
         conn.data_received_event.listen(log_event)
-        if test_takes_job(func):
-            return func(job, conn)
-        else:
-            return func(conn)
+        return func(job, conn)
 
     return wrapped
 
