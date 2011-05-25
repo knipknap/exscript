@@ -27,7 +27,7 @@ def spawn_subtask(job, conn, queue, data, **kwargs):
     count_calls2(job, conn, data, **kwargs)
     func  = bind(count_calls2, data, testarg = 1)
     task  = queue.priority_run('subtask', func)
-    queue.wait_for(task)
+    task.wait()
 
 def do_nothing(job, conn):
     pass
@@ -224,20 +224,11 @@ class QueueTest(unittest.TestCase):
         self.assert_(task is not None)
         return task
 
-    def testWaitFor(self):
-        task = self.startTask()
-        self.queue.wait_for(task)
-        self.assert_(task.is_completed())
-        # The following function is not synchronous with the above, so add
-        # a timeout to avoid races.
-        time.sleep(.1)
-        self.assert_(self.queue.is_completed())
-
     def testIsCompleted(self):
         self.assert_(self.queue.is_completed())
         task = self.startTask()
         self.failIf(self.queue.is_completed())
-        self.queue.wait_for(task)
+        task.wait()
         self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
 

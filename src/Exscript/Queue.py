@@ -396,24 +396,6 @@ class Queue(object):
         """
         self.account_manager.add_account(account)
 
-    def wait_for(self, action):
-        """
-        Waits until the given action is completed. The action is an object as
-        returned by the Queue.run() method.
-
-        @type  action: Task|Action
-        @param action: The object that was returned by Queue.run().
-        """
-        assert action is not None
-        if isinstance(action, Task):
-            self._dbg(2, 'Waiting for the task to finish.')
-            return action.wait()
-        elif isinstance(action, Action) or isinstance(action, int):
-            self._dbg(2, 'Waiting for the action to finish.')
-            return self.workqueue.wait_for(action)
-        else:
-            raise ValueError('invalid type for argument "action"')
-
     def is_completed(self):
         """
         Returns True if the task is completed, False otherwise.

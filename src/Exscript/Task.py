@@ -52,7 +52,7 @@ class Task(object):
         Does not use any polling.
         """
         for thehash in self.action_hashes:
-            self.queue.wait_for(thehash)
+            self.queue.workqueue.wait_for(thehash)
 
     def add_action(self, action):
         """
