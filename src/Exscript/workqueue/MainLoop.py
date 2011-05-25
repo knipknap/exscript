@@ -72,19 +72,19 @@ class MainLoop(threading.Thread):
 
     def enqueue(self, action, times, data):
         with self.condition:
-            self.queue.append(self._create_job(action, times, data))
+            job = self._create_job(action, times, data)
+            self.queue.append(job)
             self.condition.notify_all()
+        return id(job)
 
     def enqueue_or_ignore(self, action, times, data):
         with self.condition:
+            job = None
             if self.get_first_job_from_name(action.name) is None:
                 job = self._create_job(action, times, data)
                 self.queue.append(job)
-                enqueued = True
-            else:
-                enqueued = False
             self.condition.notify_all()
-        return enqueued
+        return job is not None and id(job) or None
 
     def priority_enqueue(self, action, force_start, times, data):
         with self.condition:
@@ -94,6 +94,7 @@ class MainLoop(threading.Thread):
             else:
                 self.queue.appendleft(job)
             self.condition.notify_all()
+        return id(job)
 
     def priority_enqueue_or_raise(self, action, force_start, times, data):
         with self.condition:
@@ -102,28 +103,30 @@ class MainLoop(threading.Thread):
             for job in chain(self.force_start, self.running_jobs):
                 if job.name == action.name:
                     self.condition.notify_all()
-                    return False
+                    return None
 
-            # If the action is already in the queue, remove it so it can be
-            # re-added later.
-            existing = None
+            # If the action is already in the queue, remove it so we can
+            # re-add it at the top of the queue later.
+            existing_job = None
             for job in self.queue:
                 if job.name == action.name:
-                    existing = job
+                    existing_job = job
+                    self.queue.remove(existing_job)
                     break
-            if existing:
-                self.queue.remove(existing)
-                action = existing.action
 
-            # Now add the action to the queue.
-            job = self._create_job(action, times, data)
+            # If it was not in the queue, create a new job.
+            if existing_job is None:
+                job = self._create_job(action, times, data)
+            else:
+                job = existing_job
+
+            # Now insert the job into the queue.
             if force_start:
                 self.force_start.append(job)
             else:
                 self.queue.appendleft(job)
-
             self.condition.notify_all()
-        return existing is None
+        return existing_job is None and id(job) or None
 
     def pause(self):
         with self.condition:

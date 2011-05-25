@@ -100,14 +100,17 @@ class WorkQueue(object):
         @param times: The maximum number of times the action is attempted.
         @type  data: object
         @param data: Optional data to store in Job.data.
+        @rtype:  int
+        @return: The id of the new job.
         """
         self._check_if_ready()
-        self.main_loop.enqueue(action, times, data)
+        return self.main_loop.enqueue(action, times, data)
 
     def enqueue_or_ignore(self, action, times = 1, data = None):
         """
         Like enqueue(), but does nothing if an action with the same name
         is already in the queue.
+        Returns a job id if a new job was added, returns None otherwise.
 
         @type  action: Action
         @param action: The action that is executed.
@@ -115,8 +118,8 @@ class WorkQueue(object):
         @param times: The maximum number of times the action is attempted.
         @type  data: object
         @param data: Optional data to store in Job.data.
-        @rtype:  bool
-        @return: True if the action was enqueued, False otherwise.
+        @rtype:  int or None
+        @return: The id of the new job.
         """
         self._check_if_ready()
         return self.main_loop.enqueue_or_ignore(action, times, data)
@@ -140,9 +143,11 @@ class WorkQueue(object):
         @param times: The maximum number of times the action is attempted.
         @type  data: object
         @param data: Optional data to store in Job.data.
+        @rtype:  int
+        @return: The id of the new job.
         """
         self._check_if_ready()
-        self.main_loop.priority_enqueue(action, force_start, times, data)
+        return self.main_loop.priority_enqueue(action, force_start, times, data)
 
     def priority_enqueue_or_raise(self,
                                   action,
@@ -153,6 +158,7 @@ class WorkQueue(object):
         Like priority_enqueue(), but if an action with the same name is
         already in the queue, the existing action is moved to the top of
         the queue and the given action is ignored.
+        Returns a job id if a new job was added, returns None otherwise.
 
         @type  action: Action
         @param action: The action that is executed.
@@ -160,8 +166,8 @@ class WorkQueue(object):
         @param times: The maximum number of times the action is attempted.
         @type  data: object
         @param data: Optional data to store in Job.data.
-        @rtype:  bool
-        @return: True if the action was enqueued, False otherwise.
+        @rtype:  int or None
+        @return: The id of the new job.
         """
         self._check_if_ready()
         return self.main_loop.priority_enqueue_or_raise(action,

@@ -29,10 +29,12 @@ class WorkQueueTest(unittest.TestCase):
 
     def testEnqueue(self):
         self.assertEqual(0, self.wq.get_length())
-        self.wq.enqueue(Action())
+        id = self.wq.enqueue(Action())
         self.assertEqual(1, self.wq.get_length())
-        self.wq.enqueue(Action())
+        self.assert_(isinstance(id, int))
+        id = self.wq.enqueue(Action())
         self.assertEqual(2, self.wq.get_length())
+        self.assert_(isinstance(id, int))
         self.wq.shutdown(True)
         self.assertEqual(0, self.wq.get_length())
 
@@ -61,12 +63,15 @@ class WorkQueueTest(unittest.TestCase):
 
     def testEnqueueOrIgnore(self):
         self.assertEqual(0, self.wq.get_length())
-        self.wq.enqueue_or_ignore(Action(name = 'one'))
+        id = self.wq.enqueue_or_ignore(Action(name = 'one'))
         self.assertEqual(1, self.wq.get_length())
-        self.wq.enqueue_or_ignore(Action(name = 'two'))
+        self.assert_(isinstance(id, int))
+        id = self.wq.enqueue_or_ignore(Action(name = 'two'))
         self.assertEqual(2, self.wq.get_length())
-        self.wq.enqueue_or_ignore(Action(name = 'one'))
+        self.assert_(isinstance(id, int))
+        id = self.wq.enqueue_or_ignore(Action(name = 'one'))
         self.assertEqual(2, self.wq.get_length())
+        self.assertEqual(id, None)
         self.wq.shutdown(True)
         self.assertEqual(0, self.wq.get_length())
 
@@ -75,10 +80,12 @@ class WorkQueueTest(unittest.TestCase):
     def testPriorityEnqueue(self):
         # Well, this test sucks.
         self.assertEqual(0, self.wq.get_length())
-        self.wq.priority_enqueue(Action())
+        id = self.wq.priority_enqueue(Action())
         self.assertEqual(1, self.wq.get_length())
-        self.wq.priority_enqueue(Action())
+        self.assert_(isinstance(id, int))
+        id = self.wq.priority_enqueue(Action())
         self.assertEqual(2, self.wq.get_length())
+        self.assert_(isinstance(id, int))
 
     def testPriorityEnqueueOrRaise(self):
         action1 = Action(name = 'foo')
@@ -86,30 +93,28 @@ class WorkQueueTest(unittest.TestCase):
         action3 = Action(name = 'foo')
         self.assertEqual(0, self.wq.get_length())
 
-        self.wq.priority_enqueue_or_raise(action1)
+        id = self.wq.priority_enqueue_or_raise(action1)
         self.assertEqual(1, self.wq.get_length())
-        self.wq.priority_enqueue_or_raise(action2)
+        self.assert_(isinstance(id, int))
+        id = self.wq.priority_enqueue_or_raise(action2)
         self.assertEqual(2, self.wq.get_length())
-        self.wq.priority_enqueue_or_raise(action3)
+        self.assert_(isinstance(id, int))
+        id = self.wq.priority_enqueue_or_raise(action3)
         self.assertEqual(2, self.wq.get_length())
+        self.assertEqual(id, None)
 
     def testPause(self):
         pass # See testEnqueue()
 
     def testWaitFor(self):
         actions = [Action(), Action(), Action(), Action()]
-        for action in actions:
-            self.wq.enqueue(action)
+        ids     = [self.wq.enqueue(a) for a in actions]
         self.assertEqual(4, self.wq.get_length())
         self.wq.unpause()
-
-        # Test that wait_for accepts an action hash.
-        self.wq.wait_for(actions[0].__hash__())
+        self.wq.wait_for(ids[0])
         self.assert_(self.wq.get_length() < 4)
-
-        # Test whether it accepts an action object.
-        for action in actions:
-            self.wq.wait_for(action)
+        for id in ids:
+            self.wq.wait_for(id)
         self.assertEqual(0, self.wq.get_length())
 
     def testWaitForActivity(self):
