@@ -112,7 +112,10 @@ class QueueWidget(Frame):
         self.data_queue = Queue.Queue()
         self.pages      = {}
         self.queue      = queue
-        self.queue.action_enqueued_event.connect(self._action_enqueued)
+        self.queue.workqueue.job_started_event.connect(self._on_job_started)
+        self.queue.workqueue.job_error_event.connect(self._on_job_error)
+        self.queue.workqueue.job_succeeded_event.connect(self._on_job_succeeded)
+        self.queue.workqueue.job_aborted_event.connect(self._on_job_aborted)
         self._update()
 
     def _update_progress(self):
@@ -139,21 +142,15 @@ class QueueWidget(Frame):
         self._update_progress()
         self.after(100, self._update)
 
-    def _action_enqueued(self, action):
-        action.started_event.connect(self._on_action_started)
-        action.error_event.connect(self._on_action_error)
-        action.succeeded_event.connect(self._on_action_succeeded)
-        action.aborted_event.connect(self._on_action_aborted)
-
-    def _on_action_started(self, action, conn):
+    def _on_job_started(self, job):
         watcher = _ConnectionWatcher(conn)
-        self.data_queue.put((self._create_page, (action, watcher)))
+        self.data_queue.put((self._create_page, (job, watcher)))
 
-    def _on_action_error(self, action, e):
-        self.data_queue.put((self._remove_page, (action,)))
+    def _on_job_error(self, job, e):
+        self.data_queue.put((self._remove_page, (job,)))
 
-    def _on_action_succeeded(self, action):
-        self.data_queue.put((self._remove_page, (action,)))
+    def _on_job_succeeded(self, job):
+        self.data_queue.put((self._remove_page, (job,)))
 
-    def _on_action_aborted(self, action):
+    def _on_job_aborted(self, job):
         pass
