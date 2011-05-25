@@ -46,7 +46,7 @@ class Job(threading.Thread):
                 self.failures += 1
             self.exc_info  = exc_info
             self.completed = True
-            self.condition.notifyAll()
+            self.condition.notify_all()
 
     def run(self):
         """

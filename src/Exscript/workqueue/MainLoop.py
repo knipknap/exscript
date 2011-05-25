@@ -67,7 +67,7 @@ class MainLoop(threading.Thread):
 
     def _create_job(self, function, name, times, data):
         if name is None:
-            name = id(function)
+            name = str(id(function))
         job = Job(self.condition, function, name, times, data)
         self.job_init_event(job)
         return job
@@ -215,7 +215,7 @@ class MainLoop(threading.Thread):
                 self._dbg(1, 'Restarting job "%s"' % job.name)
                 self._restart_job(job)
         else:
-            self._dbg(1, 'Job "%s" succeeded.' % job.getName())
+            self._dbg(1, 'Job "%s" succeeded.' % job.name)
             self.job_succeeded_event(job)
 
     def _update_running_jobs(self):
