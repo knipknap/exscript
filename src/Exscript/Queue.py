@@ -505,13 +505,17 @@ class Queue(object):
                               force,
                               duplicate_check)
 
-    def _run(self, hosts, function, duplicate_check):
+    def _run(self, hosts, function, prioritize, force, duplicate_check):
         hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
 
         task = Task(self.workqueue)
         for host in hosts:
-            id = self._run1(host, function, False, False, duplicate_check)
+            id = self._run1(host,
+                            function,
+                            prioritize,
+                            force,
+                            duplicate_check)
             if id is not None:
                 task.add_job_id(id)
 
@@ -539,7 +543,7 @@ class Queue(object):
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._run(hosts, function, False)
+        return self._run(hosts, function, False, False, False)
 
     def run_or_ignore(self, hosts, function):
         """
@@ -553,7 +557,7 @@ class Queue(object):
         @rtype:  object
         @return: A task object, or None if all hosts were duplicates.
         """
-        return self._run(hosts, function, True)
+        return self._run(hosts, function, False, False, True)
 
     def priority_run(self, hosts, function):
         """
@@ -566,17 +570,7 @@ class Queue(object):
         @rtype:  object
         @return: An object representing the task.
         """
-        hosts       = to_hosts(hosts, default_domain = self.domain)
-        self.total += len(hosts)
-
-        task = Task(self.workqueue)
-        for host in hosts:
-            id = self._run1(host, function, True, False, False)
-            if id is not None:
-                task.add_job_id(id)
-
-        self._dbg(2, 'All prioritized jobs enqueued.')
-        return task
+        return self._run(hosts, function, True, False, False)
 
     def priority_run_or_raise(self, hosts, function):
         """
@@ -591,21 +585,7 @@ class Queue(object):
         @rtype:  object
         @return: A task object, or None if all hosts were duplicates.
         """
-        hosts       = to_hosts(hosts, default_domain = self.domain)
-        self.total += len(hosts)
-
-        task = Task(self.workqueue)
-        for host in hosts:
-            id = self._run1(host, function, True, False, True)
-            if id is not None:
-                task.add_job_id(id)
-
-        if task.is_completed():
-            self._dbg(2, 'All prioritized jobs were duplicates.')
-            return None
-
-        self._dbg(2, 'All prioritized jobs enqueued.')
-        return task
+        return self._run(hosts, function, True, False, True)
 
     def force_run(self, hosts, function):
         """
@@ -619,17 +599,7 @@ class Queue(object):
         @rtype:  object
         @return: An object representing the task.
         """
-        hosts       = to_hosts(hosts, default_domain = self.domain)
-        self.total += len(hosts)
-
-        task = Task(self.workqueue)
-        for host in hosts:
-            id = self._run1(host, function, True, True, False)
-            if id is not None:
-                task.add_job_id(id)
-
-        self._dbg(2, 'All forced jobs enqueued.')
-        return task
+        return self._run(hosts, function, True, True, False)
 
     def enqueue(self, function, name = None):
         """
