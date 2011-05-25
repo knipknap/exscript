@@ -61,4 +61,4 @@ class Task(object):
         @type  id: int
         @param id: The id of the job.
         """
-        self.job_ids.add(id)
+        self.job_ids.add(int(id))

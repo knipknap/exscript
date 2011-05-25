@@ -514,7 +514,8 @@ class Queue(object):
         task = Task(self.workqueue)
         for host in hosts:
             id = self._run1(host, function, False, False, duplicate_check)
-            task.add_job_id(id)
+            if id is not None:
+                task.add_job_id(id)
 
         if task.is_completed():
             self._dbg(2, 'No actions enqueued.')
@@ -573,7 +574,8 @@ class Queue(object):
         task = Task(self.workqueue)
         for host in hosts:
             id = self._run1(host, function, True, False, False)
-            task.add_job_id(id)
+            if id is not None:
+                task.add_job_id(id)
 
         self._dbg(2, 'All prioritized actions enqueued.')
         return task
@@ -597,7 +599,8 @@ class Queue(object):
         task = Task(self.workqueue)
         for host in hosts:
             id = self._run1(host, function, True, False, True)
-            task.add_job_id(id)
+            if id is not None:
+                task.add_job_id(id)
 
         if task.is_completed():
             self._dbg(2, 'All prioritized actions were duplicates.')
@@ -624,7 +627,8 @@ class Queue(object):
         task = Task(self.workqueue)
         for host in hosts:
             id = self._run1(host, function, True, True, False)
-            task.add_job_id(id)
+            if id is not None:
+                task.add_job_id(id)
 
         self._dbg(2, 'All forced actions enqueued.')
         return task
@@ -649,7 +653,8 @@ class Queue(object):
         action = CustomAction(name)
         action.function = function
         id = self._enqueue1(action, False, False, False)
-        task.add_job_id(id)
+        if id is not None:
+            task.add_job_id(id)
 
         self._dbg(2, 'Function enqueued.')
         return task
