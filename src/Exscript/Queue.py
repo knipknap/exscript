@@ -483,15 +483,21 @@ class Queue(object):
         if duplicate_check:
             if prioritize:
                 return self.workqueue.priority_enqueue_or_raise(action,
+                                                                action.name,
                                                                 force,
                                                                 self.times)
             else:
-                return self.workqueue.enqueue_or_ignore(action, self.times)
+                return self.workqueue.enqueue_or_ignore(action,
+                                                        action.name,
+                                                        self.times)
 
         if prioritize:
-            return self.workqueue.priority_enqueue(action, force, self.times)
+            return self.workqueue.priority_enqueue(action,
+                                                   action.name,
+                                                   force,
+                                                   self.times)
         else:
-            return self.workqueue.enqueue(action, self.times)
+            return self.workqueue.enqueue(action, action.name, self.times)
         return True
 
     def _run1(self, host, function, prioritize, force, duplicate_check):

@@ -65,30 +65,32 @@ class MainLoop(threading.Thread):
             self.max_threads = int(max_threads)
             self.condition.notify_all()
 
-    def _create_job(self, action, times, data):
-        job = Job(self.condition, action, action.name, times, data)
+    def _create_job(self, action, name, times, data):
+        if name is None:
+            name = id(action)
+        job = Job(self.condition, action, name, times, data)
         self.job_init_event(job)
         return job
 
-    def enqueue(self, action, times, data):
+    def enqueue(self, action, name, times, data):
         with self.condition:
-            job = self._create_job(action, times, data)
+            job = self._create_job(action, name, times, data)
             self.queue.append(job)
             self.condition.notify_all()
         return id(job)
 
-    def enqueue_or_ignore(self, action, times, data):
+    def enqueue_or_ignore(self, action, name, times, data):
         with self.condition:
             job = None
-            if self.get_first_job_from_name(action.name) is None:
-                job = self._create_job(action, times, data)
+            if self.get_first_job_from_name(name) is None:
+                job = self._create_job(action, name, times, data)
                 self.queue.append(job)
             self.condition.notify_all()
         return job is not None and id(job) or None
 
-    def priority_enqueue(self, action, force_start, times, data):
+    def priority_enqueue(self, action, name, force_start, times, data):
         with self.condition:
-            job = self._create_job(action, times, data)
+            job = self._create_job(action, name, times, data)
             if force_start:
                 self.force_start.append(job)
             else:
@@ -96,12 +98,17 @@ class MainLoop(threading.Thread):
             self.condition.notify_all()
         return id(job)
 
-    def priority_enqueue_or_raise(self, action, force_start, times, data):
+    def priority_enqueue_or_raise(self,
+                                  action,
+                                  name,
+                                  force_start,
+                                  times,
+                                  data):
         with self.condition:
             # If the action is already running (or about to be forced),
             # there is nothing to be done.
             for job in chain(self.force_start, self.running_jobs):
-                if job.name == action.name:
+                if job.name == name:
                     self.condition.notify_all()
                     return None
 
@@ -109,14 +116,14 @@ class MainLoop(threading.Thread):
             # re-add it at the top of the queue later.
             existing_job = None
             for job in self.queue:
-                if job.name == action.name:
+                if job.name == name:
                     existing_job = job
                     self.queue.remove(existing_job)
                     break
 
             # If it was not in the queue, create a new job.
             if existing_job is None:
-                job = self._create_job(action, times, data)
+                job = self._create_job(action, name, times, data)
             else:
                 job = existing_job
 

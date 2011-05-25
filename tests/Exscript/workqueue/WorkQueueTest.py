@@ -63,13 +63,13 @@ class WorkQueueTest(unittest.TestCase):
 
     def testEnqueueOrIgnore(self):
         self.assertEqual(0, self.wq.get_length())
-        id = self.wq.enqueue_or_ignore(Action(name = 'one'))
+        id = self.wq.enqueue_or_ignore(Action(), 'one')
         self.assertEqual(1, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.enqueue_or_ignore(Action(name = 'two'))
+        id = self.wq.enqueue_or_ignore(Action(), 'two')
         self.assertEqual(2, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.enqueue_or_ignore(Action(name = 'one'))
+        id = self.wq.enqueue_or_ignore(Action(), 'one')
         self.assertEqual(2, self.wq.get_length())
         self.assertEqual(id, None)
         self.wq.shutdown(True)
@@ -88,18 +88,16 @@ class WorkQueueTest(unittest.TestCase):
         self.assert_(isinstance(id, int))
 
     def testPriorityEnqueueOrRaise(self):
-        action1 = Action(name = 'foo')
-        action2 = Action(name = 'bar')
-        action3 = Action(name = 'foo')
+        action = Action()
         self.assertEqual(0, self.wq.get_length())
 
-        id = self.wq.priority_enqueue_or_raise(action1)
+        id = self.wq.priority_enqueue_or_raise(action, 'foo')
         self.assertEqual(1, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.priority_enqueue_or_raise(action2)
+        id = self.wq.priority_enqueue_or_raise(action, 'bar')
         self.assertEqual(2, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.priority_enqueue_or_raise(action3)
+        id = self.wq.priority_enqueue_or_raise(action, 'foo')
         self.assertEqual(2, self.wq.get_length())
         self.assertEqual(id, None)
 
@@ -107,8 +105,7 @@ class WorkQueueTest(unittest.TestCase):
         pass # See testEnqueue()
 
     def testWaitFor(self):
-        actions = [Action(), Action(), Action(), Action()]
-        ids     = [self.wq.enqueue(a) for a in actions]
+        ids = [self.wq.enqueue(Action()) for a in range(4)]
         self.assertEqual(4, self.wq.get_length())
         self.wq.unpause()
         self.wq.wait_for(ids[0])
@@ -118,12 +115,10 @@ class WorkQueueTest(unittest.TestCase):
         self.assertEqual(0, self.wq.get_length())
 
     def testWaitForActivity(self):
-        action1 = Action()
-        action2 = Action()
-        action3 = Action()
-        self.wq.enqueue(action1)
-        self.wq.enqueue(action2)
-        self.wq.enqueue(action3)
+        action = Action()
+        self.wq.enqueue(action)
+        self.wq.enqueue(action)
+        self.wq.enqueue(action)
         self.wq.unpause()
         while not self.wq.get_length() == 0:
             self.wq.wait_for_activity()

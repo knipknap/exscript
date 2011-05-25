@@ -88,14 +88,18 @@ class WorkQueue(object):
         self.max_threads = max_threads
         self.main_loop.set_max_threads(max_threads)
 
-    def enqueue(self, action, times = 1, data = None):
+    def enqueue(self, action, name = None, times = 1, data = None):
         """
         Appends an action to the queue for execution. The times argument
         specifies the number of attempts if the execution of the action
         raises an exception.
+        If the name argument is None it defaults to whatever
+        id(action) returns.
 
         @type  action: Action
         @param action: The action that is executed.
+        @type  name: str
+        @param name: Stored in Job.name.
         @type  times: int
         @param times: The maximum number of times the action is attempted.
         @type  data: object
@@ -104,9 +108,9 @@ class WorkQueue(object):
         @return: The id of the new job.
         """
         self._check_if_ready()
-        return self.main_loop.enqueue(action, times, data)
+        return self.main_loop.enqueue(action, name, times, data)
 
-    def enqueue_or_ignore(self, action, times = 1, data = None):
+    def enqueue_or_ignore(self, action, name = None, times = 1, data = None):
         """
         Like enqueue(), but does nothing if an action with the same name
         is already in the queue.
@@ -114,6 +118,8 @@ class WorkQueue(object):
 
         @type  action: Action
         @param action: The action that is executed.
+        @type  name: str
+        @param name: Stored in Job.name.
         @type  times: int
         @param times: The maximum number of times the action is attempted.
         @type  data: object
@@ -122,10 +128,11 @@ class WorkQueue(object):
         @return: The id of the new job.
         """
         self._check_if_ready()
-        return self.main_loop.enqueue_or_ignore(action, times, data)
+        return self.main_loop.enqueue_or_ignore(action, name, times, data)
 
     def priority_enqueue(self,
                          action,
+                         name        = None,
                          force_start = False,
                          times       = 1,
                          data        = None):
@@ -137,6 +144,8 @@ class WorkQueue(object):
 
         @type  action: Action
         @param action: The action that is executed.
+        @type  name: str
+        @param name: Stored in Job.name.
         @type  force_start: bool
         @param force_start: Whether to start execution immediately.
         @type  times: int
@@ -147,10 +156,15 @@ class WorkQueue(object):
         @return: The id of the new job.
         """
         self._check_if_ready()
-        return self.main_loop.priority_enqueue(action, force_start, times, data)
+        return self.main_loop.priority_enqueue(action,
+                                               name,
+                                               force_start,
+                                               times,
+                                               data)
 
     def priority_enqueue_or_raise(self,
                                   action,
+                                  name        = None,
                                   force_start = False,
                                   times       = 1,
                                   data        = None):
@@ -162,6 +176,8 @@ class WorkQueue(object):
 
         @type  action: Action
         @param action: The action that is executed.
+        @type  name: str
+        @param name: Stored in Job.name.
         @type  times: int
         @param times: The maximum number of times the action is attempted.
         @type  data: object
@@ -171,6 +187,7 @@ class WorkQueue(object):
         """
         self._check_if_ready()
         return self.main_loop.priority_enqueue_or_raise(action,
+                                                        name,
                                                         force_start,
                                                         times,
                                                         data)
