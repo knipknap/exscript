@@ -175,9 +175,6 @@ class MainLoop(threading.Thread):
                job in self.force_start or \
                job in self.running_jobs
 
-    def get_running_actions(self):
-        return [job.action for job in self.running_jobs]
-
     def get_queue_length(self):
         return len(self.queue) \
              + len(self.force_start) \

@@ -254,16 +254,16 @@ class WorkQueue(object):
             return True
         return self.main_loop.is_paused()
 
-    def get_running_actions(self):
+    def get_running_jobs(self):
         """
-        Returns a list of all actions that are currently in progress.
+        Returns a list of all jobs that are currently in progress.
 
-        @rtype:  list[Action]
-        @return: A list of running actions.
+        @rtype:  list[Job]
+        @return: A list of running jobs.
         """
         if self.main_loop is None:
             return []
-        return self.main_loop.get_running_actions()
+        return self.main_loop.running_jobs
 
     def get_length(self):
         """

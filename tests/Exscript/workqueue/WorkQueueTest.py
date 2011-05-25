@@ -147,16 +147,15 @@ class WorkQueueTest(unittest.TestCase):
         self.wq.pause()
         self.assert_(self.wq.is_paused())
 
-    def testGetRunningActions(self):
-        this = self
+    def testGetRunningJobs(self):
         class TestAction(Action):
-            def execute():
-                this.assertEqual(this.wq.get_running_actions(), [self])
+            def execute(inner_self, job):
+                this.assertEqual(self.wq.get_running_jobs(), [job])
         action = TestAction()
-        self.assertEqual(self.wq.get_running_actions(), [])
+        self.assertEqual(self.wq.get_running_jobs(), [])
         self.wq.enqueue(action)
         self.wq.shutdown(True)
-        self.assertEqual(self.wq.get_running_actions(), [])
+        self.assertEqual(self.wq.get_running_jobs(), [])
 
     def testGetLength(self):
         pass # See testEnqueue()

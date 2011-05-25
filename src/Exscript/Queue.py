@@ -256,8 +256,8 @@ class Queue(object):
             return
         percent  = 100.0 / self.total * self.completed
         progress = '%d/%d (%d%%)' % (self.completed, self.total, percent)
-        actions  = self.workqueue.get_running_actions()
-        running  = '|'.join([a.name for a in actions])
+        jobs     = self.workqueue.get_running_jobs()
+        running  = '|'.join([j.name for j in jobs])
         text     = 'In progress: [%s] %s' % (running, progress)
         self._write('status_bar', text)
         self.status_bar_length = len(text)
