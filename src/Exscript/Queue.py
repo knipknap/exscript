@@ -34,9 +34,7 @@ from Exscript.workqueue import WorkQueue, job_registry
 from Exscript.protocols import get_protocol_from_name
 from Exscript.Connection import Connection
 
-def _connector(func,
-               host,
-               protocol_args):
+def _connector(func, host, protocol_args):
     """
     A decorator that connects to the given host using the given
     protocol arguments.
@@ -62,10 +60,10 @@ class _PipeHandler(threading.Thread):
     Each PipeHandler holds an open pipe to a subprocess, to allow the
     sub-process to acquire accounts and communicate status information.
     """
-    def __init__(self, queue):
+    def __init__(self, account_manager):
         threading.Thread.__init__(self)
-        self.daemon  = True
-        self.manager = queue.account_manager
+        self.daemon = True
+        self.accm   = account_manager
         self.to_child, self.to_parent = Pipe()
 
     def _send_account(self, account):
@@ -80,14 +78,14 @@ class _PipeHandler(threading.Thread):
         try:
             command, arg = request
             if command == 'acquire-account-for-host':
-                account = self.manager.acquire_account_for(arg)
+                account = self.accm.acquire_account_for(arg)
                 self._send_account(account)
             elif command == 'acquire-account':
-                account = self.manager.get_account_from_hash(arg)
-                account = self.manager.acquire_account(account)
+                account = self.accm.get_account_from_hash(arg)
+                account = self.accm.acquire_account(account)
                 self._send_account(account)
             elif command == 'release-account':
-                account = self.manager.get_account_from_hash(arg)
+                account = self.accm.get_account_from_hash(arg)
                 account.release()
                 self.to_child.send('ok')
             elif command == 'log':
@@ -229,7 +227,7 @@ class Queue(object):
 
             pipe.close()
         """
-        child = _PipeHandler(self)
+        child = _PipeHandler(self.account_manager)
         child.start()
         return child.to_parent
 
