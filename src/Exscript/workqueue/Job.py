@@ -19,11 +19,11 @@ import weakref
 job_registry = weakref.WeakValueDictionary() # Map id(job) to Job.
 
 class Job(threading.Thread):
-    def __init__(self, condition, action, name, times, data):
+    def __init__(self, condition, function, name, times, data):
         threading.Thread.__init__(self)
         job_registry[id(self)] = self
         self.condition = condition
-        self.action    = action
+        self.function  = function
         self.exc_info  = None
         self.completed = False
         self.name      = name
@@ -33,7 +33,7 @@ class Job(threading.Thread):
 
     def __copy__(self):
         job = Job(self.condition,
-                  self.action,
+                  self.function,
                   self.name,
                   self.times,
                   self.data)
@@ -50,10 +50,10 @@ class Job(threading.Thread):
 
     def run(self):
         """
-        Start the actions that are associated with the thread.
+        Start the associated function.
         """
         try:
-            self.action.execute(self)
+            self.function(self)
         except:
             self._completed(sys.exc_info())
         else:

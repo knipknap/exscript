@@ -14,10 +14,9 @@ if not os.path.exists(doc_dir):
 # Generate the API documentation.
 cmd = 'epydoc ' + ' '.join(['--name', project,
                             r'--exclude ^Exscript\.AccountManager$',
-                            r'--exclude ^Exscript\.CustomAction$',
-                            r'--exclude ^Exscript\.HostAction$',
                             r'--exclude ^Exscript\.Log$',
                             r'--exclude ^Exscript\.Logfile$',
+                            r'--exclude ^Exscript\.LoggerProxy$',
                             r'--exclude ^Exscript\.external$',
                             r'--exclude ^Exscript\.interpreter$',
                             r'--exclude ^Exscript\.parselib$',

@@ -65,32 +65,32 @@ class MainLoop(threading.Thread):
             self.max_threads = int(max_threads)
             self.condition.notify_all()
 
-    def _create_job(self, action, name, times, data):
+    def _create_job(self, function, name, times, data):
         if name is None:
-            name = id(action)
-        job = Job(self.condition, action, name, times, data)
+            name = id(function)
+        job = Job(self.condition, function, name, times, data)
         self.job_init_event(job)
         return job
 
-    def enqueue(self, action, name, times, data):
+    def enqueue(self, function, name, times, data):
         with self.condition:
-            job = self._create_job(action, name, times, data)
+            job = self._create_job(function, name, times, data)
             self.queue.append(job)
             self.condition.notify_all()
         return id(job)
 
-    def enqueue_or_ignore(self, action, name, times, data):
+    def enqueue_or_ignore(self, function, name, times, data):
         with self.condition:
             job = None
             if self.get_first_job_from_name(name) is None:
-                job = self._create_job(action, name, times, data)
+                job = self._create_job(function, name, times, data)
                 self.queue.append(job)
             self.condition.notify_all()
         return job is not None and id(job) or None
 
-    def priority_enqueue(self, action, name, force_start, times, data):
+    def priority_enqueue(self, function, name, force_start, times, data):
         with self.condition:
-            job = self._create_job(action, name, times, data)
+            job = self._create_job(function, name, times, data)
             if force_start:
                 self.force_start.append(job)
             else:
@@ -99,20 +99,20 @@ class MainLoop(threading.Thread):
         return id(job)
 
     def priority_enqueue_or_raise(self,
-                                  action,
+                                  function,
                                   name,
                                   force_start,
                                   times,
                                   data):
         with self.condition:
-            # If the action is already running (or about to be forced),
+            # If the job is already running (or about to be forced),
             # there is nothing to be done.
             for job in chain(self.force_start, self.running_jobs):
                 if job.name == name:
                     self.condition.notify_all()
                     return None
 
-            # If the action is already in the queue, remove it so we can
+            # If the job is already in the queue, remove it so we can
             # re-add it at the top of the queue later.
             existing_job = None
             for job in self.queue:
@@ -123,7 +123,7 @@ class MainLoop(threading.Thread):
 
             # If it was not in the queue, create a new job.
             if existing_job is None:
-                job = self._create_job(action, name, times, data)
+                job = self._create_job(function, name, times, data)
             else:
                 job = existing_job
 
@@ -243,7 +243,7 @@ class MainLoop(threading.Thread):
             if self.get_queue_length() == 0:
                 self.queue_empty_event()
 
-            # If there are any actions to be force_started, run them now.
+            # If there are any jobs to be force_started, run them now.
             for job in self.force_start:
                 self._start_job(job)
             self.force_start = []
@@ -260,13 +260,13 @@ class MainLoop(threading.Thread):
                 self.condition.wait()
                 continue
 
-            # Take the next action and start it in a new thread.
+            # Take the next job and start it in a new thread.
             job = self.queue.popleft()
             self._start_job(job)
             self.condition.release()
 
             if len(self.queue) <= 0:
-                self._dbg(2, 'No more pending actions in the queue.')
+                self._dbg(2, 'No more pending jobs in the queue.')
             self.condition.acquire()
         self.condition.release()
         self._dbg(2, 'Main loop terminated.')

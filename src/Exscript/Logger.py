@@ -31,7 +31,7 @@ class Logger(object):
     def __init__(self, queue):
         """
         Creates a new logger instance and attaches it to the given Queue.
-        Any actions performed within the queue are watched, and a log of
+        Any jobs performed within the queue are watched, and a log of
         them is kept in memory.
 
         @type  queue: Queue
@@ -52,13 +52,13 @@ class Logger(object):
 
     def get_succeeded_actions(self):
         """
-        Returns the number of actions that were completed successfully.
+        Returns the number of jobs that were completed successfully.
         """
         return self.success
 
     def get_aborted_actions(self):
         """
-        Returns the number of actions that were aborted.
+        Returns the number of jobs that were aborted.
         """
         return self.failed
 

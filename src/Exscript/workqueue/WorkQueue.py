@@ -88,105 +88,104 @@ class WorkQueue(object):
         self.max_threads = max_threads
         self.main_loop.set_max_threads(max_threads)
 
-    def enqueue(self, action, name = None, times = 1, data = None):
+    def enqueue(self, function, name = None, times = 1, data = None):
         """
-        Appends an action to the queue for execution. The times argument
-        specifies the number of attempts if the execution of the action
-        raises an exception.
-        If the name argument is None it defaults to whatever
-        id(action) returns.
+        Appends a function to the queue for execution. The times argument
+        specifies the number of attempts if the function raises an exception.
+        If the name argument is None it defaults to whatever id(function)
+        returns.
 
-        @type  action: Action
-        @param action: The action that is executed.
+        @type  function: callable
+        @param function: The function that is executed.
         @type  name: str
         @param name: Stored in Job.name.
         @type  times: int
-        @param times: The maximum number of times the action is attempted.
+        @param times: The maximum number of attempts.
         @type  data: object
         @param data: Optional data to store in Job.data.
         @rtype:  int
         @return: The id of the new job.
         """
         self._check_if_ready()
-        return self.main_loop.enqueue(action, name, times, data)
+        return self.main_loop.enqueue(function, name, times, data)
 
-    def enqueue_or_ignore(self, action, name = None, times = 1, data = None):
+    def enqueue_or_ignore(self, function, name = None, times = 1, data = None):
         """
-        Like enqueue(), but does nothing if an action with the same name
+        Like enqueue(), but does nothing if a function with the same name
         is already in the queue.
         Returns a job id if a new job was added, returns None otherwise.
 
-        @type  action: Action
-        @param action: The action that is executed.
+        @type  function: callable
+        @param function: The function that is executed.
         @type  name: str
         @param name: Stored in Job.name.
         @type  times: int
-        @param times: The maximum number of times the action is attempted.
+        @param times: The maximum number of attempts.
         @type  data: object
         @param data: Optional data to store in Job.data.
         @rtype:  int or None
         @return: The id of the new job.
         """
         self._check_if_ready()
-        return self.main_loop.enqueue_or_ignore(action, name, times, data)
+        return self.main_loop.enqueue_or_ignore(function, name, times, data)
 
     def priority_enqueue(self,
-                         action,
+                         function,
                          name        = None,
                          force_start = False,
                          times       = 1,
                          data        = None):
         """
-        Like L{enqueue()}, but adds the given action at the top of the
+        Like L{enqueue()}, but adds the given function at the top of the
         queue.
-        If force_start is True, the action is immediately started even when 
+        If force_start is True, the function is immediately started even when
         the maximum number of concurrent threads is already reached.
 
-        @type  action: Action
-        @param action: The action that is executed.
+        @type  function: callable
+        @param function: The function that is executed.
         @type  name: str
         @param name: Stored in Job.name.
         @type  force_start: bool
         @param force_start: Whether to start execution immediately.
         @type  times: int
-        @param times: The maximum number of times the action is attempted.
+        @param times: The maximum number of attempts.
         @type  data: object
         @param data: Optional data to store in Job.data.
         @rtype:  int
         @return: The id of the new job.
         """
         self._check_if_ready()
-        return self.main_loop.priority_enqueue(action,
+        return self.main_loop.priority_enqueue(function,
                                                name,
                                                force_start,
                                                times,
                                                data)
 
     def priority_enqueue_or_raise(self,
-                                  action,
+                                  function,
                                   name        = None,
                                   force_start = False,
                                   times       = 1,
                                   data        = None):
         """
-        Like priority_enqueue(), but if an action with the same name is
-        already in the queue, the existing action is moved to the top of
-        the queue and the given action is ignored.
+        Like priority_enqueue(), but if a function with the same name is
+        already in the queue, the existing function is moved to the top of
+        the queue and the given function is ignored.
         Returns a job id if a new job was added, returns None otherwise.
 
-        @type  action: Action
-        @param action: The action that is executed.
+        @type  function: callable
+        @param function: The function that is executed.
         @type  name: str
         @param name: Stored in Job.name.
         @type  times: int
-        @param times: The maximum number of times the action is attempted.
+        @param times: The maximum number of attempts.
         @type  data: object
         @param data: Optional data to store in Job.data.
         @rtype:  int or None
         @return: The id of the new job.
         """
         self._check_if_ready()
-        return self.main_loop.priority_enqueue_or_raise(action,
+        return self.main_loop.priority_enqueue_or_raise(function,
                                                         name,
                                                         force_start,
                                                         times,
@@ -194,7 +193,7 @@ class WorkQueue(object):
 
     def unpause(self):
         """
-        Restart the execution of enqueued actions after pausing them.
+        Restart the execution of enqueued jobs after pausing them.
         This method is the opposite of pause().
         This method is asynchronous.
         """
@@ -203,7 +202,7 @@ class WorkQueue(object):
 
     def pause(self):
         """
-        Stop the execution of enqueued actions.
+        Stop the execution of enqueued jobs.
         Executing may later be resumed by calling unpause().
         This method is asynchronous.
         """
@@ -239,12 +238,12 @@ class WorkQueue(object):
 
     def shutdown(self, restart = True):
         """
-        Stop the execution of enqueued actions, and terminate any running
-        actions. This method is synchronous and returns as soon as all actions
+        Stop the execution of enqueued jobs, and terminate any running
+        jobs. This method is synchronous and returns as soon as all jobs
         are terminated (i.e. all threads are stopped).
 
         If restart is True, the workqueue is restarted and paused,
-        so you may fill it with new actions.
+        so you may fill it with new jobs.
 
         If restart is False, the WorkQueue can no longer be used after calling
         this method.
@@ -261,11 +260,11 @@ class WorkQueue(object):
 
     def is_paused(self):
         """
-        Returns True if the queue is currently being worked (i.e. not stopped 
-        and not shut down), False otherwise.
+        Returns True if the queue is currently active (i.e. not
+        paused and not shut down), False otherwise.
 
         @rtype:  bool
-        @return: Whether enqueued actions are executed.
+        @return: Whether enqueued jobs are currently executed.
         """
         if self.main_loop is None:
             return True
@@ -284,7 +283,7 @@ class WorkQueue(object):
 
     def get_length(self):
         """
-        Returns the number of currently non-completed actions.
+        Returns the number of currently non-completed jobs.
 
         @rtype:  int
         @return: The length of the queue.

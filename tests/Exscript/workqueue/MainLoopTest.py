@@ -2,7 +2,6 @@ import sys, unittest, re, os.path, threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from Exscript.workqueue import MainLoop
-from ActionTest         import TestAction
 
 class MainLoopTest(unittest.TestCase):
     CORRELATE = MainLoop
@@ -14,10 +13,10 @@ class MainLoopTest(unittest.TestCase):
         lock = threading.Lock()
         data = {'sum': 0, 'randsum': 0}
         ml   = MainLoop.MainLoop()
+        nop  = lambda x: None
 
         for i in range(12345):
-            action = TestAction(lock, data)
-            ml.enqueue(action, name = 'test', times = 1, data = None)
+            ml.enqueue(nop, name = 'test', times = 1, data = None)
 
         self.assertEqual(0, data['sum'])
 

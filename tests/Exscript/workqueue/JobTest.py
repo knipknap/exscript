@@ -2,7 +2,6 @@ import sys, unittest, re, os.path, threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from Exscript.workqueue import Job
-from ActionTest         import TestAction
 
 class JobTest(unittest.TestCase):
     CORRELATE = Job
@@ -11,14 +10,14 @@ class JobTest(unittest.TestCase):
         self.condition = threading.Condition()
         self.lock      = threading.Lock()
         self.data      = {}
-        self.action    = TestAction(self.lock, self.data)
+        self.function  = lambda x: None
 
     def testConstructor(self):
-        job = Job.Job(self.condition, self.action, 'myaction', 1, None)
-        self.assertEqual(self.action, job.action)
+        job = Job.Job(self.condition, self.function, 'myaction', 1, None)
+        self.assertEqual(self.function, job.function)
 
     def testRun(self):
-        job = Job.Job(self.condition, self.action, 'myaction', 1, None)
+        job = Job.Job(self.condition, self.function, 'myaction', 1, None)
         job.start()
         while job.isAlive():
             pass

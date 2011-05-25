@@ -1,8 +1,33 @@
 import sys, unittest, re, os.path, threading, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from Exscript.workqueue import WorkQueue, Action, Sequence
-from ActionTest         import TestAction
+from functools import partial
+from Exscript.workqueue import WorkQueue
+
+def burn_time(lock, job):
+    """
+    This function just burns some time using shared data.
+    """
+    lock.acquire()
+    if not job.data.has_key('sum'):
+        job.data['sum'] = 0
+    if not job.data.has_key('randsum'):
+        job.data['randsum'] = 0
+    lock.release()
+
+    # Manipulate the data.
+    lock.acquire()
+    job.data['sum'] += 1
+    lock.release()
+
+    # Make sure to lock/unlock many times.
+    for number in range(random.randint(0, 1234)):
+        lock.acquire()
+        job.data['randsum'] += number
+        lock.release()
+    return True
+
+nop = lambda x: None
 
 class WorkQueueTest(unittest.TestCase):
     CORRELATE = WorkQueue
@@ -29,25 +54,22 @@ class WorkQueueTest(unittest.TestCase):
 
     def testEnqueue(self):
         self.assertEqual(0, self.wq.get_length())
-        id = self.wq.enqueue(Action())
+        id = self.wq.enqueue(nop)
         self.assertEqual(1, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.enqueue(Action())
+        id = self.wq.enqueue(nop)
         self.assertEqual(2, self.wq.get_length())
         self.assert_(isinstance(id, int))
         self.wq.shutdown(True)
         self.assertEqual(0, self.wq.get_length())
 
-        # Enqueue 111 * 3 = 333 actions.
+        # Enqueue 222 actions.
         lock = threading.Lock()
+        func = partial(burn_time, lock)
         data = {}
-        for i in range(111):
-            actions  = [TestAction(lock, data),
-                        TestAction(lock, data),
-                        TestAction(lock, data)]
-            sequence = Sequence(actions = actions)
-            self.wq.enqueue(sequence)
-        self.assertEqual(111, self.wq.get_length())
+        for i in range(222):
+            self.wq.enqueue(func, data = data)
+        self.assertEqual(222, self.wq.get_length())
 
         # Run them, using 50 threads in parallel.
         self.wq.set_max_threads(50)
@@ -57,19 +79,19 @@ class WorkQueueTest(unittest.TestCase):
 
         # Check whether each has run successfully.
         self.assertEqual(0,   self.wq.get_length())
-        self.assertEqual(333, data['sum'])
+        self.assertEqual(222, data['sum'])
         self.wq.shutdown()
         self.assertEqual(0, self.wq.get_length())
 
     def testEnqueueOrIgnore(self):
         self.assertEqual(0, self.wq.get_length())
-        id = self.wq.enqueue_or_ignore(Action(), 'one')
+        id = self.wq.enqueue_or_ignore(nop, 'one')
         self.assertEqual(1, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.enqueue_or_ignore(Action(), 'two')
+        id = self.wq.enqueue_or_ignore(nop, 'two')
         self.assertEqual(2, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.enqueue_or_ignore(Action(), 'one')
+        id = self.wq.enqueue_or_ignore(nop, 'one')
         self.assertEqual(2, self.wq.get_length())
         self.assertEqual(id, None)
         self.wq.shutdown(True)
@@ -80,24 +102,23 @@ class WorkQueueTest(unittest.TestCase):
     def testPriorityEnqueue(self):
         # Well, this test sucks.
         self.assertEqual(0, self.wq.get_length())
-        id = self.wq.priority_enqueue(Action())
+        id = self.wq.priority_enqueue(nop)
         self.assertEqual(1, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.priority_enqueue(Action())
+        id = self.wq.priority_enqueue(nop)
         self.assertEqual(2, self.wq.get_length())
         self.assert_(isinstance(id, int))
 
     def testPriorityEnqueueOrRaise(self):
-        action = Action()
         self.assertEqual(0, self.wq.get_length())
 
-        id = self.wq.priority_enqueue_or_raise(action, 'foo')
+        id = self.wq.priority_enqueue_or_raise(nop, 'foo')
         self.assertEqual(1, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.priority_enqueue_or_raise(action, 'bar')
+        id = self.wq.priority_enqueue_or_raise(nop, 'bar')
         self.assertEqual(2, self.wq.get_length())
         self.assert_(isinstance(id, int))
-        id = self.wq.priority_enqueue_or_raise(action, 'foo')
+        id = self.wq.priority_enqueue_or_raise(nop, 'foo')
         self.assertEqual(2, self.wq.get_length())
         self.assertEqual(id, None)
 
@@ -105,7 +126,7 @@ class WorkQueueTest(unittest.TestCase):
         pass # See testEnqueue()
 
     def testWaitFor(self):
-        ids = [self.wq.enqueue(Action()) for a in range(4)]
+        ids = [self.wq.enqueue(nop) for a in range(4)]
         self.assertEqual(4, self.wq.get_length())
         self.wq.unpause()
         self.wq.wait_for(ids[0])
@@ -115,10 +136,9 @@ class WorkQueueTest(unittest.TestCase):
         self.assertEqual(0, self.wq.get_length())
 
     def testWaitForActivity(self):
-        action = Action()
-        self.wq.enqueue(action)
-        self.wq.enqueue(action)
-        self.wq.enqueue(action)
+        self.wq.enqueue(nop)
+        self.wq.enqueue(nop)
+        self.wq.enqueue(nop)
         self.wq.unpause()
         while not self.wq.get_length() == 0:
             self.wq.wait_for_activity()
@@ -143,12 +163,10 @@ class WorkQueueTest(unittest.TestCase):
         self.assert_(self.wq.is_paused())
 
     def testGetRunningJobs(self):
-        class TestAction(Action):
-            def execute(inner_self, job):
-                this.assertEqual(self.wq.get_running_jobs(), [job])
-        action = TestAction()
+        def function(job):
+            self.assertEqual(self.wq.get_running_jobs(), [job])
         self.assertEqual(self.wq.get_running_jobs(), [])
-        self.wq.enqueue(action)
+        self.wq.enqueue(function)
         self.wq.shutdown(True)
         self.assertEqual(self.wq.get_running_jobs(), [])
 

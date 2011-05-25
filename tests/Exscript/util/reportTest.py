@@ -10,23 +10,10 @@ from Exscript.workqueue  import WorkQueue
 class FakeQueue(object):
     workqueue = WorkQueue()
 
-class FakeAction(object):
-    failures = 0
-    aborted  = False
-
-    def __init__(self, name = 'fake'):
-        self.name = name
-
-    def get_name(self):
-        return self.name
-
-    def n_failures(self):
-        return self.failures
-
 class FakeJob(object):
-    def __init__(self, action = None):
-        self.action   = action is not None and action or FakeAction()
-        self.name     = self.action.name
+    def __init__(self, name = 'fake'):
+        self.function = lambda x: None
+        self.name     = name
         self.failures = 0
 
 class FakeError(Exception):
@@ -43,7 +30,7 @@ class reportTest(unittest.TestCase):
     def createLog(self):
         self.n_actions += 1
         name            = 'fake' + str(self.n_actions)
-        job             = FakeJob(FakeAction(name))
+        job             = FakeJob(name)
         self.queue.workqueue.job_started_event(job)
         self.logger._on_job_log_message(job, 'hello world')
         return job
@@ -98,7 +85,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 54, in createErrorLog
+  File "%s.py", line 41, in createErrorLog
     raise FakeError()
 FakeError
 

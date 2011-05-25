@@ -4,7 +4,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from tempfile import mkdtemp
 from shutil import rmtree
 from Exscript import Host
-from Exscript.CustomAction import CustomAction
 from Exscript.FileLogger import FileLogger
 from util.reportTest import FakeQueue
 from LoggerTest import LoggerTest, FakeJob
@@ -28,11 +27,9 @@ class FileLoggerTest(LoggerTest):
     def testConstructor(self):
         self.assert_(os.path.isdir(self.tempdir))
 
-        job        = FakeJob()
-        host       = Host('fake')
-        job.action = CustomAction(host.get_name())
-        logfile    = os.path.join(self.logdir, 'fake.log')
-        errfile    = logfile + '.error'
+        job     = FakeJob('fake')
+        logfile = os.path.join(self.logdir, 'fake.log')
+        errfile = logfile + '.error'
         self.failIf(os.path.exists(logfile))
         self.failIf(os.path.exists(errfile))
 

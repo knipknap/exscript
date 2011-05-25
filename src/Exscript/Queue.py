@@ -29,9 +29,8 @@ from Exscript.Logger import logger_registry
 from Exscript.util.cast import to_hosts
 from Exscript.util.event import Event
 from Exscript.AccountManager import AccountManager
-from Exscript.CustomAction import CustomAction
 from Exscript.Task import Task
-from Exscript.workqueue import WorkQueue, Action, job_registry
+from Exscript.workqueue import WorkQueue, job_registry
 from Exscript.protocols import get_protocol_from_name
 from Exscript.Connection import Connection
 
@@ -473,39 +472,40 @@ class Queue(object):
         self._dbg(2, 'Queue reset.')
         self._del_status_bar()
 
-    def _enqueue1(self, action, prioritize, force, duplicate_check):
+    def _enqueue1(self, function, name, prioritize, force, duplicate_check):
         """
         Returns the list of newly created job ids.
         """
-        self._dbg(2, 'Enqueing Action.')
+        self._dbg(2, 'Enqueing function.')
 
         # Done. Enqueue this.
         if duplicate_check:
             if prioritize:
-                return self.workqueue.priority_enqueue_or_raise(action,
-                                                                action.name,
+                return self.workqueue.priority_enqueue_or_raise(function,
+                                                                name,
                                                                 force,
                                                                 self.times)
             else:
-                return self.workqueue.enqueue_or_ignore(action,
-                                                        action.name,
+                return self.workqueue.enqueue_or_ignore(function,
+                                                        name,
                                                         self.times)
 
         if prioritize:
-            return self.workqueue.priority_enqueue(action,
-                                                   action.name,
+            return self.workqueue.priority_enqueue(function,
+                                                   name,
                                                    force,
                                                    self.times)
         else:
-            return self.workqueue.enqueue(action, action.name, self.times)
+            return self.workqueue.enqueue(function, name, self.times)
         return True
 
     def _run1(self, host, function, prioritize, force, duplicate_check):
-        # Build an object that represents the actual task.
-        self._dbg(2, 'Building CustomAction for %s.' % host.get_name())
-        action          = CustomAction(host.get_name())
-        action.function = _connector(function, host, self.protocol_args)
-        return self._enqueue1(action, prioritize, force, duplicate_check)
+        function = _connector(function, host, self.protocol_args)
+        return self._enqueue1(function,
+                              host.get_name(),
+                              prioritize,
+                              force,
+                              duplicate_check)
 
     def _run(self, hosts, function, duplicate_check):
         hosts       = to_hosts(hosts, default_domain = self.domain)
@@ -518,10 +518,10 @@ class Queue(object):
                 task.add_job_id(id)
 
         if task.is_completed():
-            self._dbg(2, 'No actions enqueued.')
+            self._dbg(2, 'No jobs enqueued.')
             return None
 
-        self._dbg(2, 'All actions enqueued.')
+        self._dbg(2, 'All jobs enqueued.')
         return task
 
     def run(self, hosts, function):
@@ -577,7 +577,7 @@ class Queue(object):
             if id is not None:
                 task.add_job_id(id)
 
-        self._dbg(2, 'All prioritized actions enqueued.')
+        self._dbg(2, 'All prioritized jobs enqueued.')
         return task
 
     def priority_run_or_raise(self, hosts, function):
@@ -603,10 +603,10 @@ class Queue(object):
                 task.add_job_id(id)
 
         if task.is_completed():
-            self._dbg(2, 'All prioritized actions were duplicates.')
+            self._dbg(2, 'All prioritized jobs were duplicates.')
             return None
 
-        self._dbg(2, 'All prioritized actions enqueued.')
+        self._dbg(2, 'All prioritized jobs enqueued.')
         return task
 
     def force_run(self, hosts, function):
@@ -630,10 +630,10 @@ class Queue(object):
             if id is not None:
                 task.add_job_id(id)
 
-        self._dbg(2, 'All forced actions enqueued.')
+        self._dbg(2, 'All forced jobs enqueued.')
         return task
 
-    def enqueue(self, function, name = 'CustomAction'):
+    def enqueue(self, function, name = None):
         """
         Places the given function in the queue and calls it as soon
         as a thread is available. To pass additional arguments to the
@@ -647,14 +647,9 @@ class Queue(object):
         @return: An object representing the task.
         """
         self.total += 1
-
-        self._dbg(2, 'Building CustomAction for Queue.enqueue().')
-        task   = Task(self.workqueue)
-        action = CustomAction(name)
-        action.function = function
-        id = self._enqueue1(action, False, False, False)
+        task        = Task(self.workqueue)
+        id          = self._enqueue1(function, name, False, False, False)
         if id is not None:
             task.add_job_id(id)
-
         self._dbg(2, 'Function enqueued.')
         return task
