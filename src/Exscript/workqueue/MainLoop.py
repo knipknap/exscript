@@ -31,7 +31,7 @@ class MainLoop(threading.Thread):
         self.queue               = deque()
         self.force_start         = []
         self.running_jobs        = []
-        self.sleeping_actions    = []
+        self.sleeping_jobs       = set()
         self.paused              = True
         self.shutdown_now        = False
         self.max_threads         = 1
@@ -43,17 +43,17 @@ class MainLoop(threading.Thread):
         if self.debug >= level:
             print msg
 
-    def _action_sleep_notify(self, action):
-        assert self.in_progress(action)
+    def _job_sleep_notify(self, job):
+        assert job in self.running_jobs
         with self.condition:
-            self.sleeping_actions.append(action)
+            self.sleeping_jobs.add(job)
             self.condition.notify_all()
 
-    def _action_wake_notify(self, action):
-        assert self.in_progress(action)
-        assert action in self.sleeping_actions
+    def _job_wake_notify(self, job):
+        assert job in self.running_jobs
+        assert job in self.sleeping_jobs
         with self.condition:
-            self.sleeping_actions.remove(action)
+            self.sleeping_jobs.remove(job)
             self.condition.notify_all()
 
     def get_max_threads(self):
@@ -251,7 +251,7 @@ class MainLoop(threading.Thread):
                 continue
 
             # Wait until we have less than the maximum number of threads.
-            active = len(self.running_jobs) - len(self.sleeping_actions)
+            active = len(self.running_jobs) - len(self.sleeping_jobs)
             if active >= self.max_threads:
                 self.condition.wait()
                 continue
