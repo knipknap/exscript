@@ -254,34 +254,6 @@ class WorkQueue(object):
             return True
         return self.main_loop.is_paused()
 
-    def in_queue(self, action):
-        """
-        Returns True if the given action is currently in the queue or in 
-        progress. Returns False otherwise.
-
-        @type  action: Action
-        @param action: The action that is executed.
-        @rtype:  bool
-        @return: Whether the action is currently in the queue.
-        """
-        if self.main_loop is None:
-            return False
-        return self.main_loop.in_queue(action)
-
-    def in_progress(self, action):
-        """
-        Returns True if the given action is currently in progress.
-        Returns False otherwise.
-
-        @type  action: Action
-        @param action: The action that is executed.
-        @rtype:  bool
-        @return: Whether the action is currently in progress.
-        """
-        if self.main_loop is None:
-            return False
-        return self.main_loop.in_progress(action)
-
     def get_running_actions(self):
         """
         Returns a list of all actions that are currently in progress.
