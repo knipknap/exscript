@@ -141,23 +141,16 @@ class MainLoop(threading.Thread):
     def is_paused(self):
         return self.paused
 
-    def _get_action_from_hash(self, thehash):
+    def _get_job_from_id(self, job_id):
         for job in chain(self.queue, self.force_start, self.running_jobs):
-            if job.action.__hash__() == thehash:
-                return job.action
+            if id(job) == job_id:
+                return job
         return None
 
-    def wait_for(self, action):
+    def wait_for(self, job_id):
         with self.condition:
-            # If we were passed the hash of an action, look the action up
-            # first.
-            if isinstance(action, int):
-                action = self._get_action_from_hash(action)
-                if action is None:
-                    return
-
-            # Wait until the action completes.
-            while self.in_queue(action):
+            job = self._get_job_from_id(job_id)
+            while self._job_in_queue(job):
                 self.condition.wait()
 
     def wait_for_activity(self):
@@ -176,6 +169,11 @@ class MainLoop(threading.Thread):
         for job in self.running_jobs:
             job.join()
             self._dbg(1, 'Job "%s" finished' % job.name)
+
+    def _job_in_queue(self, job):
+        return job in self.queue or \
+               job in self.force_start or \
+               job in self.running_jobs
 
     def in_queue(self, action):
         jobs = chain(self.queue, self.force_start, self.running_jobs)

@@ -193,16 +193,15 @@ class WorkQueue(object):
         self._check_if_ready()
         self.main_loop.pause()
 
-    def wait_for(self, action):
+    def wait_for(self, job_id):
         """
-        Waits until the given action is completed. Instead of an action,
-        this method also accepts the return value of action.__hash__().
+        Waits until the job with the given id is completed.
 
-        @type  action: Action|int
-        @param action: The action that is executed.
+        @type  job_id: int
+        @param job_id: The job that is executed.
         """
         self._check_if_ready()
-        self.main_loop.wait_for(action)
+        self.main_loop.wait_for(job_id)
 
     def wait_for_activity(self):
         """

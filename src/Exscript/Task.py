@@ -21,16 +21,16 @@ class Task(object):
     """
     Represents a batch of running actions.
     """
-    def __init__(self, queue):
-        self.done_event    = Event()
-        self.queue         = queue
-        self.action_hashes = set()
-        self.completed     = 0
-        self.queue.workqueue.job_succeeded_event.listen(self._on_job_done)
-        self.queue.workqueue.job_aborted_event.listen(self._on_job_done)
+    def __init__(self, workqueue):
+        self.done_event = Event()
+        self.workqueue  = workqueue
+        self.job_ids    = set()
+        self.completed  = 0
+        self.workqueue.job_succeeded_event.listen(self._on_job_done)
+        self.workqueue.job_aborted_event.listen(self._on_job_done)
 
     def _on_job_done(self, job):
-        if job.action.__hash__() not in self.action_hashes:
+        if id(job) not in self.job_ids:
             return
         self.completed += 1
         if self.is_completed():
@@ -44,21 +44,21 @@ class Task(object):
         @rtype:  bool
         @return: Whether the task is completed.
         """
-        return self.completed == len(self.action_hashes)
+        return self.completed == len(self.job_ids)
 
     def wait(self):
         """
         Waits until all actions in the task have completed.
         Does not use any polling.
         """
-        for thehash in self.action_hashes:
-            self.queue.workqueue.wait_for(thehash)
+        for theid in self.job_ids:
+            self.workqueue.wait_for(theid)
 
-    def add_action(self, action):
+    def add_job_id(self, id):
         """
-        Adds a new action to the task.
+        Adds a job to the task.
 
-        @type  action: Action
-        @param action: The action to be added.
+        @type  id: int
+        @param id: The id of the job.
         """
-        self.action_hashes.add(action.__hash__())
+        self.job_ids.add(id)
