@@ -33,12 +33,12 @@ class Connection(object):
         Do not call directly; Exscript creates the connection for you and
         passes it to the function that is invoked by Queue.run().
 
+        @type  accm: mutiprocessing.Pipe
+        @param accm: A pipe to the account manager.
         @type  host: Host
         @param host: The associated Host instance.
         @type  protocol: L{protocols.Protocol}
         @param protocol: The Protocol object that is decorated.
-        @type  account_factory: callable
-        @param account_factory: A function that returns an account proxy.
         """
         # Since we override setattr below, we can't access our properties
         # directly.
