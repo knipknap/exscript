@@ -232,7 +232,7 @@ def run():
         # Enable logging.
         mode     = options.overwrite_logs and 'w' or 'a'
         logger   = FileLogger(queue, options.logdir, mode, options.delete_logs)
-        function = logged(function, logger = logger)
+        function = logged(logger)(function)
 
     # Wait until the specified time.
     if options.sleep:

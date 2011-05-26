@@ -17,20 +17,22 @@ Logging utilities.
 """
 from Exscript.LoggerProxy import LoggerProxy
 
-def logged(function, logger):
+def logged(logger):
     """
     Wraps a function that has a connection passed such that everything that
     happens on the connection is logged using the given logger.
 
-    @type  function: function
-    @param function: The function that's ought to be wrapped.
     @type  logger: Logger
     @param logger: The logger that handles the logging.
-    @rtype:  function
-    @return: The wrapped function.
     """
-    def decorated(job, conn, *args, **kwargs):
-        proxy = LoggerProxy(job.data, logger, job)
-        conn.data_received_event.listen(proxy.log)
-        return function(job, conn, *args, **kwargs)
-    return decorated
+    def decorator(function):
+        def decorated(job, conn, *args, **kwargs):
+            proxy = LoggerProxy(job.data, logger, job)
+            conn.data_received_event.listen(proxy.log)
+            try:
+                result = function(job, conn, *args, **kwargs)
+            finally:
+                conn.data_received_event.disconnect(proxy.log)
+            return result
+        return decorated
+    return decorator
