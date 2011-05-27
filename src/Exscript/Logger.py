@@ -48,9 +48,8 @@ class _Logger(object):
 
     def __init__(self):
         """
-        Creates a new logger instance and attaches it to the given Queue.
-        Any jobs performed within the queue are watched, and a log of
-        them is kept in memory.
+        Creates a new logger instance. Use the L{Exscript.util.log.log_to}
+        decorator to send messages to the logger.
         """
         self.logs    = defaultdict(list)
         self.started = 0
@@ -101,13 +100,12 @@ class _Logger(object):
 
     def log_aborted(self, job_id, exc_info):
         log = self._get_log(job_id)
-        log.error(exc_info)
+        log.aborted(exc_info)
         self.failed += 1
-        log.done()
 
     def log_succeeded(self, job_id):
         log = self._get_log(job_id)
-        log.done()
+        log.succeeded()
         self.success += 1
 
 _LoggerManager.register('Logger', _Logger)

@@ -48,14 +48,15 @@ class Log(object):
         """
         self.did_end = False
 
-    def error(self, exc_info):
+    def aborted(self, exc_info):
         """
         Called by a logger to log an exception.
         """
         self.exc_info = exc_info
+        self.did_end = True
         self.write(format_exception(*self.exc_info))
 
-    def done(self):
+    def succeeded(self):
         """
         Called by a logger to inform us that logging is complete.
         """

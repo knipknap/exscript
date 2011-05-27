@@ -21,7 +21,7 @@ class LogTest(unittest.TestCase):
         try:
             raise FakeError()
         except FakeError:
-            self.log.error(sys.exc_info())
+            self.log.aborted(sys.exc_info())
         self.assert_('FakeError' in self.log.get_error())
 
     def testGetName(self):
@@ -40,28 +40,32 @@ class LogTest(unittest.TestCase):
         self.assertEqual(self.log.did_end, False)
         self.assertEqual('', str(self.log))
 
-    def testError(self):
+    def testAborted(self):
         self.testStarted()
         before = str(self.log)
         try:
             raise FakeError()
         except FakeError:
-            self.log.error(sys.exc_info())
+            self.log.aborted(sys.exc_info())
         self.assert_(str(self.log).startswith(before))
         self.assert_('FakeError' in str(self.log), str(self.log))
 
-    def testDone(self):
-        self.testError()
-        self.log.done()
+    def testSucceeded(self):
+        self.testStarted()
+        self.failIf(self.log.has_ended())
+        self.log.succeeded()
+        self.assertEqual(str(self.log), '')
+        self.assert_(self.log.has_ended())
+        self.failIf(self.log.has_error())
 
     def testHasError(self):
         self.failIf(self.log.has_error())
-        self.testDone()
+        self.testAborted()
         self.assert_(self.log.has_error())
 
     def testHasEnded(self):
         self.failIf(self.log.has_ended())
-        self.testDone()
+        self.testSucceeded()
         self.assert_(self.log.has_ended())
 
 def suite():

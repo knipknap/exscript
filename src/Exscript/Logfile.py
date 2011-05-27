@@ -71,13 +71,14 @@ class Logfile(Log):
     def started(self):
         self.write('')  # Creates the file.
 
-    def error(self, exc_info):
+    def aborted(self, exc_info):
         self.exc_info = exc_info
+        self.did_end = True
         self.write('ERROR:', str(exc_info[1]), '\n')
         self._write_error(format_exception(*self.exc_info))
 
-    def done(self):
+    def succeeded(self):
         if self.delete and not self.has_error():
             os.remove(self.filename)
             return
-        Log.done(self)
+        Log.succeeded(self)

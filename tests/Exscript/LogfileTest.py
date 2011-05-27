@@ -25,15 +25,19 @@ class LogfileTest(LogTest):
         self.failIf(os.path.exists(self.errorfile))
 
     def testStarted(self):
-        self.log.started()
-        self.assertEqual('', str(self.log))
+        LogTest.testStarted(self)
         self.assert_(os.path.exists(self.logfile))
         self.failIf(os.path.exists(self.errorfile))
 
-    def testDone(self):
-        LogTest.testDone(self)
+    def testAborted(self):
+        LogTest.testAborted(self)
         self.assert_(os.path.exists(self.logfile))
         self.assert_(os.path.exists(self.errorfile))
+
+    def testSucceeded(self):
+        LogTest.testSucceeded(self)
+        self.assert_(os.path.exists(self.logfile))
+        self.failIf(os.path.exists(self.errorfile))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LogfileTest)
