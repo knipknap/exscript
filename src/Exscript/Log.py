@@ -47,10 +47,11 @@ class Log(object):
         """
         Called by a logger to inform us that logging may now begin.
         """
-        self.write('STARTED\n')
         self.did_end = False
 
     def _format_exc(self):
+        if isinstance(self.exc_info[2], str):
+            return self.exc_info[2]
         return ''.join(traceback.format_exception(*self.exc_info))
 
     def error(self, exc_info):
@@ -58,7 +59,6 @@ class Log(object):
         Called by a logger to log an exception.
         """
         self.exc_info = exc_info
-        self.write('ERROR:\n')
         self.write(self._format_exc())
 
     def done(self):
@@ -66,7 +66,6 @@ class Log(object):
         Called by a logger to inform us that logging is complete.
         """
         self.did_end = True
-        self.write('DONE\n')
 
     def has_error(self):
         return self.exc_info is not None

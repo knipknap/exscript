@@ -37,7 +37,8 @@ class LogTest(unittest.TestCase):
     def testStarted(self):
         self.assertEqual('', str(self.log))
         self.log.started()
-        self.assert_(len(str(self.log)) > 0)
+        self.assertEqual(self.log.did_end, False)
+        self.assertEqual('', str(self.log))
 
     def testError(self):
         self.testStarted()
