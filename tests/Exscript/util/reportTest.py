@@ -1,9 +1,10 @@
 import sys, unittest, re, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
+import traceback
 import Exscript.util.report
 from Exscript            import Host
-from Exscript.Logger     import Logger
+from Exscript            import Logger
 from Exscript.util.event import Event
 from Exscript.workqueue  import WorkQueue
 
@@ -23,34 +24,30 @@ class reportTest(unittest.TestCase):
     CORRELATE = Exscript.util.report
 
     def setUp(self):
-        self.queue     = FakeQueue()
-        self.logger    = Logger(self.queue)
+        self.logger    = Logger()
         self.n_actions = 0
 
     def createLog(self):
         self.n_actions += 1
         name            = 'fake' + str(self.n_actions)
         job             = FakeJob(name)
-        self.queue.workqueue.job_started_event(job)
-        self.logger._on_job_log_message(job, 'hello world')
+        self.logger.add_log(id(job), job.name, 1)
+        self.logger.log(id(job), 'hello world')
         return job
 
-    def createErrorLog(self):
+    def createAbortedLog(self):
         job = self.createLog()
         try:
             raise FakeError()
         except Exception:
-            self.queue.workqueue.job_error_event(job, sys.exc_info())
-        return job
-
-    def createAbortedLog(self):
-        job = self.createErrorLog()
-        self.queue.workqueue.job_aborted_event(job)
+            thetype, exc, tb = sys.exc_info()
+            tb = ''.join(traceback.format_exception(thetype, exc, tb))
+            self.logger.log_aborted(id(job), (thetype, exc, tb))
         return job
 
     def createSucceededLog(self):
         job = self.createLog()
-        self.queue.workqueue.job_succeeded_event(job)
+        self.logger.log_succeeded(id(job))
         return job
 
     def testStatus(self):
@@ -85,7 +82,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 41, in createErrorLog
+  File "%s.py", line 41, in createAbortedLog
     raise FakeError()
 FakeError
 

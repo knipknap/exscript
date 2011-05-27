@@ -4,6 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from Exscript                import Queue, Account, Logger, protocols
 from Exscript.util           import template
 from Exscript.util.decorator import bind
+from Exscript.util.log       import log_to
 from Exscript.util.report    import format
 from Exscript.protocols      import Dummy
 from Exscript.emulators      import IOSEmulator
@@ -54,14 +55,14 @@ class TemplateTest(unittest.TestCase):
     def setUp(self):
         account     = Account('sab', '')
         self.queue  = Queue(verbose = 0, max_threads = 1)
-        self.logger = Logger(self.queue)
+        self.logger = Logger()
         self.queue.add_account(account)
 
     def tearDown(self):
         self.queue.destroy()
 
     def testTemplates(self):
-        callback = bind(dummy_cb, self)
+        callback = bind(log_to(self.logger)(dummy_cb), self)
         for test in os.listdir(test_dir):
             pseudo = os.path.join(test_dir, test, 'pseudodev.py')
             if os.path.exists(pseudo):
@@ -72,7 +73,7 @@ class TemplateTest(unittest.TestCase):
 
         # Unfortunately, unittest.TestCase does not fail if self.assert()
         # was called from a subthread, so this is our workaround...
-        failed = list(self.logger.get_aborted_logs())
+        failed = self.logger.get_aborted_logs()
         report = format(self.logger, show_successful = False)
         self.assert_(not failed, report)
 

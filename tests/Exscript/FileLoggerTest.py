@@ -4,8 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from tempfile import mkdtemp
 from shutil import rmtree
 from Exscript import Host
-from Exscript.FileLogger import FileLogger
-from util.reportTest import FakeQueue
+from Exscript.FileLogger import _FileLogger as FileLogger
 from LoggerTest import LoggerTest, FakeJob
 
 class FakeError(Exception):
@@ -17,8 +16,10 @@ class FileLoggerTest(LoggerTest):
     def setUp(self):
         self.tempdir = mkdtemp()
         self.logdir  = os.path.join(self.tempdir, 'non-existent')
-        self.queue   = FakeQueue()
-        self.logger  = FileLogger(self.queue, self.logdir, clearmem = False)
+        self.logger  = FileLogger(self.logdir, clearmem = False)
+        self.job     = FakeJob('fake')
+        self.logfile = os.path.join(self.logdir, 'fake.log')
+        self.errfile = self.logfile + '.error'
 
     def tearDown(self):
         LoggerTest.tearDown(self)
@@ -26,64 +27,60 @@ class FileLoggerTest(LoggerTest):
 
     def testConstructor(self):
         self.assert_(os.path.isdir(self.tempdir))
+        self.failIf(os.path.exists(self.logfile))
+        self.failIf(os.path.exists(self.errfile))
 
-        job     = FakeJob('fake')
-        logfile = os.path.join(self.logdir, 'fake.log')
-        errfile = logfile + '.error'
-        self.failIf(os.path.exists(logfile))
-        self.failIf(os.path.exists(errfile))
+    def testAddLog(self):
+        log = LoggerTest.testAddLog(self)
+        self.assert_(os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
+        self.failIf(os.path.exists(self.errfile))
+        return log
 
-        # Test "started".
-        self.queue.workqueue.job_started_event(job)
-        self.assert_(os.path.isfile(logfile), 'No such file: ' + logfile)
-        self.failIf(os.path.exists(errfile))
-        content = open(logfile).read()
+    def testLog(self):
+        log = LoggerTest.testLog(self)
+        self.assert_(os.path.isfile(self.logfile))
+        self.failIf(os.path.exists(self.errfile))
+        return log
+
+    def testLogAborted(self):
+        log = LoggerTest.testLogAborted(self)
+        self.assert_(os.path.isfile(self.logfile))
+        self.assert_(os.path.isfile(self.errfile))
+        return log
+
+    def testLogSucceeded(self):
+        log = LoggerTest.testLogSucceeded(self)
+        self.assert_(os.path.isfile(self.logfile))
+        self.failIf(os.path.isfile(self.errfile))
+        return log
+
+    def testAddLog2(self):
+        # Like testAddLog(), but with attempt = 2.
+        self.logfile = os.path.join(self.logdir, self.job.name + '_retry1.log')
+        self.errfile = self.logfile + '.error'
+        self.failIf(os.path.exists(self.logfile))
+        self.failIf(os.path.exists(self.errfile))
+        self.logger.add_log(id(self.job), self.job.name, 2)
+        self.assert_(os.path.isfile(self.logfile))
+        self.failIf(os.path.exists(self.errfile))
+        content = open(self.logfile).read()
         self.assertEqual(content, '')
 
-        # Test data logging.
-        self.logger._on_job_log_message(job, 'hello world')
-        self.assert_(os.path.isfile(logfile))
-        self.failIf(os.path.exists(errfile))
-        content = open(logfile).read()
+    def testLog2(self):
+        # Like testLog(), but with attempt = 2.
+        self.testAddLog2()
+        self.logger.log(id(self.job), 'hello world')
+        self.assert_(os.path.isfile(self.logfile))
+        self.failIf(os.path.exists(self.errfile))
+        content = open(self.logfile).read()
         self.assertEqual(content, 'hello world')
 
-        # Test "error".
-        try:
-            raise FakeError()
-        except Exception:
-            self.queue.workqueue.job_error_event(job, sys.exc_info())
-        self.assert_(os.path.isfile(logfile))
-        self.assert_(os.path.isfile(errfile))
-        content = open(errfile).read()
-        self.assert_('FakeError' in content)
-
-        self.queue.workqueue.job_aborted_event(job)
-        content = open(logfile).read()
-
-        # Repeat all of the above, with failures = 1.
-        # Test "started".
-        job.failures = 1
-        logfile      = os.path.join(self.logdir, self.logger._get_logname(job))
-        errfile      = logfile + '.error'
-        self.failIf(os.path.exists(logfile))
-        self.failIf(os.path.exists(errfile))
-        self.queue.workqueue.job_started_event(job)
-        self.assert_(os.path.isfile(logfile))
-        self.failIf(os.path.exists(errfile))
-        content = open(logfile).read()
-        self.assertEqual(content, '')
-
-        # Test data logging.
-        self.logger._on_job_log_message(job, 'hello world')
-        self.assert_(os.path.isfile(logfile))
-        self.failIf(os.path.exists(errfile))
-        content = open(logfile).read()
-        self.assertEqual(content, 'hello world')
-
-        # Test "succeeded".
-        self.queue.workqueue.job_succeeded_event(job)
-        self.assert_(os.path.isfile(logfile))
-        self.failIf(os.path.exists(errfile))
+    def testLogSucceeded2(self):
+        # With attempt = 2.
+        self.testLog2()
+        self.logger.log_succeeded(id(self.job))
+        self.assert_(os.path.isfile(self.logfile))
+        self.failIf(os.path.exists(self.errfile))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(FileLoggerTest)

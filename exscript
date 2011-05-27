@@ -18,13 +18,13 @@ import os
 import re
 import getpass
 from optparse import OptionParser, Option, OptionValueError
-from Exscript import Queue, FileLogger, Account, PrivateKey, __version__
+from Exscript import Queue, Account, PrivateKey, __version__
 from Exscript.protocols import protocol_map
 from Exscript.util import template
 from Exscript.util.sigint import SigIntWatcher
 from Exscript.util.cast import to_list, to_host
 from Exscript.util.interact import get_login
-from Exscript.util.log import logged
+from Exscript.util.log import log_to_file
 from Exscript.util.file import get_accounts_from_file, \
                                get_hosts_from_file, \
                                get_hosts_from_csv
@@ -230,9 +230,9 @@ def run():
                 parser.error(str(e))
 
         # Enable logging.
-        mode     = options.overwrite_logs and 'w' or 'a'
-        logger   = FileLogger(queue, options.logdir, mode, options.delete_logs)
-        function = logged(logger)(function)
+        mode      = options.overwrite_logs and 'w' or 'a'
+        decorator = log_to_file(options.logdir, mode, options.delete_logs)
+        function  = decorator(function)
 
     # Wait until the specified time.
     if options.sleep:

@@ -25,7 +25,6 @@ from multiprocessing import Pipe
 from functools import wraps
 from Exscript.parselib.Exception import CompileError
 from Exscript.interpreter.Exception import FailException
-from Exscript.Logger import logger_registry
 from Exscript.util.cast import to_hosts
 from Exscript.util.event import Event
 from Exscript.AccountManager import AccountManager
@@ -58,7 +57,7 @@ def _connector(func, host, protocol_args):
 class _PipeHandler(threading.Thread):
     """
     Each PipeHandler holds an open pipe to a subprocess, to allow the
-    sub-process to acquire accounts and communicate status information.
+    sub-process to access the accounts and communicate status information.
     """
     def __init__(self, account_manager):
         threading.Thread.__init__(self)
@@ -88,12 +87,6 @@ class _PipeHandler(threading.Thread):
                 account = self.accm.get_account_from_hash(arg)
                 account.release()
                 self.to_child.send('ok')
-            elif command == 'log':
-                logger_id, job_id, string = arg
-                logger = logger_registry.get(logger_id)
-                job    = job_registry.get(job_id)
-                if logger:
-                    logger._on_job_log_message(job, string)
             else:
                 raise Exception('invalid request from worker process')
         except Exception, e:

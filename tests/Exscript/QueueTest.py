@@ -12,6 +12,7 @@ from Exscript.Connection import Connection
 from Exscript.protocols import Dummy
 from Exscript.interpreter.Exception import FailException
 from Exscript.util.decorator import bind
+from Exscript.util.log import log_to
 from Exscript.workqueue.Job import Job
 
 def count_calls(job, data, **kwargs):
@@ -72,8 +73,8 @@ class QueueTest(unittest.TestCase):
         self.err   = Log()
         self.queue = Queue(stdout = self.out, stderr = self.err, **kwargs)
         self.accm  = self.queue.account_manager
-        if logdir:
-            self.logger = FileLogger(self.queue, logdir)
+        if logdir is not None:
+            self.logger = FileLogger(logdir)
 
     def setUp(self):
         self.tempdir = mkdtemp()
@@ -220,7 +221,7 @@ class QueueTest(unittest.TestCase):
     def startTask(self):
         self.testAddAccount()
         hosts = ['dummy1', 'dummy2']
-        task  = self.queue.run(hosts, do_nothing)
+        task  = self.queue.run(hosts, log_to(self.logger)(do_nothing))
         self.assert_(task is not None)
         return task
 

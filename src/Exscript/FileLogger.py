@@ -17,20 +17,19 @@ Logging to the file system.
 """
 import os
 from Exscript.Logfile import Logfile
-from Exscript.Logger  import Logger
+from Exscript.Logger import _Logger, _LoggerManager, get_manager
 
-class FileLogger(Logger):
+class _FileLogger(_Logger):
     """
     A Logger that stores logs into files.
     """
 
     def __init__(self,
-                 queue,
                  logdir,
                  mode     = 'a',
                  delete   = False,
                  clearmem = True):
-        Logger.__init__(self, queue)
+        _Logger.__init__(self)
         self.logdir   = logdir
         self.mode     = mode
         self.delete   = delete
@@ -38,23 +37,26 @@ class FileLogger(Logger):
         if not os.path.exists(self.logdir):
             os.mkdir(self.logdir)
 
-    def _get_logname(self, job):
-        if job.failures > 0:
-            return job.name + '_retry%d.log' % job.failures
-        return job.name + '.log'
-
-    def _on_job_started(self, job):
-        filename = os.path.join(self.logdir, self._get_logname(job))
-        log      = Logfile(job.name, filename, self.mode, self.delete)
+    def add_log(self, job_id, name, attempt):
+        if attempt > 1:
+            name += '_retry%d' % (attempt - 1)
+        filename = os.path.join(self.logdir, name + '.log')
+        log      = Logfile(name, filename, self.mode, self.delete)
         log.started()
-        self.logs[id(job)].append(log)
+        self.logs[job_id].append(log)
+        return log
 
-    def _on_job_succeeded(self, job):
-        Logger._on_job_succeeded(self, job)
+    def log_aborted(self, job_id, exc_info):
+        _Logger.log_aborted(self, job_id, exc_info)
         if self.clearmem:
-            self.logs.pop(id(job))
+            self.logs.pop(job_id)
 
-    def _on_job_aborted(self, job):
-        Logger._on_job_aborted(self, job)
+    def log_succeeded(self, job_id):
+        _Logger.log_succeeded(self, job_id)
         if self.clearmem:
-            self.logs.pop(id(job))
+            self.logs.pop(job_id)
+
+_LoggerManager.register('FileLogger', _FileLogger)
+def FileLogger(*args, **kwargs):
+    manager = get_manager()
+    return manager.FileLogger(*args, **kwargs)

@@ -19,33 +19,43 @@ import weakref
 from itertools import chain, ifilter
 from collections import defaultdict
 from Exscript.Log import Log
+from multiprocessing.managers import BaseManager
 
-logger_registry = weakref.WeakValueDictionary() # Map id(logger) to Logger.
+manager = None
 
-class Logger(object):
+class _LoggerManager(BaseManager):
+    pass
+
+def _create_manager():
+    themanager = _LoggerManager()
+    manager = weakref.ref(themanager)
+    themanager.start()
+    return themanager
+
+def get_manager():
+    if manager is None:
+        return _create_manager()
+    themanager = manager()
+    if themanager is None:
+        return _create_manager()
+    return themanager
+
+class _Logger(object):
     """
     A QueueListener that implements logging for the queue.
     Logs are kept in memory, and not written to the disk.
     """
 
-    def __init__(self, queue):
+    def __init__(self):
         """
         Creates a new logger instance and attaches it to the given Queue.
         Any jobs performed within the queue are watched, and a log of
         them is kept in memory.
-
-        @type  queue: Queue
-        @param queue: The Queue that is watched.
         """
-        logger_registry[id(self)] = self
         self.logs    = defaultdict(list)
         self.started = 0
         self.success = 0
         self.failed  = 0
-        queue.workqueue.job_started_event.listen(self._on_job_started)
-        queue.workqueue.job_error_event.listen(self._on_job_error)
-        queue.workqueue.job_succeeded_event.listen(self._on_job_succeeded)
-        queue.workqueue.job_aborted_event.listen(self._on_job_aborted)
 
     def _reset(self):
         self.logs = defaultdict(list)
@@ -63,41 +73,44 @@ class Logger(object):
         return self.failed
 
     def get_logs(self):
-        return chain.from_iterable(self.logs.itervalues())
+        return list(chain.from_iterable(self.logs.itervalues()))
 
     def get_succeeded_logs(self):
         func = lambda x: x.has_ended() and not x.has_error()
-        return ifilter(func, self.get_logs())
+        return list(ifilter(func, self.get_logs()))
 
     def get_aborted_logs(self):
         func = lambda x: x.has_ended() and x.has_error()
-        return ifilter(func, self.get_logs())
+        return list(ifilter(func, self.get_logs()))
 
-    def _get_log(self, job):
-        return self.logs[id(job)][-1]
+    def _get_log(self, job_id):
+        return self.logs[job_id][-1]
 
-    def _on_job_started(self, job):
-        log = Log(job.name)
+    def add_log(self, job_id, name, attempt):
+        log = Log(name)
         log.started()
-        self.logs[id(job)].append(log)
+        self.logs[job_id].append(log)
         self.started += 1
+        return log
 
-    def _on_job_log_message(self, job, message):
+    def log(self, job_id, message):
         # This method is called whenever a sub thread sends a log message
         # via a pipe. (See LoggerProxy and Queue.PipeHandler)
-        log = self._get_log(job)
+        log = self._get_log(job_id)
         log.write(message)
 
-    def _on_job_error(self, job, exc_info):
-        log = self._get_log(job)
+    def log_aborted(self, job_id, exc_info):
+        log = self._get_log(job_id)
         log.error(exc_info)
+        self.failed += 1
+        log.done()
 
-    def _on_job_succeeded(self, job):
-        log = self._get_log(job)
+    def log_succeeded(self, job_id):
+        log = self._get_log(job_id)
         log.done()
         self.success += 1
 
-    def _on_job_aborted(self, job):
-        log = self._get_log(job)
-        log.done()
-        self.failed += 1
+_LoggerManager.register('Logger', _Logger)
+def Logger(*args, **kwargs):
+    manager = get_manager()
+    return manager.Logger(*args, **kwargs)

@@ -63,7 +63,7 @@ class Config(ConfigReader):
         max_threads = element.find('max-threads').text
         delete_logs = element.find('delete-logs') is not None
         queue       = Queue(verbose = 0, max_threads = max_threads)
-        logger      = FileLogger(queue, logdir, 'a', delete_logs)
+        logger      = FileLogger(logdir, 'a', delete_logs)
         self.loggers.append(logger) # needed to hold them alive
 
         # Assign account pools to the queue.

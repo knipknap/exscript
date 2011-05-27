@@ -15,9 +15,12 @@
 """
 Logging utilities.
 """
-from Exscript.LoggerProxy import LoggerProxy
+import sys
+import traceback
+from functools import partial
+from Exscript.Logger import get_manager
 
-def logged(logger):
+def log_to(logger):
     """
     Wraps a function that has a connection passed such that everything that
     happens on the connection is logged using the given logger.
@@ -27,12 +30,29 @@ def logged(logger):
     """
     def decorator(function):
         def decorated(job, conn, *args, **kwargs):
-            proxy = LoggerProxy(job.data, logger, job)
-            conn.data_received_event.listen(proxy.log)
+            logger.add_log(id(job), job.name, job.failures + 1)
+            log_cb = partial(logger.log, id(job))
+            conn.data_received_event.listen(log_cb)
             try:
                 result = function(job, conn, *args, **kwargs)
+            except:
+                thetype, exc, tb = sys.exc_info()
+                tb = ''.join(traceback.format_exception(thetype, exc, tb))
+                logger.log_aborted(id(job), (thetype, exc, tb))
+                raise
+            else:
+                logger.log_succeeded(id(job))
             finally:
-                conn.data_received_event.disconnect(proxy.log)
+                conn.data_received_event.disconnect(log_cb)
             return result
         return decorated
     return decorator
+
+def log_to_file(logdir, mode = 'a', delete = False, clearmem = True):
+    """
+    Like L{log_to()}, but automatically creates a new FileLogger
+    instead of having one passed.
+    """
+    manager = get_manager()
+    logger  = manager.FileLogger(logdir, mode, delete, clearmem)
+    return log_to(logger)

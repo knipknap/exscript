@@ -6,10 +6,9 @@ from itertools import islice
 from tempfile import mkdtemp
 from shutil import rmtree
 from Exscript.Log import Log
-from Exscript.Logger import Logger, logger_registry
+from Exscript.Logger import _Logger as Logger
 from LogTest import FakeError
-from util.reportTest import FakeQueue, FakeJob
-from Exscript.util.event import Event
+from util.reportTest import FakeJob
 
 def count(iterable):
     return sum(1 for _ in iterable)
@@ -22,15 +21,15 @@ class LoggerTest(unittest.TestCase):
     CORRELATE = Logger
 
     def setUp(self):
-        self.queue  = FakeQueue()
-        self.logger = Logger(self.queue)
+        self.logger = Logger()
+        self.job    = FakeJob('fake')
 
     def tearDown(self):
         # Needed to make sure that events are disconnected.
         self.logger = None
 
     def testConstructor(self):
-        logger = Logger(FakeQueue())
+        logger = Logger()
 
     def testGetSucceededActions(self):
         self.assertEqual(self.logger.get_succeeded_actions(), 0)
@@ -39,19 +38,17 @@ class LoggerTest(unittest.TestCase):
         job2 = FakeJob()
         self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
-        self.queue.workqueue.job_started_event(job1)
-        self.queue.workqueue.job_started_event(job2)
+        self.logger.add_log(id(job1), job1.name, 1)
+        self.logger.add_log(id(job2), job2.name, 1)
         self.assertEqual(self.logger.get_succeeded_actions(), 0)
 
-        self.queue.workqueue.job_succeeded_event(job1)
+        self.logger.log_succeeded(id(job1))
         self.assertEqual(self.logger.get_succeeded_actions(), 1)
 
         try:
             raise FakeError()
         except FakeError:
-            self.queue.workqueue.job_error_event(job2, sys.exc_info())
-        self.assertEqual(self.logger.get_succeeded_actions(), 1)
-        self.queue.workqueue.job_aborted_event(job2)
+            self.logger.log_aborted(id(job2), sys.exc_info())
         self.assertEqual(self.logger.get_succeeded_actions(), 1)
 
     def testGetAbortedActions(self):
@@ -60,18 +57,16 @@ class LoggerTest(unittest.TestCase):
         job = FakeJob()
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
-        self.queue.workqueue.job_started_event(job)
+        self.logger.add_log(id(job), job.name, 1)
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
-        self.queue.workqueue.job_succeeded_event(job)
+        self.logger.log_succeeded(id(job))
         self.assertEqual(self.logger.get_aborted_actions(), 0)
 
         try:
             raise FakeError()
         except FakeError:
-            self.queue.workqueue.job_error_event(job, sys.exc_info())
-        self.assertEqual(self.logger.get_aborted_actions(), 0)
-        self.queue.workqueue.job_aborted_event(job)
+            self.logger.log_aborted(id(job), sys.exc_info())
         self.assertEqual(self.logger.get_aborted_actions(), 1)
 
     def testGetLogs(self):
@@ -80,22 +75,20 @@ class LoggerTest(unittest.TestCase):
         job = FakeJob()
         self.assertEqual(count(self.logger.get_logs()), 0)
 
-        self.queue.workqueue.job_started_event(job)
+        self.logger.add_log(id(job), job.name, 1)
         self.assertEqual(count(self.logger.get_logs()), 1)
         self.assert_(isinstance(nth(self.logger.get_logs(), 0), Log))
 
-        self.logger._on_job_log_message(job, 'hello world')
+        self.logger.log(id(job), 'hello world')
         self.assertEqual(count(self.logger.get_logs()), 1)
 
-        self.queue.workqueue.job_succeeded_event(job)
+        self.logger.log_succeeded(id(job))
         self.assertEqual(count(self.logger.get_logs()), 1)
 
         try:
             raise FakeError()
         except FakeError:
-            self.queue.workqueue.job_error_event(job, sys.exc_info())
-        self.assertEqual(count(self.logger.get_logs()), 1)
-        self.queue.workqueue.job_aborted_event(job)
+            self.logger.log_aborted(id(job), sys.exc_info())
         self.assertEqual(count(self.logger.get_logs()), 1)
 
     def testGetSucceededLogs(self):
@@ -104,13 +97,13 @@ class LoggerTest(unittest.TestCase):
         job = FakeJob()
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
 
-        self.queue.workqueue.job_started_event(job)
+        self.logger.add_log(id(job), job.name, 1)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
 
-        self.logger._on_job_log_message(job, 'hello world')
+        self.logger.log(id(job), 'hello world')
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
 
-        self.queue.workqueue.job_succeeded_event(job)
+        self.logger.log_succeeded(id(job))
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 1)
         self.assert_(isinstance(nth(self.logger.get_succeeded_logs(), 0), Log))
@@ -121,28 +114,47 @@ class LoggerTest(unittest.TestCase):
         job = FakeJob()
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
 
-        self.queue.workqueue.job_started_event(job)
+        self.logger.add_log(id(job), job.name, 1)
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
 
-        self.logger._on_job_log_message(job, 'hello world')
+        self.logger.log(id(job), 'hello world')
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
 
         try:
             raise FakeError()
         except FakeError:
-            self.queue.workqueue.job_error_event(job, sys.exc_info())
-        self.queue.workqueue.job_aborted_event(job)
+            self.logger.log_aborted(id(job), sys.exc_info())
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
         self.assertEqual(count(self.logger.get_aborted_logs()), 1)
         self.assert_(isinstance(nth(self.logger.get_aborted_logs(), 0), Log))
 
-    def testLoggerRegistry(self):
-        logger    = Logger(self.queue)
-        logger_id = id(logger)
-        self.assert_(logger_id in logger_registry)
-        del logger
-        gc.collect()
-        self.assert_(logger_id not in logger_registry)
+    def testAddLog(self):
+        self.assertEqual(count(self.logger.get_logs()), 0)
+        log = self.logger.add_log(id(self.job), self.job.name, 1)
+        self.assertEqual(count(self.logger.get_logs()), 1)
+        self.assertEqual(str(log), '')
+        return log
+
+    def testLog(self):
+        log = self.testAddLog()
+        self.logger.log(id(self.job), 'hello world')
+        self.assertEqual(str(log), 'hello world')
+        return log
+
+    def testLogAborted(self):
+        log = self.testLog()
+        try:
+            raise FakeError()
+        except Exception:
+            self.logger.log_aborted(id(self.job), sys.exc_info())
+        self.assert_('FakeError' in str(log))
+        return log
+
+    def testLogSucceeded(self):
+        log = self.testLog()
+        self.logger.log_succeeded(id(self.job))
+        self.assertEqual(str(log), 'hello world')
+        return log
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LoggerTest)
