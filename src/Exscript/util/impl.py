@@ -25,16 +25,14 @@ def serializeable_exc_info(thetype, ex, tb):
     exception info tuples before they are passed accross process
     boundaries.
     """
-    if isinstance(tb, str):
-        return tb
-    return ''.join(traceback.format_exception(thetype, ex, tb))
+    return thetype, ex, ''.join(traceback.format_exception(thetype, ex, tb))
 
 def serializeable_sys_exc_info():
     """
     Convenience wrapper around serializeable_exc_info, equivalent to
     serializeable_exc_info(sys.exc_info()).
     """
-    return serializeable_exc_info(sys.exc_info())
+    return serializeable_exc_info(*sys.exc_info())
 
 def format_exception(thetype, ex, tb):
     """
