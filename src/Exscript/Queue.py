@@ -18,15 +18,14 @@ The heart of Exscript.
 import sys
 import os
 import gc
-import traceback
 import select
 import threading
 from multiprocessing import Pipe
-from functools import wraps
 from Exscript.parselib.Exception import CompileError
 from Exscript.interpreter.Exception import FailException
 from Exscript.util.cast import to_hosts
 from Exscript.util.event import Event
+from Exscript.util.impl import format_exception
 from Exscript.AccountManager import AccountManager
 from Exscript.Task import Task
 from Exscript.workqueue import WorkQueue, job_registry
@@ -88,7 +87,7 @@ class _PipeHandler(threading.Thread):
                 account.release()
                 self.to_child.send('ok')
             else:
-                raise Exception('invalid request from worker process')
+                raise Exception('invalid command on pipe: ' + repr(command))
         except Exception, e:
             self.to_child.send(e)
             raise
@@ -277,7 +276,7 @@ class Queue(object):
 
     def _on_job_error(self, job, exc_info):
         msg = job.name + ' error: ' + str(exc_info[1])
-        tb  = ''.join(traceback.format_exception(*exc_info))
+        tb  = ''.join(format_exception(*exc_info))
         self._print('errors', msg)
         if self._is_recoverable_error(exc_info[0]):
             self._print('tracebacks', tb)

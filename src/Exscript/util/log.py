@@ -15,10 +15,9 @@
 """
 Logging utilities.
 """
-import sys
-import traceback
 from functools import partial
 from Exscript.Logger import get_manager
+from Exscript.util.impl import serializeable_exc_info
 
 def log_to(logger):
     """
@@ -36,9 +35,7 @@ def log_to(logger):
             try:
                 result = function(job, conn, *args, **kwargs)
             except:
-                thetype, exc, tb = sys.exc_info()
-                tb = ''.join(traceback.format_exception(thetype, exc, tb))
-                logger.log_aborted(id(job), (thetype, exc, tb))
+                logger.log_aborted(id(job), serializeable_sys_exc_info())
                 raise
             else:
                 logger.log_succeeded(id(job))

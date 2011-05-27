@@ -18,6 +18,7 @@ Represents the logfiles for one specific action.
 import os
 import errno
 from Exscript.Log import Log
+from Exscript.util.impl import format_exception
 
 class Logfile(Log):
     """
@@ -73,7 +74,7 @@ class Logfile(Log):
     def error(self, exc_info):
         self.exc_info = exc_info
         self.write('ERROR:', str(exc_info[1]), '\n')
-        self._write_error(self._format_exc())
+        self._write_error(format_exception(*self.exc_info))
 
     def done(self):
         if self.delete and not self.has_error():

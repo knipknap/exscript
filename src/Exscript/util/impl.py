@@ -15,7 +15,43 @@
 """
 Development tools.
 """
+import sys
 import warnings
+import traceback
+
+def serializeable_exc_info(thetype, ex, tb):
+    """
+    Since traceback objects can not be pickled, this function manipulates
+    exception info tuples before they are passed accross process
+    boundaries.
+    """
+    if isinstance(tb, str):
+        return tb
+    return ''.join(traceback.format_exception(thetype, ex, tb))
+
+def serializeable_sys_exc_info():
+    """
+    Convenience wrapper around serializeable_exc_info, equivalent to
+    serializeable_exc_info(sys.exc_info()).
+    """
+    return serializeable_exc_info(sys.exc_info())
+
+def format_exception(thetype, ex, tb):
+    """
+    This function is a drop-in replacement for Python's
+    traceback.format_exception().
+
+    Since traceback objects can not be pickled, Exscript is forced to
+    manipulate them before they are passed accross process boundaries.
+    This leads to the fact the Python's traceback.format_exception()
+    no longer works for those objects.
+
+    This function works with any traceback object, regardless of whether
+    or not Exscript manipulated it.
+    """
+    if isinstance(tb, str):
+        return tb
+    return ''.join(traceback.format_exception(thetype, ex, tb))
 
 def deprecation(msg):
     """

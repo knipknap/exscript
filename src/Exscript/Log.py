@@ -12,8 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import traceback
-import sys
+from Exscript.util.impl import format_exception
 
 class Log(object):
     def __init__(self, name):
@@ -38,7 +37,7 @@ class Log(object):
         if self.exc_info is None:
             return None
         if include_tb:
-            return self._format_exc()
+            return format_exception(*self.exc_info)
         if str(self.exc_info[1]):
             return str(self.exc_info[1])
         return self.exc_info[0].__name__
@@ -49,17 +48,12 @@ class Log(object):
         """
         self.did_end = False
 
-    def _format_exc(self):
-        if isinstance(self.exc_info[2], str):
-            return self.exc_info[2]
-        return ''.join(traceback.format_exception(*self.exc_info))
-
     def error(self, exc_info):
         """
         Called by a logger to log an exception.
         """
         self.exc_info = exc_info
-        self.write(self._format_exc())
+        self.write(format_exception(*self.exc_info))
 
     def done(self):
         """
