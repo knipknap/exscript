@@ -15,6 +15,7 @@
 import sys
 import threading
 import multiprocessing
+from copy import copy
 from multiprocessing import Pipe
 from itertools import chain
 from collections import defaultdict, deque
