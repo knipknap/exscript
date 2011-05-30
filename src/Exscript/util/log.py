@@ -17,7 +17,7 @@ Logging utilities.
 """
 from functools import partial
 from Exscript.Logger import get_manager
-from Exscript.util.impl import serializeable_exc_info
+from Exscript.util.impl import serializeable_sys_exc_info
 
 def log_to(logger):
     """
