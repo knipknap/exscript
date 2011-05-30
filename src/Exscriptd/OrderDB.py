@@ -15,29 +15,9 @@
 from datetime import datetime
 import sqlalchemy as sa
 from Exscript.util.cast import to_list
-from Exscriptd.Order    import Order
-from Exscriptd.Task     import Task
-
-def synchronized(func):
-    """
-    Decorator for synchronizing method access. Used because
-    sqlite does not support concurrent writes, so we need to
-    do this to have graceful locking (rather than sqlite's
-    hard locking).
-    """
-    def wrapped(self, *args, **kwargs):
-        try:
-            rlock = self._sync_lock
-        except AttributeError:
-            from threading import RLock
-            rlock = self.__dict__.setdefault('_sync_lock', RLock())
-        with rlock:
-            return func(self, *args, **kwargs)
-
-    wrapped.__name__ = func.__name__
-    wrapped.__dict__ = func.__dict__
-    wrapped.__doc__ = func.__doc__
-    return wrapped
+from Exscript.util.impl import synchronized
+from Exscriptd.Order import Order
+from Exscriptd.Task import Task
 
 class OrderDB(object):
     """

@@ -18,6 +18,7 @@ Development tools.
 import sys
 import warnings
 import traceback
+from functools import wraps
 
 def serializeable_exc_info(thetype, ex, tb):
     """
@@ -73,3 +74,18 @@ def deprecated(func):
     decorated.__doc__  = func.__doc__
     decorated.__dict__.update(func.__dict__)
     return decorated
+
+def synchronized(func):
+    """
+    Decorator for synchronizing method access.
+    """
+    @wraps(func)
+    def wrapped(self, *args, **kwargs):
+        try:
+            rlock = self._sync_lock
+        except AttributeError:
+            from multiprocessing import RLock
+            rlock = self.__dict__.setdefault('_sync_lock', RLock())
+        with rlock:
+            return func(self, *args, **kwargs)
+    return wrapped
