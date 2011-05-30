@@ -106,9 +106,17 @@ class Queue(object):
     Manages hosts/tasks, accounts, connections, and threads.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self,
+                 domain        = '',
+                 verbose       = 1,
+                 max_threads   = 1,
+                 times         = 1,
+                 protocol_args = None,
+                 stdout        = sys.stdout,
+                 stderr        = sys.stderr):
         """
-        Constructor. Depending on the verbosity level, the following types
+        Constructor. All arguments should be passed as keyword arguments.
+        Depending on the verbosity level, the following types
         of output are written to stdout/stderr (or to whatever else is
         passed in the stdout/stderr arguments):
 
@@ -128,22 +136,29 @@ class Queue(object):
           - verbose >=  2, max_threads = 1: stdout = DL, stderr = !F
           - verbose >=  2, max_threads = n: stdout = DS, stderr = !F
 
-        @keyword domain: The default domain of the contacted hosts.
-        @keyword verbose: The verbosity level, default 1.
-        @keyword max_threads: The maximum number of concurrent threads, default 1
-        @keyword times: The number of attempts on failure, default 1.
-        @keyword protocol_args: dict, passed to the protocol adapter as kwargs.
-        @keyword stdout: The output channel, defaults to sys.stdout.
-        @keyword stderr: The error channel, defaults to sys.stderr.
+        @type  domain: string
+        @param domain: The default domain of the contacted hosts.
+        @type  verbose: int
+        @param verbose: The verbosity level.
+        @type  max_threads: int
+        @param max_threads: The maximum number of concurrent threads.
+        @type  times: int
+        @param times: The number of attempts on failure.
+        @type  protocol_args: dict
+        @param protocol_args: Passed to the protocol adapter as kwargs.
+        @type  stdout: file
+        @param stdout: The output channel, defaults to sys.stdout.
+        @type  stderr: file
+        @param stderr: The error channel, defaults to sys.stderr.
         """
         self.workqueue         = WorkQueue()
         self.account_manager   = AccountManager()
-        self.domain            = kwargs.get('domain',        '')
-        self.verbose           = kwargs.get('verbose',       1)
-        self.times             = kwargs.get('times',         1)
-        self.protocol_args     = kwargs.get('protocol_args', {})
-        self.stdout            = kwargs.get('stdout',        sys.stdout)
-        self.stderr            = kwargs.get('stderr',        sys.stderr)
+        self.domain            = domain
+        self.verbose           = verbose
+        self.times             = times
+        self.protocol_args     = protocol_args or {}
+        self.stdout            = stdout
+        self.stderr            = stderr
         self.devnull           = open(os.devnull, 'w')
         self.channel_map       = {'fatal_errors': self.stderr,
                                   'debug':        self.stdout}
@@ -151,7 +166,7 @@ class Queue(object):
         self.total             = 0
         self.failed            = 0
         self.status_bar_length = 0
-        self.set_max_threads(kwargs.get('max_threads', 1))
+        self.set_max_threads(max_threads)
 
         # Listen to what the workqueue is doing.
         self.workqueue.job_init_event.listen(self._on_job_init)
