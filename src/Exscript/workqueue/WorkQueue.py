@@ -12,7 +12,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript.util.event         import Event
+from Exscript.util.event import Event
+from Exscript.workqueue.Job import ThreadJob, ProcessJob
 from Exscript.workqueue.MainLoop import MainLoop
 
 class WorkQueue(object):
@@ -20,7 +21,7 @@ class WorkQueue(object):
     This class implements the asynchronous workqueue and is the main API
     for using the workqueue module.
     """
-    def __init__(self, debug = 0, max_threads = 1):
+    def __init__(self, debug = 0, max_threads = 1, mode = 'threading'):
         """
         Constructor.
 
@@ -29,6 +30,12 @@ class WorkQueue(object):
         @type  max_threads: int
         @param max_threads: The maximum number of concurrent threads.
         """
+        if mode == 'threading':
+            self.job_cls = ThreadJob
+        elif mode == 'multiprocessing':
+            self.job_cls = ProcessJob
+        else:
+            raise ArgumentError('invalid "mode" argument: ' + repr(mode))
         self.job_init_event      = Event()
         self.job_started_event   = Event()
         self.job_error_event     = Event()
@@ -41,7 +48,7 @@ class WorkQueue(object):
         self._init()
 
     def _init(self):
-        self.main_loop       = MainLoop()
+        self.main_loop       = MainLoop(self.job_cls)
         self.main_loop.debug = self.debug
         self.main_loop.set_max_threads(self.max_threads)
         self.main_loop.job_init_event.listen(self.job_init_event)

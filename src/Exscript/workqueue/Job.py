@@ -13,36 +13,42 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
+import multiprocessing
 import weakref
 from Exscript.util.impl import serializeable_sys_exc_info
 
-class Job(threading.Thread):
-    def __init__(self, function, name, times, data):
-        threading.Thread.__init__(self, name = name)
-        self.pipe     = None
-        self.function = function
-        self.times    = times
-        self.failures = 0
-        self.data     = data
+def _make_job(base):
+    class Job(base):
+        def __init__(self, function, name, times, data):
+            base.__init__(self, name = name)
+            self.pipe     = None
+            self.function = function
+            self.times    = times
+            self.failures = 0
+            self.data     = data
 
-    def __copy__(self):
-        job = Job(self.function, self.name, self.times, self.data)
-        job.failures = self.failures
-        return job
+        def __copy__(self):
+            job = Job(self.function, self.name, self.times, self.data)
+            job.failures = self.failures
+            return job
 
-    def run(self):
-        """
-        Start the associated function.
-        """
-        try:
-            self.function(self)
-        except:
-            self.pipe.send(serializeable_sys_exc_info())
-        else:
-            self.pipe.send('')
-        finally:
-            self.pipe = None
+        def run(self):
+            """
+            Start the associated function.
+            """
+            try:
+                self.function(self)
+            except:
+                self.pipe.send(serializeable_sys_exc_info())
+            else:
+                self.pipe.send('')
+            finally:
+                self.pipe = None
 
-    def start(self, pipe):
-        self.pipe = pipe
-        threading.Thread.start(self)
+        def start(self, pipe):
+            self.pipe = pipe
+            base.start(self)
+    return Job
+
+ThreadJob = _make_job(threading.Thread)
+ProcessJob = _make_job(multiprocessing.Process)

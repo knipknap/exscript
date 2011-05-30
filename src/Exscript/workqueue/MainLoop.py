@@ -14,11 +14,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys
 import threading
+import multiprocessing
 from multiprocessing import Pipe
 from itertools import chain
 from collections import defaultdict, deque
 from Exscript.util.event import Event
-from Exscript.workqueue.Job import Job
+
+# See http://bugs.python.org/issue1731717
+multiprocessing.process._cleanup = lambda: None
 
 class _ChildWatcher(threading.Thread):
     def __init__(self, child, callback):
@@ -43,7 +46,7 @@ class _ChildWatcher(threading.Thread):
             self.cb(self.child, result)
 
 class MainLoop(threading.Thread):
-    def __init__(self):
+    def __init__(self, job_cls):
         threading.Thread.__init__(self)
         self.job_init_event      = Event()
         self.job_started_event   = Event()
@@ -51,6 +54,7 @@ class MainLoop(threading.Thread):
         self.job_succeeded_event = Event()
         self.job_aborted_event   = Event()
         self.queue_empty_event   = Event()
+        self.job_cls             = job_cls
         self.queue               = deque()
         self.force_start         = []
         self.running_jobs        = []
@@ -92,7 +96,7 @@ class MainLoop(threading.Thread):
     def _create_job(self, function, name, times, data):
         if name is None:
             name = str(id(function))
-        job = Job(function, name, times, data)
+        job = self.job_cls(function, name, times, data)
         self.job_init_event(job)
         return job
 

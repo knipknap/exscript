@@ -109,6 +109,7 @@ class Queue(object):
     def __init__(self,
                  domain        = '',
                  verbose       = 1,
+                 mode          = 'threading',
                  max_threads   = 1,
                  times         = 1,
                  protocol_args = None,
@@ -136,10 +137,12 @@ class Queue(object):
           - verbose >=  2, max_threads = 1: stdout = DL, stderr = !F
           - verbose >=  2, max_threads = n: stdout = DS, stderr = !F
 
-        @type  domain: string
+        @type  domain: str
         @param domain: The default domain of the contacted hosts.
         @type  verbose: int
         @param verbose: The verbosity level.
+        @type  mode: str
+        @param mode: 'multiprocessing' or 'threading'
         @type  max_threads: int
         @param max_threads: The maximum number of concurrent threads.
         @type  times: int
@@ -151,7 +154,7 @@ class Queue(object):
         @type  stderr: file
         @param stderr: The error channel, defaults to sys.stderr.
         """
-        self.workqueue         = WorkQueue()
+        self.workqueue         = WorkQueue(mode = mode)
         self.account_manager   = AccountManager()
         self.domain            = domain
         self.verbose           = verbose

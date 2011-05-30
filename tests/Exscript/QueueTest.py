@@ -16,10 +16,9 @@ from Exscript.protocols import Dummy
 from Exscript.interpreter.Exception import FailException
 from Exscript.util.decorator import bind
 from Exscript.util.log import log_to
-from Exscript.workqueue.Job import Job
 
 def count_calls(job, data, **kwargs):
-    assert isinstance(job, Job)
+    assert hasattr(job, 'start')
     assert kwargs.has_key('testarg')
     data.value += 1
 
@@ -72,13 +71,17 @@ LogManager.register('Log', Log)
 
 class QueueTest(unittest.TestCase):
     CORRELATE = Queue
+    mode = 'threading'
 
     def createQueue(self, logdir = None, **kwargs):
         if self.queue:
             self.queue.destroy()
         self.out   = self.manager.Log()
         self.err   = self.manager.Log()
-        self.queue = Queue(stdout = self.out, stderr = self.err, **kwargs)
+        self.queue = Queue(mode   = self.mode,
+                           stdout = self.out,
+                           stderr = self.err,
+                           **kwargs)
         self.accm  = self.queue.account_manager
         if logdir is not None:
             self.logger = FileLogger(logdir)
@@ -381,7 +384,13 @@ class QueueTest(unittest.TestCase):
         for file in logfiles:
             content = open(os.path.join(self.tempdir, file)).read()
 
+class QueueTestMultiProcessing(QueueTest):
+    mode = 'multiprocessing'
+
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(QueueTest)
+    loader = unittest.TestLoader()
+    suite1 = loader.loadTestsFromTestCase(QueueTest)
+    suite2 = loader.loadTestsFromTestCase(QueueTestMultiProcessing)
+    return unittest.TestSuite((suite1, suite2))
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())
