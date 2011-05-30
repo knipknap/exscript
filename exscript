@@ -147,6 +147,7 @@ def run():
         'debug':       options.protocol_verbose
     }
     queue = Queue(domain        = options.default_domain,
+                  mode          = 'multiprocessing',
                   verbose       = options.verbose,
                   max_threads   = options.connections,
                   times         = options.retry + 1,
