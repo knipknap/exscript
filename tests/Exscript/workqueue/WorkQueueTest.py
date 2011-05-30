@@ -1,29 +1,22 @@
 import sys, unittest, re, os.path, threading, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
+import random
+import time
 from functools import partial
+from multiprocessing import Value
 from Exscript.workqueue import WorkQueue
 
 def burn_time(lock, job):
     """
     This function just burns some time using shared data.
     """
-    lock.acquire()
-    if not job.data.has_key('sum'):
-        job.data['sum'] = 0
-    if not job.data.has_key('randsum'):
-        job.data['randsum'] = 0
-    lock.release()
-
     # Manipulate the data.
-    lock.acquire()
-    job.data['sum'] += 1
-    lock.release()
+    job.data.value += 1
 
     # Make sure to lock/unlock many times.
-    for number in range(random.randint(0, 1234)):
+    for number in range(random.randint(0, 3456)):
         lock.acquire()
-        job.data['randsum'] += number
         lock.release()
     return True
 
@@ -66,7 +59,7 @@ class WorkQueueTest(unittest.TestCase):
         # Enqueue 222 actions.
         lock = threading.Lock()
         func = partial(burn_time, lock)
-        data = {}
+        data = Value('i', 0)  # an int in shared memory
         for i in range(222):
             self.wq.enqueue(func, data = data)
         self.assertEqual(222, self.wq.get_length())
@@ -79,7 +72,7 @@ class WorkQueueTest(unittest.TestCase):
 
         # Check whether each has run successfully.
         self.assertEqual(0,   self.wq.get_length())
-        self.assertEqual(222, data['sum'])
+        self.assertEqual(222, data.value)
         self.wq.shutdown()
         self.assertEqual(0, self.wq.get_length())
 

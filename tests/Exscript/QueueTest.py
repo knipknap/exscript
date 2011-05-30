@@ -5,8 +5,11 @@ warnings.simplefilter('ignore', DeprecationWarning)
 
 import shutil
 import time
+import ctypes
 from functools import partial
 from tempfile import mkdtemp
+from multiprocessing import Value
+from multiprocessing.managers import BaseManager
 from Exscript import Queue, Account, AccountPool, FileLogger
 from Exscript.Connection import Connection
 from Exscript.protocols import Dummy
@@ -18,7 +21,7 @@ from Exscript.workqueue.Job import Job
 def count_calls(job, data, **kwargs):
     assert isinstance(job, Job)
     assert kwargs.has_key('testarg')
-    data['n_calls'] += 1
+    data.value += 1
 
 def count_calls2(job, conn, data, **kwargs):
     assert isinstance(conn, Connection)
@@ -63,14 +66,18 @@ class Log(object):
     def read(self):
         return self.data
 
+class LogManager(BaseManager):
+    pass
+LogManager.register('Log', Log)
+
 class QueueTest(unittest.TestCase):
     CORRELATE = Queue
 
     def createQueue(self, logdir = None, **kwargs):
         if self.queue:
             self.queue.destroy()
-        self.out   = Log()
-        self.err   = Log()
+        self.out   = self.manager.Log()
+        self.err   = self.manager.Log()
         self.queue = Queue(stdout = self.out, stderr = self.err, **kwargs)
         self.accm  = self.queue.account_manager
         if logdir is not None:
@@ -80,6 +87,8 @@ class QueueTest(unittest.TestCase):
         self.tempdir = mkdtemp()
         self.queue   = None
         self.logger  = None
+        self.manager = LogManager()
+        self.manager.start()
         self.createQueue(verbose = -1, logdir = self.tempdir)
 
     def tearDown(self):
@@ -88,6 +97,7 @@ class QueueTest(unittest.TestCase):
             self.queue.destroy()
         except:
             pass # queue already destroyed
+        self.manager.shutdown()
 
     def assertVerbosity(self, channel, expected):
         data = channel.read()
@@ -187,13 +197,13 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(1, self.accm.default_pool.n_accounts())
 
         def match_cb(data, host):
-            data['match-called'] = True
+            data['match-called'].value = True
             return True
 
         def start_cb(data, job, conn):
             account = conn.acquire_account()
-            data['start-called'] = True
-            data['account'] = account.__hash__()
+            data['start-called'].value = True
+            data['account-hash'].value = account.__hash__()
             account.release()
 
         # Replace the default pool.
@@ -206,7 +216,13 @@ class QueueTest(unittest.TestCase):
         pool2    = AccountPool()
         account2 = Account('user', 'test')
         pool2.add_account(account2)
-        data = {}
+
+        match_called = Value(ctypes.c_bool, False)
+        start_called = Value(ctypes.c_bool, False)
+        account_hash = Value(ctypes.c_long, account2.__hash__())
+        data = {'match-called': match_called,
+                'start-called': start_called,
+                'account-hash': account_hash}
         self.queue.add_account_pool(pool2, partial(match_cb, data))
         self.assertEqual(self.accm.default_pool, pool1)
 
@@ -214,9 +230,10 @@ class QueueTest(unittest.TestCase):
         # returns True).
         self.queue.run('dummy', partial(start_cb, data))
         self.queue.shutdown()
+        data = dict((k, v.value) for (k, v) in data.iteritems())
         self.assertEqual(data, {'match-called': True,
                                 'start-called': True,
-                                'account': account2.__hash__()})
+                                'account-hash': account2.__hash__()})
 
     def startTask(self):
         self.testAddAccount()
@@ -259,20 +276,20 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(self.accm.default_pool.n_accounts(), 0)
 
     def testRun(self):
-        data  = {'n_calls': 0}
+        data  = Value('i', 0)
         hosts = ['dummy1', 'dummy2']
         func  = bind(count_calls2, data, testarg = 1)
         self.queue.run(hosts,    func)
         self.queue.run('dummy3', func)
         self.queue.shutdown()
-        self.assertEqual(data['n_calls'], 3)
+        self.assertEqual(data.value, 3)
 
         self.queue.run('dummy4', func)
         self.queue.destroy()
-        self.assertEqual(data['n_calls'], 4)
+        self.assertEqual(data.value, 4)
 
     def testRunOrIgnore(self):
-        data  = {'n_calls': 0}
+        data  = Value('i', 0)
         hosts = ['dummy1', 'dummy2', 'dummy1']
         func  = bind(count_calls2, data, testarg = 1)
         self.queue.workqueue.pause()
@@ -280,32 +297,29 @@ class QueueTest(unittest.TestCase):
         self.queue.run_or_ignore('dummy2', func)
         self.queue.workqueue.unpause()
         self.queue.shutdown()
-        self.assertEqual(data['n_calls'], 2)
+        self.assertEqual(data.value, 2)
 
         self.queue.run_or_ignore('dummy4', func)
         self.queue.destroy()
-        self.assertEqual(data['n_calls'], 3)
+        self.assertEqual(data.value, 3)
 
     def testPriorityRun(self):
-        data  = {'n_calls': 0}
-        hosts = ['dummy1', 'dummy2']
-        func  = bind(spawn_subtask, self.queue, data, testarg = 1)
+        def write(data, value, *args):
+            data.value = value
 
-        # Since the job (consisting of two connections) spawns a subtask,
-        # we need at least two threads. But both subtasks could be waiting
-        # for one of the parent tasks to complete, so we need at least
-        # *three* threads.
-        self.queue.set_max_threads(3)
-        self.queue.run(hosts, func)
-        self.queue.shutdown()
-        self.assertEqual(4, data['n_calls'])
-
-        self.queue.run('dummy4', func)
+        data = Value('i', 0)
+        self.queue.workqueue.pause()
+        self.queue.enqueue(partial(write, data, 1))
+        self.queue.priority_run('dummy', partial(write, data, 2))
+        self.queue.workqueue.unpause()
         self.queue.destroy()
-        self.assertEqual(6, data['n_calls'])
+
+        # The 'dummy' job should run first, so the value must
+        # be overwritten by the other process.
+        self.assertEqual(data.value, 1)
 
     def testPriorityRunOrRaise(self):
-        data  = {'n_calls': 0}
+        data  = Value('i', 0)
         hosts = ['dummy1', 'dummy2', 'dummy1']
         func  = bind(count_calls2, data, testarg = 1)
         self.queue.workqueue.pause()
@@ -313,14 +327,14 @@ class QueueTest(unittest.TestCase):
         self.queue.priority_run_or_raise('dummy2', func)
         self.queue.workqueue.unpause()
         self.queue.shutdown()
-        self.assertEqual(data['n_calls'], 2)
+        self.assertEqual(data.value, 2)
 
         self.queue.priority_run_or_raise('dummy4', func)
         self.queue.destroy()
-        self.assertEqual(data['n_calls'], 3)
+        self.assertEqual(data.value, 3)
 
     def testForceRun(self):
-        data  = {'n_calls': 0}
+        data  = Value('i', 0)
         hosts = ['dummy1', 'dummy2']
         func  = bind(count_calls2, data, testarg = 1)
 
@@ -329,20 +343,20 @@ class QueueTest(unittest.TestCase):
         self.queue.set_max_threads(0)
         self.queue.force_run(hosts, func)
         self.queue.destroy()
-        self.assertEqual(2, data['n_calls'])
+        self.assertEqual(data.value, 2)
 
     def testEnqueue(self):
         from functools import partial
-        data = {'n_calls': 0}
+        data = Value('i', 0)
         func = bind(count_calls, data, testarg = 1)
         self.queue.enqueue(func)
         self.queue.enqueue(func)
         self.queue.shutdown()
-        self.assertEqual(data['n_calls'], 2)
+        self.assertEqual(data.value, 2)
 
         self.queue.enqueue(func)
         self.queue.destroy()
-        self.assertEqual(data['n_calls'], 3)
+        self.assertEqual(data.value, 3)
 
     #FIXME: Not a method test; this should probably be elsewhere.
     def testLogging(self):
