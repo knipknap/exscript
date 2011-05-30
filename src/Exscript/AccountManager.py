@@ -15,7 +15,7 @@
 """
 Manages user accounts.
 """
-from AccountPool import AccountPool
+from Exscript.AccountPool import AccountPool
 
 class AccountManager(object):
     """

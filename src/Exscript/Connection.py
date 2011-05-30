@@ -110,9 +110,9 @@ class Connection(object):
         """
         Like L{protocols.Protocol.add_monitor}.
         """
-        def the_callback(conn, index, match):
+        def _the_callback(conn, index, match):
             return callback(self, index, match)
-        return self.protocol.add_monitor(pattern, the_callback)
+        return self.protocol.add_monitor(pattern, _the_callback)
 
     def acquire_account(self, account = None):
         # Specific account requested?

@@ -29,6 +29,15 @@ class _FileLogger(_Logger):
                  mode     = 'a',
                  delete   = False,
                  clearmem = True):
+        """
+        The logdir argument specifies the location where the logs
+        are stored. The mode specifies whether to append the existing logs
+        (if any). If delete is True, the logs are deleted after they are
+        completed, unless they have an error in them.
+        If clearmem is True, the logger does not store a reference to
+        the log in it. If you want to use the functions from
+        L{Exscript.util.report} with the logger, clearmem must be False.
+        """
         _Logger.__init__(self)
         self.logdir   = logdir
         self.mode     = mode

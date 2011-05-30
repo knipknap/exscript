@@ -54,11 +54,11 @@ class Task(object):
         for theid in self.job_ids:
             self.workqueue.wait_for(theid)
 
-    def add_job_id(self, id):
+    def add_job_id(self, theid):
         """
         Adds a job to the task.
 
-        @type  id: int
-        @param id: The id of the job.
+        @type  theid: int
+        @param theid: The id of the job.
         """
-        self.job_ids.add(int(id))
+        self.job_ids.add(int(theid))

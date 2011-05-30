@@ -40,7 +40,7 @@ def _connector(func, host, protocol_args):
     protocol_name = host.get_protocol()
     protocol_cls  = get_protocol_from_name(protocol_name)
 
-    def wrapped(job, *args, **kwargs):
+    def _wrapped(job, *args, **kwargs):
         protocol = protocol_cls(**protocol_args)
 
         # Define the behaviour of the pseudo protocol adapter.
@@ -51,7 +51,7 @@ def _connector(func, host, protocol_args):
         conn = Connection(job.data, host, protocol)
         return func(job, conn)
 
-    return wrapped
+    return _wrapped
 
 class _PipeHandler(threading.Thread):
     """
@@ -507,25 +507,18 @@ class Queue(object):
             return self.workqueue.enqueue(function, name, self.times)
         return True
 
-    def _run1(self, host, function, prioritize, force, duplicate_check):
-        function = _connector(function, host, self.protocol_args)
-        return self._enqueue1(function,
-                              host.get_name(),
-                              prioritize,
-                              force,
-                              duplicate_check)
-
     def _run(self, hosts, function, prioritize, force, duplicate_check):
         hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
 
         task = Task(self.workqueue)
         for host in hosts:
-            id = self._run1(host,
-                            function,
-                            prioritize,
-                            force,
-                            duplicate_check)
+            function = _connector(function, host, self.protocol_args)
+            id = self._enqueue1(function,
+                                host.get_name(),
+                                prioritize,
+                                force,
+                                duplicate_check)
             if id is not None:
                 task.add_job_id(id)
 
@@ -626,8 +619,8 @@ class Queue(object):
         """
         self.total += 1
         task        = Task(self.workqueue)
-        id          = self._enqueue1(function, name, False, False, False)
-        if id is not None:
-            task.add_job_id(id)
+        theid       = self._enqueue1(function, name, False, False, False)
+        if theid is not None:
+            task.add_job_id(theid)
         self._dbg(2, 'Function enqueued.')
         return task

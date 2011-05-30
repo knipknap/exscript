@@ -57,6 +57,10 @@ class AccountPool(object):
         return account
 
     def get_account_from_hash(self, account_hash):
+        """
+        Returns the account with the given hash, or None if no such
+        account is included in the account pool.
+        """
         for account in self.accounts:
             if account.__hash__() == account_hash:
                 return account
