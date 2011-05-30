@@ -27,14 +27,16 @@ class AccountManager(object):
         """
         Constructor.
         """
-        self.default_pool = AccountPool()
-        self.pools        = []
+        self.default_pool = None
+        self.pools        = None
+        self.reset()
 
     def reset(self):
-        self.default_pool.reset()
-        for match, pool in self.pools:
-            pool.reset()
-        self.pools = []
+        """
+        Removes all account pools.
+        """
+        self.default_pool = AccountPool()
+        self.pools        = []
 
     def add_pool(self, pool, match = None):
         """
