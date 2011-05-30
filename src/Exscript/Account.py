@@ -61,10 +61,15 @@ class Account(object):
         """
         When you need a 'with' context for an already-acquired account.
         """
-        class Context(object):
-            __enter__ = lambda s: self
-            __exit__  = self.__exit__
-        return Context()
+        old_enter = self.__enter__
+        old_exit  = self.__exit__
+        def _exit_context(thetype, value, traceback):
+            self.__enter__ = old_enter
+            self.__exit__  = old_exit
+            self.__exit__(thetype, value, traceback)
+        self.__enter__ = lambda: self
+        self.__exit__  = _exit_context
+        return self
 
     def acquire(self):
         """
