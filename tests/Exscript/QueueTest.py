@@ -119,10 +119,6 @@ class QueueTest(unittest.TestCase):
     def testConstructor(self):
         self.assertEqual(1, self.queue.get_max_threads())
 
-        @log_to(self.logger)
-        def logged_hello(job, conn):
-            say_hello(job, conn)
-
         # Test all verbosity levels.
         levels = (
             (-1, 1, ('',      ''), ('',      ''),      ('',      'tb')),
@@ -143,7 +139,7 @@ class QueueTest(unittest.TestCase):
         for level, max_threads, with_simple, with_error, with_fatal in levels:
             stdout, stderr = with_simple
             self.createQueue(verbose = level, max_threads = max_threads)
-            self.queue.run('dummy://mytest', logged_hello)
+            self.queue.run('dummy://mytest', say_hello)
             self.queue.join()
             #print level, max_threads, with_simple, with_error, with_fatal
             self.assertVerbosity(self.out, stdout)
