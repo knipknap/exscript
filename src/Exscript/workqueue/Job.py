@@ -15,38 +15,24 @@
 import sys
 import threading
 import weakref
+from Exscript.util.impl import serializeable_sys_exc_info
 
 job_registry = weakref.WeakValueDictionary() # Map id(job) to Job.
 
 class Job(threading.Thread):
-    def __init__(self, condition, function, name, times, data):
-        threading.Thread.__init__(self)
+    def __init__(self, function, name, times, data):
+        threading.Thread.__init__(self, name = name)
         job_registry[id(self)] = self
-        self.condition = condition
-        self.function  = function
-        self.exc_info  = None
-        self.completed = False
-        self.name      = name
-        self.times     = times
-        self.failures  = 0
-        self.data      = data
+        self.pipe     = None
+        self.function = function
+        self.times    = times
+        self.failures = 0
+        self.data     = data
 
     def __copy__(self):
-        job = Job(self.condition,
-                  self.function,
-                  self.name,
-                  self.times,
-                  self.data)
+        job = Job(self.function, self.name, self.times, self.data)
         job.failures = self.failures
         return job
-
-    def _completed(self, exc_info = None):
-        with self.condition:
-            if exc_info:
-                self.failures += 1
-            self.exc_info  = exc_info
-            self.completed = True
-            self.condition.notify_all()
 
     def run(self):
         """
@@ -55,9 +41,12 @@ class Job(threading.Thread):
         try:
             self.function(self)
         except:
-            self._completed(sys.exc_info())
+            self.pipe.send(serializeable_sys_exc_info())
         else:
-            self._completed()
+            self.pipe.send('')
+        finally:
+            self.pipe = None
 
-    def is_alive(self):
-        return not self.completed
+    def start(self, pipe):
+        self.pipe = pipe
+        threading.Thread.start(self)

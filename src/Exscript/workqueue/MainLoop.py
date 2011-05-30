@@ -12,12 +12,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+import sys
 import threading
-import gc
-from itertools              import chain
-from collections            import defaultdict, deque
-from Exscript.util.event    import Event
+from multiprocessing import Pipe
+from itertools import chain
+from collections import defaultdict, deque
+from Exscript.util.event import Event
 from Exscript.workqueue.Job import Job
+
+class _ChildWatcher(threading.Thread):
+    def __init__(self, child, callback):
+        threading.Thread.__init__(self)
+        self.child = child
+        self.cb    = callback
+
+    def run(self):
+        to_child, to_self = Pipe()
+        try:
+            self.child.start(to_self)
+            result = to_child.recv()
+            self.child.join()
+        except:
+            result = sys.exc_info()
+        finally:
+            to_child.close()
+            to_self.close()
+        if result == '':
+            self.cb(self.child, None)
+        else:
+            self.cb(self.child, result)
 
 class MainLoop(threading.Thread):
     def __init__(self):
@@ -32,6 +55,7 @@ class MainLoop(threading.Thread):
         self.force_start         = []
         self.running_jobs        = []
         self.sleeping_jobs       = set()
+        self.watchers            = {}
         self.paused              = True
         self.shutdown_now        = False
         self.max_threads         = 1
@@ -68,7 +92,7 @@ class MainLoop(threading.Thread):
     def _create_job(self, function, name, times, data):
         if name is None:
             name = str(id(function))
-        job = Job(self.condition, function, name, times, data)
+        job = Job(function, name, times, data)
         self.job_init_event(job)
         return job
 
@@ -156,26 +180,33 @@ class MainLoop(threading.Thread):
 
     def wait_for(self, job_id):
         with self.condition:
-            job = self._get_job_from_id(job_id)
-            while self._job_in_queue(job):
+            while self._get_job_from_id(job_id) is not None:
                 self.condition.wait()
+                continue
+            watcher = self.watchers.get(job_id)
+            if watcher is not None:
+                watcher.join()
 
     def wait_for_activity(self):
         with self.condition:
             self.condition.wait(.2)
 
+    def _wait_for_watchers(self):
+        for watcher in self.watchers.values():
+            watcher.join()
+            self._dbg(1, 'Watcher for "%s" joined' % watcher.child.name)
+
     def wait_until_done(self):
         with self.condition:
             while self.get_queue_length() > 0:
                 self.condition.wait()
+        self._wait_for_watchers()
 
     def shutdown(self):
         with self.condition:
             self.shutdown_now = True
             self.condition.notify_all()
-        for job in self.running_jobs:
-            job.join()
-            self._dbg(1, 'Job "%s" finished' % job.name)
+        self._wait_for_watchers()
 
     def _job_in_queue(self, job):
         return job in self.queue or \
@@ -198,16 +229,24 @@ class MainLoop(threading.Thread):
     def _start_job(self, job):
         self.running_jobs.append(job)
         self.job_started_event(job)
-        job.start()
+        watcher = _ChildWatcher(job, self._on_job_completed)
+        self.watchers[id(job)] = watcher
+        watcher.start()
         self._dbg(1, 'Job "%s" started.' % job.name)
 
     def _restart_job(self, job):
         self._start_job(copy(job))
 
-    def _on_job_completed(self, job):
-        if job.exc_info:
+    def _on_job_completed(self, job, exc_info):
+        self._dbg(1, 'Job "%s" called completed()' % job.name)
+        with self.condition:
+            self.running_jobs.remove(job)
+            self.condition.notify_all()
+
+        if exc_info:
             self._dbg(1, 'Error in job "%s"' % job.name)
-            self.job_error_event(job, job.exc_info)
+            job.failures += 1
+            self.job_error_event(job, exc_info)
             if job.failures >= job.times:
                 self._dbg(1, 'Job "%s" finally failed' % job.name)
                 self.job_aborted_event(job)
@@ -218,28 +257,11 @@ class MainLoop(threading.Thread):
             self._dbg(1, 'Job "%s" succeeded.' % job.name)
             self.job_succeeded_event(job)
 
-    def _update_running_jobs(self):
-        # Update the list of running jobs.
-        running   = []
-        completed = []
-        for job in self.running_jobs:
-            if job.is_alive():
-                running.append(job)
-                continue
-            completed.append(job)
-        self.running_jobs = running[:]
-
-        # Notify any clients *after* removing the job from the list.
-        for job in completed:
-            self._on_job_completed(job)
-            job.join()
-            del job
-        gc.collect()
+        self.watchers.pop(id(job))
 
     def run(self):
         self.condition.acquire()
         while not self.shutdown_now:
-            self._update_running_jobs()
             if self.get_queue_length() == 0:
                 self.queue_empty_event()
 

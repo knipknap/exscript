@@ -1,6 +1,7 @@
 import sys, unittest, re, os.path, threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
+from multiprocessing import Pipe
 from Exscript.workqueue import Job
 
 class JobTest(unittest.TestCase):
@@ -13,15 +14,18 @@ class JobTest(unittest.TestCase):
         self.function  = lambda x: None
 
     def testConstructor(self):
-        job = Job.Job(self.condition, self.function, 'myaction', 1, None)
+        job = Job.Job(self.function, 'myaction', 1, None)
         self.assertEqual(self.function, job.function)
 
     def testRun(self):
-        job = Job.Job(self.condition, self.function, 'myaction', 1, None)
-        job.start()
-        while job.isAlive():
+        job = Job.Job(self.function, 'myaction', 1, None)
+        to_child, to_self = Pipe()
+        job.start(to_self)
+        response = to_child.recv()
+        while job.is_alive():
             pass
         job.join()
+        self.assertEqual(response, '')
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(JobTest)
