@@ -67,5 +67,4 @@ class _FileLogger(_Logger):
 
 _LoggerManager.register('FileLogger', _FileLogger)
 def FileLogger(*args, **kwargs):
-    manager = get_manager()
-    return manager.FileLogger(*args, **kwargs)
+    return get_manager().FileLogger(*args, **kwargs)

@@ -27,6 +27,7 @@ class _LoggerManager(BaseManager):
     pass
 
 def _create_manager():
+    global manager
     themanager = _LoggerManager()
     manager = weakref.ref(themanager)
     themanager.start()
@@ -110,5 +111,4 @@ class _Logger(object):
 
 _LoggerManager.register('Logger', _Logger)
 def Logger(*args, **kwargs):
-    manager = get_manager()
-    return manager.Logger(*args, **kwargs)
+    return get_manager().Logger(*args, **kwargs)
