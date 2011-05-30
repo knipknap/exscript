@@ -16,7 +16,7 @@ import os
 import base64
 import shutil
 from lxml                    import etree
-from Exscript                import Account, Queue
+from Exscript                import Account, Queue, FileLogger
 from Exscript.AccountPool    import AccountPool
 from Exscript.util.file      import get_accounts_from_file
 from Exscriptd.OrderDB       import OrderDB
