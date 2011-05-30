@@ -35,7 +35,7 @@ class WorkQueue(object):
         elif mode == 'multiprocessing':
             self.job_cls = ProcessJob
         else:
-            raise ArgumentError('invalid "mode" argument: ' + repr(mode))
+            raise TypeError('invalid "mode" argument: ' + repr(mode))
         self.job_init_event      = Event()
         self.job_started_event   = Event()
         self.job_error_event     = Event()
