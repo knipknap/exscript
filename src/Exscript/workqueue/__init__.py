@@ -13,7 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.workqueue.WorkQueue import WorkQueue
-from Exscript.workqueue.Job import job_registry
 
 import inspect 
 __all__ = [name for name, obj in locals().items()

@@ -28,7 +28,7 @@ from Exscript.util.event import Event
 from Exscript.util.impl import format_exception
 from Exscript.AccountManager import AccountManager
 from Exscript.Task import Task
-from Exscript.workqueue import WorkQueue, job_registry
+from Exscript.workqueue import WorkQueue
 from Exscript.protocols import get_protocol_from_name
 from Exscript.Connection import Connection
 

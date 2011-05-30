@@ -12,17 +12,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys
 import threading
 import weakref
 from Exscript.util.impl import serializeable_sys_exc_info
 
-job_registry = weakref.WeakValueDictionary() # Map id(job) to Job.
-
 class Job(threading.Thread):
     def __init__(self, function, name, times, data):
         threading.Thread.__init__(self, name = name)
-        job_registry[id(self)] = self
         self.pipe     = None
         self.function = function
         self.times    = times
