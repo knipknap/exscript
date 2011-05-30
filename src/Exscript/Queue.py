@@ -513,8 +513,8 @@ class Queue(object):
 
         task = Task(self.workqueue)
         for host in hosts:
-            function = _connector(function, host, self.protocol_args)
-            id = self._enqueue1(function,
+            cb = _connector(function, host, self.protocol_args)
+            id = self._enqueue1(cb,
                                 host.get_name(),
                                 prioritize,
                                 force,
