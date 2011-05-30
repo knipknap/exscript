@@ -20,12 +20,14 @@ class WorkQueue(object):
     This class implements the asynchronous workqueue and is the main API
     for using the workqueue module.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, debug = 0, max_threads = 1):
         """
         Constructor.
 
-        @keyword debug: The debug level (default is 0)
-        @keyword max_threads: Number of concurrent connections (default is 1).
+        @type  debug: int
+        @param debug: The debug level.
+        @type  max_threads: int
+        @param max_threads: The maximum number of concurrent threads.
         """
         self.job_init_event      = Event()
         self.job_started_event   = Event()
@@ -33,8 +35,8 @@ class WorkQueue(object):
         self.job_succeeded_event = Event()
         self.job_aborted_event   = Event()
         self.queue_empty_event   = Event()
-        self.debug               = kwargs.get('debug',       0)
-        self.max_threads         = kwargs.get('max_threads', 1)
+        self.debug               = debug
+        self.max_threads         = max_threads
         self.main_loop           = None
         self._init()
 
