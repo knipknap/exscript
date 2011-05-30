@@ -120,7 +120,7 @@ class Daemon(object):
         try:
             result = service.enter(order)
         except Exception, e:
-            self.log(order, 'Exception: %s' % e)
+            self.log(order, 'Exception in Service.enter: %s' % e)
             order.close()
             self.set_order_status(order, 'enter-error')
             raise
@@ -130,6 +130,7 @@ class Daemon(object):
             order.close()
             self.set_order_status(order, 'enter-error')
             return
+        self.set_order_status(order, 'entered')
 
         # If the service did not enqueue anything, it also
         # has no opportunity to mark the order 'done'. So mark
@@ -156,7 +157,7 @@ class Daemon(object):
         try:
             accepted = service.check(order)
         except Exception, e:
-            self.log(order, 'Exception: %s' % e)
+            self.log(order, 'Exception in Service.check: %s' % e)
             order.close()
             self.set_order_status(order, 'error')
             raise
