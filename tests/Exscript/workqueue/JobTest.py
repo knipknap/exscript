@@ -2,10 +2,10 @@ import sys, unittest, re, os.path, threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from multiprocessing import Pipe
-from Exscript.workqueue import Job
+from Exscript.workqueue.Job import ThreadJob, ProcessJob
 
-class JobTest(unittest.TestCase):
-    CORRELATE = Job
+class ThreadJobTest(unittest.TestCase):
+    CORRELATE = ThreadJob
 
     def setUp(self):
         self.condition = threading.Condition()
@@ -14,11 +14,11 @@ class JobTest(unittest.TestCase):
         self.function  = lambda x: None
 
     def testConstructor(self):
-        job = Job.Job(self.function, 'myaction', 1, None)
+        job = self.CORRELATE(self.function, 'myaction', 1, None)
         self.assertEqual(self.function, job.function)
 
     def testRun(self):
-        job = Job.Job(self.function, 'myaction', 1, None)
+        job = self.CORRELATE(self.function, 'myaction', 1, None)
         to_child, to_self = Pipe()
         job.start(to_self)
         response = to_child.recv()
@@ -27,7 +27,13 @@ class JobTest(unittest.TestCase):
         job.join()
         self.assertEqual(response, '')
 
+class ProcessJobTest(ThreadJobTest):
+    CORRELATE = ProcessJob
+
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(JobTest)
+    loader = unittest.TestLoader()
+    suite1 = loader.loadTestsFromTestCase(ThreadJobTest)
+    suite2 = loader.loadTestsFromTestCase(ProcessJobTest)
+    return unittest.TestSuite((suite1, suite2))
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())
