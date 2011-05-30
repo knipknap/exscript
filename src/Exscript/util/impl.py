@@ -89,3 +89,15 @@ def synchronized(func):
         with rlock:
             return func(self, *args, **kwargs)
     return wrapped
+
+def debug(func):
+    """
+    Decorator that prints a message whenever a function is entered or left.
+    """
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        sys.stdout.write('Entering ' + func.__name__ + '()\n')
+        result = func(*args, **kwargs)
+        sys.stdout.write('Leaving ' + func.__name__ + '()\n')
+        return result
+    return wrapped
