@@ -27,6 +27,9 @@ class ThreadJobTest(unittest.TestCase):
         job.join()
         self.assertEqual(response, '')
 
+    def testStart(self):
+        pass # See testRun()
+
 class ProcessJobTest(ThreadJobTest):
     CORRELATE = ProcessJob
 
