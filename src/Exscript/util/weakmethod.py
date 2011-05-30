@@ -49,7 +49,7 @@ class WeakMethod(object):
         @rtype:  callable|None
         @return: The referenced function if it is still alive.
         """
-        return None
+        raise NotImplementedError()
 
     def isalive(self):
         """
