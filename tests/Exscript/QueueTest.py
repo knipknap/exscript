@@ -26,6 +26,10 @@ def count_calls2(job, conn, data, **kwargs):
     assert isinstance(conn, Connection)
     count_calls(job, data, **kwargs)
 
+def count_and_fail(job, data, **kwargs):
+    count_calls(job, data, **kwargs)
+    raise FailException('intentional error')
+
 def spawn_subtask(job, conn, queue, data, **kwargs):
     count_calls2(job, conn, data, **kwargs)
     func  = bind(count_calls2, data, testarg = 1)
@@ -350,7 +354,6 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(data.value, 2)
 
     def testEnqueue(self):
-        from functools import partial
         data = Value('i', 0)
         func = bind(count_calls, data, testarg = 1)
         self.queue.enqueue(func)
@@ -359,8 +362,13 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(data.value, 2)
 
         self.queue.enqueue(func)
-        self.queue.destroy()
+        self.queue.shutdown()
         self.assertEqual(data.value, 3)
+
+        func = bind(count_and_fail, data, testarg = 1)
+        self.queue.enqueue(func, attempts = 7)
+        self.queue.destroy()
+        self.assertEqual(data.value, 10)
 
     #FIXME: Not a method test; this should probably be elsewhere.
     def testLogging(self):

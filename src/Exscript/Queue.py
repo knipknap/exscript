@@ -111,7 +111,6 @@ class Queue(object):
                  verbose       = 1,
                  mode          = 'threading',
                  max_threads   = 1,
-                 times         = 1,
                  protocol_args = None,
                  stdout        = sys.stdout,
                  stderr        = sys.stderr):
@@ -145,8 +144,6 @@ class Queue(object):
         @param mode: 'multiprocessing' or 'threading'
         @type  max_threads: int
         @param max_threads: The maximum number of concurrent threads.
-        @type  times: int
-        @param times: The number of attempts on failure.
         @type  protocol_args: dict
         @param protocol_args: Passed to the protocol adapter as kwargs.
         @type  stdout: file
@@ -158,7 +155,6 @@ class Queue(object):
         self.account_manager   = AccountManager()
         self.domain            = domain
         self.verbose           = verbose
-        self.times             = times
         self.protocol_args     = protocol_args or {}
         self.stdout            = stdout
         self.stderr            = stderr
@@ -312,6 +308,7 @@ class Queue(object):
     def _on_job_aborted(self, job):
         job.data.close()
         self.completed += 1
+        self.failed    += 1
         self._print('errors', job.name + ' finally failed.')
 
     def set_max_threads(self, n_connections):
@@ -480,7 +477,13 @@ class Queue(object):
         self._dbg(2, 'Queue reset.')
         self._del_status_bar()
 
-    def _enqueue1(self, function, name, prioritize, force, duplicate_check):
+    def _enqueue1(self,
+                  function,
+                  name,
+                  prioritize,
+                  force,
+                  duplicate_check,
+                  attempts):
         """
         Returns the list of newly created job ids.
         """
@@ -492,22 +495,19 @@ class Queue(object):
                 return self.workqueue.priority_enqueue_or_raise(function,
                                                                 name,
                                                                 force,
-                                                                self.times)
-            else:
-                return self.workqueue.enqueue_or_ignore(function,
-                                                        name,
-                                                        self.times)
+                                                                attempts)
+            return self.workqueue.enqueue_or_ignore(function,
+                                                    name,
+                                                    attempts)
 
         if prioritize:
             return self.workqueue.priority_enqueue(function,
                                                    name,
                                                    force,
-                                                   self.times)
-        else:
-            return self.workqueue.enqueue(function, name, self.times)
-        return True
+                                                   attempts)
+        return self.workqueue.enqueue(function, name, attempts)
 
-    def _run(self, hosts, function, prioritize, force, duplicate_check):
+    def _run(self, hosts, function, prioritize, force, duplicate_check, attempts):
         hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
 
@@ -518,7 +518,8 @@ class Queue(object):
                                 host.get_name(),
                                 prioritize,
                                 force,
-                                duplicate_check)
+                                duplicate_check,
+                                attempts)
             if id is not None:
                 task.add_job_id(id)
 
@@ -529,7 +530,7 @@ class Queue(object):
         self._dbg(2, 'All jobs enqueued.')
         return task
 
-    def run(self, hosts, function):
+    def run(self, hosts, function, attempts = 1):
         """
         Add the given function to a queue, and call it once for each host
         according to the threading options.
@@ -543,12 +544,14 @@ class Queue(object):
         @param hosts: A hostname or Host object, or a list of them.
         @type  function: function
         @param function: The function to execute.
+        @type  attempts: int
+        @param attempts: The number of attempts on failure.
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._run(hosts, function, False, False, False)
+        return self._run(hosts, function, False, False, False, attempts)
 
-    def run_or_ignore(self, hosts, function):
+    def run_or_ignore(self, hosts, function, attempts = 1):
         """
         Like run(), but only appends hosts that are not already in the
         queue.
@@ -557,12 +560,14 @@ class Queue(object):
         @param hosts: A hostname or Host object, or a list of them.
         @type  function: function
         @param function: The function to execute.
+        @type  attempts: int
+        @param attempts: The number of attempts on failure.
         @rtype:  object
         @return: A task object, or None if all hosts were duplicates.
         """
-        return self._run(hosts, function, False, False, True)
+        return self._run(hosts, function, False, False, True, attempts)
 
-    def priority_run(self, hosts, function):
+    def priority_run(self, hosts, function, attempts = 1):
         """
         Like run(), but adds the task to the front of the queue.
 
@@ -570,12 +575,14 @@ class Queue(object):
         @param hosts: A hostname or Host object, or a list of them.
         @type  function: function
         @param function: The function to execute.
+        @type  attempts: int
+        @param attempts: The number of attempts on failure.
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._run(hosts, function, True, False, False)
+        return self._run(hosts, function, True, False, False, attempts)
 
-    def priority_run_or_raise(self, hosts, function):
+    def priority_run_or_raise(self, hosts, function, attempts = 1):
         """
         Like priority_run(), but if a host is already in the queue, the
         existing host is moved to the top of the queue instead of enqueuing
@@ -585,12 +592,14 @@ class Queue(object):
         @param hosts: A hostname or Host object, or a list of them.
         @type  function: function
         @param function: The function to execute.
+        @type  attempts: int
+        @param attempts: The number of attempts on failure.
         @rtype:  object
         @return: A task object, or None if all hosts were duplicates.
         """
-        return self._run(hosts, function, True, False, True)
+        return self._run(hosts, function, True, False, True, attempts)
 
-    def force_run(self, hosts, function):
+    def force_run(self, hosts, function, attempts = 1):
         """
         Like priority_run(), but starts the task immediately even if that
         max_threads is exceeded.
@@ -599,12 +608,14 @@ class Queue(object):
         @param hosts: A hostname or Host object, or a list of them.
         @type  function: function
         @param function: The function to execute.
+        @type  attempts: int
+        @param attempts: The number of attempts on failure.
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._run(hosts, function, True, True, False)
+        return self._run(hosts, function, True, True, False, attempts)
 
-    def enqueue(self, function, name = None):
+    def enqueue(self, function, name = None, attempts = 1):
         """
         Places the given function in the queue and calls it as soon
         as a thread is available. To pass additional arguments to the
@@ -614,12 +625,14 @@ class Queue(object):
         @param function: The function to execute.
         @type  name: string
         @param name: A name for the task.
+        @type  attempts: int
+        @param attempts: The number of attempts on failure.
         @rtype:  object
         @return: An object representing the task.
         """
         self.total += 1
-        task        = Task(self.workqueue)
-        theid       = self._enqueue1(function, name, False, False, False)
+        task  = Task(self.workqueue)
+        theid = self._enqueue1(function, name, False, False, False, attempts)
         if theid is not None:
             task.add_job_id(theid)
         self._dbg(2, 'Function enqueued.')

@@ -150,7 +150,6 @@ def run():
                   mode          = 'multiprocessing',
                   verbose       = options.verbose,
                   max_threads   = options.connections,
-                  times         = options.retry + 1,
                   protocol_args = protocol_args)
     account_pool = queue.account_manager.default_pool
 
@@ -243,7 +242,7 @@ def run():
         print "time expired, starting script."
 
     # Run the template.
-    queue.run(hosts, function)
+    queue.run(hosts, function, attempts = options.retry + 1)
     queue.join()
     failed = queue.failed
     queue.destroy()
