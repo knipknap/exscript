@@ -16,7 +16,7 @@ import sys
 import threading
 import multiprocessing
 from copy import copy
-from multiprocessing import Pipe
+from multiprocessing import Pipe, Condition, RLock
 from itertools import chain
 from collections import defaultdict, deque
 from Exscript.util.event import Event
@@ -64,7 +64,7 @@ class MainLoop(threading.Thread):
         self.paused              = True
         self.shutdown_now        = False
         self.max_threads         = 1
-        self.condition           = threading.Condition()
+        self.condition           = Condition(RLock())
         self.debug               = 5
         self.daemon              = True
 
@@ -111,7 +111,7 @@ class MainLoop(threading.Thread):
     def enqueue_or_ignore(self, function, name, times, data):
         with self.condition:
             job = None
-            if self.get_first_job_from_name(name) is None:
+            if self._get_first_job_from_name(name) is None:
                 job = self._create_job(function, name, times, data)
                 self.queue.append(job)
             self.condition.notify_all()
@@ -197,9 +197,14 @@ class MainLoop(threading.Thread):
             self.condition.wait(.2)
 
     def _wait_for_watchers(self):
-        for watcher in self.watchers.values():
-            watcher.join()
-            self._dbg(1, 'Watcher for "%s" joined' % watcher.child.name)
+        # Jobs and watchers may be spawned while we are waiting for
+        # the watchers to complete.
+        # So we need the while loop to check if any new watchers
+        # appeared.
+        while len(self.watchers) > 0:
+            for watcher in self.watchers.values():
+                watcher.join()
+                self._dbg(1, 'Watcher for "%s" joined' % watcher.child.name)
 
     def wait_until_done(self):
         with self.condition:
@@ -214,16 +219,18 @@ class MainLoop(threading.Thread):
         self._wait_for_watchers()
 
     def _job_in_queue(self, job):
-        return job in self.queue or \
-               job in self.force_start or \
-               job in self.running_jobs
+        with self.condition:
+            return job in self.queue or \
+                   job in self.force_start or \
+                   job in self.running_jobs
 
     def get_queue_length(self):
-        return len(self.queue) \
-             + len(self.force_start) \
-             + len(self.running_jobs)
+        with self.condition:
+            return len(self.queue) \
+                 + len(self.force_start) \
+                 + len(self.running_jobs)
 
-    def get_first_job_from_name(self, job_name):
+    def _get_first_job_from_name(self, job_name):
         if job_name is None:
             return None
         for job in chain(self.queue, self.force_start, self.running_jobs):
@@ -231,23 +238,28 @@ class MainLoop(threading.Thread):
                 return job
         return None
 
-    def _start_job(self, job):
-        self.running_jobs.append(job)
-        self.job_started_event(job)
-        watcher = _ChildWatcher(job, self._on_job_completed)
-        self.watchers[id(job)] = watcher
-        watcher.start()
+    def _start_job(self, job, notify = True):
+        with self.condition:
+            self.running_jobs.append(job)
+            watcher = _ChildWatcher(job, self._on_job_completed)
+            self.watchers[id(job)] = watcher
+            watcher.start()
+            self.condition.notify_all()
+        if notify:
+            self.job_started_event(job)
         self._dbg(1, 'Job "%s" started.' % job.name)
 
-    def _restart_job(self, job):
-        self._start_job(copy(job))
-
     def _on_job_completed(self, job, exc_info):
+        # This function is called in a sub-thread, so we need to be
+        # careful that we are not in a lock while sending an event.
         self._dbg(1, 'Job "%s" called completed()' % job.name)
-        with self.condition:
-            self.running_jobs.remove(job)
-            self.condition.notify_all()
 
+        # Notify listeners of the error
+        # *before* removing the job from the queue.
+        # This is because wait_until_done() depends on
+        # get_queue_length() being 0, and we don't want a listener
+        # to get a signal from a queue that already already had
+        # wait_until_done() completed.
         if exc_info:
             self._dbg(1, 'Error in job "%s"' % job.name)
             job.failures += 1
@@ -255,14 +267,24 @@ class MainLoop(threading.Thread):
             if job.failures >= job.times:
                 self._dbg(1, 'Job "%s" finally failed' % job.name)
                 self.job_aborted_event(job)
-            else:
-                self._dbg(1, 'Restarting job "%s"' % job.name)
-                self._restart_job(job)
         else:
             self._dbg(1, 'Job "%s" succeeded.' % job.name)
             self.job_succeeded_event(job)
 
-        self.watchers.pop(id(job))
+        # Remove the job from the queue, and re-enque if needed.
+        with self.condition:
+            self.running_jobs.remove(job)
+            self.watchers.pop(id(job))
+            self.condition.notify_all()
+            if exc_info and job.failures < job.times:
+                self._dbg(1, 'Restarting job "%s"' % job.name)
+                new_job = copy(job)
+                self._start_job(new_job, False)
+            else:
+                new_job = None
+
+        if new_job:
+            self.job_started_event(job)
 
     def run(self):
         self.condition.acquire()
