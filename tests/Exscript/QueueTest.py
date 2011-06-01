@@ -22,7 +22,7 @@ def count_calls(job, data, **kwargs):
     assert kwargs.has_key('testarg')
     data.value += 1
 
-def count_calls2(job, conn, data, **kwargs):
+def count_calls2(job, host, conn, data, **kwargs):
     assert isinstance(conn, Connection)
     count_calls(job, data, **kwargs)
 
@@ -30,30 +30,30 @@ def count_and_fail(job, data, **kwargs):
     count_calls(job, data, **kwargs)
     raise FailException('intentional error')
 
-def spawn_subtask(job, conn, queue, data, **kwargs):
-    count_calls2(job, conn, data, **kwargs)
+def spawn_subtask(job, host, conn, queue, data, **kwargs):
+    count_calls2(job, host, conn, data, **kwargs)
     func  = bind(count_calls2, data, testarg = 1)
     task  = queue.priority_run('subtask', func)
     task.wait()
 
-def do_nothing(job, conn):
+def do_nothing(job, host, conn):
     pass
 
-def say_hello(job, conn):
+def say_hello(job, host, conn):
     conn.send('hello')
 
-def error(job, conn):
-    say_hello(job, conn)
+def error(job, host, conn):
+    say_hello(job, host, conn)
     raise FailException('intentional error')
 
-def fatal_error(job, conn):
-    say_hello(job, conn)
+def fatal_error(job, host, conn):
+    say_hello(job, host, conn)
     raise Exception('intentional fatal error')
 
 class MyProtocol(Dummy):
     pass
 
-def raise_if_not_myprotocol(job, conn):
+def raise_if_not_myprotocol(job, host, conn):
     if not isinstance(conn, MyProtocol):
         raise Exception('not a MyProtocol instance')
 
@@ -208,7 +208,7 @@ class QueueTest(unittest.TestCase):
             data['match-called'].value = True
             return True
 
-        def start_cb(data, job, conn):
+        def start_cb(data, job, host, conn):
             account = conn.acquire_account()
             data['start-called'].value = True
             data['account-hash'].value = account.__hash__()

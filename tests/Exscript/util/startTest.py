@@ -5,7 +5,7 @@ import Exscript
 import Exscript.util.start
 from multiprocessing import Value
 
-def count_calls(job, conn, data, **kwargs):
+def count_calls(job, host, conn, data, **kwargs):
     # Warning: Assertions raised in this function happen in a subprocess!
     assert kwargs.get('testarg') == 1
     assert isinstance(conn, Exscript.Connection.Connection)

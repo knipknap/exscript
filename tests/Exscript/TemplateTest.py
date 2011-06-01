@@ -17,7 +17,7 @@ class Log(object):
         self.data += data
         return data
 
-def dummy_cb(job, conn, template_test):
+def dummy_cb(job, host, conn, template_test):
     # Warning: Assertions raised in this function happen in a subprocess!
     log       = Log()
     host      = conn.get_host()

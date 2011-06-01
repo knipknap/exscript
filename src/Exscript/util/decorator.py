@@ -35,7 +35,7 @@ def bind(function, *args, **kwargs):
         return function(*(inner_args + args), **kwargs)
     return decorated
 
-def os_function_mapper(job, conn, map, *args, **kwargs):
+def os_function_mapper(job, host, conn, map, *args, **kwargs):
     """
     When called with an open connection, this function uses the
     conn.guess_os() function to determine the operating system
@@ -43,13 +43,13 @@ def os_function_mapper(job, conn, map, *args, **kwargs):
     It then uses the given map to look up a function name that corresponds
     to the operating system, and calls it. Example::
 
-        def ios_xr(job, conn):
+        def ios_xr(job, host, conn):
             pass # Do something.
 
-        def junos(job, conn):
+        def junos(job, host, conn):
             pass # Do something else.
 
-        def shell(job, conn):
+        def shell(job, host, conn):
             pass # Do something else.
 
         Exscript.util.start.quickrun('myhost', os_function_mapper)
@@ -71,14 +71,14 @@ def os_function_mapper(job, conn, map, *args, **kwargs):
     func = map.get(os)
     if func is None:
         raise Exception('No handler for %s found.' % os)
-    return func(job, conn, *args, **kwargs)
+    return func(job, host, conn, *args, **kwargs)
 
 def connect(function):
     """
     Wraps the given function such that the connection is opened before
     calling it. Example::
 
-        def my_func(job, conn):
+        def my_func(job, host, conn):
             pass # Do something.
         Exscript.util.start.quickrun('myhost', connect(my_func))
 
@@ -87,9 +87,9 @@ def connect(function):
     @rtype:  function
     @return: The wrapped function.
     """
-    def decorated(job, conn, *args, **kwargs):
+    def decorated(job, host, conn, *args, **kwargs):
         conn.connect()
-        result = function(job, conn, *args, **kwargs)
+        result = function(job, host, conn, *args, **kwargs)
         conn.close(force = True)
         return result
     return decorated
@@ -103,7 +103,7 @@ def autologin(function, flush = True, attempts = 1):
 
     before calling calling it. Example::
 
-        def my_func(job, conn):
+        def my_func(job, host, conn):
             pass # Do something.
         Exscript.util.start.quickrun('myhost', autologin(my_func))
 
@@ -116,7 +116,7 @@ def autologin(function, flush = True, attempts = 1):
     @rtype:  function
     @return: The wrapped function.
     """
-    def decorated(job, conn, *args, **kwargs):
+    def decorated(job, host, conn, *args, **kwargs):
         failed = 0
         while True:
             try:
@@ -127,7 +127,7 @@ def autologin(function, flush = True, attempts = 1):
                     raise
                 continue
             break
-        result = function(job, conn, *args, **kwargs)
+        result = function(job, host, conn, *args, **kwargs)
         conn.close(force = True)
         return result
     return connect(decorated)

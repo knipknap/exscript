@@ -28,12 +28,12 @@ def log_to(logger):
     @param logger: The logger that handles the logging.
     """
     def decorator(function):
-        def decorated(job, conn, *args, **kwargs):
+        def decorated(job, host, conn, *args, **kwargs):
             logger.add_log(id(job), job.name, job.failures + 1)
             log_cb = partial(logger.log, id(job))
             conn.data_received_event.listen(log_cb)
             try:
-                result = function(job, conn, *args, **kwargs)
+                result = function(job, host, conn, *args, **kwargs)
             except:
                 logger.log_aborted(id(job), serializeable_sys_exc_info())
                 raise

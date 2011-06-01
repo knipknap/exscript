@@ -49,7 +49,7 @@ def _connector(func, host, protocol_args):
             protocol.device.add_commands_from_file(filename)
 
         conn = Connection(job.data, host, protocol)
-        return func(job, conn, *args, **kwargs)
+        return func(job, host, conn, *args, **kwargs)
 
     return _wrapped
 

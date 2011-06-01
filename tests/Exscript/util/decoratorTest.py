@@ -2,6 +2,7 @@ import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import Exscript.util.decorator
+from Exscript import Host
 from Exscript.protocols.Exception import LoginFailure
 from util.reportTest import FakeJob
 
@@ -27,7 +28,7 @@ class FakeConnection(object):
 class decoratorTest(unittest.TestCase):
     CORRELATE = Exscript.util.decorator
 
-    def bind_cb(self, job, conn, bound_arg1, bound_arg2, **kwargs):
+    def bind_cb(self, job, host, conn, bound_arg1, bound_arg2, **kwargs):
         self.assert_(isinstance(job, FakeJob))
         self.assert_(isinstance(conn, FakeConnection))
         self.assert_(bound_arg1 == 'one', bound_arg1)
@@ -38,24 +39,26 @@ class decoratorTest(unittest.TestCase):
     def testBind(self):
         from Exscript.util.decorator import bind
         bound  = bind(self.bind_cb, 'one', 'two', three = 3)
-        result = bound(FakeJob(), FakeConnection())
+        result = bound(FakeJob(), Host('foo'), FakeConnection())
         self.assert_(result == 123, result)
 
-    def ios_cb(self, job, conn):
+    def ios_cb(self, job, host, conn):
         return 'hello ios'
 
-    def junos_cb(self, job, conn):
+    def junos_cb(self, job, host, conn):
         return 'hello junos'
 
     def testOsFunctionMapper(self):
         from Exscript.util.decorator import os_function_mapper
         cb_map = {'ios': self.ios_cb, 'junos': self.junos_cb}
         result = os_function_mapper(FakeJob(),
+                                    Host('foo'),
                                     FakeConnection(os = 'ios'),
                                     cb_map)
         self.assertEqual(result, 'hello ios')
 
         result = os_function_mapper(FakeJob(),
+                                    Host('foo'),
                                     FakeConnection(os = 'junos'),
                                     cb_map)
         self.assertEqual(result, 'hello junos')
@@ -63,30 +66,41 @@ class decoratorTest(unittest.TestCase):
         self.assertRaises(Exception,
                           os_function_mapper,
                           FakeJob(),
+                          Host('foo'),
                           FakeConnection(),
                           cb_map)
 
-    def connect_cb(self, job, conn, *args, **kwargs):
+    def connect_cb(self, job, host, conn, *args, **kwargs):
         self.assert_(conn.connected == True)
-        return self.bind_cb(job, conn, *args, **kwargs)
+        return self.bind_cb(job, host, conn, *args, **kwargs)
 
     def testConnect(self):
         from Exscript.util.decorator import connect
         bound  = connect(self.connect_cb)
-        result = bound(FakeJob(), FakeConnection(), 'one', 'two', three = 3)
+        result = bound(FakeJob(),
+                       Host('foo'),
+                       FakeConnection(),
+                       'one',
+                       'two',
+                       three = 3)
         self.assertEqual(result, 123)
 
-    def autologin_cb(self, job, conn, *args, **kwargs):
+    def autologin_cb(self, job, host, conn, *args, **kwargs):
         self.assert_(conn.logged_in == True)
         self.assert_(conn.login_flushed == False)
-        return self.connect_cb(job, conn, *args, **kwargs)
+        return self.connect_cb(job, host, conn, *args, **kwargs)
 
     def testAutologin(self):
         from Exscript.util.decorator import autologin
 
         # Test simple login.
         bound  = autologin(self.autologin_cb, False)
-        result = bound(FakeJob(), FakeConnection(), 'one', 'two', three = 3)
+        result = bound(FakeJob(),
+                       Host('foo'),
+                       FakeConnection(),
+                       'one',
+                       'two',
+                       three = 3)
         self.assertEqual(result, 123)
 
         # Monkey patch the fake connection such that the login fails.
@@ -100,7 +114,14 @@ class decoratorTest(unittest.TestCase):
         # Test retry functionality.
         bound = autologin(self.autologin_cb, False, attempts = 5)
         job   = FakeJob()
-        self.assertRaises(LoginFailure, bound, job, conn, 'one', 'two', three = 3)
+        self.assertRaises(LoginFailure,
+                          bound,
+                          job,
+                          Host('foo'),
+                          conn,
+                          'one',
+                          'two',
+                          three = 3)
         self.assertEqual(conn.data, 5)
 
     def testDeprecated(self):
