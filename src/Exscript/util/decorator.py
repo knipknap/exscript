@@ -43,13 +43,13 @@ def os_function_mapper(job, conn, map, *args, **kwargs):
     It then uses the given map to look up a function name that corresponds
     to the operating system, and calls it. Example::
 
-        def ios(conn):
+        def ios_xr(job, conn):
             pass # Do something.
 
-        def junos(conn):
+        def junos(job, conn):
             pass # Do something else.
 
-        def shell(conn):
+        def shell(job, conn):
             pass # Do something else.
 
         Exscript.util.start.quickrun('myhost', os_function_mapper)
@@ -103,7 +103,7 @@ def autologin(function, flush = True, attempts = 1):
 
     before calling calling it. Example::
 
-        def my_func(conn):
+        def my_func(job, conn):
             pass # Do something.
         Exscript.util.start.quickrun('myhost', autologin(my_func))
 
