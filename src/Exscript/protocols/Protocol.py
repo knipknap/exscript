@@ -200,14 +200,14 @@ class Protocol(object):
     """
 
     def __init__(self,
-                 driver   = None,
-                 stdout   = None,
-                 stderr   = None,
-                 debug    = 0,
-                 timeout  = 30,
-                 logfile  = None,
-                 termtype = 'dumb',
-                 **kwargs):
+                 driver      = None,
+                 stdout      = None,
+                 stderr      = None,
+                 debug       = 0,
+                 timeout     = 30,
+                 logfile     = None,
+                 termtype    = 'dumb',
+                 verify_host = True):
         """
         Constructor.
         The following events are provided:
@@ -228,6 +228,7 @@ class Protocol(object):
             device is dumped.
         @keyword termtype: The terminal type to request from the remote host,
             e.g. 'vt100'.
+        @keyword verify_host: Whether to verify the host's fingerprint.
         """
         self.data_received_event   = Event()
         self.otp_requested_event   = Event()
@@ -246,6 +247,7 @@ class Protocol(object):
         self.port                  = None
         self.last_account          = None
         self.termtype              = termtype
+        self.verify_host           = verify_host
         self.manual_driver         = driver
         self.debug                 = debug
         self.timeout               = timeout

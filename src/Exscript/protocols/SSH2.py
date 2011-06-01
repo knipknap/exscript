@@ -48,7 +48,7 @@ class SSH2(Protocol):
     The secure shell protocol version 2 adapter, based on Paramiko.
     """
 
-    def __init__(self, auto_verify = False, **kwargs):
+    def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
         self.client = None
         self.shell  = None
@@ -59,10 +59,10 @@ class SSH2(Protocol):
         self._host_keys          = paramiko.HostKeys()
         self._host_keys_filename = None
 
-        if auto_verify:
-            self._missing_host_key = self._add_host_key
-        else:
+        if self.verify_host:
             self._missing_host_key = self._reject_host_key
+        else:
+            self._missing_host_key = self._add_host_key
 
     def _reject_host_key(self, key):
         name = key.get_name()

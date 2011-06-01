@@ -110,6 +110,10 @@ def run():
     if not hosts:
         parser.error('No hosts to connect to')
 
+    # Set host options.
+    for host in hosts:
+        host.set_option('verify-fingerprint', not options.ssh_auto_verify)
+
     # Read the Exscript.
     if options.execute:
         script_content = options.execute
@@ -142,10 +146,7 @@ def run():
         parser.error(str(e))
 
     # Create Exscript.
-    protocol_args = {
-        'auto_verify': not options.ssh_auto_verify,
-        'debug':       options.protocol_verbose
-    }
+    protocol_args = {'debug': options.protocol_verbose}
     queue = Queue(domain        = options.default_domain,
                   mode          = 'multiprocessing',
                   verbose       = options.verbose,

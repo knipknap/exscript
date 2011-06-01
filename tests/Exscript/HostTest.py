@@ -83,6 +83,16 @@ class HostTest(unittest.TestCase):
     def testGetProtocol(self):
         pass # Tested in testSetProtocol().
 
+    def testSetOption(self):
+        self.assertRaises(TypeError, self.host.set_option, 'test', True)
+        self.assertEqual(self.host.get_option('verify-fingerprint'), None)
+        self.assertEqual(self.host.get_option('verify-fingerprint', False), False)
+        self.host.set_option('verify-fingerprint', True)
+        self.assertEqual(self.host.get_option('verify-fingerprint'), True)
+
+    def testGetOption(self):
+        pass # Tested in testSetOption().
+
     def testSetTcpPort(self):
         self.assertEqual(self.host.get_tcp_port(), 23)
         self.host.set_protocol('ssh')

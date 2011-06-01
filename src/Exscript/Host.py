@@ -53,6 +53,7 @@ class Host(object):
         self.name     = None
         self.address  = None
         self.tcp_port = None
+        self.options  = None
         self.set_uri(uri) 
 
     def __copy__(self):
@@ -217,6 +218,38 @@ class Host(object):
         @return: The protocol name.
         """
         return self.protocol
+
+    def set_option(self, name, value):
+        """
+        Defines a (possibly protocol-specific) option for the host.
+        Possible options include:
+
+            verify-fingerprint: bool
+
+        @type  name: str
+        @param name: The option name.
+        @type  value: object
+        @param value: The option value.
+        """
+        if name not in ('verify-fingerprint',):
+            raise TypeError('No such option: ' + repr(name))
+        if self.options is None:
+            self.options = {}
+        self.options[name] = value
+
+    def get_option(self, name, default = None):
+        """
+        Returns the value of the given option if it is defined, returns
+        the given default value otherwise.
+
+        @type  name: str
+        @param name: The option name.
+        @type  default: object
+        @param default: A default value.
+        """
+        if self.options is None:
+            return default
+        return self.options.get(name, default)
 
     def set_tcp_port(self, tcp_port):
         """
