@@ -108,12 +108,12 @@ class Connection(object):
     def acquire_account(self, account = None):
         # Specific account requested?
         if account:
-            return AccountProxy.for_account(self.accm, account)
+            return AccountProxy.for_account_hash(self.accm, account.__hash__())
 
         # Is a default account defined for this connection?
         account = self.host.get_account()
         if account:
-            return AccountProxy.for_account(self.accm, account)
+            return AccountProxy.for_account_hash(self.accm, account.__hash__())
 
         # Else, let the account manager assign an account.
         return AccountProxy.for_host_hash(self.accm, self.host.__hash__())

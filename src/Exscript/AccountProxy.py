@@ -42,15 +42,11 @@ class AccountProxy(object):
         return account
 
     @staticmethod
-    def for_account(parent, account):
-        proxy = AccountProxy(parent)
-        proxy.account_hash = account.__hash__()
-        if not proxy.acquire():
-            proxy.user = account.get_name()
-            proxy.password = account.get_password()
-            proxy.authorization_password = account.get_authorization_password()
-            proxy.key = account.get_key()
-        return proxy
+    def for_account_hash(parent, account_hash):
+        account = AccountProxy(parent)
+        account.account_hash = account_hash
+        account.acquire()
+        return account
 
     @staticmethod
     def for_random_account(parent):
