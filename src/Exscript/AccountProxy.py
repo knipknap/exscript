@@ -12,6 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+from Exscript.util.impl import Context
 
 class AccountProxy(object):
     """
@@ -67,10 +68,7 @@ class AccountProxy(object):
         """
         When you need a 'with' context for an already-acquired account.
         """
-        class Context(object):
-            __enter__ = lambda s: self
-            __exit__  = self.__exit__
-        return Context()
+        return Context(self)
 
     def acquire(self):
         """

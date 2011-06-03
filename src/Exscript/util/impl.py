@@ -101,3 +101,32 @@ def debug(func):
         sys.stdout.write('Leaving ' + func.__name__ + '()\n')
         return result
     return wrapped
+
+class Decorator(object):
+    def __init__(self, obj):
+        self.__dict__['obj'] = obj
+
+    def __setattr__(self, name, value):
+        if name in self.__dict__.keys():
+            self.__dict__[name] = value
+        else:
+            setattr(self.obj, name, value)
+
+    def __getattr__(self, name):
+        if name in self.__dict__.keys():
+            return self.__dict__[name]
+        return getattr(self.obj, name)
+
+class _Context(Decorator):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, thetype, value, traceback):
+        pass
+
+class Context(_Context):
+    def __exit__(self, thetype, value, traceback):
+        return self.release()
+
+    def context(self):
+        return _Context(self)

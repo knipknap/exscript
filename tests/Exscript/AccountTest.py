@@ -33,8 +33,15 @@ class AccountTest(unittest.TestCase):
             account.acquire()
 
         self.account.acquire()
-        with self.account.context():
-            pass
+        with self.account.context() as context:
+            context.release()
+            context.acquire()
+            with context.context() as subcontext:
+                subcontext.release()
+                subcontext.acquire()
+                with subcontext.context() as subsubcontext:
+                    subsubcontext.release()
+                    subsubcontext.acquire()
 
         with self.account:
             pass

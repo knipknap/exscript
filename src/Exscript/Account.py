@@ -17,6 +17,7 @@ Representing user accounts.
 """
 import threading
 from Exscript.util.event import Event
+from Exscript.util.impl import Context
 
 class Account(object):
     """
@@ -61,15 +62,7 @@ class Account(object):
         """
         When you need a 'with' context for an already-acquired account.
         """
-        old_enter = self.__enter__
-        old_exit  = self.__exit__
-        def _exit_context(thetype, value, traceback):
-            self.__enter__ = old_enter
-            self.__exit__  = old_exit
-            self.__exit__(thetype, value, traceback)
-        self.__enter__ = lambda: self
-        self.__exit__  = _exit_context
-        return self
+        return Context(self)
 
     def acquire(self):
         """
