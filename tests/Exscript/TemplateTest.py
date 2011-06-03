@@ -19,13 +19,13 @@ class Log(object):
 
 def dummy_cb(job, host, conn, template_test):
     # Warning: Assertions raised in this function happen in a subprocess!
-    # Createa log object.
+    # Create a log object.
     log = Log()
-    conn.data_received_event.connect(log.collect)#
+    conn.data_received_event.connect(log.collect)
 
     # Connect and load the test template.
-    conn.connect()
-    test_name = conn.get_host()
+    conn.connect(host.get_address(), host.get_tcp_port())
+    test_name = host.get_address()
     if host.get_protocol() == 'ios':
         dirname = os.path.join(test_dir, test_name)
     else:
@@ -52,7 +52,7 @@ def dummy_cb(job, host, conn, template_test):
 class IOSDummy(Dummy):
     def __init__(self, *args, **kwargs):
         device = IOSEmulator('dummy', strict = False)
-        Dummy.__init__(self, device = device)
+        Dummy.__init__(self, device = device, **kwargs)
 protocols.protocol_map['ios'] = IOSDummy
 
 class TemplateTest(unittest.TestCase):

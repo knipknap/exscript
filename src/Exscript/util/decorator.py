@@ -56,7 +56,7 @@ def os_function_mapper(job, host, conn, map, *args, **kwargs):
 
     An exception is raised if a matching function is not found in the map.
 
-    @type  conn: Connection
+    @type  conn: Exscript.protocols.Protocol
     @param conn: The open connection.
     @type  map: dict
     @param map: A dictionary mapping operating system name to a function.
@@ -88,7 +88,7 @@ def connect(function):
     @return: The wrapped function.
     """
     def decorated(job, host, conn, *args, **kwargs):
-        conn.connect()
+        conn.connect(host.get_address(), host.get_tcp_port())
         result = function(job, host, conn, *args, **kwargs)
         conn.close(force = True)
         return result

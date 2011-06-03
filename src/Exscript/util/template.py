@@ -109,7 +109,7 @@ def eval(conn, string, strip_command = True, **kwargs):
 
     By setting strip_command to True, the first line is ommitted.
 
-    @type  conn: Connection
+    @type  conn: Exscript.protocols.Protocol
     @param conn: The connection on which to run the template.
     @type  string: string
     @param string: The template to compile.
@@ -128,7 +128,7 @@ def eval_file(conn, filename, strip_command = True, **kwargs):
     Convenience wrapper around eval() that reads the template from a file
     instead.
 
-    @type  conn: Connection
+    @type  conn: Exscript.protocols.Protocol
     @param conn: The connection on which to run the template.
     @type  filename: string
     @param filename: The name of the template file.
@@ -153,7 +153,7 @@ def paste(conn, string, **kwargs):
     the template contains a command that requires a response from the
     host.
 
-    @type  conn: Connection
+    @type  conn: Exscript.protocols.Protocol
     @param conn: The connection on which to run the template.
     @type  string: string
     @param string: The template to compile.
@@ -169,7 +169,7 @@ def paste_file(conn, filename, **kwargs):
     Convenience wrapper around paste() that reads the template from a file
     instead.
 
-    @type  conn: Connection
+    @type  conn: Exscript.protocols.Protocol
     @param conn: The connection on which to run the template.
     @type  filename: string
     @param filename: The name of the template file.

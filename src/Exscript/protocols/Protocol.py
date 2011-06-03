@@ -23,12 +23,13 @@ import signal
 import errno
 import os
 from functools import partial
-from Exscript.util.buffer         import MonitoredBuffer
-from Exscript.util.crypt          import otp
-from Exscript.util.event          import Event
-from Exscript.util.cast           import to_regexs
-from Exscript.util.tty            import get_terminal_size
-from Exscript.protocols.drivers   import driver_map, isdriver
+from Exscript.util.impl import Context, _Context
+from Exscript.util.buffer import MonitoredBuffer
+from Exscript.util.crypt import otp
+from Exscript.util.event import Event
+from Exscript.util.cast import to_regexs
+from Exscript.util.tty import get_terminal_size
+from Exscript.protocols.drivers import driver_map, isdriver
 from Exscript.protocols.OsGuesser import OsGuesser
 from Exscript.protocols.Exception import InvalidCommandException, \
                                          LoginFailure, \
@@ -200,14 +201,15 @@ class Protocol(object):
     """
 
     def __init__(self,
-                 driver      = None,
-                 stdout      = None,
-                 stderr      = None,
-                 debug       = 0,
-                 timeout     = 30,
-                 logfile     = None,
-                 termtype    = 'dumb',
-                 verify_host = True):
+                 driver          = None,
+                 stdout          = None,
+                 stderr          = None,
+                 debug           = 0,
+                 timeout         = 30,
+                 logfile         = None,
+                 termtype        = 'dumb',
+                 verify_host     = True,
+                 account_factory = None):
         """
         Constructor.
         The following events are provided:
@@ -229,6 +231,7 @@ class Protocol(object):
         @keyword termtype: The terminal type to request from the remote host,
             e.g. 'vt100'.
         @keyword verify_host: Whether to verify the host's fingerprint.
+        @keyword account_factory: A function that produces a new L{Account}.
         """
         self.data_received_event   = Event()
         self.otp_requested_event   = Event()
@@ -254,6 +257,7 @@ class Protocol(object):
         self.logfile               = logfile
         self.response              = None
         self.buffer                = MonitoredBuffer()
+        self.account_factory       = account_factory
         if stdout is None:
             self.stdout = open(os.devnull, 'w')
         else:
@@ -551,12 +555,18 @@ class Protocol(object):
         return self._connect_hook(self.host, port)
 
     def _get_account(self, account):
+        if isinstance(account, Context) or isinstance(account, _Context):
+            return account.context()
         if account is None:
             account = self.last_account
-        if account is None:
-            raise TypeError('An account is required')
+        if self.account_factory:
+            account = self.account_factory(account)
+        else:
+            if account is None:
+                raise TypeError('An account is required')
+            account.__enter__()
         self.last_account = account
-        return account
+        return account.context()
 
     def login(self, account = None, app_account = None, flush = True):
         """
@@ -578,13 +588,13 @@ class Protocol(object):
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         """
-        account = self._get_account(account)
-        if app_account is None:
-            app_account = account
-        self.authenticate(account, flush = False)
-        if self.get_driver().supports_auto_authorize():
-            self.expect_prompt()
-        self.auto_app_authorize(app_account, flush = flush)
+        with self._get_account(account) as account:
+            if app_account is None:
+                app_account = account
+            self.authenticate(account, flush = False)
+            if self.get_driver().supports_auto_authorize():
+                self.expect_prompt()
+            self.auto_app_authorize(app_account, flush = flush)
 
     def authenticate(self, account = None, app_account = None, flush = True):
         """
@@ -600,12 +610,12 @@ class Protocol(object):
         @type  flush: bool
         @param flush: Whether to flush the last prompt from the buffer.
         """
-        account = self._get_account(account)
-        if app_account is None:
-            app_account = account
+        with self._get_account(account) as account:
+            if app_account is None:
+                app_account = account
 
-        self.protocol_authenticate(account)
-        self.app_authenticate(app_account, flush = flush)
+            self.protocol_authenticate(account)
+            self.app_authenticate(app_account, flush = flush)
 
     def _protocol_authenticate(self, user, password):
         pass
@@ -624,16 +634,16 @@ class Protocol(object):
         @type  account: Account
         @param account: An account object, like login().
         """
-        account  = self._get_account(account)
-        user     = account.get_name()
-        password = account.get_password()
-        key      = account.get_key()
-        if key is None:
-            self._dbg(1, "Attempting to authenticate %s." % user)
-            self._protocol_authenticate(user, password)
-        else:
-            self._dbg(1, "Authenticate %s with key." % user)
-            self._protocol_authenticate_by_key(user, key)
+        with self._get_account(account) as account:
+            user     = account.get_name()
+            password = account.get_password()
+            key      = account.get_key()
+            if key is None:
+                self._dbg(1, "Attempting to authenticate %s." % user)
+                self._protocol_authenticate(user, password)
+            else:
+                self._dbg(1, "Authenticate %s with key." % user)
+                self._protocol_authenticate_by_key(user, key)
         self.proto_authenticated = True
 
     def is_protocol_authenticated(self):
@@ -769,11 +779,11 @@ class Protocol(object):
         @type  bailout: bool
         @param bailout: Whether to wait for a prompt after sending the password.
         """
-        account  = self._get_account(account)
-        user     = account.get_name()
-        password = account.get_password()
-        self._dbg(1, "Attempting to app-authenticate %s." % user)
-        self._app_authenticate(account, password, flush, bailout)
+        with self._get_account(account) as account:
+            user     = account.get_name()
+            password = account.get_password()
+            self._dbg(1, "Attempting to app-authenticate %s." % user)
+            self._app_authenticate(account, password, flush, bailout)
         self.app_authenticated = True
 
     def is_app_authenticated(self):
@@ -801,13 +811,13 @@ class Protocol(object):
         @type  bailout: bool
         @param bailout: Whether to wait for a prompt after sending the password.
         """
-        account  = self._get_account(account)
-        user     = account.get_name()
-        password = account.get_authorization_password()
-        if password is None:
-            password = account.get_password()
-        self._dbg(1, "Attempting to app-authorize %s." % user)
-        self._app_authenticate(account, password, flush, bailout)
+        with self._get_account(account) as account:
+            user     = account.get_name()
+            password = account.get_authorization_password()
+            if password is None:
+                password = account.get_password()
+            self._dbg(1, "Attempting to app-authorize %s." % user)
+            self._app_authenticate(account, password, flush, bailout)
         self.app_authorized = True
 
     def auto_app_authorize(self, account = None, flush = True, bailout = False):
@@ -831,9 +841,9 @@ class Protocol(object):
         @type  bailout: bool
         @param bailout: Whether to wait for a prompt after sending the password.
         """
-        account = self._get_account(account)
-        self._dbg(1, 'Calling driver.auto_authorize().')
-        self.get_driver().auto_authorize(self, account, flush, bailout)
+        with self._get_account(account) as account:
+            self._dbg(1, 'Calling driver.auto_authorize().')
+            self.get_driver().auto_authorize(self, account, flush, bailout)
 
     def is_app_authorized(self):
         """

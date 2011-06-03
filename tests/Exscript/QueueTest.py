@@ -11,8 +11,7 @@ from tempfile import mkdtemp
 from multiprocessing import Value
 from multiprocessing.managers import BaseManager
 from Exscript import Queue, Account, AccountPool, FileLogger
-from Exscript.Connection import Connection
-from Exscript.protocols import Dummy
+from Exscript.protocols import Protocol, Dummy
 from Exscript.interpreter.Exception import FailException
 from Exscript.util.decorator import bind
 from Exscript.util.log import log_to
@@ -23,7 +22,7 @@ def count_calls(job, data, **kwargs):
     data.value += 1
 
 def count_calls2(job, host, conn, data, **kwargs):
-    assert isinstance(conn, Connection)
+    assert isinstance(conn, Protocol)
     count_calls(job, data, **kwargs)
 
 def count_and_fail(job, data, **kwargs):
@@ -141,14 +140,15 @@ class QueueTest(unittest.TestCase):
             (5,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
         )
         for level, max_threads, with_simple, with_error, with_fatal in levels:
+            #print "S:", level, max_threads, with_simple, with_error, with_fatal
             stdout, stderr = with_simple
             self.createQueue(verbose = level, max_threads = max_threads)
             self.queue.run('dummy://mytest', say_hello)
             self.queue.join()
-            #print level, max_threads, with_simple, with_error, with_fatal
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
+            #print "E:", level, max_threads, with_simple, with_error, with_fatal
             stdout, stderr = with_error
             self.createQueue(verbose = level, max_threads = max_threads)
             self.queue.run('dummy://mytest', error)
@@ -156,6 +156,7 @@ class QueueTest(unittest.TestCase):
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
+            #print "F:", level, max_threads, with_simple, with_error, with_fatal
             stdout, stderr = with_fatal
             self.createQueue(verbose = level, max_threads = max_threads)
             self.queue.run('dummy://mytest', fatal_error)
@@ -209,7 +210,7 @@ class QueueTest(unittest.TestCase):
             return True
 
         def start_cb(data, job, host, conn):
-            account = conn.acquire_account()
+            account = conn.account_factory(None)
             data['start-called'].value = True
             data['account-hash'].value = account.__hash__()
             account.release()
@@ -227,7 +228,7 @@ class QueueTest(unittest.TestCase):
 
         match_called = Value(ctypes.c_bool, False)
         start_called = Value(ctypes.c_bool, False)
-        account_hash = Value(ctypes.c_long, account2.__hash__())
+        account_hash = Value(ctypes.c_long, 0)
         data = {'match-called': match_called,
                 'start-called': start_called,
                 'account-hash': account_hash}

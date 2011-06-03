@@ -11,7 +11,7 @@ class FakeConnection(object):
         self.os   = os
         self.data = {}
 
-    def connect(self):
+    def connect(self, hostname, port):
         self.connected = True
 
     def login(self, flush = True):

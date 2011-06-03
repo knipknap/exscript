@@ -8,7 +8,7 @@ from multiprocessing import Value
 def count_calls(job, host, conn, data, **kwargs):
     # Warning: Assertions raised in this function happen in a subprocess!
     assert kwargs.get('testarg') == 1
-    assert isinstance(conn, Exscript.Connection.Connection)
+    assert isinstance(conn, Exscript.protocols.Protocol)
     data.value += 1
 
 class startTest(unittest.TestCase):

@@ -16,7 +16,7 @@
 Shorthands for regular expression matching.
 """
 import re
-from Exscript.Connection import Connection
+from Exscript.protocols import Protocol
 
 def _first_match(string, compiled):
     match = compiled.search(string)
@@ -61,8 +61,8 @@ def first_match(string, regex, flags = re.M):
        match = first_match(foo, r'(aaa) (\S+)') # Returns (None, None)
        match = first_match(foo, r'(\S+) (\S+)') # Returns ('my', 'foo')
 
-    @type  string: string|Connection
-    @param string: The string that is matched, or a Connection object.
+    @type  string: string|Exscript.protocols.Protocol
+    @param string: The string that is matched, or a Protocol object.
     @type  regex: string
     @param regex: A regular expression.
     @type  flags: int
@@ -70,7 +70,7 @@ def first_match(string, regex, flags = re.M):
     @rtype:  string|tuple
     @return: A match, or a tuple of matches.
     """
-    if isinstance(string, Connection):
+    if isinstance(string, Protocol):
         string = string.response
     return _first_match(string, re.compile(regex, flags))
 
@@ -110,8 +110,8 @@ def any_match(string, regex, flags = re.M):
         for one, two in any_match(foo, r'(\S+) (\S+)'): # Returns [('1', 'uno'), ('2', 'due')]
             print m
 
-    @type  string: string|Connection
-    @param string: The string that is matched, or a Connection object.
+    @type  string: string|Exscript.protocols.Protocol
+    @param string: The string that is matched, or a Protocol object.
     @type  regex: string
     @param regex: A regular expression.
     @type  flags: int
@@ -119,7 +119,7 @@ def any_match(string, regex, flags = re.M):
     @rtype:  list[string|tuple]
     @return: A list of strings, or a list of tuples.
     """
-    if isinstance(string, Connection):
+    if isinstance(string, Protocol):
         string = string.response
     compiled = re.compile(regex, flags)
     results  = []

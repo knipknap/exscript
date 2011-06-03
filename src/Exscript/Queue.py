@@ -20,6 +20,7 @@ import os
 import gc
 import select
 import threading
+from functools import partial
 from multiprocessing import Pipe
 from Exscript.parselib.Exception import CompileError
 from Exscript.interpreter.Exception import FailException
@@ -27,10 +28,22 @@ from Exscript.util.cast import to_hosts
 from Exscript.util.event import Event
 from Exscript.util.impl import format_exception
 from Exscript.AccountManager import AccountManager
+from Exscript.AccountProxy import AccountProxy
 from Exscript.Task import Task
 from Exscript.workqueue import WorkQueue
 from Exscript.protocols import get_protocol_from_name
-from Exscript.Connection import Connection
+
+def _account_factory(accm, host, account):
+    if account is None:
+        account = host.get_account()
+
+    # Specific account requested?
+    if account:
+        account = AccountProxy.for_account_hash(accm, account.__hash__())
+    else:
+        account = AccountProxy.for_host_hash(accm, host.__hash__())
+
+    return account
 
 def _connector(func, host, protocol_args):
     """
@@ -41,15 +54,15 @@ def _connector(func, host, protocol_args):
     protocol_cls  = get_protocol_from_name(protocol_name)
 
     def _wrapped(job, *args, **kwargs):
-        protocol = protocol_cls(**protocol_args)
+        mkaccount = partial(_account_factory, job.data, host)
+        protocol  = protocol_cls(account_factory = mkaccount, **protocol_args)
 
         # Define the behaviour of the pseudo protocol adapter.
         if protocol_name == 'pseudo':
             filename = host.get_address()
             protocol.device.add_commands_from_file(filename)
 
-        conn = Connection(job.data, host, protocol)
-        return func(job, host, conn, *args, **kwargs)
+        return func(job, host, protocol, *args, **kwargs)
 
     return _wrapped
 
