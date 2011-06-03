@@ -15,7 +15,7 @@ class startTest(unittest.TestCase):
     CORRELATE = Exscript.util.start
 
     def setUp(self):
-        from Exscript                import Account
+        from Exscript import Account
         from Exscript.util.decorator import bind
 
         self.data     = Value('i', 0)

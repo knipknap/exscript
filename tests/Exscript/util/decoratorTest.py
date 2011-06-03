@@ -10,9 +10,13 @@ class FakeConnection(object):
     def __init__(self, os = None):
         self.os   = os
         self.data = {}
+        self.host = None
 
     def connect(self, hostname, port):
-        self.connected = True
+        self.host = hostname
+
+    def get_host(self):
+        return self.host
 
     def login(self, flush = True):
         self.logged_in     = True
@@ -52,13 +56,13 @@ class decoratorTest(unittest.TestCase):
         from Exscript.util.decorator import os_function_mapper
         cb_map = {'ios': self.ios_cb, 'junos': self.junos_cb}
         result = os_function_mapper(FakeJob(),
-                                    Host('foo'),
+                                    Host('dummy://foo'),
                                     FakeConnection(os = 'ios'),
                                     cb_map)
         self.assertEqual(result, 'hello ios')
 
         result = os_function_mapper(FakeJob(),
-                                    Host('foo'),
+                                    Host('dummy://foo'),
                                     FakeConnection(os = 'junos'),
                                     cb_map)
         self.assertEqual(result, 'hello junos')
@@ -71,7 +75,7 @@ class decoratorTest(unittest.TestCase):
                           cb_map)
 
     def connect_cb(self, job, host, conn, *args, **kwargs):
-        self.assert_(conn.connected == True)
+        self.assertEqual(conn.get_host(), 'foo')
         return self.bind_cb(job, host, conn, *args, **kwargs)
 
     def testConnect(self):
@@ -86,9 +90,9 @@ class decoratorTest(unittest.TestCase):
         self.assertEqual(result, 123)
 
     def autologin_cb(self, job, host, conn, *args, **kwargs):
-        self.assert_(conn.logged_in == True)
-        self.assert_(conn.login_flushed == False)
-        return self.connect_cb(job, host, conn, *args, **kwargs)
+        self.assertEqual(conn.logged_in, True)
+        self.assertEqual(conn.login_flushed, False)
+        return self.bind_cb(job, host, conn, *args, **kwargs)
 
     def testAutologin(self):
         from Exscript.util.decorator import autologin
@@ -96,7 +100,7 @@ class decoratorTest(unittest.TestCase):
         # Test simple login.
         bound  = autologin(self.autologin_cb, False)
         result = bound(FakeJob(),
-                       Host('foo'),
+                       Host('dummy://foo'),
                        FakeConnection(),
                        'one',
                        'two',
@@ -117,7 +121,7 @@ class decoratorTest(unittest.TestCase):
         self.assertRaises(LoginFailure,
                           bound,
                           job,
-                          Host('foo'),
+                          Host('dummy://foo'),
                           conn,
                           'one',
                           'two',

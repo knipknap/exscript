@@ -237,7 +237,7 @@ class QueueTest(unittest.TestCase):
 
         # Make sure that pool2 is chosen (because the match function
         # returns True).
-        self.queue.run('dummy', partial(start_cb, data))
+        self.queue.run('dummy://dummy', partial(start_cb, data))
         self.queue.shutdown()
         data = dict((k, v.value) for (k, v) in data.iteritems())
         self.assertEqual(data, {'match-called': True,
@@ -246,7 +246,7 @@ class QueueTest(unittest.TestCase):
 
     def startTask(self):
         self.testAddAccount()
-        hosts = ['dummy1', 'dummy2']
+        hosts = ['dummy://dummy1', 'dummy://dummy2']
         task  = self.queue.run(hosts, log_to(self.logger)(do_nothing))
         self.assert_(task is not None)
         return task
@@ -286,29 +286,29 @@ class QueueTest(unittest.TestCase):
 
     def testRun(self):
         data  = Value('i', 0)
-        hosts = ['dummy1', 'dummy2']
+        hosts = ['dummy://dummy1', 'dummy://dummy2']
         func  = bind(count_calls2, data, testarg = 1)
         self.queue.run(hosts,    func)
-        self.queue.run('dummy3', func)
+        self.queue.run('dummy://dummy3', func)
         self.queue.shutdown()
         self.assertEqual(data.value, 3)
 
-        self.queue.run('dummy4', func)
+        self.queue.run('dummy://dummy4', func)
         self.queue.destroy()
         self.assertEqual(data.value, 4)
 
     def testRunOrIgnore(self):
         data  = Value('i', 0)
-        hosts = ['dummy1', 'dummy2', 'dummy1']
+        hosts = ['dummy://dummy1', 'dummy://dummy2', 'dummy://dummy1']
         func  = bind(count_calls2, data, testarg = 1)
         self.queue.workqueue.pause()
         self.queue.run_or_ignore(hosts,    func)
-        self.queue.run_or_ignore('dummy2', func)
+        self.queue.run_or_ignore('dummy://dummy2', func)
         self.queue.workqueue.unpause()
         self.queue.shutdown()
         self.assertEqual(data.value, 2)
 
-        self.queue.run_or_ignore('dummy4', func)
+        self.queue.run_or_ignore('dummy://dummy4', func)
         self.queue.destroy()
         self.assertEqual(data.value, 3)
 
@@ -319,7 +319,7 @@ class QueueTest(unittest.TestCase):
         data = Value('i', 0)
         self.queue.workqueue.pause()
         self.queue.enqueue(partial(write, data, 1))
-        self.queue.priority_run('dummy', partial(write, data, 2))
+        self.queue.priority_run('dummy://dummy', partial(write, data, 2))
         self.queue.workqueue.unpause()
         self.queue.destroy()
 
@@ -329,22 +329,22 @@ class QueueTest(unittest.TestCase):
 
     def testPriorityRunOrRaise(self):
         data  = Value('i', 0)
-        hosts = ['dummy1', 'dummy2', 'dummy1']
+        hosts = ['dummy://dummy1', 'dummy://dummy2', 'dummy://dummy1']
         func  = bind(count_calls2, data, testarg = 1)
         self.queue.workqueue.pause()
         self.queue.priority_run_or_raise(hosts,    func)
-        self.queue.priority_run_or_raise('dummy2', func)
+        self.queue.priority_run_or_raise('dummy://dummy2', func)
         self.queue.workqueue.unpause()
         self.queue.shutdown()
         self.assertEqual(data.value, 2)
 
-        self.queue.priority_run_or_raise('dummy4', func)
+        self.queue.priority_run_or_raise('dummy://dummy4', func)
         self.queue.destroy()
         self.assertEqual(data.value, 3)
 
     def testForceRun(self):
         data  = Value('i', 0)
-        hosts = ['dummy1', 'dummy2']
+        hosts = ['dummy://dummy1', 'dummy://dummy2']
         func  = bind(count_calls2, data, testarg = 1)
 
         # By setting max_threads to 0 we ensure that the 'force' part is
