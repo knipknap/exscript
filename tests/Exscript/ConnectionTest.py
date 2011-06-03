@@ -35,9 +35,6 @@ class ConnectionTest(DummyTest):
     def testConstructor(self):
         self.assert_(isinstance(self.protocol, Connection))
 
-    def testGetHost(self):
-        self.assertEqual(self.protocol.get_host(), self.host)
-
     def testAcquireAccount(self):
         account = self.protocol.acquire_account()
         self.assertEqual(account.__hash__(), self.account.__hash__())
@@ -47,7 +44,6 @@ class ConnectionTest(DummyTest):
         self.assertEqual(self.protocol.response, None)
         self.doConnect()
         self.assertEqual(self.protocol.response, None)
-        self.assertEqual(self.protocol.get_host(), self.host)
 
     def testGuessOs(self):
         self.assertEqual('unknown', self.protocol.guess_os())

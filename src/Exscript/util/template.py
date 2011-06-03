@@ -20,10 +20,11 @@ from Exscript.interpreter import Parser
 
 def _compile(conn, filename, template, parser_kwargs, **kwargs):
     if conn:
-        kwargs.update(conn.get_host().get_all())
+        hostname = conn.get_host()
         account  = conn.last_account
         username = account is not None and account.get_name() or None
     else:
+        hostname = 'undefined'
         username = None
 
     # Init the parser.
@@ -31,11 +32,10 @@ def _compile(conn, filename, template, parser_kwargs, **kwargs):
     parser.define(**kwargs)
 
     # Define the built-in variables and functions.
-    hostname = conn and conn.get_host().get_address() or 'undefined'
-    builtin  = dict(__filename__   = [filename or 'undefined'],
-                    __username__   = [username],
-                    __hostname__   = [hostname],
-                    __connection__ = conn)
+    builtin = dict(__filename__   = [filename or 'undefined'],
+                   __username__   = [username],
+                   __hostname__   = [hostname],
+                   __connection__ = conn)
     parser.define_object(**builtin)
     parser.define_object(**stdlib.functions)
 

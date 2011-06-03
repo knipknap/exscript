@@ -31,10 +31,10 @@ class Host(object):
     __slots__ = ('protocol',
                  'vars',
                  'account',
-                 'logname',
                  'name',
                  'address',
-                 'tcp_port')
+                 'tcp_port',
+                 'options')
 
     def __init__(self, uri, default_protocol = 'telnet'):
         """
@@ -58,7 +58,6 @@ class Host(object):
 
     def __copy__(self):
         host = Host(self.get_uri())
-        host.set_logname(self.get_logname())
         host.set_name(self.get_name())
         return host
 

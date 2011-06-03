@@ -19,17 +19,21 @@ class Log(object):
 
 def dummy_cb(job, host, conn, template_test):
     # Warning: Assertions raised in this function happen in a subprocess!
-    log       = Log()
-    host      = conn.get_host()
-    test_name = host.get_address()
+    # Createa log object.
+    log = Log()
+    conn.data_received_event.connect(log.collect)#
+
+    # Connect and load the test template.
+    conn.connect()
+    test_name = conn.get_host()
     if host.get_protocol() == 'ios':
         dirname = os.path.join(test_dir, test_name)
     else:
         dirname = os.path.dirname(test_name)
     tmpl     = os.path.join(dirname, 'test.exscript')
     expected = os.path.join(dirname, 'expected')
-    conn.data_received_event.connect(log.collect)
-    conn.connect()
+
+    # Go.
     conn.login(flush = True)
     try:
         template.eval_file(conn, tmpl, slot = 10)

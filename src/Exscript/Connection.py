@@ -97,15 +97,6 @@ class Connection(object):
             return self.__dict__[name]
         return getattr(self.protocol, name)
 
-    def get_host(self):
-        """
-        Returns the host on which the job is performed.
-
-        @rtype:  Host
-        @return: The Host instance.
-        """
-        return self.host
-
     def add_monitor(self, pattern, callback):
         """
         Like L{protocols.Protocol.add_monitor}.
@@ -131,8 +122,8 @@ class Connection(object):
         """
         Opens the connection to the remote host.
         """
-        if not self.protocol.connect(self.get_host().get_address(),
-                                     self.get_host().get_tcp_port()):
+        if not self.protocol.connect(self.host.get_address(),
+                                     self.host.get_tcp_port()):
             raise Exception('Connection failed.')
 
     def login(self, account = None, flush = True):

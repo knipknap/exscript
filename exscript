@@ -204,16 +204,18 @@ def run():
     # Choose the template processing type.
     tmpl_vars = options.define
     if options.no_prompt:
-        def function(job, *args, **kwargs):
+        def function(job, host, conn, *args, **kwargs):
             args = args + (script_content,)
             kwargs.update(tmpl_vars)
-            return template.paste(*args, **kwargs)
+            kwargs.update(host.get_all())
+            return template.paste(conn, *args, **kwargs)
     else:
         strip = not options.no_strip
-        def function(job, *args, **kwargs):
+        def function(job, host, conn, *args, **kwargs):
             args = args + (script_content, strip)
             kwargs.update(tmpl_vars)
-            return template.eval(*args, **kwargs)
+            kwargs.update(host.get_all())
+            return template.eval(conn, *args, **kwargs)
 
     # Wrap the template processor such that the login procedure is automated.
     if options.no_authentication:
