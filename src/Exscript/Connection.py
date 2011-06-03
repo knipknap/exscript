@@ -116,7 +116,7 @@ class Connection(object):
             return AccountProxy.for_account(self.accm, account)
 
         # Else, let the account manager assign an account.
-        return AccountProxy.for_host(self.accm, self.host)
+        return AccountProxy.for_host_hash(self.accm, self.host.__hash__())
 
     def connect(self):
         """

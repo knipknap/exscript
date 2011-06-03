@@ -35,9 +35,9 @@ class AccountProxy(object):
         self.thread_local           = False
 
     @staticmethod
-    def for_host(parent, host):
+    def for_host_hash(parent, host_hash):
         account = AccountProxy(parent)
-        account.host = host
+        account.host_hash = host_hash
         account.acquire()
         return account
 
