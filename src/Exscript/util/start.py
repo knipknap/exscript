@@ -15,9 +15,9 @@
 """
 Quickstart methods for the Exscript queue.
 """
-from Exscript                import Queue
-from Exscript.util.interact  import read_login
-from Exscript.util.decorator import autologin
+from Exscript import Queue
+from Exscript.util.interact import read_login
+from Exscript.util.decorator import connect, autologin
 
 def run(users, hosts, func, **kwargs):
     """
@@ -28,7 +28,7 @@ def run(users, hosts, func, **kwargs):
     If you also want to pass arguments to the given function, you may use
     util.decorator.bind() like this::
 
-      def my_callback(job, conn, my_arg, **kwargs):
+      def my_callback(job, host, my_arg, **kwargs):
           print my_arg, kwargs.get('foo')
 
       run(account,
@@ -67,7 +67,7 @@ def quickrun(hosts, func, **kwargs):
 def start(users, hosts, func, **kwargs):
     """
     Like run(), but automatically logs into the host before passing
-    the connection to the callback function.
+    the host to the callback function.
 
     @type  users: Account|list[Account]
     @param users: The account(s) to use for logging in.
@@ -78,7 +78,7 @@ def start(users, hosts, func, **kwargs):
     @type  kwargs: dict
     @param kwargs: Passed to the Exscript.Queue constructor.
     """
-    run(users, hosts, autologin(func), **kwargs)
+    run(users, hosts, autologin()(func), **kwargs)
 
 def quickstart(hosts, func, **kwargs):
     """
@@ -92,4 +92,4 @@ def quickstart(hosts, func, **kwargs):
     @type  kwargs: dict
     @param kwargs: Passed to the Exscript.Queue constructor.
     """
-    quickrun(hosts, autologin(func), **kwargs)
+    quickrun(hosts, autologin()(func), **kwargs)

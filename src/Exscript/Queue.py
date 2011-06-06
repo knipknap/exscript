@@ -20,50 +20,24 @@ import os
 import gc
 import select
 import threading
-from functools import partial
 from multiprocessing import Pipe
 from Exscript.parselib.Exception import CompileError
 from Exscript.interpreter.Exception import FailException
 from Exscript.util.cast import to_hosts
 from Exscript.util.event import Event
 from Exscript.util.impl import format_exception
+from Exscript.util.decorator import connect
 from Exscript.AccountManager import AccountManager
-from Exscript.AccountProxy import AccountProxy
 from Exscript.Task import Task
 from Exscript.workqueue import WorkQueue
-from Exscript.protocols import get_protocol_from_name
 
-def _account_factory(accm, host, account):
-    if account is None:
-        account = host.get_account()
-
-    # Specific account requested?
-    if account:
-        account = AccountProxy.for_account_hash(accm, account.__hash__())
-    else:
-        account = AccountProxy.for_host_hash(accm, host.__hash__())
-
-    return account
-
-def _connector(func, host, protocol_args):
+def _connector(func, host):
     """
     A decorator that connects to the given host using the given
     protocol arguments.
     """
-    protocol_name = host.get_protocol()
-    protocol_cls  = get_protocol_from_name(protocol_name)
-
     def _wrapped(job, *args, **kwargs):
-        mkaccount = partial(_account_factory, job.data, host)
-        protocol  = protocol_cls(account_factory = mkaccount, **protocol_args)
-
-        # Define the behaviour of the pseudo protocol adapter.
-        if protocol_name == 'pseudo':
-            filename = host.get_address()
-            protocol.device.add_commands_from_file(filename)
-
-        return func(job, host, protocol, *args, **kwargs)
-
+        return func(job, host, *args, **kwargs)
     return _wrapped
 
 class _PipeHandler(threading.Thread):
@@ -120,13 +94,12 @@ class Queue(object):
     """
 
     def __init__(self,
-                 domain        = '',
-                 verbose       = 1,
-                 mode          = 'threading',
-                 max_threads   = 1,
-                 protocol_args = None,
-                 stdout        = sys.stdout,
-                 stderr        = sys.stderr):
+                 domain      = '',
+                 verbose     = 1,
+                 mode        = 'threading',
+                 max_threads = 1,
+                 stdout      = sys.stdout,
+                 stderr      = sys.stderr):
         """
         Constructor. All arguments should be passed as keyword arguments.
         Depending on the verbosity level, the following types
@@ -157,8 +130,6 @@ class Queue(object):
         @param mode: 'multiprocessing' or 'threading'
         @type  max_threads: int
         @param max_threads: The maximum number of concurrent threads.
-        @type  protocol_args: dict
-        @param protocol_args: Passed to the protocol adapter as kwargs.
         @type  stdout: file
         @param stdout: The output channel, defaults to sys.stdout.
         @type  stderr: file
@@ -168,7 +139,6 @@ class Queue(object):
         self.account_manager   = AccountManager()
         self.domain            = domain
         self.verbose           = verbose
-        self.protocol_args     = protocol_args or {}
         self.stdout            = stdout
         self.stderr            = stderr
         self.devnull           = open(os.devnull, 'w')
@@ -219,7 +189,6 @@ class Queue(object):
             self.channel_map['connection'] = self.devnull
             self.channel_map['errors']     = self.stderr
             self.channel_map['tracebacks'] = self.stderr
-        self.protocol_args['stdout'] = self.channel_map['connection']
 
     def _write(self, channel, msg):
         self.channel_map[channel].write(msg)
@@ -295,7 +264,11 @@ class Queue(object):
         return cls.__name__ in ('CompileError', 'FailException')
 
     def _on_job_init(self, job):
-        job.data = self._create_pipe()
+        job.data = self._create_pipe(), self.channel_map['connection']
+
+    def _on_job_destroy(self, job):
+        pipe, stdout = job.data
+        pipe.close()
 
     def _on_job_started(self, job):
         self._del_status_bar()
@@ -311,7 +284,7 @@ class Queue(object):
             self._print('fatal_errors', tb)
 
     def _on_job_succeeded(self, job):
-        job.data.close()
+        self._on_job_destroy(job)
         self.completed += 1
         self._print('status_bar', job.name + ' succeeded.')
         self._dbg(2, job.name + ' job is done.')
@@ -319,7 +292,7 @@ class Queue(object):
         self._print_status_bar()
 
     def _on_job_aborted(self, job):
-        job.data.close()
+        self._on_job_destroy(job)
         self.completed += 1
         self.failed    += 1
         self._print('errors', job.name + ' finally failed.')
@@ -526,7 +499,7 @@ class Queue(object):
 
         task = Task(self.workqueue)
         for host in hosts:
-            cb = _connector(function, host, self.protocol_args)
+            cb = lambda j, *a, **k: connect()(function)(j, host, *a, **k)
             id = self._enqueue1(cb,
                                 host.get_name(),
                                 prioritize,

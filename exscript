@@ -146,12 +146,10 @@ def run():
         parser.error(str(e))
 
     # Create Exscript.
-    protocol_args = {'debug': options.protocol_verbose}
-    queue = Queue(domain        = options.default_domain,
-                  mode          = 'multiprocessing',
-                  verbose       = options.verbose,
-                  max_threads   = options.connections,
-                  protocol_args = protocol_args)
+    queue = Queue(domain      = options.default_domain,
+                  mode        = 'multiprocessing',
+                  verbose     = options.verbose,
+                  max_threads = options.connections)
     account_pool = queue.account_manager.default_pool
 
     # Read the account pool file.
@@ -218,10 +216,13 @@ def run():
             return template.eval(conn, *args, **kwargs)
 
     # Wrap the template processor such that the login procedure is automated.
+    protocol_args = {'debug': options.protocol_verbose}
     if options.no_authentication:
-        function = connect(function)
+        decorator = connect(protocol_args = protocol_args)
     else:
-        function = autologin(function, attempts = options.retry_login + 1)
+        attempts  = options.retry_login + 1
+        decorator = autologin(attempts = attempts, protocol_args = protocol_args)
+    function = decorator(function)
 
     if options.logdir:
         # Create the log directory.
@@ -245,7 +246,9 @@ def run():
         print "time expired, starting script."
 
     # Run the template.
-    queue.run(hosts, function, attempts = options.retry + 1)
+    for host in hosts:
+        cb = bind(function, host)
+        queue.enqueue(cb, host.get_name(), attempts = options.retry + 1)
     queue.join()
     failed = queue.failed
     queue.destroy()

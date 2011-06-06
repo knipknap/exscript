@@ -15,6 +15,9 @@
 """
 Decorators for callbacks passed to Queue.run().
 """
+from functools import partial
+from Exscript.AccountProxy import AccountProxy
+from Exscript.protocols import get_protocol_from_name
 from Exscript.protocols.Exception import LoginFailure
 
 def bind(function, *args, **kwargs):
@@ -31,7 +34,8 @@ def bind(function, *args, **kwargs):
     @rtype:  function
     @return: The wrapped function.
     """
-    def decorated(*inner_args):
+    def decorated(*inner_args, **inner_kwargs):
+        kwargs.update(inner_kwargs)
         return function(*(inner_args + args), **kwargs)
     return decorated
 
@@ -73,42 +77,75 @@ def os_function_mapper(job, host, conn, map, *args, **kwargs):
         raise Exception('No handler for %s found.' % os)
     return func(job, host, conn, *args, **kwargs)
 
-def connect(function):
+def _account_factory(accm, host, account):
+    if account is None:
+        account = host.get_account()
+
+    # Specific account requested?
+    if account:
+        account = AccountProxy.for_account_hash(accm, account.__hash__())
+    else:
+        account = AccountProxy.for_host_hash(accm, host.__hash__())
+
+    return account
+
+def connect(protocol_args = None):
     """
     Wraps the given function such that the connection is opened before
     calling it. Example::
 
+        @connect(protocol_args = {'debug': 1})
         def my_func(job, host, conn):
             pass # Do something.
-        Exscript.util.start.quickrun('myhost', connect(my_func))
+        Exscript.util.start.quickrun('myhost', my_func)
 
-    @type  function: function
-    @param function: The function that's ought to be wrapped.
+    @type  protocol_args: dict
+    @param protocol_args: Passed to the Exscript.protocol.Protocol constructor.
     @rtype:  function
     @return: The wrapped function.
     """
-    def decorated(job, host, conn, *args, **kwargs):
-        conn.connect(host.get_address(), host.get_tcp_port())
-        result = function(job, host, conn, *args, **kwargs)
-        conn.close(force = True)
-        return result
-    return decorated
+    if protocol_args is None:
+        protocol_args = {}
 
-def autologin(function, flush = True, attempts = 1):
+    def decorator(function):
+        def decorated(job, host, *args, **kwargs):
+            # Define the protocol options that were attached to the
+            # job by the queue.
+            pipe, stdout = job.data
+            mkaccount = partial(_account_factory, pipe, host)
+            protocol_args.setdefault('account_factory', mkaccount)
+            protocol_args.setdefault('stdout', stdout)
+
+            # Create a protocol adapter.
+            protocol_name = host.get_protocol()
+            protocol_cls  = get_protocol_from_name(protocol_name)
+            protocol      = protocol_cls(**protocol_args)
+
+            # Special case: Define the behaviour of the pseudo protocol
+            # adapter.
+            if protocol_name == 'pseudo':
+                filename = host.get_address()
+                protocol.device.add_commands_from_file(filename)
+
+            # Open the connection.
+            protocol.connect(host.get_address(), host.get_tcp_port())
+            result = function(job, host, protocol, *args, **kwargs)
+            protocol.close(force = True)
+            return result
+        return decorated
+    return decorator
+
+def autologin(flush = True, attempts = 1):
     """
-    Wraps the given function such that...
+    Wraps the given function such that conn.login() is executed
+    before calling it. Example::
 
-        - the connection is opened, and
-        - the user is logged in
-
-    before calling calling it. Example::
-
+        @connect(debug = 1)
+        @autologin(attempts = 2)
         def my_func(job, host, conn):
             pass # Do something.
-        Exscript.util.start.quickrun('myhost', autologin(my_func))
+        Exscript.util.start.quickrun('myhost', my_func)
 
-    @type  function: function
-    @param function: The function that's ought to be wrapped.
     @type  flush: bool
     @param flush: Whether to flush the last prompt from the buffer.
     @type  attempts: int
@@ -116,18 +153,18 @@ def autologin(function, flush = True, attempts = 1):
     @rtype:  function
     @return: The wrapped function.
     """
-    def decorated(job, host, conn, *args, **kwargs):
-        failed = 0
-        while True:
-            try:
-                conn.login(flush = flush)
-            except LoginFailure, e:
-                failed += 1
-                if failed >= attempts:
-                    raise
-                continue
-            break
-        result = function(job, host, conn, *args, **kwargs)
-        conn.close(force = True)
-        return result
-    return connect(decorated)
+    def decorator(function):
+        def decorated(job, host, conn, *args, **kwargs):
+            failed = 0
+            while True:
+                try:
+                    conn.login(flush = flush)
+                except LoginFailure, e:
+                    failed += 1
+                    if failed >= attempts:
+                        raise
+                    continue
+                break
+            return function(job, host, conn, *args, **kwargs)
+        return decorated
+    return decorator

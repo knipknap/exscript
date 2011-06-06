@@ -1,10 +1,13 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
+from functools import partial
 import Exscript.util.decorator
-from Exscript import Host
+from Exscript import Host, Account
+from Exscript.protocols import Protocol
 from Exscript.protocols.Exception import LoginFailure
 from util.reportTest import FakeJob
+from multiprocessing import Value
 
 class FakeConnection(object):
     def __init__(self, os = None):
@@ -34,16 +37,17 @@ class decoratorTest(unittest.TestCase):
 
     def bind_cb(self, job, host, conn, bound_arg1, bound_arg2, **kwargs):
         self.assert_(isinstance(job, FakeJob))
-        self.assert_(isinstance(conn, FakeConnection))
-        self.assert_(bound_arg1 == 'one', bound_arg1)
-        self.assert_(bound_arg2 == 'two', bound_arg2)
-        self.assert_(kwargs.get('three') == 3, kwargs.get('three'))
+        self.assert_(isinstance(conn, Protocol) or \
+                     isinstance(conn, FakeConnection))
+        self.assertEqual(bound_arg1, 'one')
+        self.assertEqual(bound_arg2, 'two')
+        self.assertEqual(kwargs.get('three'), 3)
         return 123
 
     def testBind(self):
         from Exscript.util.decorator import bind
         bound  = bind(self.bind_cb, 'one', 'two', three = 3)
-        result = bound(FakeJob(), Host('foo'), FakeConnection())
+        result = bound(FakeJob(), Host('dummy://foo'), Protocol())
         self.assert_(result == 123, result)
 
     def ios_cb(self, job, host, conn):
@@ -80,10 +84,9 @@ class decoratorTest(unittest.TestCase):
 
     def testConnect(self):
         from Exscript.util.decorator import connect
-        bound  = connect(self.connect_cb)
+        bound  = connect()(self.connect_cb)
         result = bound(FakeJob(),
-                       Host('foo'),
-                       FakeConnection(),
+                       Host('dummy://foo'),
                        'one',
                        'two',
                        three = 3)
@@ -98,7 +101,8 @@ class decoratorTest(unittest.TestCase):
         from Exscript.util.decorator import autologin
 
         # Test simple login.
-        bound  = autologin(self.autologin_cb, False)
+        decor  = autologin(flush = False)
+        bound  = decor(self.autologin_cb)
         result = bound(FakeJob(),
                        Host('dummy://foo'),
                        FakeConnection(),
@@ -109,14 +113,15 @@ class decoratorTest(unittest.TestCase):
 
         # Monkey patch the fake connection such that the login fails.
         conn = FakeConnection()
-        conn.data = 0
-        def fail(*args, **kwargs):
-            conn.data += 1
+        data = Value('i', 0)
+        def fail(data, *args, **kwargs):
+            data.value += 1
             raise LoginFailure('intended login failure')
-        conn.login = fail
+        conn.login = partial(fail, data)
 
         # Test retry functionality.
-        bound = autologin(self.autologin_cb, False, attempts = 5)
+        decor = autologin(flush = False, attempts = 5)
+        bound = decor(self.autologin_cb)
         job   = FakeJob()
         self.assertRaises(LoginFailure,
                           bound,
@@ -126,7 +131,7 @@ class decoratorTest(unittest.TestCase):
                           'one',
                           'two',
                           three = 3)
-        self.assertEqual(conn.data, 5)
+        self.assertEqual(data.value, 5)
 
     def testDeprecated(self):
         pass #not really needed.
