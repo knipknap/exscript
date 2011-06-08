@@ -17,9 +17,9 @@ Logging to the file system.
 """
 import os
 from Exscript.Logfile import Logfile
-from Exscript.Logger import _Logger, _LoggerManager, get_manager
+from Exscript.Logger import Logger
 
-class _FileLogger(_Logger):
+class FileLogger(Logger):
     """
     A Logger that stores logs into files.
     """
@@ -38,7 +38,7 @@ class _FileLogger(_Logger):
         the log in it. If you want to use the functions from
         L{Exscript.util.report} with the logger, clearmem must be False.
         """
-        _Logger.__init__(self)
+        Logger.__init__(self)
         self.logdir   = logdir
         self.mode     = mode
         self.delete   = delete
@@ -56,15 +56,11 @@ class _FileLogger(_Logger):
         return log
 
     def log_aborted(self, job_id, exc_info):
-        _Logger.log_aborted(self, job_id, exc_info)
+        Logger.log_aborted(self, job_id, exc_info)
         if self.clearmem:
             self.logs.pop(job_id)
 
     def log_succeeded(self, job_id):
-        _Logger.log_succeeded(self, job_id)
+        Logger.log_succeeded(self, job_id)
         if self.clearmem:
             self.logs.pop(job_id)
-
-_LoggerManager.register('FileLogger', _FileLogger)
-def FileLogger(*args, **kwargs):
-    return get_manager().FileLogger(*args, **kwargs)

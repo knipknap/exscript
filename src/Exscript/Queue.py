@@ -21,6 +21,7 @@ import gc
 import select
 import threading
 from multiprocessing import Pipe
+from Exscript.Logger import logger_registry
 from Exscript.parselib.Exception import CompileError
 from Exscript.interpreter.Exception import FailException
 from Exscript.util.cast import to_hosts
@@ -59,6 +60,12 @@ class _PipeHandler(threading.Thread):
                     account.get_key())
         self.to_child.send(response)
 
+    def _call_logger(self, funcname, logger_id, *args):
+        logger = logger_registry.get(logger_id)
+        if not logger:
+            return
+        return getattr(logger, funcname)(*args)
+
     def _handle_request(self, request):
         try:
             command, arg = request
@@ -73,6 +80,15 @@ class _PipeHandler(threading.Thread):
                 account = self.accm.get_account_from_hash(arg)
                 account.release()
                 self.to_child.send('ok')
+            elif command == 'log-add':
+                log = self._call_logger('add_log', *arg)
+                self.to_child.send(log)
+            elif command == 'log-message':
+                self._call_logger('log', *arg)
+            elif command == 'log-aborted':
+                self._call_logger('log_aborted', *arg)
+            elif command == 'log-succeeded':
+                self._call_logger('log_succeeded', *arg)
             else:
                 raise Exception('invalid command on pipe: ' + repr(command))
         except Exception, e:

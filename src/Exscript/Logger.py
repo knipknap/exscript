@@ -19,29 +19,10 @@ import weakref
 from itertools import chain, ifilter
 from collections import defaultdict
 from Exscript.Log import Log
-from multiprocessing.managers import BaseManager
 
-manager = None
+logger_registry = weakref.WeakValueDictionary() # Map id(logger) to Logger.
 
-class _LoggerManager(BaseManager):
-    pass
-
-def _create_manager():
-    global manager
-    themanager = _LoggerManager()
-    manager = weakref.ref(themanager)
-    themanager.start()
-    return themanager
-
-def get_manager():
-    if manager is None:
-        return _create_manager()
-    themanager = manager()
-    if themanager is None:
-        return _create_manager()
-    return themanager
-
-class _Logger(object):
+class Logger(object):
     """
     A QueueListener that implements logging for the queue.
     Logs are kept in memory, and not written to the disk.
@@ -52,6 +33,7 @@ class _Logger(object):
         Creates a new logger instance. Use the L{Exscript.util.log.log_to}
         decorator to send messages to the logger.
         """
+        logger_registry[id(self)] = self
         self.logs    = defaultdict(list)
         self.started = 0
         self.success = 0
@@ -108,7 +90,3 @@ class _Logger(object):
         log = self._get_log(job_id)
         log.succeeded()
         self.success += 1
-
-_LoggerManager.register('Logger', _Logger)
-def Logger(*args, **kwargs):
-    return get_manager().Logger(*args, **kwargs)

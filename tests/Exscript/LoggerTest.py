@@ -6,7 +6,7 @@ from itertools import islice
 from tempfile import mkdtemp
 from shutil import rmtree
 from Exscript.Log import Log
-from Exscript.Logger import _Logger as Logger
+from Exscript.Logger import Logger
 from LogTest import FakeError
 from util.reportTest import FakeJob
 

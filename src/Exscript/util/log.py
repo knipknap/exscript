@@ -16,8 +16,11 @@
 Logging utilities.
 """
 from functools import partial
-from Exscript.Logger import get_manager
+from Exscript.FileLogger import FileLogger
+from Exscript.LoggerProxy import LoggerProxy
 from Exscript.util.impl import serializeable_sys_exc_info
+
+_loggers = []
 
 def log_to(logger):
     """
@@ -27,18 +30,23 @@ def log_to(logger):
     @type  logger: Logger
     @param logger: The logger that handles the logging.
     """
+    logger_id = id(logger)
+    del logger
+
     def decorator(function):
         def decorated(job, host, conn, *args, **kwargs):
-            logger.add_log(id(job), job.name, job.failures + 1)
-            log_cb = partial(logger.log, id(job))
+            to_parent, stdout = job.data
+            proxy = LoggerProxy(to_parent, logger_id)
+            proxy.add_log(id(job), job.name, job.failures + 1)
+            log_cb = partial(proxy.log, id(job))
             conn.data_received_event.listen(log_cb)
             try:
                 result = function(job, host, conn, *args, **kwargs)
             except:
-                logger.log_aborted(id(job), serializeable_sys_exc_info())
+                proxy.log_aborted(id(job), serializeable_sys_exc_info())
                 raise
             else:
-                logger.log_succeeded(id(job))
+                proxy.log_succeeded(id(job))
             finally:
                 conn.data_received_event.disconnect(log_cb)
             return result
@@ -49,7 +57,9 @@ def log_to_file(logdir, mode = 'a', delete = False, clearmem = True):
     """
     Like L{log_to()}, but automatically creates a new FileLogger
     instead of having one passed.
+    Note that the logger stays alive (in memory) forever. If you need
+    to control the lifetime of a logger, use L{log_to()} instead.
     """
-    manager = get_manager()
-    logger  = manager.FileLogger(logdir, mode, delete, clearmem)
+    logger = FileLogger(logdir, mode, delete, clearmem)
+    loggers.append(logger)
     return log_to(logger)

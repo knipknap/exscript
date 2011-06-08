@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from tempfile import mkdtemp
 from shutil import rmtree
 from Exscript import Host
-from Exscript.FileLogger import _FileLogger as FileLogger
+from Exscript.FileLogger import FileLogger
 from LoggerTest import LoggerTest, FakeJob
 
 class FakeError(Exception):
