@@ -98,7 +98,6 @@ class MainLoop(threading.Thread):
         if name is None:
             name = str(id(function))
         job = self.job_cls(function, name, times, data)
-        self.job_init_event(job)
         return job
 
     def enqueue(self, function, name, times, data):
@@ -240,6 +239,8 @@ class MainLoop(threading.Thread):
 
     def _start_job(self, job, notify = True):
         with self.condition:
+            if notify:
+                self.job_init_event(job)
             self.running_jobs.append(job)
             watcher = _ChildWatcher(job, self._on_job_completed)
             self.watchers[id(job)] = watcher
