@@ -61,5 +61,5 @@ def log_to_file(logdir, mode = 'a', delete = False, clearmem = True):
     to control the lifetime of a logger, use L{log_to()} instead.
     """
     logger = FileLogger(logdir, mode, delete, clearmem)
-    loggers.append(logger)
+    _loggers.append(logger)
     return log_to(logger)

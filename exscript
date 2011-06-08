@@ -216,14 +216,12 @@ def run():
             return template.eval(conn, *args, **kwargs)
 
     # Wrap the template processor such that the login procedure is automated.
-    protocol_args = {'debug': options.protocol_verbose}
-    if options.no_authentication:
-        decorator = connect(protocol_args = protocol_args)
-    else:
+    if not options.no_authentication:
         attempts  = options.retry_login + 1
-        decorator = autologin(attempts = attempts, protocol_args = protocol_args)
-    function = decorator(function)
+        decorator = autologin(attempts = attempts)
+        function  = decorator(function)
 
+    # Wrap the template processor such that logging is enabled.
     if options.logdir:
         # Create the log directory.
         if not os.path.exists(options.logdir):
@@ -237,6 +235,11 @@ def run():
         mode      = options.overwrite_logs and 'w' or 'a'
         decorator = log_to_file(options.logdir, mode, options.delete_logs)
         function  = decorator(function)
+
+    # Wrap the template processor such that the connection is opened.
+    protocol_args = {'debug': options.protocol_verbose}
+    decorator     = connect(protocol_args = protocol_args)
+    function      = decorator(function)
 
     # Wait until the specified time.
     if options.sleep:
