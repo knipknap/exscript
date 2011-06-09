@@ -28,7 +28,7 @@ class AccountProxy(object):
         """
         self.parent                 = parent
         self.account_hash           = None
-        self.host                   = None
+        self.host_hash              = None
         self.user                   = None
         self.password               = None
         self.authorization_password = None
@@ -77,13 +77,10 @@ class AccountProxy(object):
         """
         if self.thread_local:
             return False
-        if self.account_hash:
-            self.parent.send(('acquire-account', self.account_hash))
-        elif self.host:
-            host = self.host.__copy__()
-            self.parent.send(('acquire-account-for-host', host))
+        if self.host_hash:
+            self.parent.send(('acquire-account-for-host', self.host_hash))
         else:
-            raise Exception('bug: have neither account nor host')
+            self.parent.send(('acquire-account', self.account_hash))
 
         response = self.parent.recv()
         if isinstance(response, Exception):
