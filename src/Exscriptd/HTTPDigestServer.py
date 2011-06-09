@@ -73,84 +73,99 @@ else:
     def md5hex(x):
         return hashlib.md5(x).hexdigest()
 
-def require_authenticate(func):
+def _error_401(handler, msg):
+    handler.send_response(401)
+    realm = handler.server.realm
+    nonce = (u"%d:%s" % (time.time(), realm)).encode('utf8')
+    handler.send_header('WWW-Authenticate',
+                        'Digest realm="%s",'
+                        'qop="auth",'
+                        'algorithm="MD5",'
+                        'nonce="%s"' % (realm, nonce))
+    handler.end_headers()
+    handler.rfile.read()
+    handler.rfile.close()
+    handler.wfile.write(msg.encode('utf8'))
+    handler.wfile.close()
+
+def _require_authenticate(func):
     '''A decorator to add digest authorization checks to HTTP Request Handlers'''
 
     def wrapped(self):
         if not hasattr(self, 'authenticated'):
             self.authenticated = None
+        if self.authenticated:
+            return func(self)
 
         auth = self.headers.get(u'Authorization')
-        if not self.authenticated and auth is not None:
-            token, fields = auth.split(' ', 1)
-            if token == 'Digest':
-                cred = parse_http_list(fields)
-                cred = parse_keqv_list(cred)
-
-                # The request must contain all these keys to
-                # constitute a valid response.
-                keys = u'realm username nonce uri response'.split()
-                if not all(cred.get(key) for key in keys):
-                    self.authenticated = False
-                elif cred['realm'] != self.server.realm \
-                  or cred['username'] not in self.server.accounts:
-                    self.authenticated = False
-                elif 'qop' in cred and ('nc' not in cred or 'cnonce' not in cred):
-                    self.authenticated = False
-                else:
-                    location = u'%s:%s' % (self.command, self.path)
-                    location = location.encode('utf8')
-                    location = md5hex(location)
-                    password = self.server.get_password(cred['username'])
-                    if 'qop' in cred:
-                        info = (cred['nonce'],
-                                cred['nc'],
-                                cred['cnonce'],
-                                cred['qop'],
-                                location)
-                    else:
-                        info = cred['nonce'], location
-
-                    expect = u'%s:%s' % (password, ':'.join(info))
-                    expect = md5hex(expect.encode('utf8'))
-                    self.authenticated = (expect == cred['response'])
-                    if self.authenticated:
-                        self.crunchy_username = cred['username']
-
-        if self.authenticated is None:
+        if auth is None:
             msg = u"You are not allowed to access this page. Please login first!"
-        elif self.authenticated is False:
-            msg = u"Authenticated Failed"
-        if not self.authenticated :
-            self.send_response(401)
-            nonce = (u"%d:%s" % (time.time(), self.server.realm)).encode('utf8')
-            self.send_header('WWW-Authenticate',
-                             'Digest realm="%s",'
-                             'qop="auth",'
-                             'algorithm="MD5",'
-                             'nonce="%s"' % (self.server.realm, nonce))
-            self.end_headers()
-            self.rfile.read()
-            self.rfile.close()
-            self.wfile.write(msg.encode('utf8'))
-            self.wfile.close()
+            return _error_401(self, msg)
+
+        token, fields = auth.split(' ', 1)
+        if token != 'Digest':
+            return _error_401(self, 'Unsupported authentication type')
+
+        # Check the header fields of the request.
+        cred = parse_http_list(fields)
+        cred = parse_keqv_list(cred)
+        keys = u'realm', u'username', u'nonce', u'uri', u'response'
+        if not all(cred.get(key) for key in keys):
+            return _error_401(self, 'Incomplete authentication header')
+        if cred['realm'] != self.server.realm:
+            return _error_401(self, 'Incorrect realm')
+        if 'qop' in cred and ('nc' not in cred or 'cnonce' not in cred):
+            return _error_401(self, 'qop with missing nc or cnonce')
+
+        # Check the username.
+        username = cred['username']
+        password = self.server.get_password(username)
+        if not username or password is None:
+            return _error_401(self, 'Invalid username or password')
+
+        # Check the digest string.
+        location = u'%s:%s' % (self.command, self.path)
+        location = md5hex(location.encode('utf8'))
+        pwhash   = md5hex('%s:%s:%s' % (username, self.server.realm, password))
+
+        if 'qop' in cred:
+            info = (cred['nonce'],
+                    cred['nc'],
+                    cred['cnonce'],
+                    cred['qop'],
+                    location)
         else:
-            return func(self)
+            info = cred['nonce'], location
+
+        expect = u'%s:%s' % (pwhash, ':'.join(info))
+        expect = md5hex(expect.encode('utf8'))
+        if expect != cred['response']:
+            return _error_401(self, 'Invalid username or password')
+
+        # Success!
+        self.authenticated = True
+        return func(self)
 
     return wrapped
 
 
 class HTTPServer(ThreadingMixIn, PyHTTPServer):
     daemon_threads = True
-    accounts = {}
 
     def __init__(self, addr, rqh, user_data):
         self.debug           = False
         self.realm           = default_realm
         self.default_handler = None
+        self.accounts        = {}
         self.handler_table   = {}
         self.user_data       = user_data
         PyHTTPServer.__init__(self, addr, rqh)
+
+    def add_account(self, user, password):
+        self.accounts[user] = password
+
+    def get_password(self, username):
+        return self.accounts.get(username)
 
     def register_default_handler(self, handler):
         """register a default handler"""
@@ -169,12 +184,6 @@ class HTTPServer(ThreadingMixIn, PyHTTPServer):
         and should have as their docstring the path they want to handle
         """
         pass
-
-    def get_password(self, username):
-        plain = self.accounts.get(username)
-        if not plain:
-            return None
-        return md5hex('%s:%s:%s' % (username, self.realm, plain))
 
     def _dbg(self, msg):
         if self.debug:
@@ -294,11 +303,11 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(format_exc().encode('utf8'))
 
-    @require_authenticate
+    @_require_authenticate
     def do_POST(self):
         self.do_POSTGET(self.handle_POST)
 
-    @require_authenticate
+    @_require_authenticate
     def do_GET(self):
         self.do_POSTGET(self.handle_GET)
 
@@ -319,7 +328,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 if __name__ == '__main__':
     try:
         server = HTTPServer(('', 8123), HTTPRequestHandler)
-        server.accounts['test'] = 'fo'
+        server.add_account('test', 'fo')
         print 'started httpserver...'
         server.serve_forever()
     except KeyboardInterrupt:

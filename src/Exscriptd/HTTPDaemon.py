@@ -177,7 +177,7 @@ class HTTPDaemon(Daemon):
     def add_account(self, account):
         user     = account.get_name()
         password = account.get_password()
-        self.server.accounts[user] = password
+        self.server.add_account(user, password)
 
     def run(self):
         address  = (self.address or '*') + ':' + str(self.port)
