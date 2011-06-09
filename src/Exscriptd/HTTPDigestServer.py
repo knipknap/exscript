@@ -36,18 +36,19 @@ import email.message
 import sys
 import time
 import urllib
+from urlparse import urlparse
+from traceback import format_exc
 from BaseHTTPServer import BaseHTTPRequestHandler
 from BaseHTTPServer import HTTPServer as PyHTTPServer
+from SocketServer import ThreadingMixIn
 
-python_version = sys.version_info[0] + sys.version_info[1]/10.0
+_python_version = sys.version_info[0] + sys.version_info[1]/10.0
+default_realm = 'exscript'
 
 if sys.version_info < (2, 6):
     from cgi import parse_qs
 else:
     from urlparse import parse_qs
-from SocketServer import ThreadingMixIn
-from urlparse import urlparse
-from traceback import format_exc
 
 # Selective imports only for urllib2 because 2to3 will not replace the
 # urllib2.<method> calls below. Also, 2to3 will throw an error if we
@@ -59,15 +60,11 @@ if sys.version_info[0] < 3:
 else:
     from urllib.request import parse_http_list, parse_keqv_list
 
-DEBUG = False
-
-realm = "exscriptd"
-
 # This is convoluted because there's no way to tell 2to3 to insert a
 # byte literal.
 HEADER_NEWLINES = [x.encode('ascii') for x in (u'\r\n', u'\n', u'')]
 
-if python_version < 2.5:
+if _python_version < 2.5:
     import md5
     def md5hex(x):
         return md5.md5(x).hexdigest()
@@ -95,7 +92,7 @@ def require_authenticate(func):
                 keys = u'realm username nonce uri response'.split()
                 if not all(cred.get(key) for key in keys):
                     self.authenticated = False
-                elif cred['realm'] != realm \
+                elif cred['realm'] != self.server.realm \
                   or cred['username'] not in self.server.accounts:
                     self.authenticated = False
                 elif 'qop' in cred and ('nc' not in cred or 'cnonce' not in cred):
@@ -126,12 +123,12 @@ def require_authenticate(func):
             msg = u"Authenticated Failed"
         if not self.authenticated :
             self.send_response(401)
-            nonce = (u"%d:%s" % (time.time(), realm)).encode('utf8')
+            nonce = (u"%d:%s" % (time.time(), self.server.realm)).encode('utf8')
             self.send_header('WWW-Authenticate',
                              'Digest realm="%s",'
                              'qop="auth",'
                              'algorithm="MD5",'
-                             'nonce="%s"' % (realm, nonce))
+                             'nonce="%s"' % (self.server.realm, nonce))
             self.end_headers()
             self.rfile.read()
             self.rfile.close()
@@ -148,6 +145,8 @@ class HTTPServer(ThreadingMixIn, PyHTTPServer):
     accounts = {}
 
     def __init__(self, addr, rqh, user_data):
+        self.debug           = False
+        self.realm           = default_realm
         self.default_handler = None
         self.handler_table   = {}
         self.user_data       = user_data
@@ -175,20 +174,21 @@ class HTTPServer(ThreadingMixIn, PyHTTPServer):
         plain = self.accounts.get(username)
         if not plain:
             return None
-        return md5hex('%s:%s:%s' % (username, realm, plain))
+        return md5hex('%s:%s:%s' % (username, self.realm, plain))
+
+    def _dbg(self, msg):
+        if self.debug:
+            print(msg)
 
     def get_handler(self, path):
         """returns none if no handler registered"""
-        if DEBUG:
-            print("entering get_handler")
+        self._dbg("entering get_handler")
         if path in self.handler_table:
-            if DEBUG:
-                print("path %s in self.handler_table."%path)
-                print("self.handler_table[path] = %s" % self.handler_table[path])
+            self._dbg("path %s in self.handler_table."%path)
+            self._dbg("self.handler_table[path] = %s" % self.handler_table[path])
             return self.handler_table[path]
         else:
-            if DEBUG:
-                print("path %s NOT in self.handler_table."%path)
+            self._dbg("path %s NOT in self.handler_table."%path)
             return self.default_handler
 
 def parse_headers(fp, _class=email.message.Message):
@@ -265,8 +265,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
     def do_POSTGET(self, handler):
         """handle an HTTP request"""
         # at first, assume that the given path is the actual path and there are no arguments
-        if DEBUG:
-            print(self.path)
+        self.server._dbg(self.path)
 
         self.path, self.args = parse_url(self.path)
 
@@ -287,8 +286,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             self.data = None
 
         # Run the handler.
-        if DEBUG:
-            print(u"Preparing to call get_handler in do_POST")
+        self.server._dbg(u"Preparing to call get_handler in do_POST")
         try:
             handler()
         except:

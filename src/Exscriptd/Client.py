@@ -16,13 +16,13 @@
 Places orders and requests the status from a server.
 """
 import json
-from datetime                   import datetime
-from urllib                     import urlencode
-from urllib2                    import HTTPDigestAuthHandler, build_opener, HTTPError
-from lxml                       import etree
-from Exscriptd.HTTPDigestServer import realm
-from Exscriptd.Order            import Order
-from Exscriptd.Task             import Task
+from datetime import datetime
+from urllib import urlencode
+from urllib2 import HTTPDigestAuthHandler, build_opener, HTTPError
+from lxml import etree
+from Exscriptd.HTTPDigestServer import default_realm
+from Exscriptd.Order import Order
+from Exscriptd.Task import Task
 
 class Client(object):
     """
@@ -45,7 +45,7 @@ class Client(object):
         self.address = 'http://' + address
         self.handler = HTTPDigestAuthHandler()
         self.opener  = build_opener(self.handler)
-        self.handler.add_password(realm  = realm,
+        self.handler.add_password(realm  = default_realm,
                                   uri    = self.address,
                                   user   = user,
                                   passwd = password)
