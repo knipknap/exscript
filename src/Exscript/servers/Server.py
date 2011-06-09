@@ -21,9 +21,9 @@ from multiprocessing import Process, Pipe
 
 class Server(Process):
     """
-    Base class of all servers. Servers are intended to be used for
-    tests and attempt to emulate a device using the behavior of the
-    associated L{Exscript.emulators.VirtualDevice}. Sample usage::
+    Base class of the Telnet and SSH servers. Servers are intended to be
+    used for tests and attempt to emulate a device using the behavior of
+    the associated L{Exscript.emulators.VirtualDevice}. Sample usage::
 
         device = VirtualDevice('myhost')
         daemon = Telnetd('localhost', 1234, device)
@@ -32,16 +32,19 @@ class Server(Process):
         daemon.start() # Start the server.
         daemon.exit()  # Stop the server.
         daemon.join()  # Wait until it terminates.
-
-    @type  host: str
-    @param host: The address against whcih the daemon binds.
-    @type  port: str
-    @param port: The TCP port on which to listen.
-    @type  device: VirtualDevice
-    @param device: A virtual device instance.
     """
 
     def __init__(self, host, port, device):
+        """
+        Constructor.
+
+        @type  host: str
+        @param host: The address against which the daemon binds.
+        @type  port: str
+        @param port: The TCP port on which to listen.
+        @type  device: VirtualDevice
+        @param device: A virtual device instance.
+        """
         Process.__init__(self, target = self._run)
         self.host    = host
         self.port    = int(port)
