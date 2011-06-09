@@ -452,18 +452,19 @@ class Queue(object):
         @type  force: bool
         @param force: Whether to wait until all jobs were processed.
         """
-        if not force:
-            self.join()
-
-        self._dbg(2, 'Destroying queue...')
-        self.workqueue.shutdown(False)
-        self.account_manager.reset()
-        self.completed         = 0
-        self.total             = 0
-        self.failed            = 0
-        self.status_bar_length = 0
-        self._dbg(2, 'Queue destroyed.')
-        self._del_status_bar()
+        try:
+            if not force:
+                self.join()
+        finally:
+            self._dbg(2, 'Destroying queue...')
+            self.workqueue.shutdown(False)
+            self.account_manager.reset()
+            self.completed         = 0
+            self.total             = 0
+            self.failed            = 0
+            self.status_bar_length = 0
+            self._dbg(2, 'Queue destroyed.')
+            self._del_status_bar()
 
     def reset(self):
         """
