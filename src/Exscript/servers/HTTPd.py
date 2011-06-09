@@ -21,7 +21,7 @@ import urllib
 from urlparse import urlparse
 from traceback import format_exc
 from BaseHTTPServer import BaseHTTPRequestHandler
-from BaseHTTPServer import HTTPServer as PyHTTPServer
+from BaseHTTPServer import HTTPServer
 from SocketServer import ThreadingMixIn
 
 if sys.version_info < (2, 5):
@@ -53,6 +53,29 @@ default_realm = 'exscript'
 # This is convoluted because there's no way to tell 2to3 to insert a
 # byte literal.
 _HEADER_NEWLINES = [x.encode('ascii') for x in (u'\r\n', u'\n', u'')]
+
+def _parse_url(path):
+    """Given a urlencoded path, returns the path and the dictionary of
+    query arguments, all in Unicode."""
+
+    # path changes from bytes to Unicode in going from Python 2 to
+    # Python 3.
+    if sys.version_info[0] < 3:
+        o = urlparse(urllib.unquote_plus(path).decode('utf8'))
+    else:
+        o = urlparse(urllib.unquote_plus(path))
+
+    path = o.path
+    args = {}
+
+    # Convert parse_qs' str --> [str] dictionary to a str --> str
+    # dictionary since we never use multi-value GET arguments
+    # anyway.
+    multiargs = parse_qs(o.query, keep_blank_values=True)
+    for arg, value in multiargs.items():
+        args[arg] = value[0]
+
+    return path, args
 
 def _error_401(handler, msg):
     handler.send_response(401)
@@ -129,88 +152,78 @@ def _require_authenticate(func):
 
     return wrapped
 
+class HTTPd(ThreadingMixIn, HTTPServer):
+    """
+    An HTTP server, derived from Python's HTTPServer but with added
+    support for HTTP/Digest. Usage::
 
-class HTTPServer(ThreadingMixIn, PyHTTPServer):
+        from Exscript.servers import HTTPd, RequestHandler
+        class MyHandler(RequestHandler):
+            def handle_GET(self):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write('You opened ' + self.path)
+
+        server = HTTPd(('', 8080), MyHandler)
+        server.add_account('testuser', 'testpassword')
+        print 'started httpserver...'
+        server.serve_forever()
+    """
     daemon_threads = True
 
-    def __init__(self, addr, rqh, user_data):
-        self.debug           = False
-        self.realm           = default_realm
-        self.default_handler = None
-        self.accounts        = {}
-        self.handler_table   = {}
-        self.user_data       = user_data
-        PyHTTPServer.__init__(self, addr, rqh)
+    def __init__(self, addr, handler_cls, user_data = None):
+        """
+        Constructor.
 
-    def add_account(self, user, password):
-        self.accounts[user] = password
+        @type  address: (str, int)
+        @param address: The address and port number on which to bind.
+        @type  handler_cls: L{RequestHandler}
+        @param handler_cls: The RequestHandler to use.
+        @type  user_data: object
+        @param user_data: Optional data that, stored in self.user_data.
+        """
+        self.debug     = False
+        self.realm     = default_realm
+        self.accounts  = {}
+        self.user_data = user_data
+        HTTPServer.__init__(self, addr, handler_cls)
+
+    def add_account(self, username, password):
+        """
+        Adds a username/password pair that HTTP clients may use to log in.
+
+        @type  username: str
+        @param username: The name of the user.
+        @type  password: str
+        @param password: The user's password.
+        """
+        self.accounts[username] = password
 
     def get_password(self, username):
+        """
+        Returns the password of the user with the given name.
+
+        @type  username: str
+        @param username: The name of the user.
+        """
         return self.accounts.get(username)
-
-    def register_default_handler(self, handler):
-        """register a default handler"""
-        self.default_handler = handler
-
-    def register_handler(self, path, handler):
-        """
-        register a handler function
-        the function should be of the form: handler(request)
-        """
-        self.handler_table[path] = handler
-
-    def register_handler_instance(self, handlerinstance):
-        """register a handler class instance,
-        the instance functions should be of the form: class.handler(self, request)
-        and should have as their docstring the path they want to handle
-        """
-        pass
 
     def _dbg(self, msg):
         if self.debug:
             print(msg)
 
-    def get_handler(self, path):
-        """returns none if no handler registered"""
-        self._dbg("entering get_handler")
-        if path in self.handler_table:
-            self._dbg("path %s in self.handler_table."%path)
-            self._dbg("self.handler_table[path] = %s" % self.handler_table[path])
-            return self.handler_table[path]
-        else:
-            self._dbg("path %s NOT in self.handler_table."%path)
-            return self.default_handler
+class RequestHandler(BaseHTTPRequestHandler):
+    """
+    A drop-in replacement for Python's BaseHTTPRequestHandler that
+    handles HTTP/Digest.
+    """
 
-def parse_url(path):
-    """Given a urlencoded path, returns the path and the dictionary of
-    query arguments, all in Unicode."""
-
-    # path changes from bytes to Unicode in going from Python 2 to
-    # Python 3.
-    if sys.version_info[0] < 3:
-        o = urlparse(urllib.unquote_plus(path).decode('utf8'))
-    else:
-        o = urlparse(urllib.unquote_plus(path))
-
-    path = o.path
-    args = {}
-
-    # Convert parse_qs' str --> [str] dictionary to a str --> str
-    # dictionary since we never use multi-value GET arguments
-    # anyway.
-    multiargs = parse_qs(o.query, keep_blank_values=True)
-    for arg, value in multiargs.items():
-        args[arg] = value[0]
-
-    return path, args
-
-class HTTPRequestHandler(BaseHTTPRequestHandler):
-    def do_POSTGET(self, handler):
+    def _do_POSTGET(self, handler):
         """handle an HTTP request"""
         # at first, assume that the given path is the actual path and there are no arguments
         self.server._dbg(self.path)
 
-        self.path, self.args = parse_url(self.path)
+        self.path, self.args = _parse_url(self.path)
 
         # Extract POST data, if any. Clumsy syntax due to Python 2 and
         # 2to3's lack of a byte literal.
@@ -219,9 +232,8 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         if length and length.isdigit():
             self.data = self.rfile.read(int(length))
 
-        # POST data gets automatically decoded into Unicode because
-        # much of Crunchy's code assumes this. The bytestring will
-        # still be available in the bdata attribute.
+        # POST data gets automatically decoded into Unicode. The bytestring
+        # will still be available in the bdata attribute.
         self.bdata = self.data
         try:
             self.data = self.data.decode('utf8')
@@ -229,7 +241,6 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             self.data = None
 
         # Run the handler.
-        self.server._dbg(u"Preparing to call get_handler in do_POST")
         try:
             handler()
         except:
@@ -239,29 +250,46 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
     @_require_authenticate
     def do_POST(self):
-        self.do_POSTGET(self.handle_POST)
+        """
+        Do not overwrite; instead, overwrite handle_POST().
+        """
+        self._do_POSTGET(self.handle_POST)
 
     @_require_authenticate
     def do_GET(self):
-        self.do_POSTGET(self.handle_GET)
+        """
+        Do not overwrite; instead, overwrite handle_GET().
+        """
+        self._do_POSTGET(self.handle_GET)
 
     def handle_POST(self):
+        """
+        Overwrite this method to handle a POST request. The default
+        action is to respond with "error 404 (not found)".
+        """
         self.send_response(404)
         self.end_headers()
         self.wfile.write('not found'.encode('utf8'))
 
     def handle_GET(self):
+        """
+        Overwrite this method to handle a GET request. The default
+        action is to respond with "error 404 (not found)".
+        """
         self.send_response(404)
         self.end_headers()
         self.wfile.write('not found'.encode('utf8'))
 
     def send_response(self, code):
+        """
+        See Python's BaseHTTPRequestHandler.send_response().
+        """
         BaseHTTPRequestHandler.send_response(self, code)
         self.send_header("Connection", "close")
 
 if __name__ == '__main__':
     try:
-        server = HTTPServer(('', 8123), HTTPRequestHandler)
+        server = HTTPd(('', 8123), RequestHandler)
         server.add_account('test', 'fo')
         print 'started httpserver...'
         server.serve_forever()

@@ -14,13 +14,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
 import json
-from traceback                  import format_exc
-from urlparse                   import parse_qs
-from lxml                       import etree
-from Exscript                   import Host
-from Exscriptd.HTTPDigestServer import HTTPRequestHandler, HTTPServer
-from Exscriptd.Daemon           import Daemon
-from Exscriptd.Order            import Order
+from traceback import format_exc
+from urlparse import parse_qs
+from lxml import etree
+from Exscript import Host
+from Exscript.servers.HTTPd import HTTPd, RequestHandler
+from Exscriptd.Daemon import Daemon
+from Exscriptd.Order import Order
 
 """
 URL list:
@@ -44,7 +44,7 @@ To test with curl:
   curl --digest --user exscript-http:exscript-http --data @postorder localhost:8123/order/
 """
 
-class HTTPHandler(HTTPRequestHandler):
+class HTTPHandler(RequestHandler):
     def get_response(self):
         data = parse_qs(self.data)
         if self.path == '/order/':
@@ -172,7 +172,7 @@ class HTTPDaemon(Daemon):
         self.address = address
         self.port    = port
         addr         = self.address, self.port
-        self.server  = HTTPServer(addr, HTTPHandler, self)
+        self.server  = HTTPd(addr, HTTPHandler, self)
 
     def add_account(self, account):
         user     = account.get_name()

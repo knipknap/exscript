@@ -20,7 +20,7 @@ from datetime import datetime
 from urllib import urlencode
 from urllib2 import HTTPDigestAuthHandler, build_opener, HTTPError
 from lxml import etree
-from Exscriptd.HTTPDigestServer import default_realm
+from Exscript.servers.HTTPd import default_realm
 from Exscriptd.Order import Order
 from Exscriptd.Task import Task
 
