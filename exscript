@@ -241,7 +241,9 @@ def run():
     decorator     = connect(protocol_args = protocol_args)
     function      = decorator(function)
 
-    # Wait until the specified time.
+    # Wait until the specified time. We are using os.system because
+    # it allows for specifying absolute times, not just the number
+    # of seconds like Python's time.sleep().
     if options.sleep:
         print "Waiting for %s..." % options.sleep,
         sys.stdout.flush()
