@@ -42,8 +42,14 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 from BaseHTTPServer import HTTPServer as PyHTTPServer
 from SocketServer import ThreadingMixIn
 
-_python_version = sys.version_info[0] + sys.version_info[1]/10.0
-default_realm = 'exscript'
+if sys.version_info < (2, 5):
+    import md5
+    def md5hex(x):
+        return md5.md5(x).hexdigest()
+else:
+    import hashlib
+    def md5hex(x):
+        return hashlib.md5(x).hexdigest()
 
 if sys.version_info < (2, 6):
     from cgi import parse_qs
@@ -60,18 +66,11 @@ if sys.version_info[0] < 3:
 else:
     from urllib.request import parse_http_list, parse_keqv_list
 
+default_realm = 'exscript'
+
 # This is convoluted because there's no way to tell 2to3 to insert a
 # byte literal.
-HEADER_NEWLINES = [x.encode('ascii') for x in (u'\r\n', u'\n', u'')]
-
-if _python_version < 2.5:
-    import md5
-    def md5hex(x):
-        return md5.md5(x).hexdigest()
-else:
-    import hashlib
-    def md5hex(x):
-        return hashlib.md5(x).hexdigest()
+_HEADER_NEWLINES = [x.encode('ascii') for x in (u'\r\n', u'\n', u'')]
 
 def _error_401(handler, msg):
     handler.send_response(401)
