@@ -1,38 +1,20 @@
+# Copyright (C) 2011 Samuel Abels.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-Copyright (c) 2006, 2007 Andre Roberge and Johannes Woolard
-              2010 Samuel Abels (removed Crunchy dependencies)
-
-Permission is hereby granted, free of charge, to any person 
-obtaining a copy of this software and associated documentation 
-files (the "Software"), to deal in the Software without restriction, 
-including without limitation the rights to use, copy, modify, merge, 
-publish, distribute, sublicense, and/or sell copies of the Software, 
-and to permit persons to whom the Software is furnished to do so, 
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be 
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
-BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
-ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
-SOFTWARE.
+A threaded HTTP server with support for HTTP/Digest authentication.
 """
-"""
-serve HTTP in a beautiful threaded way, allowing requests to branch
-off into new threads and handling URLs automagically
-This was built for Crunchy - and it rocks!
-In some ways it is more restrictive than the default python HTTPserver -
-for instance, it can only handle GET and POST requests and actually
-treats them the same.
-"""
-
-import email
-import email.message
 import sys
 import time
 import urllib
@@ -199,41 +181,6 @@ class HTTPServer(ThreadingMixIn, PyHTTPServer):
             self._dbg("path %s NOT in self.handler_table."%path)
             return self.default_handler
 
-def parse_headers(fp, _class=email.message.Message):
-    """Parses only RFC2822 headers from a file pointer.
-
-    This code is taken directly from the Python 3 stdlib, adapted for
-    2to3. Returns a dictionary of unicode strings mapping to unicode
-    strings.
-    """
-    headers = []
-    while True:
-        line = fp.readline()
-        headers.append(line)
-        if line in HEADER_NEWLINES:
-            break
-
-    hbytes = u''.encode('ascii').join(headers)
-
-    # It turns out that in Python 3, email.Parser requires Unicode.
-    # Unfortunately,in Python 2, email.Parser refuses to handle
-    # Unicode and returns an empty object. We have to make sure that
-    # parse_headers returns Unicode in both Python 2 and Python 3. The
-    # easiest way is to throw away the email.message.Message interface
-    # and just return a dict instead, which lets us massage the bytes
-    # into Unicode.
-
-    # iso-8559-1 encoding taken from http/client.py, where this
-    # function was stolen from.
-    E = 'iso-8859-1'
-
-    if sys.version_info[0] < 3:
-        items = email.message_from_string(hbytes).items()
-        return dict((k.decode(E), v.decode(E)) for k, v in items)
-
-    hstring = hbytes.decode(E)
-    return dict(email.message_from_string(hstring))
-
 def parse_url(path):
     """Given a urlencoded path, returns the path and the dictionary of
     query arguments, all in Unicode."""
@@ -257,19 +204,7 @@ def parse_url(path):
 
     return path, args
 
-def message_wrapper(self, fp, irrelevant):
-    return parse_headers(fp)
-
 class HTTPRequestHandler(BaseHTTPRequestHandler):
-    # In Python 3, BaseHTTPRequestHandler went from using the
-    # deprecated mimetools.Message class to the new
-    # email.message.Message class for self.headers. Unfortunately, the
-    # two APIs are not compatible. Fortunately, there's an API in
-    # place to fiddle with the class that's chosen. Here we force
-    # Python 2 to adopt email.message.Message.
-    if sys.version_info[0] < 3:
-        MessageClass = message_wrapper
-
     def do_POSTGET(self, handler):
         """handle an HTTP request"""
         # at first, assume that the given path is the actual path and there are no arguments
