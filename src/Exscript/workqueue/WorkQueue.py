@@ -247,9 +247,9 @@ class WorkQueue(object):
 
     def shutdown(self, restart = True):
         """
-        Stop the execution of enqueued jobs, and terminate any running
-        jobs. This method is synchronous and returns as soon as all jobs
-        are terminated (i.e. all threads are stopped).
+        Stop the execution of enqueued jobs, and wait for all running
+        jobs to complete. This method is synchronous and returns as soon
+        as all jobs are terminated (i.e. all threads are stopped).
 
         If restart is True, the workqueue is restarted and paused,
         so you may fill it with new jobs.
@@ -266,6 +266,16 @@ class WorkQueue(object):
         self.main_loop = None
         if restart:
             self._init()
+
+    def destroy(self):
+        """
+        Like shutdown(), but does not restart the queue and does not
+        wait for already started jobs to complete.
+        """
+        self._check_if_ready()
+        self.main_loop.shutdown(True)
+        self.main_loop.join()
+        self.main_loop = None
 
     def is_paused(self):
         """

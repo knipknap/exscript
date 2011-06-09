@@ -211,11 +211,12 @@ class MainLoop(threading.Thread):
                 self.condition.wait()
         self._wait_for_watchers()
 
-    def shutdown(self):
+    def shutdown(self, force = False):
         with self.condition:
             self.shutdown_now = True
             self.condition.notify_all()
-        self._wait_for_watchers()
+        if not force:
+            self._wait_for_watchers()
 
     def _job_in_queue(self, job):
         with self.condition:

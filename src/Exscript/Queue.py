@@ -457,7 +457,7 @@ class Queue(object):
                 self.join()
         finally:
             self._dbg(2, 'Destroying queue...')
-            self.workqueue.shutdown(False)
+            self.workqueue.destroy()
             self.account_manager.reset()
             self.completed         = 0
             self.total             = 0

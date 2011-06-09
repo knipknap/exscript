@@ -146,6 +146,17 @@ class WorkQueueTest(unittest.TestCase):
     def testShutdown(self):
         pass # See testEnqueue()
 
+    def testDestroy(self):
+        self.assertEqual(0, self.wq.get_length())
+        id = self.wq.enqueue(nop)
+        self.assertEqual(1, self.wq.get_length())
+        self.assert_(isinstance(id, int))
+        id = self.wq.enqueue(nop)
+        self.assertEqual(2, self.wq.get_length())
+        self.assert_(isinstance(id, int))
+        self.wq.destroy()
+        self.assertEqual(0, self.wq.get_length())
+
     def testIsPaused(self):
         self.assert_(self.wq.is_paused())
         self.wq.pause()
