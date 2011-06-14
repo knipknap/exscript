@@ -96,9 +96,16 @@ def debug(func):
     """
     @wraps(func)
     def wrapped(*args, **kwargs):
-        sys.stdout.write('Entering ' + func.__name__ + '()\n')
-        result = func(*args, **kwargs)
-        sys.stdout.write('Leaving ' + func.__name__ + '()\n')
+        arg = repr(args) + ' ' + repr(kwargs)
+        sys.stdout.write('Entering ' + func.__name__ + arg + '\n')
+        try:
+            result = func(*args, **kwargs)
+        except:
+            sys.stdout.write('Traceback caught:\n')
+            sys.stdout.write(format_exception(*sys.exc_info()))
+            raise
+        arg = repr(result)
+        sys.stdout.write('Leaving ' + func.__name__ + '(): ' + arg + '\n')
         return result
     return wrapped
 
