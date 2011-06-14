@@ -228,15 +228,6 @@ class WorkQueue(object):
         self._check_if_ready()
         self.main_loop.wait_for(job_id)
 
-    def wait_for_activity(self):
-        """
-        Waits until any change has happened, such as a job as completed
-        or a new job was enqueued. This method can be useful for avoiding
-        polling.
-        """
-        self._check_if_ready()
-        self.main_loop.wait_for_activity()
-
     def wait_until_done(self):
         """
         Waits until the queue is empty.

@@ -128,15 +128,6 @@ class WorkQueueTest(unittest.TestCase):
             self.wq.wait_for(id)
         self.assertEqual(0, self.wq.get_length())
 
-    def testWaitForActivity(self):
-        self.wq.enqueue(nop)
-        self.wq.enqueue(nop)
-        self.wq.enqueue(nop)
-        self.wq.unpause()
-        while not self.wq.get_length() == 0:
-            self.wq.wait_for_activity()
-        self.assertEqual(0, self.wq.get_length())
-
     def testUnpause(self):
         pass # See testEnqueue()
 

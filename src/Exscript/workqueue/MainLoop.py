@@ -191,10 +191,6 @@ class MainLoop(threading.Thread):
             if watcher is not None:
                 watcher.join()
 
-    def wait_for_activity(self):
-        with self.condition:
-            self.condition.wait(.2)
-
     def _wait_for_watchers(self):
         # Jobs and watchers may be spawned while we are waiting for
         # the watchers to complete.
