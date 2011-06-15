@@ -64,24 +64,6 @@ class Pipeline(object):
             self.all.remove(id(item))
             self.condition.notify_all()
 
-    def replace(self, old, new):
-        with self.condition:
-            if old in self.queue:
-                self.queue.remove(old)
-                self.queue.add(new)
-            if old in self.force:
-                self.force.remove(old)
-                self.force.add(new)
-            if old in self.sleeping:
-                self.sleeping.remove(old)
-                self.sleeping.add(new)
-            if old in self.working:
-                self.working.remove(old)
-                self.working.add(new)
-            self.all.remove(id(old))
-            self.all.add(id(new))
-            self.condition.notify_all()
-
     def append(self, item):
         with self.condition:
             self.queue.append(item)

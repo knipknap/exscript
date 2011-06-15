@@ -67,16 +67,6 @@ class PipelineTest(unittest.TestCase):
     def testTaskDone(self):
         self.testNext()
 
-    def testReplace(self):
-        item1 = object()
-        item2 = object()
-        self.pipeline.append(item1)
-        self.pipeline.next()
-        self.assert_(item1 in self.pipeline.get_working())
-        self.pipeline.replace(item1, item2)
-        self.assert_(item1 not in self.pipeline.get_working())
-        self.assert_(item2 in self.pipeline.get_working())
-
     def testAppend(self):
         self.testContains()
 
