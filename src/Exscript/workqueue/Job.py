@@ -21,6 +21,7 @@ def _make_job(base):
     class Job(base):
         def __init__(self, function, name, times, data):
             base.__init__(self, name = name)
+            self.id       = id(self)
             self.pipe     = None
             self.function = function
             self.times    = times
@@ -29,6 +30,7 @@ def _make_job(base):
 
         def __copy__(self):
             job = Job(self.function, self.name, self.times, self.data)
+            job.id       = self.id
             job.failures = self.failures
             return job
 

@@ -30,7 +30,7 @@ class Task(object):
         self.workqueue.job_aborted_event.listen(self._on_job_done)
 
     def _on_job_done(self, job):
-        if id(job) not in self.job_ids:
+        if job.id not in self.job_ids:
             return
         self.completed += 1
         if self.is_completed():

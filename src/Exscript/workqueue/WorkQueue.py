@@ -289,7 +289,7 @@ class WorkQueue(object):
         """
         if self.main_loop is None:
             return []
-        return self.main_loop.running_jobs
+        return self.main_loop.queue.get_working()
 
     def get_length(self):
         """

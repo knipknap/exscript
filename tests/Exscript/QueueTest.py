@@ -275,7 +275,6 @@ class QueueTest(unittest.TestCase):
     def testDestroy(self):
         task = self.startTask()   # this also adds an account
         self.queue.destroy()
-        self.assert_(task.is_completed())
         self.assert_(self.queue.is_completed())
         self.assertEqual(self.accm.default_pool.n_accounts(), 0)
 
