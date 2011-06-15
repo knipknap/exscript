@@ -34,21 +34,16 @@ class PipelineTest(unittest.TestCase):
         self.assert_(item1 in self.pipeline)
         self.assert_(item2 in self.pipeline)
 
-    def testFind(self):
-        item1       = object()
-        item2       = object()
-        find_none   = lambda x: False
-        find_all    = lambda x: True
-        find_second = lambda x: x == item2
-        self.assertEqual(self.pipeline.find(find_none), None)
-        self.assertEqual(self.pipeline.find(find_all), None)
-        self.assertEqual(self.pipeline.find(find_second), None)
+    def testGetFromName(self):
+        item1 = object()
+        item2 = object()
+        self.assertEqual(self.pipeline.get_from_name('foo'), None)
 
-        self.pipeline.append(item1)
-        self.pipeline.append(item2)
-        self.assertEqual(self.pipeline.find(find_none), None)
-        self.assertEqual(self.pipeline.find(find_all), item1)
-        self.assertEqual(self.pipeline.find(find_second), item2)
+        self.pipeline.append(item1, 'foo')
+        self.pipeline.append(item2, 'bar')
+        self.assertEqual(self.pipeline.get_from_name('fff'), None)
+        self.assertEqual(self.pipeline.get_from_name('foo'), item1)
+        self.assertEqual(self.pipeline.get_from_name('bar'), item2)
 
     def testHasId(self):
         item1 = object()
@@ -71,42 +66,40 @@ class PipelineTest(unittest.TestCase):
         self.testContains()
 
     def testAppendleft(self):
-        item1      = object()
-        item2      = object()
-        item3      = object()
-        item4      = object()
-        find_first = lambda x: True
-        self.assertEqual(self.pipeline.find(find_first), None)
+        item1 = object()
+        item2 = object()
+        item3 = object()
+        item4 = object()
+        self.assertEqual(self.pipeline.try_next(), None)
 
         self.pipeline.append(item1)
         self.pipeline.append(item2)
-        self.assertEqual(self.pipeline.find(find_first), item1)
+        self.assertEqual(self.pipeline.try_next(), item1)
 
         self.pipeline.appendleft(item3)
-        self.assertEqual(self.pipeline.find(find_first), item3)
+        self.assertEqual(self.pipeline.try_next(), item3)
 
         self.pipeline.appendleft(item4, True)
-        self.assertEqual(self.pipeline.find(find_first), item4)
+        self.assertEqual(self.pipeline.try_next(), item4)
 
     def testPrioritize(self):
-        item1      = object()
-        item2      = object()
-        find_first = lambda x: True
-        self.assertEqual(self.pipeline.find(find_first), None)
+        item1 = object()
+        item2 = object()
+        self.assertEqual(self.pipeline.try_next(), None)
 
         self.pipeline.append(item1)
         self.pipeline.append(item2)
-        self.assertEqual(self.pipeline.find(find_first), item1)
+        self.assertEqual(self.pipeline.try_next(), item1)
 
         self.pipeline.prioritize(item2)
-        self.assertEqual(self.pipeline.find(find_first), item2)
+        self.assertEqual(self.pipeline.try_next(), item2)
         self.pipeline.prioritize(item2)
-        self.assertEqual(self.pipeline.find(find_first), item2)
+        self.assertEqual(self.pipeline.try_next(), item2)
 
         self.pipeline.prioritize(item1, True)
-        self.assertEqual(self.pipeline.find(find_first), item1)
+        self.assertEqual(self.pipeline.try_next(), item1)
         self.pipeline.prioritize(item1, True)
-        self.assertEqual(self.pipeline.find(find_first), item1)
+        self.assertEqual(self.pipeline.try_next(), item1)
 
     def testClear(self):
         self.testAppendleft()
@@ -270,6 +263,9 @@ class PipelineTest(unittest.TestCase):
         theitem = self.pipeline.next()
         self.assertEqual(self.pipeline.get_working(), [item])
         self.pipeline.task_done(theitem)
+
+    def testTryNext(self):
+        pass # used for testing only anyway.
 
     def testNext(self):
         # Repeat with max_working set to a value larger than the

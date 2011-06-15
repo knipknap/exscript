@@ -52,15 +52,17 @@ class Pipeline(object):
         self.name2id[name]     = id(item)
         self.id2name[id(item)] = name
 
-    def find(self, callable):
+    def get_from_name(self, name):
         """
-        Returns the first item for which the given callable returns True.
-        Returns None if no such item was found.
+        Returns the item with the given name, or None if no such item
+        is known.
         """
         with self.condition:
-            for item in chain(self.force, self.queue, self.working):
-                if callable(item):
-                    return item
+            try:
+                item_id = self.name2id[name]
+            except KeyError:
+                return None
+            return self.all[item_id]
         return None
 
     def has_id(self, item_id):
@@ -72,7 +74,7 @@ class Pipeline(object):
     def task_done(self, item):
         with self.condition:
             self.working.remove(item)
-            self.all.remove(id(item))
+            item = self.all.pop(id(item))
             try:
                 name = self.id2name.pop(id(item))
             except KeyError:
@@ -87,7 +89,7 @@ class Pipeline(object):
         """
         with self.condition:
             self.queue.append(item)
-            self.all.add(id(item))
+            self.all[id(item)] = item
             self._register_name(name, item)
             self.condition.notify_all()
 
@@ -97,7 +99,7 @@ class Pipeline(object):
                 self.force.append(item)
             else:
                 self.queue.appendleft(item)
-            self.all.add(id(item))
+            self.all[id(item)] = name
             self._register_name(name, item)
             self.condition.notify_all()
 
@@ -110,8 +112,11 @@ class Pipeline(object):
             # there is nothing to be done.
             if item in self.working or item in self.force:
                 return
+            name = self.id2name.get(id(item))
+            if name is not None:
+                self.name2id.pop(name)
             self.queue.remove(item)
-            self.appendleft(item, force = force)
+            self.appendleft(item, name, force = force)
             self.condition.notify_all()
 
     def clear(self):
@@ -120,7 +125,7 @@ class Pipeline(object):
             self.force    = deque()
             self.sleeping = set()
             self.working  = set()
-            self.all      = set()
+            self.all      = dict()
             self.name2id  = dict()
             self.id2name  = dict()
             self.condition.notify_all()
@@ -206,7 +211,7 @@ class Pipeline(object):
             self.queue.popleft()
         return sleeping
 
-    def _get_next(self):
+    def _get_next(self, pop = True):
         # We need to leave sleeping items in the queue because else we
         # would not know their original position after they wake up.
         # So we need to temporarily remove sleeping items from the top of
@@ -214,14 +219,33 @@ class Pipeline(object):
         sleeping = self._popleft_sleeping()
 
         # Get the first non-sleeping item from the queue.
-        try:
-            next = self.queue.popleft()
-        except IndexError:
-            next = None
+        if pop:
+            try:
+                next = self.queue.popleft()
+            except IndexError:
+                next = None
+        else:
+            try:
+                next = self.queue[0]
+            except IndexError:
+                next = None
 
         # Re-insert sleeping items.
         self.queue.extendleft(sleeping)
         return next
+
+    def try_next(self):
+        """
+        Like next(), but only returns the item that would be selected
+        right now, without locking and without changing the queue.
+        """
+        with self.condition:
+            try:
+                return self.force[0]
+            except IndexError:
+                pass
+
+            return self._get_next(False)
 
     def next(self):
         with self.condition:
