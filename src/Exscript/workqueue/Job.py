@@ -14,7 +14,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
 import multiprocessing
-import weakref
 from functools import partial
 from multiprocessing import Pipe
 from Exscript.util.impl import serializeable_sys_exc_info
@@ -45,7 +44,7 @@ class _ChildWatcher(threading.Thread):
         else:
             self.cb(result)
 
-def _make_process_class(base):
+def _make_process_class(base, clsname):
     class process_cls(base):
         def __init__(self, id, function, name, data):
             base.__init__(self, name = name)
@@ -71,10 +70,11 @@ def _make_process_class(base):
         def start(self, pipe):
             self.pipe = pipe
             base.start(self)
+    process_cls.__name__ = clsname
     return process_cls
 
-Thread = _make_process_class(threading.Thread)
-Process = _make_process_class(multiprocessing.Process)
+Thread = _make_process_class(threading.Thread, 'Thread')
+Process = _make_process_class(multiprocessing.Process, 'Process')
 
 class Job(object):
     __slots__ = ('func',
