@@ -29,8 +29,7 @@ from Exscript.util.event import Event
 from Exscript.util.impl import format_exception
 from Exscript.util.decorator import connect
 from Exscript.AccountManager import AccountManager
-from Exscript.Task import Task
-from Exscript.workqueue import WorkQueue
+from Exscript.workqueue import WorkQueue, Task
 
 def _connector(func, host):
     """
