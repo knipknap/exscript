@@ -58,8 +58,8 @@ class MainLoop(threading.Thread):
         self.job_succeeded_event = Event()
         self.job_aborted_event   = Event()
         self.queue_empty_event   = Event()
+        self.collection          = Pipeline()
         self.job_cls             = job_cls
-        self.queue               = Pipeline()
         self.debug               = 5
         self.daemon              = True
 
@@ -82,7 +82,7 @@ class MainLoop(threading.Thread):
 
     def enqueue(self, function, name, times, data):
         job = self._create_job(function, name, times, data)
-        self.queue.append(job)
+        self.collection.append(job)
         return job.child.id
 
     def enqueue_or_ignore(self, function, name, times, data):
@@ -92,11 +92,11 @@ class MainLoop(threading.Thread):
             job = self._create_job(function, name, times, data)
             queue.append(job)
             return job.child.id
-        return self.queue.with_lock(conditional_append)
+        return self.collection.with_lock(conditional_append)
 
     def priority_enqueue(self, function, name, force_start, times, data):
         job = self._create_job(function, name, times, data)
-        self.queue.appendleft(job, force_start)
+        self.collection.appendleft(job, force_start)
         return job.child.id
 
     def priority_enqueue_or_raise(self,
@@ -113,29 +113,29 @@ class MainLoop(threading.Thread):
                 return job.child.id
             queue.prioritize(job)
             return None
-        return self.queue.with_lock(conditional_append)
+        return self.collection.with_lock(conditional_append)
 
     def pause(self):
-        self.queue.pause()
+        self.collection.pause()
 
     def resume(self):
-        self.queue.unpause()
+        self.collection.unpause()
 
     def is_paused(self):
-        return self.queue.paused
+        return self.collection.paused
 
     def wait_for(self, job_id):
-        job = self.queue.find(lambda x: x.child.id == job_id)
+        job = self.collection.find(lambda x: x.child.id == job_id)
         if job:
-            self.queue.wait_for_id(id(job))
+            self.collection.wait_for_id(id(job))
 
     def wait_until_done(self):
-        self.queue.wait_all()
+        self.collection.wait_all()
 
     def shutdown(self, force = False):
-        self.queue.stop()
+        self.collection.stop()
         if not force:
-            self.queue.wait()
+            self.collection.wait()
 
     def _start_job(self, job, notify = True):
         if notify:
@@ -148,7 +148,7 @@ class MainLoop(threading.Thread):
         self._dbg(1, 'Job "%s" started.' % job.name)
 
     def get_queue_length(self):
-        return len(self.queue)
+        return len(self.collection)
 
     def _on_job_completed(self, job, exc_info):
         # This function is called in a sub-thread, so we need to be
@@ -178,26 +178,26 @@ class MainLoop(threading.Thread):
             if exc_info and job.child.failures < job.child.times:
                 self._dbg(1, 'Restarting job "%s"' % job.name)
                 new_job = copy(job)
-                self.queue.replace(job, new_job)
+                self.collection.replace(job, new_job)
                 self._start_job(new_job, False)
             else:
-                self.queue.task_done(job)
+                self.collection.task_done(job)
                 new_job = None
 
         if new_job:
             self.job_started_event(new_job.child)
 
     def run(self):
-        self.queue.pause()
+        self.collection.pause()
         while True:
             # Get the next job from the queue. This blocks until a task
-            # is available (or until self.queue.stop() is called, which
+            # is available (or until self.collection.stop() is called, which
             # is what we do in shutdown()).
-            job = self.queue.next()
-            if job is None:
-                break  # self.queue.stop() was called.
-
-            if len(self.queue) <= 0:
+            job = self.collection.next()
+            if len(self.collection) <= 0:
                 self.queue_empty_event()
+            if job is None:
+                break  # self.collection.stop() was called.
+
             self._start_job(job)
         self._dbg(2, 'Main loop terminated.')
