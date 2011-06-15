@@ -2,10 +2,10 @@ import sys, unittest, re, os.path, threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from multiprocessing import Pipe
-from Exscript.workqueue.Job import ThreadJob, ProcessJob
+from Exscript.workqueue.Job import Thread, Process
 
-class ThreadJobTest(unittest.TestCase):
-    CORRELATE = ThreadJob
+class ThreadTest(unittest.TestCase):
+    CORRELATE = Thread
 
     def setUp(self):
         self.condition = threading.Condition()
@@ -14,11 +14,11 @@ class ThreadJobTest(unittest.TestCase):
         self.function  = lambda x: None
 
     def testConstructor(self):
-        job = self.CORRELATE(self.function, 'myaction', 1, None)
+        job = self.CORRELATE(1, self.function, 'myaction', None)
         self.assertEqual(self.function, job.function)
 
     def testRun(self):
-        job = self.CORRELATE(self.function, 'myaction', 1, None)
+        job = self.CORRELATE(1, self.function, 'myaction', None)
         to_child, to_self = Pipe()
         job.start(to_self)
         response = to_child.recv()
@@ -30,13 +30,13 @@ class ThreadJobTest(unittest.TestCase):
     def testStart(self):
         pass # See testRun()
 
-class ProcessJobTest(ThreadJobTest):
-    CORRELATE = ProcessJob
+class ProcessTest(ThreadTest):
+    CORRELATE = Process
 
 def suite():
     loader = unittest.TestLoader()
-    suite1 = loader.loadTestsFromTestCase(ThreadJobTest)
-    suite2 = loader.loadTestsFromTestCase(ProcessJobTest)
+    suite1 = loader.loadTestsFromTestCase(ThreadTest)
+    suite2 = loader.loadTestsFromTestCase(ProcessTest)
     return unittest.TestSuite((suite1, suite2))
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())

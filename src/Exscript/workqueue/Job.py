@@ -15,24 +15,45 @@
 import threading
 import multiprocessing
 import weakref
+from functools import partial
+from multiprocessing import Pipe
 from Exscript.util.impl import serializeable_sys_exc_info
 
-def _make_job(base):
-    class Job(base):
-        def __init__(self, function, name, times, data):
+class _ChildWatcher(threading.Thread):
+    def __init__(self, child, callback):
+        threading.Thread.__init__(self)
+        self.child = child
+        self.cb    = callback
+
+    def __copy__(self):
+        watcher = _ChildWatcher(copy(self.child), self.cb)
+        return watcher
+
+    def run(self):
+        to_child, to_self = Pipe()
+        try:
+            self.child.start(to_self)
+            result = to_child.recv()
+            self.child.join()
+        except:
+            result = sys.exc_info()
+        finally:
+            to_child.close()
+            to_self.close()
+        if result == '':
+            self.cb(None)
+        else:
+            self.cb(result)
+
+def _make_process_class(base):
+    class process_cls(base):
+        def __init__(self, id, function, name, data):
             base.__init__(self, name = name)
-            self.id       = id(self)
+            self.id       = id
             self.pipe     = None
             self.function = function
-            self.times    = times
             self.failures = 0
             self.data     = data
-
-        def __copy__(self):
-            job = Job(self.function, self.name, self.times, self.data)
-            job.id       = self.id
-            job.failures = self.failures
-            return job
 
         def run(self):
             """
@@ -50,7 +71,35 @@ def _make_job(base):
         def start(self, pipe):
             self.pipe = pipe
             base.start(self)
-    return Job
+    return process_cls
 
-ThreadJob = _make_job(threading.Thread)
-ProcessJob = _make_job(multiprocessing.Process)
+Thread = _make_process_class(threading.Thread)
+Process = _make_process_class(multiprocessing.Process)
+
+class Job(object):
+    __slots__ = ('func',
+                 'name',
+                 'times',
+                 'failures',
+                 'data',
+                 'child',
+                 'watcher')
+
+    def __init__(self, function, name, times, data):
+        self.func     = function
+        self.name     = name is None and str(id(function)) or name
+        self.times    = times
+        self.failures = 0
+        self.data     = data
+        self.child    = None
+        self.watcher  = None
+
+    def start(self, child_cls, on_complete):
+        self.child = child_cls(id(self), self.func, self.name, self.data)
+        self.child.failures = self.failures
+        self.watcher = _ChildWatcher(self.child, partial(on_complete, self))
+        self.watcher.start()
+
+    def join(self):
+        self.watcher.join()
+        self.child = None

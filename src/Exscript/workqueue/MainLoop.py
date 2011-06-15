@@ -16,37 +16,11 @@ import sys
 import threading
 import multiprocessing
 from copy import copy
-from multiprocessing import Pipe
 from Exscript.util.event import Event
+from Exscript.workqueue.Job import Job
 
 # See http://bugs.python.org/issue1731717
 multiprocessing.process._cleanup = lambda: None
-
-class _ChildWatcher(threading.Thread):
-    def __init__(self, child, callback):
-        threading.Thread.__init__(self, name = child.name)
-        self.child = child
-        self.cb    = callback
-
-    def __copy__(self):
-        watcher = _ChildWatcher(copy(self.child), self.cb)
-        return watcher
-
-    def run(self):
-        to_child, to_self = Pipe()
-        try:
-            self.child.start(to_self)
-            result = to_child.recv()
-            self.child.join()
-        except:
-            result = sys.exc_info()
-        finally:
-            to_child.close()
-            to_self.close()
-        if result == '':
-            self.cb(self, None)
-        else:
-            self.cb(self, result)
 
 class MainLoop(threading.Thread):
     def __init__(self, collection, job_cls):
@@ -66,31 +40,24 @@ class MainLoop(threading.Thread):
         if self.debug >= level:
             print msg
 
-    def _create_job(self, function, name, times, data):
-        if name is None:
-            name = str(id(function))
-        job     = self.job_cls(function, name, times, data)
-        watcher = _ChildWatcher(job, self._on_job_completed)
-        return watcher
-
     def enqueue(self, function, name, times, data):
-        job = self._create_job(function, name, times, data)
+        job = Job(function, name, times, data)
         self.collection.append(job)
-        return job.child.id
+        return id(job)
 
     def enqueue_or_ignore(self, function, name, times, data):
         def conditional_append(queue):
             if queue.find(lambda x: x.name == name) is not None:
                 return None
-            job = self._create_job(function, name, times, data)
+            job = Job(function, name, times, data)
             queue.append(job)
-            return job.child.id
+            return id(job)
         return self.collection.with_lock(conditional_append)
 
     def priority_enqueue(self, function, name, force_start, times, data):
-        job = self._create_job(function, name, times, data)
+        job = Job(function, name, times, data)
         self.collection.appendleft(job, force_start)
-        return job.child.id
+        return id(job)
 
     def priority_enqueue_or_raise(self,
                                   function,
@@ -101,27 +68,15 @@ class MainLoop(threading.Thread):
         def conditional_append(queue):
             job = queue.find(lambda x: x.name == name)
             if job is None:
-                job = self._create_job(function, name, times, data)
+                job = Job(function, name, times, data)
                 queue.append(job)
-                return job.child.id
+                return id(job)
             queue.prioritize(job)
             return None
         return self.collection.with_lock(conditional_append)
 
     def wait_for(self, job_id):
-        job = self.collection.find(lambda x: x.child.id == job_id)
-        if job:
-            self.collection.wait_for_id(id(job))
-
-    def _start_job(self, job, notify = True):
-        if notify:
-            self.job_init_event(job.child)
-
-        job.start()
-
-        if notify:
-            self.job_started_event(job.child)
-        self._dbg(1, 'Job "%s" started.' % job.name)
+        self.collection.wait_for_id(job_id)
 
     def get_queue_length(self):
         return len(self.collection)
@@ -140,9 +95,9 @@ class MainLoop(threading.Thread):
             # wait_until_done() completed.
             if exc_info:
                 self._dbg(1, 'Error in job "%s"' % job.name)
-                job.child.failures += 1
+                job.failures += 1
                 self.job_error_event(job.child, exc_info)
-                if job.child.failures >= job.child.times:
+                if job.failures >= job.times:
                     self._dbg(1, 'Job "%s" finally failed' % job.name)
                     self.job_aborted_event(job.child)
             else:
@@ -151,17 +106,12 @@ class MainLoop(threading.Thread):
 
         finally:
             # Remove the watcher from the queue, and re-enque if needed.
-            if exc_info and job.child.failures < job.child.times:
+            if exc_info and job.failures < job.times:
                 self._dbg(1, 'Restarting job "%s"' % job.name)
-                new_job = copy(job)
-                self.collection.replace(job, new_job)
-                self._start_job(new_job, False)
+                job.start(self.job_cls, self._on_job_completed)
+                self.job_started_event(job.child)
             else:
                 self.collection.task_done(job)
-                new_job = None
-
-        if new_job:
-            self.job_started_event(new_job.child)
 
     def run(self):
         self.collection.pause()
@@ -174,5 +124,8 @@ class MainLoop(threading.Thread):
             if job is None:
                 break  # self.collection.stop() was called.
 
-            self._start_job(job)
+            self.job_init_event(job)
+            job.start(self.job_cls, self._on_job_completed)
+            self.job_started_event(job.child)
+            self._dbg(1, 'Job "%s" started.' % job.name)
         self._dbg(2, 'Main loop terminated.')

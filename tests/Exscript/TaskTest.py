@@ -5,7 +5,7 @@ warnings.simplefilter('ignore', DeprecationWarning)
 
 from Exscript.workqueue import WorkQueue
 from Exscript.Task import Task
-from Exscript.workqueue.Job import ThreadJob
+from Exscript.workqueue.Job import Thread
 
 class TaskTest(unittest.TestCase):
     CORRELATE = Task
@@ -28,10 +28,10 @@ class TaskTest(unittest.TestCase):
         task = Task(self.wq)
         self.assertEqual(task.is_completed(), True)
 
-        job1 = ThreadJob(object, 'foo1', 3, None)
-        job2 = ThreadJob(object, 'foo2', 3, None)
-        task.add_job_id(id(job1))
-        task.add_job_id(id(job2))
+        job1 = Thread(1, object, 'foo1', None)
+        job2 = Thread(2, object, 'foo2', None)
+        task.add_job_id(job1.id)
+        task.add_job_id(job2.id)
         self.assertEqual(task.is_completed(), False)
 
         self.wq.job_succeeded_event(job1)

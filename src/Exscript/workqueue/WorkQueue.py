@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.util.event import Event
-from Exscript.workqueue.Job import ThreadJob, ProcessJob
+from Exscript.workqueue.Job import Thread, Process
 from Exscript.workqueue.Pipeline import Pipeline
 from Exscript.workqueue.MainLoop import MainLoop
 
@@ -36,9 +36,9 @@ class WorkQueue(object):
         @param max_threads: The maximum number of concurrent threads.
         """
         if mode == 'threading':
-            self.job_cls = ThreadJob
+            self.job_cls = Thread
         elif mode == 'multiprocessing':
-            self.job_cls = ProcessJob
+            self.job_cls = Process
         else:
             raise TypeError('invalid "mode" argument: ' + repr(mode))
         if collection is None:
