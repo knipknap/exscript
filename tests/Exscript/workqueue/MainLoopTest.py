@@ -2,6 +2,7 @@ import sys, unittest, re, os.path, threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from Exscript.workqueue import MainLoop
+from Exscript.workqueue.Pipeline import Pipeline
 from Exscript.workqueue.Job import ProcessJob
 
 class MainLoopTest(unittest.TestCase):
@@ -13,7 +14,7 @@ class MainLoopTest(unittest.TestCase):
     def testMainLoop(self):
         lock = threading.Lock()
         data = {'sum': 0, 'randsum': 0}
-        ml   = MainLoop.MainLoop(ProcessJob)
+        ml   = MainLoop.MainLoop(Pipeline(), ProcessJob)
         nop  = lambda x: None
 
         for i in range(12345):

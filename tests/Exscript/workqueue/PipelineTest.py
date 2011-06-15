@@ -281,11 +281,6 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(self.pipeline.get_working(), [item])
         self.pipeline.task_done(theitem)
 
-    def testIsRunning(self):
-        self.assertEqual(self.pipeline.is_running(), True)
-        self.pipeline.stop()
-        self.assertEqual(self.pipeline.is_running(), False)
-
     def testNext(self):
         # Repeat with max_working set to a value larger than the
         # queue length (i.e. no locking).

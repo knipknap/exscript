@@ -42,10 +42,10 @@ class WorkQueue(object):
         else:
             raise TypeError('invalid "mode" argument: ' + repr(mode))
         if collection is None:
+            self.collection = Pipeline(max_threads)
+        else:
             self.collection = collection
             collection.set_max_working(max_threads)
-        else:
-            self.collection = Pipeline(max_threads)
         self.job_init_event      = Event()
         self.job_started_event   = Event()
         self.job_error_event     = Event()
@@ -53,14 +53,12 @@ class WorkQueue(object):
         self.job_aborted_event   = Event()
         self.queue_empty_event   = Event()
         self.debug               = debug
-        self.max_threads         = max_threads
         self.main_loop           = None
         self._init()
 
     def _init(self):
         self.main_loop       = MainLoop(self.collection, self.job_cls)
         self.main_loop.debug = self.debug
-        self.main_loop.set_max_threads(self.max_threads)
         self.main_loop.job_init_event.listen(self.job_init_event)
         self.main_loop.job_started_event.listen(self.job_started_event)
         self.main_loop.job_error_event.listen(self.job_error_event)
@@ -92,7 +90,7 @@ class WorkQueue(object):
         @return: The number of threads.
         """
         self._check_if_ready()
-        return self.main_loop.get_max_threads()
+        return self.collection.get_max_working()
 
     def set_max_threads(self, max_threads):
         """
@@ -104,8 +102,7 @@ class WorkQueue(object):
         if max_threads is None:
             raise TypeError('max_threads must not be None.')
         self._check_if_ready()
-        self.max_threads = max_threads
-        self.main_loop.set_max_threads(max_threads)
+        self.collection.set_max_working(max_threads)
 
     def enqueue(self, function, name = None, times = 1, data = None):
         """
@@ -216,8 +213,7 @@ class WorkQueue(object):
         This method is the opposite of pause().
         This method is asynchronous.
         """
-        self._check_if_ready()
-        self.main_loop.resume()
+        self.collection.unpause()
 
     def pause(self):
         """
@@ -225,8 +221,7 @@ class WorkQueue(object):
         Executing may later be resumed by calling unpause().
         This method is asynchronous.
         """
-        self._check_if_ready()
-        self.main_loop.pause()
+        self.collection.pause()
 
     def wait_for(self, job_id):
         """
@@ -242,9 +237,7 @@ class WorkQueue(object):
         """
         Waits until the queue is empty.
         """
-        if self.main_loop is None:
-            return
-        self.main_loop.wait_until_done()
+        self.collection.wait_all()
 
     def shutdown(self, restart = True):
         """
@@ -262,9 +255,11 @@ class WorkQueue(object):
         @param restart: Whether to restart the queue after shutting down.
         """
         self._check_if_ready()
-        self.main_loop.shutdown()
+        self.collection.stop()
+        self.collection.wait()
         self.main_loop.join()
         self.main_loop = None
+        self.collection.clear()
         if restart:
             self._init()
 
@@ -274,9 +269,10 @@ class WorkQueue(object):
         wait for already started jobs to complete.
         """
         self._check_if_ready()
-        self.main_loop.shutdown(True)
+        self.collection.stop()
         self.main_loop.join()
         self.main_loop = None
+        self.collection.clear()
 
     def is_paused(self):
         """
@@ -288,7 +284,7 @@ class WorkQueue(object):
         """
         if self.main_loop is None:
             return True
-        return self.main_loop.is_paused()
+        return self.collection.paused
 
     def get_running_jobs(self):
         """
@@ -297,9 +293,7 @@ class WorkQueue(object):
         @rtype:  list[Job]
         @return: A list of running jobs.
         """
-        if self.main_loop is None:
-            return []
-        return self.main_loop.collection.get_working()
+        return self.collection.get_working()
 
     def get_length(self):
         """
@@ -308,6 +302,4 @@ class WorkQueue(object):
         @rtype:  int
         @return: The length of the queue.
         """
-        if self.main_loop is None:
-            return 0
-        return self.main_loop.get_queue_length()
+        return len(self.collection)

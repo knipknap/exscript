@@ -24,7 +24,7 @@ class Pipeline(object):
     def __init__(self, max_working = 1):
         self.condition   = Condition(RLock())
         self.max_working = max_working
-        self.running     = True
+        self.running     = False
         self.paused      = False
         self.queue       = None
         self.force       = None
@@ -187,9 +187,6 @@ class Pipeline(object):
     def get_working(self):
         return list(self.working)
 
-    def is_running(self):
-        return self.running
-
     def _popleft_sleeping(self):
         sleeping = []
         while True:
@@ -222,6 +219,7 @@ class Pipeline(object):
 
     def next(self):
         with self.condition:
+            self.running = True
             while self.running:
                 if self.paused:
                     self.condition.wait()

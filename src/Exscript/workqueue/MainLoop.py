@@ -66,12 +66,6 @@ class MainLoop(threading.Thread):
         if self.debug >= level:
             print msg
 
-    def get_max_threads(self):
-        return self.queue.max_working
-
-    def set_max_threads(self, max_threads):
-        self.queue.set_max_working(max_threads)
-
     def _create_job(self, function, name, times, data):
         if name is None:
             name = str(id(function))
@@ -114,27 +108,10 @@ class MainLoop(threading.Thread):
             return None
         return self.collection.with_lock(conditional_append)
 
-    def pause(self):
-        self.collection.pause()
-
-    def resume(self):
-        self.collection.unpause()
-
-    def is_paused(self):
-        return self.collection.paused
-
     def wait_for(self, job_id):
         job = self.collection.find(lambda x: x.child.id == job_id)
         if job:
             self.collection.wait_for_id(id(job))
-
-    def wait_until_done(self):
-        self.collection.wait_all()
-
-    def shutdown(self, force = False):
-        self.collection.stop()
-        if not force:
-            self.collection.wait()
 
     def _start_job(self, job, notify = True):
         if notify:
@@ -190,8 +167,7 @@ class MainLoop(threading.Thread):
         self.collection.pause()
         while True:
             # Get the next job from the queue. This blocks until a task
-            # is available (or until self.collection.stop() is called, which
-            # is what we do in shutdown()).
+            # is available or until self.collection.stop() is called.
             job = self.collection.next()
             if len(self.collection) <= 0:
                 self.queue_empty_event()
