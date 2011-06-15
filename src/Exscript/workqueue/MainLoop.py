@@ -18,7 +18,6 @@ import multiprocessing
 from copy import copy
 from multiprocessing import Pipe
 from Exscript.util.event import Event
-from Exscript.workqueue.Pipeline import Pipeline
 
 # See http://bugs.python.org/issue1731717
 multiprocessing.process._cleanup = lambda: None
@@ -50,7 +49,7 @@ class _ChildWatcher(threading.Thread):
             self.cb(self, result)
 
 class MainLoop(threading.Thread):
-    def __init__(self, job_cls):
+    def __init__(self, collection, job_cls):
         threading.Thread.__init__(self)
         self.job_init_event      = Event()
         self.job_started_event   = Event()
@@ -58,7 +57,7 @@ class MainLoop(threading.Thread):
         self.job_succeeded_event = Event()
         self.job_aborted_event   = Event()
         self.queue_empty_event   = Event()
-        self.collection          = Pipeline()
+        self.collection          = collection
         self.job_cls             = job_cls
         self.debug               = 5
         self.daemon              = True

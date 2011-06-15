@@ -14,6 +14,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 from Exscript.util.event import Event
 from Exscript.workqueue.Job import ThreadJob, ProcessJob
+from Exscript.workqueue.Pipeline import Pipeline
 from Exscript.workqueue.MainLoop import MainLoop
 
 class WorkQueue(object):
@@ -21,7 +22,11 @@ class WorkQueue(object):
     This class implements the asynchronous workqueue and is the main API
     for using the workqueue module.
     """
-    def __init__(self, debug = 0, max_threads = 1, mode = 'threading'):
+    def __init__(self,
+                 collection = None,
+                 debug = 0,
+                 max_threads = 1,
+                 mode = 'threading'):
         """
         Constructor.
 
@@ -36,6 +41,11 @@ class WorkQueue(object):
             self.job_cls = ProcessJob
         else:
             raise TypeError('invalid "mode" argument: ' + repr(mode))
+        if collection is None:
+            self.collection = collection
+            collection.set_max_working(max_threads)
+        else:
+            self.collection = Pipeline(max_threads)
         self.job_init_event      = Event()
         self.job_started_event   = Event()
         self.job_error_event     = Event()
@@ -48,7 +58,7 @@ class WorkQueue(object):
         self._init()
 
     def _init(self):
-        self.main_loop       = MainLoop(self.job_cls)
+        self.main_loop       = MainLoop(self.collection, self.job_cls)
         self.main_loop.debug = self.debug
         self.main_loop.set_max_threads(self.max_threads)
         self.main_loop.job_init_event.listen(self.job_init_event)
