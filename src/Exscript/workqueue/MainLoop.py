@@ -56,7 +56,7 @@ class MainLoop(threading.Thread):
 
     def priority_enqueue(self, function, name, force_start, times, data):
         job = Job(function, name, times, data)
-        self.collection.appendleft(job, force_start)
+        self.collection.appendleft(job, force = force_start)
         return id(job)
 
     def priority_enqueue_or_raise(self,
@@ -71,7 +71,7 @@ class MainLoop(threading.Thread):
                 job = Job(function, name, times, data)
                 queue.append(job)
                 return id(job)
-            queue.prioritize(job)
+            queue.prioritize(job, force = force_start)
             return None
         return self.collection.with_lock(conditional_append)
 

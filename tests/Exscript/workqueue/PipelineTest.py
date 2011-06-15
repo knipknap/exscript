@@ -281,7 +281,7 @@ class PipelineTest(unittest.TestCase):
         item4 = object()
         self.pipeline.append(item1)
         self.pipeline.append(item2)
-        self.pipeline.appendleft(item3, True)
+        self.pipeline.appendleft(item3, force = True)
         self.pipeline.appendleft(item4)
 
         self.assertEqual(self.pipeline.next(), item3)
@@ -300,7 +300,7 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.set_max_working(2)
         self.pipeline.append(item1)
         self.pipeline.append(item2)
-        self.pipeline.appendleft(item3, True)
+        self.pipeline.appendleft(item3, force = True)
         self.pipeline.appendleft(item4)
 
         self.assertEqual(self.pipeline.next(), item3)
@@ -327,7 +327,7 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.set_max_working(1)
         self.pipeline.append(item1)
         self.pipeline.append(item2)
-        self.pipeline.appendleft(item3, True)
+        self.pipeline.appendleft(item3, force = True)
         self.pipeline.appendleft(item4)
 
         self.assertEqual(self.pipeline.next(), item3)

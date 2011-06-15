@@ -31,6 +31,8 @@ class Pipeline(object):
         self.sleeping    = None
         self.working     = None
         self.all         = None # for performance reasons
+        self.name2id     = None
+        self.id2name     = None
         self.clear()
 
     def __len__(self):
@@ -40,6 +42,15 @@ class Pipeline(object):
     def __contains__(self, item):
         with self.condition:
             return id(item) in self.all
+
+    def _register_name(self, name, item):
+        if name is None:
+            return
+        if name in self.name2id:
+            msg = 'an item named %s is already queued' % repr(name)
+            raise AttributeError(msg)
+        self.name2id[name]     = id(item)
+        self.id2name[id(item)] = name
 
     def find(self, callable):
         """
@@ -62,21 +73,32 @@ class Pipeline(object):
         with self.condition:
             self.working.remove(item)
             self.all.remove(id(item))
+            try:
+                name = self.id2name.pop(id(item))
+            except KeyError:
+                pass
+            else:
+                self.name2id.pop(name)
             self.condition.notify_all()
 
-    def append(self, item):
+    def append(self, item, name = None):
+        """
+        Adds the given item to the end of the pipeline.
+        """
         with self.condition:
             self.queue.append(item)
             self.all.add(id(item))
+            self._register_name(name, item)
             self.condition.notify_all()
 
-    def appendleft(self, item, force = False):
+    def appendleft(self, item, name = None, force = False):
         with self.condition:
             if force:
                 self.force.append(item)
             else:
                 self.queue.appendleft(item)
             self.all.add(id(item))
+            self._register_name(name, item)
             self.condition.notify_all()
 
     def prioritize(self, item, force = False):
@@ -89,7 +111,7 @@ class Pipeline(object):
             if item in self.working or item in self.force:
                 return
             self.queue.remove(item)
-            self.appendleft(item, force)
+            self.appendleft(item, force = force)
             self.condition.notify_all()
 
     def clear(self):
@@ -99,6 +121,8 @@ class Pipeline(object):
             self.sleeping = set()
             self.working  = set()
             self.all      = set()
+            self.name2id  = dict()
+            self.id2name  = dict()
             self.condition.notify_all()
 
     def stop(self):
