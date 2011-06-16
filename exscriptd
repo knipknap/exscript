@@ -20,7 +20,7 @@ from optparse import OptionParser
 from Exscript import __version__
 from Exscriptd import pidutil
 from Exscriptd.Config import Config, default_config_dir
-from Exscriptd.OrderDispatcher import OrderDispatcher
+from Exscriptd.Dispatcher import Dispatcher
 from Exscriptd.daemonize import daemonize
 
 parser = OptionParser(usage = '%prog [options] [start|stop|restart]',
@@ -119,7 +119,7 @@ order_db = config.get_order_db()
 logger.info('order db initialized')
 queues = config.get_queues()
 logger.info('queues initialized')
-dispatcher = OrderDispatcher(order_db, queues, logger, config.get_logdir())
+dispatcher = Dispatcher(order_db, queues, logger, config.get_logdir())
 logger.info('dispatcher initialized')
 
 daemon = config.get_daemon(dispatcher)

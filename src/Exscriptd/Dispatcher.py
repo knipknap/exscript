@@ -30,7 +30,7 @@ class _AsyncFunction(Thread):
     def run(self):
         self.function(*self.args, **self.kwargs)
 
-class OrderDispatcher(object):
+class Dispatcher(object):
     def __init__(self, order_db, queues, logger, logdir):
         self.order_db = order_db
         self.queues   = queues
