@@ -48,16 +48,18 @@ class PipelineTest(unittest.TestCase):
     def testHasId(self):
         item1 = object()
         item2 = object()
-        self.assertEqual(self.pipeline.has_id(id(item1)), False)
-        self.assertEqual(self.pipeline.has_id(id(item2)), False)
+        id1   = 'foo'
+        id2   = 'bar'
+        self.assertEqual(self.pipeline.has_id(id1), False)
+        self.assertEqual(self.pipeline.has_id(id2), False)
 
-        self.pipeline.append(item1)
-        self.assertEqual(self.pipeline.has_id(id(item1)), True)
-        self.assertEqual(self.pipeline.has_id(id(item2)), False)
+        id1 = self.pipeline.append(item1)
+        self.assertEqual(self.pipeline.has_id(id1), True)
+        self.assertEqual(self.pipeline.has_id(id2), False)
 
-        self.pipeline.append(item2)
-        self.assertEqual(self.pipeline.has_id(id(item1)), True)
-        self.assertEqual(self.pipeline.has_id(id(item2)), True)
+        id2 = self.pipeline.append(item2)
+        self.assertEqual(self.pipeline.has_id(id1), True)
+        self.assertEqual(self.pipeline.has_id(id2), True)
 
     def testTaskDone(self):
         self.testNext()
@@ -186,8 +188,8 @@ class PipelineTest(unittest.TestCase):
     def testWaitForId(self):
         item1 = object()
         item2 = object()
-        self.pipeline.append(item1)
-        self.pipeline.append(item2)
+        id1   = self.pipeline.append(item1)
+        id2   = self.pipeline.append(item2)
 
         item = self.pipeline.next()
         class complete_item(Thread):
@@ -199,7 +201,7 @@ class PipelineTest(unittest.TestCase):
         thread.start()
 
         self.assertEqual(len(self.pipeline), 2)
-        self.pipeline.wait_for_id(id(item)) # Must not deadlock.
+        self.pipeline.wait_for_id(id1) # Must not deadlock.
         self.assertEqual(len(self.pipeline), 1)
 
     def testWait(self):

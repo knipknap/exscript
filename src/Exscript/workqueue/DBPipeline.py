@@ -12,51 +12,117 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from uuid import uuid4
-from itertools import chain
-from collections import deque
+from datetime import datetime
+import sqlalchemy as sa
 from multiprocessing import Condition, RLock
 
-class Pipeline(object):
+def _transaction(function, *args, **kwargs):
+    def wrapper(self, *args, **kwargs):
+        with self.engine.contextual_connect(close_with_result = True).begin():
+            return function(*args, **kwargs)
+    wrapper.__name__ = f.__name__
+    wrapper.__dict__ = f.__dict__
+    wrapper.__doc__ = f.__doc__
+    return wrapper
+
+class DBPipeline(object):
     """
-    A collection that is similar to Python's Queue object, except
-    it also tracks items that are currently sleeping or in progress.
+    Like L{Exscript.workqueue.Pipeline}, but keeps all queued objects
+    in a database, instead of using in-memory data structures.
     """
-    def __init__(self, max_working = 1):
-        self.condition   = Condition(RLock())
-        self.max_working = max_working
-        self.running     = False
-        self.paused      = False
-        self.queue       = None
-        self.force       = None
-        self.sleeping    = None
-        self.working     = None
-        self.item2id     = None
-        self.id2item     = None # for performance reasons
-        self.name2id     = None
-        self.id2name     = None
+    def __init__(self, engine, max_working = 1):
+        self.condition     = Condition(RLock())
+        self.engine        = engine
+        self.max_working   = max_working
+        self.running       = False
+        self.paused        = False
+        self.metadata      = sa.MetaData(self.engine)
+        self._table_prefix = 'exscript_pipeline_'
+        self._table_map    = {}
+        self.__update_table_names()
         self.clear()
 
+    def __add_table(self, table):
+        """
+        Adds a new table to the internal table list.
+        
+        @type  table: Table
+        @param table: An sqlalchemy table.
+        """
+        pfx = self._table_prefix
+        self._table_map[table.name[len(pfx):]] = table
+
+    def __update_table_names(self):
+        """
+        Adds all tables to the internal table list.
+        """
+        pfx = self._table_prefix
+        self.__add_table(sa.Table(pfx + 'job', self.metadata,
+            sa.Column('id',     sa.Integer, primary_key = True),
+            sa.Column('name',   sa.String(150), index = True),
+            sa.Column('status', sa.String(50), index = True),
+            sa.Column('job',    sa.PickleType()),
+            mysql_engine = 'INNODB'
+        ))
+
+    @synchronized
+    def install(self):
+        """
+        Installs (or upgrades) database tables.
+        """
+        self.metadata.create_all()
+
+    @synchronized
+    def uninstall(self):
+        """
+        Drops all tables from the database. Use with care.
+        """
+        self.metadata.drop_all()
+
+    @synchronized
+    def clear_database(self):
+        """
+        Drops the content of any database table used by this library.
+        Use with care.
+
+        Wipes out everything, including types, actions, resources and acls.
+        """
+        delete = self._table_map['job'].delete()
+        delete.execute()
+
+    def debug(self, debug = True):
+        """
+        Enable/disable debugging.
+
+        @type  debug: bool
+        @param debug: True to enable debugging.
+        """
+        self.engine.echo = debug
+
+    def set_table_prefix(self, prefix):
+        """
+        Define a string that is prefixed to all table names in the database.
+
+        @type  prefix: string
+        @param prefix: The new prefix.
+        """
+        self._table_prefix = prefix
+        self.__update_table_names()
+
+    def get_table_prefix(self):
+        """
+        Returns the current database table prefix.
+        
+        @rtype:  string
+        @return: The current prefix.
+        """
+        return self._table_prefix
+
     def __len__(self):
-        with self.condition:
-            return len(self.id2item)
+        return self._table_map['job'].count().execute().fetchone()[0]
 
     def __contains__(self, item):
-        with self.condition:
-            return item in self.item2id
-
-    def _register_item(self, name, item):
-        uuid               = uuid4().hex
-        self.id2item[uuid] = item
-        self.item2id[item] = uuid
-        if name is None:
-            return uuid
-        if name in self.name2id:
-            msg = 'an item named %s is already queued' % repr(name)
-            raise AttributeError(msg)
-        self.name2id[name] = uuid
-        self.id2name[uuid] = name
-        return uuid
+        return self.has_id(id(item))
 
     def get_from_name(self, name):
         """
@@ -64,51 +130,41 @@ class Pipeline(object):
         is known.
         """
         with self.condition:
-            try:
-                item_id = self.name2id[name]
-            except KeyError:
+            tbl_j = self._table_map['job']
+            query = tbl_j.select(tbl_j.c.name == name)
+            row   = query.execute().fetchone()
+            if row is None:
                 return None
-            return self.id2item[item_id]
-        return None
+            return row.job
 
     def has_id(self, item_id):
         """
         Returns True if the queue contains an item with the given id.
         """
-        return item_id in self.id2item
+        tbl_j = self._table_map['job']
+        query = tbl_j.select(tbl_j.c.id == item_id).count()
+        return query.execute().fetchone()[0] > 0
 
     def task_done(self, item):
         with self.condition:
             self.working.remove(item)
-            item_id = self.item2id.pop(item)
-            self.id2item.pop(item_id)
-            try:
-                name = self.id2name.pop(item_id)
-            except KeyError:
-                pass
-            else:
-                self.name2id.pop(name)
+            self.all.remove(id(item))
             self.condition.notify_all()
 
-    def append(self, item, name = None):
-        """
-        Adds the given item to the end of the pipeline.
-        """
+    def append(self, item):
         with self.condition:
             self.queue.append(item)
-            uuid = self._register_item(name, item)
+            self.all.add(id(item))
             self.condition.notify_all()
-            return uuid
 
-    def appendleft(self, item, name = None, force = False):
+    def appendleft(self, item, force = False):
         with self.condition:
             if force:
                 self.force.append(item)
             else:
                 self.queue.appendleft(item)
-            uuid = self._register_item(name, item)
+            self.all.add(id(item))
             self.condition.notify_all()
-            return uuid
 
     def prioritize(self, item, force = False):
         """
@@ -120,10 +176,7 @@ class Pipeline(object):
             if item in self.working or item in self.force:
                 return
             self.queue.remove(item)
-            if force:
-                self.force.append(item)
-            else:
-                self.queue.appendleft(item)
+            self.appendleft(item, force)
             self.condition.notify_all()
 
     def clear(self):
@@ -132,10 +185,7 @@ class Pipeline(object):
             self.force    = deque()
             self.sleeping = set()
             self.working  = set()
-            self.item2id  = dict()
-            self.id2item  = dict()
-            self.name2id  = dict()
-            self.id2name  = dict()
+            self.all      = set()
             self.condition.notify_all()
 
     def stop(self):
@@ -158,11 +208,13 @@ class Pipeline(object):
             self.condition.notify_all()
 
     def sleep(self, item):
+        assert id(item) in self.all
         with self.condition:
             self.sleeping.add(item)
             self.condition.notify_all()
 
     def wake(self, item):
+        assert id(item) in self.all
         assert item in self.sleeping
         with self.condition:
             self.sleeping.remove(item)
@@ -217,7 +269,7 @@ class Pipeline(object):
             self.queue.popleft()
         return sleeping
 
-    def _get_next(self, pop = True):
+    def _get_next(self):
         # We need to leave sleeping items in the queue because else we
         # would not know their original position after they wake up.
         # So we need to temporarily remove sleeping items from the top of
@@ -225,33 +277,14 @@ class Pipeline(object):
         sleeping = self._popleft_sleeping()
 
         # Get the first non-sleeping item from the queue.
-        if pop:
-            try:
-                next = self.queue.popleft()
-            except IndexError:
-                next = None
-        else:
-            try:
-                next = self.queue[0]
-            except IndexError:
-                next = None
+        try:
+            next = self.queue.popleft()
+        except IndexError:
+            next = None
 
         # Re-insert sleeping items.
         self.queue.extendleft(sleeping)
         return next
-
-    def try_next(self):
-        """
-        Like next(), but only returns the item that would be selected
-        right now, without locking and without changing the queue.
-        """
-        with self.condition:
-            try:
-                return self.force[0]
-            except IndexError:
-                pass
-
-            return self._get_next(False)
 
     def next(self):
         with self.condition:

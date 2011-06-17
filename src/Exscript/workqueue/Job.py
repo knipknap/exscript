@@ -77,7 +77,8 @@ Thread = _make_process_class(threading.Thread, 'Thread')
 Process = _make_process_class(multiprocessing.Process, 'Process')
 
 class Job(object):
-    __slots__ = ('func',
+    __slots__ = ('id',
+                 'func',
                  'name',
                  'times',
                  'failures',
@@ -86,6 +87,7 @@ class Job(object):
                  'watcher')
 
     def __init__(self, function, name, times, data):
+        self.id       = None
         self.func     = function
         self.name     = name is None and str(id(function)) or name
         self.times    = times
@@ -95,7 +97,7 @@ class Job(object):
         self.watcher  = None
 
     def start(self, child_cls, on_complete):
-        self.child = child_cls(id(self), self.func, self.name, self.data)
+        self.child = child_cls(self.id, self.func, self.name, self.data)
         self.child.failures = self.failures
         self.watcher = _ChildWatcher(self.child, partial(on_complete, self))
         self.watcher.start()

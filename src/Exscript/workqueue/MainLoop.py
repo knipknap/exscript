@@ -41,23 +41,23 @@ class MainLoop(threading.Thread):
             print msg
 
     def enqueue(self, function, name, times, data):
-        job = Job(function, name, times, data)
-        self.collection.append(job)
-        return id(job)
+        job    = Job(function, name, times, data)
+        job.id = self.collection.append(job)
+        return job.id
 
     def enqueue_or_ignore(self, function, name, times, data):
         def conditional_append(queue):
             if queue.get_from_name(name) is not None:
                 return None
-            job = Job(function, name, times, data)
-            queue.append(job, name)
-            return id(job)
+            job    = Job(function, name, times, data)
+            job.id = queue.append(job, name)
+            return job.id
         return self.collection.with_lock(conditional_append)
 
     def priority_enqueue(self, function, name, force_start, times, data):
-        job = Job(function, name, times, data)
-        self.collection.appendleft(job, name, force = force_start)
-        return id(job)
+        job    = Job(function, name, times, data)
+        job.id = self.collection.appendleft(job, name, force = force_start)
+        return job.id
 
     def priority_enqueue_or_raise(self,
                                   function,
@@ -68,9 +68,9 @@ class MainLoop(threading.Thread):
         def conditional_append(queue):
             job = queue.get_from_name(name)
             if job is None:
-                job = Job(function, name, times, data)
-                queue.append(job, name)
-                return id(job)
+                job    = Job(function, name, times, data)
+                job.id = queue.append(job, name)
+                return job.id
             queue.prioritize(job, force = force_start)
             return None
         return self.collection.with_lock(conditional_append)
