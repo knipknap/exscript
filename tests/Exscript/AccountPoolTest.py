@@ -89,6 +89,27 @@ class AccountPoolTest(unittest.TestCase):
             for account in acquired.itervalues():
                 account.release()
 
+    def testReleaseAccounts(self):
+        account1 = Account('foo')
+        account2 = Account('bar')
+        pool = AccountPool()
+        pool.add_account(account1)
+        pool.add_account(account2)
+        pool.acquire_account(account1, 'one')
+        pool.acquire_account(account2, 'two')
+
+        self.assert_(account1 not in pool.unlocked_accounts)
+        self.assert_(account2 not in pool.unlocked_accounts)
+        pool.release_accounts('one')
+        self.assert_(account1 in pool.unlocked_accounts)
+        self.assert_(account2 not in pool.unlocked_accounts)
+        pool.release_accounts('one')
+        self.assert_(account1 in pool.unlocked_accounts)
+        self.assert_(account2 not in pool.unlocked_accounts)
+        pool.release_accounts('two')
+        self.assert_(account1 in pool.unlocked_accounts)
+        self.assert_(account2 in pool.unlocked_accounts)
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountPoolTest)
 if __name__ == '__main__':

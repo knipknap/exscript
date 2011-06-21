@@ -42,13 +42,14 @@ class Account(object):
         @type  key: PrivateKey
         @param key: A private key, if required.
         """
-        self.acquire_before_event   = Event()
+        self.acquired_event         = Event()
         self.released_event         = Event()
         self.changed_event          = Event()
         self.name                   = name
         self.password               = password
         self.authorization_password = password2
         self.key                    = key
+        self.synclock               = threading.Condition(threading.Lock())
         self.lock                   = threading.Lock()
 
     def __enter__(self):
@@ -64,25 +65,32 @@ class Account(object):
         """
         return Context(self)
 
-    def acquire(self):
+    def acquire(self, signal = True):
         """
         Locks the account.
-        """
-        self.acquire_before_event(self)
-        self.lock.acquire()
 
-    def _acquire(self):
+        @type  signal: bool
+        @param signal: Whether to emit the acquired_event signal.
         """
-        Like acquire(), but omits sending the signal.
-        """
-        self.lock.acquire()
+        with self.synclock:
+            while not self.lock.acquire(False):
+                self.synclock.wait()
+            if signal:
+                self.acquired_event(self)
+            self.synclock.notify_all()
 
-    def release(self):
+    def release(self, signal = True):
         """
         Unlocks the account.
+
+        @type  signal: bool
+        @param signal: Whether to emit the released_event signal.
         """
-        self.lock.release()
-        self.released_event(self)
+        with self.synclock:
+            self.lock.release()
+            if signal:
+                self.released_event(self)
+            self.synclock.notify_all()
 
     def set_name(self, name):
         """

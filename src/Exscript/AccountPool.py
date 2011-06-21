@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import threading
-from collections        import deque
+from collections import deque, defaultdict
 from Exscript.util.cast import to_list
 
 class AccountPool(object):
@@ -30,11 +30,13 @@ class AccountPool(object):
         """
         self.accounts          = set()
         self.unlocked_accounts = deque()
-        self.unlock_cond       = threading.Condition()
+        self.owner2account     = defaultdict(list)
+        self.account2owner     = dict()
+        self.unlock_cond       = threading.Condition(threading.RLock())
         if accounts:
             self.add_account(accounts)
 
-    def _on_account_acquire_before(self, account):
+    def _on_account_acquired(self, account):
         with self.unlock_cond:
             if account not in self.accounts:
                 msg = 'attempt to acquire unknown account %s' % account
@@ -53,6 +55,10 @@ class AccountPool(object):
             if account in self.unlocked_accounts:
                 raise Exception('account %s should be locked' % account)
             self.unlocked_accounts.append(account)
+            owner = self.account2owner.get(account)
+            if owner is not None:
+                self.account2owner.pop(account)
+                self.owner2account[owner].remove(account)
             self.unlock_cond.notify_all()
         return account
 
@@ -85,8 +91,7 @@ class AccountPool(object):
         """
         with self.unlock_cond:
             for account in to_list(accounts):
-                account.acquire_before_event.listen(
-                                         self._on_account_acquire_before)
+                account.acquired_event.listen(self._on_account_acquired)
                 account.released_event.listen(self._on_account_released)
                 self.accounts.add(account)
                 self.unlocked_accounts.append(account)
@@ -94,8 +99,6 @@ class AccountPool(object):
 
     def _remove_account(self, accounts):
         """
-        Adds one or more account instances to the pool.
-
         @type  accounts: Account|list[Account]
         @param accounts: The accounts to be removed.
         """
@@ -105,8 +108,7 @@ class AccountPool(object):
                 raise Exception(msg)
             if account not in self.unlocked_accounts:
                 raise Exception('account %s should be unlocked' % account)
-            account.acquire_before_event.disconnect(
-                                      self._on_account_acquire_before)
+            account.acquired_event.disconnect(self._on_account_acquired)
             account.released_event.disconnect(self._on_account_released)
             self.accounts.remove(account)
             self.unlocked_accounts.remove(account)
@@ -116,6 +118,8 @@ class AccountPool(object):
         Removes all accounts.
         """
         with self.unlock_cond:
+            for owner in self.owner2account:
+                self.release_accounts(owner)
             self._remove_account(self.accounts.copy())
             self.unlock_cond.notify_all()
 
@@ -137,28 +141,51 @@ class AccountPool(object):
         """
         return len(self.accounts)
 
-    def _acquire_specific_account(self, account):
-        assert account in self.accounts
-        account.acquire()
-        return account
-
-    def acquire_account(self, account = None):
+    def acquire_account(self, account = None, owner = None):
         """
         Waits until an account becomes available, then locks and returns it.
         If an account is not passed, the next available account is returned.
 
         @type  account: Account
         @param account: The account to be acquired, or None.
+        @type  owner: object
+        @param owner: An optional descriptor for the owner.
         @rtype:  L{Account}
         @return: The account that was acquired.
         """
-        if account:
-            return self._acquire_specific_account(account)
-        if len(self.accounts) == 0:
-            raise ValueError('attempt to acquire account from an empty pool')
         with self.unlock_cond:
-            while len(self.unlocked_accounts) == 0:
-                self.unlock_cond.wait()
-            account = self.unlocked_accounts.popleft()
-            account._acquire()
-        return account
+            if len(self.accounts) == 0:
+                 raise ValueError('account pool is empty')
+
+            if account:
+                # Specific account requested.
+                while account not in self.unlocked_accounts:
+                    self.unlock_cond.wait()
+                self.unlocked_accounts.remove(account)
+            else:
+                # Else take the next available one.
+                while len(self.unlocked_accounts) == 0:
+                    self.unlock_cond.wait()
+                account = self.unlocked_accounts.popleft()
+
+            if owner is not None:
+                self.owner2account[owner].append(account)
+                self.account2owner[account] = owner
+            account.acquire(False)
+            self.unlock_cond.notify_all()
+            return account
+
+    def release_accounts(self, owner):
+        """
+        Releases all accounts that were acquired by the given owner.
+
+        @type  owner: object
+        @param owner: The owner descriptor as passed to acquire_account().
+        """
+        with self.unlock_cond:
+            for account in self.owner2account[owner]:
+                self.account2owner.pop(account)
+                account.release(False)
+                self.unlocked_accounts.append(account)
+            self.owner2account.pop(owner)
+            self.unlock_cond.notify_all()

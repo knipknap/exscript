@@ -101,6 +101,28 @@ class AccountManagerTest(unittest.TestCase):
         self.assertEqual(self.data, {'match-called': True, 'host': 'myhost'})
         self.assertEqual(self.account, account)
 
+    def testReleaseAccounts(self):
+        account1 = Account('foo')
+        pool = AccountPool()
+        pool.add_account(account1)
+        pool.acquire_account(account1, 'one')
+        self.am.add_pool(pool, lambda x: None)
+
+        account2 = Account('bar')
+        self.am.add_account(account2)
+        self.am.acquire_account(account2, 'two')
+
+        self.assert_(account1 not in pool.unlocked_accounts)
+        self.assert_(account2 not in self.am.default_pool.unlocked_accounts)
+
+        self.am.release_accounts('two')
+        self.assert_(account1 not in pool.unlocked_accounts)
+        self.assert_(account2 in self.am.default_pool.unlocked_accounts)
+
+        self.am.release_accounts('one')
+        self.assert_(account1 in pool.unlocked_accounts)
+        self.assert_(account2 in self.am.default_pool.unlocked_accounts)
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountManagerTest)
 if __name__ == '__main__':

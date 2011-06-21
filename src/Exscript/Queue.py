@@ -69,11 +69,11 @@ class _PipeHandler(threading.Thread):
         try:
             command, arg = request
             if command == 'acquire-account-for-host':
-                account = self.accm.acquire_account_for(arg)
+                account = self.accm.acquire_account_for(arg, self)
                 self._send_account(account)
             elif command == 'acquire-account':
                 account = self.accm.get_account_from_hash(arg)
-                account = self.accm.acquire_account(account)
+                account = self.accm.acquire_account(account, self)
                 self._send_account(account)
             elif command == 'release-account':
                 account = self.accm.get_account_from_hash(arg)
@@ -99,7 +99,8 @@ class _PipeHandler(threading.Thread):
             r, w, x = select.select([self.to_child], [], [], .2)
             try:
                 request = self.to_child.recv()
-            except EOFError:
+            except (EOFError, IOError):
+                self.accm.release_accounts(self)
                 break
             self._handle_request(request)
 

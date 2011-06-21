@@ -125,29 +125,31 @@ class AccountManager(object):
                 return account
         return self.default_pool.get_account_from_hash(account_hash)
 
-    def acquire_account(self, account = None):
+    def acquire_account(self, account = None, owner = None):
         """
         Acquires the given account. If no account is given, one is chosen
         from the default pool.
 
         @type  account: Account
         @param account: The account that is added.
+        @type  owner: object
+        @param owner: An optional descriptor for the owner.
         @rtype:  L{Account}
         @return: The account that was acquired.
         """
         if account is not None:
             for match, pool in self.pools:
                 if pool.has_account(account):
-                    return pool.acquire_account(account)
+                    return pool.acquire_account(account, owner)
 
         if account is not None and not self.default_pool.has_account(account):
             # The account is not in any pool.
             account.acquire()
             return account
 
-        return self.default_pool.acquire_account(account)
+        return self.default_pool.acquire_account(account, owner)
 
-    def acquire_account_for(self, host):
+    def acquire_account_for(self, host, owner = None):
         """
         Acquires an account for the given host and returns it.
         The host is passed to each of the match functions that were
@@ -156,13 +158,26 @@ class AccountManager(object):
 
         @type  host: L{Host}
         @param host: The host for which an account is acquired.
+        @type  owner: object
+        @param owner: An optional descriptor for the owner.
         @rtype:  L{Account}
         @return: The account that was acquired.
         """
         # Check whether a matching account pool exists.
         for match, pool in self.pools:
             if match(host) is True:
-                return pool.acquire_account()
+                return pool.acquire_account(owner = owner)
 
         # Else, choose an account from the default account pool.
-        return self.default_pool.acquire_account()
+        return self.default_pool.acquire_account(owner = owner)
+
+    def release_accounts(self, owner):
+        """
+        Releases all accounts that were acquired by the given owner.
+
+        @type  owner: object
+        @param owner: The owner descriptor as passed to acquire_account().
+        """
+        for match, pool in self.pools:
+            pool.release_accounts(owner)
+        self.default_pool.release_accounts(owner)
