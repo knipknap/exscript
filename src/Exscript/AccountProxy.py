@@ -28,7 +28,7 @@ class AccountProxy(object):
         """
         self.parent                 = parent
         self.account_hash           = None
-        self.host_hash              = None
+        self.host                   = None
         self.user                   = None
         self.password               = None
         self.authorization_password = None
@@ -36,9 +36,9 @@ class AccountProxy(object):
         self.thread_local           = False
 
     @staticmethod
-    def for_host_hash(parent, host_hash):
+    def for_host(parent, host):
         account = AccountProxy(parent)
-        account.host_hash = host_hash
+        account.host = host
         account.acquire()
         return account
 
@@ -77,8 +77,8 @@ class AccountProxy(object):
         """
         if self.thread_local:
             return False
-        if self.host_hash:
-            self.parent.send(('acquire-account-for-host', self.host_hash))
+        if self.host:
+            self.parent.send(('acquire-account-for-host', self.host))
         else:
             self.parent.send(('acquire-account', self.account_hash))
 

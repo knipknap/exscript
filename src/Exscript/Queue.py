@@ -217,7 +217,7 @@ class Queue(object):
             pipe = queue._create_pipe()
 
             # Let the account manager choose an account.
-            pipe.send(('acquire-account-for-host', host.id()))
+            pipe.send(('acquire-account-for-host', host))
             account = pipe.recv()
             ...
             pipe.send(('release-account', account.id()))

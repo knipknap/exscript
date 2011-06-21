@@ -85,7 +85,7 @@ def _account_factory(accm, host, account):
     if account:
         account = AccountProxy.for_account_hash(accm, account.__hash__())
     else:
-        account = AccountProxy.for_host_hash(accm, host.__hash__())
+        account = AccountProxy.for_host(accm, host)
 
     return account
 
