@@ -250,7 +250,7 @@ class Config(ConfigReader):
     def get_order_db(self):
         db_elem = self.cfgtree.find('exscriptd/order-db')
         if db_elem is None:
-            engine = self._init_database_from_dbn(':memory:')
+            engine = self._init_database_from_dbn('sqlite://')
         else:
             engine = self.get_database_from_name(db_elem.text)
         db = OrderDB(engine)
