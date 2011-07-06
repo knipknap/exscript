@@ -1,0 +1,5 @@
+{
+  fail "username: $__username__" if not __username__ matches /^\S+$/
+  fail "hostname: $__hostname__" if not __hostname__ matches /^\S+\/pseudodev\.py$/
+  fail "hostname: $__filename__" if not __filename__ matches /^\S+\/test\.exscript$/
+}

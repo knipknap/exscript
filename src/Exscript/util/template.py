@@ -27,8 +27,11 @@ def _compile(conn, filename, template, parser_kwargs, **kwargs):
     parser.define(**kwargs)
 
     # Define the built-in variables and functions.
+    account  = conn.last_account
+    username = account is not None and account.get_name() or None
     hostname = conn and conn.get_host().get_address() or 'undefined'
     builtin  = dict(__filename__   = [filename or 'undefined'],
+                    __username__   = [username],
                     __hostname__   = [hostname],
                     __connection__ = conn)
     parser.define_object(**builtin)
