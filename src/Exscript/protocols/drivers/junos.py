@@ -18,10 +18,28 @@ A driver for devices running JunOS (by Juniper).
 import re
 from Exscript.protocols.drivers.driver import Driver
 
+# JunOS prompt examples:
+#   sab@DD-EA3>
+#
+#   [edit]
+#   sab@DD-EA3>
+#
+#   {backup}
+#   sab@DD-EA3>
+#
+#   {backup}[edit]
+#   sab@DD-EA3>
+#
+#   {backup}[edit interfaces]
+#   sab@DD-EA3>
+
 _user_re     = [re.compile(r'[\r\n]login: $')]
 _password_re = [re.compile(r'[\r\n]Password: $')]
-_prompt_re   = [re.compile(r'(?:[\r\n]\[edit\])?[\r\n][\w\-]+@[\-\w+\.]+[>#] $'),
-                re.compile(r'[\r\n][\w\-]+@[\-\w+\.:]+% $')]
+_mb          = r'(?:\{master}|\{backup\})'
+_edit        = r'(?:\[edit[^\]\r\n]*\])'
+_prefix      = r'(?:[\r\n]' + _mb + r'?' + _edit + r'?)'
+_prompt      = r'[\r\n][\w\-]+@[\-\w+\.:]+[%>#] $'
+_prompt_re   = [re.compile(_prefix + r'?' + _prompt)]
 _error_re    = [re.compile('^(unknown|invalid|error)', re.I)]
 _junos_re    = re.compile(r'\bjunos\b', re.I)
 
