@@ -37,6 +37,8 @@ class fileTest(unittest.TestCase):
 
     def tearDown(self):
         self.account_file.close()
+        self.host_file.close()
+        self.csv_host_file.close()
 
     def testGetAccountsFromFile(self):
         from Exscript.util.file import get_accounts_from_file
