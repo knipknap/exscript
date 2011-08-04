@@ -27,7 +27,7 @@ class SROSDriver(Driver):
         self.prompt_re   = _prompt_re
 
     def check_head_for_os(self, string):
-	if _prompt_re[0].search(string):
+        if _prompt_re[0].search(string):
             return 95
         return 0
 
