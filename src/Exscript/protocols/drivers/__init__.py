@@ -4,6 +4,7 @@ from Exscript.protocols.drivers.aix            import AIXDriver
 from Exscript.protocols.drivers.arbor_peakflow import ArborPeakflowDriver
 from Exscript.protocols.drivers.enterasys      import EnterasysDriver
 from Exscript.protocols.drivers.generic        import GenericDriver
+from Exscript.protocols.drivers.hp_pro_curve   import HPProCurveDriver
 from Exscript.protocols.drivers.ios            import IOSDriver
 from Exscript.protocols.drivers.ios_xr         import IOSXRDriver
 from Exscript.protocols.drivers.junos          import JunOSDriver
