@@ -1,10 +1,6 @@
-
 WARNING!THIS IS A PRIVATE NETWORK AND IS FOR EXCLUSIVE USE BY AUTHORIZED PERSONNEL. Use of this service constitutes
  consent to monitoring.  Unauthorized use may result in prosecution under the Computer Fraud and Abuse Act of 1986 
 or other applicable statutes and regulations.
 
 A:Host-name_R0# environment no more
-A:Host-name_R0# configure system security user ops
-*A:Host-name_R0>...security>user>ops$ exit
-*A:Host-name_R0>...security>user# exit
-*A:Host-name_R0>security#
+
