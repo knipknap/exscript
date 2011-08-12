@@ -55,6 +55,7 @@ functions = {
     'list.unique':               list.unique,
     'string.replace':            string.replace,
     'string.tolower':            string.tolower,
+    'sys.exec':                  mysys.execute,
     'sys.message':               mysys.message,
     'sys.wait':                  mysys.wait,
 }

@@ -12,10 +12,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import time, os
-from Exscript                import Host, util
-from Exscript.util.decorator import bind, autologin
-from Exscript.stdlib.util    import secure_function
+import time
+import os
+from subprocess import Popen, PIPE, STDOUT
+from Exscript import Host, util
+from Exscript.stdlib.util import secure_function
+
+def execute(scope, command):
+    """
+    Executes the given command locally.
+
+    @type  command: string
+    @param command: A shell command.
+    """
+    process = Popen(command[0],
+                    shell     = True,
+                    stdin     = PIPE,
+                    stdout    = PIPE,
+                    stderr    = STDOUT,
+                    close_fds = True)
+    scope.define(__response__ = process.stdout.read())
+    return True
 
 @secure_function
 def message(scope, string):
