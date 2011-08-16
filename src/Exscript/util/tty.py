@@ -76,6 +76,9 @@ def get_terminal_size(default_rows = 25, default_cols = 80):
     # Try os.ctermid()
     try:
         fd = os.open(os.ctermid(), os.O_RDONLY)
+    except AttributeError:
+        # os.ctermid does not exist on Windows.
+        pass
     except OSError:
         # The device pointed to by os.ctermid() does not exist.
         pass
