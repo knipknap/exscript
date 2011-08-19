@@ -114,7 +114,6 @@ class MainLoop(threading.Thread):
                 self.collection.task_done(job)
 
     def run(self):
-        self.collection.pause()
         while True:
             # Get the next job from the queue. This blocks until a task
             # is available or until self.collection.stop() is called.

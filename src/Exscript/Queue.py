@@ -172,7 +172,6 @@ class Queue(object):
         self.workqueue.job_error_event.listen(self._on_job_error)
         self.workqueue.job_succeeded_event.listen(self._on_job_succeeded)
         self.workqueue.job_aborted_event.listen(self._on_job_aborted)
-        self.workqueue.unpause()
 
     def _update_verbosity(self):
         if self.verbose < 0:
@@ -438,8 +437,7 @@ class Queue(object):
             self.join()
 
         self._dbg(2, 'Shutting down queue...')
-        self.workqueue.shutdown()
-        self.workqueue.unpause()
+        self.workqueue.shutdown(True)
         self._dbg(2, 'Queue shut down.')
         self._del_status_bar()
 

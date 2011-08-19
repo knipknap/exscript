@@ -123,6 +123,7 @@ class PipelineTest(unittest.TestCase):
                 self.assertEqual(self.pipeline.next(), item1)
                 self.assertEqual(self.pipeline.next(), None) # ***
                 thread_completed.value = 1
+                self.pipeline.task_done(item1)
 
         thread = deadlock_until_stop()
         thread.daemon = True
@@ -134,6 +135,15 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.stop()
         thread.join()
         self.assertEqual(thread_completed.value, 1)
+
+    def testStart(self):
+        self.testStop()
+        self.assertEqual(len(self.pipeline), 1)
+        item1 = object()
+        self.pipeline.appendleft(item1)
+        self.assertEqual(self.pipeline.next(), None)
+        self.pipeline.start()
+        self.assertEqual(self.pipeline.next(), item1)
 
     def testPause(self):
         item1 = object()

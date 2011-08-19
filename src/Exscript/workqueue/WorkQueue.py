@@ -261,6 +261,7 @@ class WorkQueue(object):
         self.main_loop = None
         self.collection.clear()
         if restart:
+            self.collection.start()
             self._init()
 
     def destroy(self):

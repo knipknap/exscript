@@ -25,7 +25,7 @@ class Pipeline(object):
     def __init__(self, max_working = 1):
         self.condition   = Condition(RLock())
         self.max_working = max_working
-        self.running     = False
+        self.running     = True
         self.paused      = False
         self.queue       = None
         self.force       = None
@@ -79,7 +79,15 @@ class Pipeline(object):
 
     def task_done(self, item):
         with self.condition:
-            self.working.remove(item)
+            try:
+                self.working.remove(item)
+            except KeyError:
+                # This may happen if we receive a notification from a
+                # thread that was previously enqueued, but then the
+                # workqueue was forcefully stopped without waiting for
+                # child threads to complete.
+                self.condition.notify_all()
+                return
             item_id = self.item2id.pop(item)
             self.id2item.pop(item_id)
             try:
@@ -145,6 +153,11 @@ class Pipeline(object):
         """
         with self.condition:
             self.running = False
+            self.condition.notify_all()
+
+    def start(self):
+        with self.condition:
+            self.running = True
             self.condition.notify_all()
 
     def pause(self):
@@ -255,7 +268,6 @@ class Pipeline(object):
 
     def next(self):
         with self.condition:
-            self.running = True
             while self.running:
                 if self.paused:
                     self.condition.wait()
@@ -285,3 +297,4 @@ class Pipeline(object):
                     continue
                 self.working.add(next)
                 return next
+        return None

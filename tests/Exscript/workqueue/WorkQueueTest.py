@@ -3,22 +3,19 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 
 import random
 import time
-from functools import partial
-from multiprocessing import Value
+from multiprocessing import Value, Lock
 from Exscript.workqueue import WorkQueue
 
-def burn_time(lock, job):
+lock = Lock()
+
+def burn_time(job):
     """
     This function just burns some time using shared data.
     """
     # Manipulate the data.
-    job.data.value += 1
-
-    # Make sure to lock/unlock many times.
-    for number in range(random.randint(0, 3456)):
-        lock.acquire()
-        lock.release()
-    return True
+    with lock:
+        job.data.value += 1
+    time.sleep(random.random())
 
 nop = lambda x: None
 
@@ -46,6 +43,7 @@ class WorkQueueTest(unittest.TestCase):
         self.testGetMaxThreads()
 
     def testEnqueue(self):
+        self.wq.pause()
         self.assertEqual(0, self.wq.get_length())
         id = self.wq.enqueue(nop)
         self.assertEqual(1, self.wq.get_length())
@@ -56,27 +54,26 @@ class WorkQueueTest(unittest.TestCase):
         self.wq.shutdown(True)
         self.assertEqual(0, self.wq.get_length())
 
-        # Enqueue 222 actions.
-        lock = threading.Lock()
-        func = partial(burn_time, lock)
+        # Enqueue a larger number of actions.
+        self.assert_(self.wq.is_paused())
         data = Value('i', 0)  # an int in shared memory
         for i in range(222):
-            self.wq.enqueue(func, data = data)
+            self.wq.enqueue(burn_time, data = data)
         self.assertEqual(222, self.wq.get_length())
 
         # Run them, using 50 threads in parallel.
         self.wq.set_max_threads(50)
         self.wq.unpause()
         self.wq.wait_until_done()
-        self.wq.pause()
 
         # Check whether each has run successfully.
         self.assertEqual(0,   self.wq.get_length())
         self.assertEqual(222, data.value)
-        self.wq.shutdown()
+        self.wq.shutdown(True)
         self.assertEqual(0, self.wq.get_length())
 
     def testEnqueueOrIgnore(self):
+        self.wq.pause()
         self.assertEqual(0, self.wq.get_length())
         id = self.wq.enqueue_or_ignore(nop, 'one')
         self.assertEqual(1, self.wq.get_length())
@@ -94,6 +91,7 @@ class WorkQueueTest(unittest.TestCase):
 
     def testPriorityEnqueue(self):
         # Well, this test sucks.
+        self.wq.pause()
         self.assertEqual(0, self.wq.get_length())
         id = self.wq.priority_enqueue(nop)
         self.assertEqual(1, self.wq.get_length())
@@ -105,6 +103,7 @@ class WorkQueueTest(unittest.TestCase):
     def testPriorityEnqueueOrRaise(self):
         self.assertEqual(0, self.wq.get_length())
 
+        self.wq.pause()
         id = self.wq.priority_enqueue_or_raise(nop, 'foo')
         self.assertEqual(1, self.wq.get_length())
         self.assert_(isinstance(id, str))
@@ -119,6 +118,7 @@ class WorkQueueTest(unittest.TestCase):
         pass # See testEnqueue()
 
     def testWaitFor(self):
+        self.wq.pause()
         ids = [self.wq.enqueue(nop) for a in range(4)]
         self.assertEqual(4, self.wq.get_length())
         self.wq.unpause()
@@ -138,6 +138,7 @@ class WorkQueueTest(unittest.TestCase):
         pass # See testEnqueue()
 
     def testDestroy(self):
+        self.wq.pause()
         self.assertEqual(0, self.wq.get_length())
         id = self.wq.enqueue(nop)
         self.assertEqual(1, self.wq.get_length())
@@ -149,7 +150,7 @@ class WorkQueueTest(unittest.TestCase):
         self.assertEqual(0, self.wq.get_length())
 
     def testIsPaused(self):
-        self.assert_(self.wq.is_paused())
+        self.failIf(self.wq.is_paused())
         self.wq.pause()
         self.assert_(self.wq.is_paused())
         self.wq.unpause()
