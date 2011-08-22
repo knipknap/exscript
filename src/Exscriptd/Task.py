@@ -264,13 +264,15 @@ class Task(DBObject):
 
     def set_logfile(self, logfile):
         """
-        Set the name of the logfile.
+        Set the name of the logfile, and set the name of the tracefile
+        to the same name with '.error' appended.
 
         @type  logfile: string
         @param logfile: A filename.
         """
         self.touch()
-        self.logfile = logfile
+        self.logfile   = logfile
+        self.tracefile = logfile + '.error'
 
     def get_logfile(self):
         """
