@@ -18,7 +18,7 @@ import shutil
 import logging
 import logging.handlers
 from lxml                    import etree
-from Exscript                import Account, Queue, FileLogger
+from Exscript                import Queue
 from Exscript.AccountPool    import AccountPool
 from Exscript.util.file      import get_accounts_from_file
 from Exscriptd.OrderDB       import OrderDB
@@ -67,15 +67,9 @@ class Config(ConfigReader):
     @cache_result
     def _init_queue_from_name(self, name):
         # Create the queue first.
-        logdir = os.path.join(self.logdir, 'queues', name)
-        if not os.path.isdir(logdir):
-            os.makedirs(logdir)
         element     = self.cfgtree.find('queue[@name="%s"]' % name)
         max_threads = element.find('max-threads').text
-        delete_logs = element.find('delete-logs') is not None
         queue       = Queue(verbose = 0, max_threads = max_threads)
-        logger      = FileLogger(logdir, 'a', delete_logs)
-        self.loggers.append(logger) # needed to hold them alive
 
         # Assign account pools to the queue.
         for pool_elem in element.iterfind('account-pool'):
