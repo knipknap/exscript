@@ -16,7 +16,7 @@ import os
 import logging
 from functools import partial
 from collections import defaultdict
-from threading import Thread
+from threading import Thread, Lock
 from Exscriptd.util import synchronized
 from Exscriptd import Task
 
@@ -33,41 +33,102 @@ class _AsyncFunction(Thread):
 class Dispatcher(object):
     def __init__(self, order_db, queues, logger, logdir):
         self.order_db = order_db
-        self.queues   = queues
+        self.queues   = {}
         self.logger   = logger
         self.logdir   = logdir
+        self.lock     = Lock()
         self.services = {}
         self.daemons  = {}
-        self.loggers  = defaultdict(dict) # Map order id to name/logger pairs.
         self.logger.info('Closing all open orders.')
         self.order_db.close_open_orders()
+
+        if not os.path.isdir(logdir):
+            os.makedirs(logdir)
+        for name, queue in queues.iteritems():
+            self.add_queue(name, queue)
+
+    def get_queue_from_name(self, name):
+        return self.queues[name]
+
+    def add_queue(self, name, queue):
+        self.queues[name] = queue
+        wq = queue.workqueue
+        wq.job_init_event.connect(partial(self._on_job_event, name, 'init'))
+        wq.job_started_event.connect(partial(self._on_job_event,
+                                             name,
+                                             'started'))
+        wq.job_error_event.connect(partial(self._on_job_event,
+                                           name,
+                                           'error'))
+        wq.job_succeeded_event.connect(partial(self._on_job_event,
+                                               name,
+                                               'succeeded'))
+        wq.job_aborted_event.connect(partial(self._on_job_event,
+                                             name,
+                                             'aborted'))
+
+    def _set_task_status(self, job_id, queue_name, status):
+        # Log the status change.
+        task = self.order_db.get_task(job_id = job_id)
+        msg  = '%s/%s: %s' % (queue_name, job_id, status)
+        if task is None:
+            self.logger.info(msg + ' (untracked)')
+            return
+        self.logger.info(msg + ' (order id ' + str(task.order_id) + ')')
+
+        # Update the task in the database.
+        if status == 'succeeded':
+            task.completed()
+        elif status == 'started':
+            task.set_status('running')
+        elif status == 'aborted':
+            task.close(status)
+        else:
+            task.set_status(status)
+        self.order_db.save_task(task)
+
+        # Check whether the order can now be closed.
+        if task.get_closed_timestamp() is not None:
+            order = self.order_db.get_order(id = task.order_id)
+            self._update_order_status(order)
+
+    def _on_job_event(self, queue_name, status, job, *args):
+        self._set_task_status(job.id, queue_name, status)
+
+    def set_job_progress(self, job_id, progress):
+        task = self.order_db.get_task(job_id = job_id)
+        task.set_progress(progress)
+        self.order_db.save_task(task)
+
+    def get_order_logdir(self, order):
+        orders_logdir = os.path.join(self.logdir, 'orders')
+        order_logdir  = os.path.join(orders_logdir, str(order.get_id()))
+        if not os.path.isdir(order_logdir):
+            os.makedirs(order_logdir)
+        return order_logdir
 
     def get_logger(self, order, name, level = logging.INFO):
         """
         Creates a logger that logs to a file in the order's log directory.
+        Make sure that the logger is deleted using free_logger() as soon
+        as the order is complete!
         """
-        if name in self.loggers[order.id]:
-            return self.loggers[order.id][name]
-        service_logdir = os.path.join(self.logdir, order.get_service_name())
-        order_logdir   = os.path.join(service_logdir, str(order.get_id()))
-        logfile        = os.path.join(order_logdir, name)
-        logger         = logging.getLogger(logfile)
-        handler        = logging.FileHandler(logfile)
-        format         = r'%(asctime)s - %(levelname)s - %(message)s'
-        formatter      = logging.Formatter(format)
+        order_logdir = self.get_order_logdir(order)
+        logfile      = os.path.join(order_logdir, name)
+        logger       = logging.getLogger(logfile)
+        handler      = logging.FileHandler(logfile)
+        format       = r'%(asctime)s - %(levelname)s - %(message)s'
+        formatter    = logging.Formatter(format)
         logger.setLevel(logging.INFO)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
-        self.loggers[order.id][name] = logger
         return logger
 
-    def _free_loggers(self, order_id):
-        for logger in self.loggers[order_id]:
-            # hack to work around the fact that Python's logging module
-            # provides no documented way to delete loggers.
-            del logger.manager.loggerDict[logger.name]
-            logger.manager = None
-        del self.loggers[order_id]
+    def free_logger(self, logger):
+        # hack to work around the fact that Python's logging module
+        # provides no documented way to delete loggers.
+        del logger.manager.loggerDict[logger.name]
+        logger.manager = None
 
     def service_added(self, service):
         """
@@ -98,79 +159,15 @@ class Dispatcher(object):
                                               closed   = None)
         if remaining == 0:
             order.close()
-            self._free_loggers(order.id)
             self.set_order_status(order, 'completed')
-
-    def _run_task(self, order, task):
-        service = self.services[order.get_service_name()]
-        task.set_status('in-progress')
-        try:
-            service.run_function(task.func_name, order, task)
-        except Exception, e:
-            task.close('internal-error')
-            raise
-        else:
-            if not task.get_closed_timestamp():
-                task.completed()
-
-    @synchronized
-    def _on_qtask_done(self, qtask, task, order):
-        qtask.done_event.disconnect_all()
-        self._fill_queue(task.queue_name)
-        self._update_order_status(order)
-
-    @synchronized
-    def _fill_queue(self, queue_name):
-        # Count the number of free slots in the queue.
-        queue      = self.queues[queue_name]
-        n_tasks    = queue.workqueue.get_length()
-        free_slots = max(0, 100 - n_tasks)
-        if free_slots == 0:
-            return
-
-        # Load the tasks from the database.
-        self.logger.info('restoring %d persistent tasks' % free_slots)
-        tasks = self.order_db.mark_tasks('loading',
-                                         limit = free_slots,
-                                         queue = queue_name,
-                                         status = 'go')
-        self.logger.info('%d tasks restored' % len(tasks))
-
-        # Enqueue them. We pause the queue to avoid that a done_event
-        # is sent at a time where we have not yet connected the
-        # signal.
-        self.logger.info('filling queue ' + queue_name)
-        queue.workqueue.pause()
-        for task in tasks:
-            self.logger.info('enqueuing task ' + repr(task.name))
-            task.changed_event.listen(self._on_task_changed)
-            task.closed_event.listen(self._on_task_closed)
-            order = self.order_db.get_order(id = task.order_id)
-            run   = partial(self._run_task, order, task)
-            qtask = queue.enqueue(run, task.name)
-            qtask.done_event.listen(self._on_qtask_done, qtask, task, order)
-            task.set_status('queued')
-        queue.workqueue.unpause()
-        self.logger.info('queue filled')
-
-    def _on_task_go(self, task):
-        task.go_event.disconnect_all()
-        task.closed_event.disconnect_all()
-        task.changed_event.disconnect_all()
-        self._fill_queue(task.queue_name)
 
     def _on_task_changed(self, task):
         self.order_db.save_task(task)
 
-    def _on_task_closed(self, task):
-        task.go_event.disconnect_all()
-        task.closed_event.disconnect_all()
-        task.changed_event.disconnect_all()
-
-    def create_task(self, order, name, queue_name, func):
-        task = Task(order.id, name, queue_name, func)
-        task.go_event.listen(self._on_task_go)
+    def create_task(self, order, name):
+        task = Task(order.id, name)
         task.changed_event.listen(self._on_task_changed)
+        self.order_db.save_task(task)
         return task
 
     def set_order_status(self, order, status):
@@ -217,21 +214,26 @@ class Dispatcher(object):
         self.set_order_status(order, 'saving')
         self.order_db.save_order(order)
 
-        self.set_order_status(order, 'enter-start')
-        try:
-            result = service.enter(order)
-        except Exception, e:
-            self.log(order, 'Exception: %s' % e)
-            order.close()
-            self.set_order_status(order, 'enter-exception')
-            raise
+        self.set_order_status(order, 'starting')
+        with self.lock:
+            # We must stop the queue while new jobs are placed,
+            # else the queue might start processing a job before
+            # it was attached to a task.
+            for queue in self.queues.itervalues():
+                queue.workqueue.pause()
 
-        if not result:
-            self.log(order, 'Error: enter() returned False')
-            order.close()
-            self.set_order_status(order, 'enter-error')
-            return
-        self.set_order_status(order, 'entered')
+            try:
+                service.enter(order)
+            except Exception, e:
+                self.log(order, 'Exception: %s' % e)
+                order.close()
+                self.set_order_status(order, 'error')
+                raise
+            finally:
+                # Re-enable the workqueue.
+                for queue in self.queues.itervalues():
+                    queue.workqueue.unpause()
+        self.set_order_status(order, 'running')
 
         # If the service did not enqueue anything, it may already be completed.
         self._update_order_status(order)

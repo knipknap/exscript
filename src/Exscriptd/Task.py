@@ -22,12 +22,12 @@ from Exscriptd.DBObject import DBObject
 from Exscript.util.event import Event
 
 class Task(DBObject):
-    def __init__(self, order_id, name, queue_name, func):
+    def __init__(self, order_id, name):
         DBObject.__init__(self)
         self.id            = None
         self.order_id      = order_id
+        self.job_id        = None   # reference to Exscript.workqueue.Job.id
         self.name          = name
-        self.queue_name    = queue_name
         self.status        = 'new'
         self.progress      = .0
         self.started       = datetime.utcnow()
@@ -35,13 +35,7 @@ class Task(DBObject):
         self.logfile       = None
         self.tracefile     = None
         self.vars          = {}
-        self.go_event      = Event()
-        self.closed_event  = Event()
         self.changed_event = Event()
-        if hasattr(func, '__call__'):
-            self.func_name = func.__name__
-        else:
-            self.func_name = func
 
     @staticmethod
     def from_etree(task_node):
@@ -55,7 +49,8 @@ class Task(DBObject):
         """
         # Parse required attributes.
         name           = task_node.find('name').text
-        task           = Task(name)
+        order_id       = task_node.get('order_id')
+        task           = Task(order_id, name)
         task.id        = int(task_node.get('id'))
         task.status    = task_node.find('status').text
         task.progress  = float(task_node.find('progress').text)
@@ -97,7 +92,9 @@ class Task(DBObject):
         @rtype:  lxml.etree
         @return: The resulting tree.
         """
-        task = etree.Element('task', id = str(self.id))
+        task = etree.Element('task',
+                             id       = str(self.id),
+                             order_id = str(self.order_id))
         etree.SubElement(task, 'name').text     = str(self.name)
         etree.SubElement(task, 'status').text   = str(self.status)
         etree.SubElement(task, 'progress').text = str(self.progress)
@@ -127,6 +124,7 @@ class Task(DBObject):
 
     def todict(self):
         return dict(order_id  = self.order_id,
+                    job_id    = self.get_job_id(),
                     name      = self.get_name(),
                     status    = self.get_status(),
                     progress  = self.get_progress(),
@@ -134,8 +132,6 @@ class Task(DBObject):
                     closed    = self.get_closed_timestamp(),
                     logfile   = self.get_logfile(),
                     tracefile = self.get_tracefile(),
-                    queue     = self.queue_name,
-                    function  = self.func_name,
                     vars      = self.vars)
 
     def get_id(self):
@@ -146,6 +142,27 @@ class Task(DBObject):
         @return: The id of the task.
         """
         return self.id
+
+    def set_job_id(self, job_id):
+        """
+        Associate the task with the Exscript.workqueue.Job with the given
+        id.
+
+        @type  job_id: int
+        @param job_id: The id of the job.
+        """
+        self.touch()
+        self.job_id = job_id
+        self.changed_event(self)
+
+    def get_job_id(self):
+        """
+        Returns the associated Exscript.workqueue.Job, or None.
+
+        @type  job_id: str
+        @param job_id: The id of the task.
+        """
+        return self.job_id
 
     def set_name(self, name):
         """
@@ -223,14 +240,6 @@ class Task(DBObject):
         """
         return self.started
 
-    def go(self):
-        """
-        Marks the task as being ready for execution.
-        """
-        self.touch()
-        self.set_status('go')
-        self.go_event(self)
-
     def close(self, status = None):
         """
         Marks the task closed.
@@ -242,7 +251,6 @@ class Task(DBObject):
         self.closed = datetime.utcnow()
         if status:
             self.set_status(status)
-        self.closed_event(self)
 
     def completed(self):
         """
