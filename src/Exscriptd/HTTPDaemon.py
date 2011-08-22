@@ -14,12 +14,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os
 import json
+import logging
 from traceback import format_exc
 from urlparse import parse_qs
 from lxml import etree
 from Exscript import Host
 from Exscript.servers.HTTPd import HTTPd, RequestHandler
-from Exscriptd.Daemon import Daemon
+from Exscript.util.event import Event
 from Exscriptd.Order import Order
 
 """
@@ -174,18 +175,29 @@ class HTTPHandler(RequestHandler):
         daemon = self.server.user_data
         daemon.logger.info(self.address_string() + ' - ' + format % args)
 
-class HTTPDaemon(Daemon):
+class HTTPDaemon(object):
     def __init__(self,
                  parent,
                  name,
                  logger,
                  address = '',
                  port    = 80):
-        Daemon.__init__(self, parent, name, logger)
-        self.address = address
-        self.port    = port
-        addr         = self.address, self.port
-        self.server  = HTTPd(addr, HTTPHandler, self)
+        self.parent               = parent
+        self.name                 = name
+        self.logger               = logger
+        self.order_incoming_event = Event()
+        self.address              = address
+        self.port                 = port
+        addr                      = self.address, self.port
+        self.server               = HTTPd(addr, HTTPHandler, self)
+        self.parent.daemon_added(self)
+
+    def log(self, order, message, level = logging.INFO):
+        msg = '%s/%s/%s: %s' % (self.name,
+                                order.get_service_name(),
+                                order.get_id(),
+                                message)
+        self.logger.log(level, msg)
 
     def add_account(self, account):
         user     = account.get_name()
