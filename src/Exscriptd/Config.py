@@ -17,17 +17,16 @@ import base64
 import shutil
 import logging
 import logging.handlers
-from lxml                    import etree
-from Exscript                import Queue
-from Exscript.AccountPool    import AccountPool
-from Exscript.util.file      import get_accounts_from_file
-from Exscriptd.OrderDB       import OrderDB
-from Exscriptd.HTTPDaemon    import HTTPDaemon
-from Exscriptd.PythonService import PythonService
-from Exscriptd.ConfigReader  import ConfigReader
-from Exscriptd.util          import find_module_recursive
-from Exscriptd.xml           import get_accounts_from_etree, \
-                                    add_accounts_to_etree
+from lxml import etree
+from Exscript import Queue
+from Exscript.AccountPool import AccountPool
+from Exscript.util.file import get_accounts_from_file
+from Exscriptd.OrderDB import OrderDB
+from Exscriptd.HTTPDaemon import HTTPDaemon
+from Exscriptd.Service import Service
+from Exscriptd.ConfigReader import ConfigReader
+from Exscriptd.util import find_module_recursive
+from Exscriptd.xml import get_accounts_from_etree, add_accounts_to_etree
 
 default_config_dir = os.path.join('/etc', 'exscriptd')
 default_logdir     = os.path.join('/var', 'log', 'exscriptd')
@@ -176,12 +175,12 @@ class Config(ConfigReader):
             module     = element.find('module').text
             queue_elem = element.find('queue')
             queue_name = queue_elem is not None and queue_elem.text
-            service    = PythonService(dispatcher,
-                                       name,
-                                       module,
-                                       service_dir,
-                                       self,
-                                       queue_name)
+            service    = Service(dispatcher,
+                                 name,
+                                 module,
+                                 service_dir,
+                                 self,
+                                 queue_name)
             print 'Service "%s" initialized.' % name
             services.append(service)
         return services
