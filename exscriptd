@@ -18,7 +18,7 @@ import os
 import logging
 from optparse import OptionParser
 from Exscript import __version__
-from Exscriptd import pidutil
+from Exscript.util import pidutil
 from Exscriptd.Config import Config, default_config_dir
 from Exscriptd.Dispatcher import Dispatcher
 from Exscriptd.daemonize import daemonize

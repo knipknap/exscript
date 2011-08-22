@@ -12,12 +12,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+Handling PID (process id) files.
+"""
 import os
 import logging
 import fcntl
 import errno
 
 def read(path):
+    """
+    Returns the process id from the given file if it exists, or None
+    otherwise. Raises an exception for all other types of OSError
+    while trying to access the file.
+
+    @type  path: str
+    @param path: The name of the pidfile.
+    @rtype:  int or None
+    @return: The PID, or none if the file was not found.
+    """
     # Try to read the pid from the pidfile.
     logging.info("Checking pidfile '%s'", path)
     try:
@@ -28,6 +41,16 @@ def read(path):
         raise
 
 def isalive(path):
+    """
+    Returns True if the file with the given name contains a process
+    id that is still alive.
+    Returns False otherwise.
+
+    @type  path: str
+    @param path: The name of the pidfile.
+    @rtype:  bool
+    @return: Whether the process is alive.
+    """
     # try to read the pid from the pidfile
     pid = read(path)
     if pid is None:
@@ -43,7 +66,10 @@ def isalive(path):
 
 def kill(path):
     """
-    Kills the old process, if it still exists.
+    Kills the process, if it still exists.
+
+    @type  path: str
+    @param path: The name of the pidfile.
     """
     # try to read the pid from the pidfile
     pid = read(path)
@@ -61,7 +87,10 @@ def kill(path):
 
 def write(path):
     """
-    Writes the pid to the the pidfile.
+    Writes the current process id to the given pidfile.
+
+    @type  path: str
+    @param path: The name of the pidfile.
     """
     pid = os.getpid()
     logging.info("Writing PID %s to '%s'", pid, path)
@@ -82,7 +111,10 @@ def write(path):
 
 def remove(path):
     """
-    Deletes the pidfile.
+    Deletes the pidfile if it exists.
+
+    @type  path: str
+    @param path: The name of the pidfile.
     """
     logging.info("Removing pidfile '%s'", path)
     try:
