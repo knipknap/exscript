@@ -103,6 +103,8 @@ sys.stderr = LoggingIO(logger, logging.ERROR)
 # Read the config.
 config = Config(options.config_dir)
 logger.info('config read')
+if not os.path.isdir(config.get_logdir()):
+    os.makedirs(config.get_logdir())
 logfile = os.path.join(config.get_logdir(), 'exscriptd.log')
 
 # Set up logfile rotation.
