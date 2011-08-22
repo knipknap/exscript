@@ -12,6 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+Daemonizing a process.
+"""
 import sys
 import os
 
@@ -27,6 +30,10 @@ def _redirect_output(filename):
     os.dup2(dev_null.fileno(), sys.stdin.fileno())
 
 def daemonize():
+    """
+    Forks and daemonizes the current process. Does not automatically track
+    the process id; to do this, use L{Exscript.util.pidutil}.
+    """
     sys.stdout.flush()
     sys.stderr.flush()
 

@@ -18,10 +18,9 @@ import os
 import logging
 from optparse import OptionParser
 from Exscript import __version__
-from Exscript.util import pidutil
+from Exscript.util import pidutil, daemonize
 from Exscriptd.Config import Config, default_config_dir
 from Exscriptd.Dispatcher import Dispatcher
-from Exscriptd.daemonize import daemonize
 
 parser = OptionParser(usage = '%prog [options] [start|stop|restart]',
                       version = __version__)
