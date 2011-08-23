@@ -46,12 +46,11 @@ class IfCondition(Token):
         # There was no "elif", so we handle a normal "else" condition here.
         self.else_block = Code.Code(lexer, parser, parent)
 
-
-    def value(self):
-        if self.expression.value()[0]:
-            self.if_block.value()
+    def value(self, context):
+        if self.expression.value(context)[0]:
+            self.if_block.value(context)
         elif self.else_block is not None:
-            self.else_block.value()
+            self.else_block.value(context)
         return 1
 
 

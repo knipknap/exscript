@@ -39,8 +39,7 @@ class Assign(Token):
         self.expression.dump(indent + 1)
         print (' ' * indent) + self.name, self.varname, 'start'
 
-
-    def value(self):
-        result = self.expression.value()
+    def value(self, context):
+        result = self.expression.value(context)
         self.parent.define(**{self.varname: result})
         return result

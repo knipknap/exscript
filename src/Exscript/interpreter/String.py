@@ -114,7 +114,7 @@ class String(Token):
         self.variable_sub_cb(match)
         return match.group(0)
 
-    def value(self):
+    def value(self, context):
         return [string_re.sub(self.variable_sub_cb, self.string)]
 
     def dump(self, indent = 0):

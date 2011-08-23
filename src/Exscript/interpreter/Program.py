@@ -36,5 +36,5 @@ class Program(Scope):
         self.variables = copy.copy(self.init_variables)
         if 'variables' in kwargs:
             self.variables.update(kwargs.get('variables'))
-        self.value()
+        self.value(self)
         return self.variables

@@ -82,22 +82,22 @@ class ExpressionNode(Token):
             raise Exception('Invalid operator.')
 
 
-    def value(self):
+    def value(self, context):
         # Special behavior where we only have one term.
         if self.op is None:
-            return self.lft.value()
+            return self.lft.value(context)
         elif self.op == 'not':
-            return [not self.rgt.value()[0]]
+            return [not self.rgt.value(context)[0]]
 
         # There are only two types of values: Regular expressions and lists.
         # We also have to make sure that empty lists do not cause an error.
-        lft_lst = self.lft.value()
+        lft_lst = self.lft.value(context)
         if type(lft_lst) == type([]):
             if len(lft_lst) > 0:
                 lft = lft_lst[0]
             else:
                 lft = ''
-        rgt_lst = self.rgt.value()
+        rgt_lst = self.rgt.value(context)
         if type(rgt_lst) == type([]):
             if len(rgt_lst) > 0:
                 rgt = rgt_lst[0]

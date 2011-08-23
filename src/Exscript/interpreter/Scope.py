@@ -25,10 +25,8 @@ class Scope(Token):
             if key.find('.') < 0 and not key.startswith('_'):
                 assert type(self.variables[key]) == type([])
 
-
     def exit_request(self):
         self.exit_requested = 1
-
 
     def define(self, **kwargs):
         if self.parent is not None:
@@ -40,10 +38,8 @@ class Scope(Token):
             else:
                 self.variables[key] = [kwargs[key]]
 
-
     def define_object(self, **kwargs):
         self.variables.update(kwargs)
-
 
     def is_defined(self, name):
         if name in self.variables:
@@ -51,7 +47,6 @@ class Scope(Token):
         if self.parent is not None:
             return self.parent.is_defined(name)
         return 0
-
 
     def get_vars(self):
         """
@@ -66,7 +61,6 @@ class Scope(Token):
         vars.update(self.variables)
         return vars
 
-
     def copy_public_vars(self):
         """
         Like get_vars(), but does not include any private variables and
@@ -76,7 +70,6 @@ class Scope(Token):
         vars = dict([k for k in vars.iteritems() if not k[0].startswith('_')])
         return deepcopy(vars)
 
-
     def get(self, name, default = None):
         if name in self.variables:
             return self.variables[name]
@@ -84,20 +77,17 @@ class Scope(Token):
             return default
         return self.parent.get(name, default)
 
-
-    def value(self):
+    def value(self, context):
         result = 1
         for child in self.children:
-            result = child.value()
+            result = child.value(context)
         return result
-
 
     def dump(self, indent = 0):
         print (' ' * indent) + self.name, 'start'
         for child in self.children:
             child.dump(indent + 1)
         print (' ' * indent) + self.name, 'end'
-
 
     def dump1(self):
         if self.parent is not None:

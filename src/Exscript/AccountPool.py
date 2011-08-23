@@ -155,7 +155,7 @@ class AccountPool(object):
         """
         with self.unlock_cond:
             if len(self.accounts) == 0:
-                 raise ValueError('account pool is empty')
+                raise ValueError('account pool is empty')
 
             if account:
                 # Specific account requested.

@@ -69,10 +69,8 @@ class Expression(Token):
         self.prioritize(current.lft, prio + 1)
         self.prioritize(current.rgt, prio)
 
-
-    def value(self):
-        return self.root.value()
-
+    def value(self, context):
+        return self.root.value(context)
 
     def dump(self, indent = 0):
         print (' ' * indent) + self.name, 'start'

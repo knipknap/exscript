@@ -70,6 +70,5 @@ class Template(Scope):
                 lexer.syntax_error('Unexpected %s' % type, self)
         lexer.restore_grammar()
 
-
     def execute(self):
-        return self.value()
+        return self.value(self)

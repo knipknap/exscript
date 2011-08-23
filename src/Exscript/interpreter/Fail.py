@@ -36,12 +36,10 @@ class Fail(Token):
         self.mark_end()
         lexer.skip(['whitespace', 'newline'])
 
-
-    def value(self):
-        if self.expression is None or self.expression.value()[0]:
-            raise FailException(self.msg.value()[0])
+    def value(self, context):
+        if self.expression is None or self.expression.value(context)[0]:
+            raise FailException(self.msg.value(context)[0])
         return 1
-
 
     def dump(self, indent = 0):
         print (' ' * indent) + self.name, 'start'

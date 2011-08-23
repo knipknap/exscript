@@ -36,12 +36,11 @@ class Append(Token):
 
         self.mark_end()
 
-
-    def value(self):
+    def value(self, context):
         existing = self.parent.get(self.varname)
-        self.parent.define(**{self.varname: existing + self.expr.value()})
+        args     = {self.varname: existing + self.expr.value(context)}
+        self.parent.define(**args)
         return 1
-
 
     def dump(self, indent = 0):
         print (' ' * indent) + self.name, "to", self.varname

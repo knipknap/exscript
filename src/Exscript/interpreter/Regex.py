@@ -60,8 +60,8 @@ class Regex(String):
             return char
         return token
 
-    def value(self):
-        pattern = String.value(self)[0]
+    def value(self, context):
+        pattern = String.value(self, context)[0]
         return re.compile(pattern, self.flags)
 
 

@@ -22,10 +22,7 @@ import select
 import threading
 from multiprocessing import Pipe
 from Exscript.Logger import logger_registry
-from Exscript.parselib.Exception import CompileError
-from Exscript.interpreter.Exception import FailException
 from Exscript.util.cast import to_hosts
-from Exscript.util.event import Event
 from Exscript.util.impl import format_exception
 from Exscript.util.decorator import connect
 from Exscript.AccountManager import AccountManager
@@ -39,6 +36,18 @@ def _connector(func, host):
     def _wrapped(job, *args, **kwargs):
         return func(job, host, *args, **kwargs)
     return _wrapped
+
+def _is_recoverable_error(cls):
+    # Hack: We can't use isinstance(), because the classes may
+    # have been created by another python process; apparently this
+    # will cause isinstance() to return False.
+    return cls.__name__ in ('CompileError', 'FailException')
+
+def _call_logger(funcname, logger_id, *args):
+    logger = logger_registry.get(logger_id)
+    if not logger:
+        return
+    return getattr(logger, funcname)(*args)
 
 class _PipeHandler(threading.Thread):
     """
@@ -59,12 +68,6 @@ class _PipeHandler(threading.Thread):
                     account.get_key())
         self.to_child.send(response)
 
-    def _call_logger(self, funcname, logger_id, *args):
-        logger = logger_registry.get(logger_id)
-        if not logger:
-            return
-        return getattr(logger, funcname)(*args)
-
     def _handle_request(self, request):
         try:
             command, arg = request
@@ -80,14 +83,14 @@ class _PipeHandler(threading.Thread):
                 account.release()
                 self.to_child.send('ok')
             elif command == 'log-add':
-                log = self._call_logger('add_log', *arg)
+                log = _call_logger('add_log', *arg)
                 self.to_child.send(log)
             elif command == 'log-message':
-                self._call_logger('log', *arg)
+                _call_logger('log', *arg)
             elif command == 'log-aborted':
-                self._call_logger('log_aborted', *arg)
+                _call_logger('log_aborted', *arg)
             elif command == 'log-succeeded':
-                self._call_logger('log_succeeded', *arg)
+                _call_logger('log_succeeded', *arg)
             else:
                 raise Exception('invalid command on pipe: ' + repr(command))
         except Exception, e:
@@ -272,12 +275,6 @@ class Queue(object):
             return
         self._print('debug', msg)
 
-    def _is_recoverable_error(self, cls):
-        # Hack: We can't use isinstance(), because the classes may
-        # have been created by another python process; apparently this
-        # will cause isinstance() to return False.
-        return cls.__name__ in ('CompileError', 'FailException')
-
     def _on_job_init(self, job):
         job.data = self._create_pipe(), self.channel_map['connection']
 
@@ -293,7 +290,7 @@ class Queue(object):
         msg = job.name + ' error: ' + str(exc_info[1])
         tb  = ''.join(format_exception(*exc_info))
         self._print('errors', msg)
-        if self._is_recoverable_error(exc_info[0]):
+        if _is_recoverable_error(exc_info[0]):
             self._print('tracebacks', tb)
         else:
             self._print('fatal_errors', tb)
@@ -514,15 +511,15 @@ class Queue(object):
 
         task = Task(self.workqueue)
         for host in hosts:
-            cb = lambda j, *a, **k: connect()(function)(j, host, *a, **k)
-            id = self._enqueue1(cb,
-                                host.get_name(),
-                                prioritize,
-                                force,
-                                duplicate_check,
-                                attempts)
-            if id is not None:
-                task.add_job_id(id)
+            func   = lambda j, *a, **k: connect()(function)(j, host, *a, **k)
+            job_id = self._enqueue1(func,
+                                    host.get_name(),
+                                    prioritize,
+                                    force,
+                                    duplicate_check,
+                                    attempts)
+            if job_id is not None:
+                task.add_job_id(job_id)
 
         if task.is_completed():
             self._dbg(2, 'No jobs enqueued.')
@@ -632,9 +629,9 @@ class Queue(object):
         @return: An object representing the task.
         """
         self.total += 1
-        task  = Task(self.workqueue)
-        theid = self._enqueue1(function, name, False, False, False, attempts)
-        if theid is not None:
-            task.add_job_id(theid)
+        task   = Task(self.workqueue)
+        job_id = self._enqueue1(function, name, False, False, False, attempts)
+        if job_id is not None:
+            task.add_job_id(job_id)
         self._dbg(2, 'Function enqueued.')
         return task

@@ -21,14 +21,12 @@ class Variable(Token):
         lexer.expect(self, 'varname')
         self.mark_end()
 
-
-    def value(self):
+    def value(self, context):
         val = self.parent.get(self.varname)
         if val is None:
             msg = 'Undefined variable %s' % self.varname
             self.lexer.runtime_error(msg, self)
         return val
-
 
     def dump(self, indent = 0):
         print (' ' * indent) + 'Variable', self.varname, '.'

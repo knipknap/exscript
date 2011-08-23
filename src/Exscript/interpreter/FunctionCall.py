@@ -47,16 +47,14 @@ class FunctionCall(Token):
 
         self.mark_end()
 
-
     def dump(self, indent = 0):
         print (' ' * indent) + self.name, self.funcname, 'start'
         for argument in self.arguments:
             argument.dump(indent + 1)
         print (' ' * indent) + self.name, self.funcname, 'end.'
 
-
-    def value(self):
-        argument_values = [arg.value() for arg in self.arguments]
+    def value(self, context):
+        argument_values = [arg.value(context) for arg in self.arguments]
         function        = self.parent.get(self.funcname)
         if function is None:
             self.lexer.runtime_error('Undefined function %s' % self.funcname, self)

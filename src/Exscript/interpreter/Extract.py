@@ -73,8 +73,7 @@ class Extract(Token):
             self.source = Term(lexer, parser, parent)
         self.mark_end()
 
-
-    def extract(self):
+    def extract(self, context):
         # Re-initialize the variable content, because this method
         # might be called multiple times.
         for varname in self.varnames:
@@ -83,13 +82,13 @@ class Extract(Token):
         if self.source is None:
             buffer = self.parent.get('__response__')
         else:
-            buffer = self.source.value()
+            buffer = self.source.value(context)
         #print "Buffer contains", buffer
 
         # Walk through all lines, matching each one against the regular
         # expression.
         for line in buffer:
-            match = self.regex.value().search(line)
+            match = self.regex.value(context).search(line)
             if match is None:
                 continue
 
@@ -108,9 +107,8 @@ class Extract(Token):
                     self.lexer.runtime_error(msg, self)
                 self.variables[varname].append(value)
 
-
-    def value(self):
-        self.extract()
+    def value(self, context):
+        self.extract(context)
         if not self.append:
             self.parent.define(**self.variables)
         else:

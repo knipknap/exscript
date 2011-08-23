@@ -24,10 +24,8 @@ class Enter(Token):
 
         self.execute = Execute(lexer, parser, parent, '')
 
-
-    def value(self):
-        return self.execute.value()
-
+    def value(self, context):
+        return self.execute.value(context)
 
     def dump(self, indent = 0):
         print (' ' * indent) + self.name

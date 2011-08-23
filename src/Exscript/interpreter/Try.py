@@ -25,14 +25,12 @@ class Try(Scope):
         lexer.skip(['whitespace', 'newline'])
         self.block = Code.Code(lexer, parser, parent)
 
-
-    def value(self):
+    def value(self, context):
         try:
-            self.block.value()
+            self.block.value(context)
         except ProtocolException, e:
             return 1
         return 1
-
 
     def dump(self, indent = 0):
         print (' ' * indent) + self.name, 'start'

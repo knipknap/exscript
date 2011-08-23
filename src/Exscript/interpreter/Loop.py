@@ -102,25 +102,27 @@ class Loop(Token):
         self.block = Code.Code(lexer, parser, parent)
 
 
-    def value(self):
+    def value(self, context):
         if len(self.list_variables) == 0 and not self.thefrom:
             # If this is a "while" loop, iterate as long as the condition is True.
             if self.during is not None:
-                while self.during.value()[0]:
-                    self.block.value()
+                while self.during.value(context)[0]:
+                    self.block.value(context)
                 return 1
 
             # If this is an "until" loop, iterate until the condition is True.
             if self.until is not None:
-                while not self.until.value()[0]:
-                    self.block.value()
+                while not self.until.value(context)[0]:
+                    self.block.value(context)
                 return 1
 
         # Retrieve the lists from the list terms.
         if self.thefrom:
-            lists = [range(self.thefrom.value()[0], self.theto.value()[0])]
+            start = self.thefrom.value(context)[0]
+            stop  = self.theto.value(context)[0]
+            lists = [range(start, stop)]
         else:
-            lists = [var.value() for var in self.list_variables]
+            lists = [var.value(context) for var in self.list_variables]
         vars  = self.iter_varnames
         
         # Make sure that all lists have the same length.
@@ -135,11 +137,11 @@ class Loop(Token):
             for list in lists:
                 self.block.define(**{vars[f]: [list[i]]})
                 f += 1
-            if self.until is not None and self.until.value()[0]:
+            if self.until is not None and self.until.value(context)[0]:
                 break
-            if self.during is not None and not self.during.value()[0]:
+            if self.during is not None and not self.during.value(context)[0]:
                 break
-            self.block.value()
+            self.block.value(context)
         return 1
 
 

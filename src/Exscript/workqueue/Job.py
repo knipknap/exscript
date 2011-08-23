@@ -15,6 +15,7 @@
 import sys
 import threading
 import multiprocessing
+from copy import copy
 from functools import partial
 from multiprocessing import Pipe
 from Exscript.util.impl import serializeable_sys_exc_info

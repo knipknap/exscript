@@ -31,8 +31,7 @@ class Execute(String):
         string_re.sub(self.variable_test_cb, command)
         self.parent.define(__response__ = [])
 
-
-    def value(self):
+    def value(self, context):
         if not self.parent.is_defined('__connection__'):
             error = 'Undefined variable "__connection__"'
             self.lexer.runtime_error(error, self)

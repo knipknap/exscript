@@ -53,14 +53,11 @@ class Term(Token):
             lexer.syntax_error('Expected term but got %s' % type, self)
         self.mark_end()
 
-
     def priority(self):
         return 6
 
-
-    def value(self):
-        return self.term.value()
-
+    def value(self, context):
+        return self.term.value(context)
 
     def dump(self, indent = 0):
         print (' ' * indent) + self.name

@@ -12,7 +12,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from datetime import datetime
 import sqlalchemy as sa
 from multiprocessing import Condition, RLock
 
@@ -20,9 +19,9 @@ def _transaction(function, *args, **kwargs):
     def wrapper(self, *args, **kwargs):
         with self.engine.contextual_connect(close_with_result = True).begin():
             return function(*args, **kwargs)
-    wrapper.__name__ = f.__name__
-    wrapper.__dict__ = f.__dict__
-    wrapper.__doc__ = f.__doc__
+    wrapper.__name__ = function.__name__
+    wrapper.__dict__ = function.__dict__
+    wrapper.__doc__  = function.__doc__
     return wrapper
 
 class DBPipeline(object):
