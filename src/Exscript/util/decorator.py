@@ -113,13 +113,14 @@ def connect(protocol_args = None):
             # job by the queue.
             pipe, stdout = job.data
             mkaccount = partial(_account_factory, pipe, host)
-            protocol_args.setdefault('account_factory', mkaccount)
-            protocol_args.setdefault('stdout', stdout)
+            pargs     = protocol_args.copy()
+            pargs.setdefault('account_factory', mkaccount)
+            pargs.setdefault('stdout', stdout)
 
             # Create a protocol adapter.
             protocol_name = host.get_protocol()
             protocol_cls  = get_protocol_from_name(protocol_name)
-            protocol      = protocol_cls(**protocol_args)
+            protocol      = protocol_cls(**pargs)
 
             # Special case: Define the behaviour of the pseudo protocol
             # adapter.
