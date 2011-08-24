@@ -475,49 +475,16 @@ class Queue(object):
         self._dbg(2, 'Queue reset.')
         self._del_status_bar()
 
-    def _enqueue1(self,
-                  function,
-                  name,
-                  prioritize,
-                  force,
-                  duplicate_check,
-                  attempts):
-        """
-        Returns the list of newly created job ids.
-        """
-        self._dbg(2, 'Enqueing function.')
-
-        # Done. Enqueue this.
-        if duplicate_check:
-            if prioritize:
-                return self.workqueue.priority_enqueue_or_raise(function,
-                                                                name,
-                                                                force,
-                                                                attempts)
-            return self.workqueue.enqueue_or_ignore(function,
-                                                    name,
-                                                    attempts)
-
-        if prioritize:
-            return self.workqueue.priority_enqueue(function,
-                                                   name,
-                                                   force,
-                                                   attempts)
-        return self.workqueue.enqueue(function, name, attempts)
-
-    def _run(self, hosts, function, prioritize, force, duplicate_check, attempts):
+    def _run(self, hosts, callback, queue_function, *args):
         hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
-
-        task = Task(self.workqueue)
+        callback    = connect()(callback)
+        queue       = self.workqueue
+        task        = Task(queue)
         for host in hosts:
-            func   = lambda j, *a, **k: connect()(function)(j, host, *a, **k)
-            job_id = self._enqueue1(func,
-                                    host.get_name(),
-                                    prioritize,
-                                    force,
-                                    duplicate_check,
-                                    attempts)
+            func   = lambda j, *a, **k: callback(j, host, *a, **k)
+            name   = host.get_name()
+            job_id = queue_function(func, name, *args)
             if job_id is not None:
                 task.add_job_id(job_id)
 
@@ -547,7 +514,7 @@ class Queue(object):
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._run(hosts, function, False, False, False, attempts)
+        return self._run(hosts, function, self.workqueue.enqueue, attempts)
 
     def run_or_ignore(self, hosts, function, attempts = 1):
         """
@@ -563,7 +530,10 @@ class Queue(object):
         @rtype:  object
         @return: A task object, or None if all hosts were duplicates.
         """
-        return self._run(hosts, function, False, False, True, attempts)
+        return self._run(hosts,
+                         function,
+                         self.workqueue.enqueue_or_ignore,
+                         attempts)
 
     def priority_run(self, hosts, function, attempts = 1):
         """
@@ -578,7 +548,11 @@ class Queue(object):
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._run(hosts, function, True, False, False, attempts)
+        return self._run(hosts,
+                         function,
+                         self.workqueue.priority_enqueue,
+                         False,
+                         attempts)
 
     def priority_run_or_raise(self, hosts, function, attempts = 1):
         """
@@ -595,7 +569,11 @@ class Queue(object):
         @rtype:  object
         @return: A task object, or None if all hosts were duplicates.
         """
-        return self._run(hosts, function, True, False, True, attempts)
+        return self._run(hosts,
+                         function,
+                         self.workqueue.priority_enqueue_or_raise,
+                         False,
+                         attempts)
 
     def force_run(self, hosts, function, attempts = 1):
         """
@@ -611,7 +589,11 @@ class Queue(object):
         @rtype:  object
         @return: An object representing the task.
         """
-        return self._run(hosts, function, True, True, False, attempts)
+        return self._run(hosts,
+                         function,
+                         self.workqueue.priority_enqueue,
+                         True,
+                         attempts)
 
     def enqueue(self, function, name = None, attempts = 1):
         """
@@ -630,7 +612,7 @@ class Queue(object):
         """
         self.total += 1
         task   = Task(self.workqueue)
-        job_id = self._enqueue1(function, name, False, False, False, attempts)
+        job_id = self.workqueue.enqueue(function, name, attempts)
         if job_id is not None:
             task.add_job_id(job_id)
         self._dbg(2, 'Function enqueued.')
