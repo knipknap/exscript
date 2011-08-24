@@ -16,7 +16,7 @@ class FakeJob(object):
         self.function = lambda x: None
         self.name     = name
         self.failures = 0
-        self.data     = 0, sys.stdout
+        self.data     = 0, sys.stdout, Host('foo')
 
 class FakeError(Exception):
     pass

@@ -111,7 +111,7 @@ def connect(protocol_args = None):
         def decorated(job, host, *args, **kwargs):
             # Define the protocol options that were attached to the
             # job by the queue.
-            pipe, stdout = job.data
+            pipe, stdout, _ = job.data
             mkaccount = partial(_account_factory, pipe, host)
             pargs     = protocol_args.copy()
             pargs.setdefault('account_factory', mkaccount)

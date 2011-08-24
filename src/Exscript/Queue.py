@@ -276,10 +276,11 @@ class Queue(object):
         self._print('debug', msg)
 
     def _on_job_init(self, job):
-        job.data = self._create_pipe(), self.channel_map['connection']
+        host     = job.data
+        job.data = self._create_pipe(), self.channel_map['connection'], host
 
     def _on_job_destroy(self, job):
-        pipe, stdout = job.data
+        pipe, _, _ = job.data
         pipe.close()
 
     def _on_job_started(self, job):
@@ -479,12 +480,13 @@ class Queue(object):
         hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
         callback    = connect()(callback)
-        queue       = self.workqueue
-        task        = Task(queue)
+        task        = Task(self.workqueue)
         for host in hosts:
-            func   = lambda j, *a, **k: callback(j, host, *a, **k)
+            def func(job, *inner_args, **inner_kwargs):
+                _, _, thehost = job.data
+                return callback(job, thehost, *inner_args, **inner_kwargs)
             name   = host.get_name()
-            job_id = queue_function(func, name, *args)
+            job_id = queue_function(func, name, *args, data = host)
             if job_id is not None:
                 task.add_job_id(job_id)
 
