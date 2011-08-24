@@ -119,7 +119,7 @@ class AccountManager(object):
         @type  account_hash: str
         @param account_hash: The hash of an account object.
         """
-        for match, pool in self.pools:
+        for _, pool in self.pools:
             account = pool.get_account_from_hash(account_hash)
             if account is not None:
                 return account
@@ -138,7 +138,7 @@ class AccountManager(object):
         @return: The account that was acquired.
         """
         if account is not None:
-            for match, pool in self.pools:
+            for _, pool in self.pools:
                 if pool.has_account(account):
                     return pool.acquire_account(account, owner)
 
@@ -178,6 +178,6 @@ class AccountManager(object):
         @type  owner: object
         @param owner: The owner descriptor as passed to acquire_account().
         """
-        for match, pool in self.pools:
+        for _, pool in self.pools:
             pool.release_accounts(owner)
         self.default_pool.release_accounts(owner)

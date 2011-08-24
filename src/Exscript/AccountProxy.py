@@ -12,6 +12,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+A remote object that acquires/releases an account via a pipe.
+"""
 from Exscript.util.impl import Context
 
 class AccountProxy(object):
@@ -37,6 +40,11 @@ class AccountProxy(object):
 
     @staticmethod
     def for_host(parent, host):
+        """
+        Returns a new AccountProxy that has an account acquired. The
+        account is chosen based on what the connected AccountManager
+        selects for the given host.
+        """
         account = AccountProxy(parent)
         account.host = host
         account.acquire()
@@ -44,6 +52,12 @@ class AccountProxy(object):
 
     @staticmethod
     def for_account_hash(parent, account_hash):
+        """
+        Returns a new AccountProxy that acquires the account with the
+        given hash, if such an account is known to the account manager.
+        It is an error if the account manager does not have such an
+        account.
+        """
         account = AccountProxy(parent)
         account.account_hash = account_hash
         account.acquire()
@@ -51,17 +65,30 @@ class AccountProxy(object):
 
     @staticmethod
     def for_random_account(parent):
+        """
+        Returns a new AccountProxy that has an account acquired. The
+        account is chosen by the connected AccountManager.
+        """
         account = AccountProxy(parent)
         account.acquire()
         return account
 
     def __hash__(self):
+        """
+        Returns the hash of the currently acquired account.
+        """
         return self.account_hash
 
     def __enter__(self):
+        """
+        Like L{acquire()}.
+        """
         return self.acquire()
 
     def __exit__(self, thetype, value, traceback):
+        """
+        Like L{release()}.
+        """
         return self.release()
 
     def context(self):

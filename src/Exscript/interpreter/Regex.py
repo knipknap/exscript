@@ -25,8 +25,8 @@ modifier_grammar = (
 )
 
 modifier_grammar_c = []
-for type, regex in modifier_grammar:
-    modifier_grammar_c.append((type, re.compile(regex, re.M|re.S)))
+for thetype, regex in modifier_grammar:
+    modifier_grammar_c.append((thetype, re.compile(regex, re.M|re.S)))
 
 class Regex(String):
     def __init__(self, lexer, parser, parent):

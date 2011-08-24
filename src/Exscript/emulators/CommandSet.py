@@ -79,6 +79,15 @@ class CommandSet(object):
             self.add(key, handler)
 
     def eval(self, command):
+        """
+        Evaluate the given string against all registered commands and
+        return the defined response.
+
+        @type  command: str
+        @param command: The command that is evaluated.
+        @rtype:  str or None
+        @return: The response, if one was defined.
+        """
         for cmd, response in self.response_list:
             if not cmd.match(command):
                 continue

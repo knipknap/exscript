@@ -45,14 +45,14 @@ class Loop(Token):
 
             # The iterator variable.
             lexer.next_if('whitespace')
-            type, iter_varname = lexer.token()
+            _, iter_varname = lexer.token()
             lexer.expect(self, 'varname')
             parent.define(**{iter_varname: []})
             self.iter_varnames = [iter_varname]
             lexer.next_if('whitespace')
             while lexer.next_if('comma'):
                 lexer.skip(['whitespace', 'newline'])
-                type, iter_varname = lexer.token()
+                _, iter_varname = lexer.token()
                 lexer.expect(self, 'varname')
                 parent.define(**{iter_varname: []})
                 self.iter_varnames.append(iter_varname)
@@ -74,7 +74,7 @@ class Loop(Token):
 
             if lexer.next_if('keyword', 'as'):
                 lexer.next_if('whitespace')
-                type, iter_varname = lexer.token()
+                _, iter_varname = lexer.token()
                 lexer.expect(self, 'varname')
                 lexer.next_if('whitespace')
             else:

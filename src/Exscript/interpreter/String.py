@@ -23,8 +23,8 @@ grammar = [
 ]
 
 grammar_c = []
-for type, regex in grammar:
-    grammar_c.append((type, re.compile(regex)))
+for thetype, regex in grammar:
+    grammar_c.append((thetype, re.compile(regex)))
 
 class String(Token):
     def __init__(self, lexer, parser, parent):
@@ -54,8 +54,8 @@ class String(Token):
             elif lexer.next_if('string_delimiter'):
                 break
             else:
-                type = lexer.token()[0]
-                lexer.syntax_error('Expected string but got %s' % type, self)
+                ttype = lexer.token()[0]
+                lexer.syntax_error('Expected string but got %s' % ttype, self)
 
         # Make sure that any variables specified in the command are declared.
         string_re.sub(self.variable_test_cb, self.string)

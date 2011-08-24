@@ -99,7 +99,7 @@ class _PipeHandler(threading.Thread):
 
     def run(self):
         while True:
-            r, w, x = select.select([self.to_child], [], [], .2)
+            select.select([self.to_child], [], [], .2)
             try:
                 request = self.to_child.recv()
             except (EOFError, IOError):
@@ -287,13 +287,13 @@ class Queue(object):
         self._print_status_bar()
 
     def _on_job_error(self, job, exc_info):
-        msg = job.name + ' error: ' + str(exc_info[1])
-        tb  = ''.join(format_exception(*exc_info))
+        msg   = job.name + ' error: ' + str(exc_info[1])
+        trace = ''.join(format_exception(*exc_info))
         self._print('errors', msg)
         if _is_recoverable_error(exc_info[0]):
-            self._print('tracebacks', tb)
+            self._print('tracebacks', trace)
         else:
-            self._print('fatal_errors', tb)
+            self._print('fatal_errors', trace)
 
     def _on_job_succeeded(self, job):
         self._on_job_destroy(job)

@@ -79,14 +79,14 @@ grammar = (
 )
 
 grammar_c = []
-for type, regex in grammar:
-    grammar_c.append((type, re.compile(regex)))
+for thetype, regex in grammar:
+    grammar_c.append((thetype, re.compile(regex)))
 
 class Code(Scope):
     def __init__(self, lexer, parser, parent):
         Scope.__init__(self, 'Code', lexer, parser, parent)
         lexer.set_grammar(grammar_c)
-        while 1:
+        while True:
             lexer.skip(['whitespace', 'newline'])
             if lexer.next_if('close_curly_bracket'):
                 if isinstance(parent, Template.Template):
@@ -120,6 +120,5 @@ class Code(Scope):
             elif lexer.current_is('open_function_call'):
                 self.add(FunctionCall(lexer, parser, self))
             else:
-                type, token = lexer.token()
-                lexer.syntax_error('Unexpected %s "%s"' % (type, token), self)
+                lexer.syntax_error('Unexpected %s "%s"' % lexer.token(), self)
         lexer.restore_grammar()

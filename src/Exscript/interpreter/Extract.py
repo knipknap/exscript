@@ -40,15 +40,15 @@ class Extract(Token):
         elif lexer.next_if('keyword', 'into'):
             self.append = True
         else:
-            type, token = lexer.token()
-            msg         = 'Expected "as" or "into" but got %s' % token
+            _, token = lexer.token()
+            msg      = 'Expected "as" or "into" but got %s' % token
             lexer.syntax_error(msg, self)
 
         # Expect a list of variable names.
         while 1:
             # Variable name.
             lexer.expect(self, 'whitespace')
-            type, token = lexer.token()
+            _, token = lexer.token()
             lexer.expect(self, 'varname')
             if token in self.variables:
                 lexer.syntax_error('Duplicate variable name %s', self)

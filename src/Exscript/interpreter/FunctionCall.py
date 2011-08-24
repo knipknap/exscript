@@ -23,7 +23,7 @@ class FunctionCall(Token):
         self.arguments = []
 
         # Extract the function name.
-        type, token = lexer.token()
+        _, token = lexer.token()
         lexer.expect(self, 'open_function_call')
         self.funcname = token[:-1]
         function      = self.parent.get(self.funcname)
@@ -31,15 +31,15 @@ class FunctionCall(Token):
             lexer.syntax_error('Undefined function %s' % self.funcname, self)
 
         # Parse the argument list.
-        type, token = lexer.token()
+        _, token = lexer.token()
         while 1:
             if lexer.next_if('close_bracket'):
                 break
             self.arguments.append(Expression.Expression(lexer, parser, parent))
-            type, token = lexer.token()
+            ttype, token = lexer.token()
             if not lexer.next_if('comma') and not lexer.current_is('close_bracket'):
-                error = 'Expected separator or argument list end but got %s' % type
-                lexer.syntax_error(error, self)
+                error = 'Expected separator or argument list end but got %s'
+                lexer.syntax_error(error % ttype, self)
 
         if parser.secure_only and not hasattr(function, '_is_secure'):
             msg = 'Use of insecure function %s is not permitted' % self.funcname

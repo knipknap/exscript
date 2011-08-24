@@ -26,8 +26,8 @@ grammar = (
 )
 
 grammar_c = []
-for type, regex in grammar:
-    grammar_c.append((type, re.compile(regex)))
+for thetype, regex in grammar:
+    grammar_c.append((thetype, re.compile(regex)))
 
 class Template(Scope):
     def __init__(self, lexer, parser, parent, *args, **kwargs):
@@ -66,8 +66,8 @@ class Template(Scope):
                     self.add(Execute(lexer, parser, self, buffer))
                     buffer = ''
             else:
-                type = lexer.token()[0]
-                lexer.syntax_error('Unexpected %s' % type, self)
+                ttype = lexer.token()[0]
+                lexer.syntax_error('Unexpected %s' % ttype, self)
         lexer.restore_grammar()
 
     def execute(self):

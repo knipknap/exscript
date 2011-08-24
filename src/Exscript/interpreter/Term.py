@@ -28,7 +28,7 @@ class Term(Token):
         self.op   = None
 
         # Expect a term.
-        type, token = lexer.token()
+        ttype, token = lexer.token()
         if lexer.current_is('varname'):
             if not parent.is_defined(token):
                 lexer.error('Undeclared variable %s' % token, self, ValueError)
@@ -50,7 +50,7 @@ class Term(Token):
         elif lexer.current_is('regex_delimiter'):
             self.term = Regex(lexer, parser, parent)
         else:
-            lexer.syntax_error('Expected term but got %s' % type, self)
+            lexer.syntax_error('Expected term but got %s' % ttype, self)
         self.mark_end()
 
     def priority(self):

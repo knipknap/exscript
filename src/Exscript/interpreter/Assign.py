@@ -20,7 +20,7 @@ class Assign(Token):
         Token.__init__(self, 'Assign', lexer, parser, parent)
 
         # Extract the variable name.
-        type, self.varname = lexer.token()
+        _, self.varname = lexer.token()
         lexer.expect(self, 'varname')
         lexer.expect(self, 'whitespace')
         lexer.expect(self, 'assign')

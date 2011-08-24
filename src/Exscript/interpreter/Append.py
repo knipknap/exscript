@@ -30,7 +30,7 @@ class Append(Token):
 
         # Expect a variable name.
         lexer.expect(self, 'whitespace')
-        type, self.varname = lexer.token()
+        _, self.varname = lexer.token()
         lexer.expect(self, 'varname')
         self.parent.define(**{self.varname: []})
 
