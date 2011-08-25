@@ -13,6 +13,7 @@ from Exscript.protocols.drivers.one_os         import OneOSDriver
 from Exscript.protocols.drivers.shell          import ShellDriver
 from Exscript.protocols.drivers.smart_edge_os  import SmartEdgeOSDriver
 from Exscript.protocols.drivers.vrp            import VRPDriver
+from Exscript.protocols.drivers.sros           import SROSDriver
 
 def isdriver(o):
     return inspect.isclass(o) and issubclass(o, Driver) and not o is Driver
