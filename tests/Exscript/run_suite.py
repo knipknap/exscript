@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import os, sys, unittest, glob, fnmatch, re
 from inspect import isfunction, ismodule, isclass
 
