@@ -250,11 +250,7 @@ class Config(ConfigReader):
         db.install()
         return db
 
-    def add_queue(self,
-                  queue_name,
-                  account_pool,
-                  max_threads,
-                  delete_logs):
+    def add_queue(self, queue_name, account_pool, max_threads):
         # Create an XML segment for the queue.
         changed    = False
         xml        = self.cfgtree.getroot()
@@ -282,16 +278,6 @@ class Config(ConfigReader):
         # Define the number of threads.
         if self._add_or_update_elem(queue_elem, 'max-threads', max_threads):
             changed = True
-
-        # Set the delete-logs flag.
-        delete_logs_elem = queue_elem.find('delete-logs')
-        has_flag         = delete_logs_elem is not None
-        if has_flag and not delete_logs:
-            changed = True
-            queue_elem.remove(delete_logs_elem)
-        elif delete_logs and not has_flag:
-            changed = True
-            etree.SubElement(queue_elem, 'delete-logs')
 
         if not changed:
             return False

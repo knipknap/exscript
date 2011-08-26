@@ -40,11 +40,6 @@ class QueueConfig(ConfigSection):
                           metavar = 'INT',
                           default = 5,
                           help    = 'the name of the new queue')
-        parser.add_option('--delete-logs',
-                          dest    = 'delete_logs',
-                          action  = 'store_true',
-                          default = False,
-                          help    = 'whether to delete logs when done')
 
     def prepare_add(self, parser, queue_name):
         self.queue_name = queue_name
@@ -54,8 +49,7 @@ class QueueConfig(ConfigSection):
     def start_add(self):
         self.config.add_queue(self.queue_name,
                               self.options.account_pool,
-                              self.options.max_threads,
-                              self.options.delete_logs)
+                              self.options.max_threads)
         print 'Queue added.'
 
     def getopt_edit(self, parser):
@@ -69,8 +63,7 @@ class QueueConfig(ConfigSection):
     def start_edit(self):
         if self.config.add_queue(self.queue_name,
                                  self.options.account_pool,
-                                 self.options.max_threads,
-                                 self.options.delete_logs):
+                                 self.options.max_threads):
             print 'Queue configured.'
         else:
             print 'No changes were made.'
