@@ -123,6 +123,10 @@ class DaemonConfig(ConfigSection):
                           metavar = 'INT',
                           default = 8132,
                           help    = 'the TCP port number')
+        parser.add_option('--database',
+                          dest    = 'database',
+                          metavar = 'STRING',
+                          help    = 'name of the order database')
         parser.add_option('--account-pool',
                           dest    = 'account_pool',
                           metavar = 'STRING',
@@ -139,7 +143,8 @@ class DaemonConfig(ConfigSection):
         self.config.add_daemon(self.daemon_name,
                                self.options.address,
                                self.options.port,
-                               self.options.account_pool)
+                               self.options.account_pool,
+                               self.options.database)
         print 'Daemon added.'
 
     def getopt_edit(self, parser):
@@ -150,10 +155,13 @@ class DaemonConfig(ConfigSection):
         self._read_config()
         if not self.config.has_daemon(self.daemon_name):
             parser.error('daemon not found')
+        if not self.config.has_database(self.options.database):
+            parser.error('database not found')
 
     def start_edit(self):
         self.config.add_daemon(self.daemon_name,
                                self.options.address,
                                self.options.port,
-                               self.options.account_pool)
+                               self.options.account_pool,
+                               self.options.database)
         print 'Daemon configured.'
