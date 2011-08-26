@@ -95,7 +95,7 @@ class DaemonConfig(ConfigSection):
         self._make_executable(init_file)
 
         # Create directories.
-        log_dir = self.global_options.log_dir
+        log_dir = self.options.log_dir
         self.info('creating log directory %s... ' % log_dir)
         self._mkdir(log_dir)
         self.info('creating spool directory %s... ' % spool_dir)
