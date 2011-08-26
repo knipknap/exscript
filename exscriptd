@@ -76,7 +76,7 @@ if action == 'restart':
     pidutil.kill(options.pidfile)
     print "exscriptd stopped."
 
-daemonize()
+daemonize.daemonize()
 
 logger = logging.getLogger('exscript')
 logger.setLevel(logging.INFO)
