@@ -65,7 +65,6 @@ This is the Exscript daemon configuration file.
   -->
   <queue name="default-queue">
     <max-threads>5</max-threads>
-    <delete-logs/>   <!-- Causes logs of completed tasks to be deleted. -->
     <account-pool>default</account-pool>
   </queue>
 
