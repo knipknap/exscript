@@ -29,7 +29,7 @@ from Exscriptd.util import find_module_recursive
 from Exscriptd.xml import get_accounts_from_etree, add_accounts_to_etree
 
 default_config_dir = os.path.join('/etc', 'exscriptd')
-default_logdir     = os.path.join('/var', 'log', 'exscriptd')
+default_log_dir    = os.path.join('/var', 'log', 'exscriptd')
 
 cache = {}
 def cache_result(func):
@@ -47,7 +47,7 @@ class Config(ConfigReader):
         self.cfg_dir     = cfg_dir
         self.service_dir = os.path.join(cfg_dir, 'services')
         filename         = os.path.join(cfg_dir, 'main.xml')
-        self.logdir      = default_logdir
+        self.logdir      = default_log_dir
         ConfigReader.__init__(self, filename, resolve_variables)
 
         logdir_elem = self.cfgtree.find('exscriptd/logdir')
