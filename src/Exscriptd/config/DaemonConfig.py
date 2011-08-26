@@ -65,6 +65,11 @@ class DaemonConfig(ConfigSection):
         self.info('done.\n')
 
     def getopt_install(self, parser):
+        parser.add_option('--log-dir',
+                          dest    = 'log_dir',
+                          default = default_log_dir,
+                          metavar = 'FILE',
+                          help    = 'where to place log files')
         parser.add_option('--overwrite',
                           dest    = 'overwrite',
                           action  = 'store_true',
@@ -109,11 +114,6 @@ class DaemonConfig(ConfigSection):
         self._generate(cfg_template, cfg_file)
 
     def getopt_add(self, parser):
-        parser.add_option('--log-dir',
-                          dest    = 'log_dir',
-                          default = default_log_dir,
-                          metavar = 'FILE',
-                          help    = 'where to place log files')
         parser.add_option('--address',
                           dest    = 'address',
                           metavar = 'STRING',
