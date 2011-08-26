@@ -48,7 +48,7 @@ class DaemonConfig(ConfigSection):
             return
 
         vars = {'@CFG_DIR@':    self.global_options.config_dir,
-                '@LOG_DIR@':    self.global_options.log_dir,
+                '@LOG_DIR@':    self.options.log_dir,
                 '@SPOOL_DIR@':  spool_dir,
                 '@SCRIPT_DIR@': self.script_dir,
                 '@PYTHONPATH@': os.environ.get('PYTHONPATH'),
