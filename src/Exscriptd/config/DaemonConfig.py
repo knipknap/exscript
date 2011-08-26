@@ -15,7 +15,7 @@
 import os
 import stat
 import re
-from Exscriptd.Config               import Config
+from Exscriptd.Config import Config, default_log_dir
 from Exscriptd.config.ConfigSection import ConfigSection
 
 __dirname__ = os.path.dirname(__file__)
@@ -109,6 +109,11 @@ class DaemonConfig(ConfigSection):
         self._generate(cfg_template, cfg_file)
 
     def getopt_add(self, parser):
+        parser.add_option('--log-dir',
+                          dest    = 'log_dir',
+                          default = default_log_dir,
+                          metavar = 'FILE',
+                          help    = 'where to place log files')
         parser.add_option('--address',
                           dest    = 'address',
                           metavar = 'STRING',
