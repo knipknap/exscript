@@ -24,11 +24,6 @@ from Exscriptd.Dispatcher import Dispatcher
 
 parser = OptionParser(usage = '%prog [options] [start|stop|restart]',
                       version = __version__)
-parser.add_option('--domain',
-                  dest    = 'domain',
-                  metavar = 'DOMAIN',
-                  default = None,
-                  help    = 'The default domain name')
 parser.add_option('--config-dir',
                   dest    = 'config_dir',
                   default = default_config_dir,
