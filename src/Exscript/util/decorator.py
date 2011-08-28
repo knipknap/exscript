@@ -117,6 +117,11 @@ def connect(protocol_args = None):
             pargs.setdefault('account_factory', mkaccount)
             pargs.setdefault('stdout', stdout)
 
+            # SSH key verification requested?
+            verify = pargs.get('verify-fingerprint', True)
+            verify = host.get_option('verify-fingerprint', verify)
+            pargs['verify_host'] = verify
+
             # Create a protocol adapter.
             protocol_name = host.get_protocol()
             protocol_cls  = get_protocol_from_name(protocol_name)
