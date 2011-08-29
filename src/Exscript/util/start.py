@@ -28,7 +28,7 @@ def run(users, hosts, func, **kwargs):
     If you also want to pass arguments to the given function, you may use
     util.decorator.bind() like this::
 
-      def my_callback(job, host, my_arg, **kwargs):
+      def my_callback(job, host, conn, my_arg, **kwargs):
           print my_arg, kwargs.get('foo')
 
       run(account,
