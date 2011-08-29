@@ -20,6 +20,7 @@ import os
 import gc
 import select
 import threading
+import weakref
 from multiprocessing import Pipe
 from Exscript.Logger import logger_registry
 from Exscript.util.cast import to_hosts
@@ -27,6 +28,7 @@ from Exscript.util.impl import format_exception
 from Exscript.util.decorator import connect
 from Exscript.AccountManager import AccountManager
 from Exscript.workqueue import WorkQueue, Task
+
 
 def _unpack_host_and_connection(func):
     """
@@ -160,6 +162,7 @@ class Queue(object):
         """
         self.workqueue         = WorkQueue(mode = mode)
         self.account_manager   = AccountManager()
+        self.pipe_handlers     = weakref.WeakValueDictionary()
         self.domain            = domain
         self.verbose           = verbose
         self.stdout            = stdout
@@ -238,6 +241,7 @@ class Queue(object):
             pipe.close()
         """
         child = _PipeHandler(self.account_manager)
+        self.pipe_handlers[id(child)] = child
         child.start()
         return child.to_parent
 
@@ -420,6 +424,8 @@ class Queue(object):
         """
         self._dbg(2, 'Waiting for the queue to finish.')
         self.workqueue.wait_until_done()
+        for child in self.pipe_handlers.values():
+            child.join()
         self._del_status_bar()
         self._print_status_bar()
         gc.collect()
