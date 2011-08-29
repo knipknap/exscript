@@ -138,9 +138,7 @@ def connect(protocol_args = None):
                 protocol.device.add_commands_from_file(filename)
 
             # Open the connection.
-            print "OPEN"
             protocol.connect(host.get_address(), host.get_tcp_port())
-            print "OPENED"
             job.data['conn'] = protocol
             result = function(job, *args, **kwargs)
             protocol.close(force = True)
