@@ -28,13 +28,13 @@ from Exscript.util.decorator import connect
 from Exscript.AccountManager import AccountManager
 from Exscript.workqueue import WorkQueue, Task
 
-def _connector(func, host):
+def _unpack_host_and_connection(func):
     """
-    A decorator that connects to the given host using the given
-    protocol arguments.
+    A decorator that unpacks the host and connection from the job argument
+    and passes them as separate arguments to the wrapped function.
     """
     def _wrapped(job, *args, **kwargs):
-        return func(job, host, *args, **kwargs)
+        return func(job, job.data['host'], job.data['conn'], *args, **kwargs)
     return _wrapped
 
 def _is_recoverable_error(cls):
@@ -280,12 +280,13 @@ class Queue(object):
         self._print('debug', msg)
 
     def _on_job_init(self, job):
-        host     = job.data
-        job.data = self._create_pipe(), self.channel_map['connection'], host
+        if job.data is None:
+            job.data = {}
+        job.data['pipe']   = self._create_pipe()
+        job.data['stdout'] = self.channel_map['connection']
 
     def _on_job_destroy(self, job):
-        pipe, _, _ = job.data
-        pipe.close()
+        job.data['pipe'].close()
 
     def _on_job_started(self, job):
         self._del_status_bar()
@@ -483,14 +484,12 @@ class Queue(object):
     def _run(self, hosts, callback, queue_function, *args):
         hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
-        callback    = connect()(callback)
+        callback    = connect()(_unpack_host_and_connection(callback))
         task        = Task(self.workqueue)
         for host in hosts:
-            def func(job, *inner_args, **inner_kwargs):
-                _, _, thehost = job.data
-                return callback(job, thehost, *inner_args, **inner_kwargs)
             name   = host.get_name()
-            job_id = queue_function(func, name, *args, data = host)
+            data   = {'host': host}
+            job_id = queue_function(callback, name, *args, data = data)
             if job_id is not None:
                 task.add_job_id(job_id)
 

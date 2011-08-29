@@ -39,7 +39,7 @@ def bind(function, *args, **kwargs):
         return function(*(inner_args + args), **kwargs)
     return decorated
 
-def os_function_mapper(job, host, conn, map, *args, **kwargs):
+def os_function_mapper(map):
     """
     When called with an open connection, this function uses the
     conn.guess_os() function to determine the operating system
@@ -56,7 +56,7 @@ def os_function_mapper(job, host, conn, map, *args, **kwargs):
         def shell(job, host, conn):
             pass # Do something else.
 
-        Exscript.util.start.quickrun('myhost', os_function_mapper)
+        Exscript.util.start.quickrun('myhost', os_function_mapper(globals()))
 
     An exception is raised if a matching function is not found in the map.
 
@@ -71,11 +71,14 @@ def os_function_mapper(job, host, conn, map, *args, **kwargs):
     @rtype:  object
     @return: The return value of the called function.
     """
-    os   = conn.guess_os()
-    func = map.get(os)
-    if func is None:
-        raise Exception('No handler for %s found.' % os)
-    return func(job, host, conn, *args, **kwargs)
+    def decorated(job, *args, **kwargs):
+        conn = job.data['conn']
+        os   = conn.guess_os()
+        func = map.get(os)
+        if func is None:
+            raise Exception('No handler for %s found.' % os)
+        return func(job, *args, **kwargs)
+    return decorated
 
 def _account_factory(accm, host, account):
     if account is None:
@@ -108,14 +111,15 @@ def connect(protocol_args = None):
         protocol_args = {}
 
     def decorator(function):
-        def decorated(job, host, *args, **kwargs):
+        def decorated(job, *args, **kwargs):
             # Define the protocol options that were attached to the
             # job by the queue.
-            pipe, stdout, _ = job.data
+            host      = job.data['host']
+            pipe      = job.data['pipe']
             mkaccount = partial(_account_factory, pipe, host)
             pargs     = protocol_args.copy()
             pargs.setdefault('account_factory', mkaccount)
-            pargs.setdefault('stdout', stdout)
+            pargs.setdefault('stdout', job.data['stdout'])
 
             # SSH key verification requested?
             verify = pargs.get('verify-fingerprint', True)
@@ -134,8 +138,11 @@ def connect(protocol_args = None):
                 protocol.device.add_commands_from_file(filename)
 
             # Open the connection.
+            print "OPEN"
             protocol.connect(host.get_address(), host.get_tcp_port())
-            result = function(job, host, protocol, *args, **kwargs)
+            print "OPENED"
+            job.data['conn'] = protocol
+            result = function(job, *args, **kwargs)
             protocol.close(force = True)
             return result
         return decorated
@@ -160,8 +167,9 @@ def autologin(flush = True, attempts = 1):
     @return: The wrapped function.
     """
     def decorator(function):
-        def decorated(job, host, conn, *args, **kwargs):
+        def decorated(job, *args, **kwargs):
             failed = 0
+            conn   = job.data['conn']
             while True:
                 try:
                     conn.login(flush = flush)
@@ -171,6 +179,6 @@ def autologin(flush = True, attempts = 1):
                         raise
                     continue
                 break
-            return function(job, host, conn, *args, **kwargs)
+            return function(job, *args, **kwargs)
         return decorated
     return decorator

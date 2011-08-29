@@ -16,7 +16,9 @@ class FakeJob(object):
         self.function = lambda x: None
         self.name     = name
         self.failures = 0
-        self.data     = 0, sys.stdout, Host('foo')
+        self.data     = {'pipe':   0,
+                         'stdout': sys.stdout,
+                         'host':   Host('foo')}
 
 class FakeError(Exception):
     pass
@@ -83,7 +85,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 42, in createAbortedLog
+  File "%s.py", line 44, in createAbortedLog
     raise FakeError()
 FakeError
 

@@ -34,19 +34,21 @@ def log_to(logger):
     del logger
 
     def decorator(function):
-        def decorated(job, host, conn, *args, **kwargs):
-            to_parent, _, _ = job.data
-            proxy = LoggerProxy(to_parent, logger_id)
-            proxy.add_log(id(job), job.name, job.failures + 1)
-            log_cb = partial(proxy.log, id(job))
+        def decorated(job, *args, **kwargs):
+            to_parent = job.data['pipe']
+            conn      = job.data['conn']
+            job_id    = id(job)
+            proxy     = LoggerProxy(to_parent, logger_id)
+            log_cb    = partial(proxy.log, job_id)
+            proxy.add_log(job_id, job.name, job.failures + 1)
             conn.data_received_event.listen(log_cb)
             try:
-                result = function(job, host, conn, *args, **kwargs)
+                result = function(job, *args, **kwargs)
             except:
-                proxy.log_aborted(id(job), serializeable_sys_exc_info())
+                proxy.log_aborted(job_id, serializeable_sys_exc_info())
                 raise
             else:
-                proxy.log_succeeded(id(job))
+                proxy.log_succeeded(job_id)
             finally:
                 conn.data_received_event.disconnect(log_cb)
             return result
