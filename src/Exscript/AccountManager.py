@@ -142,10 +142,10 @@ class AccountManager(object):
                 if pool.has_account(account):
                     return pool.acquire_account(account, owner)
 
-        if account is not None and not self.default_pool.has_account(account):
-            # The account is not in any pool.
-            account.acquire()
-            return account
+            if not self.default_pool.has_account(account):
+                # The account is not in any pool.
+                account.acquire()
+                return account
 
         return self.default_pool.acquire_account(account, owner)
 

@@ -74,9 +74,13 @@ class _PipeHandler(threading.Thread):
             if command == 'acquire-account-for-host':
                 account = self.accm.acquire_account_for(arg, self)
                 self._send_account(account)
-            elif command == 'acquire-account':
+            elif command == 'acquire-account-from-hash':
                 account = self.accm.get_account_from_hash(arg)
-                account = self.accm.acquire_account(account, self)
+                if account is not None:
+                    account = self.accm.acquire_account(account, self)
+                self._send_account(account)
+            elif command == 'acquire-account':
+                account = self.accm.acquire_account(owner = self)
                 self._send_account(account)
             elif command == 'release-account':
                 account = self.accm.get_account_from_hash(arg)

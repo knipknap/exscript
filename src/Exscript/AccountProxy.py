@@ -106,8 +106,10 @@ class AccountProxy(object):
             return False
         if self.host:
             self.parent.send(('acquire-account-for-host', self.host))
+        elif self.account_hash:
+            self.parent.send(('acquire-account-from-hash', self.account_hash))
         else:
-            self.parent.send(('acquire-account', self.account_hash))
+            self.parent.send(('acquire-account'))
 
         response = self.parent.recv()
         if isinstance(response, Exception):
