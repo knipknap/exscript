@@ -40,8 +40,7 @@ def message(scope, string):
     @type  string: string
     @param string: A string, or a list of strings.
     """
-    action = scope.get('__connection__').action
-    action.message('debug', string[0] + '\n')
+    sys.stdout.write(''.join(string) + '\n')
     return True
 
 @secure_function
