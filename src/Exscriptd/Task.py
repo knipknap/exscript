@@ -270,7 +270,7 @@ class Task(DBObject):
         """
         return self.closed
 
-    def set_logfile(self, logfile):
+    def set_logfile(self, *logfile):
         """
         Set the name of the logfile, and set the name of the tracefile
         to the same name with '.error' appended.
@@ -279,8 +279,8 @@ class Task(DBObject):
         @param logfile: A filename.
         """
         self.touch()
-        self.logfile   = logfile
-        self.tracefile = logfile + '.error'
+        self.logfile   = os.path.join(*logfile)
+        self.tracefile = self.logfile + '.error'
 
     def get_logfile(self):
         """
@@ -299,7 +299,7 @@ class Task(DBObject):
         @param tracefile: A filename.
         """
         self.touch()
-        self.tracefile = tracefile
+        self.tracefile = os.path.join(*tracefile)
 
     def get_tracefile(self):
         """
