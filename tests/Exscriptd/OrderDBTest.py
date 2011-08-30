@@ -98,11 +98,11 @@ class OrderDBTest(unittest.TestCase):
         assert_progress(1.0)
 
         # Add some sub-tasks.
-        task1 = Task(order.id, 'my test task', 'myqueue', testfunc)
+        task1 = Task(order.id, 'my test task')
         self.db.save_task(task1)
         assert_progress(.0)
 
-        task2 = Task(order.id, 'another test task', 'myqueue2', testfunc)
+        task2 = Task(order.id, 'another test task')
         self.db.save_task(task2)
         assert_progress(.0)
 
@@ -147,11 +147,11 @@ class OrderDBTest(unittest.TestCase):
         self.db.save_order(order)
         self.assertEqual(self.db.get_order_progress_from_id(id), 1.0)
 
-        task1 = Task(order.id, 'my test task', 'myqueue', testfunc)
+        task1 = Task(order.id, 'my test task')
         self.db.save_task(task1)
         self.assertEqual(self.db.get_order_progress_from_id(id), .0)
 
-        task2 = Task(order.id, 'another test task', 'myqueue', testfunc)
+        task2 = Task(order.id, 'another test task')
         self.db.save_task(task2)
         self.assertEqual(self.db.get_order_progress_from_id(id), .0)
 
@@ -204,7 +204,7 @@ class OrderDBTest(unittest.TestCase):
         order = Order('fooservice')
         self.db.save_order(order)
 
-        task = Task(order.id, 'my test task', 'myqueue', testfunc)
+        task = Task(order.id, 'my test task')
         self.assert_(task.id is None)
         self.db.save_task(task)
         self.assert_(task.id is not None)
@@ -215,14 +215,12 @@ class OrderDBTest(unittest.TestCase):
         order = Order('fooservice')
         self.db.save_order(order)
 
-        task1 = Task(order.id, 'my test task', 'myqueue', testfunc)
-        self.assertEqual(task1.func_name, 'testfunc')
+        task1 = Task(order.id, 'my test task')
         self.db.save_task(task1)
         loaded_task = self.db.get_task()
         self.assertEqual(task1.id, loaded_task.id)
-        self.assertEqual(loaded_task.func_name, 'testfunc')
 
-        task2 = Task(order.id, 'another test task', 'myqueue', testfunc)
+        task2 = Task(order.id, 'another test task')
         self.db.save_task(task2)
         self.assertRaises(IndexError, self.db.get_task)
 
@@ -232,8 +230,8 @@ class OrderDBTest(unittest.TestCase):
         order = Order('fooservice')
         self.db.save_order(order)
 
-        task1 = Task(order.id, 'my test task', 'myqueue2', testfunc)
-        task2 = Task(order.id, 'another test task', 'myqueue2', testfunc)
+        task1 = Task(order.id, 'my test task')
+        task2 = Task(order.id, 'another test task')
         self.db.save_task(task1)
         self.db.save_task(task2)
 
