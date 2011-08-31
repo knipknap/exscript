@@ -20,6 +20,7 @@ import time
 import select
 import socket
 import paramiko
+import Crypto
 from binascii               import hexlify
 from paramiko               import util
 from paramiko.resource      import ResourceManager
@@ -53,6 +54,18 @@ class SSH2(Protocol):
         self.client = None
         self.shell  = None
         self.cancel = False
+
+        # Since each protocol may be created in it's own thread, we must
+        # re-initialize the random number generator to make sure that
+        # child threads have no way of guessing the numbers of the parent.
+        # If we don't, PyCrypto generates an error message for security
+        # reasons.
+        try:
+            Crypto.Random.atfork()
+        except AttributeError:
+            # pycrypto versions that have no "Random" module also do not
+            # detect the missing atfork() call, so they do not raise.
+            pass
 
         # Paramiko client stuff.
         self._system_host_keys   = paramiko.HostKeys()
