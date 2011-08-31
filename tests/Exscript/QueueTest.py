@@ -179,6 +179,7 @@ class QueueTest(unittest.TestCase):
         pipe.send(('release-account', account.__hash__()))
         response = pipe.recv()
         self.assertEqual(response, 'ok')
+        pipe.close()
 
     def testSetMaxThreads(self):
         self.assertEqual(1, self.queue.get_max_threads())
