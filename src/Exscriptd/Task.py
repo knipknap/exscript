@@ -15,6 +15,7 @@
 """
 Represents an activity within an order.
 """
+import os
 import sys
 from datetime import datetime
 from lxml import etree
