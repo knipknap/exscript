@@ -86,10 +86,14 @@ def _account_factory(accm, host, account):
 
     # Specific account requested?
     if account:
-        account = AccountProxy.for_account_hash(accm, account.__hash__())
+        acquired = AccountProxy.for_account_hash(accm, account.__hash__())
     else:
-        account = AccountProxy.for_host(accm, host)
+        acquired = AccountProxy.for_host(accm, host)
 
+    # Thread-local accounts don't need a remote proxy.
+    if acquired:
+        return acquired
+    account.acquire()
     return account
 
 def connect(protocol_args = None):

@@ -36,7 +36,6 @@ class AccountProxy(object):
         self.password               = None
         self.authorization_password = None
         self.key                    = None
-        self.thread_local           = False
 
     @staticmethod
     def for_host(parent, host):
@@ -47,8 +46,9 @@ class AccountProxy(object):
         """
         account = AccountProxy(parent)
         account.host = host
-        account.acquire()
-        return account
+        if account.acquire():
+            return account
+        return None
 
     @staticmethod
     def for_account_hash(parent, account_hash):
@@ -60,8 +60,9 @@ class AccountProxy(object):
         """
         account = AccountProxy(parent)
         account.account_hash = account_hash
-        account.acquire()
-        return account
+        if account.acquire():
+            return account
+        return None
 
     @staticmethod
     def for_random_account(parent):
@@ -70,8 +71,9 @@ class AccountProxy(object):
         account is chosen by the connected AccountManager.
         """
         account = AccountProxy(parent)
-        account.acquire()
-        return account
+        if account.acquire():
+            return account
+        return None
 
     def __hash__(self):
         """
@@ -102,8 +104,6 @@ class AccountProxy(object):
         Locks the account. Returns True on success, False if the account
         is thread-local and must not be locked.
         """
-        if self.thread_local:
-            return False
         if self.host:
             self.parent.send(('acquire-account-for-host', self.host))
         elif self.account_hash:
@@ -115,7 +115,6 @@ class AccountProxy(object):
         if isinstance(response, Exception):
             raise response
         if response is None:
-            self.thread_local = True
             return False
 
         self.account_hash, \
@@ -129,8 +128,6 @@ class AccountProxy(object):
         """
         Unlocks the account.
         """
-        if self.thread_local:
-            return False
         self.parent.send(('release-account', self.account_hash))
 
         response = self.parent.recv()
