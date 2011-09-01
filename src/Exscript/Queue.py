@@ -63,6 +63,8 @@ class _PipeHandler(threading.Thread):
         self.to_child, self.to_parent = Pipe()
 
     def _send_account(self, account):
+        if account is None:
+            self.to_child.send(account)
         response = (account.__hash__(),
                     account.get_name(),
                     account.get_password(),
