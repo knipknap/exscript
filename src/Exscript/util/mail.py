@@ -162,11 +162,11 @@ class Mail(object):
             if key == 'from':
                 self.set_sender(value)
             elif key == 'to':
-                self.set_to(value)
+                self.add_to(value)
             elif key == 'cc':
-                self.set_cc(value)
+                self.add_cc(value)
             elif key == 'bcc':
-                self.set_bcc(value)
+                self.add_bcc(value)
             elif key == 'subject':
                 self.set_subject(value)
             else:
