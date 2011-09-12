@@ -42,6 +42,7 @@ VERSION_FILE_TMP=`mktemp`
 cat $VERSION_IN | sed "s/@VERSION@/$VERSION/g" > $VERSION_FILE_TMP
 if diff -q $VERSION_FILE_TMP $VERSION_FILE; then
   echo Version file unchanged.
+  rm $VERSION_FILE_TMP
   exit 0
 fi
 
