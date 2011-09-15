@@ -265,14 +265,17 @@ class Queue(object):
             return 0.0
         return 100.0 / self.total * self.completed
 
-    def _print_status_bar(self):
+    def _print_status_bar(self, exclude = None):
         if self.total == 0:
             return
         percent  = 100.0 / self.total * self.completed
         progress = '%d/%d (%d%%)' % (self.completed, self.total, percent)
         jobs     = self.workqueue.get_running_jobs()
-        running  = '|'.join([j.name for j in jobs])
-        text     = 'In progress: [%s] %s' % (running, progress)
+        running  = '|'.join([j.name for j in jobs if j.name != exclude])
+        if not running:
+            self.status_bar_length = 0
+            return
+        text = 'In progress: [%s] %s' % (running, progress)
         self._write('status_bar', text)
         self.status_bar_length = len(text)
 
@@ -314,13 +317,15 @@ class Queue(object):
         self._print('status_bar', job.name + ' succeeded.')
         self._dbg(2, job.name + ' job is done.')
         self._del_status_bar()
-        self._print_status_bar()
+        self._print_status_bar(exclude = job.name)
 
     def _on_job_aborted(self, job):
         self._on_job_destroy(job)
         self.completed += 1
         self.failed    += 1
         self._print('errors', job.name + ' finally failed.')
+        self._del_status_bar()
+        self._print_status_bar(exclude = job.name)
 
     def set_max_threads(self, n_connections):
         """
