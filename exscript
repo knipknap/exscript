@@ -202,22 +202,16 @@ def run():
     # Choose the template processing type.
     tmpl_vars = options.define
     if options.no_prompt:
-        def function(job, *args, **kwargs):
-            host = job.data['host']
-            conn = job.data['conn']
-            args = args + (script_content,)
+        def function(job, host, conn, **kwargs):
             kwargs.update(tmpl_vars)
             kwargs.update(host.get_all())
-            return template.paste(conn, *args, **kwargs)
+            return template.paste(conn, script_content, **kwargs)
     else:
         strip = not options.no_strip
-        def function(job, *args, **kwargs):
-            host = job.data['host']
-            conn = job.data['conn']
-            args = args + (script_content, strip)
+        def function(job, host, conn, **kwargs):
             kwargs.update(tmpl_vars)
             kwargs.update(host.get_all())
-            return template.eval(conn, *args, **kwargs)
+            return template.eval(conn, script_content, strip, **kwargs)
 
     # Wrap the template processor such that the login procedure is automated.
     if not options.no_authentication:
@@ -245,10 +239,6 @@ def run():
     decorator     = connect(protocol_args = protocol_args)
     function      = decorator(function)
 
-    def open_connection(job, thehost):
-        job.data['host'] = thehost
-        return function(job)
-
     # Wait until the specified time. We are using os.system because
     # it allows for specifying absolute times, not just the number
     # of seconds like Python's time.sleep().
@@ -260,8 +250,7 @@ def run():
 
     # Run the template.
     for host in hosts:
-        cb = bind(open_connection, host)
-        queue.enqueue(cb, host.get_name(), attempts = options.retry + 1)
+        queue.run(host, function, attempts = options.retry + 1)
     queue.join()
     failed = queue.failed
     queue.destroy()

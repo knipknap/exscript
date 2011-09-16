@@ -15,10 +15,8 @@
 """
 Logging utilities.
 """
-from functools import partial
 from Exscript.FileLogger import FileLogger
-from Exscript.LoggerProxy import LoggerProxy
-from Exscript.util.impl import serializeable_sys_exc_info
+from Exscript.util.impl import add_label
 
 _loggers = []
 
@@ -31,28 +29,9 @@ def log_to(logger):
     @param logger: The logger that handles the logging.
     """
     logger_id = id(logger)
-    del logger
-
     def decorator(function):
-        def decorated(job, *args, **kwargs):
-            to_parent = job.data['pipe']
-            conn      = job.data['conn']
-            job_id    = id(job)
-            proxy     = LoggerProxy(to_parent, logger_id)
-            log_cb    = partial(proxy.log, job_id)
-            proxy.add_log(job_id, job.name, job.failures + 1)
-            conn.data_received_event.listen(log_cb)
-            try:
-                result = function(job, *args, **kwargs)
-            except:
-                proxy.log_aborted(job_id, serializeable_sys_exc_info())
-                raise
-            else:
-                proxy.log_succeeded(job_id)
-            finally:
-                conn.data_received_event.disconnect(log_cb)
-            return result
-        return decorated
+        func = add_label(function, 'log_to', logger_id = logger_id)
+        return func
     return decorator
 
 def log_to_file(logdir, mode = 'a', delete = False, clearmem = True):

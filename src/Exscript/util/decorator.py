@@ -15,9 +15,7 @@
 """
 Decorators for callbacks passed to Queue.run().
 """
-from functools import partial
-from Exscript.AccountProxy import AccountProxy
-from Exscript.protocols import get_protocol_from_name
+from impl import add_label, get_label
 from Exscript.protocols.Exception import LoginFailure
 
 def bind(function, *args, **kwargs):
@@ -42,8 +40,8 @@ def bind(function, *args, **kwargs):
 def os_function_mapper(map):
     """
     When called with an open connection, this function uses the
-    conn.guess_os() function to determine the operating system
-    that is running on the connected host.
+    conn.guess_os() function to guess the operating system
+    of the connected host.
     It then uses the given map to look up a function name that corresponds
     to the operating system, and calls it. Example::
 
@@ -80,21 +78,11 @@ def os_function_mapper(map):
         return func(job, *args, **kwargs)
     return decorated
 
-def _account_factory(accm, host, account):
-    if account is None:
-        account = host.get_account()
-
-    # Specific account requested?
-    if account:
-        acquired = AccountProxy.for_account_hash(accm, account.__hash__())
-    else:
-        acquired = AccountProxy.for_host(accm, host)
-
-    # Thread-local accounts don't need a remote proxy.
-    if acquired:
-        return acquired
-    account.acquire()
-    return account
+def _mark_connect(func, protocol_args):
+    if get_label(func, 'connect') is not None:
+        return func
+    func = add_label(func, 'connect', protocol_args = protocol_args)
+    return func
 
 def connect(protocol_args = None):
     """
@@ -113,49 +101,22 @@ def connect(protocol_args = None):
     """
     if protocol_args is None:
         protocol_args = {}
-
-    def decorator(function):
-        def decorated(job, *args, **kwargs):
-            # Define the protocol options that were attached to the
-            # job by the queue.
-            host      = job.data['host']
-            pipe      = job.data['pipe']
-            mkaccount = partial(_account_factory, pipe, host)
-            pargs     = protocol_args.copy()
-            pargs.setdefault('account_factory', mkaccount)
-            pargs.setdefault('stdout', job.data['stdout'])
-
-            # SSH key verification requested?
-            verify = pargs.get('verify-fingerprint', True)
-            verify = host.get_option('verify-fingerprint', verify)
-            pargs['verify_host'] = verify
-
-            # Create a protocol adapter.
-            protocol_name = host.get_protocol()
-            protocol_cls  = get_protocol_from_name(protocol_name)
-            protocol      = protocol_cls(**pargs)
-
-            # Special case: Define the behaviour of the pseudo protocol
-            # adapter.
-            if protocol_name == 'pseudo':
-                filename = host.get_address()
-                protocol.device.add_commands_from_file(filename)
-
-            # Open the connection.
-            protocol.connect(host.get_address(), host.get_tcp_port())
-            job.data['conn'] = protocol
-            result = function(job, *args, **kwargs)
-            protocol.close(force = True)
-            return result
-        return decorated
-    return decorator
+    return lambda func: _mark_connect(func, protocol_args)
 
 def autologin(flush = True, attempts = 1):
     """
     Wraps the given function such that conn.login() is executed
     before calling it. Example::
 
-        @connect(debug = 1)
+        @connect(protocol_args = {'debug': 1})
+        @autologin(attempts = 2)
+        def my_func(job, host, conn):
+            pass # Do something.
+        Exscript.util.start.quickrun('myhost', my_func)
+
+    Note that this decorator implies that the connect() decorator is also
+    used, so the following will also work:
+
         @autologin(attempts = 2)
         def my_func(job, host, conn):
             pass # Do something.
@@ -169,9 +130,9 @@ def autologin(flush = True, attempts = 1):
     @return: The wrapped function.
     """
     def decorator(function):
-        def decorated(job, *args, **kwargs):
+        @connect()
+        def decorated(job, host, conn, *args, **kwargs):
             failed = 0
-            conn   = job.data['conn']
             while True:
                 try:
                     conn.login(flush = flush)
@@ -181,6 +142,6 @@ def autologin(flush = True, attempts = 1):
                         raise
                     continue
                 break
-            return function(job, *args, **kwargs)
+            return function(job, host, conn, *args, **kwargs)
         return decorated
     return decorator

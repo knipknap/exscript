@@ -3,6 +3,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 
 from functools import partial
 import Exscript.util.decorator
+from Exscript.util.impl import get_label
 from Exscript import Host, Account
 from Exscript.protocols import Protocol
 from Exscript.protocols.Exception import LoginFailure
@@ -75,7 +76,9 @@ class decoratorTest(unittest.TestCase):
         self.assertRaises(Exception, mapper, job)
 
     def connect_cb(self, job, *args, **kwargs):
-        conn = job.data['conn']
+        conn = job.data['conn'] = FakeConnection()
+        host = job.data['host']
+        conn.connect(host.get_name(), host.get_tcp_port())
         self.assertEqual(conn.get_host(), 'foo')
         return self.bind_cb(job, *args, **kwargs)
 
@@ -89,21 +92,21 @@ class decoratorTest(unittest.TestCase):
         result = bound(job, 'one', 'two', three = 3)
         self.assertEqual(result, 123)
 
-    def autologin_cb(self, job, *args, **kwargs):
-        conn = job.data['conn']
+    def autologin_cb(self, job, host, conn, *args, **kwargs):
         self.assertEqual(conn.logged_in, True)
         self.assertEqual(conn.login_flushed, False)
         return self.bind_cb(job, *args, **kwargs)
 
     def testAutologin(self):
         from Exscript.util.decorator import autologin
-        job = FakeJob()
-        job.data['conn'] = FakeConnection()
+        job  = FakeJob()
+        host = job.data['host']
+        conn = job.data['conn'] = FakeConnection()
 
         # Test simple login.
         decor  = autologin(flush = False)
         bound  = decor(self.autologin_cb)
-        result = bound(job, 'one', 'two', three = 3)
+        result = bound(job, host, conn, 'one', 'two', three = 3)
         self.assertEqual(result, 123)
 
         # Monkey patch the fake connection such that the login fails.
@@ -122,6 +125,8 @@ class decoratorTest(unittest.TestCase):
         self.assertRaises(LoginFailure,
                           bound,
                           job,
+                          host,
+                          conn,
                           'one',
                           'two',
                           three = 3)

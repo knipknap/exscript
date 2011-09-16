@@ -21,22 +21,112 @@ import gc
 import select
 import threading
 import weakref
+from functools import partial
 from multiprocessing import Pipe
 from Exscript.Logger import logger_registry
+from Exscript.LoggerProxy import LoggerProxy
 from Exscript.util.cast import to_hosts
-from Exscript.util.impl import format_exception
-from Exscript.util.decorator import connect
+from Exscript.util.impl import format_exception, serializeable_sys_exc_info
+from Exscript.util.decorator import get_label, connect
 from Exscript.AccountManager import AccountManager
 from Exscript.workqueue import WorkQueue, Task
+from Exscript.AccountProxy import AccountProxy
+from Exscript.protocols import get_protocol_from_name
 
+def _account_factory(accm, host, account):
+    if account is None:
+        account = host.get_account()
 
-def _unpack_host_and_connection(func):
+    # Specific account requested?
+    if account:
+        acquired = AccountProxy.for_account_hash(accm, account.__hash__())
+    else:
+        acquired = AccountProxy.for_host(accm, host)
+
+    # Thread-local accounts don't need a remote proxy.
+    if acquired:
+        return acquired
+    account.acquire()
+    return account
+
+def _run(func, job, host, conn, *args, **kwargs):
+    # Open the connection.
+    if get_label(func, 'connect') is not None:
+        conn.connect(host.get_address(), host.get_tcp_port())
+
+    # Run the callback.
+    result = func(job, host, conn, *args, **kwargs)
+
+    # Close the connection.
+    if get_label(func, 'connect') is not None:
+        conn.close(force = True)
+
+    return result
+
+def _prepare_connection(func):
     """
     A decorator that unpacks the host and connection from the job argument
     and passes them as separate arguments to the wrapped function.
     """
     def _wrapped(job, *args, **kwargs):
-        return func(job, job.data['host'], job.data['conn'], *args, **kwargs)
+        job_id    = id(job)
+        to_parent = job.data['pipe']
+        host      = job.data['host']
+        conn      = job.data.get('conn')
+
+        # Prepare the connection.
+        connect_options = get_label(func, 'connect')
+        if connect_options is not None:
+            # Define the protocol options that were attached to the
+            # job by the queue.
+            mkaccount = partial(_account_factory, to_parent, host)
+            pargs     = connect_options['protocol_args'].copy()
+            pargs.setdefault('account_factory', mkaccount)
+            pargs.setdefault('stdout', job.data['stdout'])
+
+            # SSH key verification requested?
+            verify = pargs.get('verify-fingerprint', True)
+            verify = host.get_option('verify-fingerprint', verify)
+            pargs['verify_host'] = verify
+
+            # Create a protocol adapter.
+            protocol_name    = host.get_protocol()
+            protocol_cls     = get_protocol_from_name(protocol_name)
+            conn             = protocol_cls(**pargs)
+            job.data['conn'] = conn
+
+            # Special case: Define the behaviour of the pseudo protocol
+            # adapter.
+            if protocol_name == 'pseudo':
+                filename = host.get_address()
+                conn.device.add_commands_from_file(filename)
+
+        # Connect and run the function.
+        log_options = get_label(func, 'log_to')
+        if log_options is not None:
+            # Enable logging.
+            if conn is None:
+                msg = 'logging decorator used on a function that has no' \
+                    + ' connection associated.'
+                raise Exception(msg)
+
+            proxy  = LoggerProxy(to_parent, log_options['logger_id'])
+            log_cb = partial(proxy.log, job_id)
+            proxy.add_log(job_id, job.name, job.failures + 1)
+            conn.data_received_event.listen(log_cb)
+            try:
+                result = _run(func, job, host, conn, *args, **kwargs)
+            except:
+                proxy.log_aborted(job_id, serializeable_sys_exc_info())
+                raise
+            else:
+                proxy.log_succeeded(job_id)
+            finally:
+                conn.data_received_event.disconnect(log_cb)
+        else:
+            result = _run(func, job, host, conn, *args, **kwargs)
+        return result
+
     return _wrapped
 
 def _is_recoverable_error(cls):
@@ -498,7 +588,8 @@ class Queue(object):
     def _run(self, hosts, callback, queue_function, *args):
         hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
-        callback    = connect()(_unpack_host_and_connection(callback))
+        callback    = connect()(callback)
+        callback    = _prepare_connection(callback)
         task        = Task(self.workqueue)
         for host in hosts:
             name   = host.get_name()

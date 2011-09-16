@@ -20,6 +20,41 @@ import warnings
 import traceback
 from functools import wraps
 
+def add_label(obj, name, **kwargs):
+    """
+    Labels an object such that it can later be checked with
+    L{has_label()}.
+
+    @type  obj: object
+    @param obj: The object that is labeled.
+    @type  name: str
+    @param name: A label.
+    @type  kwargs: dict
+    @param kwargs: Optional values to store with the label.
+    @rtype:  object
+    @return: The labeled function.
+    """
+    labels = obj.__dict__.setdefault('_labels', dict())
+    labels[name] = kwargs
+    return obj
+
+def get_label(obj, name):
+    """
+    Checks whether an object has the given label attached (see
+    L{mark_function()}) and returns the associated options.
+
+    @type  obj: object
+    @param obj: The object to check for the label.
+    @type  name: str
+    @param name: A label.
+    @rtype:  dict or None
+    @return: The optional values if the label is attached, None otherwise.
+    """
+    labels = obj.__dict__.get('_labels')
+    if labels is None:
+        return None
+    return labels.get(name)
+
 def serializeable_exc_info(thetype, ex, tb):
     """
     Since traceback objects can not be pickled, this function manipulates
