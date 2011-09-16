@@ -154,7 +154,7 @@ class Task(DBObject):
         """
         self.touch()
         self.job_id = job_id
-        self.changed_event(self)
+        self.set_status('queued')
 
     def get_job_id(self):
         """
