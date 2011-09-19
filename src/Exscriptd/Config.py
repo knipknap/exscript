@@ -88,6 +88,25 @@ class Config(ConfigReader):
     def get_logdir(self):
         return self.logdir
 
+    def set_logdir(self, logdir):
+        self.logdir = logdir
+        # Create an XML segment for the database.
+        changed     = False
+        xml         = self.cfgtree.getroot()
+        global_elem = xml.find('exscriptd')
+        if global_elem is None:
+            raise Exception('missing section in config file: <exscriptd>')
+
+        # Add the dbn the the XML.
+        if self._add_or_update_elem(global_elem, 'logdir', logdir):
+            changed = True
+
+        # Write the resulting XML.
+        if not changed:
+            return False
+        self.save()
+        return True
+
     def get_queues(self):
         names = [e.get('name') for e in self.cfgtree.iterfind('queue')]
         return dict((name, self._init_queue_from_name(name))

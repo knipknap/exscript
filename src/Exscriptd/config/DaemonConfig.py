@@ -12,16 +12,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os
-import stat
-import re
-from Exscriptd.Config import Config, default_log_dir
+from Exscriptd.Config import Config
 from Exscriptd.config.ConfigSection import ConfigSection
-
-__dirname__ = os.path.dirname(__file__)
-spool_dir   = os.path.join('/var', 'spool', 'exscriptd')
-pidfile     = os.path.join('/var', 'run', 'exscriptd.pid')
-init_dir    = os.path.join('/etc', 'init.d')
 
 class DaemonConfig(ConfigSection):
     def __init__(self, *args, **kwargs):
@@ -38,80 +30,8 @@ class DaemonConfig(ConfigSection):
 
     @staticmethod
     def get_commands():
-        return (('install', 'install the daemon'),
-                ('add',     'configure a new daemon'),
-                ('edit',    'configure an existing daemon'))
-
-    def _generate(self, infilename, outfilename):
-        if not self.options.overwrite and os.path.isfile(outfilename):
-            self.info('file exists, skipping.\n')
-            return
-
-        vars = {'@CFG_DIR@':    self.global_options.config_dir,
-                '@LOG_DIR@':    self.options.log_dir,
-                '@SPOOL_DIR@':  spool_dir,
-                '@SCRIPT_DIR@': self.script_dir,
-                '@PYTHONPATH@': os.environ.get('PYTHONPATH'),
-                '@PIDFILE@':    self.options.pidfile,
-                '@INIT_DIR@':   init_dir}
-        sub_re = re.compile('(' + '|'.join(vars.keys()) + ')+')
-
-        content = open(infilename).read()
-        subst   = lambda s: vars[s.group(0)]
-        content = sub_re.sub(subst, content)
-        outfile = open(outfilename, 'w')
-        outfile.write(content)
-        outfile.close()
-        self.info('done.\n')
-
-    def getopt_install(self, parser):
-        parser.add_option('--log-dir',
-                          dest    = 'log_dir',
-                          default = default_log_dir,
-                          metavar = 'FILE',
-                          help    = 'where to place log files')
-        parser.add_option('--overwrite',
-                          dest    = 'overwrite',
-                          action  = 'store_true',
-                          default = False,
-                          help    = 'overwrite existing files')
-        parser.add_option('--pidfile',
-                          dest    = 'pidfile',
-                          metavar = 'STRING',
-                          default = pidfile,
-                          help    = 'the location of the pidfile')
-
-    def _make_executable(self, filename):
-        self.info('making %s executable...\n' % filename)
-        mode = os.stat(filename).st_mode
-        os.chmod(filename, mode|stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH)
-
-    def start_install(self):
-        # Install the init script.
-        init_template = os.path.join(__dirname__, 'exscriptd.in')
-        init_file     = os.path.join('/etc', 'init.d', 'exscriptd')
-        self.info('creating init-file at %s... ' % init_file)
-        self._generate(init_template, init_file)
-        self._make_executable(init_file)
-
-        # Create directories.
-        log_dir = self.options.log_dir
-        self.info('creating log directory %s... ' % log_dir)
-        self._mkdir(log_dir)
-        self.info('creating spool directory %s... ' % spool_dir)
-        self._mkdir(spool_dir)
-        cfg_dir = self.global_options.config_dir
-        self.info('creating config directory %s... ' % cfg_dir)
-        self._mkdir(cfg_dir)
-        service_dir = os.path.join(cfg_dir, 'services')
-        self.info('creating service directory %s... ' % service_dir)
-        self._mkdir(service_dir)
-
-        # Install the default config file.
-        cfg_template = os.path.join(__dirname__, 'main.xml.in')
-        cfg_file     = os.path.join(cfg_dir, 'main.xml')
-        self.info('creating config file %s... ' % cfg_file)
-        self._generate(cfg_template, cfg_file)
+        return (('add',  'configure a new daemon'),
+                ('edit', 'configure an existing daemon'))
 
     def getopt_add(self, parser):
         parser.add_option('--address',
