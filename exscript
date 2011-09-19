@@ -28,7 +28,7 @@ from Exscript.util.log import log_to_file
 from Exscript.util.file import get_accounts_from_file, \
                                get_hosts_from_file, \
                                get_hosts_from_csv
-from Exscript.util.decorator import autologin, bind, connect
+from Exscript.util.decorator import autologin
 
 bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
 
@@ -234,10 +234,6 @@ def run():
         mode      = options.overwrite_logs and 'w' or 'a'
         decorator = log_to_file(options.logdir, mode, options.delete_logs)
         function  = decorator(function)
-
-    # Wrap the template processor such that the connection is opened.
-    decorator = connect()
-    function  = decorator(function)
 
     # Wait until the specified time. We are using os.system because
     # it allows for specifying absolute times, not just the number

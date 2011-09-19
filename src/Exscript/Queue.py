@@ -27,7 +27,7 @@ from Exscript.Logger import logger_registry
 from Exscript.LoggerProxy import LoggerProxy
 from Exscript.util.cast import to_hosts
 from Exscript.util.impl import format_exception, serializeable_sys_exc_info
-from Exscript.util.decorator import get_label, connect
+from Exscript.util.decorator import get_label
 from Exscript.AccountManager import AccountManager
 from Exscript.workqueue import WorkQueue, Task
 from Exscript.AccountProxy import AccountProxy
@@ -50,17 +50,9 @@ def _account_factory(accm, host, account):
     return account
 
 def _run(func, job, host, conn, *args, **kwargs):
-    # Open the connection.
-    if get_label(func, 'connect') is not None:
-        conn.connect(host.get_address(), host.get_tcp_port())
-
-    # Run the callback.
+    conn.connect(host.get_address(), host.get_tcp_port())
     result = func(job, host, conn, *args, **kwargs)
-
-    # Close the connection.
-    if get_label(func, 'connect') is not None:
-        conn.close(force = True)
-
+    conn.close(force = True)
     return result
 
 def _prepare_connection(func):
@@ -72,40 +64,30 @@ def _prepare_connection(func):
         job_id    = id(job)
         to_parent = job.data['pipe']
         host      = job.data['host']
-        conn      = job.data.get('conn')
 
-        # Prepare the connection.
-        connect_options = get_label(func, 'connect')
-        if connect_options is not None:
-            # Define the protocol options that were attached to the
-            # job by the queue.
-            mkaccount = partial(_account_factory, to_parent, host)
-            pargs     = connect_options['protocol_args'].copy()
-            pargs.setdefault('account_factory', mkaccount)
-            pargs.setdefault('stdout', job.data['stdout'])
-            pargs.update(host.get_options())
+        # Define the protocol options that were attached to the
+        # job by the queue.
+        mkaccount = partial(_account_factory, to_parent, host)
+        pargs     = {'account_factory': mkaccount,
+                     'stdout':          job.data['stdout']}
+        pargs.update(host.get_options())
 
-            # Create a protocol adapter.
-            protocol_name    = host.get_protocol()
-            protocol_cls     = get_protocol_from_name(protocol_name)
-            conn             = protocol_cls(**pargs)
-            job.data['conn'] = conn
+        # Create a protocol adapter.
+        protocol_name    = host.get_protocol()
+        protocol_cls     = get_protocol_from_name(protocol_name)
+        conn             = protocol_cls(**pargs)
+        job.data['conn'] = conn
 
-            # Special case: Define the behaviour of the pseudo protocol
-            # adapter.
-            if protocol_name == 'pseudo':
-                filename = host.get_address()
-                conn.device.add_commands_from_file(filename)
+        # Special case: Define the behaviour of the pseudo protocol
+        # adapter.
+        if protocol_name == 'pseudo':
+            filename = host.get_address()
+            conn.device.add_commands_from_file(filename)
 
         # Connect and run the function.
         log_options = get_label(func, 'log_to')
         if log_options is not None:
             # Enable logging.
-            if conn is None:
-                msg = 'logging decorator used on a function that has no' \
-                    + ' connection associated.'
-                raise Exception(msg)
-
             proxy  = LoggerProxy(to_parent, log_options['logger_id'])
             log_cb = partial(proxy.log, job_id)
             proxy.add_log(job_id, job.name, job.failures + 1)
@@ -584,7 +566,6 @@ class Queue(object):
     def _run(self, hosts, callback, queue_function, *args):
         hosts       = to_hosts(hosts, default_domain = self.domain)
         self.total += len(hosts)
-        callback    = connect()(callback)
         callback    = _prepare_connection(callback)
         task        = Task(self.workqueue)
         for host in hosts:

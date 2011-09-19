@@ -78,44 +78,10 @@ def os_function_mapper(map):
         return func(job, *args, **kwargs)
     return decorated
 
-def _mark_connect(func, protocol_args):
-    if get_label(func, 'connect') is not None:
-        return func
-    func = add_label(func, 'connect', protocol_args = protocol_args)
-    return func
-
-def connect(protocol_args = None):
-    """
-    Wraps the given function such that the connection is opened before
-    calling it. Example::
-
-        @connect(protocol_args = {'debug': 1})
-        def my_func(job, host, conn):
-            pass # Do something.
-        Exscript.util.start.quickrun('myhost', my_func)
-
-    @type  protocol_args: dict
-    @param protocol_args: Passed to the Exscript.protocol.Protocol constructor.
-    @rtype:  function
-    @return: The wrapped function.
-    """
-    if protocol_args is None:
-        protocol_args = {}
-    return lambda func: _mark_connect(func, protocol_args)
-
 def autologin(flush = True, attempts = 1):
     """
     Wraps the given function such that conn.login() is executed
     before calling it. Example::
-
-        @connect(protocol_args = {'debug': 1})
-        @autologin(attempts = 2)
-        def my_func(job, host, conn):
-            pass # Do something.
-        Exscript.util.start.quickrun('myhost', my_func)
-
-    Note that this decorator implies that the connect() decorator is also
-    used, so the following will also work:
 
         @autologin(attempts = 2)
         def my_func(job, host, conn):
@@ -130,7 +96,6 @@ def autologin(flush = True, attempts = 1):
     @return: The wrapped function.
     """
     def decorator(function):
-        @connect()
         def decorated(job, host, conn, *args, **kwargs):
             failed = 0
             while True:

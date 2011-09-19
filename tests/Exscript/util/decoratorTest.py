@@ -75,23 +75,6 @@ class decoratorTest(unittest.TestCase):
         job.data['conn'] = FakeConnection(os = 'unknown')
         self.assertRaises(Exception, mapper, job)
 
-    def connect_cb(self, job, *args, **kwargs):
-        conn = job.data['conn'] = FakeConnection()
-        host = job.data['host']
-        conn.connect(host.get_name(), host.get_tcp_port())
-        self.assertEqual(conn.get_host(), 'foo')
-        return self.bind_cb(job, *args, **kwargs)
-
-    def testConnect(self):
-        from Exscript.util.decorator import connect
-        job = FakeJob()
-        job.data['host']   = Host('dummy://foo')
-        job.data['stdout'] = open(os.devnull, 'w')
-
-        bound  = connect()(self.connect_cb)
-        result = bound(job, 'one', 'two', three = 3)
-        self.assertEqual(result, 123)
-
     def autologin_cb(self, job, host, conn, *args, **kwargs):
         self.assertEqual(conn.logged_in, True)
         self.assertEqual(conn.login_flushed, False)
