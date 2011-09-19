@@ -35,6 +35,7 @@ class Dispatcher(object):
         self.order_db = order_db
         self.queues   = {}
         self.logger   = logger
+        self.loggers  = defaultdict(list) # map order id to loggers
         self.logdir   = logdir
         self.lock     = Lock()
         self.services = {}
@@ -110,8 +111,6 @@ class Dispatcher(object):
     def get_logger(self, order, name, level = logging.INFO):
         """
         Creates a logger that logs to a file in the order's log directory.
-        Make sure that the logger is deleted using free_logger() as soon
-        as the order is complete!
         """
         order_logdir = self.get_order_logdir(order)
         logfile      = os.path.join(order_logdir, name)
@@ -122,9 +121,10 @@ class Dispatcher(object):
         logger.setLevel(logging.INFO)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+        self.loggers[order.get_id()].append(logger)
         return logger
 
-    def free_logger(self, logger):
+    def _free_logger(self, logger):
         # hack to work around the fact that Python's logging module
         # provides no documented way to delete loggers.
         del logger.manager.loggerDict[logger.name]
@@ -160,6 +160,8 @@ class Dispatcher(object):
         if remaining == 0:
             order.close()
             self.set_order_status(order, 'completed')
+            for logger in self.loggers.pop(order.id, []):
+                self._free_logger(logger)
 
     def _on_task_changed(self, task):
         self.order_db.save_task(task)
