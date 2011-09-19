@@ -72,7 +72,7 @@ class SSH2(Protocol):
         self._host_keys          = paramiko.HostKeys()
         self._host_keys_filename = None
 
-        if self.verify_host:
+        if self.verify_fingerprint:
             self._missing_host_key = self._reject_host_key
         else:
             self._missing_host_key = self._add_host_key

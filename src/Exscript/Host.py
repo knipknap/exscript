@@ -223,14 +223,14 @@ class Host(object):
         Defines a (possibly protocol-specific) option for the host.
         Possible options include:
 
-            verify-fingerprint: bool
+            verify_fingerprint: bool
 
         @type  name: str
         @param name: The option name.
         @type  value: object
         @param value: The option value.
         """
-        if name not in ('verify-fingerprint',):
+        if name not in ('debug', 'verify_fingerprint',):
             raise TypeError('No such option: ' + repr(name))
         if self.options is None:
             self.options = {}
@@ -249,6 +249,17 @@ class Host(object):
         if self.options is None:
             return default
         return self.options.get(name, default)
+
+    def get_options(self):
+        """
+        Return a dictionary containing all defined options.
+
+        @rtype:  dict
+        @return: The options.
+        """
+        if self.options is None:
+            return {}
+        return self.options
 
     def set_tcp_port(self, tcp_port):
         """

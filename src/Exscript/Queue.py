@@ -83,11 +83,7 @@ def _prepare_connection(func):
             pargs     = connect_options['protocol_args'].copy()
             pargs.setdefault('account_factory', mkaccount)
             pargs.setdefault('stdout', job.data['stdout'])
-
-            # SSH key verification requested?
-            verify = pargs.get('verify-fingerprint', True)
-            verify = host.get_option('verify-fingerprint', verify)
-            pargs['verify_host'] = verify
+            pargs.update(host.get_options())
 
             # Create a protocol adapter.
             protocol_name    = host.get_protocol()

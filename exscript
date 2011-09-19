@@ -112,7 +112,8 @@ def run():
 
     # Set host options.
     for host in hosts:
-        host.set_option('verify-fingerprint', not options.ssh_auto_verify)
+        host.set_option('debug', options.protocol_verbose)
+        host.set_option('verify_fingerprint', not options.ssh_auto_verify)
 
     # Read the Exscript.
     if options.execute:
@@ -235,9 +236,8 @@ def run():
         function  = decorator(function)
 
     # Wrap the template processor such that the connection is opened.
-    protocol_args = {'debug': options.protocol_verbose}
-    decorator     = connect(protocol_args = protocol_args)
-    function      = decorator(function)
+    decorator = connect()
+    function  = decorator(function)
 
     # Wait until the specified time. We are using os.system because
     # it allows for specifying absolute times, not just the number

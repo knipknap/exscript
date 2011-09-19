@@ -201,15 +201,15 @@ class Protocol(object):
     """
 
     def __init__(self,
-                 driver          = None,
-                 stdout          = None,
-                 stderr          = None,
-                 debug           = 0,
-                 timeout         = 30,
-                 logfile         = None,
-                 termtype        = 'dumb',
-                 verify_host     = True,
-                 account_factory = None):
+                 driver             = None,
+                 stdout             = None,
+                 stderr             = None,
+                 debug              = 0,
+                 timeout            = 30,
+                 logfile            = None,
+                 termtype           = 'dumb',
+                 verify_fingerprint = True,
+                 account_factory    = None):
         """
         Constructor.
         The following events are provided:
@@ -230,7 +230,7 @@ class Protocol(object):
             device is dumped.
         @keyword termtype: The terminal type to request from the remote host,
             e.g. 'vt100'.
-        @keyword verify_host: Whether to verify the host's fingerprint.
+        @keyword verify_fingerprint: Whether to verify the host's fingerprint.
         @keyword account_factory: A function that produces a new L{Account}.
         """
         self.data_received_event   = Event()
@@ -250,7 +250,7 @@ class Protocol(object):
         self.port                  = None
         self.last_account          = None
         self.termtype              = termtype
-        self.verify_host           = verify_host
+        self.verify_fingerprint    = verify_fingerprint
         self.manual_driver         = driver
         self.debug                 = debug
         self.timeout               = timeout

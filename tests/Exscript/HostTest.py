@@ -85,12 +85,17 @@ class HostTest(unittest.TestCase):
 
     def testSetOption(self):
         self.assertRaises(TypeError, self.host.set_option, 'test', True)
-        self.assertEqual(self.host.get_option('verify-fingerprint'), None)
-        self.assertEqual(self.host.get_option('verify-fingerprint', False), False)
-        self.host.set_option('verify-fingerprint', True)
-        self.assertEqual(self.host.get_option('verify-fingerprint'), True)
+        self.assertEqual(self.host.get_options(), {})
+        self.assertEqual(self.host.get_option('verify_fingerprint'), None)
+        self.assertEqual(self.host.get_option('verify_fingerprint', False), False)
+        self.host.set_option('verify_fingerprint', True)
+        self.assertEqual(self.host.get_option('verify_fingerprint'), True)
+        self.assertEqual(self.host.get_options(), {'verify_fingerprint': True})
 
     def testGetOption(self):
+        pass # Tested in testSetOption().
+
+    def testGetOptions(self):
         pass # Tested in testSetOption().
 
     def testSetTcpPort(self):
