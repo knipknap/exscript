@@ -108,7 +108,7 @@ class BaseConfig(ConfigSection):
         cfg_tmpl = os.path.join(__dirname__, 'main.xml.in')
         cfg_file = os.path.join(self.global_options.config_dir, 'main.xml')
         self.info('creating config file %s... ' % cfg_file)
-        self._generate(cfg_template, cfg_file)
+        self._generate(cfg_tmpl, cfg_file)
 
     def getopt_edit(self, parser):
         parser.add_option('--log-dir',
