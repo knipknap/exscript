@@ -26,6 +26,7 @@ from multiprocessing import Pipe
 from Exscript.Logger import logger_registry
 from Exscript.LoggerProxy import LoggerProxy
 from Exscript.util.cast import to_hosts
+from Exscript.util.tty import get_terminal_size
 from Exscript.util.impl import format_exception, serializeable_sys_exc_info
 from Exscript.util.decorator import get_label
 from Exscript.AccountManager import AccountManager
@@ -48,12 +49,6 @@ def _account_factory(accm, host, account):
         return acquired
     account.acquire()
     return account
-
-def _run(func, job, host, conn, *args, **kwargs):
-    conn.connect(host.get_address(), host.get_tcp_port())
-    result = func(job, host, conn, *args, **kwargs)
-    conn.close(force = True)
-    return result
 
 def _prepare_connection(func):
     """
@@ -81,7 +76,9 @@ def _prepare_connection(func):
             proxy.add_log(job_id, job.name, job.failures + 1)
             conn.data_received_event.listen(log_cb)
             try:
-                result = _run(func, job, host, conn, *args, **kwargs)
+                conn.connect(host.get_address(), host.get_tcp_port())
+                result = func(job, host, conn, *args, **kwargs)
+                conn.close(force = True)
             except:
                 proxy.log_aborted(job_id, serializeable_sys_exc_info())
                 raise
@@ -90,7 +87,9 @@ def _prepare_connection(func):
             finally:
                 conn.data_received_event.disconnect(log_cb)
         else:
-            result = _run(func, job, host, conn, *args, **kwargs)
+            conn.connect(host.get_address(), host.get_tcp_port())
+            result = func(job, host, conn, *args, **kwargs)
+            conn.close(force = True)
         return result
 
     return _wrapped
@@ -331,7 +330,18 @@ class Queue(object):
         if not running:
             self.status_bar_length = 0
             return
-        text = 'In progress: [%s] %s' % (running, progress)
+        rows, cols = get_terminal_size()
+        text       = 'In progress: [%s] %s' % (running, progress)
+        overflow   = len(text) - cols
+        if overflow > 0:
+            cont      = '...'
+            overflow += len(cont) + 1
+            strlen    = len(running)
+            partlen   = (strlen / 2) - (overflow / 2)
+            head      = running[:partlen]
+            tail      = running[-partlen:]
+            running   = head + cont + tail
+            text      = 'In progress: [%s] %s' % (running, progress)
         self._write('status_bar', text)
         self.status_bar_length = len(text)
 
