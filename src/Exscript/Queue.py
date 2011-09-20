@@ -31,7 +31,7 @@ from Exscript.util.decorator import get_label
 from Exscript.AccountManager import AccountManager
 from Exscript.workqueue import WorkQueue, Task
 from Exscript.AccountProxy import AccountProxy
-from Exscript.protocols import get_protocol_from_name
+from Exscript.protocols import prepare
 
 def _account_factory(accm, host, account):
     if account is None:
@@ -65,24 +65,12 @@ def _prepare_connection(func):
         to_parent = job.data['pipe']
         host      = job.data['host']
 
-        # Define the protocol options that were attached to the
-        # job by the queue.
+        # Create a protocol adapter.
         mkaccount = partial(_account_factory, to_parent, host)
         pargs     = {'account_factory': mkaccount,
                      'stdout':          job.data['stdout']}
         pargs.update(host.get_options())
-
-        # Create a protocol adapter.
-        protocol_name    = host.get_protocol()
-        protocol_cls     = get_protocol_from_name(protocol_name)
-        conn             = protocol_cls(**pargs)
-        job.data['conn'] = conn
-
-        # Special case: Define the behaviour of the pseudo protocol
-        # adapter.
-        if protocol_name == 'pseudo':
-            filename = host.get_address()
-            conn.device.add_commands_from_file(filename)
+        conn = prepare(host, **pargs)
 
         # Connect and run the function.
         log_options = get_label(func, 'log_to')
