@@ -12,12 +12,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from Exscript                    import Account
-from Exscript.util.url           import Url
+from Exscript import Account
+from Exscript.util.cast import to_host
+from Exscript.util.url import Url
 from Exscript.protocols.Protocol import Protocol
-from Exscript.protocols.Telnet   import Telnet
-from Exscript.protocols.SSH2     import SSH2
-from Exscript.protocols.Dummy    import Dummy
+from Exscript.protocols.Telnet import Telnet
+from Exscript.protocols.SSH2 import SSH2
+from Exscript.protocols.Dummy import Dummy
 
 protocol_map = {'dummy':  Dummy,
                 'pseudo': Dummy,
@@ -28,6 +29,11 @@ protocol_map = {'dummy':  Dummy,
 def get_protocol_from_name(name):
     """
     Returns the protocol class for the protocol with the given name.
+
+    @type  name: str
+    @param name: The name of the protocol.
+    @rtype:  Protocol
+    @return: The protocol class.
     """
     cls = protocol_map.get(name)
     if not cls:
@@ -37,38 +43,61 @@ def get_protocol_from_name(name):
 def create_protocol(name, **kwargs):
     """
     Returns an instance of the protocol with the given name.
+
+    @type  name: str
+    @param name: The name of the protocol.
+    @rtype:  Protocol
+    @return: An instance of the protocol.
     """
     cls = protocol_map.get(name)
     if not cls:
         raise ValueError('Unsupported protocol "%s".' % name)
     return cls(**kwargs)
 
-def connect(uri, default_protocol = 'telnet', **kwargs):
+def prepare(host, default_protocol = 'telnet', **kwargs):
     """
-    Parses the given URL-formatted hostname using L{Exscript.util.url},
-    creates an instance of the protocol, and calls L{Protocol.connect()}
-    on it. If the URL contains a username, L{Protocol.login()} is also
-    called.
+    Creates an instance of the protocol by either parsing the given
+    URL-formatted hostname using L{Exscript.util.url}, or according to
+    the options of the given L{Exscript.Host}.
 
-    @type  uri: str
-    @param uri: The URL-formatted hostname.
+    @type  host: str or Host
+    @param host: A URL-formatted hostname or a L{Exscript.Host} instance.
     @type  default_protocol: str
     @param default_protocol: Protocol that is used if the URL specifies none.
     @type  kwargs: dict
     @param kwargs: Passed to the protocol constructor.
+    @rtype:  Protocol
+    @return: An instance of the protocol.
     """
-    url  = Url.from_string(uri, default_protocol)
-    conn = create_protocol(url.protocol, **kwargs)
-    if url.protocol == 'pseudo':
-        conn.device.add_commands_from_file(url.hostname)
-    conn.connect(url.hostname, url.port)
+    host     = to_host(host, default_protocol = default_protocol)
+    protocol = host.get_protocol()
+    conn     = create_protocol(protocol, **kwargs)
+    if protocol == 'pseudo':
+        filename = host.get_address()
+        conn.device.add_commands_from_file(filename)
+    return conn
 
-    if url.username is not None \
-       or url.password1 is not None \
-       or url.password2:
-        account = Account(url.username, url.password1, url.password2)
+def connect(host, default_protocol = 'telnet', **kwargs):
+    """
+    Like L{prepare()}, but also connects to the host by calling
+    L{Protocol.connect()}. If the URL or host contain any login info, this
+    function also logs into the host using L{Protocol.login()}.
+
+    @type  host: str or Host
+    @param host: A URL-formatted hostname or a L{Exscript.Host} object.
+    @type  default_protocol: str
+    @param default_protocol: Protocol that is used if the URL specifies none.
+    @type  kwargs: dict
+    @param kwargs: Passed to the protocol constructor.
+    @rtype:  Protocol
+    @return: An instance of the protocol.
+    """
+    host    = to_host(host)
+    conn    = prepare(host, default_protocol, **kwargs)
+    account = host.get_account()
+    conn.connect(host.get_address(), host.get_tcp_port())
+    if account is not None:
         conn.login(account)
-
     return conn
 
 import inspect 
