@@ -52,6 +52,8 @@ class Execute(String):
 
         if self.strip_command:
             response = response[1:]
+        if len(response) == 0:
+            response = ['']
 
         self.parent.define(__response__ = response)
         return 1
