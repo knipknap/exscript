@@ -27,5 +27,3 @@ Mailing List: http://groups.google.com/group/exscript/
 
 * Python 2.6 or greater
 * Python-crypto
-* Python-pexpect (deprecated/optional - only for SSH version 1 support)
-* OpenSSH command line client (deprecated/optional - only for SSH version 1 support)
