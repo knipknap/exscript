@@ -180,6 +180,9 @@ class SSH2(Protocol):
         if not keys:
             raise AuthenticationException('auth agent found no keys')
 
+        saved_exception = AuthenticationException(
+            'Failed to authenticate with given username')
+
         for key in keys:
             try:
                 fp = hexlify(key.get_fingerprint())
@@ -193,6 +196,10 @@ class SSH2(Protocol):
     def _paramiko_auth_key(self, username, keys, password):
         if password is None:
             password = ''
+
+        saved_exception = AuthenticationException(
+            'Failed to authenticate with given username and password/key')
+
         for pkey_class, filename in keys:
             try:
                 key = pkey_class.from_private_key_file(filename, password)
