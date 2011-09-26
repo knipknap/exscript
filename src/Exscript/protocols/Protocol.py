@@ -23,6 +23,7 @@ import signal
 import errno
 import os
 from functools import partial
+from Exscript.Host import Host
 from Exscript.util.impl import Context, _Context
 from Exscript.util.buffer import MonitoredBuffer
 from Exscript.util.crypt import otp
@@ -200,6 +201,8 @@ class Protocol(object):
           detail here).
     """
 
+    PROTOCOL = None
+
     def __init__(self,
                  driver             = None,
                  stdout             = None,
@@ -258,6 +261,7 @@ class Protocol(object):
         self.response              = None
         self.buffer                = MonitoredBuffer()
         self.account_factory       = account_factory
+
         if stdout is None:
             self.stdout = open(os.devnull, 'w')
         else:
@@ -337,6 +341,7 @@ class Protocol(object):
         if self.debug < level:
             return
         self.stderr.write(self.get_driver().name + ': ' + msg + '\n')
+
 
     def set_driver(self, driver = None):
         """
@@ -551,7 +556,9 @@ class Protocol(object):
         @param port: The remote TCP port number.
         """
         if hostname is not None:
-            self.host = hostname
+            self.host = Host.from_details(
+                uri=hostname,
+                protocol=self.PROTOCOL)
         return self._connect_hook(self.host, port)
 
     def _get_account(self, account):

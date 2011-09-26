@@ -44,10 +44,14 @@ keymap = {'rsa': paramiko.RSAKey, 'dss': paramiko.DSSKey}
 for key in keymap:
     PrivateKey.keytypes.add(key)
 
+
 class SSH2(Protocol):
     """
     The secure shell protocol version 2 adapter, based on Paramiko.
     """
+
+    PROTOCOL = 'ssh'
+    KEEPALIVE_INTERVAL = 2.5 * 60    # Two and a half minutes
 
     def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
@@ -165,6 +169,8 @@ class SSH2(Protocol):
         if server_key != our_server_key:
             raise BadHostKeyException(self.host, server_key, our_server_key)
 
+        t.set_keepalive(self.KEEPALIVE_INTERVAL)
+
         return t
 
     def _paramiko_auth_none(self, username, password = None):
@@ -177,6 +183,9 @@ class SSH2(Protocol):
         keys = paramiko.Agent().get_keys()
         if not keys:
             raise AuthenticationException('auth agent found no keys')
+
+        saved_exception = AuthenticationException(
+            'Failed to authenticate with given username')
 
         for key in keys:
             try:
@@ -191,6 +200,11 @@ class SSH2(Protocol):
     def _paramiko_auth_key(self, username, keys, password):
         if password is None:
             password = ''
+
+        saved_exception = AuthenticationException(
+            'Failed to authenticate with given username and' /
+            ' password/key')
+
         for pkey_class, filename in keys:
             try:
                 key = pkey_class.from_private_key_file(filename, password)
