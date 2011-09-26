@@ -54,12 +54,16 @@ class Host(object):
         self.address  = None
         self.tcp_port = None
         self.options  = None
-        self.set_uri(uri) 
+        self.set_uri(uri)
 
     def __copy__(self):
         host = Host(self.get_uri())
         host.set_name(self.get_name())
         return host
+
+    @classmethod
+    def from_details(cls, uri, protocol):
+        return cls(uri, protocol)
 
     def set_uri(self, uri):
         """
