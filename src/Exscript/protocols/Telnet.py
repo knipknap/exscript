@@ -28,6 +28,8 @@ class Telnet(Protocol):
     The Telnet protocol adapter.
     """
 
+    PROTOCOL = 'telnet'
+
     def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
         self.tn = None
