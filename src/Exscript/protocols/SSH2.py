@@ -48,6 +48,7 @@ class SSH2(Protocol):
     """
     The secure shell protocol version 2 adapter, based on Paramiko.
     """
+    KEEPALIVE_INTERVAL = 2.5 * 60    # Two and a half minutes
 
     def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
@@ -165,6 +166,7 @@ class SSH2(Protocol):
         if server_key != our_server_key:
             raise BadHostKeyException(self.host, server_key, our_server_key)
 
+        t.set_keepalive(self.KEEPALIVE_INTERVAL)
         return t
 
     def _paramiko_auth_none(self, username, password = None):
