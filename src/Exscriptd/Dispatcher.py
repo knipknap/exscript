@@ -160,7 +160,7 @@ class Dispatcher(object):
         if remaining == 0:
             order.close()
             self.set_order_status(order, 'completed')
-            for logger in self.loggers.pop(order.id, []):
+            for logger in self.loggers.pop(order.get_id(), []):
                 self._free_logger(logger)
 
     def _on_task_changed(self, task):
