@@ -60,20 +60,21 @@ class decoratorTest(unittest.TestCase):
         cb_map = {'ios': self.ios_cb, 'junos': self.junos_cb}
         mapper = os_function_mapper(cb_map)
         job    = FakeJob()
+        host   = object()
 
         # Test with 'ios'.
-        job.data['conn'] = FakeConnection(os = 'ios')
-        result = mapper(job)
+        conn   = FakeConnection(os = 'ios')
+        result = mapper(job, host, conn)
         self.assertEqual(result, 'hello ios')
 
         # Test with 'junos'.
-        job.data['conn'] = FakeConnection(os = 'junos')
-        result = mapper(job)
+        conn   = FakeConnection(os = 'junos')
+        result = mapper(job, host, conn)
         self.assertEqual(result, 'hello junos')
 
         # Test with unsupported OS.
-        job.data['conn'] = FakeConnection(os = 'unknown')
-        self.assertRaises(Exception, mapper, job)
+        conn = FakeConnection(os = 'unknown')
+        self.assertRaises(Exception, mapper, job, host, conn)
 
     def autologin_cb(self, job, host, conn, *args, **kwargs):
         self.assertEqual(conn.logged_in, True)

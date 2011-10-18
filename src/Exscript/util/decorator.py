@@ -69,13 +69,12 @@ def os_function_mapper(map):
     @rtype:  object
     @return: The return value of the called function.
     """
-    def decorated(job, *args, **kwargs):
-        conn = job.data['conn']
+    def decorated(job, host, conn, *args, **kwargs):
         os   = conn.guess_os()
         func = map.get(os)
         if func is None:
             raise Exception('No handler for %s found.' % os)
-        return func(job, *args, **kwargs)
+        return func(job, host, conn, *args, **kwargs)
     return decorated
 
 def autologin(flush = True, attempts = 1):
