@@ -15,7 +15,7 @@
 """
 Decorators for callbacks passed to Queue.run().
 """
-from impl import add_label, get_label
+from impl import add_label, get_label, copy_labels
 from Exscript.protocols.Exception import LoginFailure
 
 def bind(function, *args, **kwargs):
@@ -35,6 +35,7 @@ def bind(function, *args, **kwargs):
     def decorated(*inner_args, **inner_kwargs):
         kwargs.update(inner_kwargs)
         return function(*(inner_args + args), **kwargs)
+    copy_labels(function, decorated)
     return decorated
 
 def os_function_mapper(map):
@@ -107,5 +108,6 @@ def autologin(flush = True, attempts = 1):
                     continue
                 break
             return function(job, host, conn, *args, **kwargs)
+        copy_labels(function, decorated)
         return decorated
     return decorator

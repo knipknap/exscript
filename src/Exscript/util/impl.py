@@ -55,6 +55,20 @@ def get_label(obj, name):
         return None
     return labels.get(name)
 
+def copy_labels(src, dst):
+    """
+    Copies all labels of one object to another object.
+
+    @type  src: object
+    @param src: The object to check read the labels from.
+    @type  dst: object
+    @param dst: The object into which the labels are copied.
+    """
+    labels = src.__dict__.get('_labels')
+    if labels is None:
+        return
+    dst.__dict__['_labels'] = labels.copy()
+
 def serializeable_exc_info(thetype, ex, tb):
     """
     Since traceback objects can not be pickled, this function manipulates
