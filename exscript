@@ -183,7 +183,10 @@ def run():
     # Read the SSH key.
     if options.ssh_key:
         print "Reading key from", options.ssh_key
-        key = PrivateKey.from_file(options.ssh_key, password)
+        try:
+            key = PrivateKey.from_file(options.ssh_key, password)
+        except ValueError, e:
+            parser.error(str(e))
         if user is None:
             user = getpass.getuser()
     else:

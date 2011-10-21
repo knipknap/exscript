@@ -246,7 +246,7 @@ class ProtocolTest(unittest.TestCase):
         # Key login.
         self.tearDown()
         self.setUp()
-        key     = PrivateKey.from_file('foo')
+        key     = PrivateKey.from_file('foo', keytype = 'rsa')
         account = Account(self.user, self.password, key = key)
         self.doConnect()
         self.failIf(self.protocol.is_protocol_authenticated())
@@ -280,7 +280,7 @@ class ProtocolTest(unittest.TestCase):
         # Key login.
         self.tearDown()
         self.setUp()
-        key     = PrivateKey.from_file('foo')
+        key     = PrivateKey.from_file('foo', keytype = 'rsa')
         account = Account(self.user, self.password, key = key)
         self.doConnect()
         self.failIf(self.protocol.is_protocol_authenticated())

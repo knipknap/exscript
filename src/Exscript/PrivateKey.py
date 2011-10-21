@@ -15,6 +15,8 @@
 """
 Represents a private key.
 """
+from paramiko import RSAKey, DSSKey
+from paramiko.ssh_exception import SSHException
 
 class PrivateKey(object):
     """
@@ -39,9 +41,10 @@ class PrivateKey(object):
         self.password = None
 
     @staticmethod
-    def from_file(filename, password = '', keytype = 'rsa'):
+    def from_file(filename, password = '', keytype = None):
         """
         Returns a new PrivateKey instance with the given attributes.
+        If keytype is None, we attempt to automatically detect the type.
 
         @type  filename: string
         @param filename: The key file name.
@@ -52,6 +55,17 @@ class PrivateKey(object):
         @rtype:  PrivateKey
         @return: The new key.
         """
+        if keytype is None:
+            try:
+                key = RSAKey.from_private_key_file(filename)
+                keytype = 'rsa'
+            except SSHException, e:
+                try:
+                    key = DSSKey.from_private_key_file(filename)
+                    keytype = 'dss'
+                except SSHException, e:
+                    msg = 'not a recognized private key: ' + repr(filename)
+                    raise ValueError(msg)
         key          = PrivateKey(keytype)
         key.filename = filename
         key.password = password
