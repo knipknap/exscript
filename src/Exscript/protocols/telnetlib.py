@@ -391,10 +391,11 @@ class Telnet:
 
     def set_window_size(self, rows, cols):
         """
-        Change the size of the terminal window.
+        Change the size of the terminal window, if the remote end supports
+        NAWS. If it doesn't, the method returns silently.
         """
         if not self.can_naws:
-            raise Exception('server does not support NAWS')
+            return
         self.window_size = rows, cols
         size = struct.pack('!HH', cols, rows)
         self.sock.send(IAC + SB + NAWS + size + IAC + SE)
