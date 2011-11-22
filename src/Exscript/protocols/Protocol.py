@@ -1026,10 +1026,11 @@ class Protocol(object):
         raise NotImplementedError()
 
     def _call_key_handlers(self, key_handlers, data):
-        for key, func in key_handlers.iteritems():
-            if data == key:
-                func(self)
-                return True
+        if key_handlers is not None:
+            for key, func in key_handlers.iteritems():
+                if data == key:
+                    func(self)
+                    return True
         return False
 
     def _set_terminal_size(self, rows, cols):
