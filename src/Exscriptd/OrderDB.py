@@ -64,7 +64,7 @@ class OrderDB(object):
             sa.Column('service',     sa.String(50), index = True),
             sa.Column('status',      sa.String(20), index = True),
             sa.Column('description', sa.String(150)),
-            sa.Column('created',     sa.DateTime,   default = sa.func.now()),
+            sa.Column('created',     sa.DateTime,   default = datetime.utcnow),
             sa.Column('closed',      sa.DateTime),
             sa.Column('created_by',  sa.String(50)),
             mysql_engine = 'INNODB'
@@ -77,7 +77,7 @@ class OrderDB(object):
             sa.Column('name',      sa.String(150), index = True),
             sa.Column('status',    sa.String(150), index = True),
             sa.Column('progress',  sa.Float,       default = 0.0),
-            sa.Column('started',   sa.DateTime,    default = sa.func.now()),
+            sa.Column('started',   sa.DateTime,    default = datetime.utcnow),
             sa.Column('closed',    sa.DateTime),
             sa.Column('logfile',   sa.String(250)),
             sa.Column('tracefile', sa.String(250)),
