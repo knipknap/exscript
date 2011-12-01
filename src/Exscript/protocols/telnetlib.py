@@ -492,7 +492,7 @@ class Telnet:
                     else:
                         self.sock.send(IAC + DONT + opt)
                 else:
-                    self.msg('IAC %d not recognized' % ord(opt))
+                    self.msg('IAC %d not recognized' % ord(command))
         except EOFError: # raised by self.rawq_getchar()
             pass
         self.cookedq += buf
