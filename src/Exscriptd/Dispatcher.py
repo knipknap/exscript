@@ -163,6 +163,10 @@ class Dispatcher(object):
         remaining = self.order_db.count_tasks(order_id = order.id,
                                               closed   = None)
         if remaining == 0:
+            total = self.order_db.count_tasks(order_id = order.id)
+            if total == 1:
+                task = self.order_db.get_task(order_id = order.id)
+                order.set_description(task.get_name())
             order.close()
             self.set_order_status(order, 'completed')
             for logger in self.loggers.pop(order.get_id(), []):
