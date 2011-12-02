@@ -370,6 +370,7 @@ class OrderDB(object):
         @param kwargs: The following keys may be used:
                          - id - the id of the order (str)
                          - service - the service name (str)
+                         - description - the order description (str)
                          - status - the status (str)
                        All values may also be lists (logical OR).
         @rtype:  list[Order]
@@ -380,11 +381,12 @@ class OrderDB(object):
 
         # Search conditions.
         where = None
-        for field in ('id', 'service', 'status'):
-            if field in kwargs:
+        for field in ('id', 'service', 'description', 'status'):
+            values = kwargs.get(field)
+            if values is not None:
                 cond = None
-                for value in to_list(kwargs.get(field)):
-                    cond = sa.or_(cond, tbl_o.c[field] == value)
+                for value in to_list(values):
+                    cond = sa.or_(cond, tbl_o.c[field].like(value))
                 where = sa.and_(where, cond)
 
         table  = tbl_o.outerjoin(tbl_t, tbl_t.c.order_id == tbl_o.c.id)

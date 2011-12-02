@@ -32,6 +32,9 @@ URL list:
   order/status/?id=1234           GET     Status and progress for order 1234
   order/count/                    GET     Get the total number of orders
   order/list/?offset=10&limit=25  GET     Get a list of orders
+  order/list/?service=grabber     GET     Filter list of orders by service name
+  order/list/?description=foobar  GET     Filter list of orders by description
+  order/list/?status=completed    GET     Filter list of orders by status
   task/get/?id=1234               GET     Returns task 1234
   task/count/?order_id=1234       GET     Get the number of tasks for order 1234
   task/list/?order_id=1234        GET     Get a list of tasks for order 1234
@@ -82,9 +85,16 @@ class HTTPHandler(RequestHandler):
 
         elif self.path == '/order/list/':
             # Fetch the orders.
-            offset = int(self.args.get('offset', 0))
-            limit  = min(100, int(self.args.get('limit', 100)))
-            orders = order_db.get_orders(offset = offset, limit = limit)
+            offset  = int(self.args.get('offset', 0))
+            limit   = min(100, int(self.args.get('limit', 100)))
+            service = self.args.get('service')
+            descr   = self.args.get('description')
+            status  = self.args.get('status')
+            orders  = order_db.get_orders(service     = service,
+                                          description = descr,
+                                          status      = status,
+                                          offset      = offset,
+                                          limit       = limit)
 
             # Assemble an XML document containing the orders.
             xml = etree.Element('xml')
