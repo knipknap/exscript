@@ -96,6 +96,11 @@ class Dispatcher(object):
     def _on_job_event(self, queue_name, status, job, *args):
         self._set_task_status(job.id, queue_name, status)
 
+    def set_job_name(self, job_id, name):
+        task = self.order_db.get_task(job_id = job_id)
+        task.set_name(name)
+        self.order_db.save_task(task)
+
     def set_job_progress(self, job_id, progress):
         task = self.order_db.get_task(job_id = job_id)
         task.set_progress(progress)
