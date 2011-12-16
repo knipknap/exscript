@@ -124,14 +124,32 @@ class Client(object):
             closed = datetime.strptime(closed, "%Y-%m-%d %H:%M:%S")
         return data['status'], data['progress'], closed
 
-    def count_orders(self):
+    def count_orders(self,
+                     order_id    = None,
+                     service     = None,
+                     description = None,
+                     status      = None,
+                     created_by  = None):
         """
         Returns the total number of orders.
 
         @rtype:  int
         @return: The number of orders.
+        @type  kwargs: dict
+        @param kwargs: See L{get_order_list()}
         """
-        url      = self.address + '/order/count/'
+        args = {}
+        if order_id:
+            args['order_id'] = order_id
+        if service:
+            args['service'] = service
+        if description:
+            args['description'] = description
+        if status:
+            args['status'] = status
+        if created_by:
+            args['created_by'] = created_by
+        url      = self.address + '/order/count/' + urlencode(args)
         result   = self.opener.open(url)
         response = result.read()
         if result.getcode() != 200:
@@ -139,9 +157,11 @@ class Client(object):
         return int(response)
 
     def get_order_list(self,
+                       order_id    = None,
                        service     = None,
                        description = None,
                        status      = None,
+                       created_by  = None,
                        offset      = 0,
                        limit       = 0):
         """
@@ -153,19 +173,25 @@ class Client(object):
         @param limit: The maximum number of orders to return.
         @type  kwargs: dict
         @param kwargs: The following keys may be used:
+                         - order_id - the order id (str)
                          - service - the service name (str)
                          - description - the order description (str)
                          - status - the status (str)
+                         - created_by - the user name (str)
         @rtype:  list[Order]
         @return: A list of orders.
         """
         args = {'offset': offset, 'limit': limit}
+        if order_id:
+            args['order_id'] = order_id
         if service:
             args['service'] = service
         if description:
             args['description'] = description
         if status:
             args['status'] = status
+        if created_by:
+            args['created_by'] = created_by
         url    = self.address + '/order/list/?' + urlencode(args)
         result = self.opener.open(url)
         if result.getcode() != 200:

@@ -255,6 +255,37 @@ class OrderDB(object):
                          offset   = offset,
                          limit    = limit)
 
+    def __get_orders_cond(self, **kwargs):
+        tbl_o = self._table_map['order']
+
+        # Search conditions.
+        where = None
+        for field in ('id', 'service', 'description', 'status', 'created_by'):
+            values = kwargs.get(field)
+            if values is not None:
+                cond = None
+                for value in to_list(values):
+                    cond = sa.or_(cond, tbl_o.c[field].like(value))
+                where = sa.and_(where, cond)
+
+        return where
+
+    def __get_orders_query(self, offset = 0, limit = None, **kwargs):
+        tbl_o  = self._table_map['order']
+        tbl_t  = self._table_map['task']
+        where  = self.__get_orders_cond(**kwargs)
+        table  = tbl_o.outerjoin(tbl_t, tbl_t.c.order_id == tbl_o.c.id)
+        fields = list(tbl_o.c)
+        fields.append(sa.func.avg(tbl_t.c.progress).label('avg_progress'))
+        return sa.select(fields,
+                         where,
+                         from_obj = [table],
+                         group_by = [tbl_o.c.id],
+                         order_by = [sa.desc(tbl_o.c.id)],
+                         offset   = offset,
+                         limit    = limit)
+
+
     @synchronized
     def __add_order(self, order):
         """
@@ -330,14 +361,17 @@ class OrderDB(object):
         result = query.execute()
         return [self.__get_order_from_row(row) for row in result]
 
-    def count_orders(self):
+    def count_orders(self, **kwargs):
         """
-        Returns the total number of orders in the DB.
+        Returns the total number of orders matching the given criteria.
 
         @rtype:  int
         @return: The number of orders.
+        @type  kwargs: dict
+        @param kwargs: For a list of allowed keys see get_orders().
         """
-        return self._table_map['order'].count().execute().fetchone()[0]
+        select = self.__get_orders_query(**kwargs).count()
+        return select.execute().fetchone()[0]
 
     def get_order(self, **kwargs):
         """
@@ -376,30 +410,9 @@ class OrderDB(object):
         @rtype:  list[Order]
         @return: The list of orders.
         """
-        tbl_o = self._table_map['order']
-        tbl_t = self._table_map['task']
-
-        # Search conditions.
-        where = None
-        for field in ('id', 'service', 'description', 'status'):
-            values = kwargs.get(field)
-            if values is not None:
-                cond = None
-                for value in to_list(values):
-                    cond = sa.or_(cond, tbl_o.c[field].like(value))
-                where = sa.and_(where, cond)
-
-        table  = tbl_o.outerjoin(tbl_t, tbl_t.c.order_id == tbl_o.c.id)
-        fields = list(tbl_o.c)
-        fields.append(sa.func.avg(tbl_t.c.progress).label('avg_progress'))
-        select = sa.select(fields,
-                           where,
-                           from_obj = [table],
-                           group_by = [tbl_o.c.id],
-                           order_by = [sa.desc(tbl_o.c.id)],
-                           offset   = offset,
-                           limit    = limit)
-
+        select = self.__get_orders_query(offset = offset,
+                                         limit = limit,
+                                         **kwargs)
         return self.__get_orders_from_query(select)
 
     def add_order(self, orders):

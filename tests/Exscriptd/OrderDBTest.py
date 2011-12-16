@@ -173,11 +173,13 @@ class OrderDBTest(unittest.TestCase):
 
     def testCountOrders(self):
         self.testInstall()
+        self.assertEqual(self.db.count_orders(id = 1), 0)
         self.assertEqual(self.db.count_orders(), 0)
         self.testAddOrder()
         self.assertEqual(self.db.count_orders(), 1)
         self.testAddOrder()
         self.assertEqual(self.db.count_orders(), 2)
+        self.assertEqual(self.db.count_orders(id = 1), 1)
 
     def testGetOrders(self):
         self.testAddOrder()

@@ -31,6 +31,7 @@ URL list:
   order/get/?id=1234              GET     Returns order 1234
   order/status/?id=1234           GET     Status and progress for order 1234
   order/count/                    GET     Get the total number of orders
+  order/count/?service=grabber    GET     Number of orders matching the name
   order/list/?offset=10&limit=25  GET     Get a list of orders
   order/list/?service=grabber     GET     Filter list of orders by service name
   order/list/?description=foobar  GET     Filter list of orders by description
@@ -67,7 +68,16 @@ class HTTPHandler(RequestHandler):
             return order.toxml()
 
         elif self.path == '/order/count/':
-            return str(order_db.count_orders())
+            order_id   = self.args.get('order_id')
+            service    = self.args.get('service')
+            descr      = self.args.get('description')
+            status     = self.args.get('status')
+            created_by = self.args.get('created_by')
+            return str(order_db.count_orders(id          = order_id,
+                                             service     = service,
+                                             description = descr,
+                                             status      = status,
+                                             created_by  = created_by))
 
         elif self.path == '/order/status/':
             order_id = int(self.args['id'])
@@ -85,16 +95,20 @@ class HTTPHandler(RequestHandler):
 
         elif self.path == '/order/list/':
             # Fetch the orders.
-            offset  = int(self.args.get('offset', 0))
-            limit   = min(100, int(self.args.get('limit', 100)))
-            service = self.args.get('service')
-            descr   = self.args.get('description')
-            status  = self.args.get('status')
-            orders  = order_db.get_orders(service     = service,
-                                          description = descr,
-                                          status      = status,
-                                          offset      = offset,
-                                          limit       = limit)
+            offset     = int(self.args.get('offset', 0))
+            limit      = min(100, int(self.args.get('limit', 100)))
+            order_id   = self.args.get('order_id')
+            service    = self.args.get('service')
+            descr      = self.args.get('description')
+            status     = self.args.get('status')
+            created_by = self.args.get('created_by')
+            orders     = order_db.get_orders(id          = order_id,
+                                             service     = service,
+                                             description = descr,
+                                             status      = status,
+                                             created_by  = created_by,
+                                             offset      = offset,
+                                             limit       = limit)
 
             # Assemble an XML document containing the orders.
             xml = etree.Element('xml')
