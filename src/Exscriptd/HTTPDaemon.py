@@ -73,11 +73,12 @@ class HTTPHandler(RequestHandler):
             descr      = self.args.get('description')
             status     = self.args.get('status')
             created_by = self.args.get('created_by')
-            return str(order_db.count_orders(id          = order_id,
-                                             service     = service,
-                                             description = descr,
-                                             status      = status,
-                                             created_by  = created_by))
+            n_orders   = order_db.count_orders(id          = order_id,
+                                               service     = service,
+                                               description = descr,
+                                               status      = status,
+                                               created_by  = created_by)
+            return 'application/json', json.dumps(n_orders)
 
         elif self.path == '/order/status/':
             order_id = int(self.args['id'])

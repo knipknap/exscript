@@ -274,17 +274,16 @@ class OrderDB(object):
         tbl_o  = self._table_map['order']
         tbl_t  = self._table_map['task']
         where  = self.__get_orders_cond(**kwargs)
-        table  = tbl_o.outerjoin(tbl_t, tbl_t.c.order_id == tbl_o.c.id)
         fields = list(tbl_o.c)
+        table  = tbl_o.outerjoin(tbl_t, tbl_t.c.order_id == tbl_o.c.id)
         fields.append(sa.func.avg(tbl_t.c.progress).label('avg_progress'))
         return sa.select(fields,
                          where,
-                         from_obj = [table],
-                         group_by = [tbl_o.c.id],
-                         order_by = [sa.desc(tbl_o.c.id)],
-                         offset   = offset,
-                         limit    = limit)
-
+                         from_obj   = [table],
+                         group_by   = [tbl_o.c.id],
+                         order_by   = [sa.desc(tbl_o.c.id)],
+                         offset     = offset,
+                         limit      = limit)
 
     @synchronized
     def __add_order(self, order):
@@ -370,8 +369,9 @@ class OrderDB(object):
         @type  kwargs: dict
         @param kwargs: For a list of allowed keys see get_orders().
         """
-        select = self.__get_orders_query(**kwargs).count()
-        return select.execute().fetchone()[0]
+        tbl_o = self._table_map['order']
+        where = self.__get_orders_cond(**kwargs)
+        return tbl_o.count(where).execute().fetchone()[0]
 
     def get_order(self, **kwargs):
         """
@@ -410,8 +410,9 @@ class OrderDB(object):
         @rtype:  list[Order]
         @return: The list of orders.
         """
-        select = self.__get_orders_query(offset = offset,
-                                         limit = limit,
+        select = self.__get_orders_query(avg    = True,
+                                         offset = offset,
+                                         limit  = limit,
                                          **kwargs)
         return self.__get_orders_from_query(select)
 

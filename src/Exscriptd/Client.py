@@ -149,12 +149,12 @@ class Client(object):
             args['status'] = status
         if created_by:
             args['created_by'] = created_by
-        url      = self.address + '/order/count/' + urlencode(args)
+        url      = self.address + '/order/count/?' + urlencode(args)
         result   = self.opener.open(url)
         response = result.read()
         if result.getcode() != 200:
             raise Exception(response)
-        return int(response)
+        return json.loads(response)
 
     def get_order_list(self,
                        order_id    = None,
