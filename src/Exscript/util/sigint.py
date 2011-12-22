@@ -42,6 +42,8 @@ class SigIntWatcher(object):
         """
         try:
             self.child = os.fork()
+        except AttributeError:  # platforms that don't have os.fork
+            pass
         except RuntimeError:
             pass # prevent "not holding the import lock" on some systems.
         if self.child == 0:
