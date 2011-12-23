@@ -170,6 +170,22 @@ class Order(DBObject):
         xml.append(order)
         return etree.tostring(xml, pretty_print = pretty)
 
+    def todict(self):
+        """
+        Returns the order's attributes as one flat dictionary.
+
+        @rtype:  dict
+        @return: A dictionary representing the order.
+        """
+        values = dict(service     = self.get_service_name(),
+                      status      = self.get_status(),
+                      description = self.get_description(),
+                      closed      = self.get_closed_timestamp(),
+                      created_by  = self.get_created_by())
+        if self.id:
+            values['id'] = self.get_id()
+        return values
+
     def write(self, thefile):
         """
         Export the order as an XML file.

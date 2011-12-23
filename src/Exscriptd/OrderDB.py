@@ -294,12 +294,9 @@ class OrderDB(object):
             raise AttributeError('order argument must not be None')
 
         # Insert the order
-        insert = self._table_map['order'].insert()
-        result = insert.execute(service     = order.get_service_name(),
-                                status      = order.get_status(),
-                                description = order.get_description(),
-                                closed      = order.get_closed_timestamp(),
-                                created_by  = order.get_created_by())
+        insert   = self._table_map['order'].insert()
+        fields   = order.todict()
+        result   = insert.execute(**fields)
         order.id = result.last_inserted_ids()[0]
         return order.id
 
@@ -325,11 +322,7 @@ class OrderDB(object):
         if not theorder:
             return self.add_order(order)
         table  = self._table_map['order']
-        fields = dict(service     = order.get_service_name(),
-                      status      = order.get_status(),
-                      description = order.get_description(),
-                      closed      = order.get_closed_timestamp(),
-                      created_by  = order.get_created_by())
+        fields = order.todict()
         query  = table.update(table.c.id == order.get_id())
         query.execute(**fields)
 
