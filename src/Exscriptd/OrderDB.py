@@ -295,7 +295,8 @@ class OrderDB(object):
 
         # Insert the order
         insert   = self._table_map['order'].insert()
-        fields   = order.todict()
+        fields   = dict(k for k in order.todict().iteritems()
+                        if k[0] not in ('id', 'created', 'progress'))
         result   = insert.execute(**fields)
         order.id = result.last_inserted_ids()[0]
         return order.id
@@ -322,7 +323,8 @@ class OrderDB(object):
         if not theorder:
             return self.add_order(order)
         table  = self._table_map['order']
-        fields = order.todict()
+        fields = dict(k for k in order.todict().iteritems()
+                      if k[0] not in ('id', 'created', 'progress'))
         query  = table.update(table.c.id == order.get_id())
         query.execute(**fields)
 

@@ -180,6 +180,8 @@ class Order(DBObject):
         values = dict(service     = self.get_service_name(),
                       status      = self.get_status(),
                       description = self.get_description(),
+                      progress    = self.get_progress(),
+                      created     = self.get_created_timestamp(),
                       closed      = self.get_closed_timestamp(),
                       created_by  = self.get_created_by())
         if self.id:
