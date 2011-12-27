@@ -27,7 +27,7 @@ def is_ip(string):
     """
     try:
         normalize_ip(string)
-    except AttributeError:
+    except ValueError:
         return False
     return True
 
@@ -50,15 +50,15 @@ def normalize_ip(ip):
         theip += '0'
     segments = theip.split(':')
     if len(segments) == 1:
-        raise AttributeError('no colons in ipv6 address: ' + repr(ip))
+        raise ValueError('no colons in ipv6 address: ' + repr(ip))
     fill = 8 - len(segments)
     if fill < 0:
-        raise AttributeError('ipv6 address has too many segments: ' + repr(ip))
+        raise ValueError('ipv6 address has too many segments: ' + repr(ip))
     result = []
     for segment in segments:
         if segment == '':
             if fill == 0:
-                raise AttributeError('unexpected double colon: ' + repr(ip))
+                raise ValueError('unexpected double colon: ' + repr(ip))
             for n in range(fill + 1):
                 result.append('0000')
             fill = 0
@@ -66,7 +66,7 @@ def normalize_ip(ip):
             try:
                 int(segment, 16)
             except ValueError:
-                raise AttributeError('invalid hex value in ' + repr(ip))
+                raise ValueError('invalid hex value in ' + repr(ip))
             result.append(segment.rjust(4, '0'))
     return ':'.join(result).lower()
 
