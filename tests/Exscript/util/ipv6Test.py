@@ -48,6 +48,12 @@ class ipv6Test(unittest.TestCase):
         self.assertEqual(clean_ip('A::'), 'a::')
         self.assertEqual(clean_ip('1234:0:01:02::'), '1234:0:1:2::')
 
+    def testParsePrefix(self):
+        from Exscript.util.ipv6 import parse_prefix
+        self.assertEqual(('A::A', 24), parse_prefix('A::A/24', 22))
+        self.assertEqual(('1:0:1:2::', 128), parse_prefix('1:0:1:2::'))
+        self.assertEqual(('1:0:1:2::', 64), parse_prefix('1:0:1:2::', 64))
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ipv6Test)
 if __name__ == '__main__':

@@ -119,3 +119,23 @@ def clean_ip(ip):
             continue
         result.append(segment)
     return ':'.join(result)
+
+def parse_prefix(prefix, default_length = 128):
+    """
+    Splits the given IP prefix into a network address and a prefix length.
+    If the prefix does not have a length (i.e., it is a simple IP address),
+    it is presumed to have the given default length.
+
+    @type  prefix: string
+    @param prefix: An IP mask.
+    @type  default_length: long
+    @param default_length: The default ip prefix length.
+    @rtype:  string, int
+    @return: A tuple containing the IP address and prefix length.
+    """
+    if '/' in prefix:
+        network, pfxlen = prefix.split('/')
+    else:
+        network = prefix
+        pfxlen  = default_length
+    return network, int(pfxlen)
