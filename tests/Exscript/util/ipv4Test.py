@@ -18,6 +18,14 @@ class ipv4Test(unittest.TestCase):
         self.assert_(not is_ip('1.23.4'))
         self.assert_(not is_ip('1..3.4'))
 
+    def testNormalizeIp(self):
+        from Exscript.util.ipv4 import normalize_ip
+        self.assertEqual(normalize_ip('0.0.0.0'),         '000.000.000.000')
+        self.assertEqual(normalize_ip('255.255.255.255'), '255.255.255.255')
+        self.assertEqual(normalize_ip('001.002.003.004'), '001.002.003.004')
+        self.assertEqual(normalize_ip('192.168.010.001'), '192.168.010.001')
+        self.assertEqual(normalize_ip('0.128.255.0'),     '000.128.255.000')
+
     def testCleanIp(self):
         from Exscript.util.ipv4 import clean_ip
         self.assertEqual(clean_ip('0.0.0.0'),         '0.0.0.0')

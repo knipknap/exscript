@@ -49,6 +49,22 @@ def is_ip(string):
     """
     return re.match(r'\d+\.\d+\.\d+\.\d+', string) and True or False
 
+def normalize_ip(ip):
+    """
+    Transform the address into a fixed-length form, such as:
+
+        192.168.0.1 -> 192.168.000.001
+
+    @type  ip: string
+    @param ip: An IP address.
+    @rtype:  string
+    @return: The normalized IP.
+    """
+    theip = ip.split('.')
+    if len(theip) != 4:
+        raise ValueError('ip should be 4 tuples')
+    return '.'.join(str(int(l)).rjust(3, '0') for l in theip)
+
 def clean_ip(ip):
     """
     Cleans the ip address up, useful for removing leading zeros, e.g.::
