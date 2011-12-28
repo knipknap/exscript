@@ -124,16 +124,19 @@ class Task(DBObject):
         return etree.tostring(xml, pretty_print = pretty)
 
     def todict(self):
-        return dict(order_id  = self.order_id,
-                    job_id    = self.get_job_id(),
-                    name      = self.get_name(),
-                    status    = self.get_status(),
-                    progress  = self.get_progress(),
-                    started   = self.get_started_timestamp(),
-                    closed    = self.get_closed_timestamp(),
-                    logfile   = self.get_logfile(),
-                    tracefile = self.get_tracefile(),
-                    vars      = self.vars)
+        result = dict(order_id  = self.order_id,
+                      job_id    = self.get_job_id(),
+                      name      = self.get_name(),
+                      status    = self.get_status(),
+                      progress  = self.get_progress(),
+                      started   = self.get_started_timestamp(),
+                      closed    = self.get_closed_timestamp(),
+                      logfile   = self.get_logfile(),
+                      tracefile = self.get_tracefile(),
+                      vars      = self.vars)
+        if self.id is not None:
+            result['id'] = self.id
+        return result
 
     def get_id(self):
         """
