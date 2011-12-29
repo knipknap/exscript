@@ -41,7 +41,7 @@ def find_module_recursive(name, path = None):
     if not '.' in name:
         return imp.find_module(name, path)
     parent, children = name.split('.', 1)
-    module = imp.find_module(parent)
+    module = imp.find_module(parent, path)
     path   = module[1]
     return find_module_recursive(children, [path])
 
