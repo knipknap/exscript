@@ -163,7 +163,6 @@ class _PipeHandler(threading.Thread):
 
     def run(self):
         while True:
-            select.select([self.to_child], [], [], .2)
             try:
                 request = self.to_child.recv()
             except (EOFError, IOError):
