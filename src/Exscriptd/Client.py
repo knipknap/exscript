@@ -16,6 +16,13 @@
 Places orders and requests the status from a server.
 """
 import json
+#HACK: the return value of opener.open(url) does not support
+# __enter__ and __exit__ for Python's "with" in older versions
+# of Python.
+import urllib
+urllib.addinfourl.__enter__ = lambda x: x
+urllib.addinfourl.__exit__ = lambda s, *x: s.close()
+#END HACK
 from datetime import datetime
 from urllib import urlencode
 from urllib2 import HTTPDigestAuthHandler, build_opener, HTTPError
@@ -69,15 +76,15 @@ class Client(object):
         xml          = order.toxml()
         data         = urlencode({'xml': xml})
         try:
-            result = self.opener.open(url, data)
+            with self.opener.open(url, data) as result:
+                if result.getcode() != 200:
+                    raise Exception(result.read())
+                order.id = json.loads(result.read())
         except HTTPError, e:
             if hasattr(e, 'read'):
                 raise Exception(str(e) + ' with ' + e.read())
             else:
                 raise Exception(str(e))
-        if result.getcode() != 200:
-            raise Exception(result.read())
-        order.id = json.loads(result.read())
 
     def get_order_from_id(self, id):
         """
@@ -90,10 +97,10 @@ class Client(object):
         """
         args   = 'id=%d' % id
         url    = self.address + '/order/get/?' + args
-        result = self.opener.open(url)
-        if result.getcode() != 200:
-            raise Exception(response)
-        return Order.from_xml(result.read())
+        with self.opener.open(url) as result:
+            if result.getcode() != 200:
+                raise Exception(response)
+            return Order.from_xml(result.read())
 
     def get_order_status_from_id(self, order_id):
         """
@@ -112,11 +119,11 @@ class Client(object):
         @rtype:  (str, float, datetime.timestamp)
         @return: The status and progress of the order.
         """
-        url      = self.address + '/order/status/?id=%s' % order_id
-        result   = self.opener.open(url)
-        response = result.read()
-        if result.getcode() != 200:
-            raise Exception(response)
+        url = self.address + '/order/status/?id=%s' % order_id
+        with self.opener.open(url) as result:
+            response = result.read()
+            if result.getcode() != 200:
+                raise Exception(response)
         data   = json.loads(response)
         closed = data['closed']
         if closed is not None:
@@ -149,11 +156,11 @@ class Client(object):
             args['status'] = status
         if created_by:
             args['created_by'] = created_by
-        url      = self.address + '/order/count/?' + urlencode(args)
-        result   = self.opener.open(url)
-        response = result.read()
-        if result.getcode() != 200:
-            raise Exception(response)
+        url = self.address + '/order/count/?' + urlencode(args)
+        with self.opener.open(url) as result:
+            response = result.read()
+            if result.getcode() != 200:
+                raise Exception(response)
         return json.loads(response)
 
     def get_order_list(self,
@@ -192,11 +199,11 @@ class Client(object):
             args['status'] = status
         if created_by:
             args['created_by'] = created_by
-        url    = self.address + '/order/list/?' + urlencode(args)
-        result = self.opener.open(url)
-        if result.getcode() != 200:
-            raise Exception(response)
-        xml = etree.parse(result)
+        url = self.address + '/order/list/?' + urlencode(args)
+        with self.opener.open(url) as result:
+            if result.getcode() != 200:
+                raise Exception(response)
+            xml = etree.parse(result)
         return [Order.from_etree(n) for n in xml.iterfind('order')]
 
     def count_tasks(self, order_id = None):
@@ -209,11 +216,11 @@ class Client(object):
         args = ''
         if order_id:
             args += '?order_id=%d' % order_id
-        url      = self.address + '/task/count/' + args
-        result   = self.opener.open(url)
-        response = result.read()
-        if result.getcode() != 200:
-            raise Exception(response)
+        url = self.address + '/task/count/' + args
+        with self.opener.open(url) as result:
+            response = result.read()
+            if result.getcode() != 200:
+                raise Exception(response)
         return json.loads(response)
 
     def get_task_list(self, order_id, offset = 0, limit = 0):
@@ -227,12 +234,12 @@ class Client(object):
         @rtype:  list[Order]
         @return: A list of orders.
         """
-        args   = 'order_id=%d&offset=%d&limit=%d' % (order_id, offset, limit)
-        url    = self.address + '/task/list/?' + args
-        result = self.opener.open(url)
-        if result.getcode() != 200:
-            raise Exception(response)
-        xml = etree.parse(result)
+        args = 'order_id=%d&offset=%d&limit=%d' % (order_id, offset, limit)
+        url  = self.address + '/task/list/?' + args
+        with self.opener.open(url) as result:
+            if result.getcode() != 200:
+                raise Exception(response)
+            xml = etree.parse(result)
         return [Task.from_etree(n) for n in xml.iterfind('task')]
 
     def get_task_from_id(self, id):
@@ -244,12 +251,12 @@ class Client(object):
         @rtype:  Task
         @return: The task with the given id.
         """
-        args   = 'id=%d' % id
-        url    = self.address + '/task/get/?' + args
-        result = self.opener.open(url)
-        if result.getcode() != 200:
-            raise Exception(response)
-        return Task.from_xml(result.read())
+        args = 'id=%d' % id
+        url  = self.address + '/task/get/?' + args
+        with self.opener.open(url) as result:
+            if result.getcode() != 200:
+                raise Exception(response)
+            return Task.from_xml(result.read())
 
     def get_log_from_task_id(self, task_id):
         """
@@ -260,12 +267,12 @@ class Client(object):
         @rtype:  str
         @return: The file content.
         """
-        args   = 'task_id=%d' % task_id
-        url    = self.address + '/log/?' + args
-        result = self.opener.open(url)
-        if result.getcode() != 200:
-            raise Exception(response)
-        return result.read()
+        args = 'task_id=%d' % task_id
+        url  = self.address + '/log/?' + args
+        with self.opener.open(url) as result:
+            if result.getcode() != 200:
+                raise Exception(response)
+            return result.read()
 
     def get_trace_from_task_id(self, task_id):
         """
@@ -276,9 +283,9 @@ class Client(object):
         @rtype:  str
         @return: The file content.
         """
-        args   = 'task_id=%d' % task_id
-        url    = self.address + '/trace/?' + args
-        result = self.opener.open(url)
-        if result.getcode() != 200:
-            raise Exception(response)
-        return result.read()
+        args = 'task_id=%d' % task_id
+        url  = self.address + '/trace/?' + args
+        with self.opener.open(url) as result:
+            if result.getcode() != 200:
+                raise Exception(response)
+            return result.read()
