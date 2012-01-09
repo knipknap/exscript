@@ -54,12 +54,12 @@ class BaseConfig(ConfigSection):
                 '@INIT_DIR@':   init_dir}
         sub_re = re.compile('(' + '|'.join(vars.keys()) + ')+')
 
-        content = open(infilename).read()
+        with open(infilename) as infile:
+            content = infile.read()
         subst   = lambda s: vars[s.group(0)]
         content = sub_re.sub(subst, content)
-        outfile = open(outfilename, 'w')
-        outfile.write(content)
-        outfile.close()
+        with open(outfilename, 'w') as outfile:
+            outfile.write(content)
         self.info('done.\n')
 
     def getopt_install(self, parser):

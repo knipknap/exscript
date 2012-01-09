@@ -79,21 +79,20 @@ def get_hosts_from_file(filename,
     # Open the file.
     if not os.path.exists(filename):
         raise IOError('No such file: %s' % filename)
-    file_handle = codecs.open(filename, 'r', encoding)
 
     # Read the hostnames.
     have  = set()
     hosts = []
-    for line in file_handle:
-        hostname = line.split('#')[0].strip()
-        if hostname == '':
-            continue
-        if remove_duplicates and hostname in have:
-            continue
-        have.add(hostname)
-        hosts.append(to_host(hostname, default_protocol, default_domain))
+    with codecs.open(filename, 'r', encoding) as file_handle:
+        for line in file_handle:
+            hostname = line.split('#')[0].strip()
+            if hostname == '':
+                continue
+            if remove_duplicates and hostname in have:
+                continue
+            have.add(hostname)
+            hosts.append(to_host(hostname, default_protocol, default_domain))
 
-    file_handle.close()
     return hosts
 
 
@@ -138,51 +137,50 @@ def get_hosts_from_csv(filename,
     # Open the file.
     if not os.path.exists(filename):
         raise IOError('No such file: %s' % filename)
-    file_handle = codecs.open(filename, 'r', encoding)
 
-    # Read the header.
-    header = file_handle.readline().rstrip()
-    if re.search(r'^(?:hostname|address)\b', header) is None:
-        msg  = 'Syntax error in CSV file header:'
-        msg += ' File does not start with "hostname" or "address".'
-        raise Exception(msg)
-    if re.search(r'^(?:hostname|address)(?:\t[^\t]+)*$', header) is None:
-        msg  = 'Syntax error in CSV file header:'
-        msg += ' Make sure to separate columns by tabs.'
-        raise Exception(msg)
-    varnames = [str(v) for v in header.split('\t')]
-    varnames.pop(0)
+    with codecs.open(filename, 'r', encoding) as file_handle:
+        # Read and check the header.
+        header = file_handle.readline().rstrip()
+        if re.search(r'^(?:hostname|address)\b', header) is None:
+            msg  = 'Syntax error in CSV file header:'
+            msg += ' File does not start with "hostname" or "address".'
+            raise Exception(msg)
+        if re.search(r'^(?:hostname|address)(?:\t[^\t]+)*$', header) is None:
+            msg  = 'Syntax error in CSV file header:'
+            msg += ' Make sure to separate columns by tabs.'
+            raise Exception(msg)
+        varnames = [str(v) for v in header.split('\t')]
+        varnames.pop(0)
 
-    # Walk through all lines and create a map that maps hostname to
-    # definitions.
-    last_uri = ''
-    line_re  = re.compile(r'[\r\n]*$')
-    hosts    = []
-    for line in file_handle:
-        if line.strip() == '':
-            continue
+        # Walk through all lines and create a map that maps hostname to
+        # definitions.
+        last_uri = ''
+        line_re  = re.compile(r'[\r\n]*$')
+        hosts    = []
+        for line in file_handle:
+            if line.strip() == '':
+                continue
 
-        line   = line_re.sub('', line)
-        values = line.split('\t')
-        uri    = values.pop(0).strip()
+            line   = line_re.sub('', line)
+            values = line.split('\t')
+            uri    = values.pop(0).strip()
 
-        # Add the hostname to our list.
-        if uri != last_uri:
-            #print "Reading hostname", hostname_url, "from csv."
-            host     = to_host(uri, default_protocol, default_domain)
-            last_uri = uri
-            hosts.append(host)
+            # Add the hostname to our list.
+            if uri != last_uri:
+                #print "Reading hostname", hostname_url, "from csv."
+                host     = to_host(uri, default_protocol, default_domain)
+                last_uri = uri
+                hosts.append(host)
 
-        # Define variables according to the definition.
-        for i, varname in enumerate(varnames):
-            try:
-                value = values[i]
-            except IndexError:
-                value = ''
-            if varname == 'hostname':
-                host.set_name(value)
-            else:
-                host.append(varname, value)
+            # Define variables according to the definition.
+            for i, varname in enumerate(varnames):
+                try:
+                    value = values[i]
+                except IndexError:
+                    value = ''
+                if varname == 'hostname':
+                    host.set_name(value)
+                else:
+                    host.append(varname, value)
 
-    file_handle.close()
     return hosts

@@ -181,7 +181,6 @@ class Lexer(object):
         return compiled
 
     def parse_file(self, filename):
-        fp     = open(filename)
-        string = fp.read()
-        fp.close()
+        with open(filename) as fp:
+            string = fp.read()
         return self.parse(string, filename)

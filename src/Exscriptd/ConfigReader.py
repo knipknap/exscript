@@ -68,9 +68,8 @@ class ConfigReader(object):
     def _write_xml(self, tree, filename):
         if os.path.isfile(filename):
             shutil.move(filename, filename + '.old')
-        fp = open(filename, 'w')
-        fp.write(etree.tostring(tree, pretty_print = True))
-        fp.close()
+        with open(filename, 'w') as fp:
+            fp.write(etree.tostring(tree, pretty_print = True))
 
     def _findelem(self, selector):
         elem = self.cfgtree.find(selector)
