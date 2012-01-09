@@ -206,7 +206,7 @@ elif options.order_list:
              'Created by',
              'Created',
              'Closed')]
-    for order in client.get_order_list(0, 100):
+    for order in client.get_order_list(offset = 0, limit = 100):
         row = (order.get_id(),
                order.get_service_name(),
                order.get_description(),
