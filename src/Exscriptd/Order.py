@@ -65,9 +65,10 @@ class Order(DBObject):
         """
         # Parse required attributes.
         descr_node       = order_node.find('description')
+        order_id         = order_node.get('id')
         order            = Order(order_node.get('service'))
         order.xml        = order_node
-        order.id         = int(order_node.get('id'))
+        order.id         = order_id is not None and int(order_id) or None
         order.status     = order_node.get('status',     order.status)
         order.created_by = order_node.get('created-by', order.created_by)
         created          = order_node.get('created')
