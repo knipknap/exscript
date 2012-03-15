@@ -1,0 +1,16 @@
+{
+  mylist = list.new()
+  append "abc" to mylist
+  append "def" to mylist
+  append "ghi" to mylist
+  append "ghi" to mylist
+
+  fail "list.length (before unique)" if list.length(mylist) is not 4
+  fail "list.get" if list.get(mylist, 0) is not "abc"
+  fail "list.get" if list.get(mylist, 1) is not "def"
+  fail "list.get" if list.get(mylist, 2) is not "ghi"
+  fail "list.get" if list.get(mylist, 3) is not "ghi"
+
+  mylist = list.unique(mylist)
+  fail "list.length (after unique)" if list.length(mylist) is not 3
+}

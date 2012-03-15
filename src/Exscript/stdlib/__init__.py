@@ -52,6 +52,8 @@ functions = {
     'ipv4.broadcast':            ipv4.broadcast,
     'ipv4.remote_ip':            ipv4.remote_ip,
     'list.new':                  list.new,
+    'list.get':                  list.get,
+    'list.length':               list.length,
     'list.unique':               list.unique,
     'string.replace':            string.replace,
     'string.tolower':            string.tolower,

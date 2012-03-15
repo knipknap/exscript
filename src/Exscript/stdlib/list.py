@@ -25,6 +25,40 @@ def new(scope):
     return []
 
 @secure_function
+def length(scope, mylist):
+    """
+    Returns the number of items in the list.
+
+    @rtype:  string
+    @return: The model of the remote device.
+    """
+    return [len(mylist)]
+
+@secure_function
+def get(scope, source, index):
+    """
+    Returns a copy of the list item with the given index.
+    It is an error if an item with teh given index does not exist.
+
+    @type  source: string
+    @param source: A list of strings.
+    @type  index: string
+    @param index: A list of strings.
+    @rtype:  string
+    @return: The cleaned up list of strings.
+    """
+    try:
+        index = int(index[0])
+    except IndexError:
+        raise ValueError('index variable is required')
+    except ValueError:
+        raise ValueError('index is not an integer')
+    try:
+        return [source[index]]
+    except IndexError:
+        raise ValueError('no such item in the list')
+
+@secure_function
 def unique(scope, source):
     """
     Returns a copy of the given list in which all duplicates are removed
