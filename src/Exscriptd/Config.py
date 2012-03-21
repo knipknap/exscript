@@ -17,6 +17,7 @@ import base64
 import shutil
 import logging
 import logging.handlers
+from functools import partial
 from lxml import etree
 from Exscript import Queue
 from Exscript.AccountPool import AccountPool
@@ -72,6 +73,9 @@ class Config(ConfigReader):
         queue       = Queue(verbose = 0, max_threads = max_threads)
 
         # Assign account pools to the queue.
+        def match_cb(condition, host):
+            return eval(condition, host.get_dict())
+
         for pool_elem in element.iterfind('account-pool'):
             pname = pool_elem.text
             pool  = self._init_account_pool_from_name(pname)
@@ -81,11 +85,9 @@ class Config(ConfigReader):
                 queue.add_account_pool(pool)
                 continue
 
-            condition = compile(cond, 'config', 'eval')
-            def match_cb(host):
-                return eval(condition, host.get_dict())
             print 'Assigning account pool "%s" to "%s"...' % (pname, name)
-            queue.add_account_pool(pool, match_cb)
+            condition = compile(cond, 'config', 'eval')
+            queue.add_account_pool(pool, partial(match_cb, condition))
 
         return queue
 
