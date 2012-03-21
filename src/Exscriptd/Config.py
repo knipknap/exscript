@@ -60,6 +60,7 @@ class Config(ConfigReader):
 
     @cache_result
     def _init_account_pool_from_name(self, name):
+        print 'Creating account pool "%s"...' % name
         accounts = self._get_account_list_from_name(name)
         return AccountPool(accounts)
 
@@ -72,15 +73,18 @@ class Config(ConfigReader):
 
         # Assign account pools to the queue.
         for pool_elem in element.iterfind('account-pool'):
-            pool = self._init_account_pool_from_name(pool_elem.text)
-            cond = pool_elem.get('for')
+            pname = pool_elem.text
+            pool  = self._init_account_pool_from_name(pname)
+            cond  = pool_elem.get('for')
             if cond is None:
+                print 'Assigning default account pool "%s" to "%s"...' % (pname, name)
                 queue.add_account_pool(pool)
                 continue
 
             condition = compile(cond, 'config', 'eval')
             def match_cb(host):
                 return eval(condition, host.get_dict())
+            print 'Assigning account pool "%s" to "%s"...' % (pname, name)
             queue.add_account_pool(pool, match_cb)
 
         return queue
