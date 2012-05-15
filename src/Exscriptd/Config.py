@@ -189,6 +189,17 @@ class Config(ConfigReader):
                 return file
         return None
 
+    def _get_service_file_from_folder(self, folder):
+        """
+        Searches the config directory for service configuration files,
+        and returns the name of the first file lying in the folder
+        with the given name.
+        """
+        for file in self._get_service_files():
+            if os.path.basename(os.path.dirname(file)) == folder:
+                return file
+        return None
+
     def _init_service_file(self, filename, dispatcher):
         services    = []
         service_dir = os.path.dirname(filename)
@@ -376,22 +387,22 @@ class Config(ConfigReader):
         self._write_xml(xml, pathname)
         return True
 
-    def _get_service_var_elem(self, service_name):
-        pathname = self._get_service_file_from_name(service_name)
+    def _get_service_var_elem(self, service_folder):
+        pathname = self._get_service_file_from_folder(service_folder)
         doc      = etree.parse(pathname)
         xml      = doc.getroot()
         return pathname, xml, xml.find('variables')
 
-    def set_service_variable(self, service_name, varname, value):
-        path, xml, var_elem = self._get_service_var_elem(service_name)
+    def set_service_variable(self, service_folder, varname, value):
+        path, xml, var_elem = self._get_service_var_elem(service_folder)
         elem                = var_elem.find(varname)
         if elem is None:
             elem = etree.SubElement(var_elem, varname)
         elem.text = value
         self._write_xml(xml, path)
 
-    def unset_service_variable(self, service_name, varname):
-        path, xml, var_elem = self._get_service_var_elem(service_name)
+    def unset_service_variable(self, service_folder, varname):
+        path, xml, var_elem = self._get_service_var_elem(service_folder)
         elem                = var_elem.find(varname)
         if elem is not None:
             var_elem.remove(elem)
