@@ -47,7 +47,13 @@ def is_ip(string):
     @rtype:  bool
     @return: True if the string is an IP address, False otherwise.
     """
-    return re.match(r'\d+\.\d+\.\d+\.\d+', string) and True or False
+    mo = re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)', string)
+    if mo is None:
+        return False
+    for group in mo.groups():
+        if int(group) not in range(0, 255):
+            return False
+    return True
 
 def normalize_ip(ip):
     """
@@ -203,3 +209,16 @@ def remote_ip(local_ip):
     local_ip = ip2int(local_ip)
     network  = local_ip & pfxlen2mask_int(30)
     return int2ip(network + 3 - (local_ip - network))
+
+def sort(iterable):
+    """
+    Given an IP address list, this function sorts the list.
+
+    @type  local_ip: Iterator
+    @param local_ip: An IP address list.
+    @rtype:  list
+    @return: The sorted IP address list.
+    """
+    ips = ["%3s.%3s.%3s.%3s" % tuple(clean_ip(ip).split(".")) for ip in iterable]
+    ips.sort()
+    return [ip.replace(" ", "") for ip in ips]
