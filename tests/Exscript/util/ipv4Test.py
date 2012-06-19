@@ -110,6 +110,20 @@ class ipv4Test(unittest.TestCase):
         self.assertEqual(remote_ip('10.0.0.2'), '10.0.0.1')
         self.assertEqual(remote_ip('10.0.0.3'), '10.0.0.0')
 
+    def testSort(self):
+        from Exscript.util.ipv4 import sort
+        import random
+        ip_list = ['0.0.0.0',
+                   '0.0.0.255',
+                   '1.2.3.4',
+                   '255.255.0.255',
+                   '255.255.255.255',
+                   '255.255.255.255']
+        ip_list_copy = ip_list[:]
+        for i in range(50):
+            random.shuffle(ip_list_copy)
+            self.assertEqual(ip_list, sort(ip_list_copy))
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ipv4Test)
 if __name__ == '__main__':

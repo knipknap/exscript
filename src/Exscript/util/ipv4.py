@@ -214,11 +214,10 @@ def sort(iterable):
     """
     Given an IP address list, this function sorts the list.
 
-    @type  local_ip: Iterator
-    @param local_ip: An IP address list.
+    @type  iterable: Iterator
+    @param iterable: An IP address list.
     @rtype:  list
     @return: The sorted IP address list.
     """
-    ips = ["%3s.%3s.%3s.%3s" % tuple(clean_ip(ip).split(".")) for ip in iterable]
-    ips.sort()
-    return [ip.replace(" ", "") for ip in ips]
+    ips = sorted(normalize_ip(ip) for ip in iterable)
+    return [clean_ip(ip) for ip in ips]
