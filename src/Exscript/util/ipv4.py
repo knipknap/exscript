@@ -51,7 +51,7 @@ def is_ip(string):
     if mo is None:
         return False
     for group in mo.groups():
-        if int(group) not in range(0, 255):
+        if int(group) not in range(0, 256):
             return False
     return True
 
