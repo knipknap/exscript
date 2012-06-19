@@ -42,6 +42,7 @@ import time
 import socket
 import select
 import struct
+from cStringIO import StringIO
 
 __all__ = ["Telnet"]
 
@@ -179,7 +180,7 @@ class Telnet:
         self.cancel_expect = False
         self.rawq = ''
         self.irawq = 0
-        self.cookedq = ''
+        self.cookedq = StringIO()
         self.eof = 0
         self.window_size          = kwargs.get('termsize')
         self.stdout               = kwargs.get('stdout',           sys.stdout)
@@ -277,8 +278,9 @@ class Telnet:
         while not self.eof:
             self.fill_rawq()
             self.process_rawq()
-        buf = self.cookedq
-        self.cookedq = ''
+        buf = self.cookedq.getvalue()
+        self.cookedq.seek(0)
+        self.cookedq.truncate()
         return buf
 
     def read_some(self):
@@ -289,11 +291,12 @@ class Telnet:
 
         """
         self.process_rawq()
-        while not self.cookedq and not self.eof:
+        while self.cookedq.tell() == 0 and not self.eof:
             self.fill_rawq()
             self.process_rawq()
-        buf = self.cookedq
-        self.cookedq = ''
+        buf = self.cookedq.getvalue()
+        self.cookedq.seek(0)
+        self.cookedq.truncate()
         return buf
 
     def read_very_eager(self):
@@ -319,7 +322,7 @@ class Telnet:
 
         """
         self.process_rawq()
-        while not self.cookedq and not self.eof and self.sock_avail():
+        while self.cookedq.tell() == 0 and not self.eof and self.sock_avail():
             self.fill_rawq()
             self.process_rawq()
         return self.read_very_lazy()
@@ -342,8 +345,9 @@ class Telnet:
         Return '' if no cooked data available otherwise.  Don't block.
 
         """
-        buf = self.cookedq
-        self.cookedq = ''
+        buf = self.cookedq.getvalue()
+        self.cookedq.seek(0)
+        self.cookedq.truncate()
         if not buf and self.eof and not self.rawq:
             raise EOFError, 'telnet connection closed'
         return buf
@@ -459,7 +463,7 @@ class Telnet:
                     self.msg('IAC %d not recognized' % ord(command))
         except EOFError: # raised by self.rawq_getchar()
             pass
-        self.cookedq += buf
+        self.cookedq.write(buf)
         if self.data_callback is not None:
             self.data_callback(buf, **self.data_callback_kwargs)
 
@@ -573,17 +577,24 @@ class Telnet:
                 self.msg('cancelling expect()')
                 return -2, None, ''
             #print "Queue: >>>%s<<<" % repr(self.cookedq)
-            search_window = self.cookedq[search_window_size * -1:]
+            qlen = self.cookedq.tell()
+            self.cookedq.seek(qlen - search_window_size)
+            search_window = self.cookedq.read()
             #print "Search window: >>>%s<<<" % repr(search_window)
             for i in indices:
                 m = list[i].search(search_window)
                 if m is not None:
                     #print "Match End:", m.end()
                     e    = len(m.group())
-                    e    = len(self.cookedq) - e
-                    text = self.cookedq[:e]
+                    e    = qlen - e + 1
+                    self.cookedq.seek(0)
+                    text = self.cookedq.read(e)
                     if flush:
-                        self.cookedq = search_window[m.end():]
+                        self.cookedq.seek(0)
+                        self.cookedq.truncate()
+                        self.cookedq.write(search_window[m.end():])
+                    else:
+                        self.cookedq.seek(qlen)
                     #print "END:", e, "MATCH:", i, m, repr(text)
                     return i, m, text
             if self.eof:
