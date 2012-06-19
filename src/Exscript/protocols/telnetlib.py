@@ -140,10 +140,6 @@ class Telnet:
     they can return an empty string for other reasons.  See the
     individual doc strings.
 
-    read_until(expected, [timeout])
-        Read until the expected string has been seen, or a timeout is
-        hit (default is no timeout); may block.
-
     read_all()
         Read all data until EOF; may block.
 
@@ -274,38 +270,6 @@ class Telnet:
             buffer = buffer.replace(IAC, IAC+IAC)
         self.msg("send %s", `buffer`)
         self.sock.send(buffer)
-
-    def read_until(self, match, timeout=None):
-        """Read until a given string is encountered or until timeout.
-
-        When no match is found, return whatever is available instead,
-        possibly the empty string.  Raise EOFError if the connection
-        is closed and no cooked data is available.
-
-        """
-        n = len(match)
-        self.process_rawq()
-        i = self.cookedq.find(match)
-        if i >= 0:
-            i = i+n
-            buf = self.cookedq[:i]
-            self.cookedq = self.cookedq[i:]
-            return buf
-        s_reply = ([self], [], [])
-        s_args = s_reply
-        if timeout is not None:
-            s_args = s_args + (timeout,)
-        while not self.eof and apply(select.select, s_args) == s_reply:
-            i = max(0, len(self.cookedq)-n)
-            self.fill_rawq()
-            self.process_rawq()
-            i = self.cookedq.find(match, i)
-            if i >= 0:
-                i = i+n
-                buf = self.cookedq[:i]
-                self.cookedq = self.cookedq[i:]
-                return buf
-        return self.read_very_lazy()
 
     def read_all(self):
         """Read all data until EOF; block until connection closed."""
