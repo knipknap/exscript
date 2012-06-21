@@ -9,7 +9,7 @@ logger = Logger() # Logs everything to memory.
 
 @log_to(logger)
 @autologin
-def do_something(conn):
+def do_something(job, host, conn):
     conn.execute('show ip int brie')
 
 # Read input data.
