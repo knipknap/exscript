@@ -32,7 +32,7 @@ class OneOSDriver(Driver):
 
     def check_head_for_os(self, string):
         if _first_prompt_re.search(string):
-            return 50
+            return 40
         return 0
 
     def init_terminal(self, conn):

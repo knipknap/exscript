@@ -37,12 +37,12 @@ class IOSDriver(Driver):
         self.error_re    = _error_re
 
     def check_head_for_os(self, string):
+        if 'User Access Verification' in string:
+            return 60
         if _tacacs_re.search(string):
             return 50
         if _user_re[0].search(string):
-            return 40
-        if 'User Access Verification' in string:
-            return 20
+            return 30
         return 0
 
     def init_terminal(self, conn):
