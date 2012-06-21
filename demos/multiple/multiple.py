@@ -3,7 +3,7 @@ from Exscript            import Host
 from Exscript.util.file  import get_hosts_from_file, get_accounts_from_file
 from Exscript.util.start import start
 
-def one(conn):
+def one(job, host, conn):
     # You can add a safehold based on the guess_os() method.
     if conn.guess_os() != 'ios':
         raise Exception('unsupported os: ' + repr(conn.guess_os()))
@@ -17,7 +17,7 @@ def one(conn):
     conn.execute('show ip int brie')
     print "myvariable is", conn.get_host().get('myvariable')
 
-def two(conn):
+def two(job, host, conn):
     conn.autoinit()
     conn.execute('show interface POS1/0')
 

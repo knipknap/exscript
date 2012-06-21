@@ -3,7 +3,7 @@ from Exscript.util.match    import any_match
 from Exscript.util.template import eval_file
 from Exscript.util.start    import quickstart
 
-def do_something(conn):
+def do_something(job, host, conn):
     conn.execute('ls -1')
     files = any_match(conn, r'(\S+)')
     print "Files found:", files
