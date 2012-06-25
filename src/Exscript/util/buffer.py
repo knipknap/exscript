@@ -44,8 +44,7 @@ class MonitoredBuffer(object):
         """
         Returns the content of the buffer.
         """
-        self.io.seek(0)
-        return self.io.read()
+        return self.io.getvalue()
 
     def size(self):
         """
@@ -105,6 +104,8 @@ class MonitoredBuffer(object):
         @param data: The data that is appended.
         """
         self.io.write(data)
+        if not self.monitors:
+            return
 
         # Check whether any of the monitoring regular expressions matches.
         # If it does, we need to disable that monitor until the matching
