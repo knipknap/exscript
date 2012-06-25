@@ -12,17 +12,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+from StringIO import StringIO
 from Exscript.util.impl import format_exception
 
 class Log(object):
     def __init__(self, name):
         self.name     = name
-        self.data     = ''
+        self.data     = StringIO('')
         self.exc_info = None
         self.did_end  = False
 
     def __str__(self):
-        return self.data
+        return self.data.getvalue()
 
     def __len__(self):
         return len(str(self))
@@ -31,7 +32,7 @@ class Log(object):
         return self.name
 
     def write(self, *data):
-        self.data += ' '.join(data)
+        self.data.write(' '.join(data))
 
     def get_error(self, include_tb = True):
         if self.exc_info is None:
