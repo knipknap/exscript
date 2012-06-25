@@ -999,7 +999,7 @@ class Protocol(object):
 
         return result
 
-    def add_monitor(self, pattern, callback):
+    def add_monitor(self, pattern, callback, limit = 80):
         """
         Calls the given function whenever the given pattern matches the
         incoming data.
@@ -1014,8 +1014,11 @@ class Protocol(object):
         @param pattern: One or more regular expressions.
         @type  callback: callable
         @param callback: The function that is called.
+        @type  limit: int
+        @param limit: The maximum size of the tail of the buffer
+                      that is searched, in number of bytes.
         """
-        self.buffer.add_monitor(pattern, partial(callback, self))
+        self.buffer.add_monitor(pattern, partial(callback, self), limit)
 
     def cancel_expect(self):
         """

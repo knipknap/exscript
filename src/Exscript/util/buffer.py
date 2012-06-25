@@ -112,7 +112,8 @@ class MonitoredBuffer(object):
         # track of the position of the last matching byte.
         buf = str(self)
         for item in self.monitors:
-            regex_list, callback, bytepos = item
+            regex_list, callback, bytepos, limit = item
+            bytepos = max(bytepos, len(buf) - limit)
             for i, regex in enumerate(regex_list):
                 match = regex.search(buf, bytepos)
                 if match is not None:
@@ -128,7 +129,7 @@ class MonitoredBuffer(object):
         for item in self.monitors:
             item[2] = 0
 
-    def add_monitor(self, pattern, callback):
+    def add_monitor(self, pattern, callback, limit = 80):
         """
         Calls the given function whenever the given pattern matches the
         buffer.
@@ -140,5 +141,8 @@ class MonitoredBuffer(object):
         @param pattern: One or more regular expressions.
         @type  callback: callable
         @param callback: The function that is called.
+        @type  limit: int
+        @param limit: The maximum size of the tail of the buffer
+                      that is searched, in number of bytes.
         """
-        self.monitors.append([to_regexs(pattern), callback, 0])
+        self.monitors.append([to_regexs(pattern), callback, 0, limit])
