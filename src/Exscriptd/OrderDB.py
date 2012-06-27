@@ -78,7 +78,7 @@ class OrderDB(object):
             sa.Column('status',    sa.String(150), index = True),
             sa.Column('progress',  sa.Float,       default = 0.0),
             sa.Column('started',   sa.DateTime,    default = datetime.utcnow),
-            sa.Column('closed',    sa.DateTime),
+            sa.Column('closed',    sa.DateTime,    index = True),
             sa.Column('logfile',   sa.String(250)),
             sa.Column('tracefile', sa.String(250)),
             sa.Column('vars',      sa.PickleType()),
