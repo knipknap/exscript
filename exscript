@@ -16,7 +16,9 @@
 import sys
 import os
 import re
+import imp
 import getpass
+import Exscript.protocols.drivers
 from optparse import OptionParser, Option, OptionValueError
 from Exscript import Queue, Account, PrivateKey, __version__
 from Exscript.protocols import protocol_map
@@ -105,6 +107,22 @@ def run():
         if not txt_hosts:
             print 'Warning: %s is empty.' % options.hosts
         hosts += txt_hosts
+
+    # If a filename of an Exscript driver was given, import it.
+    if options.load_driver:
+        print 'Searching drivers in %s...' % options.load_driver
+        name = os.path.splitext(os.path.basename(options.load_driver))[0]
+        try:
+            driver_module = imp.load_source(name, options.load_driver)
+        except IOError, e:
+            parser.error(str(e))
+        except Exception, e:
+            sys.stderr.write('Error in driver ' + options.load_driver + '\n')
+            raise
+        for name, obj in driver_module.__dict__.iteritems():
+            if Exscript.protocols.drivers.isdriver(obj):
+                Exscript.protocols.drivers.add_driver(obj)
+                print 'Driver ' + repr(name) + ' added.'
 
     # Make sure that all mandatory options are present.
     if not hosts:
@@ -356,6 +374,13 @@ parser.add_option('--delete-logs',
                   action  = 'store_true',
                   default = False,
                   help    = 'Delete logs of successful operations when done.')
+
+parser.add_option('--load-driver',
+                  dest    = 'load_driver',
+                  metavar = 'FILE',
+                  help    = '''
+A python file containing an Exscript driver class.
+'''.strip())
 
 parser.add_option('--execute', '-e',
                   dest    = 'execute',
