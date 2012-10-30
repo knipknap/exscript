@@ -32,6 +32,17 @@ User login successful.
 telnet@mpls1.ams2.nl>en
 Password:
 telnet@mpls1.ams2.nl#
+
+job@jump:~$ ssh job@mpls1.ams2.nl
+Password:
+SSH@mpls1.ams2.nl>en
+Password:
+SSH@mpls1.ams2.nl#exit
+SSH@mpls1.ams2.nl>exit
+Connection to mpls1.ams2.nl closed by remote host.
+Connection to mpls1.ams2.nl closed.
+job@jump:~$ 
+
 """
 
 import re
