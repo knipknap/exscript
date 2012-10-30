@@ -1,0 +1,21 @@
+
+User Access Verification
+
+Please Enter Login Name: job
+Please Enter Password: 
+
+User login successful.
+
+telnet@r1.sjo1.us>enable
+Password:
+telnet@r1.sjo1.us#ter l 0
+telnet@r1.sjo1.us#show access-list 10 
+
+Standard IP access list 10 
+ACL Remark:  "Access controll management"
+permit host 192.168.8.1
+deny any 
+
+telnet@r1.sjo1.us#conf t
+Warning: 1 user(s) already in config mode.
+telnet@r1.sjo1.us(config)#

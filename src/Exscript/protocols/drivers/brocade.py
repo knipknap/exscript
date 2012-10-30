@@ -50,7 +50,10 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'[\r\n\r\n]Please Enter Login Name: $')]
 _password_re = [re.compile(r'[\r\n](Please Enter Password: $|Password:$)')]
-_prompt_re   = [re.compile(r'[\r\n]?(telnet|SSH)@[\-\w+\.:]+[>#]$')]
+_warning     = r'(?:Warning: \d+ user\(s\) already in config mode\.)'
+_prompt      = r'[\r\n]?(telnet|SSH)@[\-\w+\.:]+(?:\(\w+\))?[>#]$'
+
+_prompt_re   = [re.compile(_warning + r'?' + _prompt)]                                                                                                                         
 # _prompt_re   = [re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re    = [re.compile(r'%Error'),
                 re.compile(r'invalid input', re.I),
