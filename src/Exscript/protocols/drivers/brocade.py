@@ -14,35 +14,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
 A driver for Brocade XMR/MLX devices.
-
-Prompt examples:
-
-job@jump:~$ telnet mpls1.ams2.nl
-Trying 80.94.64.54...
-Connected to mpls1.ams2.nl.
-Escape character is '^]'.
-
-User Access Verification
-
-Please Enter Login Name: job
-Please Enter Password: 
-
-User login successful.
-
-telnet@mpls1.ams2.nl>en
-Password:
-telnet@mpls1.ams2.nl#
-
-job@jump:~$ ssh job@mpls1.ams2.nl
-Password:
-SSH@mpls1.ams2.nl>en
-Password:
-SSH@mpls1.ams2.nl#exit
-SSH@mpls1.ams2.nl>exit
-Connection to mpls1.ams2.nl closed by remote host.
-Connection to mpls1.ams2.nl closed.
-job@jump:~$ 
-
 """
 
 import re
@@ -51,12 +22,12 @@ from Exscript.protocols.drivers.driver import Driver
 _user_re     = [re.compile(r'[\r\n\r\n]Please Enter Login Name: $')]
 _password_re = [re.compile(r'[\r\n](Please Enter Password: $|Password:$)')]
 _warning     = r'(?:Warning: \d+ user\(s\) already in config mode\.)'
-_prompt      = r'[\r\n]?(telnet|SSH)@[\-\w+\.:]+(?:\(\w+\))?[>#]$'
+_prompt      = r'[\r\n]?(telnet|SSH)@[\-\w+\.:]+(?:\([-\w]+\))?[>#]$'
 
 _prompt_re   = [re.compile(_warning + r'?' + _prompt)]                                                                                                                         
 # _prompt_re   = [re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re    = [re.compile(r'%Error'),
-                re.compile(r'invalid input', re.I),
+                re.compile(r'Invalid input', re.I),
                 re.compile(r'(?:incomplete|ambiguous) command', re.I),
                 re.compile(r'connection timed out', re.I),
                 re.compile(r'[^\r\n]+ not found', re.I)]
