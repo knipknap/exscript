@@ -1,0 +1,27 @@
+
+User Access Verification
+
+Please Enter Login Name: job
+Please Enter Password: 
+
+User login successful.
+
+telnet@r1.lax1.us>enable
+Password:
+telnet@r1.lax1.us#sh ver | i System Mode|HW 
+System Mode: XMR
+telnet@r1.lax1.us#terminal length 0
+telnet@r1.lax1.us#show ntp status 
+ Clock is unsynchronized, no reference clock
+ NTP server mode is enabled, NTP client mode is enabled
+ NTP master mode is disabled, NTP master stratum is 8
+ NTP is not in panic mode
+ source interface = 1
+
+telnet@r1.lax1.us#show run | i clock 
+clock timezone gmt GMT+01
+telnet@r1.lax1.us#conf terminal
+Warning: 2 user(s) already in config mode.
+telnet@r1.lax1.us(config)#no clock timezone gmt GMT+01
+telnet@r1.lax1.us(config)#ntp
+telnet@r1.lax1.us(config-ntp)#
