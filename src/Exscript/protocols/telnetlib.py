@@ -560,7 +560,7 @@ class Telnet:
             if time.time() > end:
                 return False
 
-    def _waitfor(self, list, timeout=None, flush=False):
+    def _waitfor(self, list, timeout=None, flush=False, cleanup=None):
         re = None
         list = list[:]
         indices = range(len(list))
@@ -581,6 +581,8 @@ class Telnet:
             self.cookedq.seek(qlen - search_window_size)
             search_window = self.cookedq.read()
             #print "Search window: >>>%s<<<" % repr(search_window)
+            if cleanup:
+                search_window = cleanup(search_window)
             for i in indices:
                 m = list[i].search(search_window)
                 if m is not None:
@@ -614,7 +616,7 @@ class Telnet:
             raise EOFError
         return -1, None, text
 
-    def waitfor(self, list, timeout=None):
+    def waitfor(self, list, timeout=None, cleanup=None):
         """Read until one from a list of a regular expressions matches.
 
         The first argument is a list of regular expressions, either
@@ -635,14 +637,14 @@ class Telnet:
         or if more than one expression can match the same input, the
         results are undeterministic, and may depend on the I/O timing.
         """
-        return self._waitfor(list, timeout, False)
+        return self._waitfor(list, timeout, False, cleanup)
 
-    def expect(self, list, timeout=None):
+    def expect(self, list, timeout=None, cleanup=None):
         """
         Like waitfor(), but removes the matched data from the incoming
         buffer.
         """
-        return self._waitfor(list, timeout, True)
+        return self._waitfor(list, timeout, True, cleanup = cleanup)
 
 
 def test():

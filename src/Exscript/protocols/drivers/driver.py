@@ -87,6 +87,9 @@ class Driver(object):
     def _check_response(self, string):
         return self.name, self.check_response_for_os(string)
 
+    def clean_response_for_re_match(self, response):
+        return response
+
     def init_terminal(self, conn):
         pass
 

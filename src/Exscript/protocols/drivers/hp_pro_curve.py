@@ -25,6 +25,7 @@ _error_re      = [re.compile(r'(?:invalid|incomplete|ambiguous) input:', re.I)]
 _login_fail_re = [re.compile(r'[\r\n]invalid password', re.I),
                   re.compile(r'unable to verify password', re.I),
                   re.compile(r'unable to login', re.I)]
+_clean_res_re  = [re.compile(r'\x1b[^A-Z]+[@-~]')]
 
 class HPProCurveDriver(Driver):
     def __init__(self):
@@ -34,6 +35,7 @@ class HPProCurveDriver(Driver):
         self.prompt_re      = _prompt_re
         self.error_re       = _error_re
         self.login_error_re = _login_fail_re
+        self.clean_res_re   = _clean_res_re
 
     def check_head_for_os(self, string):
         if 'ProCurve' in string:
@@ -41,6 +43,9 @@ class HPProCurveDriver(Driver):
         if 'Hewlett-Packard' in string:
             return 50
         return 0
+
+    def clean_response_for_re_match(self, response):
+        return self.clean_res_re.subn("", response)[0]
 
     def init_terminal(self, conn):
         pass #TODO: no idea how that works on these

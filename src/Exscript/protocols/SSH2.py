@@ -316,7 +316,9 @@ class SSH2(Protocol):
         search_window_size = 150
         while not self.cancel:
             # Check whether what's buffered matches the prompt.
+            driver        = self.get_driver()
             search_window = self.buffer.tail(search_window_size)
+            search_window = driver.clean_response_for_re_match(search_window)
             match         = None
             for n, regex in enumerate(prompt):
                 match = regex.search(search_window)
