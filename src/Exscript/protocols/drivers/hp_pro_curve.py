@@ -45,7 +45,9 @@ class HPProCurveDriver(Driver):
         return 0
 
     def clean_response_for_re_match(self, response):
-        return self.clean_res_re.subn("", response)[0]
+        for regexp in self.clean_res_re:
+            response = regexp.subn("", response)[0]
+        return response
 
     def init_terminal(self, conn):
         pass #TODO: no idea how that works on these
