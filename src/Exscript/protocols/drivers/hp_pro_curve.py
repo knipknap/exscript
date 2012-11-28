@@ -47,7 +47,7 @@ class HPProCurveDriver(Driver):
 
     def clean_response_for_re_match(self, response):
         for regexp, sub in _translate_re:
-            response = regexp.subn(sub, line)[0]
+            response = regexp.subn(sub, response)[0]
         for regexp in self.clean_res_re:
             response = regexp.subn("", response)[0]
         return response
