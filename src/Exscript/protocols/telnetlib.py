@@ -582,7 +582,9 @@ class Telnet:
             search_window = self.cookedq.read()
             #print "Search window: >>>%s<<<" % repr(search_window)
             if cleanup:
-                search_window = cleanup(search_window)
+                search_window, incomplete_tail = cleanup(search_window)
+            else:
+                incomplete_tail = ''
             for i in indices:
                 m = list[i].search(search_window)
                 if m is not None:
@@ -590,11 +592,12 @@ class Telnet:
                     e    = len(m.group())
                     e    = qlen - e + 1
                     self.cookedq.seek(0)
-                    text = self.cookedq.read(e)
+                    text = self.cookedq.read(e)[:-len(incomplete_tail)]
                     if flush:
                         self.cookedq.seek(0)
                         self.cookedq.truncate()
                         self.cookedq.write(search_window[m.end():])
+                        self.cookedq.write(incomplete_tail)
                     else:
                         self.cookedq.seek(qlen)
                     #print "END:", e, "MATCH:", i, m, repr(text)
