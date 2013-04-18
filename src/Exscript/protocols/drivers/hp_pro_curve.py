@@ -25,7 +25,8 @@ _error_re      = [re.compile(r'(?:invalid|incomplete|ambiguous) input:', re.I)]
 _login_fail_re = [re.compile(r'[\r\n]invalid password', re.I),
                   re.compile(r'unable to verify password', re.I),
                   re.compile(r'unable to login', re.I)]
-_clean_res_re  = [(re.compile(r'\x1bE'), "\r\n"), (re.compile(r'\x1b[ -/]*(?:[0-Z\-~]|\[[ -/]*[0-?]*[@-~])'), "")]
+_clean_res_re  = [re.compile(r'\x1b[ -/]*(?:[0-Z\-~]|\[[ -/]*[0-?]*[@-~])')]
+_translate_re  = [(re.compile(r'\x1bE'), "\r\n")]
 
 class HPProCurveDriver(Driver):
     def __init__(self):
@@ -45,12 +46,11 @@ class HPProCurveDriver(Driver):
         return 0
 
     def clean_response_for_re_match(self, response):
-        for regexp, sub in self.clean_res_re:
+        for regexp, sub in _translate_re:
             response = regexp.subn(sub, response)[0]
-        i = response.find('\x1b')
-        if i > -1:
-            return response[:i], response[i:]
-        return response, ''
+        for regexp in self.clean_res_re:
+            response = regexp.subn("", response)[0]
+        return response
 
     def init_terminal(self, conn):
         pass #TODO: no idea how that works on these
