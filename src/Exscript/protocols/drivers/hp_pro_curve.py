@@ -25,7 +25,7 @@ _error_re      = [re.compile(r'(?:invalid|incomplete|ambiguous) input:', re.I)]
 _login_fail_re = [re.compile(r'[\r\n]invalid password', re.I),
                   re.compile(r'unable to verify password', re.I),
                   re.compile(r'unable to login', re.I)]
-_clean_res_re  = [(re.compile(r'\x1bE'), "\r\n"), (re.compile(r'\x1b[ -/]*(?:[0-Z\-~]|\[[ -/]*[0-?]*[@-~])'), "")]
+_clean_res_re  = [(re.compile(r'\\x1bE'), "\r\n"), (re.compile(r'\\x1b[ -/]*(?:[0-Z\-~]|\[[ -/]*[0-?]*[@-~])'), "")]
 
 class HPProCurveDriver(Driver):
     def __init__(self):
