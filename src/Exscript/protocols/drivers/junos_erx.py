@@ -40,5 +40,5 @@ class JunOSERXDriver(Driver):
         conn.execute('terminal width 512')
 
     def auto_authorize(self, conn, account, flush, bailout):
-        conn.send('enable\r')
+        conn.send('enable 15\r')
         conn.app_authorize(account, flush, bailout)
