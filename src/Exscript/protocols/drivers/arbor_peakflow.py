@@ -22,7 +22,7 @@ _user_re     = [re.compile(r'(user|login): $', re.I)]
 _password_re = [re.compile(r'Password: $')]
 _prompt_re   = [re.compile(r'[\r\n][\-\w+\._]+@[\-\w+\._~]+:(?:/\w*)+[#%] $'),
                 re.compile(r'Exit anyway\? \[.\] $')]
-_os_re       = re.compile(r'\bpeakflow\b.*\barbor\b', re.I | re.S)
+_os_re       = re.compile(r'\b(peakflow\b.*\barbor|arbos)\b', re.I | re.S)
 
 class ArborPeakflowDriver(Driver):
     def __init__(self):
