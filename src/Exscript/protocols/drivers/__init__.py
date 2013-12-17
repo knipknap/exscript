@@ -2,6 +2,7 @@ import inspect
 from Exscript.protocols.drivers.driver import Driver
 from Exscript.protocols.drivers.aix import AIXDriver
 from Exscript.protocols.drivers.arbor_peakflow import ArborPeakflowDriver
+from Exscript.protocols.drivers.brocade import BrocadeDriver
 from Exscript.protocols.drivers.enterasys import EnterasysDriver
 from Exscript.protocols.drivers.generic import GenericDriver
 from Exscript.protocols.drivers.hp_pro_curve import HPProCurveDriver

@@ -66,9 +66,10 @@ class Telnet(Protocol):
             func = self.tn.waitfor
 
         # Wait for a prompt.
+        clean = self.get_driver().clean_response_for_re_match
         self.response = None
         try:
-            result, match, self.response = func(prompt, self.timeout)
+            result, match, self.response = func(prompt, self.timeout, cleanup = clean)
         except Exception:
             self._dbg(1, 'Error while waiting for ' + repr(prompt))
             raise

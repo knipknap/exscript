@@ -19,7 +19,8 @@ import re
 import os
 import base64
 import codecs
-from Exscript           import Account
+import imp
+from Exscript import Account
 from Exscript.util.cast import to_host
 
 def get_accounts_from_file(filename):
@@ -184,3 +185,33 @@ def get_hosts_from_csv(filename,
                     host.append(varname, value)
 
     return hosts
+
+
+def load_lib(filename):
+    """
+    Loads a Python file containing functions, and returns the
+    content of the __lib__ variable. The __lib__ variable must contain
+    a dictionary mapping function names to callables.
+
+    Returns a dictionary mapping the namespaced function names to
+    callables. The namespace is the basename of the file, without file
+    extension.
+
+    The result of this function can later be passed to run_template::
+
+        functions = load_lib('my_library.py')
+        run_template(conn, 'foo.exscript', **functions)
+
+    @type  filename: string
+    @param filename: A full filename.
+    @rtype:  dict[string->object]
+    @return: The loaded functions.
+    """
+    # Open the file.
+    if not os.path.exists(filename):
+        raise IOError('No such file: %s' % filename)
+
+    name = os.path.splitext(os.path.basename(filename))[0]
+    module = imp.load_source(name, filename)
+
+    return dict((name + '.' + k, v) for (k, v) in module.__lib__.iteritems())

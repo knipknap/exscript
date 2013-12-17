@@ -18,13 +18,14 @@ A driver for HP ProCurve switches.
 import re
 from Exscript.protocols.drivers.driver import Driver
 
-_user_re       = [re.compile(r'[\r\n].*Username: .*$')]
-_password_re   = [re.compile(r'[\r\n].*Password: .*$')]
-_prompt_re     = [re.compile(r'[\r\n].*[\-\w+\.:/]+[>#] ?.*$')]
+_user_re       = [re.compile(r'[\r\n]Username: ?$')]
+_password_re   = [re.compile(r'[\r\n]Password: ?$')]
+_prompt_re     = [re.compile(r'[\r\n][\-\w+\.:/]+[>#] ?$')]
 _error_re      = [re.compile(r'(?:invalid|incomplete|ambiguous) input:', re.I)]
 _login_fail_re = [re.compile(r'[\r\n]invalid password', re.I),
                   re.compile(r'unable to verify password', re.I),
                   re.compile(r'unable to login', re.I)]
+_clean_res_re  = [(re.compile(r'\x1bE'), "\r\n"), (re.compile(r'(?:\x1b\[|\x9b)[\x30-\x3f]*[\x40-\x7e]'), "")]
 
 class HPProCurveDriver(Driver):
     def __init__(self):
@@ -34,6 +35,7 @@ class HPProCurveDriver(Driver):
         self.prompt_re      = _prompt_re
         self.error_re       = _error_re
         self.login_error_re = _login_fail_re
+        self.clean_res_re   = _clean_res_re
 
     def check_head_for_os(self, string):
         if 'ProCurve' in string:
@@ -42,8 +44,16 @@ class HPProCurveDriver(Driver):
             return 50
         return 0
 
-    def init_terminal(self, conn):
-        pass #TODO: no idea how that works on these
+    def clean_response_for_re_match(self, response):
+        start = response[:10].find('\x1b')
+        if start != -1:
+            response = response[start:]
+        for regexp, sub in self.clean_res_re:
+            response = regexp.subn(sub, response)[0]
+        i = response.find('\x1b')
+        if i > -1:
+            return response[:i], response[i:]
+        return response, ''
 
-    def auto_authorize(self, conn, account, flush, bailout):
-        pass #TODO: no idea how that works on these
+    def init_terminal(self, conn):
+        conn.execute('\r\n')

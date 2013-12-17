@@ -560,31 +560,44 @@ class Telnet:
             if time.time() > end:
                 return False
 
-    def _waitfor(self, list, timeout=None, flush=False):
+    def _waitfor(self, list, timeout=None, flush=False, cleanup=None):
         re = None
         list = list[:]
         indices = range(len(list))
         search_window_size = 150
+        head_loockback_size = 10
         for i in indices:
             if not hasattr(list[i], "search"):
                 if not re: import re
                 list[i] = re.compile(list[i])
         self.msg("Expecting %s" % [l.pattern for l in list])
+        incomplete_tail = ''
+        clean_sw_size = search_window_size
         while 1:
             self.process_rawq()
             if self.cancel_expect:
                 self.cancel_expect = False
                 self.msg('cancelling expect()')
                 return -2, None, ''
-            #print "Queue: >>>%s<<<" % repr(self.cookedq)
             qlen = self.cookedq.tell()
-            self.cookedq.seek(qlen - search_window_size)
-            search_window = self.cookedq.read()
-            #print "Search window: >>>%s<<<" % repr(search_window)
+            if cleanup:
+                while 1:
+                    self.cookedq.seek(qlen - clean_sw_size - len(incomplete_tail) - head_loockback_size)
+                    search_window = self.cookedq.read()
+                    search_window, incomplete_tail = cleanup(search_window)
+                    if clean_sw_size > qlen or len(search_window) >= search_window_size:
+                        search_window = search_window[-search_window_size:]
+                        if len(search_window) > search_window_size:
+                            clean_sw_size = clean_sw_size - search_window_size
+                        break
+                    else:
+                        clean_sw_size = clean_sw_size + search_window_size
+            else:
+                self.cookedq.seek(qlen - search_window_size)
+                search_window = self.cookedq.read()
             for i in indices:
                 m = list[i].search(search_window)
                 if m is not None:
-                    #print "Match End:", m.end()
                     e    = len(m.group())
                     e    = qlen - e + 1
                     self.cookedq.seek(0)
@@ -595,7 +608,6 @@ class Telnet:
                         self.cookedq.write(search_window[m.end():])
                     else:
                         self.cookedq.seek(qlen)
-                    #print "END:", e, "MATCH:", i, m, repr(text)
                     return i, m, text
             if self.eof:
                 break
@@ -614,7 +626,7 @@ class Telnet:
             raise EOFError
         return -1, None, text
 
-    def waitfor(self, list, timeout=None):
+    def waitfor(self, list, timeout=None, cleanup=None):
         """Read until one from a list of a regular expressions matches.
 
         The first argument is a list of regular expressions, either
@@ -635,14 +647,14 @@ class Telnet:
         or if more than one expression can match the same input, the
         results are undeterministic, and may depend on the I/O timing.
         """
-        return self._waitfor(list, timeout, False)
+        return self._waitfor(list, timeout, False, cleanup)
 
-    def expect(self, list, timeout=None):
+    def expect(self, list, timeout=None, cleanup=None):
         """
         Like waitfor(), but removes the matched data from the incoming
         buffer.
         """
-        return self._waitfor(list, timeout, True)
+        return self._waitfor(list, timeout, True, cleanup = cleanup)
 
 
 def test():

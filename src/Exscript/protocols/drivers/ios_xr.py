@@ -20,7 +20,7 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'[\r\n]Username: $')]
 _password_re = [re.compile(r'[\r\n]Password: $')]
-_prompt_re   = [re.compile(r'[\r\n]RP/\d+/(?:RP)?\d+\/CPU\d+:[^#]+(?:\([^\)]+\))?#$')]
+_prompt_re   = [re.compile(r'[\r\n]RP/\d+/(?:RS?P)?\d+\/CPU\d+:[^#]+(?:\([^\)]+\))?#$')]
 
 class IOSXRDriver(Driver):
     def __init__(self):

@@ -41,7 +41,7 @@ from Exscript.protocols.drivers.driver import Driver
 #
 
 _user_re     = [re.compile(r'[\r\n]login: $')]
-_password_re = [re.compile(r'[\r\n]Password: ?$')]
+_password_re = [re.compile(r'[\r\n](Local )?[Pp]assword: ?$')]
 _mb          = r'(?:\{master(?::\d+)?\}|\{backup(?::\d+)?\})'
 _ps          = r'(?:\{primary:node\d+\}|\{secondary:node\d+\})'
 _re_re       = r'(?:'+ _mb + r'|' + _ps + r')'

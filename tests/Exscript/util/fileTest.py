@@ -35,6 +35,10 @@ class fileTest(unittest.TestCase):
         self.csv_host_file.write('\n'.join([h + '	blah' for h in hosts]))
         self.csv_host_file.flush()
 
+        self.lib_file = NamedTemporaryFile()
+        self.lib_file.write('__lib__ = {"test": object}\n')
+        self.lib_file.flush()
+
     def tearDown(self):
         self.account_file.close()
         self.host_file.close()
@@ -59,6 +63,12 @@ class fileTest(unittest.TestCase):
         testvars  = [h.get('test')[0] for h in result]
         self.assertEqual(hostnames, expected_hosts)
         self.assertEqual(testvars, ['blah' for h in result])
+
+    def testLoadLib(self):
+        from Exscript.util.file import load_lib
+        functions = load_lib(self.lib_file.name)
+        name = os.path.splitext(os.path.basename(self.lib_file.name))[0]
+        self.assertEqual({name + '.test': object}, functions)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(fileTest)

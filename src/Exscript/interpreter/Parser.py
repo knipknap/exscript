@@ -25,11 +25,11 @@ class Parser(object):
         self.variables     = {}
 
     def define(self, **kwargs):
-        for key in kwargs:
-            if hasattr(kwargs[key], '__iter__'):
-                self.variables[key] = kwargs[key]
+        for key, value in kwargs.iteritems():
+            if hasattr(value, '__iter__') or hasattr(value, '__call__'):
+                self.variables[key] = value
             else:
-                self.variables[key] = [kwargs[key]]
+                self.variables[key] = [value]
 
     def define_object(self, **kwargs):
         self.variables.update(kwargs)

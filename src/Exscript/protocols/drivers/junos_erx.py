@@ -36,9 +36,9 @@ class JunOSERXDriver(Driver):
         return 0
 
     def init_terminal(self, conn):
-        conn.execute('terminal length 0')
-        conn.execute('terminal width 512')
+        conn.execute('terminal length 60')
+        conn.execute('terminal width 150')
 
     def auto_authorize(self, conn, account, flush, bailout):
-        conn.send('enable\r')
+        conn.send('enable 15\r')
         conn.app_authorize(account, flush, bailout)
