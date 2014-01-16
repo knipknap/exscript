@@ -91,7 +91,7 @@ def generate(passphrase, seed,
     hashmodule = _HASHMODULE[hashfunction]
     folder = _FOLDFUNCTION[hashfunction]
     
-    hash = folder(hashmodule.new(seed.lower() + passphrase).digest())
+    hash = folder(hashmodule.new(seed + passphrase).digest())
     
     # discard the first <startkey> keys    
     for iterations in range(0, startkey):
