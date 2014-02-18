@@ -20,7 +20,7 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'[\r\n]login: ')]
 _password_re = [re.compile(r'[\r\n]Password: $')]
-_prompt_re   = [re.compile(r'[\r\n]\[\w+\][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
+_prompt_re   = [re.compile(r'[\r\n]\x00?\[\w+\][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
 _model_re    = re.compile(r'[\r\n][^\r\n]+-se800[\r\n]')
 
 class SmartEdgeOSDriver(Driver):
