@@ -45,9 +45,12 @@ def run(users, hosts, func, **kwargs):
     @type  kwargs: dict
     @param kwargs: Passed to the Exscript.Queue constructor.
     """
+    attempts = kwargs.get("attempts", 1)
+    if kwargs.has_key("attempts"):
+        del kwargs["attempts"]
     queue = Queue(**kwargs)
     queue.add_account(users)
-    queue.run(hosts, func)
+    queue.run(hosts, func, attempts)
     queue.destroy()
 
 def quickrun(hosts, func, **kwargs):
