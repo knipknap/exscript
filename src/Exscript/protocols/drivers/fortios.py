@@ -27,6 +27,18 @@ _prompt_re = [
     re.compile(r'[\r\n][a-zA-Z0-9-_ .]+ (?:\([A-Za-z0-9_/.-]+\) )?# $')
 ]
 _fortios_re = _prompt_re[0]
+_error_re = [re.compile(r'^Command fail.'),
+             re.compile(r'^object check operator error')
+             ]
+
+# example errors:
+#invalid netmask.
+#object check operator error, -9, discard the setting
+#Command fail. Return code -9
+
+#entry not found in datasource
+#value parse error before 'imported'
+#Command fail. Return code -3
 
 
 class FortiOSDriver(Driver):
@@ -35,6 +47,7 @@ class FortiOSDriver(Driver):
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
+        self.error_re = _error_re
 
     def check_head_for_os(self, string):
         # By default Fortigate shows only prompt
