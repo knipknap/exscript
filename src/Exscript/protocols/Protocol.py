@@ -44,7 +44,7 @@ try:
 except ImportError:
     _have_termios = False
 
-_skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)')
+_skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)(?=\s|[\r\n])')
 
 class Protocol(object):
     """
