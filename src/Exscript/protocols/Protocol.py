@@ -258,6 +258,7 @@ class Protocol(object):
         self.response              = None
         self.buffer                = MonitoredBuffer()
         self.account_factory       = account_factory
+        self.send_data             = None
         if stdout is None:
             self.stdout = open(os.devnull, 'w')
         else:
@@ -1097,6 +1098,8 @@ class Protocol(object):
                     termios.tcsetattr(stdin, termios.TCSADRAIN, curtty)
 
                     if not is_handled:
+                        if not self.send_data is None:
+                            self.send_data.write(data)
                         channel.send(data)
         finally:
             termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
@@ -1121,6 +1124,8 @@ class Protocol(object):
                 if not data:
                     break
                 if not self._call_key_handlers(key_handlers, data):
+                    if not self.send_data is None:
+                        self.send_data.write(data)
                     channel.send(data)
         except EOFError:
             self._dbg(1, 'User hit ^Z or F6')
