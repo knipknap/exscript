@@ -28,7 +28,7 @@ _error_re    = [re.compile(r'%Error'),
                 re.compile(r'connection timed out', re.I),
                 re.compile(r'[^\r\n]+ not found', re.I)]
 
-class IOSDriver(Driver):
+class ASADriver(Driver):
     def __init__(self):
         Driver.__init__(self, 'ios')
         self.user_re     = _user_re
