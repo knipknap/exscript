@@ -46,8 +46,7 @@ class ASADriver(Driver):
         return 0
 
     def init_terminal(self, conn):
-        conn.execute('term len 0')
-        conn.execute('term width 0')
+        conn.execute('term pager 0')
 
     def auto_authorize(self, conn, account, flush, bailout):
         conn.send('enable\r')
