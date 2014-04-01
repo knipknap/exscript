@@ -452,6 +452,7 @@ def send(mail, server = 'localhost'):
     message['Subject'] = mail.get_subject()
     message['From']    = mail.get_sender()
     message['To']      = ', '.join(mail.get_to())
+    message['Cc']      = ', '.join(mail.get_cc())
     message.preamble   = 'Your mail client is not MIME aware.'
 
     body = MIMEText(mail.get_body())
