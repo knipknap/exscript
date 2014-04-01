@@ -306,7 +306,7 @@ class SSH2(Protocol):
         data = self.shell.recv(200)
         if not data:
             return False
-        self._receive_cb(data)
+        self._receive_cb(data, False)
         self.buffer.append(data)
         return True
 
