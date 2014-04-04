@@ -20,8 +20,22 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'user ?name: ?$', re.I)]
 _password_re = [re.compile(r'[\r\n]Password: ?$')]
-_prompt_re   = [re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\)){,2}[>#] ?$')]
-_error_re    = [re.compile(r'%Error'),
+
+# Match on:
+# cs-spine-2a......14:08:54#
+# cs-spine-2a>
+# cs-spine-2a#
+# cs-spine-2a(s1)#
+# cs-spine-2a(s1)(config)#
+# cs-spine-2b(vrf:management)(config)#
+# cs-spine-2b(s1)(vrf:management)(config)#
+# [admin@cs-spine-2a /]$ 
+# [admin@cs-spine-2a local]$ 
+# [admin@cs-spine-2a ~]$
+# -bash-4.1#
+_prompt_re   = [re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\)){,3}[>#] ?$'),
+                re.compile(r'\[\w+\@[\w\-\.]+(?: [^\]])\] ?[>#\$] ?')]
+_error_re    = [re.compile(r'% ?Error'),
                 re.compile(r'invalid input', re.I),
                 re.compile(r'(?:incomplete|ambiguous) command', re.I),
                 re.compile(r'connection timed out', re.I),
@@ -43,7 +57,7 @@ class EOSDriver(Driver):
     def init_terminal(self, conn):
         conn.execute('terminal dont-ask')
         conn.execute('terminal length 0')
-        conn.execute('terminal length 32767')
+        conn.execute('terminal width 32767')
 
     def auto_authorize(self, conn, account, flush, bailout):
         conn.send('enable\r')
