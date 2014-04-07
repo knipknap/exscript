@@ -868,7 +868,7 @@ class Protocol(object):
         """
         raise NotImplementedError()
 
-    def execute(self, command):
+    def execute(self, command, consume=True):
         """
         Sends the given data to the remote host (with a newline appended)
         and waits for a prompt in the response. The prompt attempts to use
@@ -881,12 +881,14 @@ class Protocol(object):
 
         @type  command: string
         @param command: The data that is sent to the remote host.
+        @type  consume: boolean (Default: True)
+        @param consume: Whether to consume the prompt from the buffer or not.
         @rtype:  int, re.MatchObject
         @return: The index of the prompt regular expression that matched,
           and the match object.
         """
         self.send(command + '\r')
-        return self.expect_prompt()
+        return self.expect_prompt(consume)
 
     def _domatch(self, prompt, flush):
         """
@@ -971,7 +973,7 @@ class Protocol(object):
                 continue # retry
             return result
 
-    def expect_prompt(self):
+    def expect_prompt(self, consume=True):
         """
         Monitors the data received from the remote host and waits for a
         prompt in the response. The prompt attempts to use
@@ -981,11 +983,17 @@ class Protocol(object):
         This method also stores the received data in the response
         attribute (self.response).
 
+        @type  consume: boolean (Default: True)
+        @param consume: Whether to consume the prompt from the buffer or not.
         @rtype:  int, re.MatchObject
         @return: The index of the prompt regular expression that matched,
           and the match object.
         """
-        result = self.expect(self.get_prompt())
+        if consume:
+            result = self.expect(self.get_prompt())
+        else:
+            self._dbg(1, "DO NOT CONSUME PROMPT!")
+            result = self.waitfor(self.get_prompt())
 
         # We skip the first line because it contains the echo of the command
         # sent.
