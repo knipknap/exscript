@@ -187,7 +187,7 @@ def prompt(key,
             value = raw_input('%s: ' % message)
         else:
             value = raw_input('%s [%s]: ' % (message, default)) or default
-        if strip:
+        if strip and isinstance(value, str):
             value = value.strip()
         if not check:
             break
