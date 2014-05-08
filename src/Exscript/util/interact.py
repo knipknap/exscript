@@ -118,6 +118,7 @@ class InputHistory(object):
 def prompt(key,
            message,
            default = None,
+           doverh  = True,
            strip   = True,
            check   = None,
            history = None):
@@ -171,6 +172,8 @@ def prompt(key,
     @param message: The user prompt.
     @type  default: str|None
     @param default: The offered default if none was found in the history.
+    @type  doverh: bool
+    @param doverh: Whether to prefer default value over history value.
     @type  strip: bool
     @param strip: Whether to remove whitespace from the input.
     @type  check: callable
@@ -180,7 +183,7 @@ def prompt(key,
     """
     if history is None:
         history = InputHistory()
-    if default is None:
+    if not doverh or default is None:
         default = history.get(key, str(default))
     while True:
         if default is None:
