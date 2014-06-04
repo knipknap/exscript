@@ -19,7 +19,7 @@ import re
 from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'user ?name: ?$', re.I)]
-_password_re = [re.compile(r'[\r\n]Password: ?$')]
+_password_re = [re.compile(r'[\r\n]?Password: ?$')]
 
 # Match on:
 # cs-spine-2a......14:08:54#
