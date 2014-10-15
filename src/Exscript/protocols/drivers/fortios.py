@@ -26,7 +26,10 @@ _prompt_re = [
     re.compile(r'^[a-zA-Z0-9-_ .]+ # $'),  # first prompt
     re.compile(r'[\r\n][a-zA-Z0-9-_ .]+ (?:\([A-Za-z0-9_/.-]+\) )?# $')
 ]
-_fortios_re = _prompt_re[0]
+_fortios_re = [
+    _prompt_re[0],  # first prompt
+    re.compile(r'^[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+\'s password:')
+]
 _error_re = [re.compile(r'^Command fail.'),
              re.compile(r'^object check operator error')
              ]
@@ -52,8 +55,9 @@ class FortiOSDriver(Driver):
     def check_head_for_os(self, string):
         # By default Fortigate shows only prompt
         if len(string.splitlines()) == 1:
-            if _fortios_re.search(string):
-                return 50
+            for head_re in _fortios_re:
+                if head_re.search(string):
+                    return 50
         return 0
 
     def init_terminal(self, conn):
