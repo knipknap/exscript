@@ -17,6 +17,7 @@ from Exscript.protocols.drivers.vrp import VRPDriver
 from Exscript.protocols.drivers.sros import SROSDriver
 from Exscript.protocols.drivers.aruba import ArubaDriver
 from Exscript.protocols.drivers.enterasys_wc import EnterasysWCDriver
+from Exscript.protocols.drivers.fortios import FortiOSDriver
 
 driver_classes = []
 drivers        = []
