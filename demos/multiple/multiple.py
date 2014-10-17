@@ -26,7 +26,7 @@ accounts = get_accounts_from_file('accounts.cfg')
 # Start on one host.
 host = Host('localhost')
 host.set('myvariable', 'foobar')
-start(accounts, host1, one)
+start(accounts, host, one)
 
 # Start on many hosts. In this case, the accounts from accounts.cfg
 # are only used if the host url does not contain a username and password.
