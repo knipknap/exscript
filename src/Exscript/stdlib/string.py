@@ -42,3 +42,15 @@ def tolower(scope, strings):
     @return: The resulting string, or list of strings in lower case.
     """
     return [s.lower() for s in strings]
+
+@secure_function
+def toupper(scope, strings):
+    """
+    Returns the given string in upper case.
+
+    @type  strings: string
+    @param strings: A string, or a list of strings.
+    @rtype:  string
+    @return: The resulting string, or list of strings in upper case.
+    """
+    return [s.upper() for s in strings]
