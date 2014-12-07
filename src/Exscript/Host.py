@@ -230,7 +230,7 @@ class Host(object):
         @type  value: object
         @param value: The option value.
         """
-        if name not in ('debug', 'verify_fingerprint',):
+        if name not in ('debug', 'verify_fingerprint', 'driver'):
             raise TypeError('No such option: ' + repr(name))
         if self.options is None:
             self.options = {}
