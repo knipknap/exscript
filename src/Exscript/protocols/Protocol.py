@@ -251,7 +251,7 @@ class Protocol(object):
         self.last_account          = None
         self.termtype              = termtype
         self.verify_fingerprint    = verify_fingerprint
-        self.manual_driver         = driver
+        self.manual_driver         = None
         self.debug                 = debug
         self.timeout               = timeout
         self.logfile               = logfile
@@ -270,6 +270,18 @@ class Protocol(object):
             self.log = None
         else:
             self.log = open(logfile, 'a')
+
+        # set manual_driver
+        if driver is not None:
+            if isinstance(driver, str):
+                if driver in driver_map:
+                    self.manual_driver = driver_map[driver]
+                else:
+                    self._dbg(1, 'Invalid driver string given. Ignoring...')
+            elif isdriver(driver):
+                self.manual_driver = driver
+            else:
+                self._dbg(1, 'Invalid driver given. Ignoring...')
 
     def __copy__(self):
         """
