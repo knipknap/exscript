@@ -180,6 +180,7 @@ class Queue(object):
                  verbose     = 1,
                  mode        = 'threading',
                  max_threads = 1,
+                 host_driver = None,
                  stdout      = sys.stdout,
                  stderr      = sys.stderr):
         """
@@ -224,6 +225,7 @@ class Queue(object):
         self.verbose           = verbose
         self.stdout            = stdout
         self.stderr            = stderr
+        self.host_driver       = host_driver
         self.devnull           = open(os.devnull, 'w')
         self.channel_map       = {'fatal_errors': self.stderr,
                                   'debug':        self.stdout}
@@ -571,6 +573,9 @@ class Queue(object):
             job_id = queue_function(callback, name, *args, data = data)
             if job_id is not None:
                 task.add_job_id(job_id)
+
+            if self.host_driver is not None:
+                host.set_option('driver', self.host_driver)
 
         if task.is_completed():
             self._dbg(2, 'No jobs enqueued.')
