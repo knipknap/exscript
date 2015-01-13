@@ -13,15 +13,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-A driver for Cisco Aironet
+A driver for Cisco Aironet Wireless Controllers
 """
 import re
 from Exscript.protocols.drivers.driver import Driver
 
-_user_re     = [re.compile(r'User: ?$', re.I)]
+_user_re     = [re.compile(r'User:\s$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
 _tacacs_re   = re.compile(r'[\r\n]s\/key[\S ]+\r?%s' % _password_re[0].pattern)
-_prompt_re   = [re.compile(r'[\r\n]\S+?> ?$')]
+_prompt_re   = [re.compile(r'[\r\n].+?>\s$')]
 _error_re    = [re.compile(r'%Error'),
                 re.compile(r'invalid input', re.I),
                 re.compile(r'(?:incomplete|ambiguous) command', re.I),
