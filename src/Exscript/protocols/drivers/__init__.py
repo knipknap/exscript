@@ -1,5 +1,6 @@
 import inspect
 from Exscript.protocols.drivers.driver import Driver
+from Exscript.protocols.drivers.aironet import AironetDriver
 from Exscript.protocols.drivers.aix import AIXDriver
 from Exscript.protocols.drivers.arbor_peakflow import ArborPeakflowDriver
 from Exscript.protocols.drivers.brocade import BrocadeDriver
