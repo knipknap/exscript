@@ -30,7 +30,7 @@ _error_re    = [re.compile(r'%Error'),
 
 class AironetDriver(Driver):
     def __init__(self):
-        super(Driver, self).__init__('aironet')
+        Driver.__init__(self, 'aironet')
         self.user_re     = _user_re
         self.password_re = _password_re
         self.prompt_re   = _prompt_re
