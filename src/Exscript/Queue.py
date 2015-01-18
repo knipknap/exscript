@@ -213,6 +213,8 @@ class Queue(object):
         @param mode: 'multiprocessing' or 'threading'
         @type  max_threads: int
         @param max_threads: The maximum number of concurrent threads.
+        @type  host_driver: str
+        @param host_driver: driver name like "ios" for manual override
         @type  stdout: file
         @param stdout: The output channel, defaults to sys.stdout.
         @type  stderr: file
