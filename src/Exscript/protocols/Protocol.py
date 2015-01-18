@@ -29,7 +29,7 @@ from Exscript.util.crypt import otp
 from Exscript.util.event import Event
 from Exscript.util.cast import to_regexs
 from Exscript.util.tty import get_terminal_size
-from Exscript.protocols.drivers import driver_map, isdriver
+from Exscript.protocols.drivers import driver_map, Driver
 from Exscript.protocols.OsGuesser import OsGuesser
 from Exscript.protocols.Exception import InvalidCommandException, \
                                          LoginFailure, \
@@ -218,7 +218,7 @@ class Protocol(object):
           - otp_requested_event: The connected host requested a
           one-time-password to be entered.
 
-        @keyword driver: passed to set_driver().
+        @keyword driver: Driver()|str
         @keyword stdout: Where to write the device response. Defaults to
             os.devnull.
         @keyword stderr: Where to write debug info. Defaults to stderr.
@@ -278,7 +278,7 @@ class Protocol(object):
                     self.manual_driver = driver_map[driver]
                 else:
                     self._dbg(1, 'Invalid driver string given. Ignoring...')
-            elif isdriver(driver):
+            elif isinstance(driver, Driver):
                 self.manual_driver = driver
             else:
                 self._dbg(1, 'Invalid driver given. Ignoring...')
@@ -354,12 +354,12 @@ class Protocol(object):
         """
         Defines the driver that is used to recognize prompts and implement
         behavior depending on the remote system.
-        The driver argument may be an subclass of protocols.drivers.Driver,
-        a known driver name (string), or None.
+        The driver argument may be an instance of a protocols.drivers.Driver
+        subclass, a known driver name (string), or None.
         If the driver argument is None, the adapter automatically chooses
         a driver using the guess_os() function.
 
-        @type  driver: Driver|str
+        @type  driver: Driver()|str
         @param driver: The pattern that, when matched, causes an error.
         """
         if driver is None:
@@ -368,7 +368,7 @@ class Protocol(object):
             if driver not in driver_map:
                 raise TypeError('no such driver:' + repr(driver))
             self.manual_driver = driver_map[driver]
-        elif isdriver(driver):
+        elif isinstance(driver, Driver):
             self.manual_driver = driver
         else:
             raise TypeError('unsupported argument type:' + type(driver))
