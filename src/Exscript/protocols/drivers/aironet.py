@@ -19,8 +19,13 @@ import re
 from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'User:\s$', re.I)]
-#_password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
+_password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
 _prompt_re   = [re.compile(r'[\r\n].Cisco\sController.\s>$')]
+_error_re    = [re.compile(r'%Error'),
+                re.compile(r'invalid input', re.I),
+                re.compile(r'(?:incomplete|ambiguous) command', re.I),
+                re.compile(r'connection timed out', re.I),
+                re.compile(r'[^\r\n]+ not found', re.I)]
 
 class AironetDriver(Driver):
     def __init__(self):
@@ -31,8 +36,6 @@ class AironetDriver(Driver):
     def check_head_for_os(self, string):
         if '(Cisco Controller)' in string:
             return 90
-        if _user_re[0].search(string):
-            return 30
         return 0
 
     def init_terminal(self, conn):
