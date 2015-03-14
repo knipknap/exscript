@@ -205,6 +205,7 @@ class Protocol(object):
                  stdout             = None,
                  stderr             = None,
                  debug              = 0,
+                 init_timeout       = 30,
                  timeout            = 30,
                  logfile            = None,
                  termtype           = 'dumb',
@@ -225,6 +226,7 @@ class Protocol(object):
         @keyword debug: An integer between 0 (no debugging) and 5 (very
             verbose debugging) that specifies the amount of debug info
             sent to the terminal. The default value is 0.
+        @keyword init_timeout: Timeout for the initial TCP connection attempt
         @keyword timeout: See set_timeout(). The default value is 30.
         @keyword logfile: A file into which a log of the conversation with the
             device is dumped.
@@ -253,6 +255,7 @@ class Protocol(object):
         self.verify_fingerprint    = verify_fingerprint
         self.manual_driver         = None
         self.debug                 = debug
+        self.init_timeout          = init_timeout
         self.timeout               = timeout
         self.logfile               = logfile
         self.response              = None
@@ -547,13 +550,13 @@ class Protocol(object):
         """
         return self.timeout
 
-    def _connect_hook(self, host, port):
+    def _connect_hook(self, host, port, init_timeout):
         """
         Should be overwritten.
         """
         raise NotImplementedError()
 
-    def connect(self, hostname = None, port = None):
+    def connect(self, hostname = None, port = None, init_timeout = None):
         """
         Opens the connection to the remote host or IP address.
 
@@ -561,10 +564,12 @@ class Protocol(object):
         @param hostname: The remote host or IP address.
         @type  port: int
         @param port: The remote TCP port number.
+        @type  init_timeout: int
+        @param init_timeout: The initial TCP SYN timeout
         """
         if hostname is not None:
             self.host = hostname
-        return self._connect_hook(self.host, port)
+        return self._connect_hook(self.host, port, self.init_timeout)
 
     def _get_account(self, account):
         if isinstance(account, Context) or isinstance(account, _Context):

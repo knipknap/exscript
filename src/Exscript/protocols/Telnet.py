@@ -36,11 +36,12 @@ class Telnet(Protocol):
         self._receive_cb(data)
         self.buffer.append(data)
 
-    def _connect_hook(self, hostname, port):
+    def _connect_hook(self, hostname, port, init_timeout):
         assert self.tn is None
         rows, cols = get_terminal_size()
         self.tn = telnetlib.Telnet(hostname,
                                    port or 23,
+                                   init_timeout     = init_timeout,
                                    termsize         = (rows, cols),
                                    termtype         = self.termtype,
                                    stderr           = self.stderr,

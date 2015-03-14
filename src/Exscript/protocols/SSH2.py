@@ -143,7 +143,7 @@ class SSH2(Protocol):
         # Open a socket.
         sock = socket.socket(af, socket.SOCK_STREAM)
         try:
-            sock.settimeout(self.timeout or None)
+            sock.settimeout(self.init_timeout or None)
         except:
             pass
         sock.connect(addr)
@@ -255,7 +255,7 @@ class SSH2(Protocol):
             self._dbg(1, 'Failed to open shell.')
             raise LoginFailure('Failed to open shell: ' + str(e))
 
-    def _connect_hook(self, hostname, port):
+    def _connect_hook(self, hostname, port, init_timeout):
         self.host   = hostname
         self.port   = port or 22
         self.client = self._paramiko_connect()
