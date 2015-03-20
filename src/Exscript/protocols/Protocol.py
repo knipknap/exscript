@@ -556,7 +556,7 @@ class Protocol(object):
         """
         raise NotImplementedError()
 
-    def connect(self, hostname = None, port = None, init_timeout = None):
+    def connect(self, hostname = None, port = None):
         """
         Opens the connection to the remote host or IP address.
 
