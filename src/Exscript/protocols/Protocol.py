@@ -531,6 +531,24 @@ class Protocol(object):
             return self.manual_login_error_re
         return self.get_driver().login_error_re
 
+    def set_init_timeout(self, timeout):
+        """
+        Defines the maximum time that the adapter waits for initial connection.
+
+        @type  timeout: int
+        @param timeout: The maximum time in seconds.
+        """
+        self.init_timeout = int(timeout)
+
+    def get_init_timeout(self):
+        """
+        Returns the current init_timeout in seconds.
+
+        @rtype:  int
+        @return: The init_timeout in seconds.
+        """
+        return self.init_timeout
+
     def set_timeout(self, timeout):
         """
         Defines the maximum time that the adapter waits before a call to
@@ -550,7 +568,7 @@ class Protocol(object):
         """
         return self.timeout
 
-    def _connect_hook(self, host, port, init_timeout):
+    def _connect_hook(self, host, port):
         """
         Should be overwritten.
         """
@@ -564,12 +582,10 @@ class Protocol(object):
         @param hostname: The remote host or IP address.
         @type  port: int
         @param port: The remote TCP port number.
-        @type  init_timeout: int
-        @param init_timeout: The initial TCP SYN timeout
         """
         if hostname is not None:
             self.host = hostname
-        return self._connect_hook(self.host, port, self.init_timeout)
+        return self._connect_hook(self.host, port)
 
     def _get_account(self, account):
         if isinstance(account, Context) or isinstance(account, _Context):
