@@ -72,7 +72,7 @@ class Dummy(Protocol):
     def cancel_expect(self):
         self.cancel = True
 
-    def _connect_hook(self, hostname, port, init_timeout=None):
+    def _connect_hook(self, hostname, port):
         # To more correctly mimic the behavior of a network device, we
         # do not send the banner here, but in authenticate() instead.
         self.buffer.clear()
