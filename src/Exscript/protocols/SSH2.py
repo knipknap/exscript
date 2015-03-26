@@ -255,7 +255,7 @@ class SSH2(Protocol):
             self._dbg(1, 'Failed to open shell.')
             raise LoginFailure('Failed to open shell: ' + str(e))
 
-    def _connect_hook(self, hostname, port, init_timeout):
+    def _connect_hook(self, hostname, port):
         self.host   = hostname
         self.port   = port or 22
         self.client = self._paramiko_connect()
