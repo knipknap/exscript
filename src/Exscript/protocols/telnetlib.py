@@ -182,7 +182,7 @@ class Telnet:
         self.irawq = 0
         self.cookedq = StringIO()
         self.eof = 0
-        self.init_timetout        = kwargs.get('init_timeout',     None)
+        self.connect_timeout      = kwargs.get('connect_timeout',     None)
         self.window_size          = kwargs.get('termsize')
         self.stdout               = kwargs.get('stdout',           sys.stdout)
         self.stderr               = kwargs.get('stderr',           sys.stderr)

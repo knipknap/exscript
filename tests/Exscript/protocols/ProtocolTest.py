@@ -210,13 +210,13 @@ class ProtocolTest(unittest.TestCase):
     def testGetLoginErrorPrompt(self):
         pass # Already tested in testSetLoginErrorPrompt()
 
-    def testSetInitTimeout(self):
-        self.assert_(self.protocol.get_init_timeout() == 30)
-        self.protocol.set_init_timeout(60)
-        self.assert_(self.protocol.get_init_timeout() == 60)
+    def testSetConnectTimeout(self):
+        self.assert_(self.protocol.get_connect_timeout() == 30)
+        self.protocol.set_connect_timeout(60)
+        self.assert_(self.protocol.get_connect_timeout() == 60)
 
-    def testGetInitTimeout(self):
-        pass # Already tested in testSetTimeout()
+    def testGetConnectTimeout(self):
+        pass # Already tested in testSetConnectTimeout()
 
     def testSetTimeout(self):
         self.assert_(self.protocol.get_timeout() == 30)
