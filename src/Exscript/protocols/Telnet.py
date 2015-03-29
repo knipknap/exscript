@@ -41,6 +41,7 @@ class Telnet(Protocol):
         rows, cols = get_terminal_size()
         self.tn = telnetlib.Telnet(hostname,
                                    port or 23,
+                                   connect_timeout     = self.connect_timeout,
                                    termsize         = (rows, cols),
                                    termtype         = self.termtype,
                                    stderr           = self.stderr,

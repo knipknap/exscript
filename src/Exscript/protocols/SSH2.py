@@ -143,7 +143,7 @@ class SSH2(Protocol):
         # Open a socket.
         sock = socket.socket(af, socket.SOCK_STREAM)
         try:
-            sock.settimeout(self.timeout or None)
+            sock.settimeout(self.connect_timeout or None)
         except:
             pass
         sock.connect(addr)

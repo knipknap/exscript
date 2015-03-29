@@ -205,6 +205,7 @@ class Protocol(object):
                  stdout             = None,
                  stderr             = None,
                  debug              = 0,
+                 connect_timeout    = 30,
                  timeout            = 30,
                  logfile            = None,
                  termtype           = 'dumb',
@@ -225,6 +226,7 @@ class Protocol(object):
         @keyword debug: An integer between 0 (no debugging) and 5 (very
             verbose debugging) that specifies the amount of debug info
             sent to the terminal. The default value is 0.
+        @keyword connect_timeout: Timeout for the initial TCP connection attempt
         @keyword timeout: See set_timeout(). The default value is 30.
         @keyword logfile: A file into which a log of the conversation with the
             device is dumped.
@@ -253,6 +255,7 @@ class Protocol(object):
         self.verify_fingerprint    = verify_fingerprint
         self.manual_driver         = None
         self.debug                 = debug
+        self.connect_timeout       = connect_timeout
         self.timeout               = timeout
         self.logfile               = logfile
         self.response              = None
@@ -527,6 +530,24 @@ class Protocol(object):
         if self.manual_login_error_re:
             return self.manual_login_error_re
         return self.get_driver().login_error_re
+
+    def set_connect_timeout(self, timeout):
+        """
+        Defines the maximum time that the adapter waits for initial connection.
+
+        @type  timeout: int
+        @param timeout: The maximum time in seconds.
+        """
+        self.connect_timeout = int(timeout)
+
+    def get_connect_timeout(self):
+        """
+        Returns the current connect_timeout in seconds.
+
+        @rtype:  int
+        @return: The connect_timeout in seconds.
+        """
+        return self.connect_timeout
 
     def set_timeout(self, timeout):
         """
