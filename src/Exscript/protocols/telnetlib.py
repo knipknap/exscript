@@ -211,7 +211,7 @@ class Telnet:
             af, socktype, proto, canonname, sa = res
             try:
                 self.sock = socket.socket(af, socktype, proto)
-                self.sock.settimeout(self.init_timetout)
+                self.sock.settimeout(self.connect_timeout)
                 self.sock.connect(sa)
             except socket.error, msg:
                 if self.sock:
