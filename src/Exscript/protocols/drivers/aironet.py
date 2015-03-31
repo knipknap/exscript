@@ -20,10 +20,9 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'User:\s$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
-_prompt_re   = [re.compile(r'[\r\n].Cisco\sController.\s>$')]
-_error_re    = [re.compile(r'%Error'),
-                re.compile(r'invalid input', re.I),
-                re.compile(r'(?:incomplete|ambiguous) command', re.I),
+_prompt_re   = [re.compile(r'[\r\n].(?:(?:Cisco\sController)|(?:WiSM\S+?)).\s>$')]
+_error_re    = [re.compile(r'Incorrect\susage', re.I),
+                re.compile(r'Incorrect\sinput', re.I),
                 re.compile(r'connection timed out', re.I),
                 re.compile(r'[^\r\n]+ not found', re.I)]
 
@@ -36,7 +35,9 @@ class AironetDriver(Driver):
     def check_head_for_os(self, string):
         if '(Cisco Controller)' in string:
             return 90
+        elif '(WiSM-slot' in string:
+            return 90
         return 0
 
     def init_terminal(self, conn):
-        conn.execute('config pager disable')
+        conn.execute('config paging disable')
