@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'sr
 from multiprocessing import Pipe
 from Exscript.workqueue.Job import Thread, Process, Job
 from tempfile import NamedTemporaryFile
-from cPickle import dumps, loads
+from pickle import dumps, loads
 
 def do_nothing(job):
     pass

@@ -9,4 +9,4 @@ hostlist = [Host(str(i)) for i in range(1, 10000)]
 
 scanner.dump_all_objects('test.dump')
 om = loader.load('test.dump')
-print om.summarize()
+print(om.summarize())

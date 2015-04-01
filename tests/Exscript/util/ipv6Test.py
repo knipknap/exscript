@@ -8,20 +8,20 @@ class ipv6Test(unittest.TestCase):
 
     def testIsIp(self):
         from Exscript.util.ipv6 import is_ip
-        self.assert_(is_ip('::'))
-        self.assert_(is_ip('1::'))
-        self.assert_(is_ip('::A'))
-        self.assert_(is_ip('1234::2222'))
-        self.assert_(is_ip('1234:0:01:02::'))
-        self.assert_(is_ip('1:2:3:4:5:6:7:8'))
-        self.failIf(is_ip(':::'))
-        self.failIf(is_ip('1:2:3:4:5:6:7:8:9'))
-        self.failIf(is_ip('1::A::2'))
-        self.failIf(is_ip('1::A::'))
-        self.failIf(is_ip('::A::'))
-        self.failIf(is_ip('::A::1'))
-        self.failIf(is_ip('A'))
-        self.failIf(is_ip('X::'))
+        self.assertTrue(is_ip('::'))
+        self.assertTrue(is_ip('1::'))
+        self.assertTrue(is_ip('::A'))
+        self.assertTrue(is_ip('1234::2222'))
+        self.assertTrue(is_ip('1234:0:01:02::'))
+        self.assertTrue(is_ip('1:2:3:4:5:6:7:8'))
+        self.assertFalse(is_ip(':::'))
+        self.assertFalse(is_ip('1:2:3:4:5:6:7:8:9'))
+        self.assertFalse(is_ip('1::A::2'))
+        self.assertFalse(is_ip('1::A::'))
+        self.assertFalse(is_ip('::A::'))
+        self.assertFalse(is_ip('::A::1'))
+        self.assertFalse(is_ip('A'))
+        self.assertFalse(is_ip('X::'))
 
     def testNormalizeIp(self):
         from Exscript.util.ipv6 import normalize_ip

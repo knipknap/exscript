@@ -23,16 +23,16 @@ class PipelineTest(unittest.TestCase):
     def testContains(self):
         item1 = object()
         item2 = object()
-        self.assert_(item1 not in self.pipeline)
-        self.assert_(item2 not in self.pipeline)
+        self.assertTrue(item1 not in self.pipeline)
+        self.assertTrue(item2 not in self.pipeline)
 
         self.pipeline.append(item1)
-        self.assert_(item1 in self.pipeline)
-        self.assert_(item2 not in self.pipeline)
+        self.assertTrue(item1 in self.pipeline)
+        self.assertTrue(item2 not in self.pipeline)
 
         self.pipeline.append(item2)
-        self.assert_(item1 in self.pipeline)
-        self.assert_(item2 in self.pipeline)
+        self.assertTrue(item1 in self.pipeline)
+        self.assertTrue(item2 in self.pipeline)
 
     def testGetFromName(self):
         item1 = object()
@@ -120,8 +120,8 @@ class PipelineTest(unittest.TestCase):
         thread_completed = Value('i', 0)
         class deadlock_until_stop(Thread):
             def run(inner_self):
-                self.assertEqual(self.pipeline.next(), item1)
-                self.assertEqual(self.pipeline.next(), None) # ***
+                self.assertEqual(next(self.pipeline), item1)
+                self.assertEqual(next(self.pipeline), None) # ***
                 thread_completed.value = 1
                 self.pipeline.task_done(item1)
 
@@ -141,9 +141,9 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(len(self.pipeline), 1)
         item1 = object()
         self.pipeline.appendleft(item1)
-        self.assertEqual(self.pipeline.next(), None)
+        self.assertEqual(next(self.pipeline), None)
         self.pipeline.start()
-        self.assertEqual(self.pipeline.next(), item1)
+        self.assertEqual(next(self.pipeline), item1)
 
     def testPause(self):
         item1 = object()
@@ -153,7 +153,7 @@ class PipelineTest(unittest.TestCase):
         class complete_all(Thread):
             def run(inner_self):
                 while True:
-                    task = self.pipeline.next()
+                    task = next(self.pipeline)
                     if task is None:
                         break
                     self.pipeline.task_done(task)
@@ -178,14 +178,14 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.append(item2)
         self.assertEqual(len(self.pipeline), 2)
 
-        self.assertEqual(self.pipeline.next(), item1)
+        self.assertEqual(next(self.pipeline), item1)
         self.assertEqual(len(self.pipeline), 2)
         self.pipeline.sleep(item1)
         self.assertEqual(len(self.pipeline), 2)
 
         # This would normally deadlock if the job were not sleeping,
         # because we have reached the max_working threshold.
-        self.assertEqual(self.pipeline.next(), item2)
+        self.assertEqual(next(self.pipeline), item2)
         self.assertEqual(len(self.pipeline), 2)
 
         self.pipeline.wake(item1)
@@ -201,7 +201,7 @@ class PipelineTest(unittest.TestCase):
         id1   = self.pipeline.append(item1)
         id2   = self.pipeline.append(item2)
 
-        item = self.pipeline.next()
+        item = next(self.pipeline)
         class complete_item(Thread):
             def run(inner_self):
                 time.sleep(.1)
@@ -224,7 +224,7 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.wait()
         self.assertEqual(len(self.pipeline), 2)
 
-        item = self.pipeline.next()
+        item = next(self.pipeline)
         class complete_item(Thread):
             def run(inner_self):
                 time.sleep(.1)
@@ -245,7 +245,7 @@ class PipelineTest(unittest.TestCase):
         class complete_all(Thread):
             def run(inner_self):
                 while True:
-                    task = self.pipeline.next()
+                    task = next(self.pipeline)
                     if task is None:
                         break
                     self.pipeline.task_done(task)
@@ -272,7 +272,7 @@ class PipelineTest(unittest.TestCase):
         item = object()
         self.pipeline.append(item)
         self.assertEqual(self.pipeline.get_working(), [])
-        theitem = self.pipeline.next()
+        theitem = next(self.pipeline)
         self.assertEqual(self.pipeline.get_working(), [item])
         self.pipeline.task_done(theitem)
 
@@ -292,14 +292,14 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.appendleft(item3, force = True)
         self.pipeline.appendleft(item4)
 
-        self.assertEqual(self.pipeline.next(), item3)
-        self.assertEqual(self.pipeline.next(), item4)
-        self.assertEqual(self.pipeline.next(), item1)
-        self.assertEqual(self.pipeline.next(), item2)
-        self.assert_(item1 in self.pipeline)
-        self.assert_(item2 in self.pipeline)
-        self.assert_(item3 in self.pipeline)
-        self.assert_(item4 in self.pipeline)
+        self.assertEqual(next(self.pipeline), item3)
+        self.assertEqual(next(self.pipeline), item4)
+        self.assertEqual(next(self.pipeline), item1)
+        self.assertEqual(next(self.pipeline), item2)
+        self.assertTrue(item1 in self.pipeline)
+        self.assertTrue(item2 in self.pipeline)
+        self.assertTrue(item3 in self.pipeline)
+        self.assertTrue(item4 in self.pipeline)
         self.assertEqual(len(self.pipeline), 4)
         self.pipeline.clear()
         self.assertEqual(len(self.pipeline), 0)
@@ -311,24 +311,24 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.appendleft(item3, force = True)
         self.pipeline.appendleft(item4)
 
-        self.assertEqual(self.pipeline.next(), item3)
-        self.assertEqual(self.pipeline.next(), item4)
-        self.assert_(item3 in self.pipeline)
-        self.assert_(item4 in self.pipeline)
+        self.assertEqual(next(self.pipeline), item3)
+        self.assertEqual(next(self.pipeline), item4)
+        self.assertTrue(item3 in self.pipeline)
+        self.assertTrue(item4 in self.pipeline)
         self.pipeline.task_done(item4)
-        self.assert_(item4 not in self.pipeline)
+        self.assertTrue(item4 not in self.pipeline)
 
-        self.assertEqual(self.pipeline.next(), item1)
-        self.assert_(item1 in self.pipeline)
+        self.assertEqual(next(self.pipeline), item1)
+        self.assertTrue(item1 in self.pipeline)
         self.pipeline.task_done(item3)
-        self.assert_(item3 not in self.pipeline)
+        self.assertTrue(item3 not in self.pipeline)
 
-        self.assertEqual(self.pipeline.next(), item2)
-        self.assert_(item2 in self.pipeline)
+        self.assertEqual(next(self.pipeline), item2)
+        self.assertTrue(item2 in self.pipeline)
         self.pipeline.task_done(item2)
-        self.assert_(item2 not in self.pipeline)
+        self.assertTrue(item2 not in self.pipeline)
         self.pipeline.task_done(item1)
-        self.assert_(item1 not in self.pipeline)
+        self.assertTrue(item1 not in self.pipeline)
         self.assertEqual(len(self.pipeline), 0)
 
         # Repeat with max_working = 1.
@@ -338,25 +338,25 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.appendleft(item3, force = True)
         self.pipeline.appendleft(item4)
 
-        self.assertEqual(self.pipeline.next(), item3)
-        self.assert_(item3 in self.pipeline)
+        self.assertEqual(next(self.pipeline), item3)
+        self.assertTrue(item3 in self.pipeline)
         self.pipeline.task_done(item3)
-        self.assert_(item3 not in self.pipeline)
+        self.assertTrue(item3 not in self.pipeline)
 
-        self.assertEqual(self.pipeline.next(), item4)
-        self.assert_(item4 in self.pipeline)
+        self.assertEqual(next(self.pipeline), item4)
+        self.assertTrue(item4 in self.pipeline)
         self.pipeline.task_done(item4)
-        self.assert_(item4 not in self.pipeline)
+        self.assertTrue(item4 not in self.pipeline)
 
-        self.assertEqual(self.pipeline.next(), item1)
-        self.assert_(item1 in self.pipeline)
+        self.assertEqual(next(self.pipeline), item1)
+        self.assertTrue(item1 in self.pipeline)
         self.pipeline.task_done(item1)
-        self.assert_(item1 not in self.pipeline)
+        self.assertTrue(item1 not in self.pipeline)
 
-        self.assertEqual(self.pipeline.next(), item2)
-        self.assert_(item2 in self.pipeline)
+        self.assertEqual(next(self.pipeline), item2)
+        self.assertTrue(item2 in self.pipeline)
         self.pipeline.task_done(item2)
-        self.assert_(item2 not in self.pipeline)
+        self.assertTrue(item2 not in self.pipeline)
         self.assertEqual(len(self.pipeline), 0)
 
 def suite():

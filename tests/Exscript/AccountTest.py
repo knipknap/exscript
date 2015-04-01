@@ -24,7 +24,7 @@ class AccountTest(unittest.TestCase):
                          account.get_authorization_password())
 
         account = Account(self.user, self.password1, self.password2)
-        self.failIfEqual(account.get_password(),
+        self.assertNotEqual(account.get_password(),
                          account.get_authorization_password())
 
     def testContext(self):

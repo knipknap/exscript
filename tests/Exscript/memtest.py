@@ -46,7 +46,7 @@ def larger(x, y):
 def larger(x, y):
     return int(y.total_size - x.total_size)
 
-objs = sorted(om.objs.itervalues(), larger)
+objs = sorted(iter(om.objs.values()), larger)
 
 def is_builtin(o):
     return o.type_str in ('builtin_function_or_method',)
@@ -61,7 +61,7 @@ def is_basic_type(o):
     return o.type_str in ('int', 'str', 'bool', 'NoneType')
 
 def print_obj(lbl, o, indent = 0):
-    print (" " * indent) + lbl, o.address, o.type_str, o.name, o.total_size, o.referrers
+    print((" " * indent) + lbl, o.address, o.type_str, o.name, o.total_size, o.referrers)
 
 def print_ref(o, indent = 0, done = None):
     if o.type_str == '<ex-reference>':

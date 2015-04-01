@@ -21,23 +21,23 @@ class LogfileTest(LogTest):
     def testConstructor(self):
         self.assertEqual('testme', self.log.get_name())
         self.assertEqual('', str(self.log))
-        self.failIf(os.path.exists(self.logfile))
-        self.failIf(os.path.exists(self.errorfile))
+        self.assertFalse(os.path.exists(self.logfile))
+        self.assertFalse(os.path.exists(self.errorfile))
 
     def testStarted(self):
         LogTest.testStarted(self)
-        self.assert_(os.path.exists(self.logfile))
-        self.failIf(os.path.exists(self.errorfile))
+        self.assertTrue(os.path.exists(self.logfile))
+        self.assertFalse(os.path.exists(self.errorfile))
 
     def testAborted(self):
         LogTest.testAborted(self)
-        self.assert_(os.path.exists(self.logfile))
-        self.assert_(os.path.exists(self.errorfile))
+        self.assertTrue(os.path.exists(self.logfile))
+        self.assertTrue(os.path.exists(self.errorfile))
 
     def testSucceeded(self):
         LogTest.testSucceeded(self)
-        self.assert_(os.path.exists(self.logfile))
-        self.failIf(os.path.exists(self.errorfile))
+        self.assertTrue(os.path.exists(self.logfile))
+        self.assertFalse(os.path.exists(self.errorfile))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LogfileTest)

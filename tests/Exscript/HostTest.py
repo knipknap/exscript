@@ -155,8 +155,8 @@ class HostTest(unittest.TestCase):
 
     def testHasKey(self):
         self.testSet()
-        self.assert_(self.host.has_key('test'))
-        self.failIf(self.host.has_key('test2'))
+        self.assertTrue('test' in self.host)
+        self.assertFalse('test2' in self.host)
 
     def testGet(self):
         self.testSet()

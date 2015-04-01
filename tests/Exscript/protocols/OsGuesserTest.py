@@ -11,7 +11,7 @@ class OsGuesserTest(unittest.TestCase):
 
     def testConstructor(self):
         osg = OsGuesser()
-        self.assert_(isinstance(osg, OsGuesser))
+        self.assertTrue(isinstance(osg, OsGuesser))
 
     def testReset(self):
         self.testSet()

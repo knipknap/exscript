@@ -8,7 +8,7 @@ conn.connect('localhost')
 conn.login(account)
 conn.execute('ls -l')
 
-print "Response was:", repr(conn.response)
+print("Response was:", repr(conn.response))
 
 conn.send('exit\r')
 conn.close()

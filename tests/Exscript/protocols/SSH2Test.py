@@ -1,7 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from ProtocolTest       import ProtocolTest
+from .ProtocolTest       import ProtocolTest
 from Exscript.servers   import SSHd
 from Exscript.protocols import SSH2
 from Exscript import PrivateKey
@@ -19,7 +19,7 @@ class SSH2Test(ProtocolTest):
         self.protocol = SSH2()
 
     def testConstructor(self):
-        self.assert_(isinstance(self.protocol, SSH2))
+        self.assertTrue(isinstance(self.protocol, SSH2))
 
     def testLogin(self):
         self.assertRaises(IOError, ProtocolTest.testLogin, self)

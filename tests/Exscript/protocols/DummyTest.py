@@ -1,7 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from ProtocolTest       import ProtocolTest
+from .ProtocolTest       import ProtocolTest
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy
 
@@ -12,10 +12,10 @@ class DummyTest(ProtocolTest):
         self.protocol = Dummy(device = self.device)
 
     def testConstructor(self):
-        self.assert_(isinstance(self.protocol, Dummy))
+        self.assertTrue(isinstance(self.protocol, Dummy))
 
     def testIsDummy(self):
-        self.assert_(self.protocol.is_dummy())
+        self.assertTrue(self.protocol.is_dummy())
 
     def _create_dummy_and_eat_banner(self, device, port = None):
         protocol = Dummy(device = device)

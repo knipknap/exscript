@@ -37,16 +37,16 @@ def dummy_cb(job, host, conn, template_test):
     conn.login(flush = True)
     try:
         template.eval_file(conn, tmpl, slot = 10)
-    except Exception, e:
-        print log.data
+    except Exception as e:
+        print(log.data)
         raise
     log.data = re.sub(r'\r\n', r'\n', log.data)
     #open(expected, 'w').write(log.data)
     if log.data != open(expected).read():
-        print
-        print "Got:", log.data
-        print "---------------------------------------------"
-        print "Expected:", open(expected).read()
+        print()
+        print("Got:", log.data)
+        print("---------------------------------------------")
+        print("Expected:", open(expected).read())
     template_test.assertEqual(log.data, open(expected).read())
 
 class IOSDummy(Dummy):
@@ -79,7 +79,7 @@ class TemplateTest(unittest.TestCase):
         # was called from a subthread, so this is our workaround...
         failed = self.logger.get_aborted_logs()
         report = format(self.logger, show_successful = False)
-        self.assert_(not failed, report)
+        self.assertTrue(not failed, report)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TemplateTest)

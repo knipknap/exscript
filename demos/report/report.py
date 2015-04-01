@@ -25,5 +25,5 @@ queue.run(hosts, do_something)  # Asynchronously enqueues all hosts.
 queue.shutdown()                # Waits until all hosts are completed.
 
 # Print a short report.
-print status(logger)
-print summarize(logger)
+print(status(logger))
+print(summarize(logger))

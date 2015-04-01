@@ -1,7 +1,7 @@
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
-from VirtualDeviceTest              import VirtualDeviceTest
+from .VirtualDeviceTest              import VirtualDeviceTest
 from Exscript.emulators             import IOSEmulator
 from Exscript.emulators.IOSEmulator import iosbanner
 
@@ -22,7 +22,7 @@ class IOSEmulatorTest(VirtualDeviceTest):
                       login_type = self.cls.LOGIN_TYPE_NONE)
 
         response = cs.do('show version')
-        self.assert_(response.startswith('Cisco Internetwork Operating'), response)
+        self.assertTrue(response.startswith('Cisco Internetwork Operating'), response)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(IOSEmulatorTest)

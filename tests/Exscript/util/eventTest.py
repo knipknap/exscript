@@ -37,7 +37,7 @@ class eventTest(unittest.TestCase):
         def thefunction():
             pass
         ref = self.event.listen(thefunction)
-        self.assert_(isinstance(ref, WeakMethod))
+        self.assertTrue(isinstance(ref, WeakMethod))
         self.assertEqual(self.event.n_subscribers(), 1)
         self.assertRaises(AttributeError, self.event.listen, thefunction)
         del thefunction

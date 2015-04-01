@@ -40,14 +40,14 @@ class OrderDBTest(unittest.TestCase):
         self.db.clear_database()
 
         orders = self.db.get_orders()
-        self.assert_(len(orders) == 0)
+        self.assertTrue(len(orders) == 0)
 
     def testDebug(self):
-        self.assert_(not self.engine.echo)
+        self.assertTrue(not self.engine.echo)
         self.db.debug()
-        self.assert_(self.engine.echo)
+        self.assertTrue(self.engine.echo)
         self.db.debug(False)
-        self.assert_(not self.engine.echo)
+        self.assertTrue(not self.engine.echo)
 
     def testSetTablePrefix(self):
         self.assertEqual(self.db.get_table_prefix(), 'exscriptd_')
@@ -72,10 +72,10 @@ class OrderDBTest(unittest.TestCase):
         self.assertEqual(order1.get_description(), 'my description')
 
         # Save the order.
-        self.assert_(order1.get_id() is None)
+        self.assertTrue(order1.get_id() is None)
         self.db.add_order(order1)
         order_id = order1.get_id()
-        self.assert_(order_id is not None)
+        self.assertTrue(order_id is not None)
 
         def assert_progress(value):
             progress = self.db.get_order_progress_from_id(order_id)
@@ -128,7 +128,7 @@ class OrderDBTest(unittest.TestCase):
 
         order1 = Order('fooservice')
 
-        self.assert_(order1.get_id() is None)
+        self.assertTrue(order1.get_id() is None)
         self.db.save_order(order1)
 
         # Check that the order is stored.
@@ -198,7 +198,7 @@ class OrderDBTest(unittest.TestCase):
 
         self.db.close_open_orders()
         order = self.db.get_orders()[0]
-        self.failIfEqual(order.get_closed_timestamp(), None)
+        self.assertNotEqual(order.get_closed_timestamp(), None)
 
     def testSaveTask(self):
         self.testInstall()
@@ -207,9 +207,9 @@ class OrderDBTest(unittest.TestCase):
         self.db.save_order(order)
 
         task = Task(order.id, 'my test task')
-        self.assert_(task.id is None)
+        self.assertTrue(task.id is None)
         self.db.save_task(task)
-        self.assert_(task.id is not None)
+        self.assertTrue(task.id is not None)
 
     def testGetTask(self):
         self.testInstall()

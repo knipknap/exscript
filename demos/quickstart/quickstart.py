@@ -6,7 +6,7 @@ from Exscript.util.start    import quickstart
 def do_something(job, host, conn):
     conn.execute('ls -1')
     files = any_match(conn, r'(\S+)')
-    print "Files found:", files
+    print("Files found:", files)
 
 # Open a connection (Telnet, by default) to each of the hosts, and run
 # do_something(). To open the connection via SSH, you may prefix the

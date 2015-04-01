@@ -15,7 +15,7 @@ def one(job, host, conn):
 
     # Execute a simple command.
     conn.execute('show ip int brie')
-    print "myvariable is", conn.get_host().get('myvariable')
+    print("myvariable is", conn.get_host().get('myvariable'))
 
 def two(job, host, conn):
     conn.autoinit()

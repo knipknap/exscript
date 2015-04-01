@@ -97,7 +97,7 @@ class urlTest(unittest.TestCase):
     CORRELATE = Url
 
     def testConstructor(self):
-        self.assert_(isinstance(Url(), Url))
+        self.assertTrue(isinstance(Url(), Url))
 
     def testToString(self):
         for url, expected in urls:
@@ -105,8 +105,8 @@ class urlTest(unittest.TestCase):
             error  = 'URL:      ' + url + '\n'
             error += 'Result:   ' + str(result) + '\n'
             error += 'Expected: ' + expected
-            self.assert_(isinstance(result, Url))
-            self.assert_(result.to_string() == expected, error)
+            self.assertTrue(isinstance(result, Url))
+            self.assertTrue(result.to_string() == expected, error)
 
     def testFromString(self):
         for url, expected in urls:
@@ -114,8 +114,8 @@ class urlTest(unittest.TestCase):
             error  = 'URL:      ' + url + '\n'
             error += 'Result:   ' + str(result) + '\n'
             error += 'Expected: ' + expected
-            self.assert_(isinstance(result, Url))
-            self.assert_(str(result) == expected, error)
+            self.assertTrue(isinstance(result, Url))
+            self.assertTrue(str(result) == expected, error)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(urlTest)

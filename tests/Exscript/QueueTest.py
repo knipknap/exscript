@@ -18,7 +18,7 @@ from Exscript.util.log import log_to
 
 def count_calls(job, data, **kwargs):
     assert hasattr(job, 'start')
-    assert kwargs.has_key('testarg')
+    assert 'testarg' in kwargs
     data.value += 1
 
 def count_calls2(job, host, conn, data, **kwargs):
@@ -108,16 +108,16 @@ class QueueTest(unittest.TestCase):
     def assertVerbosity(self, channel, expected):
         data = channel.read()
         if expected == 'no_tb':
-            self.assert_('error' in data, data)
-            self.assert_('Traceback' not in data)
+            self.assertTrue('error' in data, data)
+            self.assertTrue('Traceback' not in data)
         elif expected == 'tb':
-            self.assert_('error' in data, data)
-            self.assert_('Traceback' in data)
+            self.assertTrue('error' in data, data)
+            self.assertTrue('Traceback' in data)
         elif expected == '':
             self.assertEqual(data, '')
         else:
             msg = repr(expected) + ' not in ' + repr(data)
-            self.assert_(expected in data, msg)
+            self.assertTrue(expected in data, msg)
 
     def testConstructor(self):
         self.assertEqual(1, self.queue.get_max_threads())
@@ -240,7 +240,7 @@ class QueueTest(unittest.TestCase):
         # returns True).
         self.queue.run('dummy://dummy', partial(start_cb, data))
         self.queue.shutdown()
-        data = dict((k, v.value) for (k, v) in data.iteritems())
+        data = dict((k, v.value) for (k, v) in data.items())
         self.assertEqual(data, {'match-called': True,
                                 'start-called': True,
                                 'account-hash': account2.__hash__()})
@@ -249,34 +249,34 @@ class QueueTest(unittest.TestCase):
         self.testAddAccount()
         hosts = ['dummy://dummy1', 'dummy://dummy2']
         task  = self.queue.run(hosts, log_to(self.logger)(do_nothing))
-        self.assert_(task is not None)
+        self.assertTrue(task is not None)
         return task
 
     def testIsCompleted(self):
-        self.assert_(self.queue.is_completed())
+        self.assertTrue(self.queue.is_completed())
         task = self.startTask()
-        self.failIf(self.queue.is_completed())
+        self.assertFalse(self.queue.is_completed())
         task.wait()
-        self.assert_(task.is_completed())
-        self.assert_(self.queue.is_completed())
+        self.assertTrue(task.is_completed())
+        self.assertTrue(self.queue.is_completed())
 
     def testJoin(self):
         task = self.startTask()
         self.queue.join()
-        self.assert_(task.is_completed())
-        self.assert_(self.queue.is_completed())
+        self.assertTrue(task.is_completed())
+        self.assertTrue(self.queue.is_completed())
 
     def testShutdown(self):
         task = self.startTask()   # this also adds an account
         self.queue.shutdown()
-        self.assert_(task.is_completed())
-        self.assert_(self.queue.is_completed())
+        self.assertTrue(task.is_completed())
+        self.assertTrue(self.queue.is_completed())
         self.assertEqual(self.accm.default_pool.n_accounts(), 1)
 
     def testDestroy(self):
         task = self.startTask()   # this also adds an account
         self.queue.destroy()
-        self.assert_(self.queue.is_completed())
+        self.assertTrue(self.queue.is_completed())
         self.assertEqual(self.accm.default_pool.n_accounts(), 0)
 
     def testReset(self):
@@ -380,12 +380,12 @@ class QueueTest(unittest.TestCase):
         # The following function is not synchronous with the above, so add
         # a timeout to avoid races.
         time.sleep(.1)
-        self.assert_(self.queue.is_completed())
+        self.assertTrue(self.queue.is_completed())
 
         logfiles = os.listdir(self.tempdir)
         self.assertEqual(2, len(logfiles))
-        self.assert_('dummy1.log' in logfiles)
-        self.assert_('dummy2.log' in logfiles)
+        self.assertTrue('dummy1.log' in logfiles)
+        self.assertTrue('dummy2.log' in logfiles)
         for file in logfiles:
             content = open(os.path.join(self.tempdir, file)).read()
 

@@ -4,9 +4,9 @@ from TkExscript import LoginWindow
 
 def on_start(window):
     account = window.get_account()
-    print "Username:",      account.get_name()
-    print "Password:",      account.get_password()
-    print "Authorization:", account.get_authorization_password()
+    print("Username:",      account.get_name())
+    print("Password:",      account.get_password())
+    print("Authorization:", account.get_authorization_password())
     window.quit()
 
 account = Account(getuser())

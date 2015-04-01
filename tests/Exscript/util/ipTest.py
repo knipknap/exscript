@@ -8,9 +8,9 @@ class ipTest(unittest.TestCase):
 
     def testIsIp(self):
         from Exscript.util.ip import is_ip
-        self.assert_(is_ip('0.0.0.0'))
-        self.assert_(is_ip('::'))
-        self.assert_(not is_ip('1'))
+        self.assertTrue(is_ip('0.0.0.0'))
+        self.assertTrue(is_ip('::'))
+        self.assertTrue(not is_ip('1'))
 
     def testNormalizeIp(self):
         from Exscript.util.ip import normalize_ip

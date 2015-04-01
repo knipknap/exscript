@@ -26,43 +26,43 @@ class FileLoggerTest(LoggerTest):
         rmtree(self.tempdir)
 
     def testConstructor(self):
-        self.assert_(os.path.isdir(self.tempdir))
-        self.failIf(os.path.exists(self.logfile))
-        self.failIf(os.path.exists(self.errfile))
+        self.assertTrue(os.path.isdir(self.tempdir))
+        self.assertFalse(os.path.exists(self.logfile))
+        self.assertFalse(os.path.exists(self.errfile))
 
     def testAddLog(self):
         log = LoggerTest.testAddLog(self)
-        self.assert_(os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
-        self.failIf(os.path.exists(self.errfile))
+        self.assertTrue(os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
+        self.assertFalse(os.path.exists(self.errfile))
         return log
 
     def testLog(self):
         log = LoggerTest.testLog(self)
-        self.assert_(os.path.isfile(self.logfile))
-        self.failIf(os.path.exists(self.errfile))
+        self.assertTrue(os.path.isfile(self.logfile))
+        self.assertFalse(os.path.exists(self.errfile))
         return log
 
     def testLogAborted(self):
         log = LoggerTest.testLogAborted(self)
-        self.assert_(os.path.isfile(self.logfile))
-        self.assert_(os.path.isfile(self.errfile))
+        self.assertTrue(os.path.isfile(self.logfile))
+        self.assertTrue(os.path.isfile(self.errfile))
         return log
 
     def testLogSucceeded(self):
         log = LoggerTest.testLogSucceeded(self)
-        self.assert_(os.path.isfile(self.logfile))
-        self.failIf(os.path.isfile(self.errfile))
+        self.assertTrue(os.path.isfile(self.logfile))
+        self.assertFalse(os.path.isfile(self.errfile))
         return log
 
     def testAddLog2(self):
         # Like testAddLog(), but with attempt = 2.
         self.logfile = os.path.join(self.logdir, self.job.name + '_retry1.log')
         self.errfile = self.logfile + '.error'
-        self.failIf(os.path.exists(self.logfile))
-        self.failIf(os.path.exists(self.errfile))
+        self.assertFalse(os.path.exists(self.logfile))
+        self.assertFalse(os.path.exists(self.errfile))
         self.logger.add_log(id(self.job), self.job.name, 2)
-        self.assert_(os.path.isfile(self.logfile))
-        self.failIf(os.path.exists(self.errfile))
+        self.assertTrue(os.path.isfile(self.logfile))
+        self.assertFalse(os.path.exists(self.errfile))
         content = open(self.logfile).read()
         self.assertEqual(content, '')
 
@@ -70,8 +70,8 @@ class FileLoggerTest(LoggerTest):
         # Like testLog(), but with attempt = 2.
         self.testAddLog2()
         self.logger.log(id(self.job), 'hello world')
-        self.assert_(os.path.isfile(self.logfile))
-        self.failIf(os.path.exists(self.errfile))
+        self.assertTrue(os.path.isfile(self.logfile))
+        self.assertFalse(os.path.exists(self.errfile))
         content = open(self.logfile).read()
         self.assertEqual(content, 'hello world')
 
@@ -79,8 +79,8 @@ class FileLoggerTest(LoggerTest):
         # With attempt = 2.
         self.testLog2()
         self.logger.log_succeeded(id(self.job))
-        self.assert_(os.path.isfile(self.logfile))
-        self.failIf(os.path.exists(self.errfile))
+        self.assertTrue(os.path.isfile(self.logfile))
+        self.assertFalse(os.path.exists(self.errfile))
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(FileLoggerTest)
