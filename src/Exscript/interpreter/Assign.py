@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Expression
+import Exscript.interpreter.Expression
 from Exscript.parselib import Token
 
 class Assign(Token):
@@ -30,14 +30,14 @@ class Assign(Token):
             msg = 'Assignment to internal variable ' + self.varname
             lexer.syntax_error(msg, self)
 
-        self.expression = Expression.Expression(lexer, parser, parent)
+        self.expression = Exscript.interpreter.Expression.Expression(lexer, parser, parent)
         self.parent.define(**{self.varname: None})
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.varname, 'start'
+        print((' ' * indent) + self.name, self.varname, 'start')
         self.expression.dump(indent + 1)
-        print (' ' * indent) + self.name, self.varname, 'start'
+        print((' ' * indent) + self.name, self.varname, 'start')
 
     def value(self, context):
         result = self.expression.value(context)

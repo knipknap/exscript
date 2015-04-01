@@ -15,7 +15,7 @@
 """
 A buffer object.
 """
-from StringIO           import StringIO
+from io                 import BytesIO
 from Exscript.util.cast import to_regexs
 
 class MonitoredBuffer(object):
@@ -28,13 +28,13 @@ class MonitoredBuffer(object):
         """
         Constructor.
         The data is stored in the given file-like object. If no object is
-        given, or the io argument is None, a new StringIO is used.
+        given, or the io argument is None, a new BytesIO is used.
 
         @type  io: file-like object
         @param io: A file-like object that is used for storing the data.
         """
         if io is None:
-            self.io = StringIO('')
+            self.io = BytesIO()
         else:
             self.io = io
         self.monitors = []
@@ -77,7 +77,8 @@ class MonitoredBuffer(object):
         @type  bytes: int
         @param bytes: The number of bytes to return.
         """
-        self.io.seek(self.size() - bytes)
+        size = self.size()
+        self.io.seek(size - bytes if bytes < size else 0)
         return self.io.read()
 
     def pop(self, bytes):

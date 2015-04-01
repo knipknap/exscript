@@ -43,19 +43,17 @@ class SigIntWatcher(object):
         try:
             self.child = os.fork()
         except AttributeError:  # platforms that don't have os.fork
-            pass
-        except RuntimeError:
-            pass # prevent "not holding the import lock" on some systems.
-        if self.child == 0:
-            return
-        else:
+            self.child = -1
+        except RuntimeError:    # prevent "not holding the import lock" on some systems.
+            self.child = -1
+        if self.child > 0:
             self.watch()
 
     def watch(self):
         try:
             pid, status = os.wait()
         except KeyboardInterrupt:
-            print '********** SIGINT RECEIVED - SHUTTING DOWN! **********'
+            print('********** SIGINT RECEIVED - SHUTTING DOWN! **********')
             self.kill()
             sys.exit(1)
         sys.exit(status >> 8)

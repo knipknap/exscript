@@ -67,7 +67,7 @@ class Scope(Token):
         deep copies each variable.
         """
         vars = self.get_vars()
-        vars = dict([k for k in vars.iteritems() if not k[0].startswith('_')])
+        vars = dict([k for k in vars.items() if not k[0].startswith('_')])
         return deepcopy(vars)
 
     def get(self, name, default = None):
@@ -84,13 +84,13 @@ class Scope(Token):
         return result
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         for child in self.children:
             child.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end'
+        print((' ' * indent) + self.name, 'end')
 
     def dump1(self):
         if self.parent is not None:
             self.parent.dump1()
             return
-        print "Scope:", self.variables
+        print("Scope:", self.variables)

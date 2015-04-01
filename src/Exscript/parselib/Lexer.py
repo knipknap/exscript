@@ -110,14 +110,14 @@ class Lexer(object):
         self.current_char += chars
         self.token_buffer  = None
 
-    def next(self):
+    def __next__(self):
         if self.token_buffer:
             self.forward(len(self.token_buffer[1]))
 
     def next_if(self, types, token = None):
         if token is not None:
             if self.current_is(types, token):
-                self.next()
+                next(self)
                 return 1
             return 0
 
@@ -125,7 +125,7 @@ class Lexer(object):
             types = [types]
         for t in types:
             if self.current_is(t, token):
-                self.next()
+                next(self)
                 return 1
         return 0
 

@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Code
+import Exscript.interpreter.Code
 from Exscript.parselib               import Token
 from Exscript.interpreter.Term       import Term
 from Exscript.interpreter.Expression import Expression
@@ -99,7 +99,7 @@ class Loop(Token):
 
         # Body of the loop block.
         lexer.skip(['whitespace', 'newline'])
-        self.block = Code.Code(lexer, parser, parent)
+        self.block = Exscript.interpreter.Code.Code(lexer, parser, parent)
 
 
     def value(self, context):
@@ -120,7 +120,7 @@ class Loop(Token):
         if self.thefrom:
             start = self.thefrom.value(context)[0]
             stop  = self.theto.value(context)[0]
-            lists = [range(start, stop)]
+            lists = [list(range(start, stop))]
         else:
             lists = [var.value(context) for var in self.list_variables]
         vars  = self.iter_varnames
@@ -132,7 +132,7 @@ class Loop(Token):
                 self.lexer.runtime_error(msg, self)
 
         # Iterate.
-        for i in xrange(len(lists[0])):
+        for i in range(len(lists[0])):
             f = 0
             for list in lists:
                 self.block.define(**{vars[f]: [list[i]]})
@@ -146,11 +146,11 @@ class Loop(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name,
-        print self.list_variables, 'as', self.iter_varnames, 'start'
+        print((' ' * indent) + self.name, end=' ')
+        print(self.list_variables, 'as', self.iter_varnames, 'start')
         if self.during is not None:
             self.during.dump(indent + 1)
         if self.until is not None:
             self.until.dump(indent + 1)
         self.block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.'
+        print((' ' * indent) + self.name, 'end.')

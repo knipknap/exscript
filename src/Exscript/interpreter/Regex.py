@@ -50,7 +50,7 @@ class Regex(String):
         # Compile the regular expression.
         try:
             re.compile(self.string, self.flags)
-        except Exception, e:
+        except Exception as e:
             error = 'Invalid regular expression %s: %s' % (repr(self.string), e)
             lexer.syntax_error(error, self)
 
@@ -66,4 +66,4 @@ class Regex(String):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.string
+        print((' ' * indent) + self.name, self.string)

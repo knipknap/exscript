@@ -28,5 +28,5 @@ class Enter(Token):
         return self.execute.value(context)
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name
+        print((' ' * indent) + self.name)
         self.execute.dump(indent + 1)

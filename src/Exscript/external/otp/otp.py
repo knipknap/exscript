@@ -17,17 +17,17 @@ try:
     from hashlib import md5 as MD5
 except ImportError:
     from Crypto.Hash import SHA, MD5
-from AppendixB import DefaultDictionary
-from keywrangling import keyformat, convertkey
+from .AppendixB import DefaultDictionary
+from .keywrangling import keyformat, convertkey
 
-_VALIDSEEDCHARACTERS = string.letters + string.digits
+_VALIDSEEDCHARACTERS = string.ascii_letters + string.digits
 
 _HASHMODULE = { 'md4': MD4, 'md5' : MD5, 'sha' : SHA }
 
 def _fold_md5(digest):
     result = ''
     if len(digest)<16:
-        print digest
+        print(digest)
         raise AssertionError
     for i in range(0,8):
         result = result + chr(ord(digest[i]) ^ ord(digest[i+8]))
@@ -35,7 +35,7 @@ def _fold_md5(digest):
     
 def _fold_sha(hash):
     # BROKEN
-    ordhash = map(ord, hash)
+    ordhash = list(map(ord, hash))
     result = [0, 0, 0, 0, 0, 0, 0, 0]
     
     result[3] = ordhash[0] ^ ordhash[8] ^  ordhash[16] 
@@ -73,19 +73,19 @@ def generate(passphrase, seed,
     """
     
     # check arguments for validity and standards compliance
-    if hashfunction not in _HASHMODULE.keys():
-        raise Exception, 'hashfunction'
-    if len(passphrase) not in range(4,64):
-        raise Exception, 'passphrase length'
-    if len(seed) not in range(1,17):
-        raise Exception, 'seed length'
+    if hashfunction not in list(_HASHMODULE.keys()):
+        raise Exception('hashfunction')
+    if len(passphrase) not in list(range(4,64)):
+        raise Exception('passphrase length')
+    if len(seed) not in list(range(1,17)):
+        raise Exception('seed length')
     for x in seed:
         if not x in _VALIDSEEDCHARACTERS:
-            raise Exception, 'seed composition'
+            raise Exception('seed composition')
     if startkey < 0:
-        raise Exception, 'startkey'
+        raise Exception('startkey')
     if numkeys < 1:
-        raise Exception, 'numkeys'
+        raise Exception('numkeys')
     # not checked: argument types, startkey and numkeys out of range
     
     hashmodule = _HASHMODULE[hashfunction]
@@ -109,12 +109,12 @@ def generate(passphrase, seed,
 def generateseed(length=5):
     """Generate a random, valid seed of a given length."""
     # check standards compliance of arguments
-    if length not in range(1,11):
-        raise Exception, 'length'
+    if length not in list(range(1,11)):
+        raise Exception('length')
     seed = ''
     vsclen = len(_VALIDSEEDCHARACTERS)
-    bignum = 2L**32 - 1
+    bignum = 2**32 - 1
     for i in range(0, length):
-        index = long(random.random() * bignum) % vsclen
+        index = int(random.random() * bignum) % vsclen
         seed = seed + _VALIDSEEDCHARACTERS[index]
     return seed

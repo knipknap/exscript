@@ -121,5 +121,5 @@ class Extract(Token):
     def dump(self, indent = 0):
         mode = self.append and 'into' or 'as'
         source = self.source is not None and self.source or 'buffer'
-        print (' ' * indent) + self.name, self.regex.string,
-        print mode, self.varnames, "from", source
+        print((' ' * indent) + self.name, self.regex.string, end=' ')
+        print(mode, self.varnames, "from", source)

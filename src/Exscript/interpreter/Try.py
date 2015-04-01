@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Code
+import Exscript.interpreter.Code
 from Exscript.protocols.Exception import ProtocolException
 from Exscript.interpreter.Scope   import Scope
 
@@ -23,16 +23,16 @@ class Try(Scope):
         lexer.next_if('whitespace')
         lexer.expect(self, 'keyword', 'try')
         lexer.skip(['whitespace', 'newline'])
-        self.block = Code.Code(lexer, parser, parent)
+        self.block = Exscript.interpreter.Code.Code(lexer, parser, parent)
 
     def value(self, context):
         try:
             self.block.value(context)
-        except ProtocolException, e:
+        except ProtocolException as e:
             return 1
         return 1
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         self.block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end'
+        print((' ' * indent) + self.name, 'end')

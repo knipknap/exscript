@@ -29,4 +29,4 @@ class Variable(Token):
         return val
 
     def dump(self, indent = 0):
-        print (' ' * indent) + 'Variable', self.varname, '.'
+        print((' ' * indent) + 'Variable', self.varname, '.')

@@ -9,7 +9,7 @@ keywrangling.py: key handling routines for the otp module.
 __version__ = '$Revision: 1.4 $'
 
 import types
-from AppendixB import DefaultDictionary, WordFromNumber, NumberFromWord
+from .AppendixB import DefaultDictionary, WordFromNumber, NumberFromWord
 
 def keyformat(key):
     """Return the type of a key or list of keys (all of which must
@@ -23,11 +23,11 @@ def keyformat(key):
     of length 16 will be treated as a hex key. More checks should
     be added in the future."""
     
-    if type(key) == types.ListType:
+    if type(key) == list:
         return keyformat(key[0])
-    if type(key) == types.LongType:
+    if type(key) == int:
         return 'long'
-    elif type(key) == types.StringType:
+    elif type(key) == bytes:
         if len(key) == 8:
             return 'raw'
         elif len(key) == 19 and len(key.split(' ')) == 4:
@@ -42,7 +42,7 @@ def keyformat(key):
 def long_from_raw(hash):
     """Fold to a long, a digest supplied as a string."""
     
-    hashnum = 0L
+    hashnum = 0
     for h in hash:
         hashnum <<= 8
         hashnum |= ord(h)
@@ -66,7 +66,7 @@ def hex_from_sixword(key):
     return hex_from_long(long_from_sixword(key))
 
 def long_from_hex(key):
-    return long(''.join(key.split(' ')).lower(), 16)
+    return int(''.join(key.split(' ')).lower(), 16)
 
 def checksummed_long(key):
     sum, k = 0, key
@@ -93,7 +93,7 @@ def long_from_sixword(key):
             wordCheck = WordFromNumber(wordIndex)
         except:
             wordCheck = None
-        print wordIndex, wordCheck
+        print((wordIndex, wordCheck))
 
 _KEYCONVERSIONTABLE = {
     'sixword' : { 'raw'     : sixword_from_raw ,
@@ -119,7 +119,7 @@ def convertkey(format, key_or_keylist):
         return key_or_keylist
     
     conversionfunction = _KEYCONVERSIONTABLE[format][originalformat]
-    if type(key_or_keylist) == types.ListType:
-        return map(conversionfunction, key_or_keylist)
+    if type(key_or_keylist) == list:
+        return list(map(conversionfunction, key_or_keylist))
     else:
         return conversionfunction(key_or_keylist)

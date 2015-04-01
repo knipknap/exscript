@@ -35,8 +35,8 @@ def read(path):
     logging.info("Checking pidfile '%s'", path)
     try:
         return int(open(path).read())
-    except IOError, (code, text):
-        if code == errno.ENOENT: # no such file or directory
+    except IOError as e:
+        if e.errno == errno.ENOENT: # no such file or directory
             return None
         raise
 
@@ -59,8 +59,8 @@ def isalive(path):
     # Check if a process with the given pid exists.
     try:
         os.kill(pid, 0) # Signal 0 does not kill, but check.
-    except OSError, (code, text):
-        if code == errno.ESRCH: # No such process.
+    except OSError as e:
+        if e.errno == errno.ESRCH: # No such process.
             return False
     return True
 
@@ -80,9 +80,9 @@ def kill(path):
     logging.info("Killing PID %s", pid)
     try:
         os.kill(pid, 9)
-    except OSError, (code, text):
+    except OSError as e:
         # re-raise if the error wasn't "No such process"
-        if code != errno.ESRCH:
+        if e.errno != errno.ESRCH:
             raise
 
 def write(path):

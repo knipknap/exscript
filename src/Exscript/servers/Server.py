@@ -58,8 +58,8 @@ class Server(Process):
 
     def _dbg(self, level, msg):
         if self.dbg >= level:
-            print self.host + ':' + str(self.port), '-',
-            print msg
+            print(self.host + ':' + str(self.port), '-', end=' ')
+            print(msg)
 
     def _poll_child_process(self):
         if not self.child_conn.poll():
@@ -68,7 +68,7 @@ class Server(Process):
             return False
         try:
             msg = self.child_conn.recv()
-        except socket.error:
+        except OSError:
             self.running = False
             return False
         if msg == 'shutdown':
@@ -99,7 +99,7 @@ class Server(Process):
             conn, addr = self.socket.accept()
             try:
                 self._handle_connection(conn)
-            except socket.error:
+            except OSError:
                 pass # network error
             finally:
                 self._shutdown_notify(conn)

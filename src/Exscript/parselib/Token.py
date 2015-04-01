@@ -59,7 +59,7 @@ class Token(object):
                     break
             return current
 
-        def next(self):
+        def __next__(self):
             # By using this loop we avoid an (expensive) recursive call.
             while True:
                 next = self._next()
@@ -100,6 +100,6 @@ class Token(object):
         return self.children
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name
+        print((' ' * indent) + self.name)
         for child in self.get_children():
             child.dump(indent + 1)

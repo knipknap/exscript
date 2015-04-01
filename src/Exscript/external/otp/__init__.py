@@ -1,3 +1,3 @@
 __all__ = ['otp'],
 
-from otp import generate
+from .otp import generate

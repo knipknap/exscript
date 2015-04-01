@@ -48,10 +48,10 @@ class Template(Scope):
             elif lexer.current_is('raw_data'):
                 if lexer.token()[1].lstrip().startswith('#'):
                     while not lexer.current_is('newline'):
-                        lexer.next()
+                        next(lexer)
                     continue
                 buffer += lexer.token()[1]
-                lexer.next()
+                next(lexer)
             elif lexer.current_is('escaped_data'):
                 token = lexer.token()[1]
                 if token[1] == '$':
@@ -60,7 +60,7 @@ class Template(Scope):
                     buffer += token
                 else:
                     buffer += token[1]
-                lexer.next()
+                next(lexer)
             elif lexer.next_if('newline'):
                 if buffer.strip() != '':
                     self.add(Execute(lexer, parser, self, buffer))

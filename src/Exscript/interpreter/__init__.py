@@ -15,5 +15,5 @@
 from Exscript.interpreter.Parser import Parser
 
 import inspect 
-__all__ = [name for name, obj in locals().items()
+__all__ = [name for name, obj in list(locals().items())
            if not (name.startswith('_') or inspect.ismodule(obj))]

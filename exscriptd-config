@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!C:\Python34\python.exe
 # Copyright (C) 2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,7 +27,7 @@ def get_usage(section = 'section', command = 'command'):
 
 # Parse global options (all options before the first positional argument).
 usage = get_usage() + 'Sections:'
-for module_name, module in modules.iteritems():
+for module_name, module in modules.items():
     usage += '\n  ' + module_name.ljust(8) + '\t' + module.get_description()
 
 parser = OptionParser(usage = usage, version = __version__)
@@ -73,7 +73,7 @@ exscript_binary = which('exscriptd')
 if exscript_binary is None:
     path = repr(os.environ.get('PATH'))
     parser.error('exscriptd executable not found. PATH was ' + path)
-print 'exscriptd found at ' + exscript_binary
+print('exscriptd found at ' + exscript_binary)
 script_dir = os.path.dirname(exscript_binary)
 
 handler = module(global_options, script_dir = script_dir)

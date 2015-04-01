@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Term
+import Exscript.interpreter.Term
 from Exscript.parselib import Token
 
 class ExpressionNode(Token):
@@ -32,7 +32,7 @@ class ExpressionNode(Token):
         # The "not" operator requires special treatment because it is
         # positioned left of the term.
         if not lexer.current_is('logical_operator', 'not'):
-            self.lft = Term.Term(lexer, parser, parent)
+            self.lft = Exscript.interpreter.Term.Term(lexer, parser, parent)
 
             # The expression may end already (a single term is also an
             # expression).
@@ -165,10 +165,10 @@ class ExpressionNode(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.op, 'start'
+        print((' ' * indent) + self.name, self.op, 'start')
         if self.lft is not None:
             self.lft.dump(indent + 1)
-        print (' ' * (indent + 1)) + 'Operator', self.op
+        print((' ' * (indent + 1)) + 'Operator', self.op)
         if self.rgt is not None:
             self.rgt.dump(indent + 1)
-        print (' ' * indent) + self.name, self.op, 'end.'
+        print((' ' * indent) + self.name, self.op, 'end.')

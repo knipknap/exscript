@@ -42,7 +42,7 @@ import time
 import socket
 import select
 import struct
-from cStringIO import StringIO
+from io import BytesIO
 
 __all__ = ["Telnet"]
 
@@ -180,7 +180,7 @@ class Telnet:
         self.cancel_expect = False
         self.rawq = ''
         self.irawq = 0
-        self.cookedq = StringIO()
+        self.cookedq = BytesIO()
         self.eof = 0
         self.connect_timeout      = kwargs.get('connect_timeout',     None)
         self.window_size          = kwargs.get('termsize')
@@ -213,14 +213,14 @@ class Telnet:
                 self.sock = socket.socket(af, socktype, proto)
                 self.sock.settimeout(self.connect_timeout)
                 self.sock.connect(sa)
-            except socket.error, msg:
+            except OSError as msg:
                 if self.sock:
                     self.sock.close()
                 self.sock = None
                 continue
             break
         if not self.sock:
-            raise socket.error, msg
+            raise OSError(msg)
 
     def msg(self, msg, *args):
         """Print a debug message, when the debug level is > 0.
@@ -264,14 +264,14 @@ class Telnet:
         """Write a string to the socket, doubling any IAC characters.
 
         Can block if the connection is blocked.  May raise
-        socket.error if the connection is closed.
+        OSError if the connection is closed.
 
         """
         if type(buffer) == type(0):
             buffer = chr(buffer)
         elif isinstance(buffer, str) and IAC in buffer:
             buffer = buffer.replace(IAC, IAC+IAC)
-        self.msg("send %s", `buffer`)
+        self.msg("send %s", 'buffer')
         self.sock.send(buffer)
 
     def read_all(self):
@@ -351,7 +351,7 @@ class Telnet:
         self.cookedq.seek(0)
         self.cookedq.truncate()
         if not buf and self.eof and not self.rawq:
-            raise EOFError, 'telnet connection closed'
+            raise EOFError('telnet connection closed')
         return buf
 
     def set_receive_callback(self, callback, *args, **kwargs):
@@ -500,7 +500,7 @@ class Telnet:
         # The buffer size should be fairly small so as to avoid quadratic
         # behavior in process_rawq() above.
         buf = self.sock.recv(64)
-        self.msg("recv %s", `buf`)
+        self.msg("recv %s", 'buf')
         self.eof = (not buf)
         self.rawq = self.rawq + buf
 
@@ -519,7 +519,7 @@ class Telnet:
                 try:
                     text = self.read_eager()
                 except EOFError:
-                    print '*** Connection closed by remote host ***'
+                    print('*** Connection closed by remote host ***')
                     break
                 if text:
                     self.stdout.write(text)
@@ -532,8 +532,8 @@ class Telnet:
 
     def mt_interact(self):
         """Multithreaded version of interact()."""
-        import thread
-        thread.start_new_thread(self.listener, ())
+        import _thread
+        _thread.start_new_thread(self.listener, ())
         while 1:
             line = sys.stdin.readline()
             if not line:
@@ -546,7 +546,7 @@ class Telnet:
             try:
                 data = self.read_eager()
             except EOFError:
-                print '*** Connection closed by remote host ***'
+                print('*** Connection closed by remote host ***')
                 return
             if data:
                 self.stdout.write(data)
@@ -565,7 +565,7 @@ class Telnet:
     def _waitfor(self, list, timeout=None, flush=False, cleanup=None):
         re = None
         list = list[:]
-        indices = range(len(list))
+        indices = list(range(len(list)))
         search_window_size = 150
         head_loockback_size = 10
         for i in indices:

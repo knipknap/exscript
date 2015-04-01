@@ -285,7 +285,7 @@ class DBPipeline(object):
         self.queue.extendleft(sleeping)
         return next
 
-    def next(self):
+    def __next__(self):
         with self.condition:
             self.running = True
             while self.running:

@@ -16,8 +16,7 @@
 Working with URLs (as used in URL formatted hostnames).
 """
 import re
-from urllib      import urlencode, quote
-from urlparse    import urlparse, urlsplit
+from urllib.parse    import urlencode, quote, urlparse, urlsplit
 from collections import defaultdict
 
 def _make_hexmap():
@@ -54,7 +53,7 @@ def _unquote(string):
         except KeyError:
             result[i] = '%' + item
         except UnicodeDecodeError:
-            result[i] = unichr(int(item[:2], 16)) + item[2:]
+            result[i] = chr(int(item[:2], 16)) + item[2:]
     return ''.join(result)
 
 def _urlparse_qs(url):
@@ -136,7 +135,7 @@ class Url(object):
 
         if self.vars:
             pairs = []
-            for key, values in self.vars.iteritems():
+            for key, values in list(self.vars.items()):
                 for value in values:
                     pairs.append((key, value))
             url += '?' + urlencode(pairs)

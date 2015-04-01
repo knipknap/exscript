@@ -46,7 +46,7 @@ class OsGuesser(object):
             return
         if key in self.info:
             old_confidence, old_value = self.info.get(key)
-            if old_confidence >= confidence:
+            if confidence is None or old_confidence >= confidence:
                 return
         self.info[key] = (confidence, value)
 
@@ -98,6 +98,6 @@ class OsGuesser(object):
         # Else, check the head that we collected so far.
         self.auth_buffer += data
         if self.debug:
-            print "DEBUG: Matching buffer:", repr(self.auth_buffer)
+            print(("DEBUG: Matching buffer:", repr(self.auth_buffer)))
         self.set_from_match('os', self.auth_os_map, self.auth_buffer)
         self.set_from_match('os', self.os_map,      self.auth_buffer)

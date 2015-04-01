@@ -20,4 +20,4 @@ class Number(object):
         return [self.number]
 
     def dump(self, indent = 0):
-        print (' ' * indent) + 'Number', self.number
+        print((' ' * indent) + 'Number', self.number)

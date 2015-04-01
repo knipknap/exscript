@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!C:\Python34\python.exe
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -48,7 +48,7 @@ def expand_bracket(value_name, value):
 
 def expand_host_variables(host):
     # Define host-specific variables.
-    for key, value in host.get_all().iteritems():
+    for key, value in host.get_all().items():
         if isinstance(value, str):
             value = expand_bracket(key, value)
         elif hasattr(value, '__iter__'):
@@ -83,7 +83,7 @@ def run():
     if not options.execute:
         try:
             filename = args.pop(0)
-        except IndexError, e:
+        except IndexError as e:
             parser.error('Missing filename')
     hosts = [mkhost(h) for h in args]
 
@@ -91,39 +91,39 @@ def run():
     if options.csv_hosts:
         try:
             csv_hosts = mkhosts_from_csv(options.csv_hosts)
-        except IOError, e:
+        except IOError as e:
             parser.error(str(e))
         if not csv_hosts:
-            print 'Warning: %s is empty.' % options.csv_hosts
+            print('Warning: %s is empty.' % options.csv_hosts)
         hosts += csv_hosts
 
     # If a filename containing hostnames was given, read it.
     if options.hosts:
         try:
             txt_hosts = mkhosts_from_file(options.hosts)
-        except IOError, e:
+        except IOError as e:
             parser.error(str(e))
-        except ValueError, e:
+        except ValueError as e:
             parser.error(e)
         if not txt_hosts:
-            print 'Warning: %s is empty.' % options.hosts
+            print('Warning: %s is empty.' % options.hosts)
         hosts += txt_hosts
 
     # If a filename of an Exscript driver was given, import it.
     if options.load_driver:
-        print 'Searching drivers in %s...' % options.load_driver
+        print('Searching drivers in %s...' % options.load_driver)
         name = os.path.splitext(os.path.basename(options.load_driver))[0]
         try:
             driver_module = imp.load_source(name, options.load_driver)
-        except IOError, e:
+        except IOError as e:
             parser.error(str(e))
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write('Error in driver ' + options.load_driver + '\n')
             raise
-        for name, obj in driver_module.__dict__.iteritems():
+        for name, obj in driver_module.__dict__.items():
             if Exscript.protocols.drivers.isdriver(obj):
                 Exscript.protocols.drivers.add_driver(obj)
-                print 'Driver ' + repr(name) + ' added.'
+                print('Driver ' + repr(name) + ' added.')
 
     # Make sure that all mandatory options are present.
     if not hosts:
@@ -158,7 +158,7 @@ def run():
     if options.lib:
         try:
             functions = load_lib(options.lib)
-        except IOError, e:
+        except IOError as e:
             parser.error(str(e))
 
     # Test whether the template compiles.
@@ -169,7 +169,7 @@ def run():
     vars.update(hosts[0].get_all())
     try:
         template.test(script_content, **vars)
-    except Exception, e:
+    except Exception as e:
         if options.parser_verbose > 0:
             raise
         parser.error(str(e))
@@ -186,11 +186,11 @@ def run():
         if options.account_pool:
             accounts = get_accounts_from_file(options.account_pool)
             default_pool.add_account(accounts)
-    except IOError, e:
+    except IOError as e:
         parser.error(str(e))
     if options.account_pool and default_pool.n_accounts() == 0:
         msg = r'WARNING: No accounts found in account pool file (%s)!'
-        print msg % options.account_pool
+        print(msg % options.account_pool)
 
     # Read username and password.
     if options.non_interactive or default_pool.n_accounts() > 0:
@@ -210,10 +210,10 @@ def run():
 
     # Read the SSH key.
     if options.ssh_key:
-        print "Reading key from", options.ssh_key
+        print("Reading key from", options.ssh_key)
         try:
             key = PrivateKey.from_file(options.ssh_key, password)
-        except ValueError, e:
+        except ValueError as e:
             parser.error(str(e))
         if user is None:
             user = getpass.getuser()
@@ -228,7 +228,7 @@ def run():
     # Ask for values of marked variables.
     for host in hosts:
         expand_host_variables(host)
-    for key, val in options.define.iteritems():
+    for key, val in options.define.items():
         options.define[key] = expand_bracket(key, val)
 
     # Choose the template processing type.
@@ -257,10 +257,10 @@ def run():
     if options.logdir:
         # Create the log directory.
         if not os.path.exists(options.logdir):
-            print 'Creating log directory (%s)...' % options.logdir
+            print('Creating log directory (%s)...' % options.logdir)
             try:
                 os.makedirs(options.logdir)
-            except IOError, e:
+            except IOError as e:
                 parser.error(str(e))
 
         # Enable logging.
@@ -268,14 +268,18 @@ def run():
         decorator = log_to_file(options.logdir, mode, options.delete_logs)
         function  = decorator(function)
 
-    # Wait until the specified time. We are using os.system because
+    # Wait until the specified time. On UINX we are using os.system because
     # it allows for specifying absolute times, not just the number
     # of seconds like Python's time.sleep().
     if options.sleep:
-        print "Waiting for %s..." % options.sleep,
-        sys.stdout.flush()
-        os.system('sleep %s' % options.sleep)
-        print "time expired, starting script."
+        print("Waiting for %s..." % options.sleep)
+        if sys.platform == 'win32':
+            from time import sleep
+            sleep(float(options.sleep))
+        else:
+            sys.stdout.flush()
+            os.system('sleep %s' % options.sleep)
+        print("time expired, starting script.")
 
     # Run the template.
     for host in hosts:
@@ -483,7 +487,7 @@ Instructs Exscript to overwrite existing logfiles. The default
 is to append the output if a log already exists.
 '''.strip())
 
-protocols = protocol_map.keys()
+protocols = list(protocol_map.keys())
 protocols.sort()
 parser.add_option('--protocol', '-p',
                   dest    = 'protocol',

@@ -55,6 +55,8 @@ def _prepare_connection(func):
     A decorator that unpacks the host and connection from the job argument
     and passes them as separate arguments to the wrapped function.
     """
+    from functools import wraps
+    @wraps(func)
     def _wrapped(job, *args, **kwargs):
         job_id    = id(job)
         to_parent = job.data['pipe']
@@ -157,7 +159,7 @@ class _PipeHandler(threading.Thread):
                 _call_logger('log_succeeded', *arg)
             else:
                 raise Exception('invalid command on pipe: ' + repr(command))
-        except Exception, e:
+        except Exception as e:
             self.to_child.send(e)
             raise
 
@@ -501,7 +503,7 @@ class Queue(object):
         """
         self._dbg(2, 'Waiting for the queue to finish.')
         self.workqueue.wait_until_done()
-        for child in self.pipe_handlers.values():
+        for child in list(self.pipe_handlers.values()):
             child.join()
         self._del_status_bar()
         self._print_status_bar()

@@ -29,6 +29,11 @@ def _redirect_output(filename):
     os.dup2(err_log.fileno(), sys.stderr.fileno())
     os.dup2(dev_null.fileno(), sys.stdin.fileno())
 
+def _fork_exit(): # UNIX only
+    pid = os.fork()
+    if pid > 0:
+        sys.exit(0)
+
 def daemonize():
     """
     Forks and daemonizes the current process. Does not automatically track
@@ -37,22 +42,24 @@ def daemonize():
     sys.stdout.flush()
     sys.stderr.flush()
 
-    # UNIX double-fork magic. We need to fork before any threads are
-    # created.
-    pid = os.fork()
-    if pid > 0:
-        # Exit first parent.
+    if sys.platform == 'win32': # borrowed from http.server module
+        import subprocess
+        interp = sys.executable
+        if interp.lower().endswith("w.exe"): # On Windows, use python.exe
+            interp = interp[:-5] + interp[-4:]
+        cmdline = [interp, '-u'] + sys.argv[1:] # ToDo: handle this flag to use files for logging and error reporting.
+        p = subprocess.Popen(cmdline,
+                             stdin=subprocess.DEVNULL,
+                             stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL,
+                             creationflags=subprocess.CREATE_NEW_CONSOLE,
+                             close_fds=True, shell=False, env=env)
         sys.exit(0)
+    else: # UNIX double-fork magic. We need to fork before any threads are created.
+        _fork_exit() # Exit first parent.
+        os.chdir('/')
+        os.setsid()  # Decouple from parent environment.
+        os.umask(0)
+        _fork_exit() # Now fork again to exit second parent.
+        _redirect_output(os.devnull)
 
-    # Decouple from parent environment.
-    os.chdir('/')
-    os.setsid()
-    os.umask(0)
-
-    # Now fork again.
-    pid = os.fork()
-    if pid > 0:
-        # Exit second parent.
-        sys.exit(0)
-
-    _redirect_output(os.devnull)

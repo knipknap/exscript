@@ -42,7 +42,7 @@ class Fail(Token):
         return 1
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         self.msg.dump(indent + 1)
         self.expression.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.'
+        print((' ' * indent) + self.name, 'end.')

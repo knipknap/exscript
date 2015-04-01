@@ -18,7 +18,7 @@ Tools for interacting with the user on the command line.
 import os
 import sys
 import getpass
-import ConfigParser
+import configparser
 import shutil
 from tempfile           import NamedTemporaryFile
 from Exscript           import Account
@@ -54,7 +54,7 @@ class InputHistory(object):
         @param section: The section in the configfile.
         """
         self.section = section
-        self.parser  = ConfigParser.RawConfigParser()
+        self.parser  = configparser.RawConfigParser()
         filename     = os.path.expanduser(filename)
 
         try:
@@ -85,7 +85,7 @@ class InputHistory(object):
             return default
         try:
             return self.parser.get(self.section, key)
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             return default
 
     def set(self, key, value):
@@ -183,16 +183,16 @@ def prompt(key,
     default = history.get(key, str(default))
     while True:
         if default is None:
-            value = raw_input('%s: ' % message)
+            value = input('%s: ' % message)
         else:
-            value = raw_input('%s [%s]: ' % (message, default)) or default
+            value = input('%s [%s]: ' % (message, default)) or default
         if strip:
             value = value.strip()
         if not check:
             break
         errors = check(value)
         if errors:
-            print '\n'.join(to_list(errors))
+            print('\n'.join(to_list(errors)))
         else:
             break
     history.set(key, value)
@@ -232,9 +232,9 @@ def get_user():
     except KeyError:
         env_user = ''
     if env_user is None or env_user == '':
-        user = raw_input('Please enter your user name: ')
+        user = input('Please enter your user name: ')
     else:
-        user = raw_input('Please enter your user name [%s]: ' % env_user)
+        user = input('Please enter your user name [%s]: ' % env_user)
         if user == '':
             user = env_user
     return user

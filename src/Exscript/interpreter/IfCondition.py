@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Code
+import Exscript.interpreter.Code
 from Exscript.parselib               import Token
 from Exscript.interpreter.Expression import Expression
 
@@ -27,7 +27,7 @@ class IfCondition(Token):
         self.mark_end()
 
         # Body of the if block.
-        self.if_block    = Code.Code(lexer, parser, parent)
+        self.if_block    = Exscript.interpreter.Code.Code(lexer, parser, parent)
         self.elif_blocks = []
         self.else_block  = None
 
@@ -44,7 +44,7 @@ class IfCondition(Token):
             return
 
         # There was no "elif", so we handle a normal "else" condition here.
-        self.else_block = Code.Code(lexer, parser, parent)
+        self.else_block = Exscript.interpreter.Code.Code(lexer, parser, parent)
 
     def value(self, context):
         if self.expression.value(context)[0]:
@@ -55,9 +55,9 @@ class IfCondition(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         self.expression.dump(indent + 1)
         self.if_block.dump(indent + 1)
         if self.else_block is not None:
             self.else_block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.'
+        print((' ' * indent) + self.name, 'end.')

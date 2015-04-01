@@ -60,4 +60,4 @@ class Execute(String):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.string
+        print((' ' * indent) + self.name, self.string)

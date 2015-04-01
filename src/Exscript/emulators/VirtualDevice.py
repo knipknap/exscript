@@ -24,11 +24,11 @@ class VirtualDevice(object):
     LOGIN_TYPE_PASSWORDONLY, \
     LOGIN_TYPE_USERONLY, \
     LOGIN_TYPE_BOTH, \
-    LOGIN_TYPE_NONE = range(1, 5)
+    LOGIN_TYPE_NONE = list(range(1, 5))
 
     PROMPT_STAGE_USERNAME, \
     PROMPT_STAGE_PASSWORD, \
-    PROMPT_STAGE_CUSTOM = range(1, 4)
+    PROMPT_STAGE_CUSTOM = list(range(1, 4))
 
     def __init__(self,
                  hostname,

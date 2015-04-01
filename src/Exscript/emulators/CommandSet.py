@@ -67,7 +67,7 @@ class CommandSet(object):
                each of the handlers in the file.
         """
         args = {}
-        execfile(filename, args)
+        exec(compile(open(filename).read(), filename, 'exec'), args)
         commands = args.get('commands')
         if commands is None:
             raise Exception(filename + ' has no variable named "commands"')

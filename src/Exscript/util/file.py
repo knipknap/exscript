@@ -214,4 +214,4 @@ def load_lib(filename):
     name = os.path.splitext(os.path.basename(filename))[0]
     module = imp.load_source(name, filename)
 
-    return dict((name + '.' + k, v) for (k, v) in module.__lib__.iteritems())
+    return dict((name + '.' + k, v) for (k, v) in list(module.__lib__.items()))

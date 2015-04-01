@@ -17,12 +17,12 @@ A threaded HTTP server with support for HTTP/Digest authentication.
 """
 import sys
 import time
-import urllib
-from urlparse import urlparse
+import urllib.request, urllib.parse, urllib.error
+from urllib.parse import urlparse
 from traceback import format_exc
-from BaseHTTPServer import BaseHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
-from SocketServer import ThreadingMixIn
+from http.server import BaseHTTPRequestHandler
+from http.server import HTTPServer
+from socketserver import ThreadingMixIn
 
 if sys.version_info < (2, 5):
     import md5
@@ -36,13 +36,13 @@ else:
 if sys.version_info < (2, 6):
     from cgi import parse_qs
 else:
-    from urlparse import parse_qs
+    from urllib.parse import parse_qs
 
 # Selective imports only for urllib2 because 2to3 will not replace the
 # urllib2.<method> calls below. Also, 2to3 will throw an error if we
 # try to do a from _ import _.
 if sys.version_info[0] < 3:
-    import urllib2
+    import urllib.request, urllib.error, urllib.parse
     parse_http_list = urllib2.parse_http_list
     parse_keqv_list = urllib2.parse_keqv_list
 else:
@@ -52,7 +52,7 @@ default_realm = 'exscript'
 
 # This is convoluted because there's no way to tell 2to3 to insert a
 # byte literal.
-_HEADER_NEWLINES = [x.encode('ascii') for x in (u'\r\n', u'\n', u'')]
+_HEADER_NEWLINES = [b'\r\n', b'\n', b'']
 
 def _parse_url(path):
     """Given a urlencoded path, returns the path and the dictionary of
@@ -61,9 +61,9 @@ def _parse_url(path):
     # path changes from bytes to Unicode in going from Python 2 to
     # Python 3.
     if sys.version_info[0] < 3:
-        o = urlparse(urllib.unquote_plus(path).decode('utf8'))
+        o = urlparse(urllib.parse.unquote_plus(path).decode('utf8'))
     else:
-        o = urlparse(urllib.unquote_plus(path))
+        o = urlparse(urllib.parse.unquote_plus(path))
 
     path = o.path
     args = {}
@@ -72,7 +72,7 @@ def _parse_url(path):
     # dictionary since we never use multi-value GET arguments
     # anyway.
     multiargs = parse_qs(o.query, keep_blank_values=True)
-    for arg, value in multiargs.items():
+    for arg, value in list(multiargs.items()):
         args[arg] = value[0]
 
     return path, args
@@ -80,7 +80,7 @@ def _parse_url(path):
 def _error_401(handler, msg):
     handler.send_response(401)
     realm = handler.server.realm
-    nonce = (u"%d:%s" % (time.time(), realm)).encode('utf8')
+    nonce = ("%d:%s" % (time.time(), realm)).encode('utf8')
     handler.send_header('WWW-Authenticate',
                         'Digest realm="%s",'
                         'qop="auth",'
@@ -101,9 +101,9 @@ def _require_authenticate(func):
         if self.authenticated:
             return func(self)
 
-        auth = self.headers.get(u'Authorization')
+        auth = self.headers.get('Authorization')
         if auth is None:
-            msg = u"You are not allowed to access this page. Please login first!"
+            msg = "You are not allowed to access this page. Please login first!"
             return _error_401(self, msg)
 
         token, fields = auth.split(' ', 1)
@@ -113,7 +113,7 @@ def _require_authenticate(func):
         # Check the header fields of the request.
         cred = parse_http_list(fields)
         cred = parse_keqv_list(cred)
-        keys = u'realm', u'username', u'nonce', u'uri', u'response'
+        keys = 'realm', 'username', 'nonce', 'uri', 'response'
         if not all(cred.get(key) for key in keys):
             return _error_401(self, 'Incomplete authentication header')
         if cred['realm'] != self.server.realm:
@@ -128,7 +128,7 @@ def _require_authenticate(func):
             return _error_401(self, 'Invalid username or password')
 
         # Check the digest string.
-        location = u'%s:%s' % (self.command, self.path)
+        location = '%s:%s' % (self.command, self.path)
         location = md5hex(location.encode('utf8'))
         pwhash   = md5hex('%s:%s:%s' % (username, self.server.realm, password))
 
@@ -141,7 +141,7 @@ def _require_authenticate(func):
         else:
             info = cred['nonce'], location
 
-        expect = u'%s:%s' % (pwhash, ':'.join(info))
+        expect = '%s:%s' % (pwhash, ':'.join(info))
         expect = md5hex(expect.encode('utf8'))
         if expect != cred['response']:
             return _error_401(self, 'Invalid username or password')
@@ -225,9 +225,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         self.path, self.args = _parse_url(self.path)
 
-        # Extract POST data, if any. Clumsy syntax due to Python 2 and
-        # 2to3's lack of a byte literal.
-        self.data = u"".encode()
+        self.data = b""
         length = self.headers.get('Content-Length')
         if length and length.isdigit():
             self.data = self.rfile.read(int(length))
@@ -269,7 +267,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
         self.send_response(404)
         self.end_headers()
-        self.wfile.write('not found'.encode('utf8'))
+        self.wfile.write(b'not found')
 
     def handle_GET(self):
         """
@@ -278,7 +276,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
         self.send_response(404)
         self.end_headers()
-        self.wfile.write('not found'.encode('utf8'))
+        self.wfile.write(b'not found')
 
     def send_response(self, code):
         """
@@ -291,8 +289,8 @@ if __name__ == '__main__':
     try:
         server = HTTPd(('', 8123), RequestHandler)
         server.add_account('test', 'fo')
-        print 'started httpserver...'
+        print('started httpserver...')
         server.serve_forever()
     except KeyboardInterrupt:
-        print '^C received, shutting down server'
+        print('^C received, shutting down server')
         server.socket.close()

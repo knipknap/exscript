@@ -317,19 +317,19 @@ class Protocol(object):
     def _receive_cb(self, data, remove_cr = True):
         # Clean the data up.
         if remove_cr:
-            text = data.replace('\r', '')
+            text = data.replace(b'\r', b'')
         else:
             text = data
 
         # Write to a logfile.
-        self.stdout.write(text)
+        self.stdout.write(text.decode('utf-8'))
         self.stdout.flush()
         if self.log is not None:
-            self.log.write(text)
+            self.log.write(text.decode('utf-8'))
 
         # Check whether a better driver is found based on the incoming data.
         old_driver = self.get_driver()
-        self.os_guesser.data_received(data, self.is_app_authenticated())
+        self.os_guesser.data_received(data.decode('utf-8'), self.is_app_authenticated())
         self.auto_driver = driver_map[self.guess_os()]
         new_driver       = self.get_driver()
         if old_driver != new_driver:
@@ -1063,7 +1063,7 @@ class Protocol(object):
 
     def _call_key_handlers(self, key_handlers, data):
         if key_handlers is not None:
-            for key, func in key_handlers.iteritems():
+            for key, func in list(key_handlers.items()):
                 if data == key:
                     func(self)
                     return True
@@ -1098,7 +1098,7 @@ class Protocol(object):
             while True:
                 try:
                     r, w, e = select.select([channel, stdin], [], [])
-                except select.error, e:
+                except OSError as e:
                     code, message = e
                     if code == errno.EINTR:
                         # This may happen when SIGWINCH is called
