@@ -6,3 +6,4 @@ config.xml
 build
 dist
 unit_test.cfg
+*.idea
