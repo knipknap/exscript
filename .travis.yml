@@ -9,5 +9,8 @@ python:
 install:
   - "pip install pycrypto"
   - "pip install 'paramiko<1.15'"
+  - "pip install coveralls"
 # command to run tests
-script: make tests
+script: cd tests/Exscript/; coverage run ./run_suite.py 1
+after_success:
+  coveralls
