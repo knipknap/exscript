@@ -1038,7 +1038,7 @@ class Protocol(object):
         incoming data.
 
         @note: If you want to catch all incoming data regardless of a
-        pattern, use the L{Protocol.on_data_received} event instead.
+        pattern, use the Protocol.data_received_event event instead.
 
         Arguments passed to the callback are the protocol instance, the
         index of the match, and the match object of the regular expression.

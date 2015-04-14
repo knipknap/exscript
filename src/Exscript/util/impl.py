@@ -23,7 +23,7 @@ from functools import wraps
 def add_label(obj, name, **kwargs):
     """
     Labels an object such that it can later be checked with
-    L{has_label()}.
+    L{get_label()}.
 
     @type  obj: object
     @param obj: The object that is labeled.
@@ -41,7 +41,7 @@ def add_label(obj, name, **kwargs):
 def get_label(obj, name):
     """
     Checks whether an object has the given label attached (see
-    L{mark_function()}) and returns the associated options.
+    L{add_label()}) and returns the associated options.
 
     @type  obj: object
     @param obj: The object to check for the label.
