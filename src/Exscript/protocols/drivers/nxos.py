@@ -38,7 +38,7 @@ class NXOSDriver(Driver):
 
     def check_head_for_os(self, string):
         if 'Cisco Nexus Operating System (NX-OS) Software' in string:
-            return 90
+            return 95
         return 0
 
     def init_terminal(self, conn):
