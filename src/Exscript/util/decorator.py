@@ -78,6 +78,42 @@ def os_function_mapper(map):
         return func(job, host, conn, *args, **kwargs)
     return decorated
 
+def _decorate(flush = True, attempts = 1, only_authenticate = False):
+    """
+    Wraps the given function such that conn.login() or conn.authenticate() is
+    executed.
+    Doing the real work for autologin and autoauthenticate to minimize code
+    duplication.
+
+    @type  flush: bool
+    @param flush: Whether to flush the last prompt from the buffer.
+    @type  attempts: int
+    @param attempts: The number of login attempts if login fails.
+    @type only_authenticate: bool
+    @param only_authenticate: login or only authenticate (don't authorize)?
+    @rtype:  function
+    @return: The wrapped function.
+    """
+    def decorator(function):
+        def decorated(job, host, conn, *args, **kwargs):
+            failed = 0
+            while True:
+                try:
+                    if only_authenticate:
+                        conn.authenticate(flush = flush)
+                    else:
+                        conn.login(flush = flush)
+                except LoginFailure, e:
+                    failed += 1
+                    if failed >= attempts:
+                        raise
+                    continue
+                break
+            return function(job, host, conn, *args, **kwargs)
+        copy_labels(function, decorated)
+        return decorated
+    return decorator
+
 def autologin(flush = True, attempts = 1):
     """
     Wraps the given function such that conn.login() is executed
@@ -95,19 +131,23 @@ def autologin(flush = True, attempts = 1):
     @rtype:  function
     @return: The wrapped function.
     """
-    def decorator(function):
-        def decorated(job, host, conn, *args, **kwargs):
-            failed = 0
-            while True:
-                try:
-                    conn.login(flush = flush)
-                except LoginFailure, e:
-                    failed += 1
-                    if failed >= attempts:
-                        raise
-                    continue
-                break
-            return function(job, host, conn, *args, **kwargs)
-        copy_labels(function, decorated)
-        return decorated
-    return decorator
+    return _decorate(flush, attempts)
+
+def autoauthenticate(flush = True, attempts = 1):
+    """
+    Wraps the given function such that conn.authenticate() is executed
+    before calling it. Example::
+
+        @autoauthenticate(attempts = 2)
+        def my_func(job, host, conn):
+            pass # Do something.
+        Exscript.util.start.quickrun('myhost', my_func)
+
+    @type  flush: bool
+    @param flush: Whether to flush the last prompt from the buffer.
+    @type  attempts: int
+    @param attempts: The number of login attempts if login fails.
+    @rtype:  function
+    @return: The wrapped function.
+    """
+    return _decorate(flush, attempts, only_authenticate = True)

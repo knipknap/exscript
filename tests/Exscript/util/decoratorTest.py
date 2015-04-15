@@ -12,9 +12,11 @@ from multiprocessing import Value
 
 class FakeConnection(object):
     def __init__(self, os = None):
-        self.os   = os
-        self.data = {}
-        self.host = None
+        self.os            = os
+        self.data          = {}
+        self.host          = None
+        self.logged_in     = False
+        self.authenticated = False
 
     def connect(self, hostname, port):
         self.host = hostname
@@ -24,6 +26,10 @@ class FakeConnection(object):
 
     def login(self, flush = True):
         self.logged_in     = True
+        self.login_flushed = flush
+
+    def authenticate(self, flush = True):
+        self.authenticated = True
         self.login_flushed = flush
 
     def close(self, force):
@@ -104,6 +110,46 @@ class decoratorTest(unittest.TestCase):
         # Test retry functionality.
         decor = autologin(flush = False, attempts = 5)
         bound = decor(self.autologin_cb)
+        job   = FakeJob()
+        job.data['conn'] = conn
+        self.assertRaises(LoginFailure,
+                          bound,
+                          job,
+                          host,
+                          conn,
+                          'one',
+                          'two',
+                          three = 3)
+        self.assertEqual(data.value, 5)
+
+    def autoauthenticate_cb(self, job, host, conn, *args, **kwargs):
+        self.assertEqual(conn.authenticated, True)
+        self.assertEqual(conn.login_flushed, False)
+        return self.bind_cb(job, *args, **kwargs)
+
+    def testAutoauthenticate(self):
+        from Exscript.util.decorator import autoauthenticate
+        job  = FakeJob()
+        host = job.data['host']
+        conn = job.data['conn'] = FakeConnection()
+
+        # Test simple authentication.
+        decor  = autoauthenticate(flush = False)
+        bound  = decor(self.autoauthenticate_cb)
+        result = bound(job, host, conn, 'one', 'two', three = 3)
+        self.assertEqual(result, 123)
+
+        # Monkey patch the fake connection such that the login fails.
+        conn = FakeConnection()
+        data = Value('i', 0)
+        def fail(data, *args, **kwargs):
+            data.value += 1
+            raise LoginFailure('intended login failure')
+        conn.authenticate = partial(fail, data)
+
+        # Test retry functionality.
+        decor = autoauthenticate(flush = False, attempts = 5)
+        bound = decor(self.autoauthenticate_cb)
         job   = FakeJob()
         job.data['conn'] = conn
         self.assertRaises(LoginFailure,

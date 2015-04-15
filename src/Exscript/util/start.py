@@ -17,7 +17,7 @@ Quickstart methods for the Exscript queue.
 """
 from Exscript import Queue
 from Exscript.util.interact import read_login
-from Exscript.util.decorator import autologin
+from Exscript.util.decorator import autologin, autoauthenticate
 
 def run(users, hosts, func, **kwargs):
     """
@@ -64,7 +64,7 @@ def quickrun(hosts, func, **kwargs):
     """
     run(read_login(), hosts, func, **kwargs)
 
-def start(users, hosts, func, **kwargs):
+def start(users, hosts, func,  only_authenticate = False, **kwargs):
     """
     Like run(), but automatically logs into the host before passing
     the host to the callback function.
@@ -75,12 +75,17 @@ def start(users, hosts, func, **kwargs):
     @param hosts: A list of Host objects.
     @type  func: function
     @param func: The callback function.
+    @type  only_authenticate: bool
+    @param only_authenticate: don't authorize, just authenticate?
     @type  kwargs: dict
     @param kwargs: Passed to the Exscript.Queue constructor.
     """
-    run(users, hosts, autologin()(func), **kwargs)
+    if only_authenticate:
+        run(users, hosts, autoauthenticate()(func), **kwargs)
+    else:
+        run(users, hosts, autologin()(func), **kwargs)
 
-def quickstart(hosts, func, **kwargs):
+def quickstart(hosts, func, only_authenticate = False, **kwargs):
     """
     Like quickrun(), but automatically logs into the host before passing
     the connection to the callback function.
@@ -89,7 +94,12 @@ def quickstart(hosts, func, **kwargs):
     @param hosts: A list of Host objects.
     @type  func: function
     @param func: The callback function.
+    @type  only_authenticate: bool
+    @param only_authenticate: don't authorize, just authenticate?
     @type  kwargs: dict
     @param kwargs: Passed to the Exscript.Queue constructor.
     """
-    quickrun(hosts, autologin()(func), **kwargs)
+    if only_authenticate:
+        quickrun(hosts, autoauthenticate()(func), **kwargs)
+    else:
+        quickrun(hosts, autologin()(func), **kwargs)
