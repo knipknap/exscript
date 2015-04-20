@@ -30,7 +30,7 @@ class VxworksDriver(Driver):
         self.user_re     = _user_re
         self.password_re = _password_re
         self.prompt_re   = _prompt_re
-        self._error_re   = _error_re
+        self.error_re   = _error_re
 
     def auto_authorize(self, conn, account, flush, bailout):
         conn.send('enable\r\n')
