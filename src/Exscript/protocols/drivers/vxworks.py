@@ -22,7 +22,7 @@ _user_re     = [re.compile(r'user ?name:', re.I)]
 _password_re = [re.compile(r'(?:User )?Password:', re.I)]
 _prompt_re   = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$|(?:\(y/n\)\[n\])')]
 _error_re    = [re.compile(r'%Error'),
-                re.compile(r'(?:Unknown|ambiguous|Incomplete) command', re.I)]
+                re.compile(r'(?:(?:Unknown|ambiguous|Incomplete) command)|Failure', re.I)]
 
 class VxworksDriver(Driver):
     def __init__(self):
