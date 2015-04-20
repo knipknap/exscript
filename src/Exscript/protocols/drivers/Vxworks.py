@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-A driver for devices running huawei5600T (runs on DSLAMs).
+A driver for devices running Vxworks, which can be found on huawei5600T
 """
 import re
 from Exscript.protocols.drivers.driver import Driver
@@ -24,9 +24,9 @@ _prompt_re   = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re    = [re.compile(r'%Error'),
                 re.compile(r'(?:Unknown|ambiguous) command', re.I)]
 
-class Huawei5600TDriver(Driver):
+class VxworksDriver(Driver):
     def __init__(self):
-        Driver.__init__(self, 'Huawei5600T')
+        Driver.__init__(self, 'Vxworks')
         self.user_re     = _user_re
         self.password_re = _password_re
         self.prompt_re   = _prompt_re
