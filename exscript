@@ -177,6 +177,7 @@ def run():
     # Create Exscript.
     queue = Queue(domain      = options.default_domain,
                   mode        = 'multiprocessing',
+                  host_driver = options.use_driver,
                   verbose     = options.verbose,
                   max_threads = options.connections)
     default_pool = queue.account_manager.default_pool
@@ -400,6 +401,13 @@ parser.add_option('--load-driver',
                   metavar = 'FILE',
                   help    = '''
 A python file containing an Exscript driver class.
+'''.strip())
+
+parser.add_option('--use-driver',
+                  dest    = 'use_driver',
+                  default = None,
+                  help    = '''
+The name of an exscript driver to use for all connections (overriding os detection).
 '''.strip())
 
 parser.add_option('--execute', '-e',
