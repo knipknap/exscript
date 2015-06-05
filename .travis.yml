@@ -7,8 +7,7 @@ python:
 # - "3.4"
 # command to install dependencies
 install:
-  - "pip install pycrypto"
-  - "pip install 'paramiko<1.15'"
+  - "pip install -r requirements.txt"
   - "pip install coveralls"
 # command to run tests
 script: cd tests/Exscript/; coverage run ./run_suite.py 1
