@@ -1,0 +1,2 @@
+pycrypto
+paramiko<1.15

@@ -34,7 +34,7 @@ setup(name             = 'Exscript',
                           'exscriptd',
                           'exscriptd-config',
                           'exclaim'],
-      install_requires = ['paramiko'],
+      install_requires = ['paramiko<1.15', 'pycrypto'],
       extras_require   = {
                             'Exscriptd': ['sqlalchemy', 'lxml'],
                             'TkExscript': ['tkinter'],

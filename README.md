@@ -1,4 +1,5 @@
-= Exscript =
+Exscript
+========
 
 Exscript is a Python module and a template processor for automating network 
 connections over protocols such as Telnet or SSH. We attempt to create the 
@@ -18,12 +19,21 @@ but has some unique features that make it a lot easier to use and understand
 for non-developers.
 
 
-= Links =
+Links
+=====
 
 Mailing List: http://groups.google.com/group/exscript/
 
 
-= Dependencies =
+Dependencies
+============
 
-* Python 2.6 or greater
+* Python >=2.6 , <=2.7 (no Python 3 yet)
 * Python-crypto
+* Paramiko
+
+
+Installation
+============
+
+Simply follow the [installation guide](https://github.com/knipknap/exscript/wiki/Installation-Guide "Installation Guide").
