@@ -24,9 +24,14 @@ _prompt_re   = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$|(?:\(y/n\)\[
 _error_re    = [re.compile(r'%Error'),
                 re.compile(r'(?:(?:Unknown|ambiguous|Incomplete) command)|Failure|Parameter error', re.I)]
 
+_huawei_re = re.compile(r"Huawei Integrated Access Software", re.I)
+
+_banner_re = re.compile(r"User last login information", re.I)
+
+
 class VxworksDriver(Driver):
     def __init__(self):
-        Driver.__init__(self, 'Vxworks')
+        Driver.__init__(self, 'vxworks')
         self.user_re     = _user_re
         self.password_re = _password_re
         self.prompt_re   = _prompt_re
@@ -35,3 +40,13 @@ class VxworksDriver(Driver):
     def auto_authorize(self, conn, account, flush, bailout):
         conn.send('enable\r\n')
         conn.app_authorize(account, flush, bailout)
+
+    def check_head_for_os(self, string):
+        if _huawei_re.search(string):
+            return 90
+        return 0
+
+    def check_response_for_os(self, string):
+        if _banner_re.search(string):
+            return 90
+        return 0

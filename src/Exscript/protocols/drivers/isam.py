@@ -24,6 +24,7 @@ _prompt_re   = [re.compile(r'[\r\n][\- +\d+\w+\.]+(?:\([^\)]+\))?[>#] ?')]
 _error_re    = [re.compile(r'%Error'),
                 re.compile(r'invalid token', re.I),
                 re.compile(r"command is not complete")]
+_isam_re = re.compile(r"last login : \d{1,2}/\d{1,2}/\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}")
 
 class IsamDriver(Driver):
     def __init__(self):
@@ -34,7 +35,11 @@ class IsamDriver(Driver):
         self._error_re   = _error_re
 
     def check_response_for_os(self, string):
-        if
         if _prompt_re[0].search(string):
-            return 40
+            return 20
+        return 0
+
+    def check_head_for_os(self, string):
+        if _isam_re.search(string):
+            return 90
         return 0

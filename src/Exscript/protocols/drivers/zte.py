@@ -26,9 +26,12 @@ _prompt_re   = [re.compile(r'[\r\n][\-\w+\.\(\)]+(?:\([^\)]+\))?[>#$] ?$|(?:\(y/
 _error_re    = [re.compile(r'%Error'),
                 re.compile(r'(?:Unrecognized|Incomplete) command', re.I), re.compile(r'Invalid input', re.I)]
 
+_zte_re = re.compile(r"ZTE", re.I)
+
+
 class ZteDriver(Driver):
     def __init__(self):
-        Driver.__init__(self, 'ZteDriver')
+        Driver.__init__(self, 'zte')
         self.user_re     = _user_re
         self.password_re = _password_re
         self.prompt_re   = _prompt_re
@@ -37,3 +40,8 @@ class ZteDriver(Driver):
     def auto_authorize(self, conn, account, flush, bailout):
         conn.send('enable\r\n')
         conn.app_authorize(account, flush, bailout)
+
+    def check_head_for_os(self, string):
+        if _zte_re.search(string):
+            return 90
+        return 0
