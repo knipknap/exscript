@@ -8,9 +8,9 @@ sys.path.insert(0, exscript_dir)
 from version import __version__
 
 # Import the project description from the README.
-readme = open('README').read()
+readme = open('README.md').read()
 start  = readme.index('\n\n')
-end    = readme.index('\n\n=')
+end    = readme.index('\n\nLinks')
 descr  = readme[start:end].strip()
 
 # Run the setup.
