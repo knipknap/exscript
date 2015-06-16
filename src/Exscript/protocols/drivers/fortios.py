@@ -23,8 +23,8 @@ from Exscript.protocols.drivers.driver import Driver
 _user_re = [re.compile(r'[\r\n]Username: $')]
 _password_re = [re.compile(r'[\r\n]Password: $')]
 _prompt_re = [
-    re.compile(r'^[a-zA-Z0-9-_ .]+ # $'),  # first prompt
-    re.compile(r'[\r\n][a-zA-Z0-9-_ .]+ (?:\([A-Za-z0-9_/.-]+\) )?# $')
+    re.compile(r'^[a-zA-Z0-9-_ .]+ (?:\$|#) $'),  # first prompt
+    re.compile(r'[\r\n][a-zA-Z0-9-_ .]+ (?:\([A-Za-z0-9_/.-]+\) )?(?:\$|#) $')
 ]
 _fortios_re = [
     _prompt_re[0],  # first prompt
