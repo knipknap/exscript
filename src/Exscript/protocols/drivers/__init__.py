@@ -10,6 +10,7 @@ from Exscript.protocols.drivers.hp_pro_curve import HPProCurveDriver
 from Exscript.protocols.drivers.ios import IOSDriver
 from Exscript.protocols.drivers.nxos import NXOSDriver
 from Exscript.protocols.drivers.ios_xr import IOSXRDriver
+from Exscript.protocols.drivers.ace import ACEDriver
 from Exscript.protocols.drivers.junos import JunOSDriver
 from Exscript.protocols.drivers.junos_erx import JunOSERXDriver
 from Exscript.protocols.drivers.one_os import OneOSDriver
