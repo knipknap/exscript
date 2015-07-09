@@ -20,6 +20,7 @@ from Exscript.protocols.drivers.sros import SROSDriver
 from Exscript.protocols.drivers.aruba import ArubaDriver
 from Exscript.protocols.drivers.enterasys_wc import EnterasysWCDriver
 from Exscript.protocols.drivers.fortios import FortiOSDriver
+from Exscript.protocols.drivers.bigip import BigIPDriver
 
 driver_classes = []
 drivers        = []
