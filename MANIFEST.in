@@ -1,1 +1,2 @@
 include src/Exscriptd/config/*.in
+include README.md
