@@ -1,2 +1,2 @@
 pycrypto
-paramiko<1.15
+paramiko

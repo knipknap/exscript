@@ -157,4 +157,6 @@ class SSHd(Server):
             response = self.device.do(line)
             if response:
                 self.channel.send(response)
+        # closing transport closes channel
+        self.channel = None
         t.close()
