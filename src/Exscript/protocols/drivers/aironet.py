@@ -38,7 +38,7 @@ class AironetDriver(Driver):
         elif '(WiSM-slot' in string:
             return 90
         elif ') >' in string:
-            return 90
+            return 87
         return 0
 
     def init_terminal(self, conn):
