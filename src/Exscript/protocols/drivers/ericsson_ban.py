@@ -20,7 +20,7 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'user:', re.I)]
 _password_re = [re.compile(r'pass:', re.I)]
-_prompt_re   = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?% ?$|(?:\(y/n\)\[n\])')]
+_prompt_re   = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[%#] ?$|(?:\(y/n\)\[n\])')]
 _error_re    = [re.compile(r'\(error\)')]
 
 _ban_re = re.compile(r"BLM\d+ - Broadband Loop Multiplexer", re.I)
