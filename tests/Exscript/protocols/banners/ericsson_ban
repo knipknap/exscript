@@ -1,0 +1,23 @@
+BLM1500 - Broadband Loop Multiplexer
+Copyright 2001-2012 Ericsson Inc.
+Fabric & Control Processor (ttyp0)
+
+
+
+GJDIR-G02E-T-EG (BLZDS011112) booted Thu Jun 26 08:49:43 EEST 2014, up for 9149:44:25
+
+
+user: myuser
+pass:
+
+Notice: This is a private computer system.
+Unauthorized access or use may lead to prosecution.
+--------------------------------------------------------------------------------
+Last login              | Sun Jan 15 13:26:50 EEST 2015 (0 days 00:07:24 ago)
+Last login From         | CLI-10.10.10.24
+Failed login attempts   | 0
+Failures due to lockout | 0
+Last failed attempt     | Sun Jun 15 12:23:04 EEST 2015 (0 days 00:07:33 ago)
+Last failure from       | CLI-10.10.10.24
+Password expires        | NEVER
+--------------------------------------------------------------------------------

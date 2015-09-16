@@ -22,6 +22,10 @@ from Exscript.protocols.drivers.aruba import ArubaDriver
 from Exscript.protocols.drivers.enterasys_wc import EnterasysWCDriver
 from Exscript.protocols.drivers.fortios import FortiOSDriver
 from Exscript.protocols.drivers.bigip import BigIPDriver
+from Exscript.protocols.drivers.isam import IsamDriver
+from Exscript.protocols.drivers.zte import ZteDriver
+from Exscript.protocols.drivers.vxworks import VxworksDriver
+from Exscript.protocols.drivers.ericsson_ban import EricssonBanDriver
 
 driver_classes = []
 drivers        = []
