@@ -20,7 +20,7 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'User:\s$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
-_prompt_re   = [re.compile(r'[\r\n].(?:(?:Cisco\sController)|(?:WiSM\S+?)).\s>$')]
+_prompt_re   = [re.compile(r'[\r\n].(?:(?:Cisco\sController)|(?:WiSM\S+?)|(?:\(.+\))).\s>$')]
 _error_re    = [re.compile(r'Incorrect\susage', re.I),
                 re.compile(r'Incorrect\sinput', re.I),
                 re.compile(r'connection timed out', re.I),
@@ -37,6 +37,8 @@ class AironetDriver(Driver):
             return 90
         elif '(WiSM-slot' in string:
             return 90
+        elif ') >' in string:
+            return 87
         return 0
 
     def init_terminal(self, conn):
