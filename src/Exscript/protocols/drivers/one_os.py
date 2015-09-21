@@ -18,8 +18,8 @@ A driver for OneOS (OneAccess).
 import re
 from Exscript.protocols.drivers.driver import Driver
 
-_user_re         = [re.compile(r'[\r\n]Username:$')]
-_password_re     = [re.compile(r'[\r\n]Password:$')]
+_user_re         = [re.compile(r'[\r\n]Username: ?$')]
+_password_re     = [re.compile(r'[\r\n]Password: ?$')]
 _first_prompt_re = re.compile(r'\r?\n\r?\n[\-\w+\.]+[>#]$')
 _prompt_re       = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
 
