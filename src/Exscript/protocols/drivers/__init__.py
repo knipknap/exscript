@@ -13,6 +13,7 @@ from Exscript.protocols.drivers.ios_xr import IOSXRDriver
 from Exscript.protocols.drivers.ace import ACEDriver
 from Exscript.protocols.drivers.junos import JunOSDriver
 from Exscript.protocols.drivers.junos_erx import JunOSERXDriver
+from Exscript.protocols.drivers.mrv import MRVDriver
 from Exscript.protocols.drivers.one_os import OneOSDriver
 from Exscript.protocols.drivers.shell import ShellDriver
 from Exscript.protocols.drivers.smart_edge_os import SmartEdgeOSDriver
