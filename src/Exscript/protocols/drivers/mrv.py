@@ -20,18 +20,20 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'[\r\n]Authorized Login: $')]
 _password_re = [re.compile(r'[\r\n]Password: $')]
-_aix_re      = re.compile(r'\bMRV\b')
+_mrv_re      = re.compile(r'\bMRV\b')
+_prompt_re   = [re.compile(r'[\r\n][^$]+\$ ?$')]
 
 class MRVDriver(Driver):
     def __init__(self):
         Driver.__init__(self, 'mrv')
         self.user_re     = _user_re
         self.password_re = _password_re
+        self.prompt_re = _prompt_re
 
     def check_head_for_os(self, string):
         if _user_re[0].search(string):
             return 20
-        if _aix_re.search(string):
+        if _mrv_re.search(string):
             return 75
         return 0
 
