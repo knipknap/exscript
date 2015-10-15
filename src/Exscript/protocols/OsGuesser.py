@@ -34,8 +34,9 @@ class OsGuesser(object):
         self.auth_buffer = ''
         self.set('os', 'unknown', 0)
 
-    def reset(self):
+    def reset(self, auth_buffer=''):
         self.__init__()
+        self.auth_buffer = auth_buffer
 
     def set(self, key, value, confidence = 100):
         """
