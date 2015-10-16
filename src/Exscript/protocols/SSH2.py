@@ -312,7 +312,7 @@ class SSH2(Protocol):
 
     def _domatch(self, prompt, flush):
         self._dbg(1, "Expecting a prompt")
-        self._dbg(2, "Expected pattern: " + repr(p.pattern for p in prompt))
+        self._dbg(2, "Expected pattern: " + repr([repr(p.pattern) for p in prompt]))
         search_window_size = 150
         while not self.cancel:
             # Check whether what's buffered matches the prompt.
@@ -331,9 +331,10 @@ class SSH2(Protocol):
                     raise ProtocolException(error)
                 continue
 
-            end = self.buffer.size() - len(search_window) + match.end()
+            end = self.buffer.size() - len(search_window) + match.start()
             if flush:
                 self.response = self.buffer.pop(end)
+                self.buffer.pop(match.end()-match.start())
             else:
                 self.response = self.buffer.head(end)
             return n, match
