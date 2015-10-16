@@ -21,7 +21,7 @@ from Exscript.protocols.drivers.driver import Driver
 _user_re     = [re.compile(r'[\r\n]Authorized Login: $')]
 _password_re = [re.compile(r'[\r\n]Password: $')]
 _mrv_re      = re.compile(r'\bMRV\b')
-_prompt_re   = [re.compile(r'[\r\n][^$]+\$ ?$')]
+_prompt_re   = [re.compile(r'[\r\n]+[^$\r\n]+\$ ?$')]
 
 class MRVDriver(Driver):
     def __init__(self):
