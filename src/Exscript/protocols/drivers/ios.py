@@ -53,7 +53,7 @@ class IOSDriver(Driver):
             conn.execute('term len 0')
             conn.execute('term width 0')
         except InvalidCommandException:
-            # Deal with croner cases liek the Cisco ASA
+            # Deal with corner cases like the Cisco ASA
             conn.execute('term pager 0')
 
     def auto_authorize(self, conn, account, flush, bailout):
