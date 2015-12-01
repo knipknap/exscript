@@ -17,6 +17,8 @@ A driver for Cisco IOS (not IOS XR).
 """
 import re
 from Exscript.protocols.drivers.driver import Driver
+from Exscript.protocols.Exception import InvalidCommandException
+
 
 _user_re     = [re.compile(r'user ?name: ?$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
@@ -46,8 +48,13 @@ class IOSDriver(Driver):
         return 0
 
     def init_terminal(self, conn):
-        conn.execute('term len 0')
-        conn.execute('term width 0')
+        # Try the standard term len/width ios commands
+        try:
+            conn.execute('term len 0')
+            conn.execute('term width 0')
+        except InvalidCommandException:
+            # Deal with croner cases liek the Cisco ASA
+            conn.execute('term pager 0')
 
     def auto_authorize(self, conn, account, flush, bailout):
         conn.send('enable\r')
