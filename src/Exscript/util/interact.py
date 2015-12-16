@@ -221,12 +221,14 @@ def get_filename(key, message, default = None, history = None):
             return 'File not found. Please enter a filename.'
     return prompt(key, message, default, True, _validate, history)
 
-def get_user():
+def get_user(prompt=None):
     """
     Prompts the user for his login name, defaulting to the USER environment
     variable. Returns a string containing the username.
     May throw an exception if EOF is given by the user.
 
+    @type  prompt: str|None
+    @param prompt: The user prompt or the default one if None.
     @rtype:  string
     @return: A username.
     """
@@ -235,10 +237,12 @@ def get_user():
         env_user = getpass.getuser()
     except KeyError:
         env_user = ''
+    if prompt is None:
+        prompt = "Please enter your user name"
     if env_user is None or env_user == '':
-        user = raw_input('Please enter your user name: ')
+        user = raw_input('%s: ' % prompt)
     else:
-        user = raw_input('Please enter your user name [%s]: ' % env_user)
+        user = raw_input('%s [%s]: ' % (prompt, env_user))
         if user == '':
             user = env_user
     return user
