@@ -26,6 +26,7 @@ from Exscript.protocols.drivers.isam import IsamDriver
 from Exscript.protocols.drivers.zte import ZteDriver
 from Exscript.protocols.drivers.vxworks import VxworksDriver
 from Exscript.protocols.drivers.ericsson_ban import EricssonBanDriver
+from Exscript.protocols.drivers.extremexos import ExtremeDriver
 
 driver_classes = []
 drivers        = []

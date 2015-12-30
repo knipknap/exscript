@@ -19,7 +19,7 @@ class ExtremeDriver(Driver):
 
     def check_head_for_os(self, string):
         if _extremexos_re.search(string):
-            return 20
+            return 80
         return 0
     def init_terminal(self,conn):
 	conn.execute('disable clipaging\r')
