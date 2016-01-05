@@ -6,6 +6,7 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re      = [re.compile(r'[\n]login: $')]
 _password_re  = [re.compile(r'[\r]password: $')]
+_prompt_re    = [re.compile(r'[\r\n][*a-zA-Z0-9-_ .]+# $|((y\/N))')]
 _prompt_re    = [re.compile(r'[\r\n][a-zA-Z0-9-_ .]+# $')]
 _extremexos_re = re.compile(r'\r\n\r\r\n\rExtremeXOS\r\nCopyright', re.I)
 
