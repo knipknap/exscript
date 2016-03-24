@@ -2,6 +2,7 @@ import sys, unittest, re, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from Exscript.protocols.OsGuesser import OsGuesser
+import Exscript.protocols.drivers as drivers
 
 class OsGuesserTest(unittest.TestCase):
     CORRELATE = OsGuesser
@@ -63,6 +64,8 @@ class OsGuesserTest(unittest.TestCase):
             if file.startswith('.'):
                 continue
             osname = file.split('.')[0]
+            if not drivers.driver_map[osname].supports_os_guesser():
+                continue
             file   = os.path.join(banner_dir, file)
             banner = open(file).read().rstrip('\n')
             osg    = OsGuesser()
