@@ -33,11 +33,6 @@ class RIOSDriver(Driver):
         self.prompt_re   = _prompt_re
         self.error_re    = _error_re
 
-    def check_head_for_os(self, string):
-        if _prompt_re[0].search(string):
-            return 90
-        return 0
-
     def init_terminal(self, conn):
         conn.execute('term len 0')
         conn.execute('enable')
