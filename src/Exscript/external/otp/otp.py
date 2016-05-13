@@ -25,7 +25,7 @@ except ImportError:
 from .AppendixB import DefaultDictionary
 from .keywrangling import keyformat, convertkey
 
-_VALIDSEEDCHARACTERS = string.letters + string.digits
+_VALIDSEEDCHARACTERS = string.ascii_letters + string.digits
 
 _HASHMODULE = { 'md4': MD4, 'md5' : MD5, 'sha' : SHA }
 
