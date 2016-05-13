@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -43,5 +44,5 @@ class Append(Token):
         return 1
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, "to", self.varname
+        print((' ' * indent) + self.name, "to", self.varname)
         self.expr.dump(indent + 1)

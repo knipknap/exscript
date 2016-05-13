@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -20,4 +21,4 @@ class Number(object):
         return [self.number]
 
     def dump(self, indent = 0):
-        print (' ' * indent) + 'Number', self.number
+        print((' ' * indent) + 'Number', self.number)

@@ -15,6 +15,7 @@
 """
 A class for catching SIGINT, such that CTRL+c works.
 """
+from __future__ import print_function
 import os
 import sys
 import signal
@@ -55,7 +56,7 @@ class SigIntWatcher(object):
         try:
             pid, status = os.wait()
         except KeyboardInterrupt:
-            print '********** SIGINT RECEIVED - SHUTTING DOWN! **********'
+            print('********** SIGINT RECEIVED - SHUTTING DOWN! **********')
             self.kill()
             sys.exit(1)
         sys.exit(status >> 8)

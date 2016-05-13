@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -12,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Code
+from . import Code
 from Exscript.parselib               import Token
 from Exscript.interpreter.Expression import Expression
 
@@ -55,9 +57,9 @@ class IfCondition(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         self.expression.dump(indent + 1)
         self.if_block.dump(indent + 1)
         if self.else_block is not None:
             self.else_block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.'
+        print((' ' * indent) + self.name, 'end.')

@@ -15,6 +15,7 @@
 """
 Tools for interacting with the user on the command line.
 """
+from __future__ import print_function
 import os
 import sys
 import getpass
@@ -196,7 +197,7 @@ def prompt(key,
             break
         errors = check(value)
         if errors:
-            print '\n'.join(to_list(errors))
+            print('\n'.join(to_list(errors)))
         else:
             break
     history.set(key, value)

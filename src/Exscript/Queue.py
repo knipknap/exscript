@@ -157,7 +157,7 @@ class _PipeHandler(threading.Thread):
                 _call_logger('log_succeeded', *arg)
             else:
                 raise Exception('invalid command on pipe: ' + repr(command))
-        except Exception, e:
+        except Exception as e:
             self.to_child.send(e)
             raise
 

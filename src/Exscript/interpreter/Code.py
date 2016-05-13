@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -13,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import re
-import Template
+from . import Template
 from Exscript.interpreter.Scope        import Scope
 from Exscript.interpreter.Append       import Append
 from Exscript.interpreter.Assign       import Assign

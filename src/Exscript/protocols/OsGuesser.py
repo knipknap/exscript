@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -99,6 +100,6 @@ class OsGuesser(object):
         # Else, check the head that we collected so far.
         self.auth_buffer += data
         if self.debug:
-            print "DEBUG: Matching buffer:", repr(self.auth_buffer)
+            print("DEBUG: Matching buffer:", repr(self.auth_buffer))
         self.set_from_match('os', self.auth_os_map, self.auth_buffer)
         self.set_from_match('os', self.os_map,      self.auth_buffer)

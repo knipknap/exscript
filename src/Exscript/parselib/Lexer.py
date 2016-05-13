@@ -117,7 +117,7 @@ class Lexer(object):
     def next_if(self, types, token = None):
         if token is not None:
             if self.current_is(types, token):
-                self.next()
+                next(self)
                 return 1
             return 0
 
@@ -125,7 +125,7 @@ class Lexer(object):
             types = [types]
         for t in types:
             if self.current_is(t, token):
-                self.next()
+                next(self)
                 return 1
         return 0
 

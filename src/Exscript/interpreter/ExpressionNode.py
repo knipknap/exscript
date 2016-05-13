@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -12,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Term
+from . import Term
 from Exscript.parselib import Token
 
 class ExpressionNode(Token):
@@ -165,10 +167,10 @@ class ExpressionNode(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.op, 'start'
+        print((' ' * indent) + self.name, self.op, 'start')
         if self.lft is not None:
             self.lft.dump(indent + 1)
-        print (' ' * (indent + 1)) + 'Operator', self.op
+        print((' ' * (indent + 1)) + 'Operator', self.op)
         if self.rgt is not None:
             self.rgt.dump(indent + 1)
-        print (' ' * indent) + self.name, self.op, 'end.'
+        print((' ' * indent) + self.name, self.op, 'end.')
