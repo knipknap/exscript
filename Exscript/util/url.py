@@ -23,9 +23,15 @@
 """
 Working with URLs (as used in URL formatted hostnames).
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import chr
+from builtins import range
+from builtins import object
 import re
-from urllib import urlencode, quote
-from urlparse import urlparse, urlsplit
+from urllib.parse import urlencode, quote
+from urllib.parse import urlparse, urlsplit
 from collections import defaultdict
 
 
@@ -65,7 +71,7 @@ def _unquote(string):
         except KeyError:
             result[i] = '%' + item
         except UnicodeDecodeError:
-            result[i] = unichr(int(item[:2], 16)) + item[2:]
+            result[i] = chr(int(item[:2], 16)) + item[2:]
     return ''.join(result)
 
 
@@ -153,7 +159,7 @@ class Url(object):
 
         if self.vars:
             pairs = []
-            for key, values in self.vars.iteritems():
+            for key, values in self.vars.items():
                 for value in values:
                     pairs.append((key, value))
             url += '?' + urlencode(pairs)

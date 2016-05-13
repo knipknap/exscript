@@ -24,6 +24,7 @@
 Represents the logfiles for one specific action.
 """
 from __future__ import print_function
+from builtins import str
 import os
 import errno
 from Exscript.Log import Log

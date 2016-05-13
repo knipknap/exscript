@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from builtins import object
 import copy
 from Exscript.parselib import Lexer
 from Exscript.interpreter.Program import Program
@@ -35,7 +36,7 @@ class Parser(object):
         self.variables = {}
 
     def define(self, **kwargs):
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if hasattr(value, '__iter__') or hasattr(value, '__call__'):
                 self.variables[key] = value
             else:

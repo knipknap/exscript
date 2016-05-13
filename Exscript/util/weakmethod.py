@@ -23,6 +23,7 @@
 """
 Weak references to bound and unbound methods.
 """
+from builtins import object
 import weakref
 
 

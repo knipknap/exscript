@@ -29,6 +29,8 @@ keywrangling.py: key handling routines for the otp module.
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import map
+from builtins import range
 
 __version__ = '$Revision: 1.4 $'
 
@@ -90,7 +92,7 @@ def hex_from_sixword(key):
     return hex_from_long(long_from_sixword(key))
 
 def long_from_hex(key):
-    return long(''.join(key.split(' ')).lower(), 16)
+    return int(''.join(key.split(' ')).lower(), 16)
 
 def checksummed_long(key):
     sum, k = 0, key
@@ -144,6 +146,6 @@ def convertkey(format, key_or_keylist):
     
     conversionfunction = _KEYCONVERSIONTABLE[format][originalformat]
     if type(key_or_keylist) == list:
-        return map(conversionfunction, key_or_keylist)
+        return list(map(conversionfunction, key_or_keylist))
     else:
         return conversionfunction(key_or_keylist)

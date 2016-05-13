@@ -28,6 +28,7 @@ encoded as six word sequences.
 
 <insert Python license here>
 """
+from builtins import range
 
 __version__ = '$Revision: 1.4 $'
 

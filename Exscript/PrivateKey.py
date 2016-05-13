@@ -23,6 +23,7 @@
 """
 Represents a private key.
 """
+from builtins import object
 from paramiko import RSAKey, DSSKey
 from paramiko.ssh_exception import SSHException
 

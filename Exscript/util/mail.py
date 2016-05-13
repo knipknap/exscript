@@ -23,6 +23,8 @@
 """
 Sending and formatting emails.
 """
+from builtins import str
+from builtins import object
 import time
 import re
 import socket

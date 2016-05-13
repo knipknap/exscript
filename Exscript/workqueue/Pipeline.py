@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from builtins import object
 from uuid import uuid4
 from collections import deque
 from multiprocessing import Condition, RLock
@@ -276,7 +277,7 @@ class Pipeline(object):
 
             return self._get_next(False)
 
-    def next(self):
+    def __next__(self):
         with self.condition:
             while self.running:
                 if self.paused:

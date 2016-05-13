@@ -23,6 +23,7 @@
 """
 Manages user accounts.
 """
+from builtins import object
 from Exscript.AccountPool import AccountPool
 
 

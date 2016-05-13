@@ -36,6 +36,6 @@ from Exscript.Host import Host
 from Exscript.Logger import Logger
 from Exscript.FileLogger import FileLogger
 
-import inspect
-__all__ = [name for name, obj in locals().items()
+import inspect 
+__all__ = [name for name, obj in list(locals().items())
            if not (name.startswith('_') or inspect.ismodule(obj))]

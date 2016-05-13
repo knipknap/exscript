@@ -23,6 +23,8 @@
 """
 Defines the behavior of commands by mapping commands to functions.
 """
+from past.builtins import execfile
+from builtins import object
 import re
 
 

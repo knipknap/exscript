@@ -81,4 +81,4 @@ def unique(scope, source):
     :rtype:  string
     :return: The cleaned up list of strings.
     """
-    return dict(map(lambda a: (a, 1), source)).keys()
+    return list(dict([(a, 1) for a in source]).keys())

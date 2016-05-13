@@ -78,7 +78,7 @@ class Scope(Token):
         deep copies each variable.
         """
         vars = self.get_vars()
-        vars = dict([k for k in vars.iteritems() if not k[0].startswith('_')])
+        vars = dict([k for k in vars.items() if not k[0].startswith('_')])
         return deepcopy(vars)
 
     def get(self, name, default=None):

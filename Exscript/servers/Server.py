@@ -24,6 +24,7 @@
 Base class for all servers.
 """
 from __future__ import print_function
+from builtins import str
 import select
 import socket
 from multiprocessing import Process, Pipe

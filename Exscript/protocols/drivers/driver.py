@@ -23,6 +23,7 @@
 """
 Base class for all drivers.
 """
+from builtins import object
 import re
 import string
 
