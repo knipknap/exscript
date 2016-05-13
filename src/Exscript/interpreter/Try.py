@@ -14,7 +14,7 @@ from __future__ import absolute_import
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from . import Code
+import Exscript.interpreter.Code
 from Exscript.protocols.Exception import ProtocolException
 from Exscript.interpreter.Scope   import Scope
 
@@ -25,7 +25,7 @@ class Try(Scope):
         lexer.next_if('whitespace')
         lexer.expect(self, 'keyword', 'try')
         lexer.skip(['whitespace', 'newline'])
-        self.block = Code.Code(lexer, parser, parent)
+        self.block = Exscript.interpreter.Code.Code(lexer, parser, parent)
 
     def value(self, context):
         try:

@@ -14,7 +14,7 @@ from __future__ import absolute_import
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-from . import Expression
+import Exscript.interpreter.Expression
 from Exscript.parselib              import Token
 from Exscript.interpreter.Exception import PermissionError
 
@@ -37,7 +37,7 @@ class FunctionCall(Token):
         while 1:
             if lexer.next_if('close_bracket'):
                 break
-            self.arguments.append(Expression.Expression(lexer, parser, parent))
+            self.arguments.append(Exscript.interpreter.Expression.Expression(lexer, parser, parent))
             ttype, token = lexer.token()
             if not lexer.next_if('comma') and not lexer.current_is('close_bracket'):
                 error = 'Expected separator or argument list end but got %s'
