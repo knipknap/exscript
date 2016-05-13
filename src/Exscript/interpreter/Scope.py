@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -84,13 +85,13 @@ class Scope(Token):
         return result
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         for child in self.children:
             child.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end'
+        print((' ' * indent) + self.name, 'end')
 
     def dump1(self):
         if self.parent is not None:
             self.parent.dump1()
             return
-        print "Scope:", self.variables
+        print("Scope:", self.variables)

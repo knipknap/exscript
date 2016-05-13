@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -60,4 +61,4 @@ class Execute(String):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.string
+        print((' ' * indent) + self.name, self.string)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,7 +37,7 @@ class MainLoop(threading.Thread):
 
     def _dbg(self, level, msg):
         if self.debug >= level:
-            print msg
+            print(msg)
 
     def enqueue(self, function, name, times, data):
         job    = Job(function, name, times, data)
@@ -115,7 +116,7 @@ class MainLoop(threading.Thread):
         while True:
             # Get the next job from the queue. This blocks until a task
             # is available or until self.collection.stop() is called.
-            job = self.collection.next()
+            job = next(self.collection)
             if len(self.collection) <= 0:
                 self.queue_empty_event()
             if job is None:

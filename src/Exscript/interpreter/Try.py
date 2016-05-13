@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -12,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import Code
+from . import Code
 from Exscript.protocols.Exception import ProtocolException
 from Exscript.interpreter.Scope   import Scope
 
@@ -28,11 +30,11 @@ class Try(Scope):
     def value(self, context):
         try:
             self.block.value(context)
-        except ProtocolException, e:
+        except ProtocolException as e:
             return 1
         return 1
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         self.block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end'
+        print((' ' * indent) + self.name, 'end')

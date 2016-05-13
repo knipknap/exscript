@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -47,10 +48,10 @@ class String(Token):
         while 1:
             if lexer.current_is('string_data'):
                 self.string += lexer.token()[1]
-                lexer.next()
+                next(lexer)
             elif lexer.current_is('escaped_data'):
                 self.string += self._escape(lexer.token()[1])
-                lexer.next()
+                next(lexer)
             elif lexer.next_if('string_delimiter'):
                 break
             else:
@@ -118,4 +119,4 @@ class String(Token):
         return [string_re.sub(self.variable_sub_cb, self.string)]
 
     def dump(self, indent = 0):
-        print (' ' * indent) + 'String "' + self.string + '"'
+        print((' ' * indent) + 'String "' + self.string + '"')
