@@ -27,29 +27,12 @@ from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 from socketserver import ThreadingMixIn
 
-if sys.version_info < (2, 5):
-    import md5
-    def md5hex(x):
-        return md5.md5(x).hexdigest()
-else:
-    import hashlib
-    def md5hex(x):
-        return hashlib.md5(x).hexdigest()
+import hashlib
+def md5hex(x):
+    return hashlib.md5(x).hexdigest()
 
-if sys.version_info < (2, 6):
-    from cgi import parse_qs
-else:
-    from urllib.parse import parse_qs
-
-# Selective imports only for urllib2 because 2to3 will not replace the
-# urllib2.<method> calls below. Also, 2to3 will throw an error if we
-# try to do a from _ import _.
-if sys.version_info[0] < 3:
-    import urllib.request, urllib.error, urllib.parse
-    parse_http_list = urllib2.parse_http_list
-    parse_keqv_list = urllib2.parse_keqv_list
-else:
-    from urllib.request import parse_http_list, parse_keqv_list
+from urllib.parse import parse_qs
+from urllib.request import parse_http_list, parse_keqv_list
 
 default_realm = 'exscript'
 
