@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import sys, unittest, re, os, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from ProtocolTest       import ProtocolTest
+from .ProtocolTest       import ProtocolTest
 from Exscript           import Account
 from Exscript.servers   import Telnetd
 from Exscript.protocols import Telnet
