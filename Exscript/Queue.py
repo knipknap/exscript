@@ -23,6 +23,7 @@
 """
 The heart of Exscript.
 """
+from __future__ import division
 import sys
 import os
 import gc
@@ -352,7 +353,7 @@ class Queue(object):
             cont      = '...'
             overflow += len(cont) + 1
             strlen    = len(running)
-            partlen   = (strlen / 2) - (overflow / 2)
+            partlen   = strlen // 2 - overflow // 2
             head      = running[:partlen]
             tail      = running[-partlen:]
             running   = head + cont + tail

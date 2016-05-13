@@ -22,6 +22,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
 import Exscript.interpreter.Term
 from Exscript.parselib import Token
 
@@ -163,7 +164,7 @@ class ExpressionNode(Token):
         elif self.op == '*':
             return [int(lft) * int(rgt)]
         elif self.op == '/':
-            return [int(lft) / int(rgt)]
+            return [int(lft) // int(rgt)]
         elif self.op == '%':
             return [int(lft) % int(rgt)]
         elif self.op == '.':
