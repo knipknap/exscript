@@ -1,3 +1,4 @@
+from builtins import object
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -285,7 +286,7 @@ class DBPipeline(object):
         self.queue.extendleft(sleeping)
         return next
 
-    def next(self):
+    def __next__(self):
         with self.condition:
             self.running = True
             while self.running:

@@ -15,6 +15,10 @@
 """
 The heart of Exscript.
 """
+from __future__ import division
+from builtins import str
+from builtins import object
+from past.utils import old_div
 import sys
 import os
 import gc
@@ -340,7 +344,7 @@ class Queue(object):
             cont      = '...'
             overflow += len(cont) + 1
             strlen    = len(running)
-            partlen   = (strlen / 2) - (overflow / 2)
+            partlen   = (old_div(strlen, 2)) - (old_div(overflow, 2))
             head      = running[:partlen]
             tail      = running[-partlen:]
             running   = head + cont + tail
@@ -501,7 +505,7 @@ class Queue(object):
         """
         self._dbg(2, 'Waiting for the queue to finish.')
         self.workqueue.wait_until_done()
-        for child in self.pipe_handlers.values():
+        for child in list(self.pipe_handlers.values()):
             child.join()
         self._del_status_bar()
         self._print_status_bar()

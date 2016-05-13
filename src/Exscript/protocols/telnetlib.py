@@ -35,6 +35,11 @@ To do:
 
 """
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import chr
+from builtins import range
+from builtins import object
 
 
 # Imported modules
@@ -43,7 +48,7 @@ import time
 import socket
 import select
 import struct
-from cStringIO import StringIO
+from io import StringIO
 
 __all__ = ["Telnet"]
 
@@ -126,7 +131,7 @@ EXOPL = chr(255) # Extended-Options-List
 
 SEND_TTYPE = chr(1)
 
-class Telnet:
+class Telnet(object):
     """Telnet interface class.
 
     An instance of this class represents a connection to a telnet
@@ -533,8 +538,8 @@ class Telnet:
 
     def mt_interact(self):
         """Multithreaded version of interact()."""
-        import thread
-        thread.start_new_thread(self.listener, ())
+        import _thread
+        _thread.start_new_thread(self.listener, ())
         while 1:
             line = sys.stdin.readline()
             if not line:
@@ -566,7 +571,7 @@ class Telnet:
     def _waitfor(self, list, timeout=None, flush=False, cleanup=None):
         re = None
         list = list[:]
-        indices = range(len(list))
+        indices = list(range(len(list)))
         search_window_size = 150
         head_loockback_size = 10
         for i in indices:

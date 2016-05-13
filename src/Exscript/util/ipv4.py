@@ -15,6 +15,8 @@
 """
 IPv4 address calculation and conversion.
 """
+from builtins import str
+from builtins import range
 import socket
 import struct
 import math
@@ -51,7 +53,7 @@ def is_ip(string):
     if mo is None:
         return False
     for group in mo.groups():
-        if int(group) not in range(0, 256):
+        if int(group) not in list(range(0, 256)):
             return False
     return True
 

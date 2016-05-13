@@ -42,7 +42,7 @@ def add_driver(cls):
     driver_map[driver.name] = driver
 
 # Load built-in drivers.
-for name, obj in locals().items():
+for name, obj in list(locals().items()):
     if isdriver(obj):
         add_driver(obj)
 driver_map['unknown'] = driver_map['generic']

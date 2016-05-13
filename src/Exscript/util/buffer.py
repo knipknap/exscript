@@ -15,7 +15,11 @@
 """
 A buffer object.
 """
-from StringIO           import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
+from io           import StringIO
 from Exscript.util.cast import to_regexs
 
 class MonitoredBuffer(object):

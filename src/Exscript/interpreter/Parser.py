@@ -1,3 +1,4 @@
+from builtins import object
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,7 +26,7 @@ class Parser(object):
         self.variables     = {}
 
     def define(self, **kwargs):
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if hasattr(value, '__iter__') or hasattr(value, '__call__'):
                 self.variables[key] = value
             else:

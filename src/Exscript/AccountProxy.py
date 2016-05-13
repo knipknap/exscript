@@ -15,6 +15,7 @@
 """
 A remote object that acquires/releases an account via a pipe.
 """
+from builtins import object
 from Exscript.util.impl import Context
 
 class AccountProxy(object):

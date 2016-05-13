@@ -1,5 +1,8 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -155,7 +158,7 @@ class ExpressionNode(Token):
         elif self.op == '*':
             return [int(lft) * int(rgt)]
         elif self.op == '/':
-            return [int(lft) / int(rgt)]
+            return [old_div(int(lft), int(rgt))]
         elif self.op == '%':
             return [int(lft) % int(rgt)]
         elif self.op == '.':

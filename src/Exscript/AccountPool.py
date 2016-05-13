@@ -15,6 +15,7 @@
 """
 A collection of user accounts.
 """
+from builtins import object
 import threading
 from collections import deque, defaultdict
 from Exscript.util.cast import to_list

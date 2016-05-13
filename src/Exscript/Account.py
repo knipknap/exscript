@@ -15,6 +15,7 @@
 """
 Representing user accounts.
 """
+from builtins import object
 import threading
 from Exscript.util.event import Event
 from Exscript.util.impl import Context

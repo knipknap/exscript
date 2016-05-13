@@ -15,6 +15,7 @@
 """
 Development tools.
 """
+from builtins import object
 import sys
 import warnings
 import traceback
@@ -163,13 +164,13 @@ class Decorator(object):
         self.__dict__['obj'] = obj
 
     def __setattr__(self, name, value):
-        if name in self.__dict__.keys():
+        if name in list(self.__dict__.keys()):
             self.__dict__[name] = value
         else:
             setattr(self.obj, name, value)
 
     def __getattr__(self, name):
-        if name in self.__dict__.keys():
+        if name in list(self.__dict__.keys()):
             return self.__dict__[name]
         return getattr(self.obj, name)
 

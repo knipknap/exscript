@@ -15,6 +15,7 @@
 """
 IPv6 address calculation and conversion.
 """
+from builtins import range
 
 def is_ip(string):
     """

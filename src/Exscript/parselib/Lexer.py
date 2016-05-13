@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import object
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -110,7 +112,7 @@ class Lexer(object):
         self.current_char += chars
         self.token_buffer  = None
 
-    def next(self):
+    def __next__(self):
         if self.token_buffer:
             self.forward(len(self.token_buffer[1]))
 

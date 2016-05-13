@@ -15,6 +15,7 @@
 """
 A simple signal/event mechanism.
 """
+from builtins import object
 from threading     import Lock
 from Exscript.util import weakmethod
 

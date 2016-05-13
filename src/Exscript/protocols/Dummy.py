@@ -15,6 +15,7 @@
 """
 A client that talks to a L{Exscript.emulators.VirtualDevice}.
 """
+from builtins import str
 from Exscript.emulators           import VirtualDevice
 from Exscript.protocols.Protocol  import Protocol
 from Exscript.protocols.Exception import TimeoutException, \

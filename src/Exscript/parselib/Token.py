@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import object
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -60,7 +61,7 @@ class Token(object):
                     break
             return current
 
-        def next(self):
+        def __next__(self):
             # By using this loop we avoid an (expensive) recursive call.
             while True:
                 next = self._next()

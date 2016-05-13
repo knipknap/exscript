@@ -1,3 +1,4 @@
+from builtins import object
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -265,7 +266,7 @@ class Pipeline(object):
 
             return self._get_next(False)
 
-    def next(self):
+    def __next__(self):
         with self.condition:
             while self.running:
                 if self.paused:

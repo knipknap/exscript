@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import object
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
