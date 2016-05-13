@@ -6,3 +6,5 @@ config.xml
 build
 dist
 unit_test.cfg
+.tox
+.coverage
