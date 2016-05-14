@@ -23,6 +23,7 @@
 """
 Wrapper around the ipv4 and ipv6 modules to handle both, ipv4 and ipv6.
 """
+from __future__ import unicode_literals
 from Exscript.util import ipv4
 from Exscript.util import ipv6
 

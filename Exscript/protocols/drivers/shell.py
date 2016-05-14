@@ -23,6 +23,7 @@
 """
 A generic shell driver that handles unknown unix shells.
 """
+from __future__ import unicode_literals
 import re
 from Exscript.protocols.drivers.driver import Driver
 

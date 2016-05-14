@@ -25,6 +25,7 @@ A driver for FortiOS devices.
 
 Created using a Fortigate device and FortiOS 5.0.
 """
+from __future__ import unicode_literals
 import re
 from Exscript.protocols.drivers.driver import Driver
 

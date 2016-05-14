@@ -23,6 +23,7 @@
 """
 Defines the behavior of commands by mapping commands to functions.
 """
+from __future__ import unicode_literals
 from past.builtins import execfile
 from builtins import object
 import re

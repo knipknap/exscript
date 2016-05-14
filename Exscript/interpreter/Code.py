@@ -21,6 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import re
 import Exscript.interpreter.Template
 from .Scope import Scope

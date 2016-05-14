@@ -24,6 +24,7 @@
 SSH version 2 support, based on paramiko.
 """
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from builtins import str
 import os
 import time

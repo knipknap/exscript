@@ -23,6 +23,7 @@
 """
 Representing user accounts.
 """
+from __future__ import unicode_literals
 from builtins import object
 import multiprocessing
 from Exscript.util.event import Event

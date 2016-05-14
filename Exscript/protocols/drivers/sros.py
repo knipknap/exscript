@@ -23,6 +23,7 @@
 """
 A driver for Alcatel SROS.
 """
+from __future__ import unicode_literals
 import re
 from Exscript.protocols.drivers.driver import Driver
 

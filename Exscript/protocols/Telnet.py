@@ -24,12 +24,12 @@
 The Telnet protocol.
 """
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from ..util.tty import get_terminal_size
 from . import telnetlib
 from .Protocol import Protocol
 from .Exception import ProtocolException, TimeoutException, \
         DriverReplacedException, ExpectCancelledException
-
 
 class Telnet(Protocol):
 

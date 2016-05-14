@@ -23,6 +23,7 @@
 """
 A driver for devices running Juniper ERX OS.
 """
+from __future__ import unicode_literals
 import re
 from Exscript.protocols.drivers.driver import Driver
 from Exscript.protocols.drivers.ios import _prompt_re

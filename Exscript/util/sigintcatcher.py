@@ -36,5 +36,6 @@ fork during an import may cause the following error::
 So in general it is recommended to use the :class:`sigint.SigIntWatcher()`
 class directly.
 """
+from __future__ import unicode_literals
 from Exscript.util.sigint import SigIntWatcher
 _watcher = SigIntWatcher()

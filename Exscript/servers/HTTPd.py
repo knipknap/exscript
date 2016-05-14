@@ -24,6 +24,7 @@
 A threaded HTTP server with support for HTTP/Digest authentication.
 """
 from __future__ import print_function
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 import sys

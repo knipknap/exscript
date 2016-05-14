@@ -23,6 +23,7 @@
 """
 IPv6 address calculation and conversion.
 """
+from __future__ import unicode_literals
 from builtins import range
 
 

@@ -23,6 +23,7 @@
 """
 Very simple servers, useful for emulating a device for testing.
 """
+from __future__ import unicode_literals
 from Exscript.servers.Telnetd import Telnetd
 from Exscript.servers.SSHd import SSHd
 from Exscript.servers.HTTPd import HTTPd

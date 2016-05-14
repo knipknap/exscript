@@ -23,6 +23,7 @@
 """
 Encryption related utilities.
 """
+from __future__ import unicode_literals
 from Exscript.external.otp import generate
 
 

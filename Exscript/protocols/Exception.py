@@ -23,6 +23,7 @@
 """
 Network related error types.
 """
+from __future__ import unicode_literals
 
 
 class ProtocolException(Exception):

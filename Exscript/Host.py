@@ -23,6 +23,7 @@
 """
 Representing a device to connect with.
 """
+from __future__ import unicode_literals
 from builtins import str
 from builtins import object
 from Exscript.Account import Account

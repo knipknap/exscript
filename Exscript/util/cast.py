@@ -23,6 +23,7 @@
 """
 Handy shortcuts for converting types.
 """
+from __future__ import unicode_literals
 import re
 import Exscript
 

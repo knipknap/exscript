@@ -23,6 +23,7 @@
 """
 An SSH2 server.
 """
+from __future__ import unicode_literals
 import os
 import base64
 import socket

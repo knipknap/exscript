@@ -23,6 +23,7 @@
 """
 Quickstart methods for the Exscript queue.
 """
+from __future__ import unicode_literals
 from Exscript import Queue
 from Exscript.util.interact import read_login
 from Exscript.util.decorator import autologin, autoauthenticate

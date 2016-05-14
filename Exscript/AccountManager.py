@@ -23,6 +23,7 @@
 """
 Manages user accounts.
 """
+from __future__ import unicode_literals
 from builtins import object
 from Exscript.AccountPool import AccountPool
 

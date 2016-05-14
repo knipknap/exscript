@@ -23,6 +23,7 @@
 """
 Formatting logs into human readable reports.
 """
+from __future__ import unicode_literals
 
 
 def _underline(text, line='-'):

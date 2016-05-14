@@ -23,6 +23,7 @@
 """
 The core module.
 """
+from __future__ import unicode_literals
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=DeprecationWarning)
