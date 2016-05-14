@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # This script is not meant to provide a fully automated test, it's
 # merely a hack/starting point for investigating memory consumption
 # manually. The behavior also depends heavily on the version of meliae.

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 commands = (
 ('show version', """
 Cisco Internetwork Operating System Software 

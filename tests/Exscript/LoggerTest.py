@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from builtins import next
 from builtins import str
 import sys, unittest, re, os

@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import sys, unittest, re, os, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
