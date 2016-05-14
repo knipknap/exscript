@@ -51,7 +51,7 @@ def larger(x, y):
 def larger(x, y):
     return int(y.total_size - x.total_size)
 
-objs = sorted(om.objs.itervalues(), larger)
+objs = sorted(iter(om.objs.values()), larger)
 
 
 def is_builtin(o):

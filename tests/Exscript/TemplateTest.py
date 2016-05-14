@@ -1,8 +1,9 @@
 from __future__ import print_function
+from builtins import object
 import sys
 import unittest
 import re
-import os.path
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from Exscript import Queue, Account, Logger, protocols

@@ -1,7 +1,8 @@
+from builtins import str
 import sys
 import unittest
 import re
-import os.path
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from Exscript.Log import Log

@@ -1,7 +1,8 @@
+from builtins import range
 import sys
 import unittest
 import re
-import os.path
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from Exscript import Account
@@ -90,7 +91,7 @@ class AccountPoolTest(unittest.TestCase):
             self.assert_(account.get_name() == 'abc')
 
             # Release all accounts.
-            for account in acquired.itervalues():
+            for account in acquired.values():
                 account.release()
 
     def testReleaseAccounts(self):

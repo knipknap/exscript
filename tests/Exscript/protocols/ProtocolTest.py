@@ -1,17 +1,19 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import sys
 import unittest
 import re
-import os.path
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import time
 from functools import partial
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 from Exscript import Account, PrivateKey
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols.Exception import TimeoutException, \
-    InvalidCommandException, \
-                                         ExpectCancelledException
+    InvalidCommandException, ExpectCancelledException
 from Exscript.protocols.Protocol import Protocol
 
 

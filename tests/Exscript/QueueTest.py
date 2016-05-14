@@ -1,8 +1,10 @@
+from builtins import object
 import sys
 import unittest
 import re
-import os.path
+import os
 import warnings
+import sys, unittest, re, os.path, warnings
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 warnings.simplefilter('ignore', DeprecationWarning)
@@ -260,7 +262,7 @@ class QueueTest(unittest.TestCase):
         # returns True).
         self.queue.run('dummy://dummy', partial(start_cb, data))
         self.queue.shutdown()
-        data = dict((k, v.value) for (k, v) in data.iteritems())
+        data = dict((k, v.value) for (k, v) in data.items())
         self.assertEqual(data, {'match-called': True,
                                 'start-called': True,
                                 'account-hash': account2.__hash__()})

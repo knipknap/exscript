@@ -1,7 +1,8 @@
+from builtins import range
 import sys
 import unittest
 import re
-import os.path
+import os
 import threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
