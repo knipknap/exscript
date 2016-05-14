@@ -26,10 +26,10 @@ from Exscript.servers.Server import Server
 
 class _ParamikoServer(ServerInterface):
     # 'data' is the output of base64.encodestring(str(key))
-    data = 'AAAAB3NzaC1yc2EAAAABIwAAAIEAyO4it3fHlmGZWJaGrfeHOVY7RWO3P9M7hp' + \
-           'fAu7jJ2d7eothvfeuoRFtJwhUmZDluRdFyhFY/hFAh76PJKGAusIqIQKlkJxMC' + \
-           'KDqIexkgHAfID/6mqvmnSJf0b5W8v5h2pI/stOSwTQ+pxVhwJ9ctYDhRSlF0iT' + \
-           'UWT10hcuO4Ks8='
+    data = b'AAAAB3NzaC1yc2EAAAABIwAAAIEAyO4it3fHlmGZWJaGrfeHOVY7RWO3P9M7hp'\
+           b'fAu7jJ2d7eothvfeuoRFtJwhUmZDluRdFyhFY/hFAh76PJKGAusIqIQKlkJxMC'\
+           b'KDqIexkgHAfID/6mqvmnSJf0b5W8v5h2pI/stOSwTQ+pxVhwJ9ctYDhRSlF0iT'\
+           b'UWT10hcuO4Ks8='
     good_pub_key = paramiko.RSAKey(data = base64.decodestring(data))
 
     def __init__(self):
