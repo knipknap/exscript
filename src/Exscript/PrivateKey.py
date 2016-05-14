@@ -15,6 +15,7 @@
 """
 Represents a private key.
 """
+from __future__ import unicode_literals
 from builtins import object
 from paramiko import RSAKey, DSSKey
 from paramiko.ssh_exception import SSHException

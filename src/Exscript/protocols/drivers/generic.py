@@ -15,6 +15,7 @@
 """
 The default driver that is used when the OS is not recognized.
 """
+from __future__ import unicode_literals
 from Exscript.protocols.drivers.driver import Driver
 
 class GenericDriver(Driver):

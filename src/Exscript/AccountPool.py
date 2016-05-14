@@ -15,6 +15,7 @@
 """
 A collection of user accounts.
 """
+from __future__ import unicode_literals
 from builtins import object
 import threading
 from collections import deque, defaultdict

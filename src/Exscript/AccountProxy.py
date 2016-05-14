@@ -15,6 +15,7 @@
 """
 A remote object that acquires/releases an account via a pipe.
 """
+from __future__ import unicode_literals
 from builtins import object
 from Exscript.util.impl import Context
 

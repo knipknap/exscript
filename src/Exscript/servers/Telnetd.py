@@ -15,6 +15,7 @@
 """
 A Telnet server.
 """
+from __future__ import unicode_literals
 import select
 from Exscript.servers.Server import Server
 

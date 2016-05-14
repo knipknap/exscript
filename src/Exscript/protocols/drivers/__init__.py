@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import inspect
 from Exscript.protocols.drivers.driver import Driver
 from Exscript.protocols.drivers.aironet import AironetDriver

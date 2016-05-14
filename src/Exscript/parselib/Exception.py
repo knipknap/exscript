@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify

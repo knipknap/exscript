@@ -15,6 +15,7 @@
 """
 Logging to memory.
 """
+from __future__ import unicode_literals
 from builtins import filter
 from builtins import object
 import weakref

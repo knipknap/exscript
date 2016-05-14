@@ -15,6 +15,7 @@
 """
 Handling PID (process id) files.
 """
+from __future__ import unicode_literals
 from builtins import str
 import os
 import logging

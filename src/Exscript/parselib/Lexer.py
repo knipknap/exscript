@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from builtins import next
 from builtins import object
 # Copyright (C) 2007-2010 Samuel Abels.

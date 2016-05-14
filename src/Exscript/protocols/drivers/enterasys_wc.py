@@ -17,6 +17,7 @@ A driver for Enterasys/Extreme (HiPath) Wireless Controller devices.
 
 Created using a C5110 device.
 """
+from __future__ import unicode_literals
 import re
 from Exscript.protocols.drivers.driver import Driver
 

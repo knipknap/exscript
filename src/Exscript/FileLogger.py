@@ -15,6 +15,7 @@
 """
 Logging to the file system.
 """
+from __future__ import unicode_literals
 import os
 from Exscript.Logfile import Logfile
 from Exscript.Logger import Logger

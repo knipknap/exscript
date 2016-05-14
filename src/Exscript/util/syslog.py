@@ -15,6 +15,7 @@
 """
 Send messages to a syslog server.
 """
+from __future__ import unicode_literals
 import os
 import sys
 import imp

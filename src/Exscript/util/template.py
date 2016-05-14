@@ -15,6 +15,7 @@
 """
 Executing Exscript templates on a connection.
 """
+from __future__ import unicode_literals
 from Exscript             import stdlib
 from Exscript.interpreter import Parser
 

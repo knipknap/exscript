@@ -15,6 +15,7 @@
 """
 Shorthands for regular expression matching.
 """
+from __future__ import unicode_literals
 import re
 from Exscript.protocols import Protocol
 

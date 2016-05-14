@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from builtins import next
 # Copyright (C) 2007-2010 Samuel Abels.
 #

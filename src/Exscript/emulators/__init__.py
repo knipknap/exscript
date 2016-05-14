@@ -15,6 +15,7 @@
 """
 Emulating a device for testing your scripts.
 """
+from __future__ import unicode_literals
 from Exscript.emulators.CommandSet    import CommandSet
 from Exscript.emulators.VirtualDevice import VirtualDevice
 from Exscript.emulators.IOSEmulator   import IOSEmulator

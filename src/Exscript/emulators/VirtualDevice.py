@@ -15,6 +15,7 @@
 """
 Defines the behavior of a device, as needed by L{Exscript.servers}.
 """
+from __future__ import unicode_literals
 from builtins import str
 from builtins import range
 from builtins import object

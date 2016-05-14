@@ -15,6 +15,7 @@
 """
 Logging utilities.
 """
+from __future__ import unicode_literals
 from Exscript.FileLogger import FileLogger
 from Exscript.util.impl import add_label
 

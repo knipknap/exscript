@@ -15,6 +15,7 @@
 """
 The Telnet protocol.
 """
+from __future__ import unicode_literals
 from Exscript.util.tty            import get_terminal_size
 from Exscript.protocols           import telnetlib
 from Exscript.protocols.Protocol  import Protocol

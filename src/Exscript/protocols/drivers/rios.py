@@ -15,6 +15,7 @@
 """
 A driver for Riverbed RIOS
 """
+from __future__ import unicode_literals
 import re
 from Exscript.protocols.drivers.driver import Driver
 

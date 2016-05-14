@@ -15,6 +15,7 @@
 """
 Working with URLs (as used in URL formatted hostnames).
 """
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 from builtins import str
