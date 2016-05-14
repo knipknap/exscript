@@ -1,3 +1,4 @@
+from builtins import range
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
@@ -86,7 +87,7 @@ class AccountPoolTest(unittest.TestCase):
             self.assert_(account.get_name() == 'abc')
 
             # Release all accounts.
-            for account in acquired.itervalues():
+            for account in acquired.values():
                 account.release()
 
     def testReleaseAccounts(self):

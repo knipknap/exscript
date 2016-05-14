@@ -1,9 +1,12 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 import time
 from functools import partial
-from ConfigParser                 import RawConfigParser
+from configparser                 import RawConfigParser
 from Exscript                     import Account, PrivateKey
 from Exscript.emulators           import VirtualDevice
 from Exscript.protocols.Exception import TimeoutException, \

@@ -1,3 +1,4 @@
+from builtins import str
 import sys, unittest, re, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 

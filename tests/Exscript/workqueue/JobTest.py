@@ -1,10 +1,12 @@
+from future import standard_library
+standard_library.install_aliases()
 import sys, unittest, re, os.path, threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from multiprocessing import Pipe
 from Exscript.workqueue.Job import Thread, Process, Job
 from tempfile import NamedTemporaryFile
-from cPickle import dumps, loads
+from pickle import dumps, loads
 
 def do_nothing(job):
     pass
