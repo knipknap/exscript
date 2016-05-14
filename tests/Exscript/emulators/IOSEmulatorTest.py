@@ -1,8 +1,9 @@
+from __future__ import unicode_literals
 from __future__ import absolute_import
 import sys
 import unittest
 import re
-import os.path
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from .VirtualDeviceTest import VirtualDeviceTest
