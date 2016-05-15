@@ -40,6 +40,7 @@ class ACEDriver(Driver):
     def check_head_for_os(self, string):
         if 'Cisco Application Control Software' in string:
             return 90
+        return 0
 
     def init_terminal(self, conn):
         conn.execute('term len 0')
