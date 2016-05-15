@@ -16,6 +16,8 @@
 Utilities for reading data from files.
 """
 from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
 from builtins import str
 import re
 import os
@@ -49,7 +51,7 @@ def get_accounts_from_file(filename):
     @return: The newly created account instances.
     """
     accounts           = []
-    cfgparser          = __import__('ConfigParser', {}, {}, [''])
+    cfgparser          = __import__('configparser', {}, {}, [''])
     parser             = cfgparser.RawConfigParser()
     parser.optionxform = str
     parser.read(filename)
