@@ -49,6 +49,7 @@ class ArubaDriver(Driver):
     def check_head_for_os(self, string):
         if 'aruba' in string.lower():
             return 88
+        return 0
 
     def init_terminal(self, conn):
         conn.execute('no paging')

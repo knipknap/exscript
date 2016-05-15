@@ -23,6 +23,7 @@
 """
 A driver for F5 Big-IP system (TMSH SHELL)
 """
+from __future__ import unicode_literals
 import re
 from Exscript.protocols.drivers.driver import Driver
 
@@ -43,6 +44,7 @@ class BigIPDriver(Driver):
     def check_head_for_os(self, string):
         if "(tmos)" in string:
             return 90
+        return 0
 
     def init_terminal(self, conn):
         conn.execute('modify cli preference pager disabled')
