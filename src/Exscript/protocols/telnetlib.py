@@ -569,17 +569,17 @@ class Telnet(object):
             if time.time() > end:
                 return False
 
-    def _waitfor(self, list, timeout=None, flush=False, cleanup=None):
+    def _waitfor(self, relist, timeout=None, flush=False, cleanup=None):
         re = None
-        list = list[:]
-        indices = list(range(len(list)))
+        relist = relist[:]
+        indices = list(range(len(relist)))
         search_window_size = 150
         head_loockback_size = 10
         for i in indices:
-            if not hasattr(list[i], "search"):
+            if not hasattr(relist[i], "search"):
                 if not re: import re
-                list[i] = re.compile(list[i])
-        self.msg("Expecting %s" % [l.pattern for l in list])
+                relist[i] = re.compile(relist[i])
+        self.msg("Expecting %s" % [l.pattern for l in relist])
         incomplete_tail = ''
         clean_sw_size = search_window_size
         while 1:
@@ -605,7 +605,7 @@ class Telnet(object):
                 self.cookedq.seek(qlen - search_window_size)
                 search_window = self.cookedq.read()
             for i in indices:
-                m = list[i].search(search_window)
+                m = relist[i].search(search_window)
                 if m is not None:
                     e    = len(m.group())
                     e    = qlen - e + 1
@@ -635,7 +635,7 @@ class Telnet(object):
             raise EOFError
         return -1, None, text
 
-    def waitfor(self, list, timeout=None, cleanup=None):
+    def waitfor(self, relist, timeout=None, cleanup=None):
         """Read until one from a list of a regular expressions matches.
 
         The first argument is a list of regular expressions, either
@@ -656,14 +656,14 @@ class Telnet(object):
         or if more than one expression can match the same input, the
         results are undeterministic, and may depend on the I/O timing.
         """
-        return self._waitfor(list, timeout, False, cleanup)
+        return self._waitfor(relist, timeout, False, cleanup)
 
-    def expect(self, list, timeout=None, cleanup=None):
+    def expect(self, relist, timeout=None, cleanup=None):
         """
         Like waitfor(), but removes the matched data from the incoming
         buffer.
         """
-        return self._waitfor(list, timeout, True, cleanup = cleanup)
+        return self._waitfor(relist, timeout, True, cleanup = cleanup)
 
 
 def test():
