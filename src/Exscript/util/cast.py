@@ -16,6 +16,7 @@
 Handy shortcuts for converting types.
 """
 from __future__ import unicode_literals
+from builtins import str
 import re
 import Exscript
 
@@ -30,7 +31,7 @@ def to_list(item):
     @rtype:  list
     @return: A list with the item in it.
     """
-    if hasattr(item, '__iter__'):
+    if hasattr(item, '__iter__') and not isinstance(item, str):
         return item
     return [item]
 
