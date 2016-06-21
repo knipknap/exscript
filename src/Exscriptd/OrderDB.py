@@ -169,7 +169,7 @@ class OrderDB(object):
         # Insert the task
         insert  = self._table_map['task'].insert()
         result  = insert.execute(**task.todict())
-        task_id = result.last_inserted_ids()[0]
+        task_id = result.inserted_primary_key[0]
 
         task.untouch()
         return task_id
@@ -193,7 +193,7 @@ class OrderDB(object):
         if task.id is None:
             query   = tbl_t.insert()
             result  = query.execute(**fields)
-            task.id = result.last_inserted_ids()[0]
+            task.id = result.inserted_primary_key[0]
         else:
             query   = tbl_t.update(tbl_t.c.id == task.id)
             result  = query.execute(**fields)
@@ -298,7 +298,7 @@ class OrderDB(object):
         fields   = dict(k for k in order.todict().iteritems()
                         if k[0] not in ('id', 'created', 'progress'))
         result   = insert.execute(**fields)
-        order.id = result.last_inserted_ids()[0]
+        order.id = result.inserted_primary_key[0]
         return order.id
 
     @synchronized
