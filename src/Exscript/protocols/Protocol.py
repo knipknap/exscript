@@ -628,8 +628,8 @@ class Protocol(object):
                 app_account = account
             self.authenticate(account, flush = False)
             if self.get_driver().supports_auto_authorize() and not self.only_authenticate:
-                self.expect_prompt()
                 self.auto_app_authorize(app_account, flush = flush)
+            self.expect_prompt()
 
     def authenticate(self, account = None, app_account = None, flush = True):
         """
