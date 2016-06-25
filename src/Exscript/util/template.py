@@ -42,7 +42,7 @@ def _compile(conn, filename, template, parser_kwargs, **kwargs):
     parser.define(**kwargs)
 
     # Compile the template.
-    return parser.parse(template, builtin.get('__filename__')[0])
+    return parser.parse(template, parser.variables.get('__filename__')[0])
 
 def _run(conn, filename, template, parser_kwargs, **kwargs):
     compiled = _compile(conn, filename, template, parser_kwargs, **kwargs)
