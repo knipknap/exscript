@@ -29,7 +29,6 @@ def _compile(conn, filename, template, parser_kwargs, **kwargs):
 
     # Init the parser.
     parser = Parser(**parser_kwargs)
-    parser.define(**kwargs)
 
     # Define the built-in variables and functions.
     builtin = dict(__filename__   = [filename or 'undefined'],
@@ -38,6 +37,9 @@ def _compile(conn, filename, template, parser_kwargs, **kwargs):
                    __connection__ = conn)
     parser.define_object(**builtin)
     parser.define_object(**stdlib.functions)
+
+    # Allow for overriding built-in variables.
+    parser.define(**kwargs)
 
     # Compile the template.
     return parser.parse(template, builtin.get('__filename__')[0])
