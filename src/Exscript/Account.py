@@ -15,7 +15,7 @@
 """
 Representing user accounts.
 """
-import threading
+import multiprocessing
 from Exscript.util.event import Event
 from Exscript.util.impl import Context
 
@@ -42,15 +42,15 @@ class Account(object):
         @type  key: PrivateKey
         @param key: A private key, if required.
         """
-        self.acquired_event         = Event()
-        self.released_event         = Event()
-        self.changed_event          = Event()
-        self.name                   = name
-        self.password               = password
+        self.acquired_event = Event()
+        self.released_event = Event()
+        self.changed_event = Event()
+        self.name = name
+        self.password = password
         self.authorization_password = password2
-        self.key                    = key
-        self.synclock               = threading.Condition(threading.Lock())
-        self.lock                   = threading.Lock()
+        self.key = key
+        self.synclock = multiprocessing.Condition(multiprocessing.Lock())
+        self.lock = multiprocessing.Lock()
 
     def __enter__(self):
         self.acquire()

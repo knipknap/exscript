@@ -15,7 +15,7 @@
 """
 A collection of user accounts.
 """
-import threading
+import multiprocessing
 from collections import deque, defaultdict
 from Exscript.util.cast import to_list
 
@@ -31,11 +31,11 @@ class AccountPool(object):
         @type  accounts: Account|list[Account]
         @param accounts: Passed to add_account()
         """
-        self.accounts          = set()
+        self.accounts = set()
         self.unlocked_accounts = deque()
-        self.owner2account     = defaultdict(list)
-        self.account2owner     = dict()
-        self.unlock_cond       = threading.Condition(threading.RLock())
+        self.owner2account = defaultdict(list)
+        self.account2owner = dict()
+        self.unlock_cond = multiprocessing.Condition(multiprocessing.RLock())
         if accounts:
             self.add_account(accounts)
 
