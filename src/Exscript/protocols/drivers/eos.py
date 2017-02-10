@@ -36,7 +36,8 @@ from Exscript.protocols.drivers.driver import Driver
 # % Incomplete command
 # % Ambiguous command
 
-_user_re     = [re.compile(r'user ?name: ?$', re.I)]
+_user_re     = [re.compile(r'user ?name: ?$', re.I),
+                re.compile(r' login: ?$', re.I)]
 _password_re = [re.compile(r'[\r\n]Password: ?$', re.I)]
 _prompt_re   = [re.compile(r'[\r\n]?[\-\w+\.:/]+(?:\([^\)]+\)){,3}[>#] ?$')]
 _error_re    = [re.compile(r'% ?Error'),
@@ -44,3 +45,19 @@ _error_re    = [re.compile(r'% ?Error'),
                 re.compile(r'% ?(?:Incomplete|Ambiguous) command', re.I),
                 re.compile(r'connection timed out', re.I)]
 
+class EOSDriver(Driver):
+    def __init__(self):
+        Driver.__init__(self, 'eos')
+        self.user_re     = _user_re
+        self.password_re = _password_re
+        self.prompt_re   = _prompt_re
+        self.error_re    = _error_re
+
+    def init_terminal(self, conn):
+        conn.execute('terminal dont-ask')
+        conn.execute('terminal length 0')
+        conn.execute('terminal width 32767')
+
+    def auto_authorize(self, conn, account, flush, bailout):
+        conn.send('enable\r')
+        conn.app_authorize(account, flush, bailout)
