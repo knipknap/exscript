@@ -17,3 +17,21 @@ A driver for Arista EOS.
 """
 import re
 from Exscript.protocols.drivers.driver import Driver
+
+# Match following prompt pattern variations:
+# NOTE:  Upon first login, EOS does not return \r\n before prompt
+# hostname(s1)>
+# hostname(s1)#
+# hostname(s1)(config)#
+# hostname(s1)(vrf:blah)
+# hostname(s1)(vrf:blah)(config)#
+# hostname>
+# hostname#
+# hostname(config)#
+# hostname(vrf:blah)#
+# hostname(vrf:blah)(config)#
+#
+# Error patterns
+# % Invalid input
+# % Incomplete command
+# % Ambiguous command
