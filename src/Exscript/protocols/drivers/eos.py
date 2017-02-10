@@ -35,3 +35,12 @@ from Exscript.protocols.drivers.driver import Driver
 # % Invalid input
 # % Incomplete command
 # % Ambiguous command
+
+_user_re     = [re.compile(r'user ?name: ?$', re.I)]
+_password_re = [re.compile(r'[\r\n]Password: ?$', re.I)]
+_prompt_re   = [re.compile(r'[\r\n]?[\-\w+\.:/]+(?:\([^\)]+\)){,3}[>#] ?$')]
+_error_re    = [re.compile(r'% ?Error'),
+                re.compile(r'% ?Invalid input', re.I),
+                re.compile(r'% ?(?:Incomplete|Ambiguous) command', re.I),
+                re.compile(r'connection timed out', re.I)]
+
