@@ -56,7 +56,6 @@ class EOSDriver(Driver):
     def init_terminal(self, conn):
         conn.execute('terminal dont-ask')
         conn.execute('terminal length 0')
-        conn.execute('terminal width 32767')
 
     def auto_authorize(self, conn, account, flush, bailout):
         conn.send('enable\r')
