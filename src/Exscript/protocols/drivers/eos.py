@@ -44,6 +44,17 @@ _error_re    = [re.compile(r'% ?Error'),
                 re.compile(r'% ?Invalid input', re.I),
                 re.compile(r'% ?(?:Incomplete|Ambiguous) command', re.I),
                 re.compile(r'connection timed out', re.I)]
+_login_fail = [r'[Bb]ad secrets?',
+               r'denied',
+               r'invalid',
+               r'too short',
+               r'incorrect',
+               r'connection timed out',
+               r'failed',
+               r'failure']
+_login_fail_re = [re.compile(r'[\r\n]'          \
+                           + r'[^\r\n]*'  \
+                           + r'(?:' + '|'.join(_login_fail) + r')', re.I)]
 
 class EOSDriver(Driver):
     def __init__(self):
@@ -52,6 +63,7 @@ class EOSDriver(Driver):
         self.password_re = _password_re
         self.prompt_re   = _prompt_re
         self.error_re    = _error_re
+        self.login_error_re = _login_fail_re
 
     def init_terminal(self, conn):
         conn.execute('terminal dont-ask')
