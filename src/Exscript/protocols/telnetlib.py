@@ -575,7 +575,7 @@ class Telnet:
         self.msg("Expecting %s" % [l.pattern for l in list])
         incomplete_tail = ''
         clean_sw_size = search_window_size
-        while 1:
+        while True:
             self.process_rawq()
             if self.cancel_expect:
                 self.cancel_expect = False
@@ -583,25 +583,26 @@ class Telnet:
                 return -2, None, ''
             qlen = self.cookedq.tell()
             if cleanup:
-                while 1:
+                while True:
                     self.cookedq.seek(qlen - clean_sw_size - len(incomplete_tail) - head_loockback_size)
                     search_window = self.cookedq.read()
                     search_window, incomplete_tail = cleanup(search_window)
-                    if clean_sw_size > qlen or len(search_window) >= search_window_size:
+                    search_window_len = len(search_window)
+                    if clean_sw_size > qlen or search_window_len >= search_window_size:
                         search_window = search_window[-search_window_size:]
-                        if len(search_window) > search_window_size:
-                            clean_sw_size = clean_sw_size - search_window_size
+                        if search_window_len > search_window_size:
+                            clean_sw_size -= search_window_size
                         break
                     else:
-                        clean_sw_size = clean_sw_size + search_window_size
+                        clean_sw_size += search_window_size
             else:
                 self.cookedq.seek(qlen - search_window_size)
                 search_window = self.cookedq.read()
             for i in indices:
                 m = list[i].search(search_window)
                 if m is not None:
-                    e    = len(m.group())
-                    e    = qlen - e + 1
+                    e = m.end() - m.start()
+                    e = qlen - e + 1
                     self.cookedq.seek(0)
                     text = self.cookedq.read(e)
                     if flush:
