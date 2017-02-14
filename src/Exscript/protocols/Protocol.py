@@ -210,6 +210,7 @@ class Protocol(object):
                  logfile            = None,
                  termtype           = 'dumb',
                  verify_fingerprint = True,
+                 only_authenticate  = False,
                  account_factory    = None):
         """
         Constructor.
@@ -253,6 +254,7 @@ class Protocol(object):
         self.last_account          = None
         self.termtype              = termtype
         self.verify_fingerprint    = verify_fingerprint
+        self.only_authenticate    = only_authenticate
         self.manual_driver         = None
         self.debug                 = debug
         self.connect_timeout       = connect_timeout
@@ -626,9 +628,9 @@ class Protocol(object):
             if app_account is None:
                 app_account = account
             self.authenticate(account, flush = False)
-            if self.get_driver().supports_auto_authorize():
-                self.expect_prompt()
-            self.auto_app_authorize(app_account, flush = flush)
+            if self.get_driver().supports_auto_authorize() and not self.only_authenticate:
+                self.auto_app_authorize(app_account, flush = flush)
+            self.expect_prompt()
 
     def authenticate(self, account = None, app_account = None, flush = True):
         """
