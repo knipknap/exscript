@@ -23,7 +23,7 @@ from Exscript.protocols.Exception import InvalidCommandException
 _user_re     = [re.compile(r'user ?name: ?$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
 _tacacs_re   = re.compile(r'[\r\n]s\/key[\S ]+\r?%s' % _password_re[0].pattern)
-_prompt_re   = [re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
+_prompt_re   = [re.compile(r'[\r\n]*[\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re    = [re.compile(r'%Error'),
                 re.compile(r'invalid input', re.I),
                 re.compile(r'(?:incomplete|ambiguous) command', re.I),
