@@ -284,6 +284,17 @@ class QueueTest(unittest.TestCase):
         self.queue.reset()
         self.assertEqual(self.accm.default_pool.n_accounts(), 0)
 
+    def testExceptionCallback(self):
+        self.exc = {}
+        def my_exc_cb(jobname, exc_info):
+            self.exc[jobname] = exc_info
+
+        self.createQueue(exc_cb = my_exc_cb)
+        self.queue.run('dummy://mytest', error)
+        self.queue.join()
+        self.assert_("mytest" in self.exc)
+        self.assert_(isinstance(self.exc["mytest"][1], FailException))
+
     def testRun(self):
         data  = Value('i', 0)
         hosts = ['dummy://dummy1', 'dummy://dummy2']

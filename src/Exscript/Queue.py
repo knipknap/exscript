@@ -181,6 +181,7 @@ class Queue(object):
                  mode        = 'threading',
                  max_threads = 1,
                  host_driver = None,
+                 exc_cb      = None,
                  stdout      = sys.stdout,
                  stderr      = sys.stderr):
         """
@@ -215,6 +216,8 @@ class Queue(object):
         @param max_threads: The maximum number of concurrent threads.
         @type  host_driver: str
         @param host_driver: driver name like "ios" for manual override
+        @type  exc_cb: func(jobname, exc_info)
+        @param exc_cb: callback function to call on exceptions
         @type  stdout: file
         @param stdout: The output channel, defaults to sys.stdout.
         @type  stderr: file
@@ -228,6 +231,7 @@ class Queue(object):
         self.stdout            = stdout
         self.stderr            = stderr
         self.host_driver       = host_driver
+        self.exc_cb            = exc_cb
         self.devnull           = open(os.devnull, 'w')
         self.channel_map       = {'fatal_errors': self.stderr,
                                   'debug':        self.stdout}
@@ -374,6 +378,8 @@ class Queue(object):
     def _on_job_error(self, job, exc_info):
         msg   = job.name + ' error: ' + str(exc_info[1])
         trace = ''.join(format_exception(*exc_info))
+        if self.exc_cb:
+            self.exc_cb(job.name, exc_info)
         self._print('errors', msg)
         if _is_recoverable_error(exc_info[0]):
             self._print('tracebacks', trace)
