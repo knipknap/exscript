@@ -920,6 +920,8 @@ class Protocol(object):
         @return: The index of the prompt regular expression that matched,
           and the match object.
         """
+        if not consume:
+            self.buffer.clear()
         self.send(command + '\r')
         return self.expect_prompt(consume)
 
