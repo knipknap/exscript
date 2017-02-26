@@ -20,8 +20,8 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'user ?name: ', re.I)]
 _password_re = [re.compile(r'[\r\n]Password: $')]
-_prompt_re   = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
-_huawei_re   = re.compile(r'\bhuawei\b', re.I)
+_prompt_re   = [re.compile(r'[\<\[]\S+[\>\]] ?$', re.I)]
+_huawei_re   = [re.compile(r'\bhuawei\b', re.I), re.compile(r'The current login time is.*', re.I)]
 
 class VRPDriver(Driver):
     def __init__(self):
@@ -31,6 +31,13 @@ class VRPDriver(Driver):
         self.prompt_re   = _prompt_re
 
     def check_head_for_os(self, string):
-        if _huawei_re.search(string):
+        if _huawei_re[0].search(string):
             return 80
+        elif _huawei_re[1].search(string):
+            return 70
+        elif _prompt_re[0].search(string):
+            return 60
         return 0
+
+    def init_terminal(self, conn):
+        conn.execute('screen-length 0 temporary')
