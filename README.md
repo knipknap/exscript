@@ -1,5 +1,7 @@
 # Exscript
 
+[![Build Status](https://travis-ci.org/knipknap/exscript.svg?branch=master)](https://travis-ci.org/knipknap/exscript)
+
 ## Summary
 
 Exscript is a Python module and a template processor for automating network 
