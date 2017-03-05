@@ -10,17 +10,23 @@ best possible set of tools for working with Telnet and SSH.
 
 Exscript also provides a set of tools and functions for sysadmins, that
 simplify **regular expression matching**, **reporting** by email, **logging**,
-or **syslog** handling, **CSV parsing**, **ip address handling**, and many more.
+or **syslog** handling, **CSV parsing**, **ip address handling**,
+**template processing**, and many more.
 
 Exscript may be used to automate sessions with routers from Cisco, Juniper, 
 OneAccess, Huawei, or any others. If you want to configures machines 
 running Linux/Unix, IOS, IOS-XR, JunOS, VRP, or any other operating system 
-that can be used with a terminal, Exscript should be just what you are 
-looking for.
+that can be used with a terminal, Exscript is what you are looking for.
 
-The Exscript template language is also in some ways comparable to Expect, 
-but has some unique features that make it a lot easier to use and understand 
-for non-developers.
+## Main design goals
+
+* Exscript provides **high reliability** and **scalability**. Exscript is
+  used by some of the world's largest ISPs to maintain hundreds of thousands
+  of sessions every day.
+* Exscript is **extremely well tested**. The Exscript public API has almost
+  100% test coverage.
+* Exscript is **protocol agnostic**, so if you are migrating from Telnet to
+  SSH later, you can switch easily by simply .
 
 ## Method 1: Using Exscript with Python
 
