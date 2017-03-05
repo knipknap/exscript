@@ -5,9 +5,11 @@ from Exscript.version import __version__
 
 # Import the project description from the README.
 readme = open('README.md').read()
-start  = readme.index('\n\n')
-end    = readme.index('\n\nLinks')
-descr  = readme[start:end].strip()
+descr = '''
+Exscript is a Python module and a template processor for automating network 
+connections over protocols such as Telnet or SSH. We attempt to create the 
+best possible set of tools for working with Telnet and SSH.
+'''.strip()
 
 # Run the setup.
 setup(name             = 'Exscript',
