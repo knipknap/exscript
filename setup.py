@@ -14,7 +14,7 @@ best possible set of tools for working with Telnet and SSH.
 # Run the setup.
 setup(name             = 'Exscript',
       version          = __version__,
-      description      = 'Template language for automating Telnet and SSH',
+      description      = 'Automating Telnet and SSH',
       long_description = descr,
       author           = 'Samuel Abels',
       author_email     = 'knipknap@gmail.com',
