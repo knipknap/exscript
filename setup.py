@@ -1,11 +1,7 @@
 import sys
 import os
 from setuptools import setup, find_packages
-
-# Import the file that contains the version number.
-exscript_dir = os.path.join(os.path.dirname(__file__), 'src', 'Exscript')
-sys.path.insert(0, exscript_dir)
-from version import __version__
+from Exscript.version import __version__
 
 # Import the project description from the README.
 readme = open('README.md').read()
@@ -21,10 +17,9 @@ setup(name             = 'Exscript',
       author           = 'Samuel Abels',
       author_email     = 'knipknap@gmail.com',
       license          = 'GPLv2',
-      package_dir      = {'': 'src',
-                          'Exscript':   os.path.join('src', 'Exscript')},
+      package_dir      = {'Exscript': 'Exscript'},
       package_data     = {},
-      packages         = find_packages('src'),
+      packages         = find_packages(),
       scripts          = ['exscript'],
       install_requires = ['paramiko', 'pycrypto'],
       extras_require   = {},

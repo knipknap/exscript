@@ -1,5 +1,5 @@
 import sys, unittest, re, os.path, threading
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from multiprocessing import Pipe
 from Exscript.workqueue.Job import Thread, Process, Job

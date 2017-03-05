@@ -1,5 +1,5 @@
 import sys, unittest, re, os.path, threading, time
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import time
 from threading import Thread

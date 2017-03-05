@@ -1,5 +1,5 @@
 import sys, unittest, re, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from Exscript.protocols.OsGuesser import OsGuesser
 import Exscript.protocols.drivers as drivers

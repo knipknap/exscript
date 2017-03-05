@@ -21,7 +21,7 @@ pdf:
 	# Copy the stdlib Python directory and modify it such that the
 	# generated documentation does not leak implementation details.
 	rm -Rf latex stdlib
-	cp -r ../src/Exscript/stdlib .
+	cp -r ../Exscript/stdlib .
 	mv stdlib/mysys.py stdlib/sys.py
 	sed -i 's/\(def [^(]*(\)scope,? ?/\1/' stdlib/*.py # Remove the scope arg
 	sed -i 's/\(def [^(]*\)_(/\1(/' stdlib/*.py      	 # Remove trailing _
@@ -61,7 +61,29 @@ handbook: pdf
 
 apidocs:
 	cd ..; ./version.sh
-	python mkapidoc.py
+	epydoc --name Exscript \
+        --exclude ^Exscript\.AccountManager$ \
+        --exclude ^Exscript\.Log$ \
+        --exclude ^Exscript\.Logfile$ \
+        --exclude ^Exscript\.LoggerProxy$ \
+        --exclude ^Exscript\.external$ \
+        --exclude ^Exscript\.interpreter$ \
+        --exclude ^Exscript\.parselib$ \
+        --exclude ^Exscript\.protocols\.OsGuesser$ \
+        --exclude ^Exscript\.protocols\.telnetlib$ \
+        --exclude ^Exscript\.stdlib$ \
+        --exclude ^Exscript\.workqueue$ \
+        --exclude ^Exscript\.version$ \
+        --exclude-introspect ^Exscript\.util\.sigintcatcher$ \
+		--html \
+		--no-private \
+		--introspect-only \
+		--no-source \
+		--no-frames \
+		--inheritance=included \
+		-v \
+		-o doc/api \
+		Exscript
 	cd ..; ./version.sh --reset
 
 clean:
