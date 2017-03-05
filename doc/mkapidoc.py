@@ -40,7 +40,6 @@ cmd = 'epydoc ' + ' '.join(['--name', project,
                             r'--exclude ^Exscriptd\.daemonize$',
                             r'--exclude ^Exscriptd\.util$',
                             r'--exclude ^Exscriptd\.pidutil$',
-                            r'--exclude ^TkExscript\.compat$',
                             '--html',
                             '--no-private',
                             '--introspect-only',
@@ -50,7 +49,6 @@ cmd = 'epydoc ' + ' '.join(['--name', project,
                             '-v',
                             '-o %s' % doc_dir,
                             os.path.join(base_dir, project),
-                            os.path.join(base_dir, 'Exscriptd'),
-                            os.path.join(base_dir, 'TkExscript')])
+                            os.path.join(base_dir, 'Exscriptd')])
 print cmd
 os.system(cmd)
