@@ -336,6 +336,7 @@ class SSH2(Protocol):
                 self.response = self.buffer.pop(end)
                 self.buffer.pop(match.end()-match.start())
             else:
+                end = self.buffer.size()  # Capture the whole buffer if we do not flush (prompt included)
                 self.response = self.buffer.head(end)
             return n, match
 
