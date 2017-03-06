@@ -4,10 +4,9 @@ from setuptools import setup, find_packages
 from Exscript.version import __version__
 
 # Import the project description from the README.
-readme = open('README.md').read()
 descr = '''
-Exscript is a Python module and a template processor for automating network 
-connections over protocols such as Telnet or SSH. We attempt to create the 
+Exscript is a Python module and a template processor for automating network
+connections over protocols such as Telnet or SSH. We attempt to create the
 best possible set of tools for working with Telnet and SSH.
 '''.strip()
 
