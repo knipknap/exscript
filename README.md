@@ -26,7 +26,7 @@ that can be used with a terminal, Exscript is what you are looking for.
 * Exscript is **extremely well tested**. The Exscript public API has almost
   100% test coverage.
 * Exscript is **protocol agnostic**, so if you are migrating from Telnet to
-  SSH later, you can switch easily by simply .
+  SSH later, you can switch easily by simply changing an import statement.
 
 ## Method 1: Using Exscript with Python
 
