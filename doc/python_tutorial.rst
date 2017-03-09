@@ -5,7 +5,7 @@ Introduction
 ------------
 
 This is a step by step introduction to using Exscript in
-`Python <http://www.python.org/>`__.
+`Python <http://www.python.org/>`_.
 
 We'll assume that Exscript is already installed. You can confirm that
 your installation works by typing ``exscript --version`` into a
@@ -15,11 +15,11 @@ complete.
 We will also assume that you have at least a little bit of programming
 experience, though most of the examples should be pretty simple. If you
 already understand how to use Perl's
-`Net::Telnet <http://search.cpan.org/~jrogers/Net-Telnet-3.03/lib/Net/Telnet.pm>`__,
+`Net::Telnet <http://search.cpan.org/~jrogers/Net-Telnet-3.03/lib/Net/Telnet.pm>`_,
 you should feel right at home.
 
 Exscript also has extensive `API
-documentation <http://knipknap.github.com/exscript/api/>`__, which may
+documentation <http://knipknap.github.com/exscript/api/>`_, which may
 be used as a reference throughout this tutorial.
 
 Getting started
@@ -28,7 +28,7 @@ Getting started
 As a first simple test, let's try to connect to a network device via
 SSH2, and execute the ``uname -a`` command on it.
 
-Create a file named ``test.py`` with the following content:
+Create a file named ``test.py`` with the following content::
 
     from Exscript.util.interact import read_login
     from Exscript.protocols import SSH2
@@ -49,7 +49,7 @@ connect to ``localhost`` using the entered login details. Once logged
 in, we execute ``uname -a``, log out, and make sure to wait until the
 remote host has closed the connection.
 
-You can see one important difference: we used ``conn.execute`` to run
+You can see one important difference: We used ``conn.execute`` to run
 ``uname -a``, but we used ``conn.send`` to execute the ``exit`` command.
 The reason is that *``conn.execute`` waits until the server has
 acknowledged that the command has completed*, while ``conn.send`` does
@@ -61,7 +61,7 @@ Making it easier
 ----------------
 
 While the above serves as a good introduction on how to use
-``Exscript.protocols``, it has a a few drawbacks:
+``Exscript.protocols``, it has a few drawbacks:
 
 #. It only works for SSH2 or for Telnet, but not for both.
 #. It contains a lot of unneeded code.
@@ -97,7 +97,7 @@ Running a script on multiple hosts
 
 In practice, you may want to run this script on multiple hosts, and
 optimally at the same time, in parallel. Using the
-:func:`Exscript.util.start.quickstart``
+:func:`Exscript.util.start.quickstart`
 function, this is now really easy::
 
     from Exscript.util.start import quickstart
@@ -106,13 +106,13 @@ function, this is now really easy::
         conn.execute('uname -a')
 
     hosts = ['ssh://localhost', 'telnet://anotherhost']
-    quickstart(hosts, do_something, max_threads = 2)
+    quickstart(hosts, do_something, max_threads=2)
 
 We only changed the last lines of the script:
 
 #. We pass in two hosts, ``localhost`` and ``anotherhost``. Note that
    ``localhost`` uses SSH, and ``anotherhost`` speaks Telnet.
-#. We added the ``max_threads = 2`` argument. This tells Exscript to
+#. We added the ``max_threads=2`` argument. This tells Exscript to
    open two network connections in parallel.
 
 If you run this script, it will again ask for the login details, and run
@@ -137,7 +137,7 @@ also list them in a text file and load it using
         conn.execute('uname -a')
 
     hosts = get_hosts_from_file('myhosts.txt')
-    start(hosts, do_something, max_threads = 2)
+    start(hosts, do_something, max_threads=2)
 
 Reading login information
 -------------------------
@@ -146,7 +146,7 @@ Depending on how you would like to provide the login information, there
 are a few options. The first is by hard coding it into the hostname::
 
     hosts = ['ssh://localhost', 'telnet://myuser:mypassword@anotherhost']
-    quickstart(hosts, do_something, max_threads = 2)
+    quickstart(hosts, do_something, max_threads=2)
 
 In this case, ``quickstart`` still prompts the user for his login
 details, but the entered information is only used on hosts that do not
@@ -165,7 +165,7 @@ can also use the Exscript.Host object as shown in the following script::
     host2 = Host('ssh://otherhost')
     host2.set_account(account2)
 
-    quickstart([host1 , host2], do_something, max_threads = 2)
+    quickstart([host1 , host2], do_something, max_threads=2)
 
 This script still has the problem that it prompts the user for login
 details, even though the details are already known. By using

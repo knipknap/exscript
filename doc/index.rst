@@ -6,8 +6,8 @@
 Exscript documentation
 ======================
 
-Summary
--------
+Introduction
+------------
 
 Exscript is a Python module and a template processor for automating network 
 connections over protocols such as Telnet or SSH. We attempt to create the 
@@ -23,38 +23,18 @@ OneAccess, Huawei, or any others. If you want to configures machines
 running Linux/Unix, IOS, IOS-XR, JunOS, VRP, or any other operating system 
 that can be used with a terminal, Exscript is what you are looking for.
 
-Method 1: Using Exscript with Python
-------------------------------------
-
-::
-    from Exscript.util.start import start
-    from Exscript.util.file import get_hosts_from_file
-    from Exscript.util.file import get_accounts_from_file
-
-    def do_something(job, host, conn):
-        conn.execute('uname -a')
-
-        accounts = get_accounts_from_file('accounts.cfg')
-        hosts = get_hosts_from_file('myhosts.txt')
-        start(accounts, hosts, do_something, max_threads=2)
+Using Exscript with Python
+--------------------------
 
 Make sure to check out the `python_tutorial`.
 You may also want to look at the
 `Python examples <https://github.com/knipknap/exscript/tree/master/demos/>`_.
 
-Method 2: Using the Exscript command line tool
-----------------------------------------------
+Using the Exscript command line tool
+------------------------------------
 
-Create a file named **test.exscript** with the following content::
-
-    uname -a
-
-To run this Exscript template, just start Exscript using the following command::
-
-    exscript test.exscript ssh://localhost
-
-Awesome fact: Just replace `ssh://` by `telnet://` and it should still work with Telnet devices.
-Make sure to check out the `cli_tutorial`.
+Have a look at our `cli_tutorial`. You will also want to learn about
+`templates`.
 
 Main design goals
 -----------------
@@ -78,9 +58,9 @@ Contents
    :maxdepth: 2
 
    install
-   exscript
    python_tutorial
    cli_tutorial
+   exscript
    templates
    trouble
    python

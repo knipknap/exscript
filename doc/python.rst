@@ -4,35 +4,33 @@ The Python API
 Overview
 --------
 
-*Exscript* provides simple, yet powerful Python APIs. There are two
-ways in which *Exscript* APIs may be used:
+Exscript provides simple, yet powerful Python APIs. There are two
+ways in which Exscript APIs may be used:
 
-#. “*Exscript* .protocols” is a simple replacement for Python’s built-in
-   telnetlib.
+- "Exscript.protocols" is essentially a more powerful replacement
+  for Python's built-in telnetlib.
 
-#. “*Exscript* .Queue” is a powerful, multi-threaded environment for
-   automating more complex tasks. It comes with features such as
-   logging, user account management, and error handling that make things
-   a lot easier. This is the recommended way of using Exscript.
+- "Exscript.Queue" is a powerful, multi-threaded environment for
+  automating more complex tasks. It comes with features such as
+  logging, user account management, and error handling that make things
+  a lot easier. This is the recommended way of using Exscript.
 
-*Exscript* .protocols
----------------------
+Exscript.protocols
+------------------
 
 The telnetlib module shipped with Python is incomplete, poorly
 implemented, and does not feature a generic API. To make it easy to
-access hosts via Telnet and SSH using the exact same API, *Exscript*
-.protocols provides a clean and simple replacement. *Exscript*
+access hosts via Telnet and SSH using the exact same API, Exscript
+.protocols provides a clean and simple replacement. Exscript
 supports the following protocols at this time:
 
-#. *Telnet* is a Telnet adapter.
+- *Telnet* is a Telnet adapter.
 
-#. *SSH* is an adapter for SSH version 1 and version 2.
+- *SSH* is an adapter for SSH version 1 and version 2.
 
-#. *Dummy* is a virtual pseudo device that may be used for testing.
+- *Dummy* is a virtual pseudo device that may be used for testing.
 
-The following example shows how to connect to a host using Telnet:
-
-::
+The following example shows how to connect to a host using Telnet::
 
     from Exscript.protocols import Telnet
 
@@ -43,15 +41,15 @@ The following example shows how to connect to a host using Telnet:
     conn.send("exit\r")
     conn.close()
 
-The example will execute the “ls -l” command on the remote host, and
+The example will execute the "ls -l" command on the remote host, and
 waits until the remote host has responded with a prompt. Once the prompt
-was retrieved, the function returns and “conn.send(“exit”)” is reached.
+was retrieved, the function returns and "conn.send("exit")" is reached.
 Unlike *execute()*, the *send()* method returns immediately without
 waiting for a response from the remote host. This is necessary here,
-because the remote host does not normally respond to the “exit” command;
+because the remote host does not normally respond to the "exit" command;
 it just closes the connection.
 
-The above code also works with SSH - just replace “Telnet” with SSH:
+The above code also works with SSH - just replace "Telnet" with SSH:
 
 ::
 
@@ -70,7 +68,7 @@ To fetch the response of a remote host, the following code may be used:
 Emulating A Remote Device
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Exscript* also provides a dummy protocol adapter for testing
+Exscript also provides a dummy protocol adapter for testing
 purposes. It emulates a remote host and may be used in place of the
 Telnet and SSH adapters:
 
@@ -100,26 +98,21 @@ providing a Python file that maps commands to responses. E.g.:
 Note that the command name is a regular expression, and the response may
 be either a string or a function.
 
-*Exscript* .Queue
------------------
+Exscript.Queue
+--------------
 
 The more powerful and recommended way of using Exscript is by using
-*Exscript* .Queue. Consider the following simple example:
+Exscript .Queue. Consider the following simple example:
 
-This code reads a list of hostnames from “hostlist.txt”, automatically
-logs into each of the hosts, and executes the “do_something” once for
+This code reads a list of hostnames from "hostlist.txt", automatically
+logs into each of the hosts, and executes the "do_something" once for
 each of the hosts.
 
-The “quickstart()” function is a shortcut that you can use in most
+The "quickstart()" function is a shortcut that you can use in most
 cases. However, there are some more advanced features that you can use.
 For example, Exscript can generate a report for all of the executed
 tasks:
 
-*Exscript* provides additional methods, and also offers
+Exscript provides additional methods, and also offers
 protocol-specific options. For a complete list of supported methods
 please refer to our API documentation.
-
-The Standard Library
-====================
-
-.. automodule:: Exscript.stdlib

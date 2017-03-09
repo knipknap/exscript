@@ -12,12 +12,14 @@ Installing with PIP
 -------------------
 
 ::
+
     sudo pip install exscript
 
 Installing from GitHub
 ----------------------
 
 ::
+
 	git clone git://github.com/knipknap/exscript
 	cd exscript
 	sudo make install

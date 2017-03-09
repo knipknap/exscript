@@ -58,35 +58,30 @@ Reading login information
 -------------------------
 
 Depending on how you would like to provide the login information, there
-are a few options. The first is by including it in the hostname:
+are a few options. The first is by including it in the hostname::
 
-| \`\`\`
-| exscript -c 2 test.exscript ssh://localhost
-  ssh://user:password@otherhost
-| \`\`\`
+    exscript -c 2 test.exscript ssh://localhost
+    ssh://user:password@otherhost
 
-| In this case, Exscript still prompts the user for his login details,
-  but the entered information is only used on hosts that do not have a
-  user/password combination included in the hostname.
-| If you do not want for Exscript to prompt for login details, the
-  ``-i`` switch tells Exscript to not ask for a user and password. You
-  need to make sure that all hosts have a user and password in the
-  hostname if you use it.
+In this case, Exscript still prompts the user for his login details,
+but the entered information is only used on hosts that do not have a
+user/password combination included in the hostname.
+
+If you do not want for Exscript to prompt for login details, the
+``-i`` switch tells Exscript to not ask for a user and password. You
+need to make sure that all hosts have a user and password in the
+hostname if you use it.
 
 Reading host names from a text file
-===================================
+-----------------------------------
 
 If you do not wish to hard code the host names or login details into the
 command, you may also list the hosts in an external file and load it
-using the ``--hosts`` option as follows:
+using the ``--hosts`` option as follows::
 
-| \`\`\`
-| exscript -c 2 —hosts myhosts.txt test.exscript
-| \`\`\`
+    exscript -c 2 —hosts myhosts.txt test.exscript
 
-Note that *hosts.txt* is a file containing a list of hostnames, e.g.:
-
-::
+Note that *hosts.txt* is a file containing a list of hostnames, e.g.::
 
     host1
     host2
@@ -94,30 +89,26 @@ Note that *hosts.txt* is a file containing a list of hostnames, e.g.:
     host20
 
 Reading host names from a CSV file
-==================================
+----------------------------------
 
 Similar to the ``--hosts``, you may also use ``--csv-hosts`` option to
 pass a list of hosts to Exscript while at the same time providing a
 number of variables to the script. The CSV file has the following
-format:
+format::
 
-| \`\`\`
-| address my\_variable another\_variable
-| telnet://myhost value another\_value
-| ssh://yourhost hello world
-| \`\`\`
+    address my_variable another_variable
+    telnet://myhost value another_value
+    ssh://yourhost hello world
 
 Note that fields are separated using the tab character, and the first
 line **must** start with the string "address" and is followed by a list
 of column names.
 
 In the Exscript template, you may then access the variables using those
-column names:
+column names::
 
-| \`\`\`
-| ls -l $my\_variable
-| touch $another\_variable
-| \`\`\`
+    ls -l $my_variable
+    touch $another_variable
 
 Using Account Pooling
 ---------------------
@@ -127,6 +118,7 @@ The accounts from the file are used for hosts that do not have a
 user/password combination specified in their URL.
 
 ::
+
     exscript -c 2 —hosts myhosts.txt —account-pool accounts.cfg test.exscript
 
 Note that ``accounts.cfg`` is a config file with a defined syntax as
@@ -156,7 +148,7 @@ interaction. But Exscript does a lot to make interaction with a device
 easier. The first notable tool is the ``extract`` keyword. Let's look at
 an example::
 
-    uname -a{extract /^(\\S+)\\s+(\\S+)/ as os, hostname}
+    uname -a{extract /^(\S+)\s+(\S+)/ as os, hostname}
 
 The Exscript Template Language
 ------------------------------
@@ -165,13 +157,11 @@ The Exscript template language is in some ways comparable to Expect, but
 has unique features that make it a lot easier to use and understand for
 non-developers.
 
-A first example
----------------
+A first example::
 
-::
-    {fail "not a Cisco router" if connection.guess\_os() is not "ios"}
+    {fail "not a Cisco router" if connection.guess_os() is not "ios"}
 
-    show ip interface brief {extract /^(\\S+)\\s/ as interfaces}
+    show ip interface brief {extract /^(\S+)\s/ as interfaces}
     configure terminal
     {loop interfaces as interface}
         interface $interface
@@ -198,8 +188,8 @@ to automate a session with a Cisco router::
       copy running-config startup-config
     {end}
 
-Advanced Command Templates
---------------------------
+Advanced Templates
+------------------
 
 Exscript templates support many more commands. For a full overview over
 the template language, please check the Exscript PDF handbook from the
