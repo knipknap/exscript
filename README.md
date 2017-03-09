@@ -20,16 +20,6 @@ OneAccess, Huawei, or any others. If you want to configures machines
 running Linux/Unix, IOS, IOS-XR, JunOS, VRP, or any other operating system 
 that can be used with a terminal, Exscript is what you are looking for.
 
-## Main design goals
-
-* Exscript provides **high reliability** and **scalability**. Exscript is
-  used by some of the world's largest ISPs to maintain hundreds of thousands
-  of sessions every day.
-* Exscript is **extremely well tested**. The Exscript public API has almost
-  100% test coverage.
-* Exscript is **protocol agnostic**, so if you are migrating from Telnet to
-  SSH later, you can switch easily by simply changing an import statement.
-
 ## Method 1: Using Exscript with Python
 
 ```python
@@ -44,10 +34,6 @@ accounts = get_accounts_from_file('accounts.cfg')
 hosts = get_hosts_from_file('myhosts.txt')
 start(accounts, hosts, do_something, max_threads=2)
 ```
-
-Check out the Python tutorial:
-
-https://github.com/knipknap/exscript/wiki/Python-API-Tutorial
 
 ## Method 2: Using the Exscript command line tool
 
@@ -70,14 +56,4 @@ Awesome fact: Just replace `ssh://` by `telnet://` and it should still work with
 
 Full documentation is here:
 
-https://github.com/knipknap/exscript/wiki
-
-## Installation
-
-Simply follow the [installation guide](https://github.com/knipknap/exscript/wiki/Installation-Guide "Installation Guide").
-
-## Dependencies
-
-* Python >=2.6 , <=2.7 (we are working on Python 3 support)
-* Python-crypto
-* Paramiko
+http://exscript.readthedocs.io/en/latest/index.html
