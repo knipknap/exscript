@@ -1,5 +1,117 @@
-Exscript package
+Exscript Package
 ================
+
+:mod:`Exscript` Package
+-----------------------
+
+.. automodule:: Exscript.__init__
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`Account` Module
+---------------------
+
+.. automodule:: Exscript.Account
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`AccountManager` Module
+----------------------------
+
+.. automodule:: Exscript.AccountManager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`AccountPool` Module
+-------------------------
+
+.. automodule:: Exscript.AccountPool
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`AccountProxy` Module
+--------------------------
+
+.. automodule:: Exscript.AccountProxy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`FileLogger` Module
+------------------------
+
+.. automodule:: Exscript.FileLogger
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`Host` Module
+------------------
+
+.. automodule:: Exscript.Host
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`Log` Module
+-----------------
+
+.. automodule:: Exscript.Log
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`Logfile` Module
+---------------------
+
+.. automodule:: Exscript.Logfile
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`Logger` Module
+--------------------
+
+.. automodule:: Exscript.Logger
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`LoggerProxy` Module
+-------------------------
+
+.. automodule:: Exscript.LoggerProxy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`PrivateKey` Module
+------------------------
+
+.. automodule:: Exscript.PrivateKey
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`Queue` Module
+-------------------
+
+.. automodule:: Exscript.Queue
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`version` Module
+---------------------
+
+.. automodule:: Exscript.version
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Subpackages
 -----------
@@ -16,118 +128,3 @@ Subpackages
     Exscript.util
     Exscript.workqueue
 
-Submodules
-----------
-
-Exscript.Account module
------------------------
-
-.. automodule:: Exscript.Account
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.AccountManager module
-------------------------------
-
-.. automodule:: Exscript.AccountManager
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.AccountPool module
----------------------------
-
-.. automodule:: Exscript.AccountPool
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.AccountProxy module
-----------------------------
-
-.. automodule:: Exscript.AccountProxy
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.FileLogger module
---------------------------
-
-.. automodule:: Exscript.FileLogger
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.Host module
---------------------
-
-.. automodule:: Exscript.Host
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.Log module
--------------------
-
-.. automodule:: Exscript.Log
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.Logfile module
------------------------
-
-.. automodule:: Exscript.Logfile
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.Logger module
-----------------------
-
-.. automodule:: Exscript.Logger
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.LoggerProxy module
----------------------------
-
-.. automodule:: Exscript.LoggerProxy
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.PrivateKey module
---------------------------
-
-.. automodule:: Exscript.PrivateKey
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.Queue module
----------------------
-
-.. automodule:: Exscript.Queue
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Exscript.version module
------------------------
-
-.. automodule:: Exscript.version
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: Exscript
-    :members:
-    :undoc-members:
-    :show-inheritance:

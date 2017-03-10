@@ -1,214 +1,211 @@
-Exscript.util package
-=====================
+util Package
+============
 
-Submodules
-----------
+:mod:`util` Package
+-------------------
 
-Exscript.util.buffer module
----------------------------
+.. automodule:: Exscript.util
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`buffer` Module
+--------------------
 
 .. automodule:: Exscript.util.buffer
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.cast module
--------------------------
+:mod:`cast` Module
+------------------
 
 .. automodule:: Exscript.util.cast
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.crypt module
---------------------------
+:mod:`crypt` Module
+-------------------
 
 .. automodule:: Exscript.util.crypt
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.daemonize module
-------------------------------
+:mod:`daemonize` Module
+-----------------------
 
 .. automodule:: Exscript.util.daemonize
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.decorator module
-------------------------------
+:mod:`decorator` Module
+-----------------------
 
 .. automodule:: Exscript.util.decorator
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.event module
---------------------------
+:mod:`event` Module
+-------------------
 
 .. automodule:: Exscript.util.event
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.file module
--------------------------
+:mod:`file` Module
+------------------
 
 .. automodule:: Exscript.util.file
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.impl module
--------------------------
+:mod:`impl` Module
+------------------
 
 .. automodule:: Exscript.util.impl
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.interact module
------------------------------
+:mod:`interact` Module
+----------------------
 
 .. automodule:: Exscript.util.interact
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.ip module
------------------------
+:mod:`ip` Module
+----------------
 
 .. automodule:: Exscript.util.ip
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.ipv4 module
--------------------------
+:mod:`ipv4` Module
+------------------
 
 .. automodule:: Exscript.util.ipv4
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.ipv6 module
--------------------------
+:mod:`ipv6` Module
+------------------
 
 .. automodule:: Exscript.util.ipv6
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.log module
-------------------------
+:mod:`log` Module
+-----------------
 
 .. automodule:: Exscript.util.log
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.mail module
--------------------------
+:mod:`mail` Module
+------------------
 
 .. automodule:: Exscript.util.mail
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.match module
---------------------------
+:mod:`match` Module
+-------------------
 
 .. automodule:: Exscript.util.match
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.pidutil module
-----------------------------
+:mod:`pidutil` Module
+---------------------
 
 .. automodule:: Exscript.util.pidutil
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.report module
----------------------------
+:mod:`report` Module
+--------------------
 
 .. automodule:: Exscript.util.report
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.sigint module
----------------------------
+:mod:`sigint` Module
+--------------------
 
 .. automodule:: Exscript.util.sigint
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.sigintcatcher module
-----------------------------------
+:mod:`sigintcatcher` Module
+---------------------------
 
 .. automodule:: Exscript.util.sigintcatcher
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.start module
---------------------------
+:mod:`start` Module
+-------------------
 
 .. automodule:: Exscript.util.start
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.syslog module
----------------------------
+:mod:`syslog` Module
+--------------------
 
 .. automodule:: Exscript.util.syslog
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.template module
------------------------------
+:mod:`template` Module
+----------------------
 
 .. automodule:: Exscript.util.template
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.tty module
-------------------------
+:mod:`tty` Module
+-----------------
 
 .. automodule:: Exscript.util.tty
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.url module
-------------------------
+:mod:`url` Module
+-----------------
 
 .. automodule:: Exscript.util.url
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.util.weakmethod module
--------------------------------
+:mod:`weakmethod` Module
+------------------------
 
 .. automodule:: Exscript.util.weakmethod
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: Exscript.util
-    :members:
-    :undoc-members:
-    :show-inheritance:

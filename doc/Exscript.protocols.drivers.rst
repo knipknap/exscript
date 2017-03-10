@@ -1,254 +1,251 @@
-Exscript.protocols.drivers package
-==================================
+drivers Package
+===============
 
-Submodules
-----------
+:mod:`drivers` Package
+----------------------
 
-Exscript.protocols.drivers.ace module
--------------------------------------
+.. automodule:: Exscript.protocols.drivers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`ace` Module
+-----------------
 
 .. automodule:: Exscript.protocols.drivers.ace
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.aironet module
------------------------------------------
+:mod:`aironet` Module
+---------------------
 
 .. automodule:: Exscript.protocols.drivers.aironet
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.aix module
--------------------------------------
+:mod:`aix` Module
+-----------------
 
 .. automodule:: Exscript.protocols.drivers.aix
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.arbor_peakflow module
-------------------------------------------------
+:mod:`arbor_peakflow` Module
+----------------------------
 
 .. automodule:: Exscript.protocols.drivers.arbor_peakflow
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.aruba module
----------------------------------------
+:mod:`aruba` Module
+-------------------
 
 .. automodule:: Exscript.protocols.drivers.aruba
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.bigip module
----------------------------------------
+:mod:`bigip` Module
+-------------------
 
 .. automodule:: Exscript.protocols.drivers.bigip
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.brocade module
------------------------------------------
+:mod:`brocade` Module
+---------------------
 
 .. automodule:: Exscript.protocols.drivers.brocade
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.driver module
-----------------------------------------
+:mod:`driver` Module
+--------------------
 
 .. automodule:: Exscript.protocols.drivers.driver
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.enterasys module
--------------------------------------------
+:mod:`enterasys` Module
+-----------------------
 
 .. automodule:: Exscript.protocols.drivers.enterasys
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.enterasys_wc module
-----------------------------------------------
+:mod:`enterasys_wc` Module
+--------------------------
 
 .. automodule:: Exscript.protocols.drivers.enterasys_wc
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.eos module
--------------------------------------
+:mod:`eos` Module
+-----------------
 
 .. automodule:: Exscript.protocols.drivers.eos
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.ericsson_ban module
-----------------------------------------------
+:mod:`ericsson_ban` Module
+--------------------------
 
 .. automodule:: Exscript.protocols.drivers.ericsson_ban
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.fortios module
------------------------------------------
+:mod:`fortios` Module
+---------------------
 
 .. automodule:: Exscript.protocols.drivers.fortios
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.generic module
------------------------------------------
+:mod:`generic` Module
+---------------------
 
 .. automodule:: Exscript.protocols.drivers.generic
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.hp_pro_curve module
-----------------------------------------------
+:mod:`hp_pro_curve` Module
+--------------------------
 
 .. automodule:: Exscript.protocols.drivers.hp_pro_curve
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.ios module
--------------------------------------
+:mod:`ios` Module
+-----------------
 
 .. automodule:: Exscript.protocols.drivers.ios
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.ios_xr module
-----------------------------------------
+:mod:`ios_xr` Module
+--------------------
 
 .. automodule:: Exscript.protocols.drivers.ios_xr
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.isam module
---------------------------------------
+:mod:`isam` Module
+------------------
 
 .. automodule:: Exscript.protocols.drivers.isam
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.junos module
----------------------------------------
+:mod:`junos` Module
+-------------------
 
 .. automodule:: Exscript.protocols.drivers.junos
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.junos_erx module
--------------------------------------------
+:mod:`junos_erx` Module
+-----------------------
 
 .. automodule:: Exscript.protocols.drivers.junos_erx
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.mrv module
--------------------------------------
+:mod:`mrv` Module
+-----------------
 
 .. automodule:: Exscript.protocols.drivers.mrv
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.nxos module
---------------------------------------
+:mod:`nxos` Module
+------------------
 
 .. automodule:: Exscript.protocols.drivers.nxos
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.one_os module
-----------------------------------------
+:mod:`one_os` Module
+--------------------
 
 .. automodule:: Exscript.protocols.drivers.one_os
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.rios module
---------------------------------------
+:mod:`rios` Module
+------------------
 
 .. automodule:: Exscript.protocols.drivers.rios
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.shell module
----------------------------------------
+:mod:`shell` Module
+-------------------
 
 .. automodule:: Exscript.protocols.drivers.shell
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.smart_edge_os module
------------------------------------------------
+:mod:`smart_edge_os` Module
+---------------------------
 
 .. automodule:: Exscript.protocols.drivers.smart_edge_os
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.sros module
---------------------------------------
+:mod:`sros` Module
+------------------
 
 .. automodule:: Exscript.protocols.drivers.sros
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.vrp module
--------------------------------------
+:mod:`vrp` Module
+-----------------
 
 .. automodule:: Exscript.protocols.drivers.vrp
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.vxworks module
------------------------------------------
+:mod:`vxworks` Module
+---------------------
 
 .. automodule:: Exscript.protocols.drivers.vxworks
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.protocols.drivers.zte module
--------------------------------------
+:mod:`zte` Module
+-----------------
 
 .. automodule:: Exscript.protocols.drivers.zte
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: Exscript.protocols.drivers
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -1,46 +1,43 @@
-Exscript.servers package
-========================
+servers Package
+===============
 
-Submodules
-----------
+:mod:`servers` Package
+----------------------
 
-Exscript.servers.HTTPd module
------------------------------
+.. automodule:: Exscript.servers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`HTTPd` Module
+-------------------
 
 .. automodule:: Exscript.servers.HTTPd
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.servers.SSHd module
-----------------------------
+:mod:`SSHd` Module
+------------------
 
 .. automodule:: Exscript.servers.SSHd
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.servers.Server module
-------------------------------
+:mod:`Server` Module
+--------------------
 
 .. automodule:: Exscript.servers.Server
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.servers.Telnetd module
--------------------------------
+:mod:`Telnetd` Module
+---------------------
 
 .. automodule:: Exscript.servers.Telnetd
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: Exscript.servers
-    :members:
-    :undoc-members:
-    :show-inheritance:

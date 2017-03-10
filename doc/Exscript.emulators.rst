@@ -1,38 +1,35 @@
-Exscript.emulators package
-==========================
+emulators Package
+=================
 
-Submodules
-----------
+:mod:`emulators` Package
+------------------------
 
-Exscript.emulators.CommandSet module
-------------------------------------
+.. automodule:: Exscript.emulators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`CommandSet` Module
+------------------------
 
 .. automodule:: Exscript.emulators.CommandSet
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.emulators.IOSEmulator module
--------------------------------------
+:mod:`IOSEmulator` Module
+-------------------------
 
 .. automodule:: Exscript.emulators.IOSEmulator
     :members:
     :undoc-members:
     :show-inheritance:
 
-Exscript.emulators.VirtualDevice module
----------------------------------------
+:mod:`VirtualDevice` Module
+---------------------------
 
 .. automodule:: Exscript.emulators.VirtualDevice
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: Exscript.emulators
-    :members:
-    :undoc-members:
-    :show-inheritance:
