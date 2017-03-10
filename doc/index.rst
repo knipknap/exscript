@@ -1,8 +1,20 @@
-.. Exscript documentation master file, created by
-   sphinx-quickstart on Wed Mar  8 19:52:48 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. image:: https://travis-ci.org/knipknap/exscript.svg?branch=master
+    :target: https://travis-ci.org/knipknap/exscript
 
+.. image:: https://coveralls.io/repos/github/knipknap/exscript/badge.svg?branch=master
+    :target: https://coveralls.io/github/knipknap/exscript?branch=master
+
+.. image:: https://lima.codeclimate.com/github/knipknap/exscript/badges/gpa.svg
+    :target: https://lima.codeclimate.com/github/knipknap/exscript
+    :alt: Code Climate
+
+.. image:: https://img.shields.io/github/stars/knipknap/exscript.svg
+    :target: https://github.com/knipknap/exscript/stargazers
+
+.. image:: https://img.shields.io/github/license/knipknap/exscript.svg
+    :target: https://github.com/knipknap/exscript/blob/master/COPYING
+
+|
 What is Exscript?
 =================
 
