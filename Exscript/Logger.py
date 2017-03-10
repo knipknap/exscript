@@ -30,7 +30,7 @@ class Logger(object):
 
     def __init__(self):
         """
-        Creates a new logger instance. Use the L{Exscript.util.log.log_to}
+        Creates a new logger instance. Use the :class:`Exscript.util.log.log_to`
         decorator to send messages to the logger.
         """
         logger_registry[id(self)] = self

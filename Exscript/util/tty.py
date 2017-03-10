@@ -43,8 +43,8 @@ def get_terminal_size(default_rows = 25, default_cols = 80):
     It attempts several strategies to determine the size and if all fail,
     it returns (80, 25).
 
-    @rtype:  int, int
-    @return: The rows and columns of the terminal.
+    :rtype:  int, int
+    :return: The rows and columns of the terminal.
     """
     # Collect a list of viable input channels that may tell us something
     # about the terminal dimensions.

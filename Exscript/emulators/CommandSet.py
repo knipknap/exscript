@@ -42,10 +42,10 @@ class CommandSet(object):
         If the given response handler is a function, it is called
         with the command passed as an argument.
 
-        @type  command: str|regex
-        @param command: A string or a compiled regular expression.
-        @type  response: function|str
-        @param response: A reponse, or a response handler.
+        :type  command: str|regex
+        :param command: A string or a compiled regular expression.
+        :type  response: function|str
+        :param response: A reponse, or a response handler.
         """
         if isinstance(command, str):
             command = re.compile(command)
@@ -60,10 +60,10 @@ class CommandSet(object):
         a list named 'commands' of tuples that map command names to
         handlers.
 
-        @type  filename: str
-        @param filename: The name of the file containing the tuples.
-        @type  handler_decorator: function
-        @param handler_decorator: A function that is used to decorate
+        :type  filename: str
+        :param filename: The name of the file containing the tuples.
+        :type  handler_decorator: function
+        :param handler_decorator: A function that is used to decorate
                each of the handlers in the file.
         """
         args = {}
@@ -83,10 +83,10 @@ class CommandSet(object):
         Evaluate the given string against all registered commands and
         return the defined response.
 
-        @type  command: str
-        @param command: The command that is evaluated.
-        @rtype:  str or None
-        @return: The response, if one was defined.
+        :type  command: str
+        :param command: The command that is evaluated.
+        :rtype:  str or None
+        :return: The response, if one was defined.
         """
         for cmd, response in self.response_list:
             if not cmd.match(command):

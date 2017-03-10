@@ -1,75 +1,78 @@
-stdlib Package
-==============
+Exscript.stdlib package
+=======================
 
-:mod:`stdlib` Package
----------------------
+Submodules
+----------
 
-.. automodule:: Exscript.stdlib
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`connection` Module
-------------------------
+Exscript.stdlib.connection module
+---------------------------------
 
 .. automodule:: Exscript.stdlib.connection
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`crypt` Module
--------------------
+Exscript.stdlib.crypt module
+----------------------------
 
 .. automodule:: Exscript.stdlib.crypt
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`file` Module
-------------------
+Exscript.stdlib.file module
+---------------------------
 
 .. automodule:: Exscript.stdlib.file
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`ipv4` Module
-------------------
+Exscript.stdlib.ipv4 module
+---------------------------
 
 .. automodule:: Exscript.stdlib.ipv4
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`list` Module
-------------------
+Exscript.stdlib.list module
+---------------------------
 
 .. automodule:: Exscript.stdlib.list
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`mysys` Module
--------------------
+Exscript.stdlib.mysys module
+----------------------------
 
 .. automodule:: Exscript.stdlib.mysys
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`string` Module
---------------------
+Exscript.stdlib.string module
+-----------------------------
 
 .. automodule:: Exscript.stdlib.string
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`util` Module
-------------------
+Exscript.stdlib.util module
+---------------------------
 
 .. automodule:: Exscript.stdlib.util
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: Exscript.stdlib
+    :members:
+    :undoc-members:
+    :show-inheritance:

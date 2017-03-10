@@ -87,7 +87,7 @@ class SSHd(Server):
         daemon.exit()  # Stop the server.
         daemon.join()  # Wait until it terminates.
 
-    @keyword key: An Exscript.PrivateKey object.
+    :keyword key: An Exscript.PrivateKey object.
     """
 
     def __init__(self, host, port, device, key = None):

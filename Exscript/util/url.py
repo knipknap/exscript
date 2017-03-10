@@ -108,10 +108,10 @@ class Url(object):
 
     def __str__(self):
         """
-        Like L{to_string()}.
+        Like :class:`to_string()`.
 
-        @rtype:  str
-        @return: A URL.
+        :rtype:  str
+        :return: A URL.
         """
         url = ''
         if self.protocol is not None:
@@ -146,8 +146,8 @@ class Url(object):
         """
         Returns the URL, including all attributes, as a string.
 
-        @rtype:  str
-        @return: A URL.
+        :rtype:  str
+        :return: A URL.
         """
         return str(self)
 
@@ -165,12 +165,12 @@ class Url(object):
           protocol.
           - The query variables are parsed into a dictionary (Url.vars).
 
-        @type  url: string
-        @param url: A URL.
-        @type  default_protocol: string
-        @param default_protocol: A protocol name.
-        @rtype:  Url
-        @return: The Url object contructed from the given URL.
+        :type  url: string
+        :param url: A URL.
+        :type  default_protocol: string
+        :param default_protocol: A protocol name.
+        :rtype:  Url
+        :return: The Url object contructed from the given URL.
         """
         if url is None:
             raise TypeError('Expected string but got' + type(url))

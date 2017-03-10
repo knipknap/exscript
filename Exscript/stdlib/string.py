@@ -20,14 +20,14 @@ def replace(scope, strings, source, dest):
     Returns a copy of the given string (or list of strings) in which all
     occurrences of the given source are replaced by the given dest.
 
-    @type  strings: string
-    @param strings: A string, or a list of strings.
-    @type  source: string
-    @param source: What to replace.
-    @type  dest: string
-    @param dest: What to replace it with.
-    @rtype:  string
-    @return: The resulting string, or list of strings.
+    :type  strings: string
+    :param strings: A string, or a list of strings.
+    :type  source: string
+    :param source: What to replace.
+    :type  dest: string
+    :param dest: What to replace it with.
+    :rtype:  string
+    :return: The resulting string, or list of strings.
     """
     return [s.replace(source[0], dest[0]) for s in strings]
 
@@ -36,10 +36,10 @@ def tolower(scope, strings):
     """
     Returns the given string in lower case.
 
-    @type  strings: string
-    @param strings: A string, or a list of strings.
-    @rtype:  string
-    @return: The resulting string, or list of strings in lower case.
+    :type  strings: string
+    :param strings: A string, or a list of strings.
+    :rtype:  string
+    :return: The resulting string, or list of strings in lower case.
     """
     return [s.lower() for s in strings]
 
@@ -48,9 +48,9 @@ def toupper(scope, strings):
     """
     Returns the given string in upper case.
 
-    @type  strings: string
-    @param strings: A string, or a list of strings.
-    @rtype:  string
-    @return: The resulting string, or list of strings in upper case.
+    :type  strings: string
+    :param strings: A string, or a list of strings.
+    :rtype:  string
+    :return: The resulting string, or list of strings in upper case.
     """
     return [s.upper() for s in strings]

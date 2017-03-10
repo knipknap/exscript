@@ -40,16 +40,16 @@ def netlog(message,
     The priority and facility arguments are equivalent to those of
     Python's built in syslog module.
 
-    @type  source: str
-    @param source: The source address.
-    @type  host: str
-    @param host: The IP address or hostname of the receiving server.
-    @type  port: str
-    @param port: The TCP port number of the receiving server.
-    @type  priority: int
-    @param priority: The message priority.
-    @type  facility: int
-    @param facility: The message facility.
+    :type  source: str
+    :param source: The source address.
+    :type  host: str
+    :param host: The IP address or hostname of the receiving server.
+    :type  port: str
+    :param port: The TCP port number of the receiving server.
+    :type  priority: int
+    :param priority: The message priority.
+    :type  facility: int
+    :param facility: The message facility.
     """
     if not source:
         source = '%s[%s]' + (sys.argv[0], os.getpid())

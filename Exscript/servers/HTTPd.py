@@ -175,12 +175,12 @@ class HTTPd(ThreadingMixIn, HTTPServer):
         """
         Constructor.
 
-        @type  address: (str, int)
-        @param address: The address and port number on which to bind.
-        @type  handler_cls: L{RequestHandler}
-        @param handler_cls: The RequestHandler to use.
-        @type  user_data: object
-        @param user_data: Optional data that, stored in self.user_data.
+        :type  address: (str, int)
+        :param address: The address and port number on which to bind.
+        :type  handler_cls: :class:`RequestHandler`
+        :param handler_cls: The RequestHandler to use.
+        :type  user_data: object
+        :param user_data: Optional data that, stored in self.user_data.
         """
         self.debug     = False
         self.realm     = default_realm
@@ -192,10 +192,10 @@ class HTTPd(ThreadingMixIn, HTTPServer):
         """
         Adds a username/password pair that HTTP clients may use to log in.
 
-        @type  username: str
-        @param username: The name of the user.
-        @type  password: str
-        @param password: The user's password.
+        :type  username: str
+        :param username: The name of the user.
+        :type  password: str
+        :param password: The user's password.
         """
         self.accounts[username] = password
 
@@ -203,8 +203,8 @@ class HTTPd(ThreadingMixIn, HTTPServer):
         """
         Returns the password of the user with the given name.
 
-        @type  username: str
-        @param username: The name of the user.
+        :type  username: str
+        :param username: The name of the user.
         """
         return self.accounts.get(username)
 

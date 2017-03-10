@@ -23,13 +23,13 @@ def otp(password, seed, sequence):
     sequence number and returns it.
     Uses the MD4/sixword algorithm as supported by TACACS+ servers.
 
-    @type  password: string
-    @param password: A password.
-    @type  seed: string
-    @param seed: A username.
-    @type  sequence: int
-    @param sequence: A sequence number.
-    @rtype:  string
-    @return: A hash.
+    :type  password: string
+    :param password: A password.
+    :type  seed: string
+    :param seed: A username.
+    :type  sequence: int
+    :param sequence: A sequence number.
+    :rtype:  string
+    :return: A hash.
     """
     return generate(password, seed, sequence, 1, 'md4', 'sixword')[0]

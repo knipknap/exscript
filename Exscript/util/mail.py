@@ -109,18 +109,18 @@ class Mail(object):
         If the given sender is None, one will be automatically chosen
         using getpass.getuser().
 
-        @type  sender: string
-        @param sender: The email address of the sender.
-        @type  to: string|list(string)
-        @param to: A list of email addresses, passed to set_to().
-        @type  cc: string|list(string)
-        @param cc: A list of email addresses, passed to set_cc().
-        @type  bcc: string|list(string)
-        @param bcc: A list of email addresses, passed to set_bcc().
-        @type  subject: string
-        @param subject: A subject line, passed to set_subject().
-        @type  body: string
-        @param body: The email body, passed to set_body().
+        :type  sender: string
+        :param sender: The email address of the sender.
+        :type  to: string|list(string)
+        :param to: A list of email addresses, passed to set_to().
+        :type  cc: string|list(string)
+        :param cc: A list of email addresses, passed to set_cc().
+        :type  bcc: string|list(string)
+        :param bcc: A list of email addresses, passed to set_bcc().
+        :type  subject: string
+        :param subject: A subject line, passed to set_subject().
+        :type  body: string
+        :param body: The email body, passed to set_body().
         """
         self.changed_event = Event()
         self.files         = []
@@ -145,8 +145,8 @@ class Mail(object):
         Reads the given template (SMTP formatted) and sets all fields
         accordingly.
 
-        @type  string: string
-        @param string: The template.
+        :type  string: string
+        :param string: The template.
         """
         in_header = True
         body      = ''
@@ -177,8 +177,8 @@ class Mail(object):
         """
         Defines the value of the "From:" field.
 
-        @type  sender: string
-        @param sender: The email address of the sender.
+        :type  sender: string
+        :param sender: The email address of the sender.
         """
         self.sender = sender
         self.changed_event()
@@ -187,8 +187,8 @@ class Mail(object):
         """
         Returns the value of the "From:" field.
 
-        @rtype:  string
-        @return: The email address of the sender.
+        :rtype:  string
+        :return: The email address of the sender.
         """
         return self.sender
 
@@ -200,8 +200,8 @@ class Mail(object):
           - A list of strings (email addresses).
           - A comma separated string containing one or more email addresses.
 
-        @type  to: string|list(string)
-        @param to: The email addresses for the 'to' field.
+        :type  to: string|list(string)
+        :param to: The email addresses for the 'to' field.
         """
         self.to = _cleanup_mail_addresses(to)
         self.changed_event()
@@ -211,8 +211,8 @@ class Mail(object):
         Adds the given list of receipients to the 'to' field.
         Accepts the same argument types as set_to().
 
-        @type  to: string|list(string)
-        @param to: The list of email addresses.
+        :type  to: string|list(string)
+        :param to: The list of email addresses.
         """
         self.to += _cleanup_mail_addresses(to)
         self.changed_event()
@@ -221,8 +221,8 @@ class Mail(object):
         """
         Returns the value of the "to" field.
 
-        @rtype:  list(string)
-        @return: The email addresses in the 'to' field.
+        :rtype:  list(string)
+        :return: The email addresses in the 'to' field.
         """
         return self.to
 
@@ -230,8 +230,8 @@ class Mail(object):
         """
         Like set_to(), but for the 'cc' field.
 
-        @type  cc: string|list(string)
-        @param cc: The email addresses for the 'cc' field.
+        :type  cc: string|list(string)
+        :param cc: The email addresses for the 'cc' field.
         """
         self.cc = _cleanup_mail_addresses(cc)
         self.changed_event()
@@ -240,8 +240,8 @@ class Mail(object):
         """
         Like add_to(), but for the 'cc' field.
 
-        @type  cc: string|list(string)
-        @param cc: The list of email addresses.
+        :type  cc: string|list(string)
+        :param cc: The list of email addresses.
         """
         self.cc += _cleanup_mail_addresses(cc)
         self.changed_event()
@@ -250,8 +250,8 @@ class Mail(object):
         """
         Returns the value of the "cc" field.
 
-        @rtype:  list(string)
-        @return: The email addresses in the 'cc' field.
+        :rtype:  list(string)
+        :return: The email addresses in the 'cc' field.
         """
         return self.cc
 
@@ -259,8 +259,8 @@ class Mail(object):
         """
         Like set_to(), but for the 'bcc' field.
 
-        @type  bcc: string|list(string)
-        @param bcc: The email addresses for the 'bcc' field.
+        :type  bcc: string|list(string)
+        :param bcc: The email addresses for the 'bcc' field.
         """
         self.bcc = _cleanup_mail_addresses(bcc)
         self.changed_event()
@@ -269,8 +269,8 @@ class Mail(object):
         """
         Like add_to(), but for the 'bcc' field.
 
-        @type  bcc: string|list(string)
-        @param bcc: The list of email addresses.
+        :type  bcc: string|list(string)
+        :param bcc: The list of email addresses.
         """
         self.bcc += _cleanup_mail_addresses(bcc)
         self.changed_event()
@@ -279,8 +279,8 @@ class Mail(object):
         """
         Returns the value of the "bcc" field.
 
-        @rtype:  list(string)
-        @return: The email addresses in the 'bcc' field.
+        :rtype:  list(string)
+        :return: The email addresses in the 'bcc' field.
         """
         return self.bcc
 
@@ -288,8 +288,8 @@ class Mail(object):
         """
         Returns a list of all receipients (to, cc, and bcc).
 
-        @rtype:  list(string)
-        @return: The email addresses of all receipients.
+        :rtype:  list(string)
+        :return: The email addresses of all receipients.
         """
         return self.get_to() + self.get_cc() + self.get_bcc()
 
@@ -297,8 +297,8 @@ class Mail(object):
         """
         Defines the subject line.
 
-        @type  subject: string
-        @param subject: The new subject line.
+        :type  subject: string
+        :param subject: The new subject line.
         """
         self.subject = subject
         self.changed_event()
@@ -307,8 +307,8 @@ class Mail(object):
         """
         Returns the subject line.
 
-        @rtype:  string
-        @return: The subject line.
+        :rtype:  string
+        :return: The subject line.
         """
         return self.subject
 
@@ -316,8 +316,8 @@ class Mail(object):
         """
         Defines the body of the mail.
 
-        @type  body: string
-        @param body: The new email body.
+        :type  body: string
+        :param body: The new email body.
         """
         self.body = body
         self.changed_event()
@@ -326,8 +326,8 @@ class Mail(object):
         """
         Returns the body of the mail.
 
-        @rtype:  string
-        @return: The body of the mail.
+        :rtype:  string
+        :return: The body of the mail.
         """
         return self.body
 
@@ -335,8 +335,8 @@ class Mail(object):
         """
         Returns the SMTP formatted header of the line.
 
-        @rtype:  string
-        @return: The SMTP header.
+        :rtype:  string
+        :return: The SMTP header.
         """
         header  = "From: %s\r\n"    % self.get_sender()
         header += "To: %s\r\n"      % ',\r\n '.join(self.get_to())
@@ -349,8 +349,8 @@ class Mail(object):
         """
         Returns the SMTP formatted email, as it may be passed to sendmail.
 
-        @rtype:  string
-        @return: The SMTP formatted mail.
+        :rtype:  string
+        :return: The SMTP formatted mail.
         """
         header = self.get_smtp_header()
         body   = self.get_body().replace('\n', '\r\n')
@@ -360,8 +360,8 @@ class Mail(object):
         """
         Adds the file with the given name as an attachment.
 
-        @type  filename: string
-        @param filename: A filename.
+        :type  filename: string
+        :param filename: A filename.
         """
         self.files.append(filename)
 
@@ -369,8 +369,8 @@ class Mail(object):
         """
         Returns a list of attached files.
 
-        @rtype:  list[string]
-        @return: The list of filenames.
+        :rtype:  list[string]
+        :return: The list of filenames.
         """
         return self.files
 
@@ -380,12 +380,12 @@ def from_template_string(string, **kwargs):
     Reads the given SMTP formatted template, and creates a new Mail object
     using the information.
 
-    @type  string: str
-    @param string: The SMTP formatted template.
-    @type  kwargs: str
-    @param kwargs: Variables to replace in the template.
-    @rtype:  Mail
-    @return: The resulting mail.
+    :type  string: str
+    :param string: The SMTP formatted template.
+    :type  kwargs: str
+    :param kwargs: Variables to replace in the template.
+    :rtype:  Mail
+    :return: The resulting mail.
     """
     tmpl = _render_template(string, **kwargs)
     mail = Mail()
@@ -397,12 +397,12 @@ def from_template(filename, **kwargs):
     Like from_template_string(), but reads the template from the file with
     the given name instead.
 
-    @type  filename: string
-    @param filename: The name of the template file.
-    @type  kwargs: str
-    @param kwargs: Variables to replace in the template.
-    @rtype:  Mail
-    @return: The resulting mail.
+    :type  filename: string
+    :param filename: The name of the template file.
+    :type  kwargs: str
+    :param kwargs: Variables to replace in the template.
+    :rtype:  Mail
+    :return: The resulting mail.
     """
     tmpl = open(filename).read()
     return from_template_string(tmpl, **kwargs)
@@ -440,10 +440,10 @@ def send(mail, server = 'localhost'):
     """
     Sends the given mail.
 
-    @type  mail: Mail
-    @param mail: The mail object.
-    @type  server: string
-    @param server: The address of the mailserver.
+    :type  mail: Mail
+    :param mail: The mail object.
+    :type  server: string
+    :param server: The address of the mailserver.
     """
     sender             = mail.get_sender()
     rcpt               = mail.get_receipients()

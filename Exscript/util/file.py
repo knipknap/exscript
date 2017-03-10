@@ -41,10 +41,10 @@ def get_accounts_from_file(filename):
 
         python -c 'import base64; print base64.b64encode("thepassword")'
 
-    @type  filename: string
-    @param filename: The name of the file containing the list of accounts.
-    @rtype:  list[Account]
-    @return: The newly created account instances.
+    :type  filename: string
+    :param filename: The name of the file containing the list of accounts.
+    :rtype:  list[Account]
+    :return: The newly created account instances.
     """
     accounts           = []
     cfgparser          = __import__('ConfigParser', {}, {}, [''])
@@ -64,18 +64,18 @@ def get_hosts_from_file(filename,
     """
     Reads a list of hostnames from the file with the given name.
 
-    @type  filename: string
-    @param filename: A full filename.
-    @type  default_protocol: str
-    @param default_protocol: Passed to the Host constructor.
-    @type  default_domain: str
-    @param default_domain: Appended to each hostname that has no domain.
-    @type  remove_duplicates: bool
-    @param remove_duplicates: Whether duplicates are removed.
-    @type  encoding: str
-    @param encoding: The encoding of the file.
-    @rtype:  list[Host]
-    @return: The newly created host instances.
+    :type  filename: string
+    :param filename: A full filename.
+    :type  default_protocol: str
+    :param default_protocol: Passed to the Host constructor.
+    :type  default_domain: str
+    :param default_domain: Appended to each hostname that has no domain.
+    :type  remove_duplicates: bool
+    :param remove_duplicates: Whether duplicates are removed.
+    :type  encoding: str
+    :param encoding: The encoding of the file.
+    :rtype:  list[Host]
+    :return: The newly created host instances.
     """
     # Open the file.
     if not os.path.exists(filename):
@@ -124,16 +124,16 @@ def get_hosts_from_csv(filename,
         10.0.0.1	myhost	value
         10.0.0.2	otherhost	othervalue
 
-    @type  filename: string
-    @param filename: A full filename.
-    @type  default_protocol: str
-    @param default_protocol: Passed to the Host constructor.
-    @type  default_domain: str
-    @param default_domain: Appended to each hostname that has no domain.
-    @type  encoding: str
-    @param encoding: The encoding of the file.
-    @rtype:  list[Host]
-    @return: The newly created host instances.
+    :type  filename: string
+    :param filename: A full filename.
+    :type  default_protocol: str
+    :param default_protocol: Passed to the Host constructor.
+    :type  default_domain: str
+    :param default_domain: Appended to each hostname that has no domain.
+    :type  encoding: str
+    :param encoding: The encoding of the file.
+    :rtype:  list[Host]
+    :return: The newly created host instances.
     """
     # Open the file.
     if not os.path.exists(filename):
@@ -202,10 +202,10 @@ def load_lib(filename):
         functions = load_lib('my_library.py')
         run_template(conn, 'foo.exscript', **functions)
 
-    @type  filename: string
-    @param filename: A full filename.
-    @rtype:  dict[string->object]
-    @return: The loaded functions.
+    :type  filename: string
+    :param filename: A full filename.
+    :rtype:  dict[string->object]
+    :return: The loaded functions.
     """
     # Open the file.
     if not os.path.exists(filename):

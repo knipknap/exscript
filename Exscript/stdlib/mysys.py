@@ -21,8 +21,8 @@ def execute(scope, command):
     """
     Executes the given command locally.
 
-    @type  command: string
-    @param command: A shell command.
+    :type  command: string
+    :param command: A shell command.
     """
     process = Popen(command[0],
                     shell     = True,
@@ -38,8 +38,8 @@ def message(scope, string):
     """
     Writes the given string to stdout.
 
-    @type  string: string
-    @param string: A string, or a list of strings.
+    :type  string: string
+    :param string: A string, or a list of strings.
     """
     sys.stdout.write(''.join(string) + '\n')
     return True
@@ -49,8 +49,8 @@ def wait(scope, seconds):
     """
     Waits for the given number of seconds.
 
-    @type  seconds: int
-    @param seconds: The wait time in seconds.
+    :type  seconds: int
+    :param seconds: The wait time in seconds.
     """
     time.sleep(int(seconds[0]))
     return True

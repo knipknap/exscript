@@ -26,10 +26,10 @@ def read(path):
     otherwise. Raises an exception for all other types of OSError
     while trying to access the file.
 
-    @type  path: str
-    @param path: The name of the pidfile.
-    @rtype:  int or None
-    @return: The PID, or none if the file was not found.
+    :type  path: str
+    :param path: The name of the pidfile.
+    :rtype:  int or None
+    :return: The PID, or none if the file was not found.
     """
     # Try to read the pid from the pidfile.
     logging.info("Checking pidfile '%s'", path)
@@ -46,10 +46,10 @@ def isalive(path):
     id that is still alive.
     Returns False otherwise.
 
-    @type  path: str
-    @param path: The name of the pidfile.
-    @rtype:  bool
-    @return: Whether the process is alive.
+    :type  path: str
+    :param path: The name of the pidfile.
+    :rtype:  bool
+    :return: Whether the process is alive.
     """
     # try to read the pid from the pidfile
     pid = read(path)
@@ -68,8 +68,8 @@ def kill(path):
     """
     Kills the process, if it still exists.
 
-    @type  path: str
-    @param path: The name of the pidfile.
+    :type  path: str
+    :param path: The name of the pidfile.
     """
     # try to read the pid from the pidfile
     pid = read(path)
@@ -89,8 +89,8 @@ def write(path):
     """
     Writes the current process id to the given pidfile.
 
-    @type  path: str
-    @param path: The name of the pidfile.
+    :type  path: str
+    :param path: The name of the pidfile.
     """
     pid = os.getpid()
     logging.info("Writing PID %s to '%s'", pid, path)
@@ -113,8 +113,8 @@ def remove(path):
     """
     Deletes the pidfile if it exists.
 
-    @type  path: str
-    @param path: The name of the pidfile.
+    :type  path: str
+    :param path: The name of the pidfile.
     """
     logging.info("Removing pidfile '%s'", path)
     try:

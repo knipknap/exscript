@@ -61,14 +61,14 @@ def first_match(string, regex, flags = re.M):
        match = first_match(foo, r'(aaa) (\S+)') # Returns (None, None)
        match = first_match(foo, r'(\S+) (\S+)') # Returns ('my', 'foo')
 
-    @type  string: string|Exscript.protocols.Protocol
-    @param string: The string that is matched, or a Protocol object.
-    @type  regex: string
-    @param regex: A regular expression.
-    @type  flags: int
-    @param flags: The flags for compiling the regex; e.g. re.I
-    @rtype:  string|tuple
-    @return: A match, or a tuple of matches.
+    :type  string: string|Exscript.protocols.Protocol
+    :param string: The string that is matched, or a Protocol object.
+    :type  regex: string
+    :param regex: A regular expression.
+    :type  flags: int
+    :param flags: The flags for compiling the regex; e.g. re.I
+    :rtype:  string|tuple
+    :return: A match, or a tuple of matches.
     """
     if isinstance(string, Protocol):
         string = string.response
@@ -110,14 +110,14 @@ def any_match(string, regex, flags = re.M):
         for one, two in any_match(foo, r'(\S+) (\S+)'): # Returns [('1', 'uno'), ('2', 'due')]
             print m
 
-    @type  string: string|Exscript.protocols.Protocol
-    @param string: The string that is matched, or a Protocol object.
-    @type  regex: string
-    @param regex: A regular expression.
-    @type  flags: int
-    @param flags: The flags for compiling the regex; e.g. re.I
-    @rtype:  list[string|tuple]
-    @return: A list of strings, or a list of tuples.
+    :type  string: string|Exscript.protocols.Protocol
+    :param string: The string that is matched, or a Protocol object.
+    :type  regex: string
+    :param regex: A regular expression.
+    :type  flags: int
+    :param flags: The flags for compiling the regex; e.g. re.I
+    :rtype:  list[string|tuple]
+    :return: A list of strings, or a list of tuples.
     """
     if isinstance(string, Protocol):
         string = string.response

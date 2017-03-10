@@ -21,10 +21,10 @@ def chmod(scope, filename, mode):
     to the given mode. You probably want to use an octal representation
     for the integer, e.g. "chmod(myfile, 0644)".
 
-    @type  filename: string
-    @param filename: A filename.
-    @type  mode: int
-    @param mode: The access permissions.
+    :type  filename: string
+    :param filename: A filename.
+    :type  mode: int
+    :param mode: The access permissions.
     """
     for file in filename:
         os.chmod(file, mode[0])
@@ -35,8 +35,8 @@ def clear(scope, filename):
     Clear the contents of the given file. The file is created if it does
     not exist.
 
-    @type  filename: string
-    @param filename: A filename.
+    :type  filename: string
+    :param filename: A filename.
     """
     file = open(filename[0], 'w')
     file.close()
@@ -49,10 +49,10 @@ def exists(scope, filename):
     If a list of files is given, the function returns True only if ALL of
     the files exist.
 
-    @type  filename: string
-    @param filename: A filename.
-    @rtype:  bool
-    @return: The operating system of the remote device.
+    :type  filename: string
+    :param filename: A filename.
+    :rtype:  bool
+    :return: The operating system of the remote device.
     """
     return [os.path.exists(f) for f in filename]
 
@@ -62,10 +62,10 @@ def mkdir(scope, dirname, mode = None):
     permissions are set to the given mode, and default to whatever
     is the umask on your system defined.
 
-    @type  dirname: string
-    @param dirname: A filename, or a list of dirnames.
-    @type  mode: int
-    @param mode: The access permissions.
+    :type  dirname: string
+    :param dirname: A filename, or a list of dirnames.
+    :type  mode: int
+    :param mode: The access permissions.
     """
     for dir in dirname:
         if mode is None:
@@ -79,10 +79,10 @@ def read(scope, filename):
     Reads the given file and returns the result.
     The result is also stored in the built-in __response__ variable.
 
-    @type  filename: string
-    @param filename: A filename.
-    @rtype:  string
-    @return: The content of the file.
+    :type  filename: string
+    :param filename: A filename.
+    :rtype:  string
+    :return: The content of the file.
     """
     file  = open(filename[0], 'r')
     lines = file.readlines()
@@ -94,8 +94,8 @@ def rm(scope, filename):
     """
     Deletes the given file (or files) from the file system.
 
-    @type  filename: string
-    @param filename: A filename, or a list of filenames.
+    :type  filename: string
+    :param filename: A filename, or a list of filenames.
     """
     for file in filename:
         os.remove(file)
@@ -109,12 +109,12 @@ def write(scope, filename, lines, mode = ['a']):
       - 'a': Append to the file if it already exists.
       - 'w': Replace the file if it already exists.
 
-    @type  filename: string
-    @param filename: A filename.
-    @type  lines: string
-    @param lines: The data that is written into the file.
-    @type  mode: string
-    @param mode: Any of the above listed modes.
+    :type  filename: string
+    :param filename: A filename.
+    :type  lines: string
+    :param lines: The data that is written into the file.
+    :type  mode: string
+    :param mode: Any of the above listed modes.
     """
     file = open(filename[0], mode[0])
     file.writelines(['%s\n' % line.rstrip() for line in lines])

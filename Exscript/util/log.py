@@ -25,8 +25,8 @@ def log_to(logger):
     Wraps a function that has a connection passed such that everything that
     happens on the connection is logged using the given logger.
 
-    @type  logger: Logger
-    @param logger: The logger that handles the logging.
+    :type  logger: Logger
+    :param logger: The logger that handles the logging.
     """
     logger_id = id(logger)
     def decorator(function):
@@ -36,10 +36,10 @@ def log_to(logger):
 
 def log_to_file(logdir, mode = 'a', delete = False, clearmem = True):
     """
-    Like L{log_to()}, but automatically creates a new FileLogger
+    Like :class:`log_to()`, but automatically creates a new FileLogger
     instead of having one passed.
     Note that the logger stays alive (in memory) forever. If you need
-    to control the lifetime of a logger, use L{log_to()} instead.
+    to control the lifetime of a logger, use :class:`log_to()` instead.
     """
     logger = FileLogger(logdir, mode, delete, clearmem)
     _loggers.append(logger)

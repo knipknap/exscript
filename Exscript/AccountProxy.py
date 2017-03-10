@@ -26,8 +26,8 @@ class AccountProxy(object):
         """
         Constructor.
 
-        @type  parent: multiprocessing.Connection
-        @param parent: A pipe to the associated account manager.
+        :type  parent: multiprocessing.Connection
+        :param parent: A pipe to the associated account manager.
         """
         self.parent                 = parent
         self.account_hash           = None
@@ -83,13 +83,13 @@ class AccountProxy(object):
 
     def __enter__(self):
         """
-        Like L{acquire()}.
+        Like :class:`acquire()`.
         """
         return self.acquire()
 
     def __exit__(self, thetype, value, traceback):
         """
-        Like L{release()}.
+        Like :class:`release()`.
         """
         return self.release()
 
@@ -141,8 +141,8 @@ class AccountProxy(object):
         """
         Returns the name of the account.
 
-        @rtype:  string
-        @return: The account name.
+        :rtype:  string
+        :return: The account name.
         """
         return self.user
 
@@ -150,8 +150,8 @@ class AccountProxy(object):
         """
         Returns the password of the account.
 
-        @rtype:  string
-        @return: The account password.
+        :rtype:  string
+        :return: The account password.
         """
         return self.password
 
@@ -159,8 +159,8 @@ class AccountProxy(object):
         """
         Returns the authorization password of the account.
 
-        @rtype:  string
-        @return: The account password.
+        :rtype:  string
+        :return: The account password.
         """
         return self.authorization_password or self.password
 
@@ -168,7 +168,7 @@ class AccountProxy(object):
         """
         Returns the key of the account, if any.
 
-        @rtype:  PrivateKey|None
-        @return: A key object.
+        :rtype:  PrivateKey|None
+        :return: A key object.
         """
         return self.key

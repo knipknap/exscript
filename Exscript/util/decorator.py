@@ -23,14 +23,14 @@ def bind(function, *args, **kwargs):
     Wraps the given function such that when it is called, the given arguments
     are passed in addition to the connection argument.
 
-    @type  function: function
-    @param function: The function that's ought to be wrapped.
-    @type  args: list
-    @param args: Passed on to the called function.
-    @type  kwargs: dict
-    @param kwargs: Passed on to the called function.
-    @rtype:  function
-    @return: The wrapped function.
+    :type  function: function
+    :param function: The function that's ought to be wrapped.
+    :type  args: list
+    :param args: Passed on to the called function.
+    :type  kwargs: dict
+    :param kwargs: Passed on to the called function.
+    :rtype:  function
+    :return: The wrapped function.
     """
     def decorated(*inner_args, **inner_kwargs):
         kwargs.update(inner_kwargs)
@@ -59,16 +59,16 @@ def os_function_mapper(map):
 
     An exception is raised if a matching function is not found in the map.
 
-    @type  conn: Exscript.protocols.Protocol
-    @param conn: The open connection.
-    @type  map: dict
-    @param map: A dictionary mapping operating system name to a function.
-    @type  args: list
-    @param args: Passed on to the called function.
-    @type  kwargs: dict
-    @param kwargs: Passed on to the called function.
-    @rtype:  object
-    @return: The return value of the called function.
+    :type  conn: Exscript.protocols.Protocol
+    :param conn: The open connection.
+    :type  map: dict
+    :param map: A dictionary mapping operating system name to a function.
+    :type  args: list
+    :param args: Passed on to the called function.
+    :type  kwargs: dict
+    :param kwargs: Passed on to the called function.
+    :rtype:  object
+    :return: The return value of the called function.
     """
     def decorated(job, host, conn, *args, **kwargs):
         os   = conn.guess_os()
@@ -85,14 +85,14 @@ def _decorate(flush = True, attempts = 1, only_authenticate = False):
     Doing the real work for autologin and autoauthenticate to minimize code
     duplication.
 
-    @type  flush: bool
-    @param flush: Whether to flush the last prompt from the buffer.
-    @type  attempts: int
-    @param attempts: The number of login attempts if login fails.
-    @type only_authenticate: bool
-    @param only_authenticate: login or only authenticate (don't authorize)?
-    @rtype:  function
-    @return: The wrapped function.
+    :type  flush: bool
+    :param flush: Whether to flush the last prompt from the buffer.
+    :type  attempts: int
+    :param attempts: The number of login attempts if login fails.
+    :type only_authenticate: bool
+    :param only_authenticate: login or only authenticate (don't authorize)?
+    :rtype:  function
+    :return: The wrapped function.
     """
     def decorator(function):
         def decorated(job, host, conn, *args, **kwargs):
@@ -124,12 +124,12 @@ def autologin(flush = True, attempts = 1):
             pass # Do something.
         Exscript.util.start.quickrun('myhost', my_func)
 
-    @type  flush: bool
-    @param flush: Whether to flush the last prompt from the buffer.
-    @type  attempts: int
-    @param attempts: The number of login attempts if login fails.
-    @rtype:  function
-    @return: The wrapped function.
+    :type  flush: bool
+    :param flush: Whether to flush the last prompt from the buffer.
+    :type  attempts: int
+    :param attempts: The number of login attempts if login fails.
+    :rtype:  function
+    :return: The wrapped function.
     """
     return _decorate(flush, attempts)
 
@@ -143,11 +143,11 @@ def autoauthenticate(flush = True, attempts = 1):
             pass # Do something.
         Exscript.util.start.quickrun('myhost', my_func)
 
-    @type  flush: bool
-    @param flush: Whether to flush the last prompt from the buffer.
-    @type  attempts: int
-    @param attempts: The number of login attempts if login fails.
-    @rtype:  function
-    @return: The wrapped function.
+    :type  flush: bool
+    :param flush: Whether to flush the last prompt from the buffer.
+    :type  attempts: int
+    :param attempts: The number of login attempts if login fails.
+    :rtype:  function
+    :return: The wrapped function.
     """
     return _decorate(flush, attempts, only_authenticate = True)

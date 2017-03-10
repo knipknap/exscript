@@ -36,14 +36,14 @@ def run(users, hosts, func, **kwargs):
           bind(my_callback, 'hello', foo = 'world'),
           max_threads = 10)
 
-    @type  users: Account|list[Account]
-    @param users: The account(s) to use for logging in.
-    @type  hosts: Host|list[Host]
-    @param hosts: A list of Host objects.
-    @type  func: function
-    @param func: The callback function.
-    @type  kwargs: dict
-    @param kwargs: Passed to the Exscript.Queue constructor.
+    :type  users: Account|list[Account]
+    :param users: The account(s) to use for logging in.
+    :type  hosts: Host|list[Host]
+    :param hosts: A list of Host objects.
+    :type  func: function
+    :param func: The callback function.
+    :type  kwargs: dict
+    :param kwargs: Passed to the Exscript.Queue constructor.
     """
     attempts = kwargs.get("attempts", 1)
     if kwargs.has_key("attempts"):
@@ -58,12 +58,12 @@ def quickrun(hosts, func, **kwargs):
     A wrapper around run() that creates the account by asking the user
     for entering his login information.
 
-    @type  hosts: Host|list[Host]
-    @param hosts: A list of Host objects.
-    @type  func: function
-    @param func: The callback function.
-    @type  kwargs: dict
-    @param kwargs: Passed to the Exscript.Queue constructor.
+    :type  hosts: Host|list[Host]
+    :param hosts: A list of Host objects.
+    :type  func: function
+    :param func: The callback function.
+    :type  kwargs: dict
+    :param kwargs: Passed to the Exscript.Queue constructor.
     """
     run(read_login(), hosts, func, **kwargs)
 
@@ -72,16 +72,16 @@ def start(users, hosts, func,  only_authenticate = False, **kwargs):
     Like run(), but automatically logs into the host before passing
     the host to the callback function.
 
-    @type  users: Account|list[Account]
-    @param users: The account(s) to use for logging in.
-    @type  hosts: Host|list[Host]
-    @param hosts: A list of Host objects.
-    @type  func: function
-    @param func: The callback function.
-    @type  only_authenticate: bool
-    @param only_authenticate: don't authorize, just authenticate?
-    @type  kwargs: dict
-    @param kwargs: Passed to the Exscript.Queue constructor.
+    :type  users: Account|list[Account]
+    :param users: The account(s) to use for logging in.
+    :type  hosts: Host|list[Host]
+    :param hosts: A list of Host objects.
+    :type  func: function
+    :param func: The callback function.
+    :type  only_authenticate: bool
+    :param only_authenticate: don't authorize, just authenticate?
+    :type  kwargs: dict
+    :param kwargs: Passed to the Exscript.Queue constructor.
     """
     if only_authenticate:
         run(users, hosts, autoauthenticate()(func), **kwargs)
@@ -93,14 +93,14 @@ def quickstart(hosts, func, only_authenticate = False, **kwargs):
     Like quickrun(), but automatically logs into the host before passing
     the connection to the callback function.
 
-    @type  hosts: Host|list[Host]
-    @param hosts: A list of Host objects.
-    @type  func: function
-    @param func: The callback function.
-    @type  only_authenticate: bool
-    @param only_authenticate: don't authorize, just authenticate?
-    @type  kwargs: dict
-    @param kwargs: Passed to the Exscript.Queue constructor.
+    :type  hosts: Host|list[Host]
+    :param hosts: A list of Host objects.
+    :type  func: function
+    :param func: The callback function.
+    :type  only_authenticate: bool
+    :param only_authenticate: don't authorize, just authenticate?
+    :type  kwargs: dict
+    :param kwargs: Passed to the Exscript.Queue constructor.
     """
     if only_authenticate:
         quickrun(hosts, autoauthenticate()(func), **kwargs)

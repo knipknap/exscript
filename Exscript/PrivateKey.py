@@ -21,7 +21,7 @@ from paramiko.ssh_exception import SSHException
 class PrivateKey(object):
     """
     Represents a cryptographic key, and may be used to authenticate
-    useing L{Exscript.protocols}.
+    useing :class:`Exscript.protocols`.
     """
     keytypes = set()
 
@@ -31,8 +31,8 @@ class PrivateKey(object):
         protocol adapters and can be retrieved from the PrivateKey.keytypes
         class attribute.
 
-        @type  keytype: string
-        @param keytype: The key type.
+        :type  keytype: string
+        :param keytype: The key type.
         """
         if keytype not in self.keytypes:
             raise TypeError('unsupported key type: ' + repr(keytype))
@@ -46,14 +46,14 @@ class PrivateKey(object):
         Returns a new PrivateKey instance with the given attributes.
         If keytype is None, we attempt to automatically detect the type.
 
-        @type  filename: string
-        @param filename: The key file name.
-        @type  password: string
-        @param password: The key password.
-        @type  keytype: string
-        @param keytype: The key type.
-        @rtype:  PrivateKey
-        @return: The new key.
+        :type  filename: string
+        :param filename: The key file name.
+        :type  password: string
+        :param password: The key password.
+        :type  keytype: string
+        :param keytype: The key type.
+        :rtype:  PrivateKey
+        :return: The new key.
         """
         if keytype is None:
             try:
@@ -75,8 +75,8 @@ class PrivateKey(object):
         """
         Returns the type of the key, e.g. RSA or DSA.
 
-        @rtype:  string
-        @return: The key type
+        :rtype:  string
+        :return: The key type
         """
         return self.keytype
 
@@ -84,8 +84,8 @@ class PrivateKey(object):
         """
         Sets the name of the key file to use.
 
-        @type  filename: string
-        @param filename: The key filename.
+        :type  filename: string
+        :param filename: The key filename.
         """
         self.filename = filename
 
@@ -93,8 +93,8 @@ class PrivateKey(object):
         """
         Returns the name of the key file.
 
-        @rtype:  string
-        @return: The key password.
+        :rtype:  string
+        :return: The key password.
         """
         return self.filename
 
@@ -102,8 +102,8 @@ class PrivateKey(object):
         """
         Defines the password used for decrypting the key.
 
-        @type  password: string
-        @param password: The key password.
+        :type  password: string
+        :param password: The key password.
         """
         self.password = password
 
@@ -111,7 +111,7 @@ class PrivateKey(object):
         """
         Returns the password for the key.
 
-        @rtype:  string
-        @return: The key password.
+        :rtype:  string
+        :return: The key password.
         """
         return self.password

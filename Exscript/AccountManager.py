@@ -49,11 +49,11 @@ class AccountManager(object):
         order:
 
             # Exscript checks whether an account was attached to the
-            L{Host} object using L{Host.set_account()}), and uses that.
+            :class:`Host` object using :class:`Host.set_account()`), and uses that.
 
-            # If the L{Host} has no account attached, Exscript walks
-            through all pools that were passed to L{Queue.add_account_pool()}.
-            For each pool, it passes the L{Host} to the function in the
+            # If the :class:`Host` has no account attached, Exscript walks
+            through all pools that were passed to :class:`Queue.add_account_pool()`.
+            For each pool, it passes the :class:`Host` to the function in the
             given match argument. If the return value is True, the account
             pool is used to acquire an account.
             (Accounts within each pool are taken in a round-robin
@@ -91,10 +91,10 @@ class AccountManager(object):
         hostname does not start with 'foo', the function returns False, and
         Exscript takes the 'default-user' account from the default pool.
 
-        @type  pool: AccountPool
-        @param pool: The account pool that is added.
-        @type  match: callable
-        @param match: A callback to check if the pool should be used.
+        :type  pool: AccountPool
+        :param pool: The account pool that is added.
+        :type  match: callable
+        :param match: A callback to check if the pool should be used.
         """
         if match is None:
             self.default_pool = pool
@@ -104,10 +104,10 @@ class AccountManager(object):
     def add_account(self, account):
         """
         Adds the given account to the default account pool that Exscript uses
-        to log into all hosts that have no specific L{Account} attached.
+        to log into all hosts that have no specific :class:`Account` attached.
 
-        @type  account: Account
-        @param account: The account that is added.
+        :type  account: Account
+        :param account: The account that is added.
         """
         self.default_pool.add_account(account)
 
@@ -116,8 +116,8 @@ class AccountManager(object):
         Returns the account with the given hash, if it is contained in any
         of the pools. Returns None otherwise.
 
-        @type  account_hash: str
-        @param account_hash: The hash of an account object.
+        :type  account_hash: str
+        :param account_hash: The hash of an account object.
         """
         for _, pool in self.pools:
             account = pool.get_account_from_hash(account_hash)
@@ -130,12 +130,12 @@ class AccountManager(object):
         Acquires the given account. If no account is given, one is chosen
         from the default pool.
 
-        @type  account: Account
-        @param account: The account that is added.
-        @type  owner: object
-        @param owner: An optional descriptor for the owner.
-        @rtype:  L{Account}
-        @return: The account that was acquired.
+        :type  account: Account
+        :param account: The account that is added.
+        :type  owner: object
+        :param owner: An optional descriptor for the owner.
+        :rtype:  :class:`Account`
+        :return: The account that was acquired.
         """
         if account is not None:
             for _, pool in self.pools:
@@ -156,12 +156,12 @@ class AccountManager(object):
         passed in when adding the pool. The first pool for which the
         match function returns True is chosen to assign an account.
 
-        @type  host: L{Host}
-        @param host: The host for which an account is acquired.
-        @type  owner: object
-        @param owner: An optional descriptor for the owner.
-        @rtype:  L{Account}
-        @return: The account that was acquired.
+        :type  host: :class:`Host`
+        :param host: The host for which an account is acquired.
+        :type  owner: object
+        :param owner: An optional descriptor for the owner.
+        :rtype:  :class:`Account`
+        :return: The account that was acquired.
         """
         # Check whether a matching account pool exists.
         for match, pool in self.pools:
@@ -175,8 +175,8 @@ class AccountManager(object):
         """
         Releases all accounts that were acquired by the given owner.
 
-        @type  owner: object
-        @param owner: The owner descriptor as passed to acquire_account().
+        :type  owner: object
+        :param owner: The owner descriptor as passed to acquire_account().
         """
         for _, pool in self.pools:
             pool.release_accounts(owner)

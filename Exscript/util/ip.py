@@ -23,10 +23,10 @@ def is_ip(string):
     Returns True if the given string is an IPv4 or IPv6 address, False
     otherwise.
 
-    @type  string: string
-    @param string: Any string.
-    @rtype:  bool
-    @return: True if the string is an IP address, False otherwise.
+    :type  string: string
+    :param string: Any string.
+    :rtype:  bool
+    :return: True if the string is an IP address, False otherwise.
     """
     return ipv4.is_ip(string) or ipv6.is_ip(string)
 
@@ -44,10 +44,10 @@ def normalize_ip(ip):
         192.168.0.1 -> 192.168.000.001
         1234::A -> 1234:0000:0000:0000:0000:0000:0000:000a
 
-    @type  ip: string
-    @param ip: An IP address.
-    @rtype:  string
-    @return: The normalized IP.
+    :type  ip: string
+    :param ip: An IP address.
+    :rtype:  string
+    :return: The normalized IP.
     """
     return _call_func('normalize_ip', ip)
 
@@ -58,9 +58,9 @@ def clean_ip(ip):
         192.168.010.001 -> 192.168.10.1
         1234:0000:0000:0000:0000:0000:0000:000A -> 1234::a
 
-    @type  ip: string
-    @param ip: An IP address.
-    @rtype:  string
-    @return: The cleaned up IP.
+    :type  ip: string
+    :param ip: An IP address.
+    :rtype:  string
+    :return: The cleaned up IP.
     """
     return _call_func('clean_ip', ip)

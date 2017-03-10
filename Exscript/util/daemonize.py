@@ -32,7 +32,7 @@ def _redirect_output(filename):
 def daemonize():
     """
     Forks and daemonizes the current process. Does not automatically track
-    the process id; to do this, use L{Exscript.util.pidutil}.
+    the process id; to do this, use :class:`Exscript.util.pidutil`.
     """
     sys.stdout.flush()
     sys.stderr.flush()

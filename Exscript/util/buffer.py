@@ -30,8 +30,8 @@ class MonitoredBuffer(object):
         The data is stored in the given file-like object. If no object is
         given, or the io argument is None, a new StringIO is used.
 
-        @type  io: file-like object
-        @param io: A file-like object that is used for storing the data.
+        :type  io: file-like object
+        :param io: A file-like object that is used for storing the data.
         """
         if io is None:
             self.io = StringIO('')
@@ -50,8 +50,8 @@ class MonitoredBuffer(object):
         """
         Returns the size of the buffer.
 
-        @rtype: int
-        @return: The size of the buffer in bytes.
+        :rtype: int
+        :return: The size of the buffer in bytes.
         """
         return self.io.tell()
 
@@ -60,8 +60,8 @@ class MonitoredBuffer(object):
         Returns the number of given bytes from the head of the buffer.
         The buffer remains unchanged.
 
-        @type  bytes: int
-        @param bytes: The number of bytes to return.
+        :type  bytes: int
+        :param bytes: The number of bytes to return.
         """
         oldpos = self.io.tell()
         self.io.seek(0)
@@ -74,18 +74,18 @@ class MonitoredBuffer(object):
         Returns the number of given bytes from the tail of the buffer.
         The buffer remains unchanged.
 
-        @type  bytes: int
-        @param bytes: The number of bytes to return.
+        :type  bytes: int
+        :param bytes: The number of bytes to return.
         """
         self.io.seek(self.size() - bytes)
         return self.io.read()
 
     def pop(self, bytes):
         """
-        Like L{head()}, but also removes the head from the buffer.
+        Like :class:`head()`, but also removes the head from the buffer.
 
-        @type  bytes: int
-        @param bytes: The number of bytes to return and remove.
+        :type  bytes: int
+        :param bytes: The number of bytes to return and remove.
         """
         self.io.seek(0)
         head = self.io.read(bytes)
@@ -100,8 +100,8 @@ class MonitoredBuffer(object):
         Appends the given data to the buffer, and triggers all connected
         monitors, if any of them match the buffer content.
 
-        @type  data: str
-        @param data: The data that is appended.
+        :type  data: str
+        :param data: The data that is appended.
         """
         self.io.write(data)
         if not self.monitors:
@@ -138,12 +138,12 @@ class MonitoredBuffer(object):
         Arguments passed to the callback are the index of the match, and
         the match object of the regular expression.
 
-        @type  pattern: str|re.RegexObject|list(str|re.RegexObject)
-        @param pattern: One or more regular expressions.
-        @type  callback: callable
-        @param callback: The function that is called.
-        @type  limit: int
-        @param limit: The maximum size of the tail of the buffer
+        :type  pattern: str|re.RegexObject|list(str|re.RegexObject)
+        :param pattern: One or more regular expressions.
+        :type  callback: callable
+        :param callback: The function that is called.
+        :type  limit: int
+        :param limit: The maximum size of the tail of the buffer
                       that is searched, in number of bytes.
         """
         self.monitors.append([to_regexs(pattern), callback, 0, limit])

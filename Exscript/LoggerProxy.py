@@ -22,8 +22,8 @@ class LoggerProxy(object):
         """
         Constructor.
 
-        @type  parent: multiprocessing.Connection
-        @param parent: A pipe to the associated pipe handler.
+        :type  parent: multiprocessing.Connection
+        :param parent: A pipe to the associated pipe handler.
         """
         self.parent    = parent
         self.logger_id = logger_id

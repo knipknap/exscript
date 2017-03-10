@@ -28,8 +28,8 @@ class AccountPool(object):
         """
         Constructor.
 
-        @type  accounts: Account|list[Account]
-        @param accounts: Passed to add_account()
+        :type  accounts: Account|list[Account]
+        :param accounts: Passed to add_account()
         """
         self.accounts = set()
         self.unlocked_accounts = deque()
@@ -80,8 +80,8 @@ class AccountPool(object):
         Returns True if the given account exists in the pool, returns False
         otherwise.
 
-        @type  account: Account
-        @param account: The account object.
+        :type  account: Account
+        :param account: The account object.
         """
         return account in self.accounts
 
@@ -89,8 +89,8 @@ class AccountPool(object):
         """
         Adds one or more account instances to the pool.
 
-        @type  accounts: Account|list[Account]
-        @param accounts: The account to be added.
+        :type  accounts: Account|list[Account]
+        :param accounts: The account to be added.
         """
         with self.unlock_cond:
             for account in to_list(accounts):
@@ -102,8 +102,8 @@ class AccountPool(object):
 
     def _remove_account(self, accounts):
         """
-        @type  accounts: Account|list[Account]
-        @param accounts: The accounts to be removed.
+        :type  accounts: Account|list[Account]
+        :param accounts: The accounts to be removed.
         """
         for account in to_list(accounts):
             if account not in self.accounts:
@@ -130,8 +130,8 @@ class AccountPool(object):
         """
         Returns the account with the given name.
 
-        @type  name: string
-        @param name: The name of the account.
+        :type  name: string
+        :param name: The name of the account.
         """
         for account in self.accounts:
             if account.get_name() == name:
@@ -149,12 +149,12 @@ class AccountPool(object):
         Waits until an account becomes available, then locks and returns it.
         If an account is not passed, the next available account is returned.
 
-        @type  account: Account
-        @param account: The account to be acquired, or None.
-        @type  owner: object
-        @param owner: An optional descriptor for the owner.
-        @rtype:  L{Account}
-        @return: The account that was acquired.
+        :type  account: Account
+        :param account: The account to be acquired, or None.
+        :type  owner: object
+        :param owner: An optional descriptor for the owner.
+        :rtype:  :class:`Account`
+        :return: The account that was acquired.
         """
         with self.unlock_cond:
             if len(self.accounts) == 0:
@@ -182,8 +182,8 @@ class AccountPool(object):
         """
         Releases all accounts that were acquired by the given owner.
 
-        @type  owner: object
-        @param owner: The owner descriptor as passed to acquire_account().
+        :type  owner: object
+        :param owner: The owner descriptor as passed to acquire_account().
         """
         with self.unlock_cond:
             for account in self.owner2account[owner]:

@@ -42,10 +42,10 @@ class Host(object):
         The default_protocol argument defines the protocol that is used
         in case the given uri does not specify it.
 
-        @type  uri: string
-        @param uri: A hostname; see set_uri() for more info.
-        @type  default_protocol: string
-        @param default_protocol: The protocol name.
+        :type  uri: string
+        :param uri: A hostname; see set_uri() for more info.
+        :type  default_protocol: string
+        :param default_protocol: The protocol name.
         """
         self.protocol = default_protocol
         self.vars     = None    # To save memory, do not init with a dict.
@@ -78,8 +78,8 @@ class Host(object):
 
         For a list of supported protocols please see set_protocol().
 
-        @type  uri: string
-        @param uri: An URL formatted hostname.
+        :type  uri: string
+        :param uri: An URL formatted hostname.
         """
         try:
             uri = Url.from_string(uri, self.protocol)
@@ -107,8 +107,8 @@ class Host(object):
         of it's attributes except for the name. Uses the
         address, not the name of the host to build the URI.
 
-        @rtype:  str
-        @return: A URI.
+        :rtype:  str
+        :return: A URI.
         """
         url = Url()
         url.protocol = self.get_protocol()
@@ -135,8 +135,8 @@ class Host(object):
             - protocol
             - port
 
-        @rtype:  dict
-        @return: The resulting dictionary.
+        :rtype:  dict
+        :return: The resulting dictionary.
         """
         return {'hostname': self.get_name(),
                 'address':  self.get_address(),
@@ -148,8 +148,8 @@ class Host(object):
         Set the hostname of the remote host without
         changing username, password, protocol, and TCP port number.
 
-        @type  name: string
-        @param name: A hostname or IP address.
+        :type  name: string
+        :param name: A hostname or IP address.
         """
         self.name = name
 
@@ -157,8 +157,8 @@ class Host(object):
         """
         Returns the name.
 
-        @rtype:  string
-        @return: The hostname excluding the name.
+        :rtype:  string
+        :return: The hostname excluding the name.
         """
         return self.name
 
@@ -169,8 +169,8 @@ class Host(object):
         number.
         This is the actual address that is used to open the connection.
 
-        @type  address: string
-        @param address: A hostname or IP name.
+        :type  address: string
+        :param address: A hostname or IP name.
         """
         if is_ip(address):
             self.address = clean_ip(address)
@@ -181,8 +181,8 @@ class Host(object):
         """
         Returns the address that is used to open the connection.
 
-        @rtype:  string
-        @return: The address that is used to open the connection.
+        :rtype:  string
+        :return: The address that is used to open the connection.
         """
         return self.address
 
@@ -204,8 +204,8 @@ class Host(object):
               documentation of
               protocols.Dummy.load_command_handler_from_file().
 
-        @type  protocol: string
-        @param protocol: The protocol name.
+        :type  protocol: string
+        :param protocol: The protocol name.
         """
         self.protocol = protocol
 
@@ -213,8 +213,8 @@ class Host(object):
         """
         Returns the name of the protocol.
 
-        @rtype:  string
-        @return: The protocol name.
+        :rtype:  string
+        :return: The protocol name.
         """
         return self.protocol
 
@@ -225,10 +225,10 @@ class Host(object):
 
             verify_fingerprint: bool
 
-        @type  name: str
-        @param name: The option name.
-        @type  value: object
-        @param value: The option value.
+        :type  name: str
+        :param name: The option name.
+        :type  value: object
+        :param value: The option value.
         """
         if name not in ('debug', 'verify_fingerprint', 'driver'):
             raise TypeError('No such option: ' + repr(name))
@@ -241,10 +241,10 @@ class Host(object):
         Returns the value of the given option if it is defined, returns
         the given default value otherwise.
 
-        @type  name: str
-        @param name: The option name.
-        @type  default: object
-        @param default: A default value.
+        :type  name: str
+        :param name: The option name.
+        :type  default: object
+        :param default: A default value.
         """
         if self.options is None:
             return default
@@ -254,8 +254,8 @@ class Host(object):
         """
         Return a dictionary containing all defined options.
 
-        @rtype:  dict
-        @return: The options.
+        :rtype:  dict
+        :return: The options.
         """
         if self.options is None:
             return {}
@@ -265,8 +265,8 @@ class Host(object):
         """
         Defines the TCP port number.
 
-        @type  tcp_port: int
-        @param tcp_port: The TCP port number.
+        :type  tcp_port: int
+        :param tcp_port: The TCP port number.
         """
         if tcp_port is None:
             self.tcp_port = None
@@ -277,8 +277,8 @@ class Host(object):
         """
         Returns the TCP port number.
 
-        @rtype:  string
-        @return: The TCP port number.
+        :rtype:  string
+        :return: The TCP port number.
         """
         return self.tcp_port
 
@@ -286,8 +286,8 @@ class Host(object):
         """
         Defines the account that is used to log in.
 
-        @type  account: L{Exscript.Account}
-        @param account: The account.
+        :type  account: :class:`Exscript.Account`
+        :param account: The account.
         """
         self.account = account
 
@@ -295,8 +295,8 @@ class Host(object):
         """
         Returns the account that is used to log in.
 
-        @rtype:  Account
-        @return: The account.
+        :rtype:  Account
+        :return: The account.
         """
         return self.account
 
@@ -304,10 +304,10 @@ class Host(object):
         """
         Stores the given variable/value in the object for later retrieval.
 
-        @type  name: string
-        @param name: The name of the variable.
-        @type  value: object
-        @param value: The value of the variable.
+        :type  name: string
+        :param name: The name of the variable.
+        :type  value: object
+        :param value: The value of the variable.
         """
         if self.vars is None:
             self.vars = {}
@@ -319,8 +319,8 @@ class Host(object):
         dictionary. In other words, passing an empty dictionary
         results in all variables being removed.
 
-        @type  variables: dict
-        @param variables: The dictionary with the variables.
+        :type  variables: dict
+        :param variables: The dictionary with the variables.
         """
         self.vars = dict(variables)
 
@@ -328,10 +328,10 @@ class Host(object):
         """
         Appends the given value to the list variable with the given name.
 
-        @type  name: string
-        @param name: The name of the variable.
-        @type  value: object
-        @param value: The appended value.
+        :type  name: string
+        :param name: The name of the variable.
+        :type  value: object
+        :param value: The appended value.
         """
         if self.vars is None:
             self.vars = {}
@@ -345,10 +345,10 @@ class Host(object):
         Like set(), but only sets the value if the variable is not already
         defined.
 
-        @type  name: string
-        @param name: The name of the variable.
-        @type  value: object
-        @param value: The value of the variable.
+        :type  name: string
+        :param name: The name of the variable.
+        :type  value: object
+        :param value: The value of the variable.
         """
         if self.vars is None:
             self.vars = {}
@@ -360,10 +360,10 @@ class Host(object):
         Returns True if the variable with the given name is defined, False
         otherwise.
 
-        @type  name: string
-        @param name: The name of the variable.
-        @rtype:  bool
-        @return: Whether the variable is defined.
+        :type  name: string
+        :param name: The name of the variable.
+        :rtype:  bool
+        :return: Whether the variable is defined.
         """
         if self.vars is None:
             return False
@@ -374,12 +374,12 @@ class Host(object):
         Returns the value of the given variable, or the given default
         value if the variable is not defined.
 
-        @type  name: string
-        @param name: The name of the variable.
-        @type  default: object
-        @param default: The default value.
-        @rtype:  object
-        @return: The value of the variable.
+        :type  name: string
+        :param name: The name of the variable.
+        :type  default: object
+        :param default: The default value.
+        :rtype:  object
+        :return: The value of the variable.
         """
         if self.vars is None:
             return default
@@ -389,8 +389,8 @@ class Host(object):
         """
         Returns a dictionary containing all variables.
 
-        @rtype:  dict
-        @return: The dictionary with the variables.
+        :rtype:  dict
+        :return: The dictionary with the variables.
         """
         if self.vars is None:
             self.vars = {}

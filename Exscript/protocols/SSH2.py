@@ -104,19 +104,19 @@ class SSH2(Protocol):
     def _load_system_host_keys(self, filename = None):
         """
         Load host keys from a system (read-only) file.  Host keys read with
-        this method will not be saved back by L{save_host_keys}.
+        this method will not be saved back by :class:`save_host_keys`.
 
         This method can be called multiple times.  Each new set of host keys
         will be merged with the existing set (new replacing old if there are
         conflicts).
 
-        If C{filename} is left as C{None}, an attempt will be made to read
+        If C{filename} is left as ``None``, an attempt will be made to read
         keys from the user's local "known hosts" file, as used by OpenSSH,
         and no exception will be raised if the file can't be read.  This is
         probably only useful on posix.
 
-        @param filename: the filename to read, or C{None}
-        @type filename: str
+        :param filename: the filename to read, or ``None``
+        :type filename: str
 
         @raise IOError: if a filename was provided and the file could not be
             read

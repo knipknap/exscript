@@ -219,21 +219,21 @@ class Protocol(object):
           - otp_requested_event: The connected host requested a
           one-time-password to be entered.
 
-        @keyword driver: Driver()|str
-        @keyword stdout: Where to write the device response. Defaults to
+        :keyword driver: Driver()|str
+        :keyword stdout: Where to write the device response. Defaults to
             os.devnull.
-        @keyword stderr: Where to write debug info. Defaults to stderr.
-        @keyword debug: An integer between 0 (no debugging) and 5 (very
+        :keyword stderr: Where to write debug info. Defaults to stderr.
+        :keyword debug: An integer between 0 (no debugging) and 5 (very
             verbose debugging) that specifies the amount of debug info
             sent to the terminal. The default value is 0.
-        @keyword connect_timeout: Timeout for the initial TCP connection attempt
-        @keyword timeout: See set_timeout(). The default value is 30.
-        @keyword logfile: A file into which a log of the conversation with the
+        :keyword connect_timeout: Timeout for the initial TCP connection attempt
+        :keyword timeout: See set_timeout(). The default value is 30.
+        :keyword logfile: A file into which a log of the conversation with the
             device is dumped.
-        @keyword termtype: The terminal type to request from the remote host,
+        :keyword termtype: The terminal type to request from the remote host,
             e.g. 'vt100'.
-        @keyword verify_fingerprint: Whether to verify the host's fingerprint.
-        @keyword account_factory: A function that produces a new L{Account}.
+        :keyword verify_fingerprint: Whether to verify the host's fingerprint.
+        :keyword account_factory: A function that produces a new :class:`Account`.
         """
         self.data_received_event   = Event()
         self.otp_requested_event   = Event()
@@ -292,8 +292,8 @@ class Protocol(object):
         Overwritten to return the very same object instead of copying the
         stream, because copying a network connection is impossible.
 
-        @rtype:  Protocol
-        @return: self
+        :rtype:  Protocol
+        :return: self
         """
         return self
 
@@ -302,10 +302,10 @@ class Protocol(object):
         Overwritten to return the very same object instead of copying the
         stream, because copying a network connection is impossible.
 
-        @type  memo: object
-        @param memo: Please refer to Python's standard library documentation.
-        @rtype:  Protocol
-        @return: self
+        :type  memo: object
+        :param memo: Please refer to Python's standard library documentation.
+        :rtype:  Protocol
+        :return: self
         """
         return self
 
@@ -344,8 +344,8 @@ class Protocol(object):
         Returns True if the adapter implements a virtual device, i.e.
         it isn't an actual network connection.
 
-        @rtype:  Boolean
-        @return: True for dummy adapters, False for network adapters.
+        :rtype:  Boolean
+        :return: True for dummy adapters, False for network adapters.
         """
         return False
 
@@ -363,8 +363,8 @@ class Protocol(object):
         If the driver argument is None, the adapter automatically chooses
         a driver using the guess_os() function.
 
-        @type  driver: Driver()|str
-        @param driver: The pattern that, when matched, causes an error.
+        :type  driver: Driver()|str
+        :param driver: The pattern that, when matched, causes an error.
         """
         if driver is None:
             self.manual_driver = None
@@ -381,8 +381,8 @@ class Protocol(object):
         """
         Returns the currently used driver.
 
-        @rtype:  Driver
-        @return: A regular expression.
+        :rtype:  Driver
+        :return: A regular expression.
         """
         if self.manual_driver:
             return self.manual_driver
@@ -406,8 +406,8 @@ class Protocol(object):
         Defines a pattern that is used to monitor the response of the
         connected host for a username prompt.
 
-        @type  regex: RegEx
-        @param regex: The pattern that, when matched, causes an error.
+        :type  regex: RegEx
+        :param regex: The pattern that, when matched, causes an error.
         """
         if regex is None:
             self.manual_user_re = regex
@@ -419,8 +419,8 @@ class Protocol(object):
         Returns the regular expression that is used to monitor the response
         of the connected host for a username prompt.
 
-        @rtype:  regex
-        @return: A regular expression.
+        :rtype:  regex
+        :return: A regular expression.
         """
         if self.manual_user_re:
             return self.manual_user_re
@@ -431,8 +431,8 @@ class Protocol(object):
         Defines a pattern that is used to monitor the response of the
         connected host for a password prompt.
 
-        @type  regex: RegEx
-        @param regex: The pattern that, when matched, causes an error.
+        :type  regex: RegEx
+        :param regex: The pattern that, when matched, causes an error.
         """
         if regex is None:
             self.manual_password_re = regex
@@ -444,8 +444,8 @@ class Protocol(object):
         Returns the regular expression that is used to monitor the response
         of the connected host for a username prompt.
 
-        @rtype:  regex
-        @return: A regular expression.
+        :rtype:  regex
+        :return: A regular expression.
         """
         if self.manual_password_re:
             return self.manual_password_re
@@ -459,8 +459,8 @@ class Protocol(object):
         prompt argument set to None, a default prompt is used that should
         work with many devices running Unix, IOS, IOS-XR, or Junos and others.
 
-        @type  prompt: RegEx
-        @param prompt: The pattern that matches the prompt of the remote host.
+        :type  prompt: RegEx
+        :param prompt: The pattern that matches the prompt of the remote host.
         """
         if prompt is None:
             self.manual_prompt_re = prompt
@@ -472,8 +472,8 @@ class Protocol(object):
         Returns the regular expressions that is matched against the host
         response when calling the expect_prompt() method.
 
-        @rtype:  list(re.RegexObject)
-        @return: A list of regular expression objects.
+        :rtype:  list(re.RegexObject)
+        :return: A list of regular expression objects.
         """
         if self.manual_prompt_re:
             return self.manual_prompt_re
@@ -485,8 +485,8 @@ class Protocol(object):
         connected host. If the pattern matches (any time the expect() or
         expect_prompt() methods are used), an error is raised.
 
-        @type  error: RegEx
-        @param error: The pattern that, when matched, causes an error.
+        :type  error: RegEx
+        :param error: The pattern that, when matched, causes an error.
         """
         if error is None:
             self.manual_error_re = error
@@ -498,8 +498,8 @@ class Protocol(object):
         Returns the regular expression that is used to monitor the response
         of the connected host for errors.
 
-        @rtype:  regex
-        @return: A regular expression.
+        :rtype:  regex
+        :return: A regular expression.
         """
         if self.manual_error_re:
             return self.manual_error_re
@@ -511,8 +511,8 @@ class Protocol(object):
         connected host during the authentication procedure.
         If the pattern matches an error is raised.
 
-        @type  error: RegEx
-        @param error: The pattern that, when matched, causes an error.
+        :type  error: RegEx
+        :param error: The pattern that, when matched, causes an error.
         """
         if error is None:
             self.manual_login_error_re = error
@@ -525,8 +525,8 @@ class Protocol(object):
         of the connected host for login errors; this is only used during
         the login procedure, i.e. app_authenticate() or app_authorize().
 
-        @rtype:  regex
-        @return: A regular expression.
+        :rtype:  regex
+        :return: A regular expression.
         """
         if self.manual_login_error_re:
             return self.manual_login_error_re
@@ -536,8 +536,8 @@ class Protocol(object):
         """
         Defines the maximum time that the adapter waits for initial connection.
 
-        @type  timeout: int
-        @param timeout: The maximum time in seconds.
+        :type  timeout: int
+        :param timeout: The maximum time in seconds.
         """
         self.connect_timeout = int(timeout)
 
@@ -545,18 +545,18 @@ class Protocol(object):
         """
         Returns the current connect_timeout in seconds.
 
-        @rtype:  int
-        @return: The connect_timeout in seconds.
+        :rtype:  int
+        :return: The connect_timeout in seconds.
         """
         return self.connect_timeout
 
     def set_timeout(self, timeout):
         """
         Defines the maximum time that the adapter waits before a call to
-        L{expect()} or L{expect_prompt()} fails.
+        :class:`expect()` or :class:`expect_prompt()` fails.
 
-        @type  timeout: int
-        @param timeout: The maximum time in seconds.
+        :type  timeout: int
+        :param timeout: The maximum time in seconds.
         """
         self.timeout = int(timeout)
 
@@ -564,8 +564,8 @@ class Protocol(object):
         """
         Returns the current timeout in seconds.
 
-        @rtype:  int
-        @return: The timeout in seconds.
+        :rtype:  int
+        :return: The timeout in seconds.
         """
         return self.timeout
 
@@ -579,10 +579,10 @@ class Protocol(object):
         """
         Opens the connection to the remote host or IP address.
 
-        @type  hostname: string
-        @param hostname: The remote host or IP address.
-        @type  port: int
-        @param port: The remote TCP port number.
+        :type  hostname: string
+        :param hostname: The remote host or IP address.
+        :type  port: int
+        :param port: The remote TCP port number.
         """
         if hostname is not None:
             self.host = hostname
@@ -610,17 +610,17 @@ class Protocol(object):
         made, use the account that was passed to the constructor. If that
         also fails, raise a TypeError.
 
-        The app_account is passed to L{app_authenticate()} and
-        L{app_authorize()}.
+        The app_account is passed to :class:`app_authenticate()` and
+        :class:`app_authorize()`.
         If app_account is not given, default to the value of the account
         argument.
 
-        @type  account: Account
-        @param account: The account for protocol level authentication.
-        @type  app_account: Account
-        @param app_account: The account for app level authentication.
-        @type  flush: bool
-        @param flush: Whether to flush the last prompt from the buffer.
+        :type  account: Account
+        :param account: The account for protocol level authentication.
+        :type  app_account: Account
+        :param app_account: The account for app level authentication.
+        :type  flush: bool
+        :param flush: Whether to flush the last prompt from the buffer.
         """
         with self._get_account(account) as account:
             if app_account is None:
@@ -634,15 +634,16 @@ class Protocol(object):
         """
         Like login(), but skips the authorization procedure.
 
-        @note: If you are unsure whether to use L{authenticate()} or
-            L{login()}, stick with L{login}.
+        .. HINT::
+           If you are unsure whether to use :class:`authenticate()` or
+           :class:`login()`, stick with :class:`login`.
 
-        @type  account: Account
-        @param account: The account for protocol level authentication.
-        @type  app_account: Account
-        @param app_account: The account for app level authentication.
-        @type  flush: bool
-        @param flush: Whether to flush the last prompt from the buffer.
+        :type  account: Account
+        :param account: The account for protocol level authentication.
+        :type  app_account: Account
+        :param app_account: The account for app level authentication.
+        :type  flush: bool
+        :param flush: Whether to flush the last prompt from the buffer.
         """
         with self._get_account(account) as account:
             if app_account is None:
@@ -662,11 +663,12 @@ class Protocol(object):
         Low-level API to perform protocol-level authentication on protocols
         that support it.
 
-        @note: In most cases, you want to use the login() method instead, as
+        .. HINT::
+           In most cases, you want to use the login() method instead, as
            it automatically chooses the best login method for each protocol.
 
-        @type  account: Account
-        @param account: An account object, like login().
+        :type  account: Account
+        :param account: An account object, like login().
         """
         with self._get_account(account) as account:
             user     = account.get_name()
@@ -685,8 +687,8 @@ class Protocol(object):
         Returns True if the protocol-level authentication procedure was
         completed, False otherwise.
 
-        @rtype:  bool
-        @return: Whether the authentication was completed.
+        :rtype:  bool
+        :return: Whether the authentication was completed.
         """
         return self.proto_authenticated
 
@@ -806,12 +808,12 @@ class Protocol(object):
         on whether the flush argument is True, it also removes the
         prompt from the incoming buffer.
 
-        @type  account: Account
-        @param account: An account object, like login().
-        @type  flush: bool
-        @param flush: Whether to flush the last prompt from the buffer.
-        @type  bailout: bool
-        @param bailout: Whether to wait for a prompt after sending the password.
+        :type  account: Account
+        :param account: An account object, like login().
+        :type  flush: bool
+        :param flush: Whether to flush the last prompt from the buffer.
+        :type  bailout: bool
+        :param bailout: Whether to wait for a prompt after sending the password.
         """
         with self._get_account(account) as account:
             user     = account.get_name()
@@ -825,8 +827,8 @@ class Protocol(object):
         Returns True if the application-level authentication procedure was
         completed, False otherwise.
 
-        @rtype:  bool
-        @return: Whether the authentication was completed.
+        :rtype:  bool
+        :return: Whether the authentication was completed.
         """
         return self.app_authenticated
 
@@ -838,12 +840,12 @@ class Protocol(object):
         For the difference between authentication and authorization
         please google for AAA.
 
-        @type  account: Account
-        @param account: An account object, like login().
-        @type  flush: bool
-        @param flush: Whether to flush the last prompt from the buffer.
-        @type  bailout: bool
-        @param bailout: Whether to wait for a prompt after sending the password.
+        :type  account: Account
+        :param account: An account object, like login().
+        :type  flush: bool
+        :param flush: Whether to flush the last prompt from the buffer.
+        :type  bailout: bool
+        :param bailout: Whether to wait for a prompt after sending the password.
         """
         with self._get_account(account) as account:
             user     = account.get_name()
@@ -868,12 +870,12 @@ class Protocol(object):
         In the case of a device that is not recognized to support AAA, this
         method does nothing.
 
-        @type  account: Account
-        @param account: An account object, like login().
-        @type  flush: bool
-        @param flush: Whether to flush the last prompt from the buffer.
-        @type  bailout: bool
-        @param bailout: Whether to wait for a prompt after sending the password.
+        :type  account: Account
+        :param account: An account object, like login().
+        :type  flush: bool
+        :param flush: Whether to flush the last prompt from the buffer.
+        :type  bailout: bool
+        :param bailout: Whether to wait for a prompt after sending the password.
         """
         with self._get_account(account) as account:
             self._dbg(1, 'Calling driver.auto_authorize().')
@@ -884,8 +886,8 @@ class Protocol(object):
         Returns True if the application-level authorization procedure was
         completed, False otherwise.
 
-        @rtype:  bool
-        @return: Whether the authorization was completed.
+        :rtype:  bool
+        :return: Whether the authorization was completed.
         """
         return self.app_authorized
 
@@ -894,10 +896,10 @@ class Protocol(object):
         Sends the given data to the remote host.
         Returns without waiting for a response.
 
-        @type  data: string
-        @param data: The data that is sent to the remote host.
-        @rtype:  Boolean
-        @return: True on success, False otherwise.
+        :type  data: string
+        :param data: The data that is sent to the remote host.
+        :rtype:  Boolean
+        :return: True on success, False otherwise.
         """
         raise NotImplementedError()
 
@@ -912,12 +914,12 @@ class Protocol(object):
         attribute, for details please see the documentation of the
         expect() method.
 
-        @type  command: string
-        @param command: The data that is sent to the remote host.
-        @type  consume: boolean (Default: True)
-        @param consume: Whether to consume the prompt from the buffer or not.
-        @rtype:  int, re.MatchObject
-        @return: The index of the prompt regular expression that matched,
+        :type  command: string
+        :param command: The data that is sent to the remote host.
+        :type  consume: boolean (Default: True)
+        :param consume: Whether to consume the prompt from the buffer or not.
+        :rtype:  int, re.MatchObject
+        :return: The index of the prompt regular expression that matched,
           and the match object.
         """
         self.send(command + '\r')
@@ -956,10 +958,10 @@ class Protocol(object):
 
         Returns the index of the regular expression that matched.
 
-        @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
-        @param prompt: One or more regular expressions.
-        @rtype:  int, re.MatchObject
-        @return: The index of the regular expression that matched,
+        :type  prompt: str|re.RegexObject|list(str|re.RegexObject)
+        :param prompt: One or more regular expressions.
+        :rtype:  int, re.MatchObject
+        :return: The index of the regular expression that matched,
           and the match object.
 
         @raise TimeoutException: raised if the timeout was reached.
@@ -991,12 +993,13 @@ class Protocol(object):
 
         Returns the index of the regular expression that matched.
 
-        @note: May raise the same exceptions as L{waitfor}.
+        .. HINT::
+            May raise the same exceptions as :class:`waitfor`.
 
-        @type  prompt: str|re.RegexObject|list(str|re.RegexObject)
-        @param prompt: One or more regular expressions.
-        @rtype:  int, re.MatchObject
-        @return: The index of the regular expression that matched,
+        :type  prompt: str|re.RegexObject|list(str|re.RegexObject)
+        :param prompt: One or more regular expressions.
+        :rtype:  int, re.MatchObject
+        :return: The index of the regular expression that matched,
           and the match object.
         """
         while True:
@@ -1016,10 +1019,10 @@ class Protocol(object):
         This method also stores the received data in the response
         attribute (self.response).
 
-        @type  consume: boolean (Default: True)
-        @param consume: Whether to consume the prompt from the buffer or not.
-        @rtype:  int, re.MatchObject
-        @return: The index of the prompt regular expression that matched,
+        :type  consume: boolean (Default: True)
+        :param consume: Whether to consume the prompt from the buffer or not.
+        :rtype:  int, re.MatchObject
+        :return: The index of the prompt regular expression that matched,
           and the match object.
         """
         if consume:
@@ -1046,25 +1049,26 @@ class Protocol(object):
         Calls the given function whenever the given pattern matches the
         incoming data.
 
-        @note: If you want to catch all incoming data regardless of a
-        pattern, use the Protocol.data_received_event event instead.
+        .. HINT::
+            If you want to catch all incoming data regardless of a
+            pattern, use the Protocol.data_received_event event instead.
 
         Arguments passed to the callback are the protocol instance, the
         index of the match, and the match object of the regular expression.
 
-        @type  pattern: str|re.RegexObject|list(str|re.RegexObject)
-        @param pattern: One or more regular expressions.
-        @type  callback: callable
-        @param callback: The function that is called.
-        @type  limit: int
-        @param limit: The maximum size of the tail of the buffer
+        :type  pattern: str|re.RegexObject|list(str|re.RegexObject)
+        :param pattern: One or more regular expressions.
+        :type  callback: callable
+        :param callback: The function that is called.
+        :type  limit: int
+        :param limit: The maximum size of the tail of the buffer
                       that is searched, in number of bytes.
         """
         self.buffer.add_monitor(pattern, partial(callback, self), limit)
 
     def cancel_expect(self):
         """
-        Cancel the current call to L{expect()} as soon as control returns
+        Cancel the current call to :class:`expect()` as soon as control returns
         to the protocol adapter. This method may be used in callbacks to
         the events emitted by this class, e.g. Protocol.data_received_event.
         """
@@ -1186,10 +1190,10 @@ class Protocol(object):
 
             conn.interact({'\031': mycallback})
 
-        @type  key_handlers: dict(str: callable)
-        @param key_handlers: A dictionary mapping chars to a functions.
-        @type  handle_window_size: bool
-        @param handle_window_size: Whether the connected host is notified
+        :type  key_handlers: dict(str: callable)
+        :param key_handlers: A dictionary mapping chars to a functions.
+        :type  handle_window_size: bool
+        :param handle_window_size: Whether the connected host is notified
           when the terminal size changes.
         """
         raise NotImplementedError()
@@ -1204,8 +1208,8 @@ class Protocol(object):
         """
         Returns the name or address of the currently connected host.
 
-        @rtype:  string
-        @return: A name or an address.
+        :rtype:  string
+        :return: A name or an address.
         """
         return self.host
 
@@ -1219,7 +1223,7 @@ class Protocol(object):
         The OS is also a wild guess that often depends on volatile
         information, so there is no guarantee that this will always work.
 
-        @rtype:  string
-        @return: A string to help identify the remote operating system.
+        :rtype:  string
+        :return: A string to help identify the remote operating system.
         """
         return self.os_guesser.get('os')

@@ -48,10 +48,10 @@ class InputHistory(object):
         such that the object behavior does not change, but the history
         is not remembered across instances.
 
-        @type  filename: str|list(str)
-        @param filename: The config file.
-        @type  section: str
-        @param section: The section in the configfile.
+        :type  filename: str|list(str)
+        :param filename: The config file.
+        :type  section: str
+        :param section: The section in the configfile.
         """
         self.section = section
         self.parser  = ConfigParser.RawConfigParser()
@@ -74,12 +74,12 @@ class InputHistory(object):
         passed to the constructor. If either the section or the key
         are not found, the default value is returned.
 
-        @type  key: str
-        @param key: The key for which to return a value.
-        @type  default: str|object
-        @param default: The default value that is returned.
-        @rtype:  str|object
-        @return: The value from the config file, or the default.
+        :type  key: str
+        :param key: The key for which to return a value.
+        :type  default: str|object
+        :param default: The default value that is returned.
+        :rtype:  str|object
+        :return: The value from the config file, or the default.
         """
         if not self.parser:
             return default
@@ -96,12 +96,12 @@ class InputHistory(object):
 
         Does nothing if the given value is None.
 
-        @type  key: str
-        @param key: The key for which to define a value.
-        @type  value: str|None
-        @param value: The value that is defined, or None.
-        @rtype:  str|None
-        @return: The given value.
+        :type  key: str
+        :param key: The key for which to define a value.
+        :type  value: str|None
+        :param value: The value that is defined, or None.
+        :rtype:  str|None
+        :return: The given value.
         """
         if value is None:
             return None
@@ -132,7 +132,7 @@ def prompt(key,
           as the default value the next time this function is used
           (based on the key argument).
 
-    The config file is based around the L{InputHistory}. If a history object
+    The config file is based around the :class:`InputHistory`. If a history object
     is not passed in the history argument, a new one will be created.
 
     The key argument specifies under which name the input is saved in the
@@ -166,20 +166,20 @@ def prompt(key,
         Please enter a value [Foobar]:        (enters nothing)
         You entered: Foobar
 
-    @type  key: str
-    @param key: The key under which to store the input in the L{InputHistory}.
-    @type  message: str
-    @param message: The user prompt.
-    @type  default: str|None
-    @param default: The offered default if none was found in the history.
-    @type  doverh: bool
-    @param doverh: Whether to prefer default value over history value.
-    @type  strip: bool
-    @param strip: Whether to remove whitespace from the input.
-    @type  check: callable
-    @param check: A function that is called for validating the input.
-    @type  history: L{InputHistory}|None
-    @param history: The history used for recording default values, or None.
+    :type  key: str
+    :param key: The key under which to store the input in the :class:`InputHistory`.
+    :type  message: str
+    :param message: The user prompt.
+    :type  default: str|None
+    :param default: The offered default if none was found in the history.
+    :type  doverh: bool
+    :param doverh: Whether to prefer default value over history value.
+    :type  strip: bool
+    :param strip: Whether to remove whitespace from the input.
+    :type  check: callable
+    :param check: A function that is called for validating the input.
+    :type  history: :class:`InputHistory`|None
+    :param history: The history used for recording default values, or None.
     """
     if history is None:
         history = InputHistory()
@@ -204,17 +204,17 @@ def prompt(key,
 
 def get_filename(key, message, default = None, history = None):
     """
-    Like L{prompt()}, but only accepts the name of an existing file
+    Like :class:`prompt()`, but only accepts the name of an existing file
     as an input.
 
-    @type  key: str
-    @param key: The key under which to store the input in the L{InputHistory}.
-    @type  message: str
-    @param message: The user prompt.
-    @type  default: str|None
-    @param default: The offered default if none was found in the history.
-    @type  history: L{InputHistory}|None
-    @param history: The history used for recording default values, or None.
+    :type  key: str
+    :param key: The key under which to store the input in the :class:`InputHistory`.
+    :type  message: str
+    :param message: The user prompt.
+    :type  default: str|None
+    :param default: The offered default if none was found in the history.
+    :type  history: :class:`InputHistory`|None
+    :param history: The history used for recording default values, or None.
     """
     def _validate(string):
         if not os.path.isfile(string):
@@ -227,10 +227,10 @@ def get_user(prompt=None):
     variable. Returns a string containing the username.
     May throw an exception if EOF is given by the user.
 
-    @type  prompt: str|None
-    @param prompt: The user prompt or the default one if None.
-    @rtype:  string
-    @return: A username.
+    :type  prompt: str|None
+    :param prompt: The user prompt or the default one if None.
+    :rtype:  string
+    :return: A username.
     """
     # Read username and password.
     try:
@@ -254,8 +254,8 @@ def get_login():
     Returns a tuple containing the username and the password.
     May throw an exception if EOF is given by the user.
 
-    @rtype:  (string, string)
-    @return: A tuple containing the username and the password.
+    :rtype:  (string, string)
+    :return: A tuple containing the username and the password.
     """
     user     = get_user()
     password = getpass.getpass('Please enter your password: ')
@@ -265,8 +265,8 @@ def read_login():
     """
     Like get_login(), but returns an Account object.
 
-    @rtype:  Account
-    @return: A new account.
+    :rtype:  Account
+    :return: A new account.
     """
     user, password = get_login()
     return Account(user, password)

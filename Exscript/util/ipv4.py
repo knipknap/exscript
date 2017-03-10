@@ -42,10 +42,10 @@ def is_ip(string):
     """
     Returns True if the given string is an IPv4 address, False otherwise.
 
-    @type  string: string
-    @param string: Any string.
-    @rtype:  bool
-    @return: True if the string is an IP address, False otherwise.
+    :type  string: string
+    :param string: Any string.
+    :rtype:  bool
+    :return: True if the string is an IP address, False otherwise.
     """
     mo = re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)', string)
     if mo is None:
@@ -61,10 +61,10 @@ def normalize_ip(ip):
 
         192.168.0.1 -> 192.168.000.001
 
-    @type  ip: string
-    @param ip: An IP address.
-    @rtype:  string
-    @return: The normalized IP.
+    :type  ip: string
+    :param ip: An IP address.
+    :rtype:  string
+    :return: The normalized IP.
     """
     theip = ip.split('.')
     if len(theip) != 4:
@@ -77,10 +77,10 @@ def clean_ip(ip):
 
         192.168.010.001 -> 192.168.10.1
 
-    @type  ip: string
-    @param ip: An IP address.
-    @rtype:  string
-    @return: The cleaned up IP.
+    :type  ip: string
+    :param ip: An IP address.
+    :rtype:  string
+    :return: The cleaned up IP.
     """
     return '.'.join(str(int(i)) for i in ip.split('.'))
 
@@ -88,10 +88,10 @@ def ip2int(ip):
     """
     Converts the given IP address to a 4 byte integer value.
 
-    @type  ip: string
-    @param ip: An IP address.
-    @rtype:  long
-    @return: The IP, converted to a number.
+    :type  ip: string
+    :param ip: An IP address.
+    :rtype:  long
+    :return: The IP, converted to a number.
     """
     if ip == '255.255.255.255':
         return 0xFFFFFFFFl
@@ -101,10 +101,10 @@ def int2ip(number):
     """
     Converts the given integer value to an IP address.
 
-    @type  number: long
-    @param number: An IP as a number.
-    @rtype:  string
-    @return: The IP address.
+    :type  number: long
+    :param number: An IP as a number.
+    :rtype:  string
+    :return: The IP address.
     """
     number &= 0xFFFFFFFFl
     return socket.inet_ntoa(struct.pack('!L', number))
@@ -113,10 +113,10 @@ def pfxlen2mask_int(pfxlen):
     """
     Converts the given prefix length to an IP mask value.
 
-    @type  pfxlen: int
-    @param pfxlen: A prefix length.
-    @rtype:  long
-    @return: The mask, as a long value.
+    :type  pfxlen: int
+    :param pfxlen: A prefix length.
+    :rtype:  long
+    :return: The mask, as a long value.
     """
     return 0xFFFFFFFFl << (32 - int(pfxlen))
 
@@ -124,10 +124,10 @@ def pfxlen2mask(pfxlen):
     """
     Converts the given prefix length to an IP mask.
 
-    @type  pfxlen: int
-    @param pfxlen: A prefix length.
-    @rtype:  string
-    @return: The mask.
+    :type  pfxlen: int
+    :param pfxlen: A prefix length.
+    :rtype:  string
+    :return: The mask.
     """
     return int2ip(pfxlen2mask_int(pfxlen))
 
@@ -135,10 +135,10 @@ def mask2pfxlen(mask):
     """
     Converts the given IP mask to a prefix length.
 
-    @type  mask: string
-    @param mask: An IP mask.
-    @rtype:  long
-    @return: The mask, as a long value.
+    :type  mask: string
+    :param mask: An IP mask.
+    :rtype:  long
+    :return: The mask, as a long value.
     """
     return 32 - _least_bit(ip2int(mask))
 
@@ -148,12 +148,12 @@ def parse_prefix(prefix, default_length = 24):
     If the prefix does not have a length (i.e., it is a simple IP address),
     it is presumed to have the given default length.
 
-    @type  prefix: string
-    @param prefix: An IP mask.
-    @type  default_length: long
-    @param default_length: The default ip prefix length.
-    @rtype:  string, int
-    @return: A tuple containing the IP address and prefix length.
+    :type  prefix: string
+    :param prefix: An IP mask.
+    :type  default_length: long
+    :param default_length: The default ip prefix length.
+    :rtype:  string, int
+    :return: A tuple containing the IP address and prefix length.
     """
     if '/' in prefix:
         network, pfxlen = prefix.split('/')
@@ -167,12 +167,12 @@ def network(prefix, default_length = 24):
     Given a prefix, this function returns the corresponding network
     address.
 
-    @type  prefix: string
-    @param prefix: An IP prefix.
-    @type  default_length: long
-    @param default_length: The default ip prefix length.
-    @rtype:  string
-    @return: The IP network address.
+    :type  prefix: string
+    :param prefix: An IP prefix.
+    :type  default_length: long
+    :param default_length: The default ip prefix length.
+    :rtype:  string
+    :return: The IP network address.
     """
     address, pfxlen = parse_prefix(prefix, default_length)
     ip              = ip2int(address)
@@ -183,12 +183,12 @@ def broadcast(prefix, default_length = 24):
     Given a prefix, this function returns the corresponding broadcast
     address.
 
-    @type  prefix: string
-    @param prefix: An IP prefix.
-    @type  default_length: long
-    @param default_length: The default ip prefix length.
-    @rtype:  string
-    @return: The IP broadcast address.
+    :type  prefix: string
+    :param prefix: An IP prefix.
+    :type  default_length: long
+    :param default_length: The default ip prefix length.
+    :rtype:  string
+    :return: The IP broadcast address.
     """
     address, pfxlen = parse_prefix(prefix, default_length)
     ip              = ip2int(address)
@@ -201,10 +201,10 @@ def remote_ip(local_ip):
     In other words, given one link net address, this function returns the
     other link net address.
 
-    @type  local_ip: string
-    @param local_ip: An IP address.
-    @rtype:  string
-    @return: The other IP address of the link address pair.
+    :type  local_ip: string
+    :param local_ip: An IP address.
+    :rtype:  string
+    :return: The other IP address of the link address pair.
     """
     local_ip = ip2int(local_ip)
     network  = local_ip & pfxlen2mask_int(30)
@@ -214,10 +214,10 @@ def sort(iterable):
     """
     Given an IP address list, this function sorts the list.
 
-    @type  iterable: Iterator
-    @param iterable: An IP address list.
-    @rtype:  list
-    @return: The sorted IP address list.
+    :type  iterable: Iterator
+    :param iterable: An IP address list.
+    :rtype:  list
+    :return: The sorted IP address list.
     """
     ips = sorted(normalize_ip(ip) for ip in iterable)
     return [clean_ip(ip) for ip in ips]

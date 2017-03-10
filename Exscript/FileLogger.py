@@ -36,7 +36,7 @@ class FileLogger(Logger):
         completed, unless they have an error in them.
         If clearmem is True, the logger does not store a reference to
         the log in it. If you want to use the functions from
-        L{Exscript.util.report} with the logger, clearmem must be False.
+        :class:`Exscript.util.report` with the logger, clearmem must be False.
         """
         Logger.__init__(self)
         self.logdir   = logdir

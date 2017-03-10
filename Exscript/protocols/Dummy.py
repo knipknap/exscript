@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-A client that talks to a L{Exscript.emulators.VirtualDevice}.
+A client that talks to a :class:`Exscript.emulators.VirtualDevice`.
 """
 from Exscript.emulators           import VirtualDevice
 from Exscript.protocols.Protocol  import Protocol
@@ -24,14 +24,15 @@ from Exscript.protocols.Exception import TimeoutException, \
 class Dummy(Protocol):
     """
     This protocol adapter does not open a network connection, but talks to
-    a L{Exscript.emulators.VirtualDevice} internally.
+    a :class:`Exscript.emulators.VirtualDevice` internally.
     """
 
     def __init__(self, device = None, **kwargs):
         """
-        @note: Also supports all keyword arguments that L{Protocol} supports.
+        .. HINT::
+            Also supports all keyword arguments that :class:`Protocol` supports.
 
-        @keyword device: The L{Exscript.emulators.VirtualDevice} with
+        :keyword device: The :class:`Exscript.emulators.VirtualDevice` with
             which to communicate.
         """
         Protocol.__init__(self, **kwargs)

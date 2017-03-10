@@ -19,20 +19,20 @@ import weakref
 
 class DeadMethodCalled(Exception):
     """
-    Raised by L{WeakMethod} if it is called when the referenced object
+    Raised by :class:`WeakMethod` if it is called when the referenced object
     is already dead.
     """
     pass
 
 class WeakMethod(object):
     """
-    Do not create this class directly; use L{ref()} instead.
+    Do not create this class directly; use :class:`ref()` instead.
     """
     __slots__ = 'name', 'callback'
 
     def __init__(self, name, callback):
         """
-        Constructor. Do not use directly, use L{ref()} instead.
+        Constructor. Do not use directly, use :class:`ref()` instead.
         """
         self.name     = name
         self.callback = callback
@@ -46,8 +46,8 @@ class WeakMethod(object):
         Returns the referenced method/function if it is still alive.
         Returns None otherwise.
 
-        @rtype:  callable|None
-        @return: The referenced function if it is still alive.
+        :rtype:  callable|None
+        :return: The referenced function if it is still alive.
         """
         raise NotImplementedError()
 
@@ -56,18 +56,18 @@ class WeakMethod(object):
         Returns True if the referenced function is still alive, False
         otherwise.
 
-        @rtype:  bool
-        @return: Whether the referenced function is still alive.
+        :rtype:  bool
+        :return: Whether the referenced function is still alive.
         """
         return self.get_function() is not None
 
     def __call__(self, *args, **kwargs):
         """
-        Proxied to the underlying function or method. Raises L{DeadMethodCalled}
+        Proxied to the underlying function or method. Raises :class:`DeadMethodCalled`
         if the referenced function is dead.
 
-        @rtype:  object
-        @return: Whatever the referenced function returned.
+        :rtype:  object
+        :return: Whatever the referenced function returned.
         """
         method = self.get_function()
         if method is None:
@@ -105,10 +105,10 @@ def ref(function, callback = None):
     If the callback argument is not None, it is called as soon
     as the referenced function is garbage deleted.
 
-    @type  function: callable
-    @param function: The function to reference.
-    @type  callback: callable
-    @param callback: Called when the function dies.
+    :type  function: callable
+    :param function: The function to reference.
+    :type  callback: callable
+    :param callback: Called when the function dies.
     """
     try:
         function.__func__

@@ -23,7 +23,7 @@ class Server(Process):
     """
     Base class of the Telnet and SSH servers. Servers are intended to be
     used for tests and attempt to emulate a device using the behavior of
-    the associated L{Exscript.emulators.VirtualDevice}. Sample usage::
+    the associated :class:`Exscript.emulators.VirtualDevice`. Sample usage::
 
         device = VirtualDevice('myhost')
         daemon = Telnetd('localhost', 1234, device)
@@ -38,12 +38,12 @@ class Server(Process):
         """
         Constructor.
 
-        @type  host: str
-        @param host: The address against which the daemon binds.
-        @type  port: str
-        @param port: The TCP port on which to listen.
-        @type  device: VirtualDevice
-        @param device: A virtual device instance.
+        :type  host: str
+        :param host: The address against which the daemon binds.
+        :type  port: str
+        :param port: The TCP port on which to listen.
+        :type  device: VirtualDevice
+        :param device: A virtual device instance.
         """
         Process.__init__(self, target = self._run)
         self.host    = host
@@ -117,8 +117,8 @@ class Server(Process):
         """
         Like exit(), but may be used as a handler in add_command.
 
-        @type  cmd: str
-        @param cmd: The command that causes the server to exit.
+        :type  cmd: str
+        :param cmd: The command that causes the server to exit.
         """
         self.exit()
         return ''

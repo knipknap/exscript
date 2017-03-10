@@ -24,10 +24,10 @@ def status(logger):
     Creates a one-line summary on the actions that were logged by the given
     Logger.
 
-    @type  logger: Logger
-    @param logger: The logger that recorded what happened in the queue.
-    @rtype:  string
-    @return: A string summarizing the status.
+    :type  logger: Logger
+    :param logger: The logger that recorded what happened in the queue.
+    :rtype:  string
+    :return: A string summarizing the status.
     """
     aborted   = logger.get_aborted_actions()
     succeeded = logger.get_succeeded_actions()
@@ -51,10 +51,10 @@ def summarize(logger):
     Creates a short summary on the actions that were logged by the given
     Logger.
 
-    @type  logger: Logger
-    @param logger: The logger that recorded what happened in the queue.
-    @rtype:  string
-    @return: A string summarizing the status of every performed task.
+    :type  logger: Logger
+    :param logger: The logger that recorded what happened in the queue.
+    :rtype:  string
+    :return: A string summarizing the status of every performed task.
     """
     summary = []
     for log in logger.get_logs():
@@ -72,10 +72,10 @@ def format(logger,
     The report contains a list of successful actions, as well as the full
     error message on failed actions.
 
-    @type  logger: Logger
-    @param logger: The logger that recorded what happened in the queue.
-    @rtype:  string
-    @return: A string summarizing the status of every performed task.
+    :type  logger: Logger
+    :param logger: The logger that recorded what happened in the queue.
+    :rtype:  string
+    :return: A string summarizing the status of every performed task.
     """
     output = []
 

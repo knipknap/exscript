@@ -30,10 +30,10 @@ def get_protocol_from_name(name):
     """
     Returns the protocol class for the protocol with the given name.
 
-    @type  name: str
-    @param name: The name of the protocol.
-    @rtype:  Protocol
-    @return: The protocol class.
+    :type  name: str
+    :param name: The name of the protocol.
+    :rtype:  Protocol
+    :return: The protocol class.
     """
     cls = protocol_map.get(name)
     if not cls:
@@ -44,10 +44,10 @@ def create_protocol(name, **kwargs):
     """
     Returns an instance of the protocol with the given name.
 
-    @type  name: str
-    @param name: The name of the protocol.
-    @rtype:  Protocol
-    @return: An instance of the protocol.
+    :type  name: str
+    :param name: The name of the protocol.
+    :rtype:  Protocol
+    :return: An instance of the protocol.
     """
     cls = protocol_map.get(name)
     if not cls:
@@ -57,17 +57,17 @@ def create_protocol(name, **kwargs):
 def prepare(host, default_protocol = 'telnet', **kwargs):
     """
     Creates an instance of the protocol by either parsing the given
-    URL-formatted hostname using L{Exscript.util.url}, or according to
-    the options of the given L{Exscript.Host}.
+    URL-formatted hostname using :class:`Exscript.util.url`, or according to
+    the options of the given :class:`Exscript.Host`.
 
-    @type  host: str or Host
-    @param host: A URL-formatted hostname or a L{Exscript.Host} instance.
-    @type  default_protocol: str
-    @param default_protocol: Protocol that is used if the URL specifies none.
-    @type  kwargs: dict
-    @param kwargs: Passed to the protocol constructor.
-    @rtype:  Protocol
-    @return: An instance of the protocol.
+    :type  host: str or Host
+    :param host: A URL-formatted hostname or a :class:`Exscript.Host` instance.
+    :type  default_protocol: str
+    :param default_protocol: Protocol that is used if the URL specifies none.
+    :type  kwargs: dict
+    :param kwargs: Passed to the protocol constructor.
+    :rtype:  Protocol
+    :return: An instance of the protocol.
     """
     host     = to_host(host, default_protocol = default_protocol)
     protocol = host.get_protocol()
@@ -79,18 +79,18 @@ def prepare(host, default_protocol = 'telnet', **kwargs):
 
 def connect(host, default_protocol = 'telnet', **kwargs):
     """
-    Like L{prepare()}, but also connects to the host by calling
-    L{Protocol.connect()}. If the URL or host contain any login info, this
-    function also logs into the host using L{Protocol.login()}.
+    Like :class:`prepare()`, but also connects to the host by calling
+    :class:`Protocol.connect()`. If the URL or host contain any login info, this
+    function also logs into the host using :class:`Protocol.login()`.
 
-    @type  host: str or Host
-    @param host: A URL-formatted hostname or a L{Exscript.Host} object.
-    @type  default_protocol: str
-    @param default_protocol: Protocol that is used if the URL specifies none.
-    @type  kwargs: dict
-    @param kwargs: Passed to the protocol constructor.
-    @rtype:  Protocol
-    @return: An instance of the protocol.
+    :type  host: str or Host
+    :param host: A URL-formatted hostname or a :class:`Exscript.Host` object.
+    :type  default_protocol: str
+    :param default_protocol: Protocol that is used if the URL specifies none.
+    :type  kwargs: dict
+    :param kwargs: Passed to the protocol constructor.
+    :rtype:  Protocol
+    :return: An instance of the protocol.
     """
     host    = to_host(host)
     conn    = prepare(host, default_protocol, **kwargs)

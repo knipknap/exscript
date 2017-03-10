@@ -32,10 +32,10 @@ def authenticate_user(scope, user = [None], password = [None]):
     user and password that were used at the last login attempt; it is
     an error if no such attempt was made before.
 
-    @type  user: string
-    @param user: A username.
-    @type  password: string
-    @param password: A password.
+    :type  user: string
+    :param user: A username.
+    :type  password: string
+    :param password: A password.
     """
     conn = scope.get('__connection__')
     user = user[0]
@@ -55,8 +55,8 @@ def authorize(scope, password = [None]):
     password that was used at the last login attempt; it is
     an error if no such attempt was made before.
 
-    @type  password: string
-    @param password: A password.
+    :type  password: string
+    :param password: A password.
     """
     conn     = scope.get('__connection__')
     password = password[0]
@@ -79,8 +79,8 @@ def auto_authorize(scope, password = [None]):
       - on IOS, the "enable" command is executed.
       - nothing on other operating systems yet.
 
-    @type  password: string
-    @param password: A password.
+    :type  password: string
+    :param password: A password.
     """
     conn     = scope.get('__connection__')
     password = password[0]
@@ -129,8 +129,8 @@ def exec_(scope, data):
     This function also causes the response of the command to be stored
     in the built-in __response__ variable.
 
-    @type  data: string
-    @param data: The data that is sent.
+    :type  data: string
+    :param data: The data that is sent.
     """
     conn     = scope.get('__connection__')
     response = []
@@ -147,8 +147,8 @@ def execline(scope, data):
     Like exec(), but appends a newline to the command in data before sending
     it.
 
-    @type  data: string
-    @param data: The data that is sent.
+    :type  data: string
+    :param data: The data that is sent.
     """
     conn     = scope.get('__connection__')
     response = []
@@ -167,8 +167,8 @@ def guess_os(scope):
     on the host; Exscript looks for known patterns and maps them to specific
     operating systems.
 
-    @rtype:  string
-    @return: The operating system.
+    :rtype:  string
+    :return: The operating system.
     """
     conn = scope.get('__connection__')
     return [conn.guess_os()]
@@ -179,8 +179,8 @@ def send(scope, data):
     Like exec(), but does not wait for a response of the remote host after
     sending the command.
 
-    @type  data: string
-    @param data: The data that is sent.
+    :type  data: string
+    :param data: The data that is sent.
     """
     conn = scope.get('__connection__')
     for line in data:
@@ -193,8 +193,8 @@ def sendline(scope, data):
     Like execline(), but does not wait for a response of the remote host after
     sending the command.
 
-    @type  data: string
-    @param data: The data that is sent.
+    :type  data: string
+    :param data: The data that is sent.
     """
     conn = scope.get('__connection__')
     for line in data:
@@ -206,8 +206,8 @@ def wait_for(scope, prompt):
     """
     Waits until the response of the remote host contains the given pattern.
 
-    @type  prompt: regex
-    @param prompt: The prompt pattern.
+    :type  prompt: regex
+    :param prompt: The prompt pattern.
     """
     conn = scope.get('__connection__')
     conn.expect(prompt)
@@ -227,8 +227,8 @@ def set_prompt(scope, prompt = None):
     method was used). set_prompt() redefines as to what is recognized as a
     prompt.
 
-    @type  prompt: regex
-    @param prompt: The prompt pattern.
+    :type  prompt: regex
+    :param prompt: The prompt pattern.
     """
     conn = scope.get('__connection__')
     conn.set_prompt(prompt)
@@ -244,8 +244,8 @@ def set_error(scope, error_re = None):
     response of the host for the given pattern and raises an error if the
     pattern is found.
 
-    @type  error_re: regex
-    @param error_re: The error pattern.
+    :type  error_re: regex
+    :param error_re: The error pattern.
     """
     conn = scope.get('__connection__')
     conn.set_error_prompt(error_re)
@@ -257,8 +257,8 @@ def set_timeout(scope, timeout):
     Defines the time after which Exscript fails if it does not receive a
     prompt from the remote host.
 
-    @type  timeout: int
-    @param timeout: The timeout in seconds.
+    :type  timeout: int
+    :param timeout: The timeout in seconds.
     """
     conn = scope.get('__connection__')
     conn.set_timeout(int(timeout[0]))

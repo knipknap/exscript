@@ -25,7 +25,7 @@ fork during an import may cause the following error::
 
   RuntimeError: not holding the import lock
 
-So in general it is recommended to use the L{sigint.SigIntWatcher()}
+So in general it is recommended to use the :class:`sigint.SigIntWatcher()`
 class directly.
 """
 from Exscript.util.sigint import SigIntWatcher

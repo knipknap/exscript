@@ -33,14 +33,14 @@ class Account(object):
         If an authorization password is not given, it defaults to the
         same value as the authentication password.
 
-        @type  name: string
-        @param name: A username.
-        @type  password: string
-        @param password: The authentication password.
-        @type  password2: string
-        @param password2: The authorization password, if required.
-        @type  key: PrivateKey
-        @param key: A private key, if required.
+        :type  name: string
+        :param name: A username.
+        :type  password: string
+        :param password: The authentication password.
+        :type  password2: string
+        :param password2: The authorization password, if required.
+        :type  key: PrivateKey
+        :param key: A private key, if required.
         """
         self.acquired_event = Event()
         self.released_event = Event()
@@ -69,8 +69,8 @@ class Account(object):
         """
         Locks the account.
 
-        @type  signal: bool
-        @param signal: Whether to emit the acquired_event signal.
+        :type  signal: bool
+        :param signal: Whether to emit the acquired_event signal.
         """
         with self.synclock:
             while not self.lock.acquire(False):
@@ -83,8 +83,8 @@ class Account(object):
         """
         Unlocks the account.
 
-        @type  signal: bool
-        @param signal: Whether to emit the released_event signal.
+        :type  signal: bool
+        :param signal: Whether to emit the released_event signal.
         """
         with self.synclock:
             self.lock.release()
@@ -96,8 +96,8 @@ class Account(object):
         """
         Changes the name of the account.
 
-        @type  name: string
-        @param name: The account name.
+        :type  name: string
+        :param name: The account name.
         """
         self.name = name
         self.changed_event.emit(self)
@@ -106,8 +106,8 @@ class Account(object):
         """
         Returns the name of the account.
 
-        @rtype:  string
-        @return: The account name.
+        :rtype:  string
+        :return: The account name.
         """
         return self.name
 
@@ -115,8 +115,8 @@ class Account(object):
         """
         Changes the password of the account.
 
-        @type  password: string
-        @param password: The account password.
+        :type  password: string
+        :param password: The account password.
         """
         self.password = password
         self.changed_event.emit(self)
@@ -125,8 +125,8 @@ class Account(object):
         """
         Returns the password of the account.
 
-        @rtype:  string
-        @return: The account password.
+        :rtype:  string
+        :return: The account password.
         """
         return self.password
 
@@ -134,8 +134,8 @@ class Account(object):
         """
         Changes the authorization password of the account.
 
-        @type  password: string
-        @param password: The new authorization password.
+        :type  password: string
+        :param password: The new authorization password.
         """
         self.authorization_password = password
         self.changed_event.emit(self)
@@ -144,8 +144,8 @@ class Account(object):
         """
         Returns the authorization password of the account.
 
-        @rtype:  string
-        @return: The account password.
+        :rtype:  string
+        :return: The account password.
         """
         return self.authorization_password or self.password
 
@@ -153,7 +153,7 @@ class Account(object):
         """
         Returns the key of the account, if any.
 
-        @rtype:  PrivateKey|None
-        @return: A key object.
+        :rtype:  PrivateKey|None
+        :return: A key object.
         """
         return self.key

@@ -23,16 +23,16 @@ from functools import wraps
 def add_label(obj, name, **kwargs):
     """
     Labels an object such that it can later be checked with
-    L{get_label()}.
+    :class:`get_label()`.
 
-    @type  obj: object
-    @param obj: The object that is labeled.
-    @type  name: str
-    @param name: A label.
-    @type  kwargs: dict
-    @param kwargs: Optional values to store with the label.
-    @rtype:  object
-    @return: The labeled function.
+    :type  obj: object
+    :param obj: The object that is labeled.
+    :type  name: str
+    :param name: A label.
+    :type  kwargs: dict
+    :param kwargs: Optional values to store with the label.
+    :rtype:  object
+    :return: The labeled function.
     """
     labels = obj.__dict__.setdefault('_labels', dict())
     labels[name] = kwargs
@@ -41,14 +41,14 @@ def add_label(obj, name, **kwargs):
 def get_label(obj, name):
     """
     Checks whether an object has the given label attached (see
-    L{add_label()}) and returns the associated options.
+    :class:`add_label()`) and returns the associated options.
 
-    @type  obj: object
-    @param obj: The object to check for the label.
-    @type  name: str
-    @param name: A label.
-    @rtype:  dict or None
-    @return: The optional values if the label is attached, None otherwise.
+    :type  obj: object
+    :param obj: The object to check for the label.
+    :type  name: str
+    :param name: A label.
+    :rtype:  dict or None
+    :return: The optional values if the label is attached, None otherwise.
     """
     labels = obj.__dict__.get('_labels')
     if labels is None:
@@ -59,10 +59,10 @@ def copy_labels(src, dst):
     """
     Copies all labels of one object to another object.
 
-    @type  src: object
-    @param src: The object to check read the labels from.
-    @type  dst: object
-    @param dst: The object into which the labels are copied.
+    :type  src: object
+    :param src: The object to check read the labels from.
+    :type  dst: object
+    :param dst: The object into which the labels are copied.
     """
     labels = src.__dict__.get('_labels')
     if labels is None:

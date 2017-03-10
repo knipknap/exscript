@@ -22,13 +22,13 @@ def otp(scope, password, seed, seqs):
     sequence number and returns it.
     Uses the md4/sixword algorithm as supported by TACACS+ servers.
 
-    @type  password: string
-    @param password: A password.
-    @type  seed: string
-    @param seed: A username.
-    @type  seqs: int
-    @param seqs: A sequence number, or a list of sequence numbers.
-    @rtype:  string
-    @return: A hash, or a list of hashes.
+    :type  password: string
+    :param password: A password.
+    :type  seed: string
+    :param seed: A username.
+    :type  seqs: int
+    :param seqs: A sequence number, or a list of sequence numbers.
+    :rtype:  string
+    :return: A hash, or a list of hashes.
     """
     return [crypt.otp(password[0], seed[0], int(seq)) for seq in seqs]

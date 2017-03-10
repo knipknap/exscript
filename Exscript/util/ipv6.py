@@ -20,10 +20,10 @@ def is_ip(string):
     """
     Returns True if the given string is an IPv6 address, False otherwise.
 
-    @type  string: string
-    @param string: Any string.
-    @rtype:  bool
-    @return: True if the string is an IP address, False otherwise.
+    :type  string: string
+    :param string: Any string.
+    :rtype:  bool
+    :return: True if the string is an IP address, False otherwise.
     """
     try:
         normalize_ip(string)
@@ -38,10 +38,10 @@ def normalize_ip(ip):
         1234:0:01:02:: -> 1234:0000:0001:0002:0000:0000:0000:0000
         1234::A -> 1234:0000:0000:0000:0000:0000:0000:000a
 
-    @type  ip: string
-    @param ip: An IP address.
-    @rtype:  string
-    @return: The normalized IP.
+    :type  ip: string
+    :param ip: An IP address.
+    :rtype:  string
+    :return: The normalized IP.
     """
     theip = ip
     if theip.startswith('::'):
@@ -79,10 +79,10 @@ def clean_ip(ip):
         1234:0000:0000:0000:0001:0000:0000:0000 -> 1234:0:0:0:1::
         0000:0000:0000:0000:0001:0000:0000:0000 -> ::1:0:0:0
 
-    @type  ip: string
-    @param ip: An IP address.
-    @rtype:  string
-    @return: The cleaned up IP.
+    :type  ip: string
+    :param ip: An IP address.
+    :rtype:  string
+    :return: The cleaned up IP.
     """
     theip    = normalize_ip(ip)
     segments = ['%x' % int(s, 16) for s in theip.split(':')]
@@ -126,12 +126,12 @@ def parse_prefix(prefix, default_length = 128):
     If the prefix does not have a length (i.e., it is a simple IP address),
     it is presumed to have the given default length.
 
-    @type  prefix: string
-    @param prefix: An IP mask.
-    @type  default_length: long
-    @param default_length: The default ip prefix length.
-    @rtype:  string, int
-    @return: A tuple containing the IP address and prefix length.
+    :type  prefix: string
+    :param prefix: An IP mask.
+    :type  default_length: long
+    :param default_length: The default ip prefix length.
+    :rtype:  string, int
+    :return: A tuple containing the IP address and prefix length.
     """
     if '/' in prefix:
         network, pfxlen = prefix.split('/')

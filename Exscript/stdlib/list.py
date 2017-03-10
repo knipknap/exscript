@@ -19,8 +19,8 @@ def new(scope):
     """
     Returns a new, empty list.
 
-    @rtype:  string
-    @return: The model of the remote device.
+    :rtype:  string
+    :return: The model of the remote device.
     """
     return []
 
@@ -29,8 +29,8 @@ def length(scope, mylist):
     """
     Returns the number of items in the list.
 
-    @rtype:  string
-    @return: The model of the remote device.
+    :rtype:  string
+    :return: The model of the remote device.
     """
     return [len(mylist)]
 
@@ -40,12 +40,12 @@ def get(scope, source, index):
     Returns a copy of the list item with the given index.
     It is an error if an item with teh given index does not exist.
 
-    @type  source: string
-    @param source: A list of strings.
-    @type  index: string
-    @param index: A list of strings.
-    @rtype:  string
-    @return: The cleaned up list of strings.
+    :type  source: string
+    :param source: A list of strings.
+    :type  index: string
+    :param index: A list of strings.
+    :rtype:  string
+    :return: The cleaned up list of strings.
     """
     try:
         index = int(index[0])
@@ -64,9 +64,9 @@ def unique(scope, source):
     Returns a copy of the given list in which all duplicates are removed
     such that one of each item remains in the list.
 
-    @type  source: string
-    @param source: A list of strings.
-    @rtype:  string
-    @return: The cleaned up list of strings.
+    :type  source: string
+    :param source: A list of strings.
+    :rtype:  string
+    :return: The cleaned up list of strings.
     """
     return dict(map(lambda a: (a, 1), source)).keys()

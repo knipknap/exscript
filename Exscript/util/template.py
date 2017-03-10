@@ -53,10 +53,10 @@ def test(string, **kwargs):
     Compiles the given template, and raises an exception if that
     failed. Does nothing otherwise.
 
-    @type  string: string
-    @param string: The template to compile.
-    @type  kwargs: dict
-    @param kwargs: Variables to define in the template.
+    :type  string: string
+    :param string: The template to compile.
+    :type  kwargs: dict
+    :param kwargs: Variables to define in the template.
     """
     _compile(None, None, string, {}, **kwargs)
 
@@ -67,10 +67,10 @@ def test_secure(string, **kwargs):
     Raises Exscript.interpreter.Exception.PermissionError if any
     function lacks the decorator.
 
-    @type  string: string
-    @param string: The template to compile.
-    @type  kwargs: dict
-    @param kwargs: Variables to define in the template.
+    :type  string: string
+    :param string: The template to compile.
+    :type  kwargs: dict
+    :param kwargs: Variables to define in the template.
     """
     _compile(None, None, string, {'secure': True}, **kwargs)
 
@@ -79,10 +79,10 @@ def test_file(filename, **kwargs):
     Convenience wrapper around test() that reads the template from a file
     instead.
 
-    @type  filename: string
-    @param filename: The name of the template file.
-    @type  kwargs: dict
-    @param kwargs: Variables to define in the template.
+    :type  filename: string
+    :param filename: The name of the template file.
+    :type  kwargs: dict
+    :param kwargs: Variables to define in the template.
     """
     _compile(None, filename, open(filename).read(), {}, **kwargs)
 
@@ -111,16 +111,16 @@ def eval(conn, string, strip_command = True, **kwargs):
 
     By setting strip_command to True, the first line is ommitted.
 
-    @type  conn: Exscript.protocols.Protocol
-    @param conn: The connection on which to run the template.
-    @type  string: string
-    @param string: The template to compile.
-    @type  strip_command: bool
-    @param strip_command: Whether to strip the command echo from the response.
-    @type  kwargs: dict
-    @param kwargs: Variables to define in the template.
-    @rtype:  dict
-    @return: The variables that are defined after execution of the script.
+    :type  conn: Exscript.protocols.Protocol
+    :param conn: The connection on which to run the template.
+    :type  string: string
+    :param string: The template to compile.
+    :type  strip_command: bool
+    :param strip_command: Whether to strip the command echo from the response.
+    :type  kwargs: dict
+    :param kwargs: Variables to define in the template.
+    :rtype:  dict
+    :return: The variables that are defined after execution of the script.
     """
     parser_args = {'strip_command': strip_command}
     return _run(conn, None, string, parser_args, **kwargs)
@@ -130,14 +130,14 @@ def eval_file(conn, filename, strip_command = True, **kwargs):
     Convenience wrapper around eval() that reads the template from a file
     instead.
 
-    @type  conn: Exscript.protocols.Protocol
-    @param conn: The connection on which to run the template.
-    @type  filename: string
-    @param filename: The name of the template file.
-    @type  strip_command: bool
-    @param strip_command: Whether to strip the command echo from the response.
-    @type  kwargs: dict
-    @param kwargs: Variables to define in the template.
+    :type  conn: Exscript.protocols.Protocol
+    :param conn: The connection on which to run the template.
+    :type  filename: string
+    :param filename: The name of the template file.
+    :type  strip_command: bool
+    :param strip_command: Whether to strip the command echo from the response.
+    :type  kwargs: dict
+    :param kwargs: Variables to define in the template.
     """
     template    = open(filename, 'r').read()
     parser_args = {'strip_command': strip_command}
@@ -155,14 +155,14 @@ def paste(conn, string, **kwargs):
     the template contains a command that requires a response from the
     host.
 
-    @type  conn: Exscript.protocols.Protocol
-    @param conn: The connection on which to run the template.
-    @type  string: string
-    @param string: The template to compile.
-    @type  kwargs: dict
-    @param kwargs: Variables to define in the template.
-    @rtype:  dict
-    @return: The variables that are defined after execution of the script.
+    :type  conn: Exscript.protocols.Protocol
+    :param conn: The connection on which to run the template.
+    :type  string: string
+    :param string: The template to compile.
+    :type  kwargs: dict
+    :param kwargs: Variables to define in the template.
+    :rtype:  dict
+    :return: The variables that are defined after execution of the script.
     """
     return _run(conn, None, string, {'no_prompt': True}, **kwargs)
 
@@ -171,12 +171,12 @@ def paste_file(conn, filename, **kwargs):
     Convenience wrapper around paste() that reads the template from a file
     instead.
 
-    @type  conn: Exscript.protocols.Protocol
-    @param conn: The connection on which to run the template.
-    @type  filename: string
-    @param filename: The name of the template file.
-    @type  kwargs: dict
-    @param kwargs: Variables to define in the template.
+    :type  conn: Exscript.protocols.Protocol
+    :param conn: The connection on which to run the template.
+    :type  filename: string
+    :param filename: The name of the template file.
+    :type  kwargs: dict
+    :param kwargs: Variables to define in the template.
     """
     template = open(filename, 'r').read()
     return _run(conn, None, template, {'no_prompt': True}, **kwargs)

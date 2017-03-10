@@ -41,8 +41,8 @@ class Task(object):
         Returns True if all actions in the task are completed, returns
         False otherwise.
 
-        @rtype:  bool
-        @return: Whether the task is completed.
+        :rtype:  bool
+        :return: Whether the task is completed.
         """
         return self.completed == len(self.job_ids)
 
@@ -58,7 +58,7 @@ class Task(object):
         """
         Adds a job to the task.
 
-        @type  theid: int
-        @param theid: The id of the job.
+        :type  theid: int
+        :param theid: The id of the job.
         """
         self.job_ids.add(theid)

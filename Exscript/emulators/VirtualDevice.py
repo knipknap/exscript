@@ -13,7 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-Defines the behavior of a device, as needed by L{Exscript.servers}.
+Defines the behavior of a device, as needed by :class:`Exscript.servers`.
 """
 from Exscript.emulators import CommandSet
 
@@ -37,14 +37,14 @@ class VirtualDevice(object):
                  strict     = True,
                  banner     = None):
         """
-        @type  hostname: str
-        @param hostname: The hostname, used for the prompt.
+        :type  hostname: str
+        :param hostname: The hostname, used for the prompt.
 
-        @keyword banner: A string to show as soon as the connection is opened.
-        @keyword login_type: integer constant, one of LOGIN_TYPE_PASSWORDONLY,
+        :keyword banner: A string to show as soon as the connection is opened.
+        :keyword login_type: integer constant, one of LOGIN_TYPE_PASSWORDONLY,
             LOGIN_TYPE_USERONLY, LOGIN_TYPE_BOTH, LOGIN_TYPE_NONE.
-        @keyword echo: whether to echo the command in a response.
-        @keyword strict: Whether to raise when a given command has no handler.
+        :keyword echo: whether to echo the command in a response.
+        :keyword strict: Whether to raise when a given command has no handler.
         """
         self.hostname        = hostname
         self.banner          = banner or 'Welcome to %s!\n' % str(hostname)
@@ -83,8 +83,8 @@ class VirtualDevice(object):
         """
         Returns the prompt of the device.
 
-        @rtype:  str
-        @return: The current command line prompt.
+        :rtype:  str
+        :return: The current command line prompt.
         """
         return self.prompt
 
@@ -92,8 +92,8 @@ class VirtualDevice(object):
         """
         Change the prompt of the device.
 
-        @type  prompt: str
-        @param prompt: The new command line prompt.
+        :type  prompt: str
+        :param prompt: The new command line prompt.
         """
         self.prompt = prompt
 
@@ -110,12 +110,12 @@ class VirtualDevice(object):
         If the given response handler is a function, it is called
         with the command passed as an argument.
 
-        @type  command: str|regex
-        @param command: A string or a compiled regular expression.
-        @type  handler: function|str
-        @param handler: A string, or a response handler.
-        @type  prompt: bool
-        @param prompt: Whether to show a prompt after completing the command.
+        :type  command: str|regex
+        :param command: A string or a compiled regular expression.
+        :type  handler: function|str
+        :param handler: A string, or a response handler.
+        :type  prompt: bool
+        :param prompt: Whether to show a prompt after completing the command.
         """
         if prompt:
             thehandler = self._create_autoprompt_handler(handler)
@@ -130,10 +130,10 @@ class VirtualDevice(object):
         a list named 'commands' of tuples that map command names to
         handlers.
 
-        @type  filename: str
-        @param filename: The name of the file containing the tuples.
-        @type  autoprompt: bool
-        @param autoprompt: Whether to append a prompt to each response.
+        :type  filename: str
+        :param filename: The name of the file containing the tuples.
+        :type  autoprompt: bool
+        :param autoprompt: Whether to append a prompt to each response.
         """
         if autoprompt:
             deco = self._create_autoprompt_handler
@@ -145,8 +145,8 @@ class VirtualDevice(object):
         """
         Init or reset the virtual device.
 
-        @rtype:  str
-        @return: The initial response of the virtual device.
+        :rtype:  str
+        :return: The initial response of the virtual device.
         """
         self.logged_in = False
 
@@ -164,10 +164,10 @@ class VirtualDevice(object):
         "Executes" the given command on the virtual device, and returns
         the response.
 
-        @type  command: str
-        @param command: The command to be executed.
-        @rtype:  str
-        @return: The response of the virtual device.
+        :type  command: str
+        :param command: The command to be executed.
+        :rtype:  str
+        :return: The response of the virtual device.
         """
         echo = self.echo and command or ''
         if not self.logged_in:

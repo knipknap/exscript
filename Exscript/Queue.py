@@ -206,22 +206,22 @@ class Queue(object):
           - verbose >=  2, max_threads = 1: stdout = DL, stderr = !F
           - verbose >=  2, max_threads = n: stdout = DS, stderr = !F
 
-        @type  domain: str
-        @param domain: The default domain of the contacted hosts.
-        @type  verbose: int
-        @param verbose: The verbosity level.
-        @type  mode: str
-        @param mode: 'multiprocessing' or 'threading'
-        @type  max_threads: int
-        @param max_threads: The maximum number of concurrent threads.
-        @type  host_driver: str
-        @param host_driver: driver name like "ios" for manual override
-        @type  exc_cb: func(jobname, exc_info)
-        @param exc_cb: callback function to call on exceptions
-        @type  stdout: file
-        @param stdout: The output channel, defaults to sys.stdout.
-        @type  stderr: file
-        @param stderr: The error channel, defaults to sys.stderr.
+        :type  domain: str
+        :param domain: The default domain of the contacted hosts.
+        :type  verbose: int
+        :param verbose: The verbosity level.
+        :type  mode: str
+        :param mode: 'multiprocessing' or 'threading'
+        :type  max_threads: int
+        :param max_threads: The maximum number of concurrent threads.
+        :type  host_driver: str
+        :param host_driver: driver name like "ios" for manual override
+        :type  exc_cb: func(jobname, exc_info)
+        :param exc_cb: callback function to call on exceptions
+        :type  stdout: file
+        :param stdout: The output channel, defaults to sys.stdout.
+        :type  stderr: file
+        :param stderr: The error channel, defaults to sys.stderr.
         """
         self.workqueue         = WorkQueue(mode = mode)
         self.account_manager   = AccountManager()
@@ -320,8 +320,8 @@ class Queue(object):
         """
         Returns the progress in percent.
 
-        @rtype:  float
-        @return: The progress in percent.
+        :rtype:  float
+        :return: The progress in percent.
         """
         if self.total == 0:
             return 0.0
@@ -406,8 +406,8 @@ class Queue(object):
         """
         Sets the maximum number of concurrent connections.
 
-        @type  n_connections: int
-        @param n_connections: The maximum number of connections.
+        :type  n_connections: int
+        :param n_connections: The maximum number of connections.
         """
         self.workqueue.set_max_threads(n_connections)
         self._update_verbosity()
@@ -416,8 +416,8 @@ class Queue(object):
         """
         Returns the maximum number of concurrent threads.
 
-        @rtype:  int
-        @return: The maximum number of connections.
+        :rtype:  int
+        :return: The maximum number of connections.
         """
         return self.workqueue.get_max_threads()
 
@@ -432,11 +432,11 @@ class Queue(object):
         order:
 
             # Exscript checks whether an account was attached to the
-            L{Host} object using L{Host.set_account()}), and uses that.
+            :class:`Host` object using :class:`Host.set_account()`), and uses that.
 
-            # If the L{Host} has no account attached, Exscript walks
-            through all pools that were passed to L{Queue.add_account_pool()}.
-            For each pool, it passes the L{Host} to the function in the
+            # If the :class:`Host` has no account attached, Exscript walks
+            through all pools that were passed to :class:`Queue.add_account_pool()`.
+            For each pool, it passes the :class:`Host` to the function in the
             given match argument. If the return value is True, the account
             pool is used to acquire an account.
             (Accounts within each pool are taken in a round-robin
@@ -474,20 +474,20 @@ class Queue(object):
         hostname does not start with 'foo', the function returns False, and
         Exscript takes the 'default-user' account from the default pool.
 
-        @type  pool: AccountPool
-        @param pool: The account pool that is added.
-        @type  match: callable
-        @param match: A callback to check if the pool should be used.
+        :type  pool: AccountPool
+        :param pool: The account pool that is added.
+        :type  match: callable
+        :param match: A callback to check if the pool should be used.
         """
         self.account_manager.add_pool(pool, match)
 
     def add_account(self, account):
         """
         Adds the given account to the default account pool that Exscript uses
-        to log into all hosts that have no specific L{Account} attached.
+        to log into all hosts that have no specific :class:`Account` attached.
 
-        @type  account: Account
-        @param account: The account that is added.
+        :type  account: Account
+        :param account: The account that is added.
         """
         self.account_manager.add_account(account)
 
@@ -496,8 +496,8 @@ class Queue(object):
         Returns True if the task is completed, False otherwise.
         In other words, this methods returns True if the queue is empty.
 
-        @rtype:  bool
-        @return: Whether all tasks are completed.
+        :rtype:  bool
+        :return: Whether all tasks are completed.
         """
         return self.workqueue.get_length() == 0
 
@@ -522,8 +522,8 @@ class Queue(object):
         After emptying the queue it is restarted, so you may still call run()
         after using this method.
 
-        @type  force: bool
-        @param force: Whether to wait until all jobs were processed.
+        :type  force: bool
+        :param force: Whether to wait until all jobs were processed.
         """
         if not force:
             self.join()
@@ -539,8 +539,8 @@ class Queue(object):
         does not restart the queue. In other words, the queue can no longer
         be used after calling this method.
 
-        @type  force: bool
-        @param force: Whether to wait until all jobs were processed.
+        :type  force: bool
+        :param force: Whether to wait until all jobs were processed.
         """
         try:
             if not force:
@@ -602,14 +602,14 @@ class Queue(object):
         Returns an object that represents the queued task, and that may be
         passed to is_completed() to check the status.
 
-        @type  hosts: string|list(string)|Host|list(Host)
-        @param hosts: A hostname or Host object, or a list of them.
-        @type  function: function
-        @param function: The function to execute.
-        @type  attempts: int
-        @param attempts: The number of attempts on failure.
-        @rtype:  object
-        @return: An object representing the task.
+        :type  hosts: string|list(string)|Host|list(Host)
+        :param hosts: A hostname or Host object, or a list of them.
+        :type  function: function
+        :param function: The function to execute.
+        :type  attempts: int
+        :param attempts: The number of attempts on failure.
+        :rtype:  object
+        :return: An object representing the task.
         """
         return self._run(hosts, function, self.workqueue.enqueue, attempts)
 
@@ -618,14 +618,14 @@ class Queue(object):
         Like run(), but only appends hosts that are not already in the
         queue.
 
-        @type  hosts: string|list(string)|Host|list(Host)
-        @param hosts: A hostname or Host object, or a list of them.
-        @type  function: function
-        @param function: The function to execute.
-        @type  attempts: int
-        @param attempts: The number of attempts on failure.
-        @rtype:  object
-        @return: A task object, or None if all hosts were duplicates.
+        :type  hosts: string|list(string)|Host|list(Host)
+        :param hosts: A hostname or Host object, or a list of them.
+        :type  function: function
+        :param function: The function to execute.
+        :type  attempts: int
+        :param attempts: The number of attempts on failure.
+        :rtype:  object
+        :return: A task object, or None if all hosts were duplicates.
         """
         return self._run(hosts,
                          function,
@@ -636,14 +636,14 @@ class Queue(object):
         """
         Like run(), but adds the task to the front of the queue.
 
-        @type  hosts: string|list(string)|Host|list(Host)
-        @param hosts: A hostname or Host object, or a list of them.
-        @type  function: function
-        @param function: The function to execute.
-        @type  attempts: int
-        @param attempts: The number of attempts on failure.
-        @rtype:  object
-        @return: An object representing the task.
+        :type  hosts: string|list(string)|Host|list(Host)
+        :param hosts: A hostname or Host object, or a list of them.
+        :type  function: function
+        :param function: The function to execute.
+        :type  attempts: int
+        :param attempts: The number of attempts on failure.
+        :rtype:  object
+        :return: An object representing the task.
         """
         return self._run(hosts,
                          function,
@@ -657,14 +657,14 @@ class Queue(object):
         existing host is moved to the top of the queue instead of enqueuing
         the new one.
 
-        @type  hosts: string|list(string)|Host|list(Host)
-        @param hosts: A hostname or Host object, or a list of them.
-        @type  function: function
-        @param function: The function to execute.
-        @type  attempts: int
-        @param attempts: The number of attempts on failure.
-        @rtype:  object
-        @return: A task object, or None if all hosts were duplicates.
+        :type  hosts: string|list(string)|Host|list(Host)
+        :param hosts: A hostname or Host object, or a list of them.
+        :type  function: function
+        :param function: The function to execute.
+        :type  attempts: int
+        :param attempts: The number of attempts on failure.
+        :rtype:  object
+        :return: A task object, or None if all hosts were duplicates.
         """
         return self._run(hosts,
                          function,
@@ -677,14 +677,14 @@ class Queue(object):
         Like priority_run(), but starts the task immediately even if that
         max_threads is exceeded.
 
-        @type  hosts: string|list(string)|Host|list(Host)
-        @param hosts: A hostname or Host object, or a list of them.
-        @type  function: function
-        @param function: The function to execute.
-        @type  attempts: int
-        @param attempts: The number of attempts on failure.
-        @rtype:  object
-        @return: An object representing the task.
+        :type  hosts: string|list(string)|Host|list(Host)
+        :param hosts: A hostname or Host object, or a list of them.
+        :type  function: function
+        :param function: The function to execute.
+        :type  attempts: int
+        :param attempts: The number of attempts on failure.
+        :rtype:  object
+        :return: An object representing the task.
         """
         return self._run(hosts,
                          function,
@@ -698,14 +698,14 @@ class Queue(object):
         as a thread is available. To pass additional arguments to the
         callback, use Python's functools.partial().
 
-        @type  function: function
-        @param function: The function to execute.
-        @type  name: string
-        @param name: A name for the task.
-        @type  attempts: int
-        @param attempts: The number of attempts on failure.
-        @rtype:  object
-        @return: An object representing the task.
+        :type  function: function
+        :param function: The function to execute.
+        :type  name: string
+        :param name: A name for the task.
+        :type  attempts: int
+        :param attempts: The number of attempts on failure.
+        :rtype:  object
+        :return: An object representing the task.
         """
         self.total += 1
         task   = Task(self.workqueue)

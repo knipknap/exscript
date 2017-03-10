@@ -30,10 +30,10 @@ class WorkQueue(object):
         """
         Constructor.
 
-        @type  debug: int
-        @param debug: The debug level.
-        @type  max_threads: int
-        @param max_threads: The maximum number of concurrent threads.
+        :type  debug: int
+        :param debug: The debug level.
+        :type  max_threads: int
+        :param max_threads: The maximum number of concurrent threads.
         """
         if mode == 'threading':
             self.job_cls = Thread
@@ -75,8 +75,8 @@ class WorkQueue(object):
         """
         Set the debug level.
 
-        @type  debug: int
-        @param debug: The debug level.
+        :type  debug: int
+        :param debug: The debug level.
         """
         self._check_if_ready()
         self.debug           = debug
@@ -86,8 +86,8 @@ class WorkQueue(object):
         """
         Returns the maximum number of concurrent threads.
 
-        @rtype:  int
-        @return: The number of threads.
+        :rtype:  int
+        :return: The number of threads.
         """
         self._check_if_ready()
         return self.collection.get_max_working()
@@ -96,8 +96,8 @@ class WorkQueue(object):
         """
         Set the maximum number of concurrent threads.
 
-        @type  max_threads: int
-        @param max_threads: The number of threads.
+        :type  max_threads: int
+        :param max_threads: The number of threads.
         """
         if max_threads is None:
             raise TypeError('max_threads must not be None.')
@@ -111,16 +111,16 @@ class WorkQueue(object):
         If the name argument is None it defaults to whatever id(function)
         returns.
 
-        @type  function: callable
-        @param function: The function that is executed.
-        @type  name: str
-        @param name: Stored in Job.name.
-        @type  times: int
-        @param times: The maximum number of attempts.
-        @type  data: object
-        @param data: Optional data to store in Job.data.
-        @rtype:  int
-        @return: The id of the new job.
+        :type  function: callable
+        :param function: The function that is executed.
+        :type  name: str
+        :param name: Stored in Job.name.
+        :type  times: int
+        :param times: The maximum number of attempts.
+        :type  data: object
+        :param data: Optional data to store in Job.data.
+        :rtype:  int
+        :return: The id of the new job.
         """
         self._check_if_ready()
         return self.main_loop.enqueue(function, name, times, data)
@@ -131,16 +131,16 @@ class WorkQueue(object):
         is already in the queue.
         Returns a job id if a new job was added, returns None otherwise.
 
-        @type  function: callable
-        @param function: The function that is executed.
-        @type  name: str
-        @param name: Stored in Job.name.
-        @type  times: int
-        @param times: The maximum number of attempts.
-        @type  data: object
-        @param data: Optional data to store in Job.data.
-        @rtype:  int or None
-        @return: The id of the new job.
+        :type  function: callable
+        :param function: The function that is executed.
+        :type  name: str
+        :param name: Stored in Job.name.
+        :type  times: int
+        :param times: The maximum number of attempts.
+        :type  data: object
+        :param data: Optional data to store in Job.data.
+        :rtype:  int or None
+        :return: The id of the new job.
         """
         self._check_if_ready()
         return self.main_loop.enqueue_or_ignore(function, name, times, data)
@@ -152,23 +152,23 @@ class WorkQueue(object):
                          times       = 1,
                          data        = None):
         """
-        Like L{enqueue()}, but adds the given function at the top of the
+        Like :class:`enqueue()`, but adds the given function at the top of the
         queue.
         If force_start is True, the function is immediately started even when
         the maximum number of concurrent threads is already reached.
 
-        @type  function: callable
-        @param function: The function that is executed.
-        @type  name: str
-        @param name: Stored in Job.name.
-        @type  force_start: bool
-        @param force_start: Whether to start execution immediately.
-        @type  times: int
-        @param times: The maximum number of attempts.
-        @type  data: object
-        @param data: Optional data to store in Job.data.
-        @rtype:  int
-        @return: The id of the new job.
+        :type  function: callable
+        :param function: The function that is executed.
+        :type  name: str
+        :param name: Stored in Job.name.
+        :type  force_start: bool
+        :param force_start: Whether to start execution immediately.
+        :type  times: int
+        :param times: The maximum number of attempts.
+        :type  data: object
+        :param data: Optional data to store in Job.data.
+        :rtype:  int
+        :return: The id of the new job.
         """
         self._check_if_ready()
         return self.main_loop.priority_enqueue(function,
@@ -189,16 +189,16 @@ class WorkQueue(object):
         the queue and the given function is ignored.
         Returns a job id if a new job was added, returns None otherwise.
 
-        @type  function: callable
-        @param function: The function that is executed.
-        @type  name: str
-        @param name: Stored in Job.name.
-        @type  times: int
-        @param times: The maximum number of attempts.
-        @type  data: object
-        @param data: Optional data to store in Job.data.
-        @rtype:  int or None
-        @return: The id of the new job.
+        :type  function: callable
+        :param function: The function that is executed.
+        :type  name: str
+        :param name: Stored in Job.name.
+        :type  times: int
+        :param times: The maximum number of attempts.
+        :type  data: object
+        :param data: Optional data to store in Job.data.
+        :rtype:  int or None
+        :return: The id of the new job.
         """
         self._check_if_ready()
         return self.main_loop.priority_enqueue_or_raise(function,
@@ -227,8 +227,8 @@ class WorkQueue(object):
         """
         Waits until the job with the given id is completed.
 
-        @type  job_id: int
-        @param job_id: The job that is executed.
+        :type  job_id: int
+        :param job_id: The job that is executed.
         """
         self._check_if_ready()
         self.main_loop.wait_for(job_id)
@@ -251,8 +251,8 @@ class WorkQueue(object):
         If restart is False, the WorkQueue can no longer be used after calling
         this method.
 
-        @type  restart: bool
-        @param restart: Whether to restart the queue after shutting down.
+        :type  restart: bool
+        :param restart: Whether to restart the queue after shutting down.
         """
         self._check_if_ready()
         self.collection.stop()
@@ -280,8 +280,8 @@ class WorkQueue(object):
         Returns True if the queue is currently active (i.e. not
         paused and not shut down), False otherwise.
 
-        @rtype:  bool
-        @return: Whether enqueued jobs are currently executed.
+        :rtype:  bool
+        :return: Whether enqueued jobs are currently executed.
         """
         if self.main_loop is None:
             return True
@@ -291,8 +291,8 @@ class WorkQueue(object):
         """
         Returns a list of all jobs that are currently in progress.
 
-        @rtype:  list[Job]
-        @return: A list of running jobs.
+        :rtype:  list[Job]
+        :return: A list of running jobs.
         """
         return self.collection.get_working()
 
@@ -300,7 +300,7 @@ class WorkQueue(object):
         """
         Returns the number of currently non-completed jobs.
 
-        @rtype:  int
-        @return: The length of the queue.
+        :rtype:  int
+        :return: The length of the queue.
         """
         return len(self.collection)
