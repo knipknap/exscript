@@ -3,11 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Exscript documentation
-======================
-
-Introduction
-------------
+What is Exscript?
+=================
 
 Exscript is a Python module and a template processor for automating network 
 connections over protocols such as Telnet or SSH. We attempt to create the 
@@ -26,15 +23,15 @@ that can be used with a terminal, Exscript is what you are looking for.
 Using Exscript with Python
 --------------------------
 
-Make sure to check out the `python_tutorial`.
+Make sure to check out the :doc:`python_tutorial`.
 You may also want to look at the
 `Python examples <https://github.com/knipknap/exscript/tree/master/demos/>`_.
 
 Using the Exscript command line tool
 ------------------------------------
 
-Have a look at our `cli_tutorial`. You will also want to learn about
-`templates`.
+Have a look at our :doc:`cli_tutorial`. You will also want to learn about
+:doc:`templates`.
 
 Main design goals
 -----------------
