@@ -57,4 +57,4 @@ Awesome fact: Just replace `ssh://` by `telnet://` and it should still work with
 
 Full documentation is here:
 
-http://exscript.readthedocs.io/en/latest/index.html
+http://exscript.readthedocs.io
