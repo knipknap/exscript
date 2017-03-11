@@ -20,7 +20,7 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re     = [re.compile(r'user ?name: ', re.I)]
 _password_re = [re.compile(r'[\r\n]Password: $')]
-_prompt_re   = [re.compile(r'[\<\[]\S+[\>\]] ?$', re.I)]
+_prompt_re   = [re.compile(r'[\r\n][\<\[]\S+[\>\]] ?$', re.I)]
 _huawei_re   = [re.compile(r'\bhuawei\b', re.I), re.compile(r'The current login time is.*', re.I)]
 
 class VRPDriver(Driver):
