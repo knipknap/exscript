@@ -192,7 +192,4 @@ Advanced Templates
 ------------------
 
 Exscript templates support many more commands. For a full overview over
-the template language, please check the Exscript PDF handbook from the
-download section at Github.
-
-You may also look at our `templates`.
+the template language, please check :doc:`templates`.
