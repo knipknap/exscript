@@ -66,7 +66,7 @@ Exscript is on `GitHub <https://github.com/knipknap/exscript>`_.
 
 License
 -------
-Exscript is published under the `GPLv2 <https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt>`_.
+Exscript is published under the `MIT licence <https://opensource.org/licenses/MIT>`_.
 
 Contents
 --------
