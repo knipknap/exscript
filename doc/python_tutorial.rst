@@ -18,8 +18,7 @@ already understand how to use Perl's
 `Net::Telnet <http://search.cpan.org/~jrogers/Net-Telnet-3.03/lib/Net/Telnet.pm>`_,
 you should feel right at home.
 
-Exscript also has extensive `API
-documentation <http://knipknap.github.com/exscript/api/>`_, which may
+Exscript also has extensive :doc:`modules`, which may
 be used as a reference throughout this tutorial.
 
 Getting started
@@ -61,7 +60,7 @@ Making it easier
 ----------------
 
 While the above serves as a good introduction on how to use
-``Exscript.protocols``, it has a few drawbacks:
+:mod:`Exscript.protocols`, it has a few drawbacks:
 
 #. It only works for SSH2 or for Telnet, but not for both.
 #. It contains a lot of unneeded code.
@@ -82,9 +81,9 @@ As you can see, we made two major changes:
 #. We moved the code that executes ``uname -a`` into a function named
    ``do_something``. (Note: We could have picked any other name for the
    function.)
-#. We imported and used the ``quickstart`` function.
+#. We imported and used the :func:`Exscript.util.start.quickstart` function.
 
-``quickstart`` does the following:
+:func:`Exscript.util.start.quickstart` does the following:
 
 #. It prompts the user for a username and a password.
 #. It connects to the specified host, using the specified protocol.
