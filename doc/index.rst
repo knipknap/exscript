@@ -80,5 +80,4 @@ Contents
    exscript
    templates
    trouble
-   python
    API Documentation<modules>

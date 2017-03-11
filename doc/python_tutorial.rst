@@ -268,3 +268,47 @@ can never fail::
 :func:`Exscript.util.match.any_match` is designed such that it always
 returns a list, where each item contains a tuple of the same size. So
 there is no need to worry about checking the return value first.
+
+Advanced queueing and reporting
+-------------------------------
+
+:class:`Exscript.Queue` is a powerful, multi-threaded environment for
+automating more complex tasks. It comes with features such as
+logging, user account management, and error handling that make things
+a lot easier. The above functions :func:`Exscript.util.start.start` and
+:func:`Exscript.util.start.quickstart` are just convenience wrappers
+around this queue.
+
+In some cases, you may want to use the :class:`Exscript.Queue` directly.
+Here is a complete example that also implements reporting:
+
+.. literalinclude:: ../demos/report/report.py
+
+Emulating a remote device
+-------------------------
+
+Exscript also provides a dummy protocol adapter for testing
+purposes. It emulates a remote host and may be used in place of the
+Telnet and SSH adapters::
+
+    from Exscript.protocols import Dummy
+    conn = Dummy()
+    ...
+
+In order to define the behavior of the dummy, you may define it by
+providing a Python file that maps commands to responses. E.g.::
+
+    def echo(command):
+        return command.split(' ', 1)[1]
+
+    commands = (
+    ('ls -l', """
+    -rw-r--r-- 1 sab nmc 1906 Oct  5 11:18 Makefile
+    -rw-r--r-- 1 sab nmc 1906 Oct  5 11:18 myfile
+    """),
+
+    (r'echo [\r\n]+', echo)
+    )
+
+Note that the command name is a regular expression, and the response may
+be either a string or a function.
