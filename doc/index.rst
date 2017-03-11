@@ -1,3 +1,6 @@
+.. image:: _static/logo.png
+    :target: http://exscript.readthedocs.io
+
 .. image:: https://travis-ci.org/knipknap/exscript.svg?branch=master
     :target: https://travis-ci.org/knipknap/exscript
 
@@ -55,6 +58,11 @@ Main design goals
   100% test coverage.
 - Exscript is **protocol agnostic**, so if you are migrating from Telnet to
   SSH later, you can switch easily by simply changing an import statement.
+
+Development
+-----------
+
+Exscript is on `GitHub <https://github.com/knipknap/exscript>`_.
 
 License
 -------
