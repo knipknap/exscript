@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import print_function
 from Exscript.parselib                 import Token
 from Exscript.interpreter.Variable     import Variable
 from Exscript.interpreter.Number       import Number
@@ -68,5 +69,5 @@ class Term(Token):
         return self.term.value(context)
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name
+        print((' ' * indent) + self.name)
         self.term.dump(indent + 1)

@@ -75,7 +75,7 @@ class AccountPoolTest(unittest.TestCase):
             for n in range(0, 5):
                 account = self.accm.acquire_account()
                 self.assert_(account is not None)
-                self.assert_(not acquired.has_key(account.get_name()))
+                self.assert_(account.get_name() not in acquired)
                 acquired[account.get_name()] = account
 
             # Release one account.

@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import print_function
 from copy              import deepcopy
 from Exscript.parselib import Token
 
@@ -92,13 +93,13 @@ class Scope(Token):
         return result
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         for child in self.children:
             child.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end'
+        print((' ' * indent) + self.name, 'end')
 
     def dump1(self):
         if self.parent is not None:
             self.parent.dump1()
             return
-        print "Scope:", self.variables
+        print("Scope:", self.variables)

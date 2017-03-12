@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import print_function
 from Exscript.parselib               import Token
 from Exscript.interpreter.Expression import Expression
 from Exscript.interpreter.Exception  import FailException
@@ -50,7 +51,7 @@ class Fail(Token):
         return 1
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         self.msg.dump(indent + 1)
         self.expression.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.'
+        print((' ' * indent) + self.name, 'end.')

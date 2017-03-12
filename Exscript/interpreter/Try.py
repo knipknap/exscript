@@ -20,7 +20,9 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import Code
+from __future__ import print_function
+from __future__ import absolute_import
+import Exscript.interpreter.Code
 from Exscript.protocols.Exception import ProtocolException
 from Exscript.interpreter.Scope   import Scope
 
@@ -31,16 +33,16 @@ class Try(Scope):
         lexer.next_if('whitespace')
         lexer.expect(self, 'keyword', 'try')
         lexer.skip(['whitespace', 'newline'])
-        self.block = Code.Code(lexer, parser, parent)
+        self.block = Exscript.interpreter.Code.Code(lexer, parser, parent)
 
     def value(self, context):
         try:
             self.block.value(context)
-        except ProtocolException, e:
+        except ProtocolException as e:
             return 1
         return 1
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, 'start'
+        print((' ' * indent) + self.name, 'start')
         self.block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end'
+        print((' ' * indent) + self.name, 'end')

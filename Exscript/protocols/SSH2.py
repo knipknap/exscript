@@ -197,7 +197,7 @@ class SSH2(Protocol):
                 self._dbg(1, 'Trying SSH agent key %s' % fp)
                 self.client.auth_publickey(username, key)
                 return
-            except SSHException, e:
+            except SSHException as e:
                 saved_exception = e
         raise saved_exception
 
@@ -215,9 +215,9 @@ class SSH2(Protocol):
                 self._dbg(1, 'Trying key %s in %s' % (fp, filename))
                 self.client.auth_publickey(username, key)
                 return
-            except SSHException, e:
+            except SSHException as e:
                 saved_exception = e
-            except IOError, e:
+            except IOError as e:
                 saved_exception = e
         raise saved_exception
 
@@ -241,13 +241,13 @@ class SSH2(Protocol):
             try:
                 method(username, password)
                 return
-            except BadHostKeyException, e:
+            except BadHostKeyException as e:
                 self._dbg(1, 'Bad host key!')
                 last_exception = e
-            except AuthenticationException, e:
+            except AuthenticationException as e:
                 self._dbg(1, 'Authentication with %s failed' % method.__name__)
                 last_exception = e
-            except SSHException, e:
+            except SSHException as e:
                 self._dbg(1, 'Missing host key.')
                 last_exception = e
         raise LoginFailure('Login failed: ' + str(last_exception))
@@ -259,7 +259,7 @@ class SSH2(Protocol):
             self.shell = self.client.open_session()
             self.shell.get_pty(self.termtype, cols, rows)
             self.shell.invoke_shell()
-        except SSHException, e:
+        except SSHException as e:
             self._dbg(1, 'Failed to open shell.')
             raise LoginFailure('Failed to open shell: ' + str(e))
 

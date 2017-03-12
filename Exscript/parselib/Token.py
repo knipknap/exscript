@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import print_function
 class Token(object):
     """
     Abstract base class for all tokens.
@@ -107,6 +108,6 @@ class Token(object):
         return self.children
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name
+        print((' ' * indent) + self.name)
         for child in self.get_children():
             child.dump(indent + 1)

@@ -20,8 +20,9 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import absolute_import
 import re
-import Template
+import Exscript.interpreter.Template
 from Exscript.interpreter.Scope        import Scope
 from Exscript.interpreter.Append       import Append
 from Exscript.interpreter.Assign       import Assign
@@ -97,9 +98,9 @@ class Code(Scope):
         while True:
             lexer.skip(['whitespace', 'newline'])
             if lexer.next_if('close_curly_bracket'):
-                if isinstance(parent, Template.Template):
+                if isinstance(parent, Exscript.interpreter.Template.Template):
                     break
-                self.add(Template.Template(lexer, parser, self))
+                self.add(Exscript.interpreter.Template.Template(lexer, parser, self))
             elif lexer.current_is('keyword', 'append'):
                 self.add(Append(lexer, parser, self))
             elif lexer.current_is('keyword', 'extract'):

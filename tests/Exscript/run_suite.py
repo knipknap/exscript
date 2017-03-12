@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import os, sys, unittest, glob, fnmatch, re
 from inspect import isfunction, ismodule, isclass
 
@@ -89,8 +90,8 @@ if __name__ == '__main__':
     elif len(sys.argv) == 2:
         verbosity = int(sys.argv[1])
     else:
-        print 'Syntax:', sys.argv[0], '[verbosity]'
-        print 'Default verbosity is 2'
+        print('Syntax:', sys.argv[0], '[verbosity]')
+        print('Default verbosity is 2')
         sys.exit(1)
 
     # Run.

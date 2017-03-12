@@ -20,7 +20,8 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from Exscript.parselib           import Token
+from __future__ import print_function
+from Exscript.parselib import Token
 from Exscript.interpreter.String import String, string_re
 
 class Execute(String):
@@ -68,4 +69,4 @@ class Execute(String):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.string
+        print((' ' * indent) + self.name, self.string)

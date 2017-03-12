@@ -1119,7 +1119,7 @@ class Protocol(object):
             while True:
                 try:
                     r, w, e = select.select([channel, stdin], [], [])
-                except select.error, e:
+                except select.error as e:
                     code, message = e
                     if code == errno.EINTR:
                         # This may happen when SIGWINCH is called

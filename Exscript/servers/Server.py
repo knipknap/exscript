@@ -23,6 +23,7 @@
 """
 Base class for all servers.
 """
+from __future__ import print_function
 import select
 import socket
 from multiprocessing import Process, Pipe
@@ -66,8 +67,8 @@ class Server(Process):
 
     def _dbg(self, level, msg):
         if self.dbg >= level:
-            print self.host + ':' + str(self.port), '-',
-            print msg
+            print(self.host + ':' + str(self.port), '-', end=' ')
+            print(msg)
 
     def _poll_child_process(self):
         if not self.child_conn.poll():

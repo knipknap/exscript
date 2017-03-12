@@ -23,6 +23,7 @@
 """
 Represents the logfiles for one specific action.
 """
+from __future__ import print_function
 import os
 import errno
 from Exscript.Log import Log
@@ -45,7 +46,7 @@ class Logfile(Log):
         if dirname:
             try:
                 os.mkdir(dirname)
-            except OSError, e:
+            except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
 
@@ -65,8 +66,8 @@ class Logfile(Log):
         try:
             with open(filename, self.mode) as thefile:
                 thefile.write(' '.join(data))
-        except Exception, e:
-            print 'Error writing to %s: %s' % (filename, e)
+        except Exception as e:
+            print('Error writing to %s: %s' % (filename, e))
             self.do_log = False
             raise
 

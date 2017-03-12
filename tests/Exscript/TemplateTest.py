@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -37,16 +38,16 @@ def dummy_cb(job, host, conn, template_test):
     conn.login(flush = True)
     try:
         template.eval_file(conn, tmpl, slot = 10)
-    except Exception, e:
-        print log.data
+    except Exception as e:
+        print(log.data)
         raise
     log.data = re.sub(r'\r\n', r'\n', log.data)
     #open(expected, 'w').write(log.data)
     if log.data != open(expected).read():
-        print
-        print "Got:", log.data
-        print "---------------------------------------------"
-        print "Expected:", open(expected).read()
+        print()
+        print("Got:", log.data)
+        print("---------------------------------------------")
+        print("Expected:", open(expected).read())
     template_test.assertEqual(log.data, open(expected).read())
 
 class IOSDummy(Dummy):

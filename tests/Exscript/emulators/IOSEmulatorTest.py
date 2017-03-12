@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import sys, unittest, re, os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from VirtualDeviceTest              import VirtualDeviceTest
+from .VirtualDeviceTest              import VirtualDeviceTest
 from Exscript.emulators             import IOSEmulator
 from Exscript.emulators.IOSEmulator import iosbanner
 

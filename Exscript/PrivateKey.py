@@ -67,11 +67,11 @@ class PrivateKey(object):
             try:
                 key = RSAKey.from_private_key_file(filename)
                 keytype = 'rsa'
-            except SSHException, e:
+            except SSHException as e:
                 try:
                     key = DSSKey.from_private_key_file(filename)
                     keytype = 'dss'
-                except SSHException, e:
+                except SSHException as e:
                     msg = 'not a recognized private key: ' + repr(filename)
                     raise ValueError(msg)
         key          = PrivateKey(keytype)

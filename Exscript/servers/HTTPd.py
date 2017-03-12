@@ -23,6 +23,7 @@
 """
 A threaded HTTP server with support for HTTP/Digest authentication.
 """
+from __future__ import print_function
 import sys
 import time
 import urllib
@@ -299,8 +300,8 @@ if __name__ == '__main__':
     try:
         server = HTTPd(('', 8123), RequestHandler)
         server.add_account('test', 'fo')
-        print 'started httpserver...'
+        print('started httpserver...')
         server.serve_forever()
     except KeyboardInterrupt:
-        print '^C received, shutting down server'
+        print('^C received, shutting down server')
         server.socket.close()

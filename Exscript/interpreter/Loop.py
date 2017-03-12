@@ -20,7 +20,9 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import Code
+from __future__ import print_function
+from __future__ import absolute_import
+import Exscript.interpreter.Code
 from Exscript.parselib               import Token
 from Exscript.interpreter.Term       import Term
 from Exscript.interpreter.Expression import Expression
@@ -107,7 +109,7 @@ class Loop(Token):
 
         # Body of the loop block.
         lexer.skip(['whitespace', 'newline'])
-        self.block = Code.Code(lexer, parser, parent)
+        self.block = Exscript.interpreter.Code.Code(lexer, parser, parent)
 
 
     def value(self, context):
@@ -154,11 +156,11 @@ class Loop(Token):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name,
-        print self.list_variables, 'as', self.iter_varnames, 'start'
+        print((' ' * indent) + self.name, end=' ')
+        print(self.list_variables, 'as', self.iter_varnames, 'start')
         if self.during is not None:
             self.during.dump(indent + 1)
         if self.until is not None:
             self.until.dump(indent + 1)
         self.block.dump(indent + 1)
-        print (' ' * indent) + self.name, 'end.'
+        print((' ' * indent) + self.name, 'end.')

@@ -56,6 +56,7 @@ To do:
   option on one of the read calls only
 
 """
+from __future__ import print_function
 
 
 # Imported modules
@@ -235,14 +236,14 @@ class Telnet:
                 self.sock = socket.socket(af, socktype, proto)
                 self.sock.settimeout(self.connect_timeout)
                 self.sock.connect(sa)
-            except socket.error, msg:
+            except socket.error as msg:
                 if self.sock:
                     self.sock.close()
                 self.sock = None
                 continue
             break
         if not self.sock:
-            raise socket.error, msg
+            raise socket.error(msg)
 
     def msg(self, msg, *args):
         """Print a debug message, when the debug level is > 0.
@@ -293,7 +294,7 @@ class Telnet:
             buffer = chr(buffer)
         elif isinstance(buffer, str) and IAC in buffer:
             buffer = buffer.replace(IAC, IAC+IAC)
-        self.msg("send %s", `buffer`)
+        self.msg("send %s", repr(buffer))
         self.sock.send(buffer)
 
     def read_all(self):
@@ -373,7 +374,7 @@ class Telnet:
         self.cookedq.seek(0)
         self.cookedq.truncate()
         if not buf and self.eof and not self.rawq:
-            raise EOFError, 'telnet connection closed'
+            raise EOFError('telnet connection closed')
         return buf
 
     def set_receive_callback(self, callback, *args, **kwargs):
@@ -522,7 +523,7 @@ class Telnet:
         # The buffer size should be fairly small so as to avoid quadratic
         # behavior in process_rawq() above.
         buf = self.sock.recv(64)
-        self.msg("recv %s", `buf`)
+        self.msg("recv %s", repr(buf))
         self.eof = (not buf)
         self.rawq = self.rawq + buf
 
@@ -541,7 +542,7 @@ class Telnet:
                 try:
                     text = self.read_eager()
                 except EOFError:
-                    print '*** Connection closed by remote host ***'
+                    print('*** Connection closed by remote host ***')
                     break
                 if text:
                     self.stdout.write(text)
@@ -568,7 +569,7 @@ class Telnet:
             try:
                 data = self.read_eager()
             except EOFError:
-                print '*** Connection closed by remote host ***'
+                print('*** Connection closed by remote host ***')
                 return
             if data:
                 self.stdout.write(data)

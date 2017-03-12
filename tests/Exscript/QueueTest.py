@@ -18,7 +18,7 @@ from Exscript.util.log import log_to
 
 def count_calls(job, data, **kwargs):
     assert hasattr(job, 'start')
-    assert kwargs.has_key('testarg')
+    assert 'testarg' in kwargs
     data.value += 1
 
 def count_calls2(job, host, conn, data, **kwargs):

@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import print_function
 import re
 from Exscript.interpreter.String import String
 
@@ -58,7 +59,7 @@ class Regex(String):
         # Compile the regular expression.
         try:
             re.compile(self.string, self.flags)
-        except Exception, e:
+        except Exception as e:
             error = 'Invalid regular expression %s: %s' % (repr(self.string), e)
             lexer.syntax_error(error, self)
 
@@ -74,4 +75,4 @@ class Regex(String):
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.string
+        print((' ' * indent) + self.name, self.string)

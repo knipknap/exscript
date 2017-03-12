@@ -20,7 +20,9 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import Expression
+from __future__ import print_function
+from __future__ import absolute_import
+import Exscript.interpreter.Expression
 from Exscript.parselib import Token
 
 class Assign(Token):
@@ -38,14 +40,14 @@ class Assign(Token):
             msg = 'Assignment to internal variable ' + self.varname
             lexer.syntax_error(msg, self)
 
-        self.expression = Expression.Expression(lexer, parser, parent)
+        self.expression = Exscript.interpreter.Expression.Expression(lexer, parser, parent)
         self.parent.define(**{self.varname: None})
 
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.varname, 'start'
+        print((' ' * indent) + self.name, self.varname, 'start')
         self.expression.dump(indent + 1)
-        print (' ' * indent) + self.name, self.varname, 'start'
+        print((' ' * indent) + self.name, self.varname, 'start')
 
     def value(self, context):
         result = self.expression.value(context)

@@ -30,7 +30,7 @@ import re
 
 def _least_bit(number):
     for i in range(0, 32):
-        if number & (0x00000001l << i) != 0:
+        if number & (0x00000001 << i) != 0:
             return i
     return 32
 
@@ -102,7 +102,7 @@ def ip2int(ip):
     :return: The IP, converted to a number.
     """
     if ip == '255.255.255.255':
-        return 0xFFFFFFFFl
+        return 0xFFFFFFFF
     return struct.unpack('!L', socket.inet_aton(ip))[0]
 
 def int2ip(number):
@@ -114,7 +114,7 @@ def int2ip(number):
     :rtype:  string
     :return: The IP address.
     """
-    number &= 0xFFFFFFFFl
+    number &= 0xFFFFFFFF
     return socket.inet_ntoa(struct.pack('!L', number))
 
 def pfxlen2mask_int(pfxlen):
@@ -126,7 +126,7 @@ def pfxlen2mask_int(pfxlen):
     :rtype:  long
     :return: The mask, as a long value.
     """
-    return 0xFFFFFFFFl << (32 - int(pfxlen))
+    return 0xFFFFFFFF << (32 - int(pfxlen))
 
 def pfxlen2mask(pfxlen):
     """

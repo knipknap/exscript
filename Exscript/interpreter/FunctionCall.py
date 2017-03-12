@@ -20,7 +20,9 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import Expression
+from __future__ import print_function
+from __future__ import absolute_import
+import Exscript.interpreter.Expression
 from Exscript.parselib              import Token
 from Exscript.interpreter.Exception import PermissionError
 
@@ -43,7 +45,7 @@ class FunctionCall(Token):
         while 1:
             if lexer.next_if('close_bracket'):
                 break
-            self.arguments.append(Expression.Expression(lexer, parser, parent))
+            self.arguments.append(Exscript.interpreter.Expression.Expression(lexer, parser, parent))
             ttype, token = lexer.token()
             if not lexer.next_if('comma') and not lexer.current_is('close_bracket'):
                 error = 'Expected separator or argument list end but got %s'
@@ -56,10 +58,10 @@ class FunctionCall(Token):
         self.mark_end()
 
     def dump(self, indent = 0):
-        print (' ' * indent) + self.name, self.funcname, 'start'
+        print((' ' * indent) + self.name, self.funcname, 'start')
         for argument in self.arguments:
             argument.dump(indent + 1)
-        print (' ' * indent) + self.name, self.funcname, 'end.'
+        print((' ' * indent) + self.name, self.funcname, 'end.')
 
     def value(self, context):
         argument_values = [arg.value(context) for arg in self.arguments]

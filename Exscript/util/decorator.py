@@ -23,7 +23,8 @@
 """
 Decorators for callbacks passed to Queue.run().
 """
-from impl import add_label, get_label, copy_labels
+from __future__ import absolute_import
+from .impl import add_label, get_label, copy_labels
 from Exscript.protocols.Exception import LoginFailure
 
 def bind(function, *args, **kwargs):
@@ -111,7 +112,7 @@ def _decorate(flush = True, attempts = 1, only_authenticate = False):
                         conn.authenticate(flush = flush)
                     else:
                         conn.login(flush = flush)
-                except LoginFailure, e:
+                except LoginFailure as e:
                     failed += 1
                     if failed >= attempts:
                         raise

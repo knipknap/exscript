@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import print_function
 import threading
 import multiprocessing
 from Exscript.util.event import Event
@@ -44,7 +45,7 @@ class MainLoop(threading.Thread):
 
     def _dbg(self, level, msg):
         if self.debug >= level:
-            print msg
+            print(msg)
 
     def enqueue(self, function, name, times, data):
         job    = Job(function, name, times, data)
@@ -123,7 +124,7 @@ class MainLoop(threading.Thread):
         while True:
             # Get the next job from the queue. This blocks until a task
             # is available or until self.collection.stop() is called.
-            job = self.collection.next()
+            job = next(self.collection)
             if len(self.collection) <= 0:
                 self.queue_empty_event()
             if job is None:

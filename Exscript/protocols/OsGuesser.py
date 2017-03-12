@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import print_function
 from Exscript.protocols.drivers import drivers
 
 class OsGuesser(object):
@@ -107,6 +108,6 @@ class OsGuesser(object):
         # Else, check the head that we collected so far.
         self.auth_buffer += data
         if self.debug:
-            print "DEBUG: Matching buffer:", repr(self.auth_buffer)
+            print("DEBUG: Matching buffer:", repr(self.auth_buffer))
         self.set_from_match('os', self.auth_os_map, self.auth_buffer)
         self.set_from_match('os', self.os_map,      self.auth_buffer)
