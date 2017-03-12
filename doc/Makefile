@@ -53,7 +53,7 @@ clean:
 
 .PHONY: apidoc
 apidoc:
-	sphinx-apidoc -fo . ../Exscript `realpath ../Exscript/interpreter` `realpath ../Exscript/external` `realpath ../Exscript/parselib` `realpath ../Exscript/workqueue`
+	sphinx-apidoc -d5 -Mefo . ../Exscript `realpath ../Exscript/interpreter` `realpath ../Exscript/external` `realpath ../Exscript/parselib` `realpath ../Exscript/workqueue`
 
 .PHONY: html
 html:

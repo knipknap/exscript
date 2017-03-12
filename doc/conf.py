@@ -18,6 +18,15 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
 
+# Auto-generate API documentation.
+from sphinx.apidoc import main
+apidoc_exclude = [os.path.join('..', 'Exscript', 'interpreter'),
+                  os.path.join('..', 'Exscript', 'external'),
+                  os.path.join('..', 'Exscript', 'parselib'),
+                  os.path.join('..', 'Exscript', 'workqueue')]
+main(['-d5', '-Mef', '-o', '.', '../Exscript']
+     + [os.path.abspath(p) for p in apidoc_exclude])
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
