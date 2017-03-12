@@ -1,5 +1,5 @@
 import sys, unittest, re, os.path, tempfile
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from getpass import getuser
 import Exscript.util.mail

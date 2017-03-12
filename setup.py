@@ -1,17 +1,15 @@
 import sys
 import os
 from setuptools import setup, find_packages
-
-# Import the file that contains the version number.
-exscript_dir = os.path.join(os.path.dirname(__file__), 'src', 'Exscript')
-sys.path.insert(0, exscript_dir)
-from version import __version__
+from Exscript.version import __version__
 
 # Import the project description from the README.
 readme = open('README.md').read()
-start  = readme.index('\n\n')
-end    = readme.index('\n\nLinks')
-descr  = readme[start:end].strip()
+descr = '''
+Exscript is a Python module and a template processor for automating network 
+connections over protocols such as Telnet or SSH. We attempt to create the 
+best possible set of tools for working with Telnet and SSH.
+'''.strip()
 
 # Run the setup.
 setup(name             = 'Exscript',
@@ -21,27 +19,13 @@ setup(name             = 'Exscript',
       author           = 'Samuel Abels',
       author_email     = 'knipknap@gmail.com',
       license          = 'GPLv2',
-      package_dir      = {'': 'src',
-                          'Exscript':   os.path.join('src', 'Exscript'),
-                          'Exscriptd':  os.path.join('src', 'Exscriptd'),
-                          'TkExscript': os.path.join('src', 'TkExscript')},
-      package_data     = {'Exscriptd': [
-                            os.path.join('config', 'exscriptd.in'),
-                            os.path.join('config', 'main.xml.in'),
-                         ]},
-      packages         = find_packages('src'),
-      scripts          = ['exscript',
-                          'exscriptd',
-                          'exscriptd-config',
-                          'exclaim'],
+      package_dir      = {'Exscript': 'Exscript'},
+      package_data     = {},
+      packages         = find_packages(),
+      scripts          = ['exscript'],
       install_requires = ['paramiko', 'pycrypto'],
-      extras_require   = {
-                            'Exscriptd': ['sqlalchemy', 'lxml'],
-                            'TkExscript': ['tkinter'],
-                         },
+      extras_require   = {},
       keywords         = ' '.join(['exscript',
-                                   'exscripd',
-                                   'exclaim',
                                    'telnet',
                                    'ssh',
                                    'network',

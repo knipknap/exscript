@@ -11,7 +11,7 @@ DISTDIR=/pub/code/releases/$(NAME)
 .PHONY : clean
 clean:
 	find . -name "*.pyc" -o -name "*.pyo" | xargs -n1 rm -f
-	rm -Rf build src/*.egg-info
+	rm -Rf build *.egg-info
 	cd doc; make clean
 
 .PHONY : dist-clean

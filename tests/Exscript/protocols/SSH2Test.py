@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import sys, unittest, re, os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from .ProtocolTest       import ProtocolTest
 from Exscript.servers   import SSHd
