@@ -353,6 +353,23 @@ class ProtocolTest(unittest.TestCase):
         self.assert_(self.protocol.is_app_authenticated())
         self.assert_(self.protocol.is_app_authorized())
 
+    def testAppAuthorize2(self):
+        # Same test as above, but using flush=True all the way.
+        # Test can not work on the abstract base.
+        if self.protocol.__class__ == Protocol:
+            self.assertRaises(Exception, self.protocol.app_authorize)
+            return
+        self.doProtocolAuthenticate(flush=True)
+        self.doAppAuthenticate(flush=True)
+        response = self.protocol.response
+
+        # Authorize should see that a prompt is still in the buffer,
+        # and do nothing.
+        self.doAppAuthorize(flush=True)
+        self.assert_(self.protocol.is_protocol_authenticated())
+        self.assert_(self.protocol.is_app_authenticated())
+        self.assert_(self.protocol.is_app_authorized())
+
     def testAutoAppAuthorize(self):
         # Test can not work on the abstract base.
         if self.protocol.__class__ == Protocol:
