@@ -75,7 +75,8 @@ def _urlparse_qs(url):
 
     Arguments:
 
-      - url: URL with query string to be parsed
+    :type url: str
+    :param url: URL with query string to be parsed
     """
     # Extract the query part from the URL.
     querystring = urlparse(url)[4]
@@ -165,15 +166,15 @@ class Url(object):
         Parses the given URL and returns an URL object. There are some
         differences to Python's built-in URL parser:
 
-          - It is less strict, many more inputs are accepted. This is
+        - It is less strict, many more inputs are accepted. This is
           necessary to allow for passing a simple hostname as a URL.
-          - You may specify a default protocol that is used when the http://
+        - You may specify a default protocol that is used when the http://
           portion is missing.
-          - The port number defaults to the well-known port of the given
+        - The port number defaults to the well-known port of the given
           protocol.
-          - The query variables are parsed into a dictionary (Url.vars).
+        - The query variables are parsed into a dictionary (Url.vars).
 
-        :type  url: string
+        :type  url: str
         :param url: A URL.
         :type  default_protocol: string
         :param default_protocol: A protocol name.
