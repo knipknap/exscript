@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -32,7 +32,12 @@ class Account(object):
     This class represents a user account.
     """
 
-    def __init__(self, name, password = '', password2 = None, key = None):
+    def __init__(self,
+                 name,
+                 password='',
+                 password2=None,
+                 key=None,
+                 needs_lock=True):
         """
         Constructor.
 
@@ -41,14 +46,30 @@ class Account(object):
         If an authorization password is not given, it defaults to the
         same value as the authentication password.
 
-        :type  name: string
+        If the `needs_lock` argument is set to True, we ensure that no
+        two threads can use the same account at the same time. You will
+        want to use this setting if you are using a central authentication
+        server that allows for only one login to happen at a time.
+        Note that you will still be able to open multiple sessions at the
+        time. It is only the authentication procedure that will not happen
+        in parallel; once the login is complete, other threads can use
+        the account again.
+        In other words, the account is only locked during calls to
+        :meth:`protocols.Protocol.login` and the `*authenticate*` methods.
+
+        .. warning::
+            Setting `lock` to True drastically degrades performance!
+
+        :type  name: str
         :param name: A username.
-        :type  password: string
+        :type  password: str
         :param password: The authentication password.
-        :type  password2: string
+        :type  password2: str
         :param password2: The authorization password, if required.
         :type  key: PrivateKey
         :param key: A private key, if required.
+        :type needs_lock: bool
+        :param needs_lock: True if the account will be locked during login.
         """
         self.acquired_event = Event()
         self.released_event = Event()
@@ -59,13 +80,16 @@ class Account(object):
         self.key = key
         self.synclock = multiprocessing.Condition(multiprocessing.Lock())
         self.lock = multiprocessing.Lock()
+        self.needs_lock = needs_lock
 
     def __enter__(self):
-        self.acquire()
+        if self.needs_lock:
+            self.acquire()
         return self
 
     def __exit__(self, thetype, value, traceback):
-        self.release()
+        if self.needs_lock:
+            self.release()
 
     def context(self):
         """
@@ -73,13 +97,17 @@ class Account(object):
         """
         return Context(self)
 
-    def acquire(self, signal = True):
+    def acquire(self, signal=True):
         """
         Locks the account.
+        Method has no effect if the constructor argument `needs_lock`
+        wsa set to False.
 
-        :type  signal: bool
+        :type signal: bool
         :param signal: Whether to emit the acquired_event signal.
         """
+        if not self.needs_lock:
+            return
         with self.synclock:
             while not self.lock.acquire(False):
                 self.synclock.wait()
@@ -87,13 +115,17 @@ class Account(object):
                 self.acquired_event(self)
             self.synclock.notify_all()
 
-    def release(self, signal = True):
+    def release(self, signal=True):
         """
         Unlocks the account.
+        Method has no effect if the constructor argument `needs_lock`
+        wsa set to False.
 
-        :type  signal: bool
+        :type signal: bool
         :param signal: Whether to emit the released_event signal.
         """
+        if not self.needs_lock:
+            return
         with self.synclock:
             self.lock.release()
             if signal:
