@@ -10,27 +10,29 @@ class matchTest(unittest.TestCase):
         from Exscript.util.match import first_match
 
         string = 'my test'
-        self.assert_(first_match(string, r'aaa') is None)
-        self.assert_(first_match(string, r'\S+') == 'my test')
-        self.assert_(first_match(string, r'(aaa)') is None)
-        self.assert_(first_match(string, r'(\S+)') == 'my')
-        self.assert_(first_match(string, r'(aaa) (\S+)') == (None, None))
-        self.assert_(first_match(string, r'(\S+) (\S+)') == ('my', 'test'))
+        self.assertIsNone(first_match(string, r'aaa'))
+        self.assertEqual(first_match(string, r'\S+'), 'my test')
+        self.assertIsNone(first_match(string, r'(aaa)'))
+        self.assertEqual(first_match(string, r'(\S+)'), 'my')
+        self.assertEqual(first_match(string, r'(aaa) (\S+)'), (None, None))
+        self.assertEqual(first_match(string, r'(\S+) (\S+)'), ('my', 'test'))
+        self.assertEqual(first_match("24.1632", r'(\d+)\.(\d+)'), ('24', '1632'))
+        self.assertEqual(first_match("24", r'(\d+)\.?(\d+)?'), ('24', None))
 
         multi_line = 'hello\nworld\nhello world'
-        self.assert_(first_match(multi_line, r'(he)llo') == 'he')
+        self.assertEqual(first_match(multi_line, r'(he)llo'), 'he')
 
     def testAnyMatch(self):
         from Exscript.util.match import any_match
 
         string = 'one uno\ntwo due'
-        self.assert_(any_match(string, r'aaa')   == [])
-        self.assert_(any_match(string, r'\S+')   == ['one uno', 'two due'])
-        self.assert_(any_match(string, r'(aaa)') == [])
-        self.assert_(any_match(string, r'(\S+)') == ['one', 'two'])
-        self.assert_(any_match(string, r'(aaa) (\S+)') == [])
+        self.assertEqual(any_match(string, r'aaa'), [])
+        self.assertEqual(any_match(string, r'\S+'), ['one uno', 'two due'])
+        self.assertEqual(any_match(string, r'(aaa)'), [])
+        self.assertEqual(any_match(string, r'(\S+)'), ['one', 'two'])
+        self.assertEqual(any_match(string, r'(aaa) (\S+)'), [])
         expected = [('one', 'uno'), ('two', 'due')]
-        self.assert_(any_match(string, r'(\S+) (\S+)') == expected)
+        self.assertEqual(any_match(string, r'(\S+) (\S+)'), expected)
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(matchTest)
