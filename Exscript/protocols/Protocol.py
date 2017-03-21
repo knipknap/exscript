@@ -218,7 +218,8 @@ class Protocol(object):
                  logfile            = None,
                  termtype           = 'dumb',
                  verify_fingerprint = True,
-                 account_factory    = None):
+                 account_factory    = None,
+                 banner_timeout=None):
         """
         Constructor.
         The following events are provided:
@@ -242,6 +243,8 @@ class Protocol(object):
             e.g. 'vt100'.
         :keyword verify_fingerprint: Whether to verify the host's fingerprint.
         :keyword account_factory: A function that produces a new :class:`Account`.
+        :type banner_timeout: bool
+        :keyword banner_timeout: The time to wait for the banner.
         """
         self.data_received_event   = Event()
         self.otp_requested_event   = Event()
@@ -269,7 +272,8 @@ class Protocol(object):
         self.response              = None
         self.buffer                = MonitoredBuffer()
         self.account_factory       = account_factory
-        self.send_data             = None
+        self.banner_timeout = banner_timeout
+        self.send_data = None
         if stdout is None:
             self.stdout = open(os.devnull, 'w')
         else:

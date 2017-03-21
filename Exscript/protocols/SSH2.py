@@ -158,6 +158,7 @@ class SSH2(Protocol):
 
         # Init the paramiko protocol.
         t = paramiko.Transport(sock)
+        t.banner_timeout = self.banner_timeout
         t.start_client()
         ResourceManager.register(self, t)
 
