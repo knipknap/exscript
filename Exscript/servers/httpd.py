@@ -27,27 +27,15 @@ from __future__ import print_function
 import sys
 import time
 import urllib
-from urlparse import urlparse
+import hashlib
+from urlparse import urlparse, parse_qs
 from traceback import format_exc
 from BaseHTTPServer import BaseHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 from SocketServer import ThreadingMixIn
 
-if sys.version_info < (2, 5):
-    import md5
-
-    def md5hex(x):
-        return md5.md5(x).hexdigest()
-else:
-    import hashlib
-
-    def md5hex(x):
-        return hashlib.md5(x).hexdigest()
-
-if sys.version_info < (2, 6):
-    from cgi import parse_qs
-else:
-    from urlparse import parse_qs
+def md5hex(x):
+    return hashlib.md5(x).hexdigest()
 
 # Selective imports only for urllib2 because 2to3 will not replace the
 # urllib2.<method> calls below. Also, 2to3 will throw an error if we
