@@ -363,12 +363,13 @@ class ProtocolTest(unittest.TestCase):
         self.doAppAuthenticate(flush=True)
         response = self.protocol.response
 
-        # Authorize should see that a prompt is still in the buffer,
-        # and do nothing.
-        self.doAppAuthorize(flush=True)
+        # At this point app_authorize should fail because the buffer is
+        # empty due to flush=True above. In other words, app_authorize
+        # will wait for a prompt until a timeout happens.
+        self.assertRaises(TimeoutException, self.doAppAuthorize)
         self.assert_(self.protocol.is_protocol_authenticated())
         self.assert_(self.protocol.is_app_authenticated())
-        self.assert_(self.protocol.is_app_authorized())
+        self.failIf(self.protocol.is_app_authorized())
 
     def testAutoAppAuthorize(self):
         # Test can not work on the abstract base.
