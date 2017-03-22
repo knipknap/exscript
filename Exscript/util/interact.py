@@ -204,9 +204,9 @@ def prompt(key,
         default = history.get(key, str(default))
     while True:
         if default is None:
-            value = input('%s: ' % message)
+            value = eval(input('%s: ' % message))
         else:
-            value = input('%s [%s]: ' % (message, default)) or default
+            value = eval(input('%s [%s]: ' % (message, default))) or default
         if strip and isinstance(value, str):
             value = value.strip()
         if not check:
@@ -259,9 +259,9 @@ def get_user(prompt=None):
     if prompt is None:
         prompt = "Please enter your user name"
     if env_user is None or env_user == '':
-        user = input('%s: ' % prompt)
+        user = eval(input('%s: ' % prompt))
     else:
-        user = input('%s [%s]: ' % (prompt, env_user))
+        user = eval(input('%s [%s]: ' % (prompt, env_user)))
         if user == '':
             user = env_user
     return user

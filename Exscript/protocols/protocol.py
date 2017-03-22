@@ -1089,7 +1089,7 @@ class Protocol(object):
 
     def _call_key_handlers(self, key_handlers, data):
         if key_handlers is not None:
-            for key, func in key_handlers.items():
+            for key, func in list(key_handlers.items()):
                 if data == key:
                     func(self)
                     return True

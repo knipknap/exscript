@@ -156,7 +156,7 @@ class mailTest(unittest.TestCase):
         expected = smtp.split('\n', 1)[1].strip()
 
         # Compare the results.
-        for key, value in vars.items():
+        for key, value in list(vars.items()):
             expected = expected.replace('{' + key + '}', value)
         self.assertEqual(result, expected)
 

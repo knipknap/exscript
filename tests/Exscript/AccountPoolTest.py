@@ -91,7 +91,7 @@ class AccountPoolTest(unittest.TestCase):
             self.assert_(account.get_name() == 'abc')
 
             # Release all accounts.
-            for account in acquired.values():
+            for account in list(acquired.values()):
                 account.release()
 
     def testReleaseAccounts(self):

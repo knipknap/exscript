@@ -104,8 +104,8 @@ class SSH2(Protocol):
     def _save_host_keys(self):
         with open(self._host_keys_filename, 'w') as file:
             file.write('# SSH host keys collected by Exscript\n')
-            for hostname, keys in self._host_keys.items():
-                for keytype, key in keys.items():
+            for hostname, keys in list(self._host_keys.items()):
+                for keytype, key in list(keys.items()):
                     line = ' '.join((hostname, keytype, key.get_base64()))
                     file.write(line + '\n')
 
