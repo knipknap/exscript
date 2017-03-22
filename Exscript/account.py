@@ -23,6 +23,7 @@
 """
 Manages user accounts.
 """
+from builtins import object
 import multiprocessing
 from collections import deque, defaultdict
 from .util.cast import to_list

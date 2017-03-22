@@ -24,10 +24,15 @@
 Tools for interacting with the user on the command line.
 """
 from __future__ import print_function, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import input
+from builtins import str
+from builtins import object
 import os
 import sys
 import getpass
-import ConfigParser
+import configparser
 import shutil
 from tempfile import NamedTemporaryFile
 from .. import Account
@@ -65,7 +70,7 @@ class InputHistory(object):
         :param section: The section in the configfile.
         """
         self.section = section
-        self.parser = ConfigParser.RawConfigParser()
+        self.parser = configparser.RawConfigParser()
         filename = os.path.expanduser(filename)
 
         try:
@@ -96,7 +101,7 @@ class InputHistory(object):
             return default
         try:
             return self.parser.get(self.section, key)
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             return default
 
     def set(self, key, value):
@@ -199,9 +204,9 @@ def prompt(key,
         default = history.get(key, str(default))
     while True:
         if default is None:
-            value = raw_input('%s: ' % message)
+            value = input('%s: ' % message)
         else:
-            value = raw_input('%s [%s]: ' % (message, default)) or default
+            value = input('%s [%s]: ' % (message, default)) or default
         if strip and isinstance(value, str):
             value = value.strip()
         if not check:
@@ -254,9 +259,9 @@ def get_user(prompt=None):
     if prompt is None:
         prompt = "Please enter your user name"
     if env_user is None or env_user == '':
-        user = raw_input('%s: ' % prompt)
+        user = input('%s: ' % prompt)
     else:
-        user = raw_input('%s [%s]: ' % (prompt, env_user))
+        user = input('%s [%s]: ' % (prompt, env_user))
         if user == '':
             user = env_user
     return user

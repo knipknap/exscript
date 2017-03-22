@@ -1,3 +1,5 @@
+from future import standard_library
+standard_library.install_aliases()
 import sys
 import unittest
 import re
@@ -7,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from multiprocessing import Pipe
 from tempfile import NamedTemporaryFile
-from cPickle import dumps, loads
+from pickle import dumps, loads
 from Exscript.workqueue.job import Thread, Process, Job
 
 

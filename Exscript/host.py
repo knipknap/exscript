@@ -24,6 +24,8 @@
 Representing a device to connect with.
 """
 from __future__ import absolute_import
+from builtins import str
+from builtins import object
 from .account import Account
 from .util.cast import to_list
 from .util.ipv4 import is_ip, clean_ip
@@ -110,7 +112,7 @@ class Host(object):
             account = Account(uri.username, uri.password1, uri.password2)
             self.set_account(account)
 
-        for key, val in uri.vars.iteritems():
+        for key, val in uri.vars.items():
             self.set(key, val)
 
     def get_uri(self):
@@ -127,7 +129,7 @@ class Host(object):
         url.hostname = self.get_address()
         url.port = self.get_tcp_port()
         url.vars = dict((k, to_list(v))
-                        for (k, v) in self.get_all().iteritems()
+                        for (k, v) in self.get_all().items()
                         if isinstance(v, str) or isinstance(v, list))
 
         if self.account:

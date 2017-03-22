@@ -1,3 +1,4 @@
+from builtins import object
 import sys
 import unittest
 import re
@@ -260,7 +261,7 @@ class QueueTest(unittest.TestCase):
         # returns True).
         self.queue.run('dummy://dummy', partial(start_cb, data))
         self.queue.shutdown()
-        data = dict((k, v.value) for (k, v) in data.iteritems())
+        data = dict((k, v.value) for (k, v) in data.items())
         self.assertEqual(data, {'match-called': True,
                                 'start-called': True,
                                 'account-hash': account2.__hash__()})

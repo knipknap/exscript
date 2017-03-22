@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 #
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)

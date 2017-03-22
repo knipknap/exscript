@@ -24,6 +24,7 @@
 An abstract base class for all protocols.
 """
 from __future__ import absolute_import
+from builtins import object
 import re
 import sys
 import select
@@ -1088,7 +1089,7 @@ class Protocol(object):
 
     def _call_key_handlers(self, key_handlers, data):
         if key_handlers is not None:
-            for key, func in key_handlers.iteritems():
+            for key, func in key_handlers.items():
                 if data == key:
                     func(self)
                     return True

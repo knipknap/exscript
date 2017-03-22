@@ -21,6 +21,8 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
+from builtins import next
+from builtins import object
 from .exception import LexerException, CompileError, ExecuteError
 
 
@@ -119,7 +121,7 @@ class Lexer(object):
         self.current_char += chars
         self.token_buffer = None
 
-    def next(self):
+    def __next__(self):
         if self.token_buffer:
             self.forward(len(self.token_buffer[1]))
 

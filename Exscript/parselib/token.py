@@ -21,6 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
+from builtins import object
 
 
 class Token(object):
@@ -74,7 +75,7 @@ class Token(object):
                     break
             return current
 
-        def next(self):
+        def __next__(self):
             # By using this loop we avoid an (expensive) recursive call.
             while True:
                 next = self._next()

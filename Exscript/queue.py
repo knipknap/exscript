@@ -24,6 +24,8 @@
 The heart of Exscript.
 """
 from __future__ import division, absolute_import
+from builtins import str
+from builtins import object
 import sys
 import os
 import gc
@@ -523,7 +525,7 @@ class Queue(object):
         """
         self._dbg(2, 'Waiting for the queue to finish.')
         self.workqueue.wait_until_done()
-        for child in self.pipe_handlers.values():
+        for child in list(self.pipe_handlers.values()):
             child.join()
         self._del_status_bar()
         self._print_status_bar()

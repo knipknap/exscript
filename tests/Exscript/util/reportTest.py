@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import sys
 import unittest
 import re
@@ -93,7 +95,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 52, in createAbortedLog
+  File "%s.py", line 54, in createAbortedLog
     raise FakeError()
 FakeError
 

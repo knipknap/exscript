@@ -24,6 +24,7 @@
 A client that talks to a :class:`Exscript.emulators.VirtualDevice`.
 """
 from __future__ import absolute_import
+from builtins import str
 from ..emulators import VirtualDevice
 from .protocol import Protocol
 from .exception import TimeoutException, DriverReplacedException, \
