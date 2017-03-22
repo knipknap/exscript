@@ -18,8 +18,8 @@ complete.
 Getting started
 ---------------
 
-As a first simple test, let's try to connect to a network device via
-SSH2, and execute the ``uname -a`` command on it.
+As a first simple test, let's try to connect to a Linux/Unix machine
+via SSH2, and execute the ``uname -a`` command on it.
 
 Create a file named ``test.exscript`` with the following content::
 
@@ -32,6 +32,11 @@ command::
 
 Awesome fact: Just replace ``ssh://`` by ``telnet://`` and it should
 still work with Telnet devices.
+
+.. hint::
+   The example assumes that ``localhost`` is a Unix server where
+   SSH is running. You may of course change this to either an ip
+   address (such as ``ssh://192.168.0.1``), or any other hostname.
 
 Exscript will prompt you for a username and a password, and connect to
 ``localhost`` using the entered login details. Once logged in, it
