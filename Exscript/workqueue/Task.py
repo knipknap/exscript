@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,15 +25,18 @@ Represents a batch of enqueued actions.
 """
 from Exscript.util.event import Event
 
+
 class Task(object):
+
     """
     Represents a batch of running actions.
     """
+
     def __init__(self, workqueue):
         self.done_event = Event()
-        self.workqueue  = workqueue
-        self.job_ids    = set()
-        self.completed  = 0
+        self.workqueue = workqueue
+        self.job_ids = set()
+        self.completed = 0
         self.workqueue.job_succeeded_event.listen(self._on_job_done)
         self.workqueue.job_aborted_event.listen(self._on_job_done)
 

@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -27,6 +27,7 @@ import os
 import logging
 import fcntl
 import errno
+
 
 def read(path):
     """
@@ -45,9 +46,10 @@ def read(path):
         return int(open(path).read())
     except IOError as xxx_todo_changeme:
         (code, text) = xxx_todo_changeme.args
-        if code == errno.ENOENT: # no such file or directory
+        if code == errno.ENOENT:  # no such file or directory
             return None
         raise
+
 
 def isalive(path):
     """
@@ -67,12 +69,13 @@ def isalive(path):
 
     # Check if a process with the given pid exists.
     try:
-        os.kill(pid, 0) # Signal 0 does not kill, but check.
+        os.kill(pid, 0)  # Signal 0 does not kill, but check.
     except OSError as xxx_todo_changeme1:
         (code, text) = xxx_todo_changeme1.args
-        if code == errno.ESRCH: # No such process.
+        if code == errno.ESRCH:  # No such process.
             return False
     return True
+
 
 def kill(path):
     """
@@ -97,6 +100,7 @@ def kill(path):
         if code != errno.ESRCH:
             raise
 
+
 def write(path):
     """
     Writes the current process id to the given pidfile.
@@ -120,6 +124,7 @@ def write(path):
             pidfile.close()
         except:
             pass
+
 
 def remove(path):
     """

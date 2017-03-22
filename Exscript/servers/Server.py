@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -28,7 +28,9 @@ import select
 import socket
 from multiprocessing import Process, Pipe
 
+
 class Server(Process):
+
     """
     Base class of the Telnet and SSH servers. Servers are intended to be
     used for tests and attempt to emulate a device using the behavior of
@@ -54,15 +56,15 @@ class Server(Process):
         :type  device: VirtualDevice
         :param device: A virtual device instance.
         """
-        Process.__init__(self, target = self._run)
-        self.host    = host
-        self.port    = int(port)
+        Process.__init__(self, target=self._run)
+        self.host = host
+        self.port = int(port)
         self.timeout = .5
-        self.dbg     = 0
+        self.dbg = 0
         self.running = False
-        self.buf     = ''
-        self.socket  = None
-        self.device  = device
+        self.buf = ''
+        self.socket = None
+        self.device = device
         self.parent_conn, self.child_conn = Pipe()
 
     def _dbg(self, level, msg):
@@ -109,7 +111,7 @@ class Server(Process):
             try:
                 self._handle_connection(conn)
             except socket.error:
-                pass # network error
+                pass  # network error
             finally:
                 self._shutdown_notify(conn)
                 conn.close()

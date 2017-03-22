@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -21,24 +21,26 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from Exscript.parselib.Exception import LexerException, \
-                                        CompileError, \
+    CompileError, \
                                         ExecuteError
 
+
 class Lexer(object):
+
     def __init__(self, parser_cls, *args, **kwargs):
         """
         The given args are passed to the parser_cls constructor.
         """
-        self.parser_cls      = parser_cls
+        self.parser_cls = parser_cls
         self.parser_cls_args = args
-        self.filename        = None
-        self.input           = ''
-        self.input_length    = 0
-        self.current_char    = 0
-        self.last_char       = 0
-        self.token_buffer    = None
-        self.grammar         = []
-        self.debug           = kwargs.get('debug', False)
+        self.filename = None
+        self.input = ''
+        self.input_length = 0
+        self.current_char = 0
+        self.last_char = 0
+        self.token_buffer = None
+        self.grammar = []
+        self.debug = kwargs.get('debug', False)
 
     def set_grammar(self, grammar):
         self.grammar.append(grammar)
@@ -56,9 +58,9 @@ class Lexer(object):
             match = token_regex.match(self.input, self.current_char)
             if match is not None:
                 self.token_buffer = (token_type, match.group(0))
-                #print "Match:", self.token_buffer
+                # print "Match:", self.token_buffer
                 return
-        end   = self.input.find('\n', self.current_char + 2)
+        end = self.input.find('\n', self.current_char + 2)
         error = 'Invalid syntax: %s' % repr(self.input[self.current_char:end])
         self.syntax_error(error)
 
@@ -88,15 +90,15 @@ class Lexer(object):
         line_end = self.input.find('\n', char)
         return line_start, line_end
 
-    def _error(self, exc_cls, error, sender = None):
+    def _error(self, exc_cls, error, sender=None):
         if not sender:
             raise exc_cls('\n' + error)
-        start, end  = self._get_line_position_from_char(sender.end)
+        start, end = self._get_line_position_from_char(sender.end)
         line_number = self._get_line_number_from_char(sender.end)
-        line        = self._get_line(line_number)
-        offset      = sender.start - start
-        token_len   = sender.end   - sender.start
-        output      = line + '\n'
+        line = self._get_line(line_number)
+        offset = sender.start - start
+        token_len = sender.end - sender.start
+        output = line + '\n'
         if token_len <= 1:
             output += (' ' * offset) + '^\n'
         else:
@@ -104,25 +106,25 @@ class Lexer(object):
         output += '%s in %s:%s' % (error, self.filename, line_number)
         raise exc_cls('\n' + output)
 
-    def error(self, error, sender = None, exc_cls = LexerException):
+    def error(self, error, sender=None, exc_cls=LexerException):
         self._error(exc_cls, error, sender)
 
-    def syntax_error(self, error, sender = None):
+    def syntax_error(self, error, sender=None):
         self._error(CompileError, error, sender)
 
-    def runtime_error(self, error, sender = None):
+    def runtime_error(self, error, sender=None):
         self._error(ExecuteError, error, sender)
 
-    def forward(self, chars = 1):
-        self.last_char     = self.current_char
+    def forward(self, chars=1):
+        self.last_char = self.current_char
         self.current_char += chars
-        self.token_buffer  = None
+        self.token_buffer = None
 
     def next(self):
         if self.token_buffer:
             self.forward(len(self.token_buffer[1]))
 
-    def next_if(self, types, token = None):
+    def next_if(self, types, token=None):
         if token is not None:
             if self.current_is(types, token):
                 next(self)
@@ -137,11 +139,11 @@ class Lexer(object):
                 return 1
         return 0
 
-    def skip(self, types, token = None):
+    def skip(self, types, token=None):
         while self.next_if(types, token):
             pass
 
-    def expect(self, sender, type, token = None):
+    def expect(self, sender, type, token=None):
         cur_type, cur_token = self.token()
         if self.next_if(type, token):
             return
@@ -154,10 +156,10 @@ class Lexer(object):
         # In this case we do not point to the token that raised the error,
         # but to the actual position of the lexer.
         sender.start = self.current_char
-        sender.end   = self.current_char + 1
+        sender.end = self.current_char + 1
         self.syntax_error(error, sender)
 
-    def current_is(self, type, token = None):
+    def current_is(self, type, token=None):
         if self.token_buffer is None:
             self.match()
         if self.token_buffer[0] != type:
@@ -173,17 +175,17 @@ class Lexer(object):
             self.match()
         return self.token_buffer
 
-    def parse(self, string, filename = None):
+    def parse(self, string, filename=None):
         # Re-initialize, so that the same lexer instance may be used multiple
         # times.
-        self.filename     = filename
-        self.input        = string
+        self.filename = filename
+        self.input = string
         self.input_length = len(string)
         self.current_char = 0
-        self.last_char    = 0
+        self.last_char = 0
         self.token_buffer = None
-        self.grammar      = []
-        compiled          = self.parser_cls(self, *self.parser_cls_args)
+        self.grammar = []
+        compiled = self.parser_cls(self, *self.parser_cls_args)
         if self.debug > 3:
             compiled.dump()
         return compiled

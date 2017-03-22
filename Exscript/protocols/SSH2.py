@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,26 +23,23 @@
 """
 SSH version 2 support, based on paramiko.
 """
+from __future__ import absolute_import
 import os
 import time
 import select
 import socket
 import paramiko
 import Crypto
-from binascii               import hexlify
-from paramiko               import util
-from paramiko.resource      import ResourceManager
-from paramiko.ssh_exception import SSHException, \
-                                   AuthenticationException, \
-                                   BadHostKeyException
-from Exscript.util.tty            import get_terminal_size
-from Exscript.PrivateKey          import PrivateKey
-from Exscript.protocols.Protocol  import Protocol
-from Exscript.protocols.Exception import ProtocolException, \
-                                         LoginFailure, \
-                                         TimeoutException, \
-                                         DriverReplacedException, \
-                                         ExpectCancelledException
+from binascii import hexlify
+from paramiko import util
+from paramiko.resource import ResourceManager
+from paramiko.ssh_exception import SSHException, AuthenticationException, \
+        BadHostKeyException
+from ..util.tty import get_terminal_size
+from ..PrivateKey import PrivateKey
+from .Protocol import Protocol
+from .Exception import ProtocolException, LoginFailure, TimeoutException, \
+        DriverReplacedException, ExpectCancelledException
 
 # Workaround for paramiko error; avoids a warning message.
 util.log_to_file(os.devnull)
@@ -52,7 +49,9 @@ keymap = {'rsa': paramiko.RSAKey, 'dss': paramiko.DSSKey}
 for key in keymap:
     PrivateKey.keytypes.add(key)
 
+
 class SSH2(Protocol):
+
     """
     The secure shell protocol version 2 adapter, based on Paramiko.
     """
@@ -61,7 +60,7 @@ class SSH2(Protocol):
     def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
         self.client = None
-        self.shell  = None
+        self.shell = None
         self.cancel = False
 
         # Since each protocol may be created in it's own thread, we must
@@ -77,8 +76,8 @@ class SSH2(Protocol):
             pass
 
         # Paramiko client stuff.
-        self._system_host_keys   = paramiko.HostKeys()
-        self._host_keys          = paramiko.HostKeys()
+        self._system_host_keys = paramiko.HostKeys()
+        self._host_keys = paramiko.HostKeys()
         self._host_keys_filename = None
 
         if self.verify_fingerprint:
@@ -88,14 +87,14 @@ class SSH2(Protocol):
 
     def _reject_host_key(self, key):
         name = key.get_name()
-        fp   = hexlify(key.get_fingerprint())
-        msg  = 'Rejecting %s host key for %s: %s' % (name, self.host, fp)
+        fp = hexlify(key.get_fingerprint())
+        msg = 'Rejecting %s host key for %s: %s' % (name, self.host, fp)
         self._dbg(1, msg)
 
     def _add_host_key(self, key):
         name = key.get_name()
-        fp   = hexlify(key.get_fingerprint())
-        msg  = 'Adding %s host key for %s: %s' % (name, self.host, fp)
+        fp = hexlify(key.get_fingerprint())
+        msg = 'Adding %s host key for %s: %s' % (name, self.host, fp)
         self._dbg(1, msg)
         self._host_keys.add(self.host, name, key)
         if self._host_keys_filename is not None:
@@ -109,7 +108,7 @@ class SSH2(Protocol):
                     line = ' '.join((hostname, keytype, key.get_base64()))
                     file.write(line + '\n')
 
-    def _load_system_host_keys(self, filename = None):
+    def _load_system_host_keys(self, filename=None):
         """
         Load host keys from a system (read-only) file.  Host keys read with
         this method will not be saved back by :class:`save_host_keys`.
@@ -165,9 +164,11 @@ class SSH2(Protocol):
         # Check system host keys.
         server_key = t.get_remote_server_key()
         keytype = server_key.get_name()
-        our_server_key = self._system_host_keys.get(self.host, {}).get(keytype, None)
+        our_server_key = self._system_host_keys.get(
+            self.host, {}).get(keytype, None)
         if our_server_key is None:
-            our_server_key = self._host_keys.get(self.host, {}).get(keytype, None)
+            our_server_key = self._host_keys.get(
+                self.host, {}).get(keytype, None)
         if our_server_key is None:
             self._missing_host_key(server_key)
             # if the callback returns, assume the key is ok
@@ -178,13 +179,13 @@ class SSH2(Protocol):
         t.set_keepalive(self.KEEPALIVE_INTERVAL)
         return t
 
-    def _paramiko_auth_none(self, username, password = None):
+    def _paramiko_auth_none(self, username, password=None):
         self.client.auth_none(username)
 
     def _paramiko_auth_password(self, username, password):
         self.client.auth_password(username, password or '')
 
-    def _paramiko_auth_agent(self, username, password = None):
+    def _paramiko_auth_agent(self, username, password=None):
         keys = paramiko.Agent().get_keys()
         if not keys:
             raise AuthenticationException('auth agent found no keys')
@@ -212,7 +213,7 @@ class SSH2(Protocol):
         for pkey_class, filename in keys:
             try:
                 key = pkey_class.from_private_key_file(filename, password)
-                fp  = hexlify(key.get_fingerprint())
+                fp = hexlify(key.get_fingerprint())
                 self._dbg(1, 'Trying key %s in %s' % (fp, filename))
                 self.client.auth_publickey(username, key)
                 return
@@ -224,10 +225,10 @@ class SSH2(Protocol):
 
     def _paramiko_auth_autokey(self, username, password):
         keyfiles = []
-        for cls, file in ((paramiko.RSAKey, '~/.ssh/id_rsa'), # Unix
-                          (paramiko.DSSKey, '~/.ssh/id_dsa'), # Unix
+        for cls, file in ((paramiko.RSAKey, '~/.ssh/id_rsa'),  # Unix
+                          (paramiko.DSSKey, '~/.ssh/id_dsa'),  # Unix
                           (paramiko.RSAKey, '~/ssh/id_rsa'),  # Windows
-                          (paramiko.DSSKey, '~/ssh/id_dsa')): # Windows
+                          (paramiko.DSSKey, '~/ssh/id_dsa')):  # Windows
             file = os.path.expanduser(file)
             if os.path.isfile(file):
                 keyfiles.append((cls, file))
@@ -265,8 +266,8 @@ class SSH2(Protocol):
             raise LoginFailure('Failed to open shell: ' + str(e))
 
     def _connect_hook(self, hostname, port):
-        self.host   = hostname
-        self.port   = port or 22
+        self.host = hostname
+        self.port = port or 22
         self.client = self._paramiko_connect()
         self._load_system_host_keys()
         return True
@@ -321,14 +322,16 @@ class SSH2(Protocol):
 
     def _domatch(self, prompt, flush):
         self._dbg(1, "Expecting a prompt")
-        self._dbg(2, "Expected pattern: " + repr([repr(p.pattern) for p in prompt]))
+        self._dbg(2, "Expected pattern: " +
+                  repr([repr(p.pattern) for p in prompt]))
         search_window_size = 150
         while not self.cancel:
             # Check whether what's buffered matches the prompt.
-            driver        = self.get_driver()
+            driver = self.get_driver()
             search_window = self.buffer.tail(search_window_size)
-            search_window, incomplete_tail = driver.clean_response_for_re_match(search_window)
-            match         = None
+            search_window, incomplete_tail = driver.clean_response_for_re_match(
+                search_window)
+            match = None
             for n, regex in enumerate(prompt):
                 match = regex.search(search_window)
                 if match is not None:
@@ -343,7 +346,7 @@ class SSH2(Protocol):
             end = self.buffer.size() - len(search_window) + match.start()
             if flush:
                 self.response = self.buffer.pop(end)
-                self.buffer.pop(match.end()-match.start())
+                self.buffer.pop(match.end() - match.start())
             else:
                 self.response = self.buffer.head(end)
             return n, match
@@ -361,10 +364,10 @@ class SSH2(Protocol):
     def _set_terminal_size(self, rows, cols):
         self.shell.resize_pty(cols, rows)
 
-    def interact(self, key_handlers = None, handle_window_size = True):
+    def interact(self, key_handlers=None, handle_window_size=True):
         return self._open_shell(self.shell, key_handlers, handle_window_size)
 
-    def close(self, force = False):
+    def close(self, force=False):
         if self.shell is None:
             return
         if not force:

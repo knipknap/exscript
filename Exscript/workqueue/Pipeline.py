@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -24,24 +24,27 @@ from uuid import uuid4
 from collections import deque
 from multiprocessing import Condition, RLock
 
+
 class Pipeline(object):
+
     """
     A collection that is similar to Python's Queue object, except
     it also tracks items that are currently sleeping or in progress.
     """
-    def __init__(self, max_working = 1):
-        self.condition   = Condition(RLock())
+
+    def __init__(self, max_working=1):
+        self.condition = Condition(RLock())
         self.max_working = max_working
-        self.running     = True
-        self.paused      = False
-        self.queue       = None
-        self.force       = None
-        self.sleeping    = None
-        self.working     = None
-        self.item2id     = None
-        self.id2item     = None # for performance reasons
-        self.name2id     = None
-        self.id2name     = None
+        self.running = True
+        self.paused = False
+        self.queue = None
+        self.force = None
+        self.sleeping = None
+        self.working = None
+        self.item2id = None
+        self.id2item = None  # for performance reasons
+        self.name2id = None
+        self.id2name = None
         self.clear()
 
     def __len__(self):
@@ -53,7 +56,7 @@ class Pipeline(object):
             return item in self.item2id
 
     def _register_item(self, name, item):
-        uuid               = uuid4().hex
+        uuid = uuid4().hex
         self.id2item[uuid] = item
         self.item2id[item] = uuid
         if name is None:
@@ -105,7 +108,7 @@ class Pipeline(object):
                 self.name2id.pop(name)
             self.condition.notify_all()
 
-    def append(self, item, name = None):
+    def append(self, item, name=None):
         """
         Adds the given item to the end of the pipeline.
         """
@@ -115,7 +118,7 @@ class Pipeline(object):
             self.condition.notify_all()
             return uuid
 
-    def appendleft(self, item, name = None, force = False):
+    def appendleft(self, item, name=None, force=False):
         with self.condition:
             if force:
                 self.force.append(item)
@@ -125,7 +128,7 @@ class Pipeline(object):
             self.condition.notify_all()
             return uuid
 
-    def prioritize(self, item, force = False):
+    def prioritize(self, item, force=False):
         """
         Moves the item to the very left of the queue.
         """
@@ -143,14 +146,14 @@ class Pipeline(object):
 
     def clear(self):
         with self.condition:
-            self.queue    = deque()
-            self.force    = deque()
+            self.queue = deque()
+            self.force = deque()
             self.sleeping = set()
-            self.working  = set()
-            self.item2id  = dict()
-            self.id2item  = dict()
-            self.name2id  = dict()
-            self.id2name  = dict()
+            self.working = set()
+            self.item2id = dict()
+            self.id2item = dict()
+            self.name2id = dict()
+            self.id2name = dict()
             self.condition.notify_all()
 
     def stop(self):
@@ -237,7 +240,7 @@ class Pipeline(object):
             self.queue.popleft()
         return sleeping
 
-    def _get_next(self, pop = True):
+    def _get_next(self, pop=True):
         # We need to leave sleeping items in the queue because else we
         # would not know their original position after they wake up.
         # So we need to temporarily remove sleeping items from the top of

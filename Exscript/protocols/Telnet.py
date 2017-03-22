@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,15 +23,16 @@
 """
 The Telnet protocol.
 """
-from Exscript.util.tty            import get_terminal_size
-from Exscript.protocols           import telnetlib
-from Exscript.protocols.Protocol  import Protocol
-from Exscript.protocols.Exception import ProtocolException, \
-                                         TimeoutException, \
-                                         DriverReplacedException, \
-                                         ExpectCancelledException
+from __future__ import absolute_import
+from ..util.tty import get_terminal_size
+from . import telnetlib
+from .Protocol import Protocol
+from .Exception import ProtocolException, TimeoutException, \
+        DriverReplacedException, ExpectCancelledException
+
 
 class Telnet(Protocol):
+
     """
     The Telnet protocol adapter.
     """
@@ -49,11 +50,11 @@ class Telnet(Protocol):
         rows, cols = get_terminal_size()
         self.tn = telnetlib.Telnet(hostname,
                                    port or 23,
-                                   connect_timeout     = self.connect_timeout,
-                                   termsize         = (rows, cols),
-                                   termtype         = self.termtype,
-                                   stderr           = self.stderr,
-                                   receive_callback = self._telnetlib_received)
+                                   connect_timeout=self.connect_timeout,
+                                   termsize=(rows, cols),
+                                   termtype=self.termtype,
+                                   stderr=self.stderr,
+                                   receive_callback=self._telnetlib_received)
         if self.debug >= 5:
             self.tn.set_debuglevel(1)
         if self.tn is None:
@@ -78,7 +79,8 @@ class Telnet(Protocol):
         clean = self.get_driver().clean_response_for_re_match
         self.response = None
         try:
-            result, match, self.response = func(prompt, self.timeout, cleanup = clean)
+            result, match, self.response = func(
+                prompt, self.timeout, cleanup=clean)
         except Exception:
             self._dbg(1, 'Error while waiting for ' + repr(prompt))
             raise
@@ -109,10 +111,10 @@ class Telnet(Protocol):
     def _set_terminal_size(self, rows, cols):
         self.tn.set_window_size(rows, cols)
 
-    def interact(self, key_handlers = None, handle_window_size = True):
+    def interact(self, key_handlers=None, handle_window_size=True):
         return self._open_shell(self.tn.sock, key_handlers, handle_window_size)
 
-    def close(self, force = False):
+    def close(self, force=False):
         if self.tn is None:
             return
         if not force:

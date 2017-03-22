@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -21,14 +21,16 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
-from copy              import deepcopy
+from copy import deepcopy
 from Exscript.parselib import Token
 
+
 class Scope(Token):
-    def __init__(self, name, lexer, parser, parent = None, *args, **kwargs):
+
+    def __init__(self, name, lexer, parser, parent=None, *args, **kwargs):
         Token.__init__(self, name, lexer, parser, parent)
-        self.variables      = kwargs.get('variables', {})
-        self.children       = []
+        self.variables = kwargs.get('variables', {})
+        self.children = []
         self.exit_requested = 0
         for key in self.variables:
             if key.find('.') < 0 and not key.startswith('_'):
@@ -42,7 +44,7 @@ class Scope(Token):
             return self.parent.define(**kwargs)
         for key in kwargs:
             if key.find('.') >= 0 or key.startswith('_') \
-              or type(kwargs[key]) == type([]):
+                    or type(kwargs[key]) == type([]):
                 self.variables[key] = kwargs[key]
             else:
                 self.variables[key] = [kwargs[key]]
@@ -59,7 +61,7 @@ class Scope(Token):
 
     def get_vars(self):
         """
-        Returns a complete dict of all variables that are defined in this 
+        Returns a complete dict of all variables that are defined in this
         scope, including the variables of the parent.
         """
         if self.parent is None:
@@ -79,7 +81,7 @@ class Scope(Token):
         vars = dict([k for k in vars.iteritems() if not k[0].startswith('_')])
         return deepcopy(vars)
 
-    def get(self, name, default = None):
+    def get(self, name, default=None):
         if name in self.variables:
             return self.variables[name]
         if self.parent is None:
@@ -92,7 +94,7 @@ class Scope(Token):
             result = child.value(context)
         return result
 
-    def dump(self, indent = 0):
+    def dump(self, indent=0):
         print((' ' * indent) + self.name, 'start')
         for child in self.children:
             child.dump(indent + 1)

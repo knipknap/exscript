@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -29,8 +29,9 @@ import socket
 import threading
 import Crypto
 import paramiko
-from paramiko                import ServerInterface
+from paramiko import ServerInterface
 from Exscript.servers.Server import Server
+
 
 class _ParamikoServer(ServerInterface):
     # 'data' is the output of base64.encodestring(str(key))
@@ -38,7 +39,7 @@ class _ParamikoServer(ServerInterface):
            'fAu7jJ2d7eothvfeuoRFtJwhUmZDluRdFyhFY/hFAh76PJKGAusIqIQKlkJxMC' + \
            'KDqIexkgHAfID/6mqvmnSJf0b5W8v5h2pI/stOSwTQ+pxVhwJ9ctYDhRSlF0iT' + \
            'UWT10hcuO4Ks8='
-    good_pub_key = paramiko.RSAKey(data = base64.decodestring(data))
+    good_pub_key = paramiko.RSAKey(data=base64.decodestring(data))
 
     def __init__(self):
         self.event = threading.Event()
@@ -61,7 +62,7 @@ class _ParamikoServer(ServerInterface):
         return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
     def check_auth_password(self, username, password):
-        return paramiko.AUTH_SUCCESSFUL # TODO: paramiko.AUTH_FAILED
+        return paramiko.AUTH_SUCCESSFUL  # TODO: paramiko.AUTH_FAILED
 
     def check_auth_publickey(self, username, key):
         return paramiko.AUTH_SUCCESSFUL
@@ -83,7 +84,9 @@ class _ParamikoServer(ServerInterface):
                                   modes):
         return True
 
+
 class SSHd(Server):
+
     """
     A SSH2 server. Usage::
 
@@ -98,14 +101,14 @@ class SSHd(Server):
     :keyword key: An Exscript.PrivateKey object.
     """
 
-    def __init__(self, host, port, device, key = None):
+    def __init__(self, host, port, device, key=None):
         Server.__init__(self, host, port, device)
         if key:
             keyfile = key.get_filename()
         else:
             keyfile = os.path.expanduser('~/.ssh/id_rsa')
-        self.host_key = paramiko.RSAKey(filename = keyfile)
-        self.channel  = None
+        self.host_key = paramiko.RSAKey(filename=keyfile)
+        self.channel = None
 
     def _recvline(self):
         while not '\n' in self.buf:
@@ -120,7 +123,7 @@ class SSHd(Server):
                 self.running = False
                 return None
             self.buf += data.replace('\r\n', '\n').replace('\r', '\n')
-        lines    = self.buf.split('\n')
+        lines = self.buf.split('\n')
         self.buf = '\n'.join(lines[1:])
         return lines[0] + '\n'
 
@@ -137,7 +140,7 @@ class SSHd(Server):
             raise
         t.add_server_key(self.host_key)
         server = _ParamikoServer()
-        t.start_server(server = server)
+        t.start_server(server=server)
 
         # wait for auth
         self.channel = t.accept(20)

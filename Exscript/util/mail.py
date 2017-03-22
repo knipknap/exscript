@@ -28,33 +28,36 @@ import re
 import socket
 import smtplib
 import mimetypes
-from getpass              import getuser
-from email                import encoders
+from getpass import getuser
+from email import encoders
 from email.mime.multipart import MIMEMultipart
-from email.mime.audio     import MIMEAudio
-from email.mime.base      import MIMEBase
-from email.mime.image     import MIMEImage
-from email.mime.text      import MIMEText
-from Exscript.util.event  import Event
+from email.mime.audio import MIMEAudio
+from email.mime.base import MIMEBase
+from email.mime.image import MIMEImage
+from email.mime.text import MIMEText
+from Exscript.util.event import Event
 
-###########################################################
+#
 # Helpers. (non-public)
-###########################################################
+#
 _varname_re = re.compile(r'[a-z][\w_]*',     re.I)
-_string_re  = re.compile(r'(\\?){([\w_]+)}', re.I)
+_string_re = re.compile(r'(\\?){([\w_]+)}', re.I)
+
 
 class _TemplateParser(object):
+
     """
     This exists for backward compatibility; Python 2.3 does not come
     with a similar way for string substitution yet.
     """
+
     def __init__(self):
         self.tmpl_vars = None
 
     # Tokens that include variables in a string may use this callback to
     # substitute the variable against its value.
     def _variable_sub_cb(self, match):
-        escape  = match.group(1)
+        escape = match.group(1)
         varname = match.group(2)
         if escape == '\\':
             return '$' + varname
@@ -69,13 +72,14 @@ class _TemplateParser(object):
 
     def parse(self, template, **kwargs):
         self.tmpl_vars = kwargs
-        output         = ''
+        output = ''
         for line in template.split('\n'):
             if line.endswith(' '):
                 output += line
             else:
                 output += line + '\n'
         return _string_re.sub(self._variable_sub_cb, output)
+
 
 def _render_template(string, **vars):
     default = {'date': time.strftime('%Y-%m-%d'),
@@ -84,12 +88,15 @@ def _render_template(string, **vars):
     parser = _TemplateParser()
     return parser.parse(string, **default)
 
+
 def _is_header_line(line):
     return re.match(r'^\w+: .+$', line) is not None
+
 
 def _get_var_from_header_line(line):
     match = re.match(r'^(\w+): (.+)$', line)
     return match.group(1).strip().lower(), match.group(2).strip()
+
 
 def _cleanup_mail_addresses(receipients):
     if isinstance(receipients, list):
@@ -97,21 +104,24 @@ def _cleanup_mail_addresses(receipients):
     rcpt = re.split(r'\s*[,;]\s*', receipients.lower())
     return [str(r) for r in rcpt if r.strip()]
 
-###########################################################
+#
 # Public.
-###########################################################
+#
+
+
 class Mail(object):
+
     """
     Represents an email.
     """
 
     def __init__(self,
-                 sender  = None,
-                 to      = '',
-                 cc      = '',
-                 bcc     = '',
-                 subject = '',
-                 body    = ''):
+                 sender=None,
+                 to='',
+                 cc='',
+                 bcc='',
+                 subject='',
+                 body=''):
         """
         Creates a new email with the given values.
         If the given sender is None, one will be automatically chosen
@@ -131,13 +141,13 @@ class Mail(object):
         :param body: The email body, passed to set_body().
         """
         self.changed_event = Event()
-        self.files         = []
-        self.sender        = None
-        self.cc            = None
-        self.bcc           = None
-        self.to            = None
-        self.subject       = None
-        self.body          = None
+        self.files = []
+        self.sender = None
+        self.cc = None
+        self.bcc = None
+        self.to = None
+        self.subject = None
+        self.body = None
         if not sender:
             domain = socket.getfqdn('localhost')
             sender = getuser() + '@' + domain
@@ -157,7 +167,7 @@ class Mail(object):
         :param string: The template.
         """
         in_header = True
-        body      = ''
+        body = ''
         for line in string.split('\n'):
             if not in_header:
                 body += line + '\n'
@@ -346,10 +356,10 @@ class Mail(object):
         :rtype:  string
         :return: The SMTP header.
         """
-        header  = "From: %s\r\n"    % self.get_sender()
-        header += "To: %s\r\n"      % ',\r\n '.join(self.get_to())
-        header += "Cc: %s\r\n"      % ',\r\n '.join(self.get_cc())
-        header += "Bcc: %s\r\n"     % ',\r\n '.join(self.get_bcc())
+        header = "From: %s\r\n" % self.get_sender()
+        header += "To: %s\r\n" % ',\r\n '.join(self.get_to())
+        header += "Cc: %s\r\n" % ',\r\n '.join(self.get_cc())
+        header += "Bcc: %s\r\n" % ',\r\n '.join(self.get_bcc())
         header += "Subject: %s\r\n" % self.get_subject()
         return header
 
@@ -361,7 +371,7 @@ class Mail(object):
         :return: The SMTP formatted mail.
         """
         header = self.get_smtp_header()
-        body   = self.get_body().replace('\n', '\r\n')
+        body = self.get_body().replace('\n', '\r\n')
         return header + '\r\n' + body + '\r\n'
 
     def add_attachment(self, filename):
@@ -400,6 +410,7 @@ def from_template_string(string, **kwargs):
     mail.set_from_template_string(tmpl)
     return mail
 
+
 def from_template(filename, **kwargs):
     """
     Like from_template_string(), but reads the template from the file with
@@ -415,6 +426,7 @@ def from_template(filename, **kwargs):
     tmpl = open(filename).read()
     return from_template_string(tmpl, **kwargs)
 
+
 def _get_mime_object(filename):
     # Guess the content type based on the file's extension.  Encoding
     # is ignored, although we should check for simple things like
@@ -425,26 +437,27 @@ def _get_mime_object(filename):
 
     maintype, subtype = ctype.split('/', 1)
     if maintype == 'text':
-        fp  = open(filename)
-        msg = MIMEText(fp.read(), _subtype = subtype)
+        fp = open(filename)
+        msg = MIMEText(fp.read(), _subtype=subtype)
     elif maintype == 'image':
-        fp  = open(filename, 'rb')
-        msg = MIMEImage(fp.read(), _subtype = subtype)
+        fp = open(filename, 'rb')
+        msg = MIMEImage(fp.read(), _subtype=subtype)
     elif maintype == 'audio':
-        fp  = open(filename, 'rb')
-        msg = MIMEAudio(fp.read(), _subtype = subtype)
+        fp = open(filename, 'rb')
+        msg = MIMEAudio(fp.read(), _subtype=subtype)
     else:
-        fp  = open(filename, 'rb')
+        fp = open(filename, 'rb')
         msg = MIMEBase(maintype, subtype)
         msg.set_payload(fp.read())
         encoders.encode_base64(msg)
     fp.close()
 
     # Set the filename parameter
-    msg.add_header('Content-Disposition', 'attachment', filename = filename)
+    msg.add_header('Content-Disposition', 'attachment', filename=filename)
     return msg
 
-def send(mail, server = 'localhost'):
+
+def send(mail, server='localhost'):
     """
     Sends the given mail.
 
@@ -453,15 +466,15 @@ def send(mail, server = 'localhost'):
     :type  server: string
     :param server: The address of the mailserver.
     """
-    sender             = mail.get_sender()
-    rcpt               = mail.get_receipients()
-    session            = smtplib.SMTP(server)
-    message            = MIMEMultipart()
+    sender = mail.get_sender()
+    rcpt = mail.get_receipients()
+    session = smtplib.SMTP(server)
+    message = MIMEMultipart()
     message['Subject'] = mail.get_subject()
-    message['From']    = mail.get_sender()
-    message['To']      = ', '.join(mail.get_to())
-    message['Cc']      = ', '.join(mail.get_cc())
-    message.preamble   = 'Your mail client is not MIME aware.'
+    message['From'] = mail.get_sender()
+    message['To'] = ', '.join(mail.get_to())
+    message['Cc'] = ', '.join(mail.get_cc())
+    message.preamble = 'Your mail client is not MIME aware.'
 
     body = MIMEText(mail.get_body())
     body.add_header('Content-Disposition', 'inline')

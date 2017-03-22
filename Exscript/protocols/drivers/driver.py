@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,46 +23,47 @@
 """
 Base class for all drivers.
 """
-import re, string
+import re
+import string
 
-_flags          = re.I
-_printable      = re.escape(string.printable)
-_unprintable    = r'[^' + _printable + r']'
+_flags = re.I
+_printable = re.escape(string.printable)
+_unprintable = r'[^' + _printable + r']'
 _unprintable_re = re.compile(_unprintable)
-_ignore         = r'[\x1b\x07\x00]'
-_nl             = r'[\r\n]'
-_prompt_start   = _nl + r'(?:' + _unprintable + r'*|' + _ignore + '*)'
-_prompt_chars   = r'[\-\w\(\)@:~]'
-_filename       = r'(?:[\w\+\-\._]+)'
-_path           = r'(?:(?:' + _filename + r')?(?:/' + _filename + r')*/?)'
-_any_path       = r'(?:' + _path + r'|~' + _path + r'?)'
-_host           = r'(?:[\w+\-\.]+)'
-_user           = r'(?:[\w+\-]+)'
-_user_host      = r'(?:(?:' + _user + r'\@)?' + _host + r')'
-_prompt_re      = [re.compile(_prompt_start                 \
-                            + r'[\[\<]?'                    \
-                            + r'\w+'                        \
-                            + _user_host + r'?'             \
-                            + r':?'                         \
-                            + _any_path + r'?'              \
-                            + r'[: ]?'                      \
-                            + _any_path + r'?'              \
-                            + r'(?:\(' + _filename + '\))?' \
-                            + r'[\]\-]?'                    \
-                            + r'[#>%\$\]] ?'                \
-                            + _unprintable + r'*'           \
-                            + r'\Z', _flags)]
+_ignore = r'[\x1b\x07\x00]'
+_nl = r'[\r\n]'
+_prompt_start = _nl + r'(?:' + _unprintable + r'*|' + _ignore + '*)'
+_prompt_chars = r'[\-\w\(\)@:~]'
+_filename = r'(?:[\w\+\-\._]+)'
+_path = r'(?:(?:' + _filename + r')?(?:/' + _filename + r')*/?)'
+_any_path = r'(?:' + _path + r'|~' + _path + r'?)'
+_host = r'(?:[\w+\-\.]+)'
+_user = r'(?:[\w+\-]+)'
+_user_host = r'(?:(?:' + _user + r'\@)?' + _host + r')'
+_prompt_re = [re.compile(_prompt_start
+                         + r'[\[\<]?'
+                         + r'\w+'
+                         + _user_host + r'?'
+                         + r':?'
+                         + _any_path + r'?'
+                         + r'[: ]?'
+                         + _any_path + r'?'
+                         + r'(?:\(' + _filename + '\))?'
+                         + r'[\]\-]?'
+                         + r'[#>%\$\]] ?'
+                         + _unprintable + r'*'
+                         + r'\Z', _flags)]
 
-_user_re    = [re.compile(r'(user ?name|user|login): *$', _flags)]
-_pass_re    = [re.compile(r'password:? *$',               _flags)]
-_errors     = [r'error',
-               r'invalid',
-               r'incomplete',
-               r'unrecognized',
-               r'unknown command',
-               r'connection timed out',
-               r'[^\r\n]+ not found']
-_error_re   = [re.compile(r'^%?\s*(?:' + '|'.join(_errors) + r')', _flags)]
+_user_re = [re.compile(r'(user ?name|user|login): *$', _flags)]
+_pass_re = [re.compile(r'password:? *$',               _flags)]
+_errors = [r'error',
+           r'invalid',
+           r'incomplete',
+           r'unrecognized',
+           r'unknown command',
+           r'connection timed out',
+           r'[^\r\n]+ not found']
+_error_re = [re.compile(r'^%?\s*(?:' + '|'.join(_errors) + r')', _flags)]
 _login_fail = [r'bad secrets',
                r'denied',
                r'invalid',
@@ -71,17 +72,19 @@ _login_fail = [r'bad secrets',
                r'connection timed out',
                r'failed',
                r'failure']
-_login_fail_re = [re.compile(_nl          \
-                           + r'[^\r\n]*'  \
-                           + r'(?:' + '|'.join(_login_fail) + r')', _flags)]
+_login_fail_re = [re.compile(_nl
+                             + r'[^\r\n]*'
+                             + r'(?:' + '|'.join(_login_fail) + r')', _flags)]
+
 
 class Driver(object):
+
     def __init__(self, name):
-        self.name           = name
-        self.user_re        = _user_re
-        self.password_re    = _pass_re
-        self.prompt_re      = _prompt_re
-        self.error_re       = _error_re
+        self.name = name
+        self.user_re = _user_re
+        self.password_re = _pass_re
+        self.prompt_re = _prompt_re
+        self.error_re = _error_re
         self.login_error_re = _login_fail_re
 
     def check_head_for_os(self, string):

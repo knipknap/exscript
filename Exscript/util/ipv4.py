@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -28,11 +28,13 @@ import struct
 import math
 import re
 
+
 def _least_bit(number):
     for i in range(0, 32):
         if number & (0x00000001 << i) != 0:
             return i
     return 32
+
 
 def _highest_bit(number):
     if number == 0:
@@ -45,6 +47,7 @@ def _highest_bit(number):
     number |= number >> 16
     number += 1
     return math.sqrt(number)
+
 
 def is_ip(string):
     """
@@ -63,6 +66,7 @@ def is_ip(string):
             return False
     return True
 
+
 def normalize_ip(ip):
     """
     Transform the address into a fixed-length form, such as:
@@ -79,6 +83,7 @@ def normalize_ip(ip):
         raise ValueError('ip should be 4 tuples')
     return '.'.join(str(int(l)).rjust(3, '0') for l in theip)
 
+
 def clean_ip(ip):
     """
     Cleans the ip address up, useful for removing leading zeros, e.g.::
@@ -91,6 +96,7 @@ def clean_ip(ip):
     :return: The cleaned up IP.
     """
     return '.'.join(str(int(i)) for i in ip.split('.'))
+
 
 def ip2int(ip):
     """
@@ -105,6 +111,7 @@ def ip2int(ip):
         return 0xFFFFFFFF
     return struct.unpack('!L', socket.inet_aton(ip))[0]
 
+
 def int2ip(number):
     """
     Converts the given integer value to an IP address.
@@ -117,6 +124,7 @@ def int2ip(number):
     number &= 0xFFFFFFFF
     return socket.inet_ntoa(struct.pack('!L', number))
 
+
 def pfxlen2mask_int(pfxlen):
     """
     Converts the given prefix length to an IP mask value.
@@ -127,6 +135,7 @@ def pfxlen2mask_int(pfxlen):
     :return: The mask, as a long value.
     """
     return 0xFFFFFFFF << (32 - int(pfxlen))
+
 
 def pfxlen2mask(pfxlen):
     """
@@ -139,6 +148,7 @@ def pfxlen2mask(pfxlen):
     """
     return int2ip(pfxlen2mask_int(pfxlen))
 
+
 def mask2pfxlen(mask):
     """
     Converts the given IP mask to a prefix length.
@@ -150,7 +160,8 @@ def mask2pfxlen(mask):
     """
     return 32 - _least_bit(ip2int(mask))
 
-def parse_prefix(prefix, default_length = 24):
+
+def parse_prefix(prefix, default_length=24):
     """
     Splits the given IP prefix into a network address and a prefix length.
     If the prefix does not have a length (i.e., it is a simple IP address),
@@ -167,10 +178,11 @@ def parse_prefix(prefix, default_length = 24):
         network, pfxlen = prefix.split('/')
     else:
         network = prefix
-        pfxlen  = default_length
+        pfxlen = default_length
     return network, int(pfxlen)
 
-def network(prefix, default_length = 24):
+
+def network(prefix, default_length=24):
     """
     Given a prefix, this function returns the corresponding network
     address.
@@ -183,10 +195,11 @@ def network(prefix, default_length = 24):
     :return: The IP network address.
     """
     address, pfxlen = parse_prefix(prefix, default_length)
-    ip              = ip2int(address)
+    ip = ip2int(address)
     return int2ip(ip & pfxlen2mask_int(pfxlen))
 
-def broadcast(prefix, default_length = 24):
+
+def broadcast(prefix, default_length=24):
     """
     Given a prefix, this function returns the corresponding broadcast
     address.
@@ -199,8 +212,9 @@ def broadcast(prefix, default_length = 24):
     :return: The IP broadcast address.
     """
     address, pfxlen = parse_prefix(prefix, default_length)
-    ip              = ip2int(address)
+    ip = ip2int(address)
     return int2ip(ip | ~pfxlen2mask_int(pfxlen))
+
 
 def remote_ip(local_ip):
     """
@@ -215,8 +229,9 @@ def remote_ip(local_ip):
     :return: The other IP address of the link address pair.
     """
     local_ip = ip2int(local_ip)
-    network  = local_ip & pfxlen2mask_int(30)
+    network = local_ip & pfxlen2mask_int(30)
     return int2ip(network + 3 - (local_ip - network))
+
 
 def sort(iterable):
     """

@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -26,18 +26,20 @@ from __future__ import division
 import Exscript.interpreter.Term
 from Exscript.parselib import Token
 
+
 class ExpressionNode(Token):
-    def __init__(self, lexer, parser, parent, parent_node = None):
+
+    def __init__(self, lexer, parser, parent, parent_node=None):
         # Skip whitespace before initializing the token to make sure that self.start
         # points to the beginning of the expression (which makes for prettier error
         # messages).
         lexer.skip(['whitespace', 'newline'])
 
         Token.__init__(self, 'ExpressionNode', lexer, parser, parent)
-        self.lft         = None
-        self.rgt         = None
-        self.op          = None
-        self.op_type     = None
+        self.lft = None
+        self.rgt = None
+        self.op = None
+        self.op_type = None
         self.parent_node = parent_node
 
         # The "not" operator requires special treatment because it is
@@ -69,7 +71,6 @@ class ExpressionNode(Token):
         self.rgt = ExpressionNode(lexer, parser, parent, self)
         self.mark_end()
 
-
     def priority(self):
         if self.op is None:
             return 8
@@ -91,7 +92,6 @@ class ExpressionNode(Token):
             return 1
         else:
             raise Exception('Invalid operator.')
-
 
     def value(self, context):
         # Special behavior where we only have one term.
@@ -132,7 +132,8 @@ class ExpressionNode(Token):
         elif self.op == 'matches':
             regex = rgt_lst
             # The "matches" keyword requires a regular expression as the right hand
-            # operand. The exception throws if "regex" does not have a match() method.
+            # operand. The exception throws if "regex" does not have a match()
+            # method.
             try:
                 regex.match(str(lft))
             except AttributeError:
@@ -143,7 +144,7 @@ class ExpressionNode(Token):
                     return [1]
             return [0]
         elif self.op == 'is not':
-            #print "LFT: '%s', RGT: '%s', RES: %s" % (lft, rgt, [lft != rgt])
+            # print "LFT: '%s', RGT: '%s', RES: %s" % (lft, rgt, [lft != rgt])
             return [lft != rgt]
         elif self.op == 'in':
             return [lft in rgt_lst]
@@ -174,8 +175,7 @@ class ExpressionNode(Token):
         elif self.op == '-':
             return [int(lft) - int(rgt)]
 
-
-    def dump(self, indent = 0):
+    def dump(self, indent=0):
         print((' ' * indent) + self.name, self.op, 'start')
         if self.lft is not None:
             self.lft.dump(indent + 1)

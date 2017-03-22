@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,25 +25,27 @@ Defines the behavior of a device, as needed by :class:`Exscript.servers`.
 """
 from Exscript.emulators import CommandSet
 
+
 class VirtualDevice(object):
+
     """
     An object that emulates a remote device.
     """
     LOGIN_TYPE_PASSWORDONLY, \
-    LOGIN_TYPE_USERONLY, \
-    LOGIN_TYPE_BOTH, \
-    LOGIN_TYPE_NONE = range(1, 5)
+        LOGIN_TYPE_USERONLY, \
+        LOGIN_TYPE_BOTH, \
+        LOGIN_TYPE_NONE = range(1, 5)
 
     PROMPT_STAGE_USERNAME, \
-    PROMPT_STAGE_PASSWORD, \
-    PROMPT_STAGE_CUSTOM = range(1, 4)
+        PROMPT_STAGE_PASSWORD, \
+        PROMPT_STAGE_CUSTOM = range(1, 4)
 
     def __init__(self,
                  hostname,
-                 echo       = True,
-                 login_type = LOGIN_TYPE_BOTH,
-                 strict     = True,
-                 banner     = None):
+                 echo=True,
+                 login_type=LOGIN_TYPE_BOTH,
+                 strict=True,
+                 banner=None):
         """
         :type  hostname: str
         :param hostname: The hostname, used for the prompt.
@@ -54,14 +56,14 @@ class VirtualDevice(object):
         :keyword echo: whether to echo the command in a response.
         :keyword strict: Whether to raise when a given command has no handler.
         """
-        self.hostname        = hostname
-        self.banner          = banner or 'Welcome to %s!\n' % str(hostname)
-        self.echo            = echo
-        self.login_type      = login_type
-        self.prompt          = hostname + '> '
-        self.logged_in       = False
-        self.commands        = CommandSet(strict = strict)
-        self.user_prompt     = 'User: '
+        self.hostname = hostname
+        self.banner = banner or 'Welcome to %s!\n' % str(hostname)
+        self.echo = echo
+        self.login_type = login_type
+        self.prompt = hostname + '> '
+        self.logged_in = False
+        self.commands = CommandSet(strict=strict)
+        self.user_prompt = 'User: '
         self.password_prompt = 'Password: '
         self.init()
 
@@ -105,7 +107,7 @@ class VirtualDevice(object):
         """
         self.prompt = prompt
 
-    def add_command(self, command, handler, prompt = True):
+    def add_command(self, command, handler, prompt=True):
         """
         Registers a command.
 
@@ -131,7 +133,7 @@ class VirtualDevice(object):
             thehandler = handler
         self.commands.add(command, thehandler)
 
-    def add_commands_from_file(self, filename, autoprompt = True):
+    def add_commands_from_file(self, filename, autoprompt=True):
         """
         Wrapper around add_command_handler that reads the handlers from the
         file with the given name. The file is a Python script containing

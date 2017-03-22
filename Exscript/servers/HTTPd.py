@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -35,10 +35,12 @@ from SocketServer import ThreadingMixIn
 
 if sys.version_info < (2, 5):
     import md5
+
     def md5hex(x):
         return md5.md5(x).hexdigest()
 else:
     import hashlib
+
     def md5hex(x):
         return hashlib.md5(x).hexdigest()
 
@@ -63,6 +65,7 @@ default_realm = 'exscript'
 # byte literal.
 _HEADER_NEWLINES = [x.encode('ascii') for x in (u'\r\n', u'\n', u'')]
 
+
 def _parse_url(path):
     """Given a urlencoded path, returns the path and the dictionary of
     query arguments, all in Unicode."""
@@ -86,6 +89,7 @@ def _parse_url(path):
 
     return path, args
 
+
 def _error_401(handler, msg):
     handler.send_response(401)
     realm = handler.server.realm
@@ -100,6 +104,7 @@ def _error_401(handler, msg):
     handler.rfile.close()
     handler.wfile.write(msg.encode('utf8'))
     handler.wfile.close()
+
 
 def _require_authenticate(func):
     '''A decorator to add digest authorization checks to HTTP Request Handlers'''
@@ -139,7 +144,7 @@ def _require_authenticate(func):
         # Check the digest string.
         location = u'%s:%s' % (self.command, self.path)
         location = md5hex(location.encode('utf8'))
-        pwhash   = md5hex('%s:%s:%s' % (username, self.server.realm, password))
+        pwhash = md5hex('%s:%s:%s' % (username, self.server.realm, password))
 
         if 'qop' in cred:
             info = (cred['nonce'],
@@ -161,7 +166,9 @@ def _require_authenticate(func):
 
     return wrapped
 
+
 class HTTPd(ThreadingMixIn, HTTPServer):
+
     """
     An HTTP server, derived from Python's HTTPServer but with added
     support for HTTP/Digest. Usage::
@@ -180,7 +187,7 @@ class HTTPd(ThreadingMixIn, HTTPServer):
     """
     daemon_threads = True
 
-    def __init__(self, addr, handler_cls, user_data = None):
+    def __init__(self, addr, handler_cls, user_data=None):
         """
         Constructor.
 
@@ -191,9 +198,9 @@ class HTTPd(ThreadingMixIn, HTTPServer):
         :type  user_data: object
         :param user_data: Optional data that, stored in self.user_data.
         """
-        self.debug     = False
-        self.realm     = default_realm
-        self.accounts  = {}
+        self.debug = False
+        self.realm = default_realm
+        self.accounts = {}
         self.user_data = user_data
         HTTPServer.__init__(self, addr, handler_cls)
 
@@ -221,7 +228,9 @@ class HTTPd(ThreadingMixIn, HTTPServer):
         if self.debug:
             print(msg)
 
+
 class RequestHandler(BaseHTTPRequestHandler):
+
     """
     A drop-in replacement for Python's BaseHTTPRequestHandler that
     handles HTTP/Digest.
@@ -229,7 +238,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def _do_POSTGET(self, handler):
         """handle an HTTP request"""
-        # at first, assume that the given path is the actual path and there are no arguments
+        # at first, assume that the given path is the actual path and there are
+        # no arguments
         self.server._dbg(self.path)
 
         self.path, self.args = _parse_url(self.path)

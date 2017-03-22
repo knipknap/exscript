@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,16 +25,19 @@ from Exscript.workqueue.Job import Thread, Process
 from Exscript.workqueue.Pipeline import Pipeline
 from Exscript.workqueue.MainLoop import MainLoop
 
+
 class WorkQueue(object):
+
     """
     This class implements the asynchronous workqueue and is the main API
     for using the workqueue module.
     """
+
     def __init__(self,
-                 collection = None,
-                 debug = 0,
-                 max_threads = 1,
-                 mode = 'threading'):
+                 collection=None,
+                 debug=0,
+                 max_threads=1,
+                 mode='threading'):
         """
         Constructor.
 
@@ -54,18 +57,18 @@ class WorkQueue(object):
         else:
             self.collection = collection
             collection.set_max_working(max_threads)
-        self.job_init_event      = Event()
-        self.job_started_event   = Event()
-        self.job_error_event     = Event()
+        self.job_init_event = Event()
+        self.job_started_event = Event()
+        self.job_error_event = Event()
         self.job_succeeded_event = Event()
-        self.job_aborted_event   = Event()
-        self.queue_empty_event   = Event()
-        self.debug               = debug
-        self.main_loop           = None
+        self.job_aborted_event = Event()
+        self.queue_empty_event = Event()
+        self.debug = debug
+        self.main_loop = None
         self._init()
 
     def _init(self):
-        self.main_loop       = MainLoop(self.collection, self.job_cls)
+        self.main_loop = MainLoop(self.collection, self.job_cls)
         self.main_loop.debug = self.debug
         self.main_loop.job_init_event.listen(self.job_init_event)
         self.main_loop.job_started_event.listen(self.job_started_event)
@@ -79,7 +82,7 @@ class WorkQueue(object):
         if self.main_loop is None:
             raise Exception('main loop is already destroyed')
 
-    def set_debug(self, debug = 1):
+    def set_debug(self, debug=1):
         """
         Set the debug level.
 
@@ -87,7 +90,7 @@ class WorkQueue(object):
         :param debug: The debug level.
         """
         self._check_if_ready()
-        self.debug           = debug
+        self.debug = debug
         self.main_loop.debug = debug
 
     def get_max_threads(self):
@@ -112,7 +115,7 @@ class WorkQueue(object):
         self._check_if_ready()
         self.collection.set_max_working(max_threads)
 
-    def enqueue(self, function, name = None, times = 1, data = None):
+    def enqueue(self, function, name=None, times=1, data=None):
         """
         Appends a function to the queue for execution. The times argument
         specifies the number of attempts if the function raises an exception.
@@ -133,7 +136,7 @@ class WorkQueue(object):
         self._check_if_ready()
         return self.main_loop.enqueue(function, name, times, data)
 
-    def enqueue_or_ignore(self, function, name = None, times = 1, data = None):
+    def enqueue_or_ignore(self, function, name=None, times=1, data=None):
         """
         Like enqueue(), but does nothing if a function with the same name
         is already in the queue.
@@ -155,10 +158,10 @@ class WorkQueue(object):
 
     def priority_enqueue(self,
                          function,
-                         name        = None,
-                         force_start = False,
-                         times       = 1,
-                         data        = None):
+                         name=None,
+                         force_start=False,
+                         times=1,
+                         data=None):
         """
         Like :class:`enqueue()`, but adds the given function at the top of the
         queue.
@@ -187,10 +190,10 @@ class WorkQueue(object):
 
     def priority_enqueue_or_raise(self,
                                   function,
-                                  name        = None,
-                                  force_start = False,
-                                  times       = 1,
-                                  data        = None):
+                                  name=None,
+                                  force_start=False,
+                                  times=1,
+                                  data=None):
         """
         Like priority_enqueue(), but if a function with the same name is
         already in the queue, the existing function is moved to the top of
@@ -247,7 +250,7 @@ class WorkQueue(object):
         """
         self.collection.wait_all()
 
-    def shutdown(self, restart = True):
+    def shutdown(self, restart=True):
         """
         Stop the execution of enqueued jobs, and wait for all running
         jobs to complete. This method is synchronous and returns as soon

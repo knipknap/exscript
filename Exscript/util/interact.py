@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -29,11 +29,13 @@ import sys
 import getpass
 import ConfigParser
 import shutil
-from tempfile           import NamedTemporaryFile
-from Exscript           import Account
+from tempfile import NamedTemporaryFile
+from Exscript import Account
 from Exscript.util.cast import to_list
 
+
 class InputHistory(object):
+
     """
     When prompting a user for input it is often useful to record his
     input in a file, and use previous input as a default value.
@@ -42,8 +44,8 @@ class InputHistory(object):
     """
 
     def __init__(self,
-                 filename = '~/.exscript_history',
-                 section  = os.path.basename(sys.argv[0])):
+                 filename='~/.exscript_history',
+                 section=os.path.basename(sys.argv[0])):
         """
         Constructor. The filename argument allows for listing on or
         more config files, and is passed to Python's RawConfigParser; please
@@ -63,8 +65,8 @@ class InputHistory(object):
         :param section: The section in the configfile.
         """
         self.section = section
-        self.parser  = ConfigParser.RawConfigParser()
-        filename     = os.path.expanduser(filename)
+        self.parser = ConfigParser.RawConfigParser()
+        filename = os.path.expanduser(filename)
 
         try:
             self.file = open(filename, 'a+')
@@ -77,7 +79,7 @@ class InputHistory(object):
         if not self.parser.has_section(self.section):
             self.parser.add_section(self.section)
 
-    def get(self, key, default = None):
+    def get(self, key, default=None):
         """
         Returns the input with the given key from the section that was
         passed to the constructor. If either the section or the key
@@ -116,7 +118,7 @@ class InputHistory(object):
             return None
 
         self.parser.set(self.section, key, value)
-        with NamedTemporaryFile(delete = False) as tmpfile:
+        with NamedTemporaryFile(delete=False) as tmpfile:
             self.parser.write(tmpfile)
 
         self.file.close()
@@ -124,13 +126,14 @@ class InputHistory(object):
         self.file = open(self.file.name)
         return value
 
+
 def prompt(key,
            message,
-           default = None,
-           doverh  = True,
-           strip   = True,
-           check   = None,
-           history = None):
+           default=None,
+           doverh=True,
+           strip=True,
+           check=None,
+           history=None):
     """
     Prompt the user for input. This function is similar to Python's built
     in raw_input, with the following differences:
@@ -211,7 +214,8 @@ def prompt(key,
     history.set(key, value)
     return value
 
-def get_filename(key, message, default = None, history = None):
+
+def get_filename(key, message, default=None, history=None):
     """
     Like :class:`prompt()`, but only accepts the name of an existing file
     as an input.
@@ -229,6 +233,7 @@ def get_filename(key, message, default = None, history = None):
         if not os.path.isfile(string):
             return 'File not found. Please enter a filename.'
     return prompt(key, message, default, True, _validate, history)
+
 
 def get_user(prompt=None):
     """
@@ -256,6 +261,7 @@ def get_user(prompt=None):
             user = env_user
     return user
 
+
 def get_login():
     """
     Prompts the user for the login name using get_user(), and also asks for
@@ -266,9 +272,10 @@ def get_login():
     :rtype:  (string, string)
     :return: A tuple containing the username and the password.
     """
-    user     = get_user()
+    user = get_user()
     password = getpass.getpass('Please enter your password: ')
     return user, password
+
 
 def read_login():
     """

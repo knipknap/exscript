@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,16 +23,19 @@
 """
 Representing a device to connect with.
 """
-from Exscript.Account   import Account
+from Exscript.Account import Account
 from Exscript.util.cast import to_list
 from Exscript.util.ipv4 import is_ip, clean_ip
-from Exscript.util.url  import Url
+from Exscript.util.url import Url
+
 
 def _is_ip(string):
     # Adds IPv6 support.
     return ':' in string or is_ip(string)
 
+
 class Host(object):
+
     """
     Represents a device on which to open a connection.
     """
@@ -44,7 +47,7 @@ class Host(object):
                  'tcp_port',
                  'options')
 
-    def __init__(self, uri, default_protocol = 'telnet'):
+    def __init__(self, uri, default_protocol='telnet'):
         """
         Constructor. The given uri is passed to Host.set_uri().
         The default_protocol argument defines the protocol that is used
@@ -56,13 +59,13 @@ class Host(object):
         :param default_protocol: The protocol name.
         """
         self.protocol = default_protocol
-        self.vars     = None    # To save memory, do not init with a dict.
-        self.account  = None
-        self.name     = None
-        self.address  = None
+        self.vars = None    # To save memory, do not init with a dict.
+        self.account = None
+        self.name = None
+        self.address = None
         self.tcp_port = None
-        self.options  = None
-        self.set_uri(uri) 
+        self.options = None
+        self.set_uri(uri)
 
     def __copy__(self):
         host = Host(self.get_uri())
@@ -94,7 +97,7 @@ class Host(object):
         except ValueError:
             raise ValueError('Hostname parse error: ' + repr(uri))
         hostname = uri.hostname or ''
-        name     = uri.path and hostname + uri.path or hostname
+        name = uri.path and hostname + uri.path or hostname
         self.set_protocol(uri.protocol)
         self.set_tcp_port(uri.port)
         self.set_name(name)
@@ -121,13 +124,13 @@ class Host(object):
         url = Url()
         url.protocol = self.get_protocol()
         url.hostname = self.get_address()
-        url.port     = self.get_tcp_port()
-        url.vars     = dict((k, to_list(v))
-                            for (k, v) in self.get_all().iteritems()
-                            if isinstance(v, str) or isinstance(v, list))
+        url.port = self.get_tcp_port()
+        url.vars = dict((k, to_list(v))
+                        for (k, v) in self.get_all().iteritems()
+                        if isinstance(v, str) or isinstance(v, list))
 
         if self.account:
-            url.username  = self.account.get_name()
+            url.username = self.account.get_name()
             url.password1 = self.account.get_password()
             url.password2 = self.account.authorization_password
 
@@ -244,7 +247,7 @@ class Host(object):
             self.options = {}
         self.options[name] = value
 
-    def get_option(self, name, default = None):
+    def get_option(self, name, default=None):
         """
         Returns the value of the given option if it is defined, returns
         the given default value otherwise.
@@ -377,7 +380,7 @@ class Host(object):
             return False
         return name in self.vars
 
-    def get(self, name, default = None):
+    def get(self, name, default=None):
         """
         Returns the value of the given variable, or the given default
         value if the variable is not defined.

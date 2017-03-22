@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -28,6 +28,7 @@ import sys
 import struct
 from subprocess import Popen, PIPE
 
+
 def _get_terminal_size(fd):
     try:
         import fcntl
@@ -37,7 +38,7 @@ def _get_terminal_size(fd):
     s = struct.pack('HHHH', 0, 0, 0, 0)
     try:
         x = fcntl.ioctl(fd, termios.TIOCGWINSZ, s)
-    except IOError: # Window size ioctl not supported.
+    except IOError:  # Window size ioctl not supported.
         return None
     try:
         rows, cols, x_pixels, y_pixels = struct.unpack('HHHH', x)
@@ -45,7 +46,8 @@ def _get_terminal_size(fd):
         return None
     return rows, cols
 
-def get_terminal_size(default_rows = 25, default_cols = 80):
+
+def get_terminal_size(default_rows=25, default_cols=80):
     """
     Returns the number of lines and columns of the current terminal.
     It attempts several strategies to determine the size and if all fail,
@@ -113,12 +115,12 @@ def get_terminal_size(default_rows = 25, default_cols = 80):
     # Try `stty size`
     devnull = open(os.devnull, 'w')
     try:
-        process = Popen(['stty', 'size'], stderr = devnull, stdout = PIPE)
+        process = Popen(['stty', 'size'], stderr=devnull, stdout=PIPE)
     except OSError:
         pass
     else:
         errcode = process.wait()
-        output  = process.stdout.read()
+        output = process.stdout.read()
         devnull.close()
         try:
             rows, cols = output.split()

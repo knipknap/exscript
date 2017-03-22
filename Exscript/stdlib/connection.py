@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -20,8 +20,9 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from Exscript             import Account
+from Exscript import Account
 from Exscript.stdlib.util import secure_function
+
 
 @secure_function
 def authenticate(scope):
@@ -32,8 +33,9 @@ def authenticate(scope):
     scope.get('__connection__').app_authenticate()
     return True
 
+
 @secure_function
-def authenticate_user(scope, user = [None], password = [None]):
+def authenticate_user(scope, user=[None], password=[None]):
     """
     Like authenticate(), but logs in using the given user and password.
     If a user and password are not given, the function uses the same
@@ -54,8 +56,9 @@ def authenticate_user(scope, user = [None], password = [None]):
         conn.app_authenticate(account)
     return True
 
+
 @secure_function
-def authorize(scope, password = [None]):
+def authorize(scope, password=[None]):
     """
     Looks for a password prompt on the current connection
     and enters the given password.
@@ -66,7 +69,7 @@ def authorize(scope, password = [None]):
     :type  password: string
     :param password: A password.
     """
-    conn     = scope.get('__connection__')
+    conn = scope.get('__connection__')
     password = password[0]
     if password is None:
         conn.app_authorize()
@@ -75,8 +78,9 @@ def authorize(scope, password = [None]):
         conn.app_authorize(account)
     return True
 
+
 @secure_function
-def auto_authorize(scope, password = [None]):
+def auto_authorize(scope, password=[None]):
     """
     Executes a command on the remote host that causes an authorization
     procedure to be started, then authorizes using the given password
@@ -90,7 +94,7 @@ def auto_authorize(scope, password = [None]):
     :type  password: string
     :param password: A password.
     """
-    conn     = scope.get('__connection__')
+    conn = scope.get('__connection__')
     password = password[0]
     if password is None:
         conn.auto_app_authorize()
@@ -98,6 +102,7 @@ def auto_authorize(scope, password = [None]):
         account = Account('', password)
         conn.auto_app_authorize(account)
     return True
+
 
 @secure_function
 def autoinit(scope):
@@ -114,6 +119,7 @@ def autoinit(scope):
     scope.get('__connection__').autoinit()
     return True
 
+
 @secure_function
 def close(scope):
     """
@@ -123,8 +129,9 @@ def close(scope):
     """
     conn = scope.get('__connection__')
     conn.close(1)
-    scope.define(__response__ = conn.response)
+    scope.define(__response__=conn.response)
     return True
+
 
 @secure_function
 def exec_(scope, data):
@@ -140,14 +147,15 @@ def exec_(scope, data):
     :type  data: string
     :param data: The data that is sent.
     """
-    conn     = scope.get('__connection__')
+    conn = scope.get('__connection__')
     response = []
     for line in data:
         conn.send(line)
         conn.expect_prompt()
         response += conn.response.split('\n')[1:]
-    scope.define(__response__ = response)
+    scope.define(__response__=response)
     return True
+
 
 @secure_function
 def execline(scope, data):
@@ -158,13 +166,14 @@ def execline(scope, data):
     :type  data: string
     :param data: The data that is sent.
     """
-    conn     = scope.get('__connection__')
+    conn = scope.get('__connection__')
     response = []
     for line in data:
         conn.execute(line)
         response += conn.response.split('\n')[1:]
-    scope.define(__response__ = response)
+    scope.define(__response__=response)
     return True
+
 
 @secure_function
 def guess_os(scope):
@@ -181,6 +190,7 @@ def guess_os(scope):
     conn = scope.get('__connection__')
     return [conn.guess_os()]
 
+
 @secure_function
 def send(scope, data):
     """
@@ -194,6 +204,7 @@ def send(scope, data):
     for line in data:
         conn.send(line)
     return True
+
 
 @secure_function
 def sendline(scope, data):
@@ -209,6 +220,7 @@ def sendline(scope, data):
         conn.send(line + '\r')
     return True
 
+
 @secure_function
 def wait_for(scope, prompt):
     """
@@ -219,11 +231,12 @@ def wait_for(scope, prompt):
     """
     conn = scope.get('__connection__')
     conn.expect(prompt)
-    scope.define(__response__ = conn.response)
+    scope.define(__response__=conn.response)
     return True
 
+
 @secure_function
-def set_prompt(scope, prompt = None):
+def set_prompt(scope, prompt=None):
     """
     Defines the pattern that is recognized at any future time when Exscript
     needs to wait for a prompt.
@@ -242,8 +255,9 @@ def set_prompt(scope, prompt = None):
     conn.set_prompt(prompt)
     return True
 
+
 @secure_function
-def set_error(scope, error_re = None):
+def set_error(scope, error_re=None):
     """
     Defines a pattern that, whenever detected in the response of the remote
     host, causes an error to be raised.
@@ -258,6 +272,7 @@ def set_error(scope, error_re = None):
     conn = scope.get('__connection__')
     conn.set_error_prompt(error_re)
     return True
+
 
 @secure_function
 def set_timeout(scope, timeout):

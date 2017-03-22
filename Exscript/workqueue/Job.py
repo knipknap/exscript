@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -28,11 +28,13 @@ from functools import partial
 from multiprocessing import Pipe
 from Exscript.util.impl import serializeable_sys_exc_info
 
+
 class _ChildWatcher(threading.Thread):
+
     def __init__(self, child, callback):
         threading.Thread.__init__(self)
         self.child = child
-        self.cb    = callback
+        self.cb = callback
 
     def __copy__(self):
         watcher = _ChildWatcher(copy(self.child), self.cb)
@@ -54,15 +56,17 @@ class _ChildWatcher(threading.Thread):
         else:
             self.cb(result)
 
+
 def _make_process_class(base, clsname):
     class process_cls(base):
+
         def __init__(self, id, function, name, data):
-            base.__init__(self, name = name)
-            self.id       = id
-            self.pipe     = None
+            base.__init__(self, name=name)
+            self.id = id
+            self.pipe = None
             self.function = function
             self.failures = 0
-            self.data     = data
+            self.data = data
 
         def run(self):
             """
@@ -86,6 +90,7 @@ def _make_process_class(base, clsname):
 Thread = _make_process_class(threading.Thread, 'Thread')
 Process = _make_process_class(multiprocessing.Process, 'Process')
 
+
 class Job(object):
     __slots__ = ('id',
                  'func',
@@ -97,14 +102,14 @@ class Job(object):
                  'watcher')
 
     def __init__(self, function, name, times, data):
-        self.id       = None
-        self.func     = function
-        self.name     = name is None and str(id(function)) or name
-        self.times    = times
+        self.id = None
+        self.func = function
+        self.name = name is None and str(id(function)) or name
+        self.times = times
         self.failures = 0
-        self.data     = data
-        self.child    = None
-        self.watcher  = None
+        self.data = data
+        self.child = None
+        self.watcher = None
 
     def start(self, child_cls, on_complete):
         self.child = child_cls(self.id, self.func, self.name, self.data)

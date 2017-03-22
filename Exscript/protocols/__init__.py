@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -34,6 +34,7 @@ protocol_map = {'dummy':  Dummy,
                 'ssh':    SSH2,
                 'ssh2':   SSH2}
 
+
 def get_protocol_from_name(name):
     """
     Returns the protocol class for the protocol with the given name.
@@ -47,6 +48,7 @@ def get_protocol_from_name(name):
     if not cls:
         raise ValueError('Unsupported protocol "%s".' % name)
     return cls
+
 
 def create_protocol(name, **kwargs):
     """
@@ -62,7 +64,8 @@ def create_protocol(name, **kwargs):
         raise ValueError('Unsupported protocol "%s".' % name)
     return cls(**kwargs)
 
-def prepare(host, default_protocol = 'telnet', **kwargs):
+
+def prepare(host, default_protocol='telnet', **kwargs):
     """
     Creates an instance of the protocol by either parsing the given
     URL-formatted hostname using :class:`Exscript.util.url`, or according to
@@ -77,15 +80,16 @@ def prepare(host, default_protocol = 'telnet', **kwargs):
     :rtype:  Protocol
     :return: An instance of the protocol.
     """
-    host     = to_host(host, default_protocol = default_protocol)
+    host = to_host(host, default_protocol=default_protocol)
     protocol = host.get_protocol()
-    conn     = create_protocol(protocol, **kwargs)
+    conn = create_protocol(protocol, **kwargs)
     if protocol == 'pseudo':
         filename = host.get_address()
         conn.device.add_commands_from_file(filename)
     return conn
 
-def connect(host, default_protocol = 'telnet', **kwargs):
+
+def connect(host, default_protocol='telnet', **kwargs):
     """
     Like :class:`prepare()`, but also connects to the host by calling
     :class:`Protocol.connect()`. If the URL or host contain any login info, this
@@ -100,14 +104,14 @@ def connect(host, default_protocol = 'telnet', **kwargs):
     :rtype:  Protocol
     :return: An instance of the protocol.
     """
-    host    = to_host(host)
-    conn    = prepare(host, default_protocol, **kwargs)
+    host = to_host(host)
+    conn = prepare(host, default_protocol, **kwargs)
     account = host.get_account()
     conn.connect(host.get_address(), host.get_tcp_port())
     if account is not None:
         conn.login(account)
     return conn
 
-import inspect 
+import inspect
 __all__ = [name for name, obj in locals().items()
            if not (name.startswith('_') or inspect.ismodule(obj))]

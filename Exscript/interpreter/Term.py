@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -21,20 +21,22 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
-from Exscript.parselib                 import Token
-from Exscript.interpreter.Variable     import Variable
-from Exscript.interpreter.Number       import Number
+from Exscript.parselib import Token
+from Exscript.interpreter.Variable import Variable
+from Exscript.interpreter.Number import Number
 from Exscript.interpreter.FunctionCall import FunctionCall
-from Exscript.interpreter.String       import String
-from Exscript.interpreter.Regex        import Regex
+from Exscript.interpreter.String import String
+from Exscript.interpreter.Regex import Regex
+
 
 class Term(Token):
+
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'Term', lexer, parser, parent)
         self.term = None
-        self.lft  = None
-        self.rgt  = None
-        self.op   = None
+        self.lft = None
+        self.rgt = None
+        self.op = None
 
         # Expect a term.
         ttype, token = lexer.token()
@@ -68,6 +70,6 @@ class Term(Token):
     def value(self, context):
         return self.term.value(context)
 
-    def dump(self, indent = 0):
+    def dump(self, indent=0):
         print((' ' * indent) + self.name)
         self.term.dump(indent + 1)

@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,11 +25,14 @@ A remote object that acquires/releases an account via a pipe.
 """
 from Exscript.util.impl import Context
 
+
 class AccountProxy(object):
+
     """
     An object that has a 1:1 relation to an account object in another
     process.
     """
+
     def __init__(self, parent):
         """
         Constructor.
@@ -37,13 +40,13 @@ class AccountProxy(object):
         :type  parent: multiprocessing.Connection
         :param parent: A pipe to the associated account manager.
         """
-        self.parent                 = parent
-        self.account_hash           = None
-        self.host                   = None
-        self.user                   = None
-        self.password               = None
+        self.parent = parent
+        self.account_hash = None
+        self.host = None
+        self.user = None
+        self.password = None
         self.authorization_password = None
-        self.key                    = None
+        self.key = None
 
     @staticmethod
     def for_host(parent, host):
@@ -126,10 +129,10 @@ class AccountProxy(object):
             return False
 
         self.account_hash, \
-        self.user, \
-        self.password, \
-        self.authorization_password, \
-        self.key = response
+            self.user, \
+            self.password, \
+            self.authorization_password, \
+            self.key = response
         return True
 
     def release(self):

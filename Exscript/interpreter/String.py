@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,7 +25,7 @@ import re
 from Exscript.parselib import Token
 
 varname_re = re.compile(r'((?:__)?[a-zA-Z][\w_]*(?:__)?)')
-string_re  = re.compile(r'(\\?)\$([\w_]*)')
+string_re = re.compile(r'(\\?)\$([\w_]*)')
 
 grammar = [
     ('escaped_data', r'\\.'),
@@ -35,17 +35,19 @@ grammar_c = []
 for thetype, regex in grammar:
     grammar_c.append((thetype, re.compile(regex)))
 
+
 class String(Token):
+
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
         # Create a grammar depending on the delimiting character.
         tok_type, delimiter = lexer.token()
-        escaped_delimiter   = '\\' + delimiter
-        data                = r'[^\r\n\\' + escaped_delimiter + ']+'
-        delimiter_re        = re.compile(escaped_delimiter)
-        data_re             = re.compile(data)
-        grammar_with_delim  = grammar_c[:]
+        escaped_delimiter = '\\' + delimiter
+        data = r'[^\r\n\\' + escaped_delimiter + ']+'
+        delimiter_re = re.compile(escaped_delimiter)
+        data_re = re.compile(data)
+        grammar_with_delim = grammar_c[:]
         grammar_with_delim.append(('string_data',      data_re))
         grammar_with_delim.append(('string_delimiter', delimiter_re))
         lexer.set_grammar(grammar_with_delim)
@@ -77,22 +79,22 @@ class String(Token):
             return '\n'
         elif char == 'r':
             return '\r'
-        elif char == '$': # Escaping is done later, in variable_sub_cb.
+        elif char == '$':  # Escaping is done later, in variable_sub_cb.
             return token
         return char
 
     def _variable_error(self, field, msg):
         self.start += self.string.find(field)
-        self.end    = self.start + len(field)
+        self.end = self.start + len(field)
         self.lexer.runtime_error(msg, self)
 
     # Tokens that include variables in a string may use this callback to
     # substitute the variable against its value.
     def variable_sub_cb(self, match):
-        field   = match.group(0)
-        escape  = match.group(1)
+        field = match.group(0)
+        escape = match.group(1)
         varname = match.group(2)
-        value   = self.parent.get(varname)
+        value = self.parent.get(varname)
 
         # Check the variable name syntax.
         if escape:
@@ -126,5 +128,5 @@ class String(Token):
     def value(self, context):
         return [string_re.sub(self.variable_sub_cb, self.string)]
 
-    def dump(self, indent = 0):
+    def dump(self, indent=0):
         print((' ' * indent) + 'String "' + self.string + '"')

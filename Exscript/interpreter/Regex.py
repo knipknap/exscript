@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -35,15 +35,17 @@ modifier_grammar = (
 
 modifier_grammar_c = []
 for thetype, regex in modifier_grammar:
-    modifier_grammar_c.append((thetype, re.compile(regex, re.M|re.S)))
+    modifier_grammar_c.append((thetype, re.compile(regex, re.M | re.S)))
+
 
 class Regex(String):
+
     def __init__(self, lexer, parser, parent):
         self.delimiter = lexer.token()[1]
         # String parser collects the regex.
         String.__init__(self, lexer, parser, parent)
         self.n_groups = len(bracket_re.findall(self.string))
-        self.flags    = 0
+        self.flags = 0
 
         # Collect modifiers.
         lexer.set_grammar(modifier_grammar_c)
@@ -52,7 +54,7 @@ class Regex(String):
                 self.flags = self.flags | re.I
             else:
                 modifier = lexer.token()[1]
-                error    = 'Invalid regular expression modifier "%s"' % modifier
+                error = 'Invalid regular expression modifier "%s"' % modifier
                 lexer.syntax_error(error, self)
         lexer.restore_grammar()
 
@@ -60,7 +62,8 @@ class Regex(String):
         try:
             re.compile(self.string, self.flags)
         except Exception as e:
-            error = 'Invalid regular expression %s: %s' % (repr(self.string), e)
+            error = 'Invalid regular expression %s: %s' % (
+                repr(self.string), e)
             lexer.syntax_error(error, self)
 
     def _escape(self, token):
@@ -73,6 +76,5 @@ class Regex(String):
         pattern = String.value(self, context)[0]
         return re.compile(pattern, self.flags)
 
-
-    def dump(self, indent = 0):
+    def dump(self, indent=0):
         print((' ' * indent) + self.name, self.string)

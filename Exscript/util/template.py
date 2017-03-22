@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,13 +23,14 @@
 """
 Executing Exscript templates on a connection.
 """
-from Exscript             import stdlib
+from Exscript import stdlib
 from Exscript.interpreter import Parser
+
 
 def _compile(conn, filename, template, parser_kwargs, **kwargs):
     if conn:
         hostname = conn.get_host()
-        account  = conn.last_account
+        account = conn.last_account
         username = account is not None and account.get_name() or None
     else:
         hostname = 'undefined'
@@ -39,10 +40,10 @@ def _compile(conn, filename, template, parser_kwargs, **kwargs):
     parser = Parser(**parser_kwargs)
 
     # Define the built-in variables and functions.
-    builtin = dict(__filename__   = [filename or 'undefined'],
-                   __username__   = [username],
-                   __hostname__   = [hostname],
-                   __connection__ = conn)
+    builtin = dict(__filename__=[filename or 'undefined'],
+                   __username__=[username],
+                   __hostname__=[hostname],
+                   __connection__=conn)
     parser.define_object(**builtin)
     parser.define_object(**stdlib.functions)
 
@@ -52,9 +53,11 @@ def _compile(conn, filename, template, parser_kwargs, **kwargs):
     # Compile the template.
     return parser.parse(template, parser.variables.get('__filename__')[0])
 
+
 def _run(conn, filename, template, parser_kwargs, **kwargs):
     compiled = _compile(conn, filename, template, parser_kwargs, **kwargs)
     return compiled.execute()
+
 
 def test(string, **kwargs):
     """
@@ -67,6 +70,7 @@ def test(string, **kwargs):
     :param kwargs: Variables to define in the template.
     """
     _compile(None, None, string, {}, **kwargs)
+
 
 def test_secure(string, **kwargs):
     """
@@ -82,6 +86,7 @@ def test_secure(string, **kwargs):
     """
     _compile(None, None, string, {'secure': True}, **kwargs)
 
+
 def test_file(filename, **kwargs):
     """
     Convenience wrapper around test() that reads the template from a file
@@ -94,7 +99,8 @@ def test_file(filename, **kwargs):
     """
     _compile(None, filename, open(filename).read(), {}, **kwargs)
 
-def eval(conn, string, strip_command = True, **kwargs):
+
+def eval(conn, string, strip_command=True, **kwargs):
     """
     Compiles the given template and executes it on the given
     connection.
@@ -133,7 +139,8 @@ def eval(conn, string, strip_command = True, **kwargs):
     parser_args = {'strip_command': strip_command}
     return _run(conn, None, string, parser_args, **kwargs)
 
-def eval_file(conn, filename, strip_command = True, **kwargs):
+
+def eval_file(conn, filename, strip_command=True, **kwargs):
     """
     Convenience wrapper around eval() that reads the template from a file
     instead.
@@ -147,9 +154,10 @@ def eval_file(conn, filename, strip_command = True, **kwargs):
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
-    template    = open(filename, 'r').read()
+    template = open(filename, 'r').read()
     parser_args = {'strip_command': strip_command}
     return _run(conn, filename, template, parser_args, **kwargs)
+
 
 def paste(conn, string, **kwargs):
     """
@@ -173,6 +181,7 @@ def paste(conn, string, **kwargs):
     :return: The variables that are defined after execution of the script.
     """
     return _run(conn, None, string, {'no_prompt': True}, **kwargs)
+
 
 def paste_file(conn, filename, **kwargs):
     """

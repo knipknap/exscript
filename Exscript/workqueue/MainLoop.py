@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -29,26 +29,28 @@ from Exscript.workqueue.Job import Job
 # See http://bugs.python.org/issue1731717
 multiprocessing.process._cleanup = lambda: None
 
+
 class MainLoop(threading.Thread):
+
     def __init__(self, collection, job_cls):
         threading.Thread.__init__(self)
-        self.job_init_event      = Event()
-        self.job_started_event   = Event()
-        self.job_error_event     = Event()
+        self.job_init_event = Event()
+        self.job_started_event = Event()
+        self.job_error_event = Event()
         self.job_succeeded_event = Event()
-        self.job_aborted_event   = Event()
-        self.queue_empty_event   = Event()
-        self.collection          = collection
-        self.job_cls             = job_cls
-        self.debug               = 5
-        self.daemon              = True
+        self.job_aborted_event = Event()
+        self.queue_empty_event = Event()
+        self.collection = collection
+        self.job_cls = job_cls
+        self.debug = 5
+        self.daemon = True
 
     def _dbg(self, level, msg):
         if self.debug >= level:
             print(msg)
 
     def enqueue(self, function, name, times, data):
-        job    = Job(function, name, times, data)
+        job = Job(function, name, times, data)
         job.id = self.collection.append(job)
         return job.id
 
@@ -56,14 +58,14 @@ class MainLoop(threading.Thread):
         def conditional_append(queue):
             if queue.get_from_name(name) is not None:
                 return None
-            job    = Job(function, name, times, data)
+            job = Job(function, name, times, data)
             job.id = queue.append(job, name)
             return job.id
         return self.collection.with_lock(conditional_append)
 
     def priority_enqueue(self, function, name, force_start, times, data):
-        job    = Job(function, name, times, data)
-        job.id = self.collection.appendleft(job, name, force = force_start)
+        job = Job(function, name, times, data)
+        job.id = self.collection.appendleft(job, name, force=force_start)
         return job.id
 
     def priority_enqueue_or_raise(self,
@@ -75,10 +77,10 @@ class MainLoop(threading.Thread):
         def conditional_append(queue):
             job = queue.get_from_name(name)
             if job is None:
-                job    = Job(function, name, times, data)
+                job = Job(function, name, times, data)
                 job.id = queue.append(job, name)
                 return job.id
-            queue.prioritize(job, force = force_start)
+            queue.prioritize(job, force=force_start)
             return None
         return self.collection.with_lock(conditional_append)
 

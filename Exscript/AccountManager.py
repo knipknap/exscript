@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,7 +25,9 @@ Manages user accounts.
 """
 from Exscript.AccountPool import AccountPool
 
+
 class AccountManager(object):
+
     """
     Keeps track of available user accounts and assigns them to the
     worker threads.
@@ -36,7 +38,7 @@ class AccountManager(object):
         Constructor.
         """
         self.default_pool = None
-        self.pools        = None
+        self.pools = None
         self.reset()
 
     def reset(self):
@@ -44,9 +46,9 @@ class AccountManager(object):
         Removes all account pools.
         """
         self.default_pool = AccountPool()
-        self.pools        = []
+        self.pools = []
 
-    def add_pool(self, pool, match = None):
+    def add_pool(self, pool, match=None):
         """
         Adds a new account pool. If the given match argument is
         None, the pool the default pool. Otherwise, the match argument is
@@ -133,7 +135,7 @@ class AccountManager(object):
                 return account
         return self.default_pool.get_account_from_hash(account_hash)
 
-    def acquire_account(self, account = None, owner = None):
+    def acquire_account(self, account=None, owner=None):
         """
         Acquires the given account. If no account is given, one is chosen
         from the default pool.
@@ -157,7 +159,7 @@ class AccountManager(object):
 
         return self.default_pool.acquire_account(account, owner)
 
-    def acquire_account_for(self, host, owner = None):
+    def acquire_account_for(self, host, owner=None):
         """
         Acquires an account for the given host and returns it.
         The host is passed to each of the match functions that were
@@ -174,10 +176,10 @@ class AccountManager(object):
         # Check whether a matching account pool exists.
         for match, pool in self.pools:
             if match(host) is True:
-                return pool.acquire_account(owner = owner)
+                return pool.acquire_account(owner=owner)
 
         # Else, choose an account from the default account pool.
-        return self.default_pool.acquire_account(owner = owner)
+        return self.default_pool.acquire_account(owner=owner)
 
     def release_accounts(self, owner):
         """

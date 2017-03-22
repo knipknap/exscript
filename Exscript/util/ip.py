@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -26,6 +26,7 @@ Wrapper around the ipv4 and ipv6 modules to handle both, ipv4 and ipv6.
 from Exscript.util import ipv4
 from Exscript.util import ipv6
 
+
 def is_ip(string):
     """
     Returns True if the given string is an IPv4 or IPv6 address, False
@@ -38,12 +39,14 @@ def is_ip(string):
     """
     return ipv4.is_ip(string) or ipv6.is_ip(string)
 
+
 def _call_func(funcname, ip, *args):
     if ipv4.is_ip(ip):
         return ipv4.__dict__[funcname](ip, *args)
     elif ipv6.is_ip(ip):
         return ipv6.__dict__[funcname](ip, *args)
     raise ValueError('neither ipv4 nor ipv6: ' + repr(ip))
+
 
 def normalize_ip(ip):
     """
@@ -58,6 +61,7 @@ def normalize_ip(ip):
     :return: The normalized IP.
     """
     return _call_func('normalize_ip', ip)
+
 
 def clean_ip(ip):
     """

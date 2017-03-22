@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -44,14 +44,14 @@ from Exscript.protocols.drivers.driver import Driver
 # % Incomplete command
 # % Ambiguous command
 
-_user_re     = [re.compile(r'user ?name: ?$', re.I),
-                re.compile(r' login: ?$', re.I)]
+_user_re = [re.compile(r'user ?name: ?$', re.I),
+            re.compile(r' login: ?$', re.I)]
 _password_re = [re.compile(r'[\r\n]Password: ?$', re.I)]
-_prompt_re   = [re.compile(r'[\r\n]?[\-\w+\.:/]+(?:\([^\)]+\)){,3}[>#] ?$')]
-_error_re    = [re.compile(r'% ?Error'),
-                re.compile(r'% ?Invalid input', re.I),
-                re.compile(r'% ?(?:Incomplete|Ambiguous) command', re.I),
-                re.compile(r'connection timed out', re.I)]
+_prompt_re = [re.compile(r'[\r\n]?[\-\w+\.:/]+(?:\([^\)]+\)){,3}[>#] ?$')]
+_error_re = [re.compile(r'% ?Error'),
+             re.compile(r'% ?Invalid input', re.I),
+             re.compile(r'% ?(?:Incomplete|Ambiguous) command', re.I),
+             re.compile(r'connection timed out', re.I)]
 _login_fail = [r'[Bb]ad secrets?',
                r'denied',
                r'invalid',
@@ -60,17 +60,19 @@ _login_fail = [r'[Bb]ad secrets?',
                r'connection timed out',
                r'failed',
                r'failure']
-_login_fail_re = [re.compile(r'[\r\n]'          \
-                           + r'[^\r\n]*'  \
-                           + r'(?:' + '|'.join(_login_fail) + r')', re.I)]
+_login_fail_re = [re.compile(r'[\r\n]'
+                             + r'[^\r\n]*'
+                             + r'(?:' + '|'.join(_login_fail) + r')', re.I)]
+
 
 class EOSDriver(Driver):
+
     def __init__(self):
         Driver.__init__(self, 'eos')
-        self.user_re     = _user_re
+        self.user_re = _user_re
         self.password_re = _password_re
-        self.prompt_re   = _prompt_re
-        self.error_re    = _error_re
+        self.prompt_re = _prompt_re
+        self.error_re = _error_re
         self.login_error_re = _login_fail_re
 
     def init_terminal(self, conn):

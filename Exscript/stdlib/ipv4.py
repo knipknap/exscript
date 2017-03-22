@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -20,11 +20,12 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from Exscript.util        import ipv4
+from Exscript.util import ipv4
 from Exscript.stdlib.util import secure_function
 
+
 @secure_function
-def in_network(scope, prefixes, destination, default_pfxlen = [24]):
+def in_network(scope, prefixes, destination, default_pfxlen=[24]):
     """
     Returns True if the given destination is in the network range that is
     defined by the given prefix (e.g. 10.0.0.1/22). If the given prefix
@@ -47,10 +48,11 @@ def in_network(scope, prefixes, destination, default_pfxlen = [24]):
     needle = ipv4.ip2int(destination[0])
     for prefix in prefixes:
         network, pfxlen = ipv4.parse_prefix(prefix, default_pfxlen[0])
-        mask            = ipv4.pfxlen2mask_int(pfxlen)
+        mask = ipv4.pfxlen2mask_int(pfxlen)
         if needle & mask == ipv4.ip2int(network) & mask:
             return [True]
     return [False]
+
 
 @secure_function
 def mask(scope, ips, mask):
@@ -68,6 +70,7 @@ def mask(scope, ips, mask):
     mask = ipv4.ip2int(mask[0])
     return [ipv4.int2ip(ipv4.ip2int(ip) & mask) for ip in ips]
 
+
 @secure_function
 def mask2pfxlen(scope, masks):
     """
@@ -79,6 +82,7 @@ def mask2pfxlen(scope, masks):
     :return: The prefix length(s) that result(s) from converting the mask.
     """
     return [ipv4.mask2pfxlen(mask) for mask in masks]
+
 
 @secure_function
 def pfxlen2mask(scope, pfxlen):
@@ -92,6 +96,7 @@ def pfxlen2mask(scope, pfxlen):
     """
     return [ipv4.pfxlen2mask(pfx) for pfx in pfxlen]
 
+
 @secure_function
 def network(scope, prefixes):
     """
@@ -104,6 +109,7 @@ def network(scope, prefixes):
     """
     return [ipv4.network(pfx) for pfx in prefixes]
 
+
 @secure_function
 def broadcast(scope, prefixes):
     """
@@ -115,6 +121,7 @@ def broadcast(scope, prefixes):
     :return: The broadcast address(es) of the prefix length(s).
     """
     return [ipv4.broadcast(pfx) for pfx in prefixes]
+
 
 @secure_function
 def pfxmask(scope, ips, pfxlen):
@@ -131,6 +138,7 @@ def pfxmask(scope, ips, pfxlen):
     """
     mask = ipv4.pfxlen2mask_int(pfxlen[0])
     return [ipv4.int2ip(ipv4.ip2int(ip) & mask) for ip in ips]
+
 
 @secure_function
 def remote_ip(scope, local_ips):

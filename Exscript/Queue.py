@@ -43,6 +43,7 @@ from Exscript.workqueue import WorkQueue, Task
 from Exscript.AccountProxy import AccountProxy
 from Exscript.protocols import prepare
 
+
 def _account_factory(accm, host, account):
     if account is None:
         account = host.get_account()
@@ -59,20 +60,21 @@ def _account_factory(accm, host, account):
     account.acquire()
     return account
 
+
 def _prepare_connection(func):
     """
     A decorator that unpacks the host and connection from the job argument
     and passes them as separate arguments to the wrapped function.
     """
     def _wrapped(job, *args, **kwargs):
-        job_id    = id(job)
+        job_id = id(job)
         to_parent = job.data['pipe']
-        host      = job.data['host']
+        host = job.data['host']
 
         # Create a protocol adapter.
         mkaccount = partial(_account_factory, to_parent, host)
-        pargs     = {'account_factory': mkaccount,
-                     'stdout':          job.data['stdout']}
+        pargs = {'account_factory': mkaccount,
+                 'stdout':          job.data['stdout']}
         pargs.update(host.get_options())
         conn = prepare(host, **pargs)
 
@@ -80,14 +82,14 @@ def _prepare_connection(func):
         log_options = get_label(func, 'log_to')
         if log_options is not None:
             # Enable logging.
-            proxy  = LoggerProxy(to_parent, log_options['logger_id'])
+            proxy = LoggerProxy(to_parent, log_options['logger_id'])
             log_cb = partial(proxy.log, job_id)
             proxy.add_log(job_id, job.name, job.failures + 1)
             conn.data_received_event.listen(log_cb)
             try:
                 conn.connect(host.get_address(), host.get_tcp_port())
                 result = func(job, host, conn, *args, **kwargs)
-                conn.close(force = True)
+                conn.close(force=True)
             except:
                 proxy.log_aborted(job_id, serializeable_sys_exc_info())
                 raise
@@ -98,10 +100,11 @@ def _prepare_connection(func):
         else:
             conn.connect(host.get_address(), host.get_tcp_port())
             result = func(job, host, conn, *args, **kwargs)
-            conn.close(force = True)
+            conn.close(force=True)
         return result
 
     return _wrapped
+
 
 def _is_recoverable_error(cls):
     # Hack: We can't use isinstance(), because the classes may
@@ -109,21 +112,25 @@ def _is_recoverable_error(cls):
     # will cause isinstance() to return False.
     return cls.__name__ in ('CompileError', 'FailException')
 
+
 def _call_logger(funcname, logger_id, *args):
     logger = logger_registry.get(logger_id)
     if not logger:
         return
     return getattr(logger, funcname)(*args)
 
+
 class _PipeHandler(threading.Thread):
+
     """
     Each PipeHandler holds an open pipe to a subprocess, to allow the
     sub-process to access the accounts and communicate status information.
     """
+
     def __init__(self, account_manager):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.accm   = account_manager
+        self.accm = account_manager
         self.to_child, self.to_parent = Pipe()
 
     def _send_account(self, account):
@@ -149,7 +156,7 @@ class _PipeHandler(threading.Thread):
                     account = self.accm.acquire_account(account, self)
                 self._send_account(account)
             elif command == 'acquire-account':
-                account = self.accm.acquire_account(owner = self)
+                account = self.accm.acquire_account(owner=self)
                 self._send_account(account)
             elif command == 'release-account':
                 account = self.accm.get_account_from_hash(arg)
@@ -179,20 +186,22 @@ class _PipeHandler(threading.Thread):
                 break
             self._handle_request(request)
 
+
 class Queue(object):
+
     """
     Manages hosts/tasks, accounts, connections, and threads.
     """
 
     def __init__(self,
-                 domain      = '',
-                 verbose     = 1,
-                 mode        = 'threading',
-                 max_threads = 1,
-                 host_driver = None,
-                 exc_cb      = None,
-                 stdout      = sys.stdout,
-                 stderr      = sys.stderr):
+                 domain='',
+                 verbose=1,
+                 mode='threading',
+                 max_threads=1,
+                 host_driver=None,
+                 exc_cb=None,
+                 stdout=sys.stdout,
+                 stderr=sys.stderr):
         """
         Constructor. All arguments should be passed as keyword arguments.
         Depending on the verbosity level, the following types
@@ -232,21 +241,21 @@ class Queue(object):
         :type  stderr: file
         :param stderr: The error channel, defaults to sys.stderr.
         """
-        self.workqueue         = WorkQueue(mode = mode)
-        self.account_manager   = AccountManager()
-        self.pipe_handlers     = weakref.WeakValueDictionary()
-        self.domain            = domain
-        self.verbose           = verbose
-        self.stdout            = stdout
-        self.stderr            = stderr
-        self.host_driver       = host_driver
-        self.exc_cb            = exc_cb
-        self.devnull           = open(os.devnull, 'w')
-        self.channel_map       = {'fatal_errors': self.stderr,
-                                  'debug':        self.stdout}
-        self.completed         = 0
-        self.total             = 0
-        self.failed            = 0
+        self.workqueue = WorkQueue(mode=mode)
+        self.account_manager = AccountManager()
+        self.pipe_handlers = weakref.WeakValueDictionary()
+        self.domain = domain
+        self.verbose = verbose
+        self.stdout = stdout
+        self.stderr = stderr
+        self.host_driver = host_driver
+        self.exc_cb = exc_cb
+        self.devnull = open(os.devnull, 'w')
+        self.channel_map = {'fatal_errors': self.stderr,
+                            'debug':        self.stdout}
+        self.completed = 0
+        self.total = 0
+        self.failed = 0
         self.status_bar_length = 0
         self.set_max_threads(max_threads)
 
@@ -261,32 +270,32 @@ class Queue(object):
         if self.verbose < 0:
             self.channel_map['status_bar'] = self.devnull
             self.channel_map['connection'] = self.devnull
-            self.channel_map['errors']     = self.devnull
+            self.channel_map['errors'] = self.devnull
             self.channel_map['tracebacks'] = self.devnull
         elif self.verbose == 0:
             self.channel_map['status_bar'] = self.devnull
             self.channel_map['connection'] = self.devnull
-            self.channel_map['errors']     = self.stderr
+            self.channel_map['errors'] = self.stderr
             self.channel_map['tracebacks'] = self.devnull
         elif self.verbose == 1 and self.get_max_threads() == 1:
             self.channel_map['status_bar'] = self.devnull
             self.channel_map['connection'] = self.stdout
-            self.channel_map['errors']     = self.stderr
+            self.channel_map['errors'] = self.stderr
             self.channel_map['tracebacks'] = self.devnull
         elif self.verbose == 1:
             self.channel_map['status_bar'] = self.stdout
             self.channel_map['connection'] = self.devnull
-            self.channel_map['errors']     = self.stderr
+            self.channel_map['errors'] = self.stderr
             self.channel_map['tracebacks'] = self.devnull
         elif self.verbose >= 2 and self.get_max_threads() == 1:
             self.channel_map['status_bar'] = self.devnull
             self.channel_map['connection'] = self.stdout
-            self.channel_map['errors']     = self.stderr
+            self.channel_map['errors'] = self.stderr
             self.channel_map['tracebacks'] = self.stderr
         elif self.verbose >= 2:
             self.channel_map['status_bar'] = self.stdout
             self.channel_map['connection'] = self.devnull
-            self.channel_map['errors']     = self.stderr
+            self.channel_map['errors'] = self.stderr
             self.channel_map['tracebacks'] = self.stderr
 
     def _write(self, channel, msg):
@@ -336,28 +345,28 @@ class Queue(object):
             return 0.0
         return 100.0 / self.total * self.completed
 
-    def _print_status_bar(self, exclude = None):
+    def _print_status_bar(self, exclude=None):
         if self.total == 0:
             return
-        percent  = 100.0 / self.total * self.completed
+        percent = 100.0 / self.total * self.completed
         progress = '%d/%d (%d%%)' % (self.completed, self.total, percent)
-        jobs     = self.workqueue.get_running_jobs()
-        running  = '|'.join([j.name for j in jobs if j.name != exclude])
+        jobs = self.workqueue.get_running_jobs()
+        running = '|'.join([j.name for j in jobs if j.name != exclude])
         if not running:
             self.status_bar_length = 0
             return
         rows, cols = get_terminal_size()
-        text       = 'In progress: [%s] %s' % (running, progress)
-        overflow   = len(text) - cols
+        text = 'In progress: [%s] %s' % (running, progress)
+        overflow = len(text) - cols
         if overflow > 0:
-            cont      = '...'
+            cont = '...'
             overflow += len(cont) + 1
-            strlen    = len(running)
-            partlen   = strlen // 2 - overflow // 2
-            head      = running[:partlen]
-            tail      = running[-partlen:]
-            running   = head + cont + tail
-            text      = 'In progress: [%s] %s' % (running, progress)
+            strlen = len(running)
+            partlen = strlen // 2 - overflow // 2
+            head = running[:partlen]
+            tail = running[-partlen:]
+            running = head + cont + tail
+            text = 'In progress: [%s] %s' % (running, progress)
         self._write('status_bar', text)
         self.status_bar_length = len(text)
 
@@ -374,7 +383,7 @@ class Queue(object):
     def _on_job_init(self, job):
         if job.data is None:
             job.data = {}
-        job.data['pipe']   = self._create_pipe()
+        job.data['pipe'] = self._create_pipe()
         job.data['stdout'] = self.channel_map['connection']
 
     def _on_job_destroy(self, job):
@@ -385,7 +394,7 @@ class Queue(object):
         self._print_status_bar()
 
     def _on_job_error(self, job, exc_info):
-        msg   = job.name + ' error: ' + str(exc_info[1])
+        msg = job.name + ' error: ' + str(exc_info[1])
         trace = ''.join(format_exception(*exc_info))
         if self.exc_cb:
             self.exc_cb(job.name, exc_info)
@@ -401,15 +410,15 @@ class Queue(object):
         self._print('status_bar', job.name + ' succeeded.')
         self._dbg(2, job.name + ' job is done.')
         self._del_status_bar()
-        self._print_status_bar(exclude = job.name)
+        self._print_status_bar(exclude=job.name)
 
     def _on_job_aborted(self, job):
         self._on_job_destroy(job)
         self.completed += 1
-        self.failed    += 1
+        self.failed += 1
         self._print('errors', job.name + ' finally failed.')
         self._del_status_bar()
-        self._print_status_bar(exclude = job.name)
+        self._print_status_bar(exclude=job.name)
 
     def set_max_threads(self, n_connections):
         """
@@ -430,7 +439,7 @@ class Queue(object):
         """
         return self.workqueue.get_max_threads()
 
-    def add_account_pool(self, pool, match = None):
+    def add_account_pool(self, pool, match=None):
         """
         Adds a new account pool. If the given match argument is
         None, the pool the default pool. Otherwise, the match argument is
@@ -522,7 +531,7 @@ class Queue(object):
         self._print_status_bar()
         gc.collect()
 
-    def shutdown(self, force = False):
+    def shutdown(self, force=False):
         """
         Stop executing any further jobs. If the force argument is True,
         the function does not wait until any queued jobs are completed but
@@ -542,7 +551,7 @@ class Queue(object):
         self._dbg(2, 'Queue shut down.')
         self._del_status_bar()
 
-    def destroy(self, force = False):
+    def destroy(self, force=False):
         """
         Like shutdown(), but also removes all accounts, hosts, etc., and
         does not restart the queue. In other words, the queue can no longer
@@ -558,9 +567,9 @@ class Queue(object):
             self._dbg(2, 'Destroying queue...')
             self.workqueue.destroy()
             self.account_manager.reset()
-            self.completed         = 0
-            self.total             = 0
-            self.failed            = 0
+            self.completed = 0
+            self.total = 0
+            self.failed = 0
             self.status_bar_length = 0
             self._dbg(2, 'Queue destroyed.')
             self._del_status_bar()
@@ -572,22 +581,22 @@ class Queue(object):
         self._dbg(2, 'Resetting queue...')
         self.account_manager.reset()
         self.workqueue.shutdown(True)
-        self.completed         = 0
-        self.total             = 0
-        self.failed            = 0
+        self.completed = 0
+        self.total = 0
+        self.failed = 0
         self.status_bar_length = 0
         self._dbg(2, 'Queue reset.')
         self._del_status_bar()
 
     def _run(self, hosts, callback, queue_function, *args):
-        hosts       = to_hosts(hosts, default_domain = self.domain)
+        hosts = to_hosts(hosts, default_domain=self.domain)
         self.total += len(hosts)
-        callback    = _prepare_connection(callback)
-        task        = Task(self.workqueue)
+        callback = _prepare_connection(callback)
+        task = Task(self.workqueue)
         for host in hosts:
-            name   = host.get_name()
-            data   = {'host': host}
-            job_id = queue_function(callback, name, *args, data = data)
+            name = host.get_name()
+            data = {'host': host}
+            job_id = queue_function(callback, name, *args, data=data)
             if job_id is not None:
                 task.add_job_id(job_id)
 
@@ -601,7 +610,7 @@ class Queue(object):
         self._dbg(2, 'All jobs enqueued.')
         return task
 
-    def run(self, hosts, function, attempts = 1):
+    def run(self, hosts, function, attempts=1):
         """
         Add the given function to a queue, and call it once for each host
         according to the threading options.
@@ -622,7 +631,7 @@ class Queue(object):
         """
         return self._run(hosts, function, self.workqueue.enqueue, attempts)
 
-    def run_or_ignore(self, hosts, function, attempts = 1):
+    def run_or_ignore(self, hosts, function, attempts=1):
         """
         Like run(), but only appends hosts that are not already in the
         queue.
@@ -641,7 +650,7 @@ class Queue(object):
                          self.workqueue.enqueue_or_ignore,
                          attempts)
 
-    def priority_run(self, hosts, function, attempts = 1):
+    def priority_run(self, hosts, function, attempts=1):
         """
         Like run(), but adds the task to the front of the queue.
 
@@ -660,7 +669,7 @@ class Queue(object):
                          False,
                          attempts)
 
-    def priority_run_or_raise(self, hosts, function, attempts = 1):
+    def priority_run_or_raise(self, hosts, function, attempts=1):
         """
         Like priority_run(), but if a host is already in the queue, the
         existing host is moved to the top of the queue instead of enqueuing
@@ -681,7 +690,7 @@ class Queue(object):
                          False,
                          attempts)
 
-    def force_run(self, hosts, function, attempts = 1):
+    def force_run(self, hosts, function, attempts=1):
         """
         Like priority_run(), but starts the task immediately even if that
         max_threads is exceeded.
@@ -701,7 +710,7 @@ class Queue(object):
                          True,
                          attempts)
 
-    def enqueue(self, function, name = None, attempts = 1):
+    def enqueue(self, function, name=None, attempts=1):
         """
         Places the given function in the queue and calls it as soon
         as a thread is available. To pass additional arguments to the
@@ -717,7 +726,7 @@ class Queue(object):
         :return: An object representing the task.
         """
         self.total += 1
-        task   = Task(self.workqueue)
+        task = Task(self.workqueue)
         job_id = self.workqueue.enqueue(function, name, attempts)
         if job_id is not None:
             task.add_job_id(job_id)

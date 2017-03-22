@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -22,6 +22,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import os
 from Exscript.stdlib.util import secure_function
+
 
 def chmod(scope, filename, mode):
     """
@@ -38,6 +39,7 @@ def chmod(scope, filename, mode):
         os.chmod(file, mode[0])
     return True
 
+
 def clear(scope, filename):
     """
     Clear the contents of the given file. The file is created if it does
@@ -49,6 +51,7 @@ def clear(scope, filename):
     file = open(filename[0], 'w')
     file.close()
     return True
+
 
 @secure_function
 def exists(scope, filename):
@@ -64,7 +67,8 @@ def exists(scope, filename):
     """
     return [os.path.exists(f) for f in filename]
 
-def mkdir(scope, dirname, mode = None):
+
+def mkdir(scope, dirname, mode=None):
     """
     Creates the given directory (or directories). The optional access
     permissions are set to the given mode, and default to whatever
@@ -82,6 +86,7 @@ def mkdir(scope, dirname, mode = None):
             os.makedirs(dir, mode[0])
     return True
 
+
 def read(scope, filename):
     """
     Reads the given file and returns the result.
@@ -92,11 +97,12 @@ def read(scope, filename):
     :rtype:  string
     :return: The content of the file.
     """
-    file  = open(filename[0], 'r')
+    file = open(filename[0], 'r')
     lines = file.readlines()
     file.close()
-    scope.define(__response__ = lines)
+    scope.define(__response__=lines)
     return lines
+
 
 def rm(scope, filename):
     """
@@ -109,7 +115,8 @@ def rm(scope, filename):
         os.remove(file)
     return True
 
-def write(scope, filename, lines, mode = ['a']):
+
+def write(scope, filename, lines, mode=['a']):
     """
     Writes the given string into the given file.
     The following modes are supported:

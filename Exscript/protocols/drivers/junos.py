@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -48,25 +48,27 @@ from Exscript.protocols.drivers.driver import Driver
 #   pheller@fw1>
 #
 
-_user_re     = [re.compile(r'[\r\n]login: $')]
+_user_re = [re.compile(r'[\r\n]login: $')]
 _password_re = [re.compile(r'[\r\n](Local )?[Pp]assword: ?$')]
-_mb          = r'(?:\{master(?::\d+)?\}|\{backup(?::\d+)?\})'
-_ps          = r'(?:\{primary:node\d+\}|\{secondary:node\d+\})'
-_re_re       = r'(?:'+ _mb + r'|' + _ps + r')'
-_edit        = r'(?:\[edit[^\]\r\n]*\])'
-_prefix      = r'(?:[\r\n]+' + _re_re + r'?' + _edit + r'?)'
-_prompt      = r'[\r\n]+[\w\-\.]+@[\-\w+\.:]+[%>#] $'
-_prompt_re   = [re.compile(_prefix + r'?' + _prompt)]
-_error_re    = [re.compile('^(unknown|invalid|error)', re.I)]
-_junos_re    = re.compile(r'\bjunos\b', re.I)
+_mb = r'(?:\{master(?::\d+)?\}|\{backup(?::\d+)?\})'
+_ps = r'(?:\{primary:node\d+\}|\{secondary:node\d+\})'
+_re_re = r'(?:' + _mb + r'|' + _ps + r')'
+_edit = r'(?:\[edit[^\]\r\n]*\])'
+_prefix = r'(?:[\r\n]+' + _re_re + r'?' + _edit + r'?)'
+_prompt = r'[\r\n]+[\w\-\.]+@[\-\w+\.:]+[%>#] $'
+_prompt_re = [re.compile(_prefix + r'?' + _prompt)]
+_error_re = [re.compile('^(unknown|invalid|error)', re.I)]
+_junos_re = re.compile(r'\bjunos\b', re.I)
+
 
 class JunOSDriver(Driver):
+
     def __init__(self):
         Driver.__init__(self, 'junos')
-        self.user_re     = _user_re
+        self.user_re = _user_re
         self.password_re = _password_re
-        self.prompt_re   = _prompt_re
-        self.error_re    = _error_re
+        self.prompt_re = _prompt_re
+        self.error_re = _error_re
 
     def check_head_for_os(self, string):
         if _junos_re.search(string):

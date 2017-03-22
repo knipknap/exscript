@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -20,13 +20,14 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import print_function, absolute_import
+from ..parselib import Token
 import Exscript.interpreter.Code
-from Exscript.parselib import Token
-from Exscript.interpreter.Expression import Expression
+from .Expression import Expression
+
 
 class IfCondition(Token):
+
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'If-condition', lexer, parser, parent)
 
@@ -37,9 +38,9 @@ class IfCondition(Token):
         self.mark_end()
 
         # Body of the if block.
-        self.if_block    = Exscript.interpreter.Code.Code(lexer, parser, parent)
+        self.if_block = Exscript.interpreter.Code.Code(lexer, parser, parent)
         self.elif_blocks = []
-        self.else_block  = None
+        self.else_block = None
 
         # If there is no "else" statement, just return.
         lexer.skip(['whitespace', 'newline'])
@@ -63,8 +64,7 @@ class IfCondition(Token):
             self.else_block.value(context)
         return 1
 
-
-    def dump(self, indent = 0):
+    def dump(self, indent=0):
         print((' ' * indent) + self.name, 'start')
         self.expression.dump(indent + 1)
         self.if_block.dump(indent + 1)

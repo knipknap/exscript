@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,6 +23,7 @@
 """
 IPv6 address calculation and conversion.
 """
+
 
 def is_ip(string):
     """
@@ -38,6 +39,7 @@ def is_ip(string):
     except ValueError:
         return False
     return True
+
 
 def normalize_ip(ip):
     """
@@ -78,6 +80,7 @@ def normalize_ip(ip):
             result.append(segment.rjust(4, '0'))
     return ':'.join(result).lower()
 
+
 def clean_ip(ip):
     """
     Cleans the ip address up, useful for removing leading zeros, e.g.::
@@ -92,13 +95,13 @@ def clean_ip(ip):
     :rtype:  string
     :return: The cleaned up IP.
     """
-    theip    = normalize_ip(ip)
+    theip = normalize_ip(ip)
     segments = ['%x' % int(s, 16) for s in theip.split(':')]
 
     # Find the longest consecutive sequence of zeroes.
-    seq      = {0: 0}
-    start    = None
-    count    = 0
+    seq = {0: 0}
+    start = None
+    count = 0
     for n, segment in enumerate(segments):
         if segment != '0':
             start = None
@@ -110,8 +113,8 @@ def clean_ip(ip):
         seq[count] = start
 
     # Replace those zeroes by a double colon.
-    count  = max(seq)
-    start  = seq[count]
+    count = max(seq)
+    start = seq[count]
     result = []
     for n, segment in enumerate(segments):
         if n == start and count > 1:
@@ -128,7 +131,8 @@ def clean_ip(ip):
         result.append(segment)
     return ':'.join(result)
 
-def parse_prefix(prefix, default_length = 128):
+
+def parse_prefix(prefix, default_length=128):
     """
     Splits the given IP prefix into a network address and a prefix length.
     If the prefix does not have a length (i.e., it is a simple IP address),
@@ -145,5 +149,5 @@ def parse_prefix(prefix, default_length = 128):
         network, pfxlen = prefix.split('/')
     else:
         network = prefix
-        pfxlen  = default_length
+        pfxlen = default_length
     return network, int(pfxlen)

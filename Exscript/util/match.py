@@ -26,6 +26,7 @@ Shorthands for regular expression matching.
 import re
 from Exscript.protocols import Protocol
 
+
 def _first_match(string, compiled):
     match = compiled.search(string)
     if match is None and compiled.groups <= 1:
@@ -39,7 +40,8 @@ def _first_match(string, compiled):
     else:
         return match.groups()
 
-def first_match(string, regex, flags = re.M):
+
+def first_match(string, regex, flags=re.M):
     """
     Matches the given string against the given regex.
 
@@ -82,7 +84,8 @@ def first_match(string, regex, flags = re.M):
         string = string.response
     return _first_match(string, re.compile(regex, flags))
 
-def any_match(string, regex, flags = re.M):
+
+def any_match(string, regex, flags=re.M):
     """
     Matches the given string against the given regex.
 
@@ -130,7 +133,7 @@ def any_match(string, regex, flags = re.M):
     if isinstance(string, Protocol):
         string = string.response
     compiled = re.compile(regex, flags)
-    results  = []
+    results = []
     if compiled.groups <= 1:
         for line in string.split('\n'):
             match = _first_match(line, compiled)

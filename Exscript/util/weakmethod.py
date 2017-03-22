@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,14 +25,18 @@ Weak references to bound and unbound methods.
 """
 import weakref
 
+
 class DeadMethodCalled(Exception):
+
     """
     Raised by :class:`WeakMethod` if it is called when the referenced object
     is already dead.
     """
     pass
 
+
 class WeakMethod(object):
+
     """
     Do not create this class directly; use :class:`ref()` instead.
     """
@@ -42,7 +46,7 @@ class WeakMethod(object):
         """
         Constructor. Do not use directly, use :class:`ref()` instead.
         """
-        self.name     = name
+        self.name = name
         self.callback = callback
 
     def _dead(self, ref):
@@ -82,6 +86,7 @@ class WeakMethod(object):
             raise DeadMethodCalled('method called on dead object ' + self.name)
         method(*args, **kwargs)
 
+
 class _WeakMethodBound(WeakMethod):
     __slots__ = 'name', 'callback', 'f', 'c'
 
@@ -97,6 +102,7 @@ class _WeakMethodBound(WeakMethod):
             return None
         return getattr(cls, self.f.__name__)
 
+
 class _WeakMethodFree(WeakMethod):
     __slots__ = 'name', 'callback', 'f'
 
@@ -107,7 +113,8 @@ class _WeakMethodFree(WeakMethod):
     def get_function(self):
         return self.f()
 
-def ref(function, callback = None):
+
+def ref(function, callback=None):
     """
     Returns a weak reference to the given method or function.
     If the callback argument is not None, it is called as soon

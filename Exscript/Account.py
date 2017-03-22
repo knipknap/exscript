@@ -27,7 +27,9 @@ import multiprocessing
 from Exscript.util.event import Event
 from Exscript.util.impl import Context
 
+
 class Account(object):
+
     """
     This class represents a user account.
     """

@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,6 +25,7 @@ Handy shortcuts for converting types.
 """
 import re
 import Exscript
+
 
 def to_list(item):
     """
@@ -41,7 +42,8 @@ def to_list(item):
         return item
     return [item]
 
-def to_host(host, default_protocol = 'telnet', default_domain = ''):
+
+def to_host(host, default_protocol='telnet', default_domain=''):
     """
     Given a string or a Host object, this function returns a Host object.
 
@@ -60,9 +62,10 @@ def to_host(host, default_protocol = 'telnet', default_domain = ''):
         return host
     if default_domain and not '.' in host:
         host += '.' + default_domain
-    return Exscript.Host(host, default_protocol = default_protocol)
+    return Exscript.Host(host, default_protocol=default_protocol)
 
-def to_hosts(hosts, default_protocol = 'telnet', default_domain = ''):
+
+def to_hosts(hosts, default_protocol='telnet', default_domain=''):
     """
     Given a string or a Host object, or a list of strings or Host objects,
     this function returns a list of Host objects.
@@ -79,7 +82,8 @@ def to_hosts(hosts, default_protocol = 'telnet', default_domain = ''):
     return [to_host(h, default_protocol, default_domain)
             for h in to_list(hosts)]
 
-def to_regex(regex, flags = 0):
+
+def to_regex(regex, flags=0):
     """
     Given a string, this function returns a new re.RegexObject.
     Given a re.RegexObject, this function just returns the same object.
@@ -96,6 +100,7 @@ def to_regex(regex, flags = 0):
     if hasattr(regex, 'match'):
         return regex
     return re.compile(regex, flags)
+
 
 def to_regexs(regexs):
     """

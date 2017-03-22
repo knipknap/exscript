@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -24,7 +24,9 @@ from __future__ import print_function
 from Exscript.parselib import Token
 from Exscript.interpreter.Term import Term
 
+
 class Append(Token):
+
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'Append', lexer, parser, parent)
 
@@ -47,10 +49,10 @@ class Append(Token):
 
     def value(self, context):
         existing = self.parent.get(self.varname)
-        args     = {self.varname: existing + self.expr.value(context)}
+        args = {self.varname: existing + self.expr.value(context)}
         self.parent.define(**args)
         return 1
 
-    def dump(self, indent = 0):
+    def dump(self, indent=0):
         print((' ' * indent) + self.name, "to", self.varname)
         self.expr.dump(indent + 1)

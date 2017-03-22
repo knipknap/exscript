@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,7 +23,9 @@
 from __future__ import print_function
 from Exscript.protocols.drivers import drivers
 
+
 class OsGuesser(object):
+
     """
     The OsGuesser monitors everything that happens on a Protocol,
     and attempts to collect data out of the network activity.
@@ -36,10 +38,10 @@ class OsGuesser(object):
     """
 
     def __init__(self):
-        self.info        = {}
-        self.debug       = False
+        self.info = {}
+        self.debug = False
         self.auth_os_map = [d._check_head for d in drivers]
-        self.os_map      = [d._check_response for d in drivers]
+        self.os_map = [d._check_response for d in drivers]
         self.auth_buffer = ''
         self.set('os', 'unknown', 0)
 
@@ -47,7 +49,7 @@ class OsGuesser(object):
         self.__init__()
         self.auth_buffer = auth_buffer
 
-    def set(self, key, value, confidence = 100):
+    def set(self, key, value, confidence=100):
         """
         Defines the given value with the given confidence, unless the same
         value is already defined with a higher confidence level.
@@ -84,7 +86,7 @@ class OsGuesser(object):
                 if regex.search(string):
                     self.set(key, value, confidence)
 
-    def get(self, key, confidence = 0):
+    def get(self, key, confidence=0):
         """
         Returns the info with the given key, if it has at least the given
         confidence. Returns None otherwise.

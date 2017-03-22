@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -30,6 +30,7 @@ import codecs
 import imp
 from Exscript import Account
 from Exscript.util.cast import to_host
+
 
 def get_accounts_from_file(filename):
     """
@@ -54,9 +55,9 @@ def get_accounts_from_file(filename):
     :rtype:  list[Account]
     :return: The newly created account instances.
     """
-    accounts           = []
-    cfgparser          = __import__('ConfigParser', {}, {}, [''])
-    parser             = cfgparser.RawConfigParser()
+    accounts = []
+    cfgparser = __import__('ConfigParser', {}, {}, [''])
+    parser = cfgparser.RawConfigParser()
     parser.optionxform = str
     parser.read(filename)
     for user, password in parser.items('account-pool'):
@@ -65,10 +66,10 @@ def get_accounts_from_file(filename):
 
 
 def get_hosts_from_file(filename,
-                        default_protocol  = 'telnet',
-                        default_domain    = '',
-                        remove_duplicates = False,
-                        encoding          = 'utf-8'):
+                        default_protocol='telnet',
+                        default_domain='',
+                        remove_duplicates=False,
+                        encoding='utf-8'):
     """
     Reads a list of hostnames from the file with the given name.
 
@@ -90,7 +91,7 @@ def get_hosts_from_file(filename,
         raise IOError('No such file: %s' % filename)
 
     # Read the hostnames.
-    have  = set()
+    have = set()
     hosts = []
     with codecs.open(filename, 'r', encoding) as file_handle:
         for line in file_handle:
@@ -106,9 +107,9 @@ def get_hosts_from_file(filename,
 
 
 def get_hosts_from_csv(filename,
-                       default_protocol = 'telnet',
-                       default_domain   = '',
-                       encoding         = 'utf-8'):
+                       default_protocol='telnet',
+                       default_domain='',
+                       encoding='utf-8'):
     """
     Reads a list of hostnames and variables from the tab-separated .csv file
     with the given name. The first line of the file must contain the column
@@ -151,11 +152,11 @@ def get_hosts_from_csv(filename,
         # Read and check the header.
         header = file_handle.readline().rstrip()
         if re.search(r'^(?:hostname|address)\b', header) is None:
-            msg  = 'Syntax error in CSV file header:'
+            msg = 'Syntax error in CSV file header:'
             msg += ' File does not start with "hostname" or "address".'
             raise Exception(msg)
         if re.search(r'^(?:hostname|address)(?:\t[^\t]+)*$', header) is None:
-            msg  = 'Syntax error in CSV file header:'
+            msg = 'Syntax error in CSV file header:'
             msg += ' Make sure to separate columns by tabs.'
             raise Exception(msg)
         varnames = [str(v) for v in header.split('\t')]
@@ -164,20 +165,20 @@ def get_hosts_from_csv(filename,
         # Walk through all lines and create a map that maps hostname to
         # definitions.
         last_uri = ''
-        line_re  = re.compile(r'[\r\n]*$')
-        hosts    = []
+        line_re = re.compile(r'[\r\n]*$')
+        hosts = []
         for line in file_handle:
             if line.strip() == '':
                 continue
 
-            line   = line_re.sub('', line)
+            line = line_re.sub('', line)
             values = line.split('\t')
-            uri    = values.pop(0).strip()
+            uri = values.pop(0).strip()
 
             # Add the hostname to our list.
             if uri != last_uri:
-                #print "Reading hostname", hostname_url, "from csv."
-                host     = to_host(uri, default_protocol, default_domain)
+                # print "Reading hostname", hostname_url, "from csv."
+                host = to_host(uri, default_protocol, default_domain)
                 last_uri = uri
                 hosts.append(host)
 

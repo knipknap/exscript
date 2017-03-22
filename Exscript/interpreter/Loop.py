@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,19 +23,21 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import Exscript.interpreter.Code
-from Exscript.parselib               import Token
-from Exscript.interpreter.Term       import Term
+from Exscript.parselib import Token
+from Exscript.interpreter.Term import Term
 from Exscript.interpreter.Expression import Expression
 
+
 class Loop(Token):
+
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, 'Loop', lexer, parser, parent)
-        self.during         = None
-        self.until          = None
-        self.thefrom        = None
-        self.theto          = None
+        self.during = None
+        self.until = None
+        self.thefrom = None
+        self.theto = None
         self.list_variables = []
-        self.iter_varnames  = []
+        self.iter_varnames = []
 
         # Expect one ore more lists.
         lexer.expect(self, 'keyword', 'loop')
@@ -91,19 +93,19 @@ class Loop(Token):
                 iter_varname = 'counter'
             parent.define(**{iter_varname: []})
             self.iter_varnames = [iter_varname]
-        
+
         # Check if this is a "while" loop.
         if lexer.next_if('keyword', 'while'):
             lexer.expect(self, 'whitespace')
             self.during = Expression(lexer, parser, parent)
             lexer.next_if('whitespace')
-        
+
         # Check if this is an "until" loop.
         if lexer.next_if('keyword', 'until'):
             lexer.expect(self, 'whitespace')
             self.until = Expression(lexer, parser, parent)
             lexer.next_if('whitespace')
-        
+
         # End of statement.
         self.mark_end()
 
@@ -111,10 +113,10 @@ class Loop(Token):
         lexer.skip(['whitespace', 'newline'])
         self.block = Exscript.interpreter.Code.Code(lexer, parser, parent)
 
-
     def value(self, context):
         if len(self.list_variables) == 0 and not self.thefrom:
-            # If this is a "while" loop, iterate as long as the condition is True.
+            # If this is a "while" loop, iterate as long as the condition is
+            # True.
             if self.during is not None:
                 while self.during.value(context)[0]:
                     self.block.value(context)
@@ -129,12 +131,12 @@ class Loop(Token):
         # Retrieve the lists from the list terms.
         if self.thefrom:
             start = self.thefrom.value(context)[0]
-            stop  = self.theto.value(context)[0]
+            stop = self.theto.value(context)[0]
             lists = [range(start, stop)]
         else:
             lists = [var.value(context) for var in self.list_variables]
-        vars  = self.iter_varnames
-        
+        vars = self.iter_varnames
+
         # Make sure that all lists have the same length.
         for list in lists:
             if len(list) != len(lists[0]):
@@ -154,8 +156,7 @@ class Loop(Token):
             self.block.value(context)
         return 1
 
-
-    def dump(self, indent = 0):
+    def dump(self, indent=0):
         print((' ' * indent) + self.name, end=' ')
         print(self.list_variables, 'as', self.iter_varnames, 'start')
         if self.during is not None:

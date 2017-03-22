@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,19 +23,21 @@
 """
 A client that talks to a :class:`Exscript.emulators.VirtualDevice`.
 """
-from Exscript.emulators           import VirtualDevice
-from Exscript.protocols.Protocol  import Protocol
-from Exscript.protocols.Exception import TimeoutException, \
-                                         DriverReplacedException, \
-                                         ExpectCancelledException
+from __future__ import absolute_import
+from ..emulators import VirtualDevice
+from .Protocol import Protocol
+from .Exception import TimeoutException, DriverReplacedException, \
+        ExpectCancelledException
+
 
 class Dummy(Protocol):
+
     """
     This protocol adapter does not open a network connection, but talks to
     a :class:`Exscript.emulators.VirtualDevice` internally.
     """
 
-    def __init__(self, device = None, **kwargs):
+    def __init__(self, device=None, **kwargs):
         """
         .. HINT::
             Also supports all keyword arguments that :class:`Protocol` supports.
@@ -44,17 +46,17 @@ class Dummy(Protocol):
             which to communicate.
         """
         Protocol.__init__(self, **kwargs)
-        self.device    = device
+        self.device = device
         self.init_done = False
-        self.cancel    = False
-        self.response  = None
+        self.cancel = False
+        self.response = None
         if not self.device:
-            self.device = VirtualDevice('dummy', strict = False)
+            self.device = VirtualDevice('dummy', strict=False)
 
     def is_dummy(self):
         return True
 
-    def _expect_any(self, prompt_list, flush = True):
+    def _expect_any(self, prompt_list, flush=True):
         self._doinit()
 
         # Cancelled by a callback during self._say().
@@ -125,6 +127,6 @@ class Dummy(Protocol):
 
         return result, match
 
-    def close(self, force = False):
+    def close(self, force=False):
         self._say('\n')
         self.buffer.clear()

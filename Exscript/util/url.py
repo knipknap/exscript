@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -24,9 +24,10 @@
 Working with URLs (as used in URL formatted hostnames).
 """
 import re
-from urllib      import urlencode, quote
-from urlparse    import urlparse, urlsplit
+from urllib import urlencode, quote
+from urlparse import urlparse, urlsplit
 from collections import defaultdict
+
 
 def _make_hexmap():
     hexmap = dict()
@@ -49,9 +50,11 @@ _WELL_KNOWN_PORTS = {
     'imap':  143
 }
 
-###############################################################
+#
 # utils
-###############################################################
+#
+
+
 def _unquote(string):
     """_unquote('abc%20def') -> 'abc def'."""
     result = string.split('%')
@@ -64,6 +67,7 @@ def _unquote(string):
         except UnicodeDecodeError:
             result[i] = unichr(int(item[:2], 16)) + item[2:]
     return ''.join(result)
+
 
 def _urlparse_qs(url):
     """
@@ -92,28 +96,32 @@ def _urlparse_qs(url):
             continue
 
         if len(pair[1]) > 0:
-            name  = _unquote(pair[0].replace('+', ' '))
+            name = _unquote(pair[0].replace('+', ' '))
             value = _unquote(pair[1].replace('+', ' '))
             result[name].append(value)
 
     return result
 
-###############################################################
+#
 # public api
-###############################################################
+#
+
+
 class Url(object):
+
     """
     Represents a URL.
     """
+
     def __init__(self):
-        self.protocol  = None
-        self.username  = None
+        self.protocol = None
+        self.username = None
         self.password1 = None
         self.password2 = None
-        self.hostname  = None
-        self.port      = None
-        self.path      = None
-        self.vars      = None
+        self.hostname = None
+        self.port = None
+        self.path = None
+        self.vars = None
 
     def __str__(self):
         """
@@ -161,7 +169,7 @@ class Url(object):
         return str(self)
 
     @staticmethod
-    def from_string(url, default_protocol = 'telnet'):
+    def from_string(url, default_protocol='telnet'):
         """
         Parses the given URL and returns an URL object. There are some
         differences to Python's built-in URL parser:
@@ -186,7 +194,7 @@ class Url(object):
 
         # Extract the protocol name from the URL.
         result = Url()
-        match  = re.match(r'(\w+)://', url)
+        match = re.match(r'(\w+)://', url)
         if match:
             result.protocol = match.group(1)
         else:
@@ -215,7 +223,7 @@ class Url(object):
             auth, netloc = netloc.split('@')
             auth = auth.split(':')
             try:
-                result.username  = _unquote(auth[0])
+                result.username = _unquote(auth[0])
                 result.password1 = _unquote(auth[1])
                 result.password2 = _unquote(auth[2])
             except IndexError:
@@ -223,9 +231,9 @@ class Url(object):
 
         # Parse hostname and port number.
         result.hostname = netloc + parsed.path
-        result.port     = _WELL_KNOWN_PORTS.get(result.protocol)
+        result.port = _WELL_KNOWN_PORTS.get(result.protocol)
         if ':' in netloc:
             result.hostname, port = netloc.split(':')
-            result.port           = int(port)
+            result.port = int(port)
 
         return result

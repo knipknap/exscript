@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,16 +23,18 @@
 """
 A buffer object.
 """
-from StringIO           import StringIO
+from StringIO import StringIO
 from Exscript.util.cast import to_regexs
 
+
 class MonitoredBuffer(object):
+
     """
     A specialized string buffer that allows for monitoring
     the content using regular expression-triggered callbacks.
     """
 
-    def __init__(self, io = None):
+    def __init__(self, io=None):
         """
         Constructor.
         The data is stored in the given file-like object. If no object is
@@ -138,7 +140,7 @@ class MonitoredBuffer(object):
         for item in self.monitors:
             item[2] = 0
 
-    def add_monitor(self, pattern, callback, limit = 80):
+    def add_monitor(self, pattern, callback, limit=80):
         """
         Calls the given function whenever the given pattern matches the
         buffer.

@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,19 +23,19 @@
 from __future__ import absolute_import
 import re
 import Exscript.interpreter.Template
-from Exscript.interpreter.Scope        import Scope
-from Exscript.interpreter.Append       import Append
-from Exscript.interpreter.Assign       import Assign
-from Exscript.interpreter.Enter        import Enter
-from Exscript.interpreter.Extract      import Extract
-from Exscript.interpreter.Fail         import Fail
-from Exscript.interpreter.FunctionCall import FunctionCall
-from Exscript.interpreter.IfCondition  import IfCondition
-from Exscript.interpreter.Loop         import Loop
-from Exscript.interpreter.Try          import Try
-from Exscript.interpreter.String       import varname_re
+from .Scope import Scope
+from .Append import Append
+from .Assign import Assign
+from .Enter import Enter
+from .Extract import Extract
+from .Fail import Fail
+from .FunctionCall import FunctionCall
+from .IfCondition import IfCondition
+from .Loop import Loop
+from .Try import Try
+from .String import varname_re
 
-varname  = varname_re.pattern
+varname = varname_re.pattern
 keywords = ['append',
             'as',
             'else',
@@ -73,7 +73,7 @@ grammar = (
     ('close_bracket',       r'\)'),
     ('comma',               r','),
     ('whitespace',          r'[ \t]+'),
-    ('keyword',             r'\b(?:' + '|'.join(keywords)  + r')\b'),
+    ('keyword',             r'\b(?:' + '|'.join(keywords) + r')\b'),
     ('assign',              r'='),
     ('octal_number',        r'0\d+'),
     ('hex_number',          r'0x(?:\w\w)+'),
@@ -91,7 +91,9 @@ grammar_c = []
 for thetype, regex in grammar:
     grammar_c.append((thetype, re.compile(regex)))
 
+
 class Code(Scope):
+
     def __init__(self, lexer, parser, parent):
         Scope.__init__(self, 'Code', lexer, parser, parent)
         lexer.set_grammar(grammar_c)
@@ -100,7 +102,8 @@ class Code(Scope):
             if lexer.next_if('close_curly_bracket'):
                 if isinstance(parent, Exscript.interpreter.Template.Template):
                     break
-                self.add(Exscript.interpreter.Template.Template(lexer, parser, self))
+                self.add(
+                    Exscript.interpreter.Template.Template(lexer, parser, self))
             elif lexer.current_is('keyword', 'append'):
                 self.add(Append(lexer, parser, self))
             elif lexer.current_is('keyword', 'extract'):

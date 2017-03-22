@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -21,6 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from Exscript.stdlib.util import secure_function
+
 
 @secure_function
 def new(scope):
@@ -32,6 +33,7 @@ def new(scope):
     """
     return []
 
+
 @secure_function
 def length(scope, mylist):
     """
@@ -41,6 +43,7 @@ def length(scope, mylist):
     :return: The model of the remote device.
     """
     return [len(mylist)]
+
 
 @secure_function
 def get(scope, source, index):
@@ -65,6 +68,7 @@ def get(scope, source, index):
         return [source[index]]
     except IndexError:
         raise ValueError('no such item in the list')
+
 
 @secure_function
 def unique(scope, source):

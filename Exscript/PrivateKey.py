@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -26,14 +26,16 @@ Represents a private key.
 from paramiko import RSAKey, DSSKey
 from paramiko.ssh_exception import SSHException
 
+
 class PrivateKey(object):
+
     """
     Represents a cryptographic key, and may be used to authenticate
     useing :class:`Exscript.protocols`.
     """
     keytypes = set()
 
-    def __init__(self, keytype = 'rsa'):
+    def __init__(self, keytype='rsa'):
         """
         Constructor. Supported key types are provided by their respective
         protocol adapters and can be retrieved from the PrivateKey.keytypes
@@ -44,12 +46,12 @@ class PrivateKey(object):
         """
         if keytype not in self.keytypes:
             raise TypeError('unsupported key type: ' + repr(keytype))
-        self.keytype  = keytype
+        self.keytype = keytype
         self.filename = None
         self.password = None
 
     @staticmethod
-    def from_file(filename, password = '', keytype = None):
+    def from_file(filename, password='', keytype=None):
         """
         Returns a new PrivateKey instance with the given attributes.
         If keytype is None, we attempt to automatically detect the type.
@@ -74,7 +76,7 @@ class PrivateKey(object):
                 except SSHException as e:
                     msg = 'not a recognized private key: ' + repr(filename)
                     raise ValueError(msg)
-        key          = PrivateKey(keytype)
+        key = PrivateKey(keytype)
         key.filename = filename
         key.password = password
         return key

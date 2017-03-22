@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -26,6 +26,7 @@ Decorators for callbacks passed to Queue.run().
 from __future__ import absolute_import
 from .impl import add_label, get_label, copy_labels
 from Exscript.protocols.Exception import LoginFailure
+
 
 def bind(function, *args, **kwargs):
     """
@@ -46,6 +47,7 @@ def bind(function, *args, **kwargs):
         return function(*(inner_args + args), **kwargs)
     copy_labels(function, decorated)
     return decorated
+
 
 def os_function_mapper(map):
     """
@@ -80,14 +82,15 @@ def os_function_mapper(map):
     :return: The return value of the called function.
     """
     def decorated(job, host, conn, *args, **kwargs):
-        os   = conn.guess_os()
+        os = conn.guess_os()
         func = map.get(os)
         if func is None:
             raise Exception('No handler for %s found.' % os)
         return func(job, host, conn, *args, **kwargs)
     return decorated
 
-def _decorate(flush = True, attempts = 1, only_authenticate = False):
+
+def _decorate(flush=True, attempts=1, only_authenticate=False):
     """
     Wraps the given function such that conn.login() or conn.authenticate() is
     executed.
@@ -109,9 +112,9 @@ def _decorate(flush = True, attempts = 1, only_authenticate = False):
             while True:
                 try:
                     if only_authenticate:
-                        conn.authenticate(flush = flush)
+                        conn.authenticate(flush=flush)
                     else:
-                        conn.login(flush = flush)
+                        conn.login(flush=flush)
                 except LoginFailure as e:
                     failed += 1
                     if failed >= attempts:
@@ -123,7 +126,8 @@ def _decorate(flush = True, attempts = 1, only_authenticate = False):
         return decorated
     return decorator
 
-def autologin(flush = True, attempts = 1):
+
+def autologin(flush=True, attempts=1):
     """
     Wraps the given function such that conn.login() is executed
     before calling it. Example::
@@ -142,7 +146,8 @@ def autologin(flush = True, attempts = 1):
     """
     return _decorate(flush, attempts)
 
-def autoauthenticate(flush = True, attempts = 1):
+
+def autoauthenticate(flush=True, attempts=1):
     """
     Wraps the given function such that conn.authenticate() is executed
     before calling it. Example::
@@ -159,4 +164,4 @@ def autoauthenticate(flush = True, attempts = 1):
     :rtype:  function
     :return: The wrapped function.
     """
-    return _decorate(flush, attempts, only_authenticate = True)
+    return _decorate(flush, attempts, only_authenticate=True)
