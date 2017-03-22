@@ -24,28 +24,21 @@
 A threaded HTTP server with support for HTTP/Digest authentication.
 """
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 import sys
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import hashlib
-from urlparse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs
+from urllib.request import parse_http_list, parse_keqv_list
 from traceback import format_exc
-from BaseHTTPServer import BaseHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
-from SocketServer import ThreadingMixIn
+from http.server import BaseHTTPRequestHandler
+from http.server import HTTPServer
+from socketserver import ThreadingMixIn
 
 def md5hex(x):
     return hashlib.md5(x).hexdigest()
-
-# Selective imports only for urllib2 because 2to3 will not replace the
-# urllib2.<method> calls below. Also, 2to3 will throw an error if we
-# try to do a from _ import _.
-if sys.version_info[0] < 3:
-    import urllib2
-    parse_http_list = urllib2.parse_http_list
-    parse_keqv_list = urllib2.parse_keqv_list
-else:
-    from urllib.request import parse_http_list, parse_keqv_list
 
 default_realm = 'exscript'
 
@@ -61,9 +54,9 @@ def _parse_url(path):
     # path changes from bytes to Unicode in going from Python 2 to
     # Python 3.
     if sys.version_info[0] < 3:
-        o = urlparse(urllib.unquote_plus(path).decode('utf8'))
+        o = urlparse(urllib.parse.unquote_plus(path).decode('utf8'))
     else:
-        o = urlparse(urllib.unquote_plus(path))
+        o = urlparse(urllib.parse.unquote_plus(path))
 
     path = o.path
     args = {}
@@ -72,7 +65,7 @@ def _parse_url(path):
     # dictionary since we never use multi-value GET arguments
     # anyway.
     multiargs = parse_qs(o.query, keep_blank_values=True)
-    for arg, value in multiargs.items():
+    for arg, value in list(multiargs.items()):
         args[arg] = value[0]
 
     return path, args
