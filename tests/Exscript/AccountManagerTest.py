@@ -1,16 +1,21 @@
-import sys, unittest, re, os.path, warnings
+import sys
+import unittest
+import re
+import os.path
+import warnings
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from Exscript.Account import Account
 from Exscript.AccountPool import AccountPool
 from Exscript.AccountManager import AccountManager
 
+
 class AccountManagerTest(unittest.TestCase):
     CORRELATE = AccountManager
 
     def setUp(self):
-        self.am      = AccountManager()
-        self.data    = {}
+        self.am = AccountManager()
+        self.data = {}
         self.account = Account('user', 'test')
 
     def testConstructor(self):
@@ -52,7 +57,7 @@ class AccountManagerTest(unittest.TestCase):
 
     def testGetAccountFromHash(self):
         pool1 = AccountPool()
-        acc1  = Account('user1')
+        acc1 = Account('user1')
         pool1.add_account(acc1)
         self.am.add_pool(pool1)
 
@@ -123,7 +128,8 @@ class AccountManagerTest(unittest.TestCase):
         self.assert_(account1 in pool.unlocked_accounts)
         self.assert_(account2 in self.am.default_pool.unlocked_accounts)
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountManagerTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

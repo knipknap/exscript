@@ -1,4 +1,8 @@
-import sys, unittest, re, os.path, warnings
+import sys
+import unittest
+import re
+import os.path
+import warnings
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 warnings.simplefilter('ignore', DeprecationWarning)
@@ -16,45 +20,56 @@ from Exscript.interpreter.Exception import FailException
 from Exscript.util.decorator import bind
 from Exscript.util.log import log_to
 
+
 def count_calls(job, data, **kwargs):
     assert hasattr(job, 'start')
     assert 'testarg' in kwargs
     data.value += 1
 
+
 def count_calls2(job, host, conn, data, **kwargs):
     assert isinstance(conn, Protocol)
     count_calls(job, data, **kwargs)
+
 
 def count_and_fail(job, data, **kwargs):
     count_calls(job, data, **kwargs)
     raise FailException('intentional error')
 
+
 def spawn_subtask(job, host, conn, queue, data, **kwargs):
     count_calls2(job, host, conn, data, **kwargs)
-    func  = bind(count_calls2, data, testarg = 1)
-    task  = queue.priority_run('subtask', func)
+    func = bind(count_calls2, data, testarg=1)
+    task = queue.priority_run('subtask', func)
     task.wait()
+
 
 def do_nothing(job, host, conn):
     pass
 
+
 def say_hello(job, host, conn):
     conn.send('hello')
+
 
 def error(job, host, conn):
     say_hello(job, host, conn)
     raise FailException('intentional error')
 
+
 def fatal_error(job, host, conn):
     say_hello(job, host, conn)
     raise Exception('intentional fatal error')
 
+
 class MyProtocol(Dummy):
     pass
+
 
 def raise_if_not_myprotocol(job, host, conn):
     if not isinstance(conn, MyProtocol):
         raise Exception('not a MyProtocol instance')
+
 
 class Log(object):
     data = ''
@@ -68,41 +83,43 @@ class Log(object):
     def read(self):
         return self.data
 
+
 class LogManager(BaseManager):
     pass
 LogManager.register('Log', Log)
+
 
 class QueueTest(unittest.TestCase):
     CORRELATE = Queue
     mode = 'threading'
 
-    def createQueue(self, logdir = None, **kwargs):
+    def createQueue(self, logdir=None, **kwargs):
         if self.queue:
             self.queue.destroy()
-        self.out   = self.manager.Log()
-        self.err   = self.manager.Log()
-        self.queue = Queue(mode   = self.mode,
-                           stdout = self.out,
-                           stderr = self.err,
+        self.out = self.manager.Log()
+        self.err = self.manager.Log()
+        self.queue = Queue(mode=self.mode,
+                           stdout=self.out,
+                           stderr=self.err,
                            **kwargs)
-        self.accm  = self.queue.account_manager
+        self.accm = self.queue.account_manager
         if logdir is not None:
             self.logger = FileLogger(logdir)
 
     def setUp(self):
         self.tempdir = mkdtemp()
-        self.queue   = None
-        self.logger  = None
+        self.queue = None
+        self.logger = None
         self.manager = LogManager()
         self.manager.start()
-        self.createQueue(verbose = -1, logdir = self.tempdir)
+        self.createQueue(verbose=-1, logdir=self.tempdir)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
         try:
             self.queue.destroy()
         except:
-            pass # queue already destroyed
+            pass  # queue already destroyed
         self.manager.shutdown()
 
     def assertVerbosity(self, channel, expected):
@@ -140,25 +157,28 @@ class QueueTest(unittest.TestCase):
             (5,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
         )
         for level, max_threads, with_simple, with_error, with_fatal in levels:
-            #print "S:", level, max_threads, with_simple, with_error, with_fatal
+            # print "S:", level, max_threads, with_simple, with_error,
+            # with_fatal
             stdout, stderr = with_simple
-            self.createQueue(verbose = level, max_threads = max_threads)
+            self.createQueue(verbose=level, max_threads=max_threads)
             self.queue.run('dummy://mytest', say_hello)
             self.queue.join()
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
-            #print "E:", level, max_threads, with_simple, with_error, with_fatal
+            # print "E:", level, max_threads, with_simple, with_error,
+            # with_fatal
             stdout, stderr = with_error
-            self.createQueue(verbose = level, max_threads = max_threads)
+            self.createQueue(verbose=level, max_threads=max_threads)
             self.queue.run('dummy://mytest', error)
             self.queue.join()
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
-            #print "F:", level, max_threads, with_simple, with_error, with_fatal
+            # print "F:", level, max_threads, with_simple, with_error,
+            # with_fatal
             stdout, stderr = with_fatal
-            self.createQueue(verbose = level, max_threads = max_threads)
+            self.createQueue(verbose=level, max_threads=max_threads)
             self.queue.run('dummy://mytest', fatal_error)
             self.queue.join()
             self.assertVerbosity(self.out, stdout)
@@ -187,7 +207,7 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(2, self.queue.get_max_threads())
 
     def testGetMaxThreads(self):
-        pass # Already tested in testSetMaxThreads().
+        pass  # Already tested in testSetMaxThreads().
 
     def testGetProgress(self):
         self.assertEqual(0.0, self.queue.get_progress())
@@ -223,7 +243,7 @@ class QueueTest(unittest.TestCase):
 
         # Add another pool, making sure that it does not replace
         # the default pool.
-        pool2    = AccountPool()
+        pool2 = AccountPool()
         account2 = Account('user', 'test')
         pool2.add_account(account2)
 
@@ -248,7 +268,7 @@ class QueueTest(unittest.TestCase):
     def startTask(self):
         self.testAddAccount()
         hosts = ['dummy://dummy1', 'dummy://dummy2']
-        task  = self.queue.run(hosts, log_to(self.logger)(do_nothing))
+        task = self.queue.run(hosts, log_to(self.logger)(do_nothing))
         self.assert_(task is not None)
         return task
 
@@ -286,19 +306,20 @@ class QueueTest(unittest.TestCase):
 
     def testExceptionCallback(self):
         self.exc = {}
+
         def my_exc_cb(jobname, exc_info):
             self.exc[jobname] = exc_info
 
-        self.createQueue(exc_cb = my_exc_cb)
+        self.createQueue(exc_cb=my_exc_cb)
         self.queue.run('dummy://mytest', error)
         self.queue.join()
         self.assert_("mytest" in self.exc)
         self.assert_(isinstance(self.exc["mytest"][1], FailException))
 
     def testRun(self):
-        data  = Value('i', 0)
+        data = Value('i', 0)
         hosts = ['dummy://dummy1', 'dummy://dummy2']
-        func  = bind(count_calls2, data, testarg = 1)
+        func = bind(count_calls2, data, testarg=1)
         self.queue.run(hosts,    func)
         self.queue.run('dummy://dummy3', func)
         self.queue.shutdown()
@@ -309,9 +330,9 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(data.value, 4)
 
     def testRunOrIgnore(self):
-        data  = Value('i', 0)
+        data = Value('i', 0)
         hosts = ['dummy://dummy1', 'dummy://dummy2', 'dummy://dummy1']
-        func  = bind(count_calls2, data, testarg = 1)
+        func = bind(count_calls2, data, testarg=1)
         self.queue.workqueue.pause()
         self.queue.run_or_ignore(hosts,    func)
         self.queue.run_or_ignore('dummy://dummy2', func)
@@ -339,9 +360,9 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(data.value, 1)
 
     def testPriorityRunOrRaise(self):
-        data  = Value('i', 0)
+        data = Value('i', 0)
         hosts = ['dummy://dummy1', 'dummy://dummy2', 'dummy://dummy1']
-        func  = bind(count_calls2, data, testarg = 1)
+        func = bind(count_calls2, data, testarg=1)
         self.queue.workqueue.pause()
         self.queue.priority_run_or_raise(hosts,    func)
         self.queue.priority_run_or_raise('dummy://dummy2', func)
@@ -354,9 +375,9 @@ class QueueTest(unittest.TestCase):
         self.assertEqual(data.value, 3)
 
     def testForceRun(self):
-        data  = Value('i', 0)
+        data = Value('i', 0)
         hosts = ['dummy://dummy1', 'dummy://dummy2']
-        func  = bind(count_calls2, data, testarg = 1)
+        func = bind(count_calls2, data, testarg=1)
 
         # By setting max_threads to 0 we ensure that the 'force' part is
         # actually tested; the thread should run regardless.
@@ -367,7 +388,7 @@ class QueueTest(unittest.TestCase):
 
     def testEnqueue(self):
         data = Value('i', 0)
-        func = bind(count_calls, data, testarg = 1)
+        func = bind(count_calls, data, testarg=1)
         self.queue.enqueue(func)
         self.queue.enqueue(func)
         self.queue.shutdown()
@@ -377,12 +398,12 @@ class QueueTest(unittest.TestCase):
         self.queue.shutdown()
         self.assertEqual(data.value, 3)
 
-        func = bind(count_and_fail, data, testarg = 1)
-        self.queue.enqueue(func, attempts = 7)
+        func = bind(count_and_fail, data, testarg=1)
+        self.queue.enqueue(func, attempts=7)
         self.queue.destroy()
         self.assertEqual(data.value, 10)
 
-    #FIXME: Not a method test; this should probably be elsewhere.
+    # FIXME: Not a method test; this should probably be elsewhere.
     def testLogging(self):
         task = self.startTask()
         while not task.is_completed():
@@ -400,8 +421,10 @@ class QueueTest(unittest.TestCase):
         for file in logfiles:
             content = open(os.path.join(self.tempdir, file)).read()
 
+
 class QueueTestMultiProcessing(QueueTest):
     mode = 'multiprocessing'
+
 
 def suite():
     loader = unittest.TestLoader()
@@ -409,4 +432,4 @@ def suite():
     suite2 = loader.loadTestsFromTestCase(QueueTestMultiProcessing)
     return unittest.TestSuite((suite1, suite2))
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

@@ -1,11 +1,15 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import Exscript.util.cast
 import re
-from Exscript         import Host
-from Exscript.Log     import Log
+from Exscript import Host
+from Exscript.Log import Log
 from Exscript.Logfile import Logfile
+
 
 class castTest(unittest.TestCase):
     CORRELATE = Exscript.util.cast
@@ -41,7 +45,7 @@ class castTest(unittest.TestCase):
         self.assert_(len(result) == 1)
         self.assert_(isinstance(result[0], Host))
 
-        hosts  = ['localhost', Host('1.2.3.4')]
+        hosts = ['localhost', Host('1.2.3.4')]
         result = to_hosts(hosts)
         self.assert_(isinstance(result, list))
         self.assert_(len(result) == 2)
@@ -81,7 +85,8 @@ class castTest(unittest.TestCase):
         self.assertEqual(result[0].pattern, 'regex1')
         self.assertEqual(result[1].pattern, 'regex2')
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(castTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

@@ -1,18 +1,22 @@
-import sys, unittest, re, os
+import sys
+import unittest
+import re
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import time
-from Exscript           import Account
-from Exscript.servers   import Server
+from Exscript import Account
+from Exscript.servers import Server
 from Exscript.emulators import VirtualDevice
+
 
 class ServerTest(unittest.TestCase):
     CORRELATE = Server.Server
 
     def setUp(self):
-        self.host   = 'localhost'
-        self.port   = 1235
-        self.device = VirtualDevice(self.host, echo = False)
+        self.host = 'localhost'
+        self.port = 1235
+        self.device = VirtualDevice(self.host, echo=False)
         self.daemon = Server.Server(self.host, self.port, self.device)
         self.device.set_prompt(self.host + ':' + str(self.port) + '> ')
 
@@ -31,7 +35,7 @@ class ServerTest(unittest.TestCase):
     def _add_commands(self):
         self.device.add_command('exit', self.daemon.exit_command)
         self.device.add_command('ls',   'ok1')
-        self.device.add_command('ll',   'ok2\nfoobar:1>', prompt = False)
+        self.device.add_command('ll',   'ok2\nfoobar:1>', prompt=False)
         self.device.add_command('.+',   'Unknown command.')
 
     def testConstructor(self):
@@ -62,7 +66,7 @@ class ServerTest(unittest.TestCase):
         client.send('exit\r')
 
     def testExitCommand(self):
-        pass # tested in testExit()
+        pass  # tested in testExit()
 
     def testExit(self):
         # Test can not work on the abstract base.
@@ -75,7 +79,8 @@ class ServerTest(unittest.TestCase):
         self.daemon.join()
         self.testConstructor()
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ServerTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

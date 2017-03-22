@@ -5,7 +5,8 @@ from Exscript.util.decorator import autologin
 from Exscript.util.file import get_hosts_from_file, get_accounts_from_file
 from Exscript.util.report import status, summarize
 
-logger = Logger() # Logs everything to memory.
+logger = Logger()  # Logs everything to memory.
+
 
 @log_to(logger)
 @autologin()

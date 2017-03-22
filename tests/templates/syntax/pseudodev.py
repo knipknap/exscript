@@ -1,8 +1,8 @@
 commands = (
-('ls -1.*', """
+    ('ls -1.*', """
 hello
 testme
 """),
 
-('ls -l .+', lambda x: '\n' + x)
+    ('ls -l .+', lambda x: '\n' + x)
 )

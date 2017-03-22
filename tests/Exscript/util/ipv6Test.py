@@ -1,7 +1,11 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import Exscript.util.ipv6
+
 
 class ipv6Test(unittest.TestCase):
     CORRELATE = Exscript.util.ipv6
@@ -54,7 +58,8 @@ class ipv6Test(unittest.TestCase):
         self.assertEqual(('1:0:1:2::', 128), parse_prefix('1:0:1:2::'))
         self.assertEqual(('1:0:1:2::', 64), parse_prefix('1:0:1:2::', 64))
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ipv6Test)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

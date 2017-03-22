@@ -1,7 +1,11 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import Exscript.util.crypt
+
 
 class cryptTest(unittest.TestCase):
     CORRELATE = Exscript.util.crypt
@@ -17,7 +21,8 @@ class cryptTest(unittest.TestCase):
         hash = otp('pass', 'abc888', 9998)
         self.assertEqual('DEBT BOON ASKS ORAL MEN WEE', hash)
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(cryptTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

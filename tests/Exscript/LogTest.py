@@ -1,9 +1,13 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from Exscript.Log    import Log
-from Exscript        import Host
+from Exscript.Log import Log
+from Exscript import Host
 from util.reportTest import FakeError
+
 
 class LogTest(unittest.TestCase):
     CORRELATE = Log
@@ -68,7 +72,8 @@ class LogTest(unittest.TestCase):
         self.testSucceeded()
         self.assert_(self.log.has_ended())
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LogTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

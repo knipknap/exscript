@@ -1,7 +1,11 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from Exscript import PrivateKey
+
 
 class PrivateKeyTest(unittest.TestCase):
     CORRELATE = PrivateKey
@@ -9,7 +13,7 @@ class PrivateKeyTest(unittest.TestCase):
     def setUp(self):
         self.filename = 'my.key'
         self.password = 'test1'
-        self.key      = None
+        self.key = None
 
     def testConstructor(self):
         self.key = PrivateKey()
@@ -47,7 +51,8 @@ class PrivateKeyTest(unittest.TestCase):
     def testSetPassword(self):
         self.testGetPassword()
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(PrivateKeyTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

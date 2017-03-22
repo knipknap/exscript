@@ -1,4 +1,9 @@
-import sys, unittest, re, os.path, threading, time
+import sys
+import unittest
+import re
+import os.path
+import threading
+import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import random
@@ -7,6 +12,7 @@ from multiprocessing import Value, Lock
 from Exscript.workqueue import WorkQueue
 
 lock = Lock()
+
 
 def burn_time(job):
     """
@@ -18,6 +24,7 @@ def burn_time(job):
     time.sleep(random.random())
 
 nop = lambda x: None
+
 
 class WorkQueueTest(unittest.TestCase):
     CORRELATE = WorkQueue
@@ -58,7 +65,7 @@ class WorkQueueTest(unittest.TestCase):
         self.assert_(self.wq.is_paused())
         data = Value('i', 0)  # an int in shared memory
         for i in range(222):
-            self.wq.enqueue(burn_time, data = data)
+            self.wq.enqueue(burn_time, data=data)
         self.assertEqual(222, self.wq.get_length())
 
         # Run them, using 50 threads in parallel.
@@ -115,7 +122,7 @@ class WorkQueueTest(unittest.TestCase):
         self.assertEqual(id, None)
 
     def testPause(self):
-        pass # See testEnqueue()
+        pass  # See testEnqueue()
 
     def testWaitFor(self):
         self.wq.pause()
@@ -129,13 +136,13 @@ class WorkQueueTest(unittest.TestCase):
         self.assertEqual(0, self.wq.get_length())
 
     def testUnpause(self):
-        pass # See testEnqueue()
+        pass  # See testEnqueue()
 
     def testWaitUntilDone(self):
-        pass # See testEnqueue()
+        pass  # See testEnqueue()
 
     def testShutdown(self):
-        pass # See testEnqueue()
+        pass  # See testEnqueue()
 
     def testDestroy(self):
         self.wq.pause()
@@ -167,9 +174,10 @@ class WorkQueueTest(unittest.TestCase):
         self.assertEqual(self.wq.get_running_jobs(), [])
 
     def testGetLength(self):
-        pass # See testEnqueue()
+        pass  # See testEnqueue()
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(WorkQueueTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

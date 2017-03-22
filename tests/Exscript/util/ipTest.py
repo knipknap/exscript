@@ -1,7 +1,11 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import Exscript.util.ip
+
 
 class ipTest(unittest.TestCase):
     CORRELATE = Exscript.util.ip
@@ -23,7 +27,8 @@ class ipTest(unittest.TestCase):
         self.assertEqual(clean_ip('192.168.010.001'), '192.168.10.1')
         self.assertEqual(clean_ip('1234:0:0:0:0:0:0:000A'), '1234::a')
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ipTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

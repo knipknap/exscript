@@ -1,9 +1,13 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from tempfile import NamedTemporaryFile
 import Exscript.util.interact
 from Exscript.util.interact import InputHistory
+
 
 class InputHistoryTest(unittest.TestCase):
     CORRELATE = InputHistory
@@ -40,6 +44,7 @@ class InputHistoryTest(unittest.TestCase):
         self.assertEqual(self.history.get('bar', '...'), 'myvalue2')
         self.assertEqual(self.history.get('bar', None), 'myvalue2')
 
+
 class interactTest(unittest.TestCase):
     CORRELATE = Exscript.util.interact
 
@@ -63,11 +68,12 @@ class interactTest(unittest.TestCase):
         from Exscript.util.interact import read_login
         # Can't really be tested, as it is interactive.
 
+
 def suite():
-    loader   = unittest.TestLoader()
+    loader = unittest.TestLoader()
     thesuite = unittest.TestSuite()
     thesuite.addTest(loader.loadTestsFromTestCase(InputHistoryTest))
     thesuite.addTest(loader.loadTestsFromTestCase(interactTest))
     return thesuite
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

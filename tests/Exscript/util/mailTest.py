@@ -1,11 +1,15 @@
-import sys, unittest, re, os.path, tempfile
+import sys
+import unittest
+import re
+import os.path
+import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from getpass import getuser
 import Exscript.util.mail
 from Exscript.util.mail import Mail
 
-vars     = dict(testvar1 = 'blah', testvar2 = 'foo', testvar3 = 'bar')
+vars = dict(testvar1='blah', testvar2='foo', testvar3='bar')
 template = '''
 To: user, user2@localhost
 Cc: user3
@@ -28,11 +32,12 @@ Test body: {testvar2}
 {testvar3}
 '''.strip().replace('\n', '\r\n')
 
+
 class MailTest(unittest.TestCase):
     CORRELATE = Mail
 
     def setUp(self):
-        self.mail = Mail(sender = 'test')
+        self.mail = Mail(sender='test')
 
     def testConstructor(self):
         mail = Mail()
@@ -54,7 +59,7 @@ class MailTest(unittest.TestCase):
         self.assertEqual(self.mail.get_sender(), 'test2')
 
     def testGetSender(self):
-        pass # see testSetSender()
+        pass  # see testSetSender()
 
     def checkSetAddr(self, set_method, get_method):
         set_method('test')
@@ -80,7 +85,7 @@ class MailTest(unittest.TestCase):
         self.checkAddAddr(self.mail.add_to, self.mail.get_to)
 
     def testGetTo(self):
-        pass # see testSetTo()
+        pass  # see testSetTo()
 
     def testSetCc(self):
         self.checkSetAddr(self.mail.set_cc, self.mail.get_cc)
@@ -89,7 +94,7 @@ class MailTest(unittest.TestCase):
         self.checkAddAddr(self.mail.add_cc, self.mail.get_cc)
 
     def testGetCc(self):
-        pass # see testSetCc()
+        pass  # see testSetCc()
 
     def testSetBcc(self):
         self.checkSetAddr(self.mail.set_bcc, self.mail.get_bcc)
@@ -98,7 +103,7 @@ class MailTest(unittest.TestCase):
         self.checkAddAddr(self.mail.add_bcc, self.mail.get_bcc)
 
     def testGetBcc(self):
-        pass # see testSetBcc()
+        pass  # see testSetBcc()
 
     def testGetReceipients(self):
         self.mail.set_to('test1')
@@ -113,7 +118,7 @@ class MailTest(unittest.TestCase):
         self.assertEqual(self.mail.get_subject(), 'test')
 
     def testGetSubject(self):
-        pass # see testSetSubject()
+        pass  # see testSetSubject()
 
     def testSetBody(self):
         self.assertEqual(self.mail.get_body(), '')
@@ -121,7 +126,7 @@ class MailTest(unittest.TestCase):
         self.assertEqual(self.mail.get_body(), 'test')
 
     def testGetBody(self):
-        pass # see testSetBody()
+        pass  # see testSetBody()
 
     def testAddAttachment(self):
         self.assertEqual(self.mail.get_attachments(), [])
@@ -134,10 +139,11 @@ class MailTest(unittest.TestCase):
         self.testAddAttachment()
 
     def testGetSmtpHeader(self):
-        pass # see testSetFromTemplateString()
+        pass  # see testSetFromTemplateString()
 
     def testGetSmtpMail(self):
-        pass # see testSetFromTemplateString()
+        pass  # see testSetFromTemplateString()
+
 
 class mailTest(unittest.TestCase):
     CORRELATE = Exscript.util.mail
@@ -146,7 +152,7 @@ class mailTest(unittest.TestCase):
         self.assert_(isinstance(mail, Mail))
 
         # Remove the "From:" line.
-        result   = mail.get_smtp_mail().split('\n', 1)[1].strip()
+        result = mail.get_smtp_mail().split('\n', 1)[1].strip()
         expected = smtp.split('\n', 1)[1].strip()
 
         # Compare the results.
@@ -169,11 +175,12 @@ class mailTest(unittest.TestCase):
         self.checkResult(mail)
 
     def testSend(self):
-        pass # no easy way to test without spamming.
+        pass  # no easy way to test without spamming.
+
 
 def suite():
-    mail_cls    = unittest.TestLoader().loadTestsFromTestCase(MailTest)
+    mail_cls = unittest.TestLoader().loadTestsFromTestCase(MailTest)
     mail_module = unittest.TestLoader().loadTestsFromTestCase(mailTest)
     return unittest.TestSuite([mail_cls, mail_module])
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

@@ -1,4 +1,7 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from tempfile import mkdtemp
@@ -7,17 +10,19 @@ from Exscript import Host
 from Exscript.FileLogger import FileLogger
 from LoggerTest import LoggerTest, FakeJob
 
+
 class FakeError(Exception):
     pass
+
 
 class FileLoggerTest(LoggerTest):
     CORRELATE = FileLogger
 
     def setUp(self):
         self.tempdir = mkdtemp()
-        self.logdir  = os.path.join(self.tempdir, 'non-existent')
-        self.logger  = FileLogger(self.logdir, clearmem = False)
-        self.job     = FakeJob('fake')
+        self.logdir = os.path.join(self.tempdir, 'non-existent')
+        self.logger = FileLogger(self.logdir, clearmem=False)
+        self.job = FakeJob('fake')
         self.logfile = os.path.join(self.logdir, 'fake.log')
         self.errfile = self.logfile + '.error'
 
@@ -32,7 +37,8 @@ class FileLoggerTest(LoggerTest):
 
     def testAddLog(self):
         log = LoggerTest.testAddLog(self)
-        self.assert_(os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
+        self.assert_(
+            os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
         self.failIf(os.path.exists(self.errfile))
         return log
 
@@ -82,7 +88,8 @@ class FileLoggerTest(LoggerTest):
         self.assert_(os.path.isfile(self.logfile))
         self.failIf(os.path.exists(self.errfile))
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(FileLoggerTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

@@ -1,10 +1,15 @@
-import sys, unittest, re, os.path, warnings
+import sys
+import unittest
+import re
+import os.path
+import warnings
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 warnings.simplefilter('ignore', DeprecationWarning)
 
 from Exscript.workqueue import WorkQueue, Task
 from Exscript.workqueue.Job import Thread
+
 
 class TaskTest(unittest.TestCase):
     CORRELATE = Task
@@ -21,7 +26,7 @@ class TaskTest(unittest.TestCase):
     def testIsCompleted(self):
         task = Task(self.wq)
         task.add_job_id(123)
-        task.wait() # Returns immediately because the id is not known.
+        task.wait()  # Returns immediately because the id is not known.
 
     def testWait(self):
         task = Task(self.wq)
@@ -41,7 +46,8 @@ class TaskTest(unittest.TestCase):
     def testAddJobId(self):
         self.testWait()
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TaskTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

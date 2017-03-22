@@ -1,10 +1,14 @@
 from __future__ import absolute_import
-import sys, unittest, re, os
+import sys
+import unittest
+import re
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from .ServerTest         import ServerTest
-from Exscript.servers   import Telnetd
+from .ServerTest import ServerTest
+from Exscript.servers import Telnetd
 from Exscript.protocols import Telnet
+
 
 class TelnetdTest(ServerTest):
     CORRELATE = Telnetd
@@ -15,7 +19,8 @@ class TelnetdTest(ServerTest):
     def _create_client(self):
         return Telnet()
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TelnetdTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

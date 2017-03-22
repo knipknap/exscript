@@ -1,4 +1,7 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from Exscript.util.url import Url
@@ -93,6 +96,7 @@ urls = [
      'pseudo:///abs/path'),
 ]
 
+
 class urlTest(unittest.TestCase):
     CORRELATE = Url
 
@@ -102,7 +106,7 @@ class urlTest(unittest.TestCase):
     def testToString(self):
         for url, expected in urls:
             result = Url.from_string(url)
-            error  = 'URL:      ' + url + '\n'
+            error = 'URL:      ' + url + '\n'
             error += 'Result:   ' + str(result) + '\n'
             error += 'Expected: ' + expected
             self.assert_(isinstance(result, Url))
@@ -111,13 +115,14 @@ class urlTest(unittest.TestCase):
     def testFromString(self):
         for url, expected in urls:
             result = Url.from_string(url)
-            error  = 'URL:      ' + url + '\n'
+            error = 'URL:      ' + url + '\n'
             error += 'Result:   ' + str(result) + '\n'
             error += 'Expected: ' + expected
             self.assert_(isinstance(result, Url))
             self.assert_(str(result) == expected, error)
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(urlTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

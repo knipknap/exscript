@@ -1,8 +1,12 @@
-import sys, unittest, re, os
+import sys
+import unittest
+import re
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from Exscript.protocols.OsGuesser import OsGuesser
 import Exscript.protocols.drivers as drivers
+
 
 class OsGuesserTest(unittest.TestCase):
     CORRELATE = OsGuesser
@@ -55,10 +59,10 @@ class OsGuesserTest(unittest.TestCase):
         self.assertEqual(self.sa.get('test'), 'eins')
 
     def testGet(self):
-        pass # See testSet().
+        pass  # See testSet().
 
     def testDataReceived(self):
-        dirname    = os.path.dirname(__file__)
+        dirname = os.path.dirname(__file__)
         banner_dir = os.path.join(dirname, 'banners')
         for file in os.listdir(banner_dir):
             if file.startswith('.'):
@@ -66,14 +70,15 @@ class OsGuesserTest(unittest.TestCase):
             osname = file.split('.')[0]
             if not drivers.driver_map[osname].supports_os_guesser():
                 continue
-            file   = os.path.join(banner_dir, file)
+            file = os.path.join(banner_dir, file)
             banner = open(file).read().rstrip('\n')
-            osg    = OsGuesser()
+            osg = OsGuesser()
             for char in banner:
                 osg.data_received(char, False)
             self.assertEqual(osg.get('os'), osname)
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(OsGuesserTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

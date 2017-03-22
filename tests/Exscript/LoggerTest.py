@@ -1,4 +1,7 @@
-import sys, unittest, re, os
+import sys
+import unittest
+import re
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import gc
@@ -10,19 +13,22 @@ from Exscript.Logger import Logger
 from LogTest import FakeError
 from util.reportTest import FakeJob
 
+
 def count(iterable):
     return sum(1 for _ in iterable)
 
-def nth(iterable, n, default = None):
+
+def nth(iterable, n, default=None):
     "Returns the nth item or a default value"
     return next(islice(iterable, n, None), default)
+
 
 class LoggerTest(unittest.TestCase):
     CORRELATE = Logger
 
     def setUp(self):
         self.logger = Logger()
-        self.job    = FakeJob('fake')
+        self.job = FakeJob('fake')
 
     def tearDown(self):
         # Needed to make sure that events are disconnected.
@@ -156,7 +162,8 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(str(log), 'hello world')
         return log
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LoggerTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

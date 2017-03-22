@@ -1,23 +1,27 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import tempfile
 import Exscript.util.tty
+
 
 class ttyTest(unittest.TestCase):
     CORRELATE = Exscript.util.tty
 
     def setUp(self):
         self.tempfile = tempfile.TemporaryFile()
-        self.stdout   = sys.stdout
-        self.stderr   = sys.stderr
-        self.stdin    = sys.stdin
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+        self.stdin = sys.stdin
         sys.stdout = sys.stderr = sys.stdin = self.tempfile
 
     def _unredirect(self):
         sys.stdout = self.stdout
         sys.stderr = self.stderr
-        sys.stdin  = self.stdin
+        sys.stdin = self.stdin
 
     def tearDown(self):
         self._unredirect()
@@ -38,13 +42,13 @@ class ttyTest(unittest.TestCase):
 
         # If the LINES and COLUMNS variables are not set, all methods should
         # now fail, and the default values are returned.
-        os.environ['LINES']   = ''
+        os.environ['LINES'] = ''
         os.environ['COLUMNS'] = ''
         self.assertEqual(get_terminal_size(),       (25, 80))
         self.assertEqual(get_terminal_size(10, 10), (10, 10))
 
         # If the LINES and COLUMNS variables are set, they should be used.
-        os.environ['LINES']   = '1000'
+        os.environ['LINES'] = '1000'
         os.environ['COLUMNS'] = '1000'
         self.assertEqual(get_terminal_size(),       (1000, 1000))
         self.assertEqual(get_terminal_size(10, 10), (1000, 1000))
@@ -55,7 +59,7 @@ class ttyTest(unittest.TestCase):
             self.assertNotEqual(get_terminal_size(),       (1000, 1000))
             self.assertNotEqual(get_terminal_size(10, 10), (1000, 1000))
         except OSError:
-            pass # "stty" not found.
+            pass  # "stty" not found.
 
         # Lastly, if stdin/stderr/stdout exist, they should tell us something.
         os.environ['PATH'] = ''
@@ -64,7 +68,8 @@ class ttyTest(unittest.TestCase):
         self.assertNotEqual(get_terminal_size(10, 10), (1000, 1000))
         os.environ['PATH'] = oldpath
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ttyTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

@@ -6,10 +6,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from Exscript.util.weakmethod import ref, WeakMethod, DeadMethodCalled
 
+
 class TestClass(object):
+
     def callback(self, *args, **kwargs):
-        self.args   = args
+        self.args = args
         self.kwargs = kwargs
+
 
 class weakmethodTest(unittest.TestCase):
     CORRELATE = WeakMethod
@@ -50,11 +53,11 @@ class weakmethodTest(unittest.TestCase):
     def testCall(self):
         # Test with a function.
         def function(data, *args, **kwargs):
-            data['args']   = args
+            data['args'] = args
             data['kwargs'] = kwargs
         d = {}
         f = ref(function)
-        f(d, 'one', two = True)
+        f(d, 'one', two=True)
         self.assertEqual(d, {'args': ('one',), 'kwargs': {'two': True}})
         del function
 
@@ -62,14 +65,15 @@ class weakmethodTest(unittest.TestCase):
         d = {}
         c = TestClass()
         m = ref(c.callback)
-        m('one', two = True)
+        m('one', two=True)
         self.assertEqual(c.args, ('one',))
         self.assertEqual(c.kwargs, {'two': True})
 
         del c
         self.assertRaises(DeadMethodCalled, m)
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(weakmethodTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

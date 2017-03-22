@@ -1,9 +1,13 @@
-import sys, unittest, re, os
+import sys
+import unittest
+import re
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from tempfile import TemporaryFile
 from functools import partial
 from Exscript.util.buffer import MonitoredBuffer
+
 
 class bufferTest(unittest.TestCase):
     CORRELATE = MonitoredBuffer
@@ -91,7 +95,7 @@ class bufferTest(unittest.TestCase):
 
         # Set the monitor callback up.
         def monitor_cb(thedata, *args, **kwargs):
-            thedata['args']   = args
+            thedata['args'] = args
             thedata['kwargs'] = kwargs
         data = {}
         b.add_monitor('abc', partial(monitor_cb, data))
@@ -122,7 +126,8 @@ class bufferTest(unittest.TestCase):
         self.assertEqual(data.get('args')[1].group(0), 'abc')
         self.assertEqual(data.get('kwargs'), {})
 
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(bufferTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

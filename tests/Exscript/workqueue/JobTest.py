@@ -1,4 +1,8 @@
-import sys, unittest, re, os.path, threading
+import sys
+import unittest
+import re
+import os.path
+import threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from multiprocessing import Pipe
@@ -6,8 +10,10 @@ from Exscript.workqueue.Job import Thread, Process, Job
 from tempfile import NamedTemporaryFile
 from cPickle import dumps, loads
 
+
 def do_nothing(job):
     pass
+
 
 class ThreadTest(unittest.TestCase):
     CORRELATE = Thread
@@ -27,12 +33,15 @@ class ThreadTest(unittest.TestCase):
         self.assertEqual(response, '')
 
     def testStart(self):
-        pass # See testRun()
+        pass  # See testRun()
+
 
 class ProcessTest(ThreadTest):
     CORRELATE = Process
 
+
 class JobTest(unittest.TestCase):
+
     def testConstructor(self):
         job = Job(do_nothing, 'myaction', 1, 'foo')
         self.assertEqual(job.name, 'myaction')
@@ -47,6 +56,7 @@ class JobTest(unittest.TestCase):
         job2 = loads(data)
         self.assertEqual(job1.name, job2.name)
 
+
 def suite():
     loader = unittest.TestLoader()
     suite1 = loader.loadTestsFromTestCase(ThreadTest)
@@ -54,4 +64,4 @@ def suite():
     suite3 = loader.loadTestsFromTestCase(JobTest)
     return unittest.TestSuite((suite1, suite2, suite3))
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())

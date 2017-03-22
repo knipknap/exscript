@@ -1,6 +1,6 @@
 commands = (
-('show version', """
-Cisco Internetwork Operating System Software 
+    ('show version', """
+Cisco Internetwork Operating System Software
 IOS (tm) GS Software (C12KPRP-P-M), Version 12.0(32)SY6c, RELEASE SOFTWARE (fc3)
 Technical Support: http://www.cisco.com/techsupport
 Copyright (c) 1986-2008 by cisco Systems, Inc.
@@ -45,7 +45,7 @@ Channelized E1, Version 1.0.
 Configuration register is 0x2102
 """),
 
-(r'show diag \d+', """
+    (r'show diag \d+', """
 SLOT 0  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC connector
   MAIN: type 79,  800-19733-08 rev A0
         Deviation: 0
@@ -63,7 +63,7 @@ SLOT 0  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC 
   ROM Monitor version 18.0
   Fabric Downloader version used 7.1 (ROM version is 7.1)
   Primary clock is CSC 1
-  Board is analyzed 
+  Board is analyzed
   Board State is Line Card Enabled (IOS  RUN )
   Insertion time: 00:00:30 (36w1d ago)
   Processor Memory size: 1073741824 bytes

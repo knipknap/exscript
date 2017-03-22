@@ -6,7 +6,7 @@ from meliae import scanner, loader
 from Exscript import Account, Host
 
 hostlist = [Host(str(i)) for i in range(1, 10000)]
-#accountlist = [Account(str(i)) for i in range(1, 10000)]
+# accountlist = [Account(str(i)) for i in range(1, 10000)]
 
 scanner.dump_all_objects('test.dump')
 om = loader.load('test.dump')

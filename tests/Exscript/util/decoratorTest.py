@@ -1,4 +1,7 @@
-import sys, unittest, re, os.path
+import sys
+import unittest
+import re
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from functools import partial
@@ -10,12 +13,14 @@ from Exscript.protocols.Exception import LoginFailure
 from util.reportTest import FakeJob
 from multiprocessing import Value
 
+
 class FakeConnection(object):
-    def __init__(self, os = None):
-        self.os            = os
-        self.data          = {}
-        self.host          = None
-        self.logged_in     = False
+
+    def __init__(self, os=None):
+        self.os = os
+        self.data = {}
+        self.host = None
+        self.logged_in = False
         self.authenticated = False
 
     def connect(self, hostname, port):
@@ -24,20 +29,21 @@ class FakeConnection(object):
     def get_host(self):
         return self.host
 
-    def login(self, flush = True):
-        self.logged_in     = True
+    def login(self, flush=True):
+        self.logged_in = True
         self.login_flushed = flush
 
-    def authenticate(self, flush = True):
+    def authenticate(self, flush=True):
         self.authenticated = True
         self.login_flushed = flush
 
     def close(self, force):
-        self.connected    = False
+        self.connected = False
         self.close_forced = force
 
     def guess_os(self):
         return self.os
+
 
 class decoratorTest(unittest.TestCase):
     CORRELATE = Exscript.util.decorator
@@ -51,7 +57,7 @@ class decoratorTest(unittest.TestCase):
 
     def testBind(self):
         from Exscript.util.decorator import bind
-        bound  = bind(self.bind_cb, 'one', 'two', three = 3)
+        bound = bind(self.bind_cb, 'one', 'two', three=3)
         result = bound(FakeJob())
         self.assert_(result == 123, result)
 
@@ -65,21 +71,21 @@ class decoratorTest(unittest.TestCase):
         from Exscript.util.decorator import os_function_mapper
         cb_map = {'ios': self.ios_cb, 'junos': self.junos_cb}
         mapper = os_function_mapper(cb_map)
-        job    = FakeJob()
-        host   = object()
+        job = FakeJob()
+        host = object()
 
         # Test with 'ios'.
-        conn   = FakeConnection(os = 'ios')
+        conn = FakeConnection(os='ios')
         result = mapper(job, host, conn)
         self.assertEqual(result, 'hello ios')
 
         # Test with 'junos'.
-        conn   = FakeConnection(os = 'junos')
+        conn = FakeConnection(os='junos')
         result = mapper(job, host, conn)
         self.assertEqual(result, 'hello junos')
 
         # Test with unsupported OS.
-        conn = FakeConnection(os = 'unknown')
+        conn = FakeConnection(os='unknown')
         self.assertRaises(Exception, mapper, job, host, conn)
 
     def autologin_cb(self, job, host, conn, *args, **kwargs):
@@ -89,28 +95,29 @@ class decoratorTest(unittest.TestCase):
 
     def testAutologin(self):
         from Exscript.util.decorator import autologin
-        job  = FakeJob()
+        job = FakeJob()
         host = job.data['host']
         conn = job.data['conn'] = FakeConnection()
 
         # Test simple login.
-        decor  = autologin(flush = False)
-        bound  = decor(self.autologin_cb)
-        result = bound(job, host, conn, 'one', 'two', three = 3)
+        decor = autologin(flush=False)
+        bound = decor(self.autologin_cb)
+        result = bound(job, host, conn, 'one', 'two', three=3)
         self.assertEqual(result, 123)
 
         # Monkey patch the fake connection such that the login fails.
         conn = FakeConnection()
         data = Value('i', 0)
+
         def fail(data, *args, **kwargs):
             data.value += 1
             raise LoginFailure('intended login failure')
         conn.login = partial(fail, data)
 
         # Test retry functionality.
-        decor = autologin(flush = False, attempts = 5)
+        decor = autologin(flush=False, attempts=5)
         bound = decor(self.autologin_cb)
-        job   = FakeJob()
+        job = FakeJob()
         job.data['conn'] = conn
         self.assertRaises(LoginFailure,
                           bound,
@@ -119,7 +126,7 @@ class decoratorTest(unittest.TestCase):
                           conn,
                           'one',
                           'two',
-                          three = 3)
+                          three=3)
         self.assertEqual(data.value, 5)
 
     def autoauthenticate_cb(self, job, host, conn, *args, **kwargs):
@@ -129,28 +136,29 @@ class decoratorTest(unittest.TestCase):
 
     def testAutoauthenticate(self):
         from Exscript.util.decorator import autoauthenticate
-        job  = FakeJob()
+        job = FakeJob()
         host = job.data['host']
         conn = job.data['conn'] = FakeConnection()
 
         # Test simple authentication.
-        decor  = autoauthenticate(flush = False)
-        bound  = decor(self.autoauthenticate_cb)
-        result = bound(job, host, conn, 'one', 'two', three = 3)
+        decor = autoauthenticate(flush=False)
+        bound = decor(self.autoauthenticate_cb)
+        result = bound(job, host, conn, 'one', 'two', three=3)
         self.assertEqual(result, 123)
 
         # Monkey patch the fake connection such that the login fails.
         conn = FakeConnection()
         data = Value('i', 0)
+
         def fail(data, *args, **kwargs):
             data.value += 1
             raise LoginFailure('intended login failure')
         conn.authenticate = partial(fail, data)
 
         # Test retry functionality.
-        decor = autoauthenticate(flush = False, attempts = 5)
+        decor = autoauthenticate(flush=False, attempts=5)
         bound = decor(self.autoauthenticate_cb)
-        job   = FakeJob()
+        job = FakeJob()
         job.data['conn'] = conn
         self.assertRaises(LoginFailure,
                           bound,
@@ -159,13 +167,14 @@ class decoratorTest(unittest.TestCase):
                           conn,
                           'one',
                           'two',
-                          three = 3)
+                          three=3)
         self.assertEqual(data.value, 5)
 
     def testDeprecated(self):
-        pass #not really needed.
+        pass  # not really needed.
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(decoratorTest)
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity = 2).run(suite())
+    unittest.TextTestRunner(verbosity=2).run(suite())
