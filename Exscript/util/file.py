@@ -23,13 +23,17 @@
 """
 Utilities for reading data from files.
 """
+from __future__ import absolute_import
+from builtins import str
+from future import standard_library
+standard_library.install_aliases()
 import re
 import os
 import base64
 import codecs
 import imp
 from Exscript import Account
-from Exscript.util.cast import to_host
+from .cast import to_host
 
 
 def get_accounts_from_file(filename):
@@ -56,7 +60,7 @@ def get_accounts_from_file(filename):
     :return: The newly created account instances.
     """
     accounts = []
-    cfgparser = __import__('ConfigParser', {}, {}, [''])
+    cfgparser = __import__('configparser', {}, {}, [''])
     parser = cfgparser.RawConfigParser()
     parser.optionxform = str
     parser.read(filename)
@@ -223,4 +227,4 @@ def load_lib(filename):
     name = os.path.splitext(os.path.basename(filename))[0]
     module = imp.load_source(name, filename)
 
-    return dict((name + '.' + k, v) for (k, v) in module.__lib__.iteritems())
+    return dict((name + '.' + k, v) for (k, v) in module.__lib__.items())
