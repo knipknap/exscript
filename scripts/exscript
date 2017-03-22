@@ -1,3 +1,6 @@
+from builtins import input
+from builtins import str
+from builtins import range
 #!/usr/bin/env python
 # Copyright (C) 2007-2010 Samuel Abels.
 #
@@ -43,12 +46,12 @@ def expand_bracket(value_name, value):
     if prompt.startswith('!'):
         value = getpass.getpass('Please enter %s: ' % prompt[1:])
     else:
-        value = raw_input('Please enter %s: ' % prompt)
+        value = eval(input('Please enter %s: ' % prompt))
     return value
 
 def expand_host_variables(host):
     # Define host-specific variables.
-    for key, value in host.get_all().iteritems():
+    for key, value in list(host.get_all().items()):
         if isinstance(value, str):
             value = expand_bracket(key, value)
         elif hasattr(value, '__iter__'):
@@ -120,7 +123,7 @@ def run():
         except Exception, e:
             sys.stderr.write('Error in driver ' + options.load_driver + '\n')
             raise
-        for name, obj in driver_module.__dict__.iteritems():
+        for name, obj in list(driver_module.__dict__.items()):
             if Exscript.protocols.drivers.isdriver(obj):
                 Exscript.protocols.drivers.add_driver(obj)
                 print 'Driver ' + repr(name) + ' added.'
@@ -229,7 +232,7 @@ def run():
     # Ask for values of marked variables.
     for host in hosts:
         expand_host_variables(host)
-    for key, val in options.define.iteritems():
+    for key, val in list(options.define.items()):
         options.define[key] = expand_bracket(key, val)
 
     # Choose the template processing type.
@@ -491,7 +494,7 @@ Instructs Exscript to overwrite existing logfiles. The default
 is to append the output if a log already exists.
 '''.strip())
 
-protocols = protocol_map.keys()
+protocols = list(protocol_map.keys())
 protocols.sort()
 parser.add_option('--protocol', '-p',
                   dest    = 'protocol',
