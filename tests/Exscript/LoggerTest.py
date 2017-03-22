@@ -8,8 +8,7 @@ import gc
 from itertools import islice
 from tempfile import mkdtemp
 from shutil import rmtree
-from Exscript.Log import Log
-from Exscript.Logger import Logger
+from Exscript.logger import Log, Logger
 from LogTest import FakeError
 from util.reportTest import FakeJob
 

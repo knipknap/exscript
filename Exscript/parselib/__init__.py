@@ -20,8 +20,9 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from Exscript.parselib.Lexer import Lexer
-from Exscript.parselib.Token import Token
+from __future__ import absolute_import
+from .lexer import Lexer
+from .token import Token
 
 import inspect
 __all__ = [name for name, obj in locals().items()

@@ -23,18 +23,17 @@
 """
 The core module.
 """
+from __future__ import absolute_import
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=DeprecationWarning)
     import paramiko
-from Exscript.version import __version__
-from Exscript.Account import Account
-from Exscript.AccountPool import AccountPool
-from Exscript.PrivateKey import PrivateKey
-from Exscript.Queue import Queue
-from Exscript.Host import Host
-from Exscript.Logger import Logger
-from Exscript.FileLogger import FileLogger
+from .version import __version__
+from .account import Account, AccountPool
+from .key import PrivateKey
+from .queue import Queue
+from .host import Host
+from .logger import Logger, FileLogger
 
 import inspect
 __all__ = [name for name, obj in locals().items()

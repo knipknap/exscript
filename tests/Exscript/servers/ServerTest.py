@@ -6,24 +6,24 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import time
 from Exscript import Account
-from Exscript.servers import Server
+from Exscript.servers.server import Server
 from Exscript.emulators import VirtualDevice
 
 
 class ServerTest(unittest.TestCase):
-    CORRELATE = Server.Server
+    CORRELATE = Server
 
     def setUp(self):
         self.host = 'localhost'
         self.port = 1235
         self.device = VirtualDevice(self.host, echo=False)
-        self.daemon = Server.Server(self.host, self.port, self.device)
+        self.daemon = Server(self.host, self.port, self.device)
         self.device.set_prompt(self.host + ':' + str(self.port) + '> ')
 
     def tearDown(self):
         if self.daemon:
             self.daemon.exit()
-        if self.daemon.__class__ != Server.Server:
+        if self.daemon.__class__ != Server:
             self.daemon.join()
 
     def _create_daemon(self):
@@ -40,7 +40,7 @@ class ServerTest(unittest.TestCase):
 
     def testConstructor(self):
         # Test can not work on the abstract base.
-        if self.daemon.__class__ == Server.Server:
+        if self.daemon.__class__ == Server:
             return
         self._create_daemon()
         self.daemon.start()
@@ -48,7 +48,7 @@ class ServerTest(unittest.TestCase):
 
     def testStart(self):
         # Test can not work on the abstract base.
-        if self.daemon.__class__ == Server.Server:
+        if self.daemon.__class__ == Server:
             return
         self._create_daemon()
         self._add_commands()
@@ -70,7 +70,7 @@ class ServerTest(unittest.TestCase):
 
     def testExit(self):
         # Test can not work on the abstract base.
-        if self.daemon.__class__ == Server.Server:
+        if self.daemon.__class__ == Server:
             return
         self.testStart()
         # Since testStart() sent an "exit" command to the server,

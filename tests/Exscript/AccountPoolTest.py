@@ -5,7 +5,7 @@ import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from Exscript import Account
-from Exscript.AccountPool import AccountPool
+from Exscript.account import AccountPool
 from Exscript.util.file import get_accounts_from_file
 
 

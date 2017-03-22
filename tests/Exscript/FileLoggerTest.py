@@ -6,8 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from tempfile import mkdtemp
 from shutil import rmtree
-from Exscript import Host
-from Exscript.FileLogger import FileLogger
+from Exscript import Host, FileLogger
 from LoggerTest import LoggerTest, FakeJob
 
 

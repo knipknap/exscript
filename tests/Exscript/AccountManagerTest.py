@@ -5,9 +5,7 @@ import os.path
 import warnings
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from Exscript.Account import Account
-from Exscript.AccountPool import AccountPool
-from Exscript.AccountManager import AccountManager
+from Exscript.account import Account, AccountPool, AccountManager
 
 
 class AccountManagerTest(unittest.TestCase):

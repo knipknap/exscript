@@ -9,7 +9,7 @@ import Exscript.util.decorator
 from Exscript.util.impl import get_label
 from Exscript import Host, Account
 from Exscript.protocols import Protocol
-from Exscript.protocols.Exception import LoginFailure
+from Exscript.protocols.exception import LoginFailure
 from util.reportTest import FakeJob
 from multiprocessing import Value
 

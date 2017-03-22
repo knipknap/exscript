@@ -20,13 +20,14 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from Exscript import Account
-from Exscript.util.cast import to_host
-from Exscript.util.url import Url
-from Exscript.protocols.Protocol import Protocol
-from Exscript.protocols.Telnet import Telnet
-from Exscript.protocols.SSH2 import SSH2
-from Exscript.protocols.Dummy import Dummy
+from __future__ import absolute_import
+from .. import Account
+from ..util.cast import to_host
+from ..util.url import Url
+from .protocol import Protocol
+from .telnet import Telnet
+from .ssh2 import SSH2
+from .dummy import Dummy
 
 protocol_map = {'dummy':  Dummy,
                 'pseudo': Dummy,

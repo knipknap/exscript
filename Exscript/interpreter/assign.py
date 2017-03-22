@@ -20,14 +20,36 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-Very simple servers, useful for emulating a device for testing.
-"""
-from __future__ import absolute_import
-from .telnetd import Telnetd
-from .sshd import SSHd
-from .httpd import HTTPd
+from __future__ import print_function, absolute_import
+from ..parselib import Token
+from .expression import Expression
 
-import inspect
-__all__ = [name for name, obj in locals().items()
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+
+class Assign(Token):
+
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Assign', lexer, parser, parent)
+
+        # Extract the variable name.
+        _, self.varname = lexer.token()
+        lexer.expect(self, 'varname')
+        lexer.expect(self, 'whitespace')
+        lexer.expect(self, 'assign')
+        lexer.expect(self, 'whitespace')
+
+        if self.varname.startswith('__'):
+            msg = 'Assignment to internal variable ' + self.varname
+            lexer.syntax_error(msg, self)
+
+        self.expression = Expression(lexer, parser, parent)
+        self.parent.define(**{self.varname: None})
+
+    def dump(self, indent=0):
+        print((' ' * indent) + self.name, self.varname, 'start')
+        self.expression.dump(indent + 1)
+        print((' ' * indent) + self.name, self.varname, 'start')
+
+    def value(self, context):
+        result = self.expression.value(context)
+        self.parent.define(**{self.varname: result})
+        return result

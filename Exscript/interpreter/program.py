@@ -20,14 +20,32 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-Very simple servers, useful for emulating a device for testing.
-"""
 from __future__ import absolute_import
-from .telnetd import Telnetd
-from .sshd import SSHd
-from .httpd import HTTPd
+import copy
+from .template import Template
+from .scope import Scope
 
-import inspect
-__all__ = [name for name, obj in locals().items()
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+
+class Program(Scope):
+
+    def __init__(self, lexer, parser, variables, **kwargs):
+        Scope.__init__(self, 'Program', lexer, parser, None, **kwargs)
+        self.variables = variables
+        self.init_variables = variables
+        self.add(Template(lexer, parser, self))
+
+    def init(self, *args, **kwargs):
+        for key in kwargs:
+            if key.find('.') >= 0 or key.startswith('_'):
+                continue
+            if type(kwargs[key]) == type([]):
+                self.init_variables[key] = kwargs[key]
+            else:
+                self.init_variables[key] = [kwargs[key]]
+
+    def execute(self, *args, **kwargs):
+        self.variables = copy.copy(self.init_variables)
+        if 'variables' in kwargs:
+            self.variables.update(kwargs.get('variables'))
+        self.value(self)
+        return self.variables

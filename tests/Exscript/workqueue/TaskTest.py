@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 warnings.simplefilter('ignore', DeprecationWarning)
 
 from Exscript.workqueue import WorkQueue, Task
-from Exscript.workqueue.Job import Thread
+from Exscript.workqueue.job import Thread
 
 
 class TaskTest(unittest.TestCase):

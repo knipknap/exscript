@@ -5,21 +5,19 @@ import os.path
 import threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from Exscript.workqueue import MainLoop
-from Exscript.workqueue.Pipeline import Pipeline
-from Exscript.workqueue.Job import Process
+from Exscript.workqueue.mainloop import MainLoop
+from Exscript.workqueue.pipeline import Pipeline
+from Exscript.workqueue.job import Process
 
 
 class MainLoopTest(unittest.TestCase):
-    CORRELATE = MainLoop
-
     def setUp(self):
         pass
 
     def testMainLoop(self):
         lock = threading.Lock()
         data = {'sum': 0, 'randsum': 0}
-        ml = MainLoop.MainLoop(Pipeline(), Process)
+        ml = MainLoop(Pipeline(), Process)
         nop = lambda x: None
 
         for i in range(12345):

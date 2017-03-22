@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from tempfile import mkdtemp
 from shutil import rmtree
 from LogTest import LogTest
-from Exscript.Logfile import Logfile
+from Exscript.logger import Logfile
 
 
 class LogfileTest(LogTest):

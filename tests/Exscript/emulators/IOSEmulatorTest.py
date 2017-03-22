@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from .VirtualDeviceTest import VirtualDeviceTest
 from Exscript.emulators import IOSEmulator
-from Exscript.emulators.IOSEmulator import iosbanner
+from Exscript.emulators.iosemu import iosbanner
 
 
 class IOSEmulatorTest(VirtualDeviceTest):

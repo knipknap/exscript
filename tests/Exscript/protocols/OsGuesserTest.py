@@ -4,8 +4,8 @@ import re
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from Exscript.protocols.OsGuesser import OsGuesser
-import Exscript.protocols.drivers as drivers
+from Exscript.protocols.osguesser import OsGuesser
+from Exscript.protocols import drivers
 
 
 class OsGuesserTest(unittest.TestCase):

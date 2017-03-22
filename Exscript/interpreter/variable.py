@@ -20,14 +20,24 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-Very simple servers, useful for emulating a device for testing.
-"""
-from __future__ import absolute_import
-from .telnetd import Telnetd
-from .sshd import SSHd
-from .httpd import HTTPd
+from __future__ import print_function, absolute_import
+from ..parselib import Token
 
-import inspect
-__all__ = [name for name, obj in locals().items()
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+
+class Variable(Token):
+
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Variable', lexer, parser, parent)
+        self.varname = lexer.token()[1]
+        lexer.expect(self, 'varname')
+        self.mark_end()
+
+    def value(self, context):
+        val = self.parent.get(self.varname)
+        if val is None:
+            msg = 'Undefined variable %s' % self.varname
+            self.lexer.runtime_error(msg, self)
+        return val
+
+    def dump(self, indent=0):
+        print((' ' * indent) + 'Variable', self.varname, '.')

@@ -20,14 +20,30 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-Very simple servers, useful for emulating a device for testing.
-"""
-from __future__ import absolute_import
-from .telnetd import Telnetd
-from .sshd import SSHd
-from .httpd import HTTPd
+from __future__ import print_function, absolute_import
+import Exscript.interpreter.code
+from ..protocols.exception import ProtocolException
+from .scope import Scope
 
-import inspect
-__all__ = [name for name, obj in locals().items()
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+
+class Try(Scope):
+
+    def __init__(self, lexer, parser, parent):
+        Scope.__init__(self, 'Try', lexer, parser, parent)
+
+        lexer.next_if('whitespace')
+        lexer.expect(self, 'keyword', 'try')
+        lexer.skip(['whitespace', 'newline'])
+        self.block = Exscript.interpreter.code.Code(lexer, parser, parent)
+
+    def value(self, context):
+        try:
+            self.block.value(context)
+        except ProtocolException as e:
+            return 1
+        return 1
+
+    def dump(self, indent=0):
+        print((' ' * indent) + self.name, 'start')
+        self.block.dump(indent + 1)
+        print((' ' * indent) + self.name, 'end')

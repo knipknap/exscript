@@ -23,9 +23,10 @@
 """
 Emulating a device for testing your scripts.
 """
-from Exscript.emulators.CommandSet import CommandSet
-from Exscript.emulators.VirtualDevice import VirtualDevice
-from Exscript.emulators.IOSEmulator import IOSEmulator
+from __future__ import absolute_import
+from .command import CommandSet
+from .vdevice import VirtualDevice
+from .iosemu import IOSEmulator
 
 import inspect
 __all__ = [name for name, obj in locals().items()

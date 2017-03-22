@@ -23,9 +23,10 @@
 """
 A driver for Cisco IOS (not IOS XR).
 """
+from __future__ import absolute_import
 import re
-from Exscript.protocols.drivers.driver import Driver
-from Exscript.protocols.Exception import InvalidCommandException
+from ..exception import InvalidCommandException
+from .driver import Driver
 
 
 _user_re = [re.compile(r'user ?name: ?$', re.I)]

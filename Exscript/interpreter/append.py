@@ -20,14 +20,39 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-Very simple servers, useful for emulating a device for testing.
-"""
-from __future__ import absolute_import
-from .telnetd import Telnetd
-from .sshd import SSHd
-from .httpd import HTTPd
+from __future__ import print_function, absolute_import
+from ..parselib import Token
+from .term import Term
 
-import inspect
-__all__ = [name for name, obj in locals().items()
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+
+class Append(Token):
+
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Append', lexer, parser, parent)
+
+        # First expect an expression.
+        lexer.expect(self, 'keyword', 'append')
+        lexer.expect(self, 'whitespace')
+        self.expr = Term(lexer, parser, parent)
+
+        # Expect "to" keyword.
+        lexer.expect(self, 'whitespace')
+        lexer.expect(self, 'keyword', 'to')
+
+        # Expect a variable name.
+        lexer.expect(self, 'whitespace')
+        _, self.varname = lexer.token()
+        lexer.expect(self, 'varname')
+        self.parent.define(**{self.varname: []})
+
+        self.mark_end()
+
+    def value(self, context):
+        existing = self.parent.get(self.varname)
+        args = {self.varname: existing + self.expr.value(context)}
+        self.parent.define(**args)
+        return 1
+
+    def dump(self, indent=0):
+        print((' ' * indent) + self.name, "to", self.varname)
+        self.expr.dump(indent + 1)

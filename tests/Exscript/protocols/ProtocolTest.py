@@ -9,10 +9,9 @@ from functools import partial
 from ConfigParser import RawConfigParser
 from Exscript import Account, PrivateKey
 from Exscript.emulators import VirtualDevice
-from Exscript.protocols.Exception import TimeoutException, \
-    InvalidCommandException, \
-                                         ExpectCancelledException
-from Exscript.protocols.Protocol import Protocol
+from Exscript.protocols.exception import TimeoutException, \
+    InvalidCommandException, ExpectCancelledException
+from Exscript.protocols.protocol import Protocol
 
 
 class ProtocolTest(unittest.TestCase):

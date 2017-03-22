@@ -7,8 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import Exscript.util.cast
 import re
 from Exscript import Host
-from Exscript.Log import Log
-from Exscript.Logfile import Logfile
+from Exscript.logger import Log, Logfile
 
 
 class castTest(unittest.TestCase):

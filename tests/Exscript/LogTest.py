@@ -4,8 +4,8 @@ import re
 import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from Exscript.Log import Log
 from Exscript import Host
+from Exscript.logger import Log
 from util.reportTest import FakeError
 
 

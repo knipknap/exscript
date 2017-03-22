@@ -16,7 +16,7 @@ from multiprocessing import Value
 from multiprocessing.managers import BaseManager
 from Exscript import Queue, Account, AccountPool, FileLogger
 from Exscript.protocols import Protocol, Dummy
-from Exscript.interpreter.Exception import FailException
+from Exscript.interpreter.exception import FailException
 from Exscript.util.decorator import bind
 from Exscript.util.log import log_to
 

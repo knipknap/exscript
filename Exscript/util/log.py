@@ -23,8 +23,8 @@
 """
 Logging utilities.
 """
-from Exscript.FileLogger import FileLogger
-from Exscript.util.impl import add_label
+from .. import FileLogger
+from .impl import add_label
 
 _loggers = []
 

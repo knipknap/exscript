@@ -20,14 +20,24 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-Very simple servers, useful for emulating a device for testing.
-"""
-from __future__ import absolute_import
-from .telnetd import Telnetd
-from .sshd import SSHd
-from .httpd import HTTPd
+from __future__ import print_function, absolute_import
+from ..parselib import Token
+from .execute import Execute
 
-import inspect
-__all__ = [name for name, obj in locals().items()
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+
+class Enter(Token):
+
+    def __init__(self, lexer, parser, parent):
+        Token.__init__(self, 'Enter', lexer, parser, parent)
+
+        lexer.expect(self, 'keyword', 'enter')
+        lexer.skip(['whitespace', 'newline'])
+
+        self.execute = Execute(lexer, parser, parent, '')
+
+    def value(self, context):
+        return self.execute.value(context)
+
+    def dump(self, indent=0):
+        print((' ' * indent) + self.name)
+        self.execute.dump(indent + 1)

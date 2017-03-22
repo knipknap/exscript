@@ -25,7 +25,7 @@ Decorators for callbacks passed to Queue.run().
 """
 from __future__ import absolute_import
 from .impl import add_label, get_label, copy_labels
-from Exscript.protocols.Exception import LoginFailure
+from ..protocols.exception import LoginFailure
 
 
 def bind(function, *args, **kwargs):

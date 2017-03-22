@@ -6,9 +6,9 @@ import threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from multiprocessing import Pipe
-from Exscript.workqueue.Job import Thread, Process, Job
 from tempfile import NamedTemporaryFile
 from cPickle import dumps, loads
+from Exscript.workqueue.job import Thread, Process, Job
 
 
 def do_nothing(job):
