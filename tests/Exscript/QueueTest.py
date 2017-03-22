@@ -157,7 +157,7 @@ class QueueTest(unittest.TestCase):
             (5,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
         )
         for level, max_threads, with_simple, with_error, with_fatal in levels:
-            # print "S:", level, max_threads, with_simple, with_error,
+            # print("S:", level, max_threads, with_simple, with_error,)
             # with_fatal
             stdout, stderr = with_simple
             self.createQueue(verbose=level, max_threads=max_threads)
@@ -166,7 +166,7 @@ class QueueTest(unittest.TestCase):
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
-            # print "E:", level, max_threads, with_simple, with_error,
+            # print("E:", level, max_threads, with_simple, with_error,)
             # with_fatal
             stdout, stderr = with_error
             self.createQueue(verbose=level, max_threads=max_threads)
@@ -175,7 +175,7 @@ class QueueTest(unittest.TestCase):
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
-            # print "F:", level, max_threads, with_simple, with_error,
+            # print("F:", level, max_threads, with_simple, with_error,)
             # with_fatal
             stdout, stderr = with_fatal
             self.createQueue(verbose=level, max_threads=max_threads)

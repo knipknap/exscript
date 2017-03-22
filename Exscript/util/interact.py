@@ -23,15 +23,15 @@
 """
 Tools for interacting with the user on the command line.
 """
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 import os
 import sys
 import getpass
 import ConfigParser
 import shutil
 from tempfile import NamedTemporaryFile
-from Exscript import Account
-from Exscript.util.cast import to_list
+from .. import Account
+from .cast import to_list
 
 
 class InputHistory(object):
@@ -164,7 +164,7 @@ def prompt(key,
             if len(input) < 4:
                 return 'Please enter at least 4 characters!'
         value = prompt('test', 'Enter a value', 'My Default', check = validate)
-        print 'You entered:', value
+        print('You entered:', value)
 
     This leads to the following output::
 

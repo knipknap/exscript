@@ -20,6 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+from __future__ import print_function
 from .exception import LexerException, CompileError, ExecuteError
 
 
@@ -56,7 +57,7 @@ class Lexer(object):
             match = token_regex.match(self.input, self.current_char)
             if match is not None:
                 self.token_buffer = (token_type, match.group(0))
-                # print "Match:", self.token_buffer
+                # print("Match:", self.token_buffer)
                 return
         end = self.input.find('\n', self.current_char + 2)
         error = 'Invalid syntax: %s' % repr(self.input[self.current_char:end])

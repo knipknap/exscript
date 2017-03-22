@@ -39,7 +39,7 @@ om.remove_expensive_references()
 om.collapse_instance_dicts()
 om.compute_referrers()
 om.compute_total_size()
-# print om.summarize()
+# print(om.summarize())
 
 from pprint import pprint as pp
 
@@ -119,4 +119,4 @@ for obj in objs:
         print_obj_recursive(obj)
 
 # for addr in sorted(set(thedict.ref_list), larger):
-#    print om[addr]
+#    print(om[addr])

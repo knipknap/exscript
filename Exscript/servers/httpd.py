@@ -163,7 +163,7 @@ class HTTPd(ThreadingMixIn, HTTPServer):
 
         server = HTTPd(('', 8080), MyHandler)
         server.add_account('testuser', 'testpassword')
-        print 'started httpserver...'
+        print('started httpserver...')
         server.serve_forever()
     """
     daemon_threads = True

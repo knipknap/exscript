@@ -44,7 +44,7 @@ class Template(Scope):
     def __init__(self, lexer, parser, parent, *args, **kwargs):
         Scope.__init__(self, 'Template', lexer, parser, parent, **kwargs)
         lexer.set_grammar(grammar_c)
-        # print "Opening Scope:", lexer.token()
+        # print("Opening Scope:", lexer.token())
         buffer = ''
         while 1:
             if self.exit_requested or lexer.current_is('EOF'):

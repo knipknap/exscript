@@ -23,9 +23,10 @@
 """
 Quickstart methods for the Exscript queue.
 """
-from Exscript import Queue
-from Exscript.util.interact import read_login
-from Exscript.util.decorator import autologin, autoauthenticate
+from __future__ import print_function, absolute_import
+from .. import Queue
+from .interact import read_login
+from .decorator import autologin, autoauthenticate
 
 
 def run(users, hosts, func, **kwargs):
@@ -38,7 +39,7 @@ def run(users, hosts, func, **kwargs):
     util.decorator.bind() like this::
 
       def my_callback(job, host, conn, my_arg, **kwargs):
-          print my_arg, kwargs.get('foo')
+          print(my_arg, kwargs.get('foo'))
 
       run(account,
           host,

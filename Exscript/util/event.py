@@ -23,8 +23,9 @@
 """
 A simple signal/event mechanism.
 """
+from __future__ import print_function, absolute_import
 from threading import Lock
-from Exscript.util import weakmethod
+from . import weakmethod
 
 
 class Event(object):
@@ -33,7 +34,7 @@ class Event(object):
     A simple signal/event mechanism, to be used like this::
 
         def mycallback(arg, **kwargs):
-            print arg, kwargs['foo']
+            print(arg, kwargs['foo'])
 
         myevent = Event()
         myevent.connect(mycallback)

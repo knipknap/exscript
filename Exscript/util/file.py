@@ -23,7 +23,7 @@
 """
 Utilities for reading data from files.
 """
-from __future__ import absolute_import
+from __future__ import print_function, absolute_import
 from builtins import str
 from future import standard_library
 standard_library.install_aliases()
@@ -32,7 +32,7 @@ import os
 import base64
 import codecs
 import imp
-from Exscript import Account
+from .. import Account
 from .cast import to_host
 
 
@@ -52,7 +52,7 @@ def get_accounts_from_file(filename):
     Each password needs to be base64 encrypted. To encrypt a password,
     you may use the following command::
 
-        python -c 'import base64; print base64.b64encode("thepassword")'
+        python -c 'import base64; print(base64.b64encode("thepassword"))'
 
     :type  filename: string
     :param filename: The name of the file containing the list of accounts.

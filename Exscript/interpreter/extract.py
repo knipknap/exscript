@@ -94,7 +94,7 @@ class Extract(Token):
             buffer = self.parent.get('__response__')
         else:
             buffer = self.source.value(context)
-        # print "Buffer contains", buffer
+        # print("Buffer contains", buffer)
 
         # Walk through all lines, matching each one against the regular
         # expression.

@@ -142,7 +142,7 @@ class ExpressionNode(Token):
                     return [1]
             return [0]
         elif self.op == 'is not':
-            # print "LFT: '%s', RGT: '%s', RES: %s" % (lft, rgt, [lft != rgt])
+            # print("LFT: '%s', RGT: '%s', RES: %s" % (lft, rgt, [lft != rgt]))
             return [lft != rgt]
         elif self.op == 'in':
             return [lft in rgt_lst]
@@ -196,7 +196,7 @@ class Expression(Token):
         self.mark_end()
 
     def prioritize(self, start, prio=1):
-        # print "Prioritizing from", start.op, "with prio", prio, (start.lft,
+        # print("Prioritizing from", start.op, "with prio", prio, (start.lft,)
         # start.rgt)
         if prio == 6:
             return
@@ -218,7 +218,7 @@ class Expression(Token):
             return
 
         # Reparent the expressions.
-        # print "Prio of", root.op, 'is higher than', current.op
+        # print("Prio of", root.op, 'is higher than', current.op)
         previous.rgt = current.lft
         current.lft = root
 

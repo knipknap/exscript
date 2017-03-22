@@ -23,8 +23,9 @@
 """
 Shorthands for regular expression matching.
 """
+from __future__ import print_function, absolute_import
 import re
-from Exscript.protocols import Protocol
+from ..protocols import Protocol
 
 
 def _first_match(string, compiled):
@@ -104,22 +105,22 @@ def any_match(string, regex, flags=re.M):
 
         foo = '1 uno\\n2 due'
         for m in any_match(foo, r'aaa'):         # Returns []
-            print m
+            print(m)
 
         for m in any_match(foo, r'\S+'):         # Returns ['1 uno', '2 due']
-            print m
+            print(m)
 
         for m in any_match(foo, r'(aaa)'):       # Returns []
-            print m
+            print(m)
 
         for m in any_match(foo, r'(\S+)'):       # Returns ['1', '2']
-            print m
+            print(m)
 
         for one, two in any_match(foo, r'(aaa) (\S+)'): # Returns []
-            print m
+            print(m)
 
         for one, two in any_match(foo, r'(\S+) (\S+)'): # Returns [('1', 'uno'), ('2', 'due')]
-            print m
+            print(m)
 
     :type  string: string|Exscript.protocols.Protocol
     :param string: The string that is matched, or a Protocol object.
