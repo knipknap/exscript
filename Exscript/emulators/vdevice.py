@@ -24,6 +24,8 @@
 Defines the behavior of a device, as needed by :class:`Exscript.servers`.
 """
 from __future__ import absolute_import, unicode_literals
+from builtins import range
+from builtins import object
 from builtins import str
 from . import CommandSet
 
@@ -36,11 +38,11 @@ class VirtualDevice(object):
     LOGIN_TYPE_PASSWORDONLY, \
         LOGIN_TYPE_USERONLY, \
         LOGIN_TYPE_BOTH, \
-        LOGIN_TYPE_NONE = range(1, 5)
+        LOGIN_TYPE_NONE = list(range(1, 5))
 
     PROMPT_STAGE_USERNAME, \
         PROMPT_STAGE_PASSWORD, \
-        PROMPT_STAGE_CUSTOM = range(1, 4)
+        PROMPT_STAGE_CUSTOM = list(range(1, 4))
 
     def __init__(self,
                  hostname,

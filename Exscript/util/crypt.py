@@ -24,6 +24,11 @@
 Encryption related utilities.
 """
 from __future__ import print_function, absolute_import
+from builtins import chr
+from builtins import ord
+from builtins import range
+from builtins import bytes
+import sys
 import string
 import random
 from Crypto.Hash import MD4
@@ -309,19 +314,33 @@ def _long_from_raw(thehash):
     hashnum = 0
     for h in thehash:
         hashnum <<= 8
-        hashnum |= ord(h)
+        hashnum |= ord(bytes([h]))
     return hashnum
 
 def _sixword_from_raw(key):
     return _sixword_from_long(_long_from_raw(key))
 
-def _fold_md4_or_md5(digest):
-    result = ''
-    if len(digest) < 16:
-        raise ValueError('digest is too short')
-    for i in range(0, 8):
-        result = result + chr(ord(digest[i])^ord(digest[i+8]))
-    return result
+if sys.version_info[0] < 3:
+    def _fold_md4_or_md5(digest):
+        if len(digest) < 16:
+            raise ValueError('digest is too short')
+        result = b''
+        for i in range(0, 8):
+            one = ord(bytes(digest[i]))
+            two = ord(bytes(digest[i+8]))
+            result = result + bytes([one^two])
+        return result
+else:
+    def _fold_md4_or_md5(digest):
+        if len(digest) < 16:
+            raise ValueError('digest is too short')
+        result = b''
+        for i in range(0, 8):
+            #print(len(digest[i]))
+            one = ord(bytes([digest[i]]))
+            two = ord(bytes([digest[i+8]]))
+            result = result + bytes([one^two])
+        return result
 
 def otp(password, seed, sequence):
     """
@@ -329,10 +348,10 @@ def otp(password, seed, sequence):
     sequence number and returns it.
     Uses the MD4/sixword algorithm as supported by TACACS+ servers.
 
-    :type  password: string
+    :type  password: str
     :param password: A password.
-    :type  seed: string
-    :param seed: A username.
+    :type  seed: str
+    :param seed: A cryptographic seed.
     :type  sequence: int
     :param sequence: A sequence number.
     :rtype:  string

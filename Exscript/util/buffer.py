@@ -24,6 +24,7 @@
 A buffer object.
 """
 from __future__ import absolute_import
+from builtins import object
 from builtins import str
 from io import StringIO
 from .cast import to_regexs

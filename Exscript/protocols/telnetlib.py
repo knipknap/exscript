@@ -57,6 +57,11 @@ To do:
 
 """
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import chr
+from builtins import range
+from builtins import object
 
 
 # Imported modules
@@ -65,7 +70,7 @@ import time
 import socket
 import select
 import struct
-from cStringIO import StringIO
+from io import BytesIO
 
 __all__ = ["Telnet"]
 
@@ -149,7 +154,7 @@ EXOPL = chr(255)  # Extended-Options-List
 SEND_TTYPE = chr(1)
 
 
-class Telnet:
+class Telnet(object):
 
     """Telnet interface class.
 
@@ -205,13 +210,13 @@ class Telnet:
         self.cancel_expect = False
         self.rawq = ''
         self.irawq = 0
-        self.cookedq = StringIO()
+        self.cookedq = BytesIO()
         self.eof = 0
-        self.connect_timeout = kwargs.get('connect_timeout',     None)
+        self.connect_timeout = kwargs.get('connect_timeout', None)
         self.window_size = kwargs.get('termsize')
-        self.stdout = kwargs.get('stdout',           sys.stdout)
-        self.stderr = kwargs.get('stderr',           sys.stderr)
-        self.termtype = kwargs.get('termtype',         'dumb')
+        self.stdout = kwargs.get('stdout', sys.stdout)
+        self.stderr = kwargs.get('stderr', sys.stderr)
+        self.termtype = kwargs.get('termtype', 'dumb')
         self.data_callback = kwargs.get('receive_callback', None)
         self.data_callback_kwargs = {}
         if host:
@@ -559,8 +564,8 @@ class Telnet:
 
     def mt_interact(self):
         """Multithreaded version of interact()."""
-        import thread
-        thread.start_new_thread(self.listener, ())
+        import _thread
+        _thread.start_new_thread(self.listener, ())
         while 1:
             line = sys.stdin.readline()
             if not line:
@@ -592,7 +597,7 @@ class Telnet:
     def _waitfor(self, relist, timeout=None, flush=False, cleanup=None):
         re = None
         relist = relist[:]
-        indices = range(len(relist))
+        indices = list(range(len(relist)))
         search_window_size = 150
         head_loockback_size = 10
         for i in indices:
@@ -612,8 +617,8 @@ class Telnet:
             qlen = self.cookedq.tell()
             if cleanup:
                 while True:
-                    self.cookedq.seek(qlen - clean_sw_size - len(
-                        incomplete_tail) - head_loockback_size)
+                    pos = qlen-clean_sw_size-len(incomplete_tail)-head_loockback_size
+                    self.cookedq.seek(max(0, pos))
                     search_window = self.cookedq.read()
                     search_window, incomplete_tail = cleanup(search_window)
                     search_window_len = len(search_window)

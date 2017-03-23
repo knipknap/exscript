@@ -23,12 +23,17 @@
 """
 Logging to memory.
 """
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import filter
+from builtins import str
+from builtins import object
 import os
 import errno
 import weakref
-from StringIO import StringIO
-from itertools import chain, ifilter
+from io import StringIO
+from itertools import chain
 from collections import defaultdict
 from .util.impl import format_exception
 
@@ -190,15 +195,15 @@ class Logger(object):
         return self.failed
 
     def get_logs(self):
-        return list(chain.from_iterable(self.logs.itervalues()))
+        return list(chain.from_iterable(iter(self.logs.values())))
 
     def get_succeeded_logs(self):
         func = lambda x: x.has_ended() and not x.has_error()
-        return list(ifilter(func, self.get_logs()))
+        return list(filter(func, self.get_logs()))
 
     def get_aborted_logs(self):
         func = lambda x: x.has_ended() and x.has_error()
-        return list(ifilter(func, self.get_logs()))
+        return list(filter(func, self.get_logs()))
 
     def _get_log(self, job_id):
         return self.logs[job_id][-1]
