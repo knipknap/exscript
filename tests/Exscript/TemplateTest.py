@@ -49,13 +49,11 @@ def dummy_cb(job, host, conn, template_test):
         print(log.data)
         raise
     log.data = re.sub(r'\r\n', r'\n', log.data)
-    # open(expected, 'w').write(log.data)
-    if log.data != open(expected).read():
-        print()
-        print("Got:", log.data)
-        print("---------------------------------------------")
-        print("Expected:", open(expected).read())
-    template_test.assertEqual(log.data, open(expected).read())
+    expected_data = open(expected).read()
+    #open(expected, 'w').write(log.data)
+    #open('output', 'w').write(log.data)
+    #open('exp', 'w').write(expected_data)
+    template_test.assertEqual(log.data, expected_data)
 
 
 class IOSDummy(Dummy):
@@ -73,6 +71,7 @@ class TemplateTest(unittest.TestCase):
         self.queue = Queue(verbose=0, max_threads=1)
         self.logger = Logger()
         self.queue.add_account(account)
+        self.maxDiff = None
 
     def tearDown(self):
         self.queue.destroy()

@@ -68,7 +68,7 @@ class _TemplateParser(object):
         value = self.tmpl_vars.get(varname)
         if value is None:
             raise Exception('Undefined value for %s' % varname)
-        elif hasattr(value, '__iter__'):
+        elif hasattr(value, '__iter__') and not isinstance(value, str):
             value = '\n'.join([str(v) for v in value])
         return str(value)
 

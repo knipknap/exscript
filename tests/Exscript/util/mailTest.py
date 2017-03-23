@@ -168,7 +168,7 @@ class mailTest(unittest.TestCase):
     def testFromTemplate(self):
         from Exscript.util.mail import from_template
         tmpfile = tempfile.NamedTemporaryFile()
-        tmpfile.write(template)
+        tmpfile.write(template.encode('utf8'))
         tmpfile.flush()
         mail = from_template(tmpfile.name, **vars)
         tmpfile.close()

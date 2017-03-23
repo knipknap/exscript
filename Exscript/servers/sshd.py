@@ -112,7 +112,7 @@ class SSHd(Server):
         self.channel = None
 
     def _recvline(self):
-        while not '\n' in self.buf:
+        while not b'\n' in self.buf:
             self._poll_child_process()
             if not self.running:
                 return None
@@ -123,9 +123,9 @@ class SSHd(Server):
             if not data:
                 self.running = False
                 return None
-            self.buf += data.replace('\r\n', '\n').replace('\r', '\n')
-        lines = self.buf.split('\n')
-        self.buf = '\n'.join(lines[1:])
+            self.buf += data.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+        lines = self.buf.split(b'\n')
+        self.buf = b'\n'.join(lines[1:])
         return lines[0] + '\n'
 
     def _shutdown_notify(self, conn):
