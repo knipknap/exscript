@@ -19,7 +19,7 @@ class TelnetTest(ProtocolTest):
         self.daemon = Telnetd(self.hostname, self.port, self.device)
 
     def createProtocol(self):
-        self.protocol = Telnet()
+        self.protocol = Telnet(timeout=1)
 
     def testConstructor(self):
         self.assert_(isinstance(self.protocol, Telnet))

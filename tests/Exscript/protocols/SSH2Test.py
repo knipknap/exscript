@@ -21,7 +21,7 @@ class SSH2Test(ProtocolTest):
         self.daemon = SSHd(self.hostname, self.port, self.device, key=key)
 
     def createProtocol(self):
-        self.protocol = SSH2()
+        self.protocol = SSH2(timeout=1)
 
     def testConstructor(self):
         self.assert_(isinstance(self.protocol, SSH2))

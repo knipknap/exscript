@@ -15,7 +15,7 @@ class DummyTest(ProtocolTest):
     CORRELATE = Dummy
 
     def createProtocol(self):
-        self.protocol = Dummy(device=self.device)
+        self.protocol = Dummy(device=self.device, timeout=1)
 
     def testConstructor(self):
         self.assert_(isinstance(self.protocol, Dummy))

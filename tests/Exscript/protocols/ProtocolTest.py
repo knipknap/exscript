@@ -60,7 +60,7 @@ class ProtocolTest(unittest.TestCase):
         pass
 
     def createProtocol(self):
-        self.protocol = Protocol()
+        self.protocol = Protocol(timeout=1)
 
     def doConnect(self):
         self.protocol.connect(self.hostname, self.port)
@@ -226,7 +226,7 @@ class ProtocolTest(unittest.TestCase):
         pass  # Already tested in testSetConnectTimeout()
 
     def testSetTimeout(self):
-        self.assert_(self.protocol.get_timeout() == 30)
+        self.assert_(self.protocol.get_timeout() == 1)
         self.protocol.set_timeout(60)
         self.assert_(self.protocol.get_timeout() == 60)
 
