@@ -23,8 +23,10 @@
 """
 A buffer object.
 """
-from StringIO import StringIO
-from Exscript.util.cast import to_regexs
+from __future__ import absolute_import
+from builtins import str
+from io import StringIO
+from .cast import to_regexs
 
 
 class MonitoredBuffer(object):
@@ -44,7 +46,7 @@ class MonitoredBuffer(object):
         :param io: A file-like object that is used for storing the data.
         """
         if io is None:
-            self.io = StringIO('')
+            self.io = StringIO(u'')
         else:
             self.io = io
         self.monitors = []
@@ -87,7 +89,7 @@ class MonitoredBuffer(object):
         :type  bytes: int
         :param bytes: The number of bytes to return.
         """
-        self.io.seek(self.size() - bytes)
+        self.io.seek(max(0, self.size() - bytes))
         return self.io.read()
 
     def pop(self, bytes):

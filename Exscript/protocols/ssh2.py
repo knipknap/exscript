@@ -23,7 +23,7 @@
 """
 SSH version 2 support, based on paramiko.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from builtins import str
 import os
 import time
@@ -317,6 +317,7 @@ class SSH2(Protocol):
         data = self.shell.recv(200)
         if not data:
             return False
+        data = data.decode(self.encoding)
         self._receive_cb(data, False)
         self.buffer.append(data)
         return True

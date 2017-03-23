@@ -23,7 +23,9 @@
 """
 The Telnet protocol.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
+from future import standard_library
+standard_library.install_aliases()
 from ..util.tty import get_terminal_size
 from . import telnetlib
 from .protocol import Protocol
@@ -42,6 +44,7 @@ class Telnet(Protocol):
         self.tn = None
 
     def _telnetlib_received(self, data):
+        data = data.decode(self.encoding)
         self._receive_cb(data, False)
         self.buffer.append(data)
 

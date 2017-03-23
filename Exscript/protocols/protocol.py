@@ -23,7 +23,9 @@
 """
 An abstract base class for all protocols.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
+from future import standard_library
+standard_library.install_aliases()
 from builtins import object
 import re
 import sys
@@ -220,7 +222,8 @@ class Protocol(object):
                  termtype='dumb',
                  verify_fingerprint=True,
                  account_factory=None,
-                 banner_timeout=None):
+                 banner_timeout=None,
+                 encoding='latin-1'):
         """
         Constructor.
         The following events are provided:
@@ -246,6 +249,8 @@ class Protocol(object):
         :keyword account_factory: A function that produces a new :class:`Account`.
         :type banner_timeout: bool
         :keyword banner_timeout: The time to wait for the banner.
+        :type encoding: str
+        :keyword encoding: The encoding of data received from the remote host.
         """
         self.data_received_event = Event()
         self.otp_requested_event = Event()
@@ -274,6 +279,7 @@ class Protocol(object):
         self.buffer = MonitoredBuffer()
         self.account_factory = account_factory
         self.banner_timeout = banner_timeout
+        self.encoding = encoding
         self.send_data = None
         if stdout is None:
             self.stdout = open(os.devnull, 'w')

@@ -23,7 +23,9 @@
 """
 Defines the behavior of a device, as needed by :class:`Exscript.servers`.
 """
-from Exscript.emulators import CommandSet
+from __future__ import absolute_import, unicode_literals
+from builtins import str
+from . import CommandSet
 
 
 class VirtualDevice(object):
@@ -50,17 +52,21 @@ class VirtualDevice(object):
         :type  hostname: str
         :param hostname: The hostname, used for the prompt.
 
-        :keyword banner: A string to show as soon as the connection is opened.
+        :param echo: bool
+        :keyword echo: whether to echo the command in a response.
+        :param login_type: int
         :keyword login_type: integer constant, one of LOGIN_TYPE_PASSWORDONLY,
             LOGIN_TYPE_USERONLY, LOGIN_TYPE_BOTH, LOGIN_TYPE_NONE.
-        :keyword echo: whether to echo the command in a response.
+        :param strict: bool
         :keyword strict: Whether to raise when a given command has no handler.
+        :param banner: str
+        :keyword banner: A string to show as soon as the connection is opened.
         """
-        self.hostname = hostname
-        self.banner = banner or 'Welcome to %s!\n' % str(hostname)
+        self.hostname = str(hostname)
+        self.banner = str(banner or 'Welcome to %s!\n' % hostname)
         self.echo = echo
-        self.login_type = login_type
-        self.prompt = hostname + '> '
+        self.login_type = int(login_type)
+        self.prompt = str(hostname + '> ')
         self.logged_in = False
         self.commands = CommandSet(strict=strict)
         self.user_prompt = 'User: '
@@ -84,10 +90,10 @@ class VirtualDevice(object):
             raise Exception('invalid prompt stage')
 
     def _create_autoprompt_handler(self, handler):
-        if isinstance(handler, str):
-            return lambda x: handler + '\n' + self._get_prompt()
-        else:
+        if hasattr(handler, '__call__'):
             return lambda x: handler(x) + '\n' + self._get_prompt()
+        else:
+            return lambda x: handler + '\n' + self._get_prompt()
 
     def get_prompt(self):
         """

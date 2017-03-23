@@ -486,11 +486,11 @@ class ProtocolTest(unittest.TestCase):
         self.protocol.add_monitor('abc', partial(monitor_cb, data))
 
         # Simulate some non-matching data.
-        self.protocol.buffer.append('aaa')
+        self.protocol.buffer.append(u'aaa')
         self.assertEqual(data, {})
 
         # Simulate some matching data.
-        self.protocol.buffer.append('abc')
+        self.protocol.buffer.append(u'abc')
         self.assertEqual(len(data.get('args')), 3)
         self.assertEqual(data.get('args')[0], self.protocol)
         self.assertEqual(data.get('args')[1], 0)
