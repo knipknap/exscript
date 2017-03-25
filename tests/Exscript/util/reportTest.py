@@ -104,7 +104,12 @@ Successful actions:
 -------------------
 fake1
 fake3'''.strip() % file
-        self.assertEqual(format(self.logger), expected)
+        expected_py3 = expected.replace('FakeError\n',
+                                        'util.reportTest.FakeError\n')
+        if sys.version_info[0] < 3:
+            self.assertEqual(format(self.logger), expected)
+        else:
+            self.assertEqual(format(self.logger), expected_py3)
 
 
 def suite():

@@ -44,7 +44,6 @@ class Telnet(Protocol):
         self.tn = None
 
     def _telnetlib_received(self, data):
-        data = data.decode(self.encoding)
         self._receive_cb(data, False)
         self.buffer.append(data)
 
@@ -53,6 +52,7 @@ class Telnet(Protocol):
         rows, cols = get_terminal_size()
         self.tn = telnetlib.Telnet(hostname,
                                    port or 23,
+                                   encoding=self.encoding,
                                    connect_timeout=self.connect_timeout,
                                    termsize=(rows, cols),
                                    termtype=self.termtype,

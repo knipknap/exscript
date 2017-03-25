@@ -126,7 +126,7 @@ class SSHd(Server):
             self.buf += data.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
         lines = self.buf.split(b'\n')
         self.buf = b'\n'.join(lines[1:])
-        return lines[0] + '\n'
+        return lines[0].decode(self.encoding) + '\n'
 
     def _shutdown_notify(self, conn):
         if self.channel:

@@ -110,8 +110,8 @@ class urlTest(unittest.TestCase):
             error = 'URL:      ' + url + '\n'
             error += 'Result:   ' + str(result) + '\n'
             error += 'Expected: ' + expected
-            self.assert_(isinstance(result, Url))
-            self.assert_(result.to_string() == expected, error)
+            self.assertIsInstance(result, Url, error)
+            self.assertEqual(result.to_string(), expected, error)
 
     def testFromString(self):
         for url, expected in urls:

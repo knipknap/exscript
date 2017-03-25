@@ -46,7 +46,7 @@ class Server(Process):
         daemon.join()  # Wait until it terminates.
     """
 
-    def __init__(self, host, port, device):
+    def __init__(self, host, port, device, encoding='utf8'):
         """
         Constructor.
 
@@ -56,6 +56,8 @@ class Server(Process):
         :param port: The TCP port on which to listen.
         :type  device: VirtualDevice
         :param device: A virtual device instance.
+        :type encoding: str
+        :param encoding: The encoding of data between client and server.
         """
         Process.__init__(self, target=self._run)
         self.host = host
@@ -63,9 +65,10 @@ class Server(Process):
         self.timeout = .5
         self.dbg = 0
         self.running = False
-        self.buf = ''
+        self.buf = b''
         self.socket = None
         self.device = device
+        self.encoding = encoding
         self.parent_conn, self.child_conn = Pipe()
 
     def _dbg(self, level, msg):

@@ -33,7 +33,7 @@ from builtins import object
 import re
 from urllib.parse import urlencode, quote
 from urllib.parse import urlparse, urlsplit
-from collections import defaultdict
+from collections import OrderedDict, Callable, defaultdict
 
 
 def _make_hexmap():
@@ -61,6 +61,49 @@ _WELL_KNOWN_PORTS = {
 # utils
 #
 
+
+class _OrderedDefaultDict(OrderedDict):
+
+    def __init__(self, default_factory=None, *a, **kw):
+        if (default_factory is not None and
+           not isinstance(default_factory, Callable)):
+            raise TypeError('first argument must be callable')
+        OrderedDict.__init__(self, *a, **kw)
+        self.default_factory = default_factory
+
+    def __getitem__(self, key):
+        try:
+            return OrderedDict.__getitem__(self, key)
+        except KeyError:
+            return self.__missing__(key)
+
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        self[key] = value = self.default_factory()
+        return value
+
+    def __reduce__(self):
+        if self.default_factory is None:
+            args = tuple()
+        else:
+            args = self.default_factory,
+        return type(self), args, None, None, self.items()
+
+    def copy(self):
+        return self.__copy__()
+
+    def __copy__(self):
+        return type(self)(self.default_factory, self)
+
+    def __deepcopy__(self, memo):
+        import copy
+        return type(self)(self.default_factory,
+                          copy.deepcopy(self.items()))
+
+    def __repr__(self):
+        return 'OrderedDefaultDict(%s, %s)' % (self.default_factory,
+                                               OrderedDict.__repr__(self))
 
 def _unquote(string):
     """_unquote('abc%20def') -> 'abc def'."""
@@ -96,7 +139,7 @@ def _urlparse_qs(url):
     pairs = [s2 for s1 in querystring.split('&') for s2 in s1.split(';')]
 
     # Split the name/value pairs.
-    result = defaultdict(list)
+    result = _OrderedDefaultDict(list)
     for name_value in pairs:
         pair = name_value.split('=', 1)
         if len(pair) != 2:

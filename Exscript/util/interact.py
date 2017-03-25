@@ -33,6 +33,7 @@ import os
 import sys
 import getpass
 import configparser
+import codecs
 import shutil
 from tempfile import NamedTemporaryFile
 from .. import Account
@@ -70,7 +71,7 @@ class InputHistory(object):
         :param section: The section in the configfile.
         """
         self.section = section
-        self.parser = configparser.RawConfigParser()
+        self.parser = configparser.ConfigParser()
         filename = os.path.expanduser(filename)
 
         try:
@@ -123,8 +124,14 @@ class InputHistory(object):
             return None
 
         self.parser.set(self.section, key, value)
+
+        # Unfortunately ConfigParser attempts to write a string to the file
+        # object, and NamedTemporaryFile uses binary mode. So we nee to create
+        # the tempfile, and then re-open it.
         with NamedTemporaryFile(delete=False) as tmpfile:
-            self.parser.write(tmpfile)
+            pass
+        with codecs.open(tmpfile.name, 'w', encoding='utf8') as fp:
+            self.parser.write(fp)
 
         self.file.close()
         shutil.move(tmpfile.name, self.file.name)

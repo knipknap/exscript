@@ -60,6 +60,7 @@ from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
 from builtins import chr
+from builtins import bytes
 from builtins import range
 from builtins import object
 
@@ -70,7 +71,7 @@ import time
 import socket
 import select
 import struct
-from io import BytesIO
+from io import StringIO
 
 __all__ = ["Telnet"]
 
@@ -194,7 +195,7 @@ class Telnet(object):
         I/O.
     """
 
-    def __init__(self, host=None, port=0, **kwargs):
+    def __init__(self, host=None, port=0, encoding='latin1', **kwargs):
         """Constructor.
 
         When called without arguments, create an unconnected instance.
@@ -208,10 +209,11 @@ class Telnet(object):
         self.port = port
         self.sock = None
         self.cancel_expect = False
-        self.rawq = ''
+        self.rawq = b''
         self.irawq = 0
-        self.cookedq = BytesIO()
+        self.cookedq = StringIO()
         self.eof = 0
+        self.encoding = encoding
         self.connect_timeout = kwargs.get('connect_timeout', None)
         self.window_size = kwargs.get('termsize')
         self.stdout = kwargs.get('stdout', sys.stdout)
@@ -302,7 +304,7 @@ class Telnet(object):
         elif isinstance(buffer, str) and IAC in buffer:
             buffer = buffer.replace(IAC, IAC + IAC)
         self.msg("send %s", repr(buffer))
-        self.sock.send(buffer)
+        self.sock.send(buffer.encode(self.encoding))
 
     def read_all(self):
         """Read all data until EOF; block until connection closed."""
@@ -406,13 +408,13 @@ class Telnet(object):
         Set self.eof when connection is closed.  Don't block unless in
         the midst of an IAC sequence.
         """
-        buf = ''
+        buf = b''
         try:
             while self.rawq:
                 # Handle non-IAC first (normal data).
                 char = self.rawq_getchar()
                 if char != IAC:
-                    buf = buf + char
+                    buf = buf + bytearray([char])
                     continue
 
                 # Interpret the command byte that follows after the IAC code.
@@ -422,7 +424,7 @@ class Telnet(object):
                     continue
                 elif command == IAC:
                     self.msg('IAC DATA')
-                    buf = buf + command
+                    buf = buf + bytearray([command])
                     continue
 
                 # DO: Indicates the request that the other party perform,
@@ -432,14 +434,14 @@ class Telnet(object):
                     opt = self.rawq_getchar()
                     self.msg('IAC DO %s', ord(opt))
                     if opt == TTYPE:
-                        self.sock.send(IAC + WILL + opt)
+                        self.sock.send(bytearray([IAC,WILL,opt]))
                     elif opt == NAWS:
-                        self.sock.send(IAC + WILL + opt)
+                        self.sock.send(bytearray([IAC,WILL,opt]))
                         self.can_naws = True
                         if self.window_size:
                             self.set_window_size(*self.window_size)
                     else:
-                        self.sock.send(IAC + WONT + opt)
+                        self.sock.send(bytearray([IAC,WONT,opt]))
 
                 # DON'T: Indicates the demand that the other party stop
                 # performing, or confirmation that you are no longer
@@ -448,7 +450,7 @@ class Telnet(object):
                 elif command == DONT:
                     opt = self.rawq_getchar()
                     self.msg('IAC DONT %s', ord(opt))
-                    self.sock.send(IAC + WONT + opt)
+                    self.sock.send(bytearray([IAC,WONT,opt]))
 
                 # SB: Indicates that what follows is subnegotiation of the
                 # indicated option.
@@ -483,20 +485,20 @@ class Telnet(object):
                     # Send the next supported terminal.
                     ttype = self.termtype
                     self.msg('indicating support for terminal type %s', ttype)
-                    self.sock.send(
-                        IAC + SB + TTYPE + theNULL + ttype + IAC + SE)
+                    self.sock.send(bytearray([IAC,SB,TTYPE,theNULL,ttype,IAC,SE]))
                 elif command in (WILL, WONT):
                     opt = self.rawq_getchar()
                     self.msg('IAC %s %d',
                              command == WILL and 'WILL' or 'WONT', ord(opt))
                     if opt == ECHO:
-                        self.sock.send(IAC + DO + opt)
+                        self.sock.send(bytearray([IAC,DO,opt]))
                     else:
-                        self.sock.send(IAC + DONT + opt)
+                        self.sock.send(bytearray([IAC,DONT,opt]))
                 else:
                     self.msg('IAC %d not recognized' % ord(command))
         except EOFError:  # raised by self.rawq_getchar()
             pass
+        buf = buf.decode(self.encoding)
         self.cookedq.write(buf)
         if self.data_callback is not None:
             self.data_callback(buf, **self.data_callback_kwargs)
@@ -515,7 +517,7 @@ class Telnet(object):
         c = self.rawq[self.irawq]
         self.irawq = self.irawq + 1
         if self.irawq >= len(self.rawq):
-            self.rawq = ''
+            self.rawq = b''
             self.irawq = 0
         return c
 
@@ -527,7 +529,7 @@ class Telnet(object):
 
         """
         if self.irawq >= len(self.rawq):
-            self.rawq = ''
+            self.rawq = b''
             self.irawq = 0
         # The buffer size should be fairly small so as to avoid quadratic
         # behavior in process_rawq() above.
@@ -545,7 +547,7 @@ class Telnet(object):
         if sys.platform == "win32":
             self.mt_interact()
             return
-        while 1:
+        while True:
             rfd, wfd, xfd = select.select([self, sys.stdin], [], [])
             if self in rfd:
                 try:
@@ -606,7 +608,7 @@ class Telnet(object):
                     import re
                 relist[i] = re.compile(relist[i])
         self.msg("Expecting %s" % [l.pattern for l in relist])
-        incomplete_tail = ''
+        incomplete_tail = u''
         clean_sw_size = search_window_size
         while True:
             self.process_rawq()
