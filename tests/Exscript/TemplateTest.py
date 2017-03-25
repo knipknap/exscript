@@ -48,8 +48,11 @@ def dummy_cb(job, host, conn, template_test):
     except Exception as e:
         print(log.data)
         raise
-    log.data = re.sub(r'\r\n', r'\n', log.data)
-    expected_data = open(expected).read()
+    log.data = log.data.replace('\r\n', '\n')
+    if sys.version_info[0] == 2:
+        expected_data = open(expected).read()
+    else:
+        expected_data = open(expected, newline='').read()
     #open(expected, 'w').write(log.data)
     #open('output', 'w').write(log.data)
     #open('exp', 'w').write(expected_data)

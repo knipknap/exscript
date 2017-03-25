@@ -23,6 +23,8 @@
 """
 Cisco IOS emulator.
 """
+from __future__ import unicode_literals
+#from builtins import str
 import re
 from Exscript.emulators import VirtualDevice
 
