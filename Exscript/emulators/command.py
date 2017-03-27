@@ -24,6 +24,7 @@
 Defines the behavior of commands by mapping commands to functions.
 """
 from past.builtins import execfile
+from builtins import str
 from builtins import object
 import re
 
@@ -59,10 +60,7 @@ class CommandSet(object):
         :type  response: function|str
         :param response: A reponse, or a response handler.
         """
-        if isinstance(command, str):
-            command = re.compile(command)
-        elif not hasattr(command, 'search'):
-            raise TypeError('command argument must be str or a regex')
+        command = re.compile(command)
         self.response_list.append((command, response))
 
     def add_from_file(self, filename, handler_decorator=None):
@@ -105,10 +103,10 @@ class CommandSet(object):
                 continue
             if response is None:
                 return None
-            elif isinstance(response, str):
-                return response
-            else:
+            elif hasattr(response, '__call__'):
                 return response(command)
+            else:
+                return response
         if self.strict:
             raise Exception('Undefined command: ' + repr(command))
         return None
