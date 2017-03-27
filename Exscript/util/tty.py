@@ -113,20 +113,20 @@ def get_terminal_size(default_rows=25, default_cols=80):
             os.close(fd)
 
     # Try `stty size`
-    devnull = open(os.devnull, 'w')
-    try:
-        process = Popen(['stty', 'size'], stderr=devnull, stdout=PIPE)
-    except OSError:
-        pass
-    else:
-        errcode = process.wait()
-        output = process.stdout.read()
-        devnull.close()
+    with open(os.devnull, 'w') as devnull:
         try:
-            rows, cols = output.split()
-            return int(rows), int(cols)
-        except (ValueError, TypeError):
+            process = Popen(['stty', 'size'], stderr=devnull, stdout=PIPE,
+                            close_fds=True)
+        except OSError:
             pass
+        else:
+            errcode = process.wait()
+            output = process.stdout.read()
+            try:
+                rows, cols = output.split()
+                return int(rows), int(cols)
+            except (ValueError, TypeError):
+                pass
 
     # Try environment variables.
     try:
