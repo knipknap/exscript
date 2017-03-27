@@ -10,6 +10,6 @@ install:
   - "pip install -r requirements.txt"
   - "pip install coveralls"
 # command to run tests
-script: travis_wait coverage run --source=Exscript python -m unittest discover tests/Exscript "*Test.py"
+script: travis_wait coverage run --source=Exscript -m unittest discover tests/Exscript "*Test.py"
 after_success:
   coveralls
