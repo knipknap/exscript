@@ -24,7 +24,7 @@ class SSH2Test(ProtocolTest):
         self.protocol = SSH2(timeout=1)
 
     def testConstructor(self):
-        self.assert_(isinstance(self.protocol, SSH2))
+        self.assertIsInstance(self.protocol, SSH2)
 
     def testLogin(self):
         self.assertRaises(IOError, ProtocolTest.testLogin, self)

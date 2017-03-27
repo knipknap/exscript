@@ -22,7 +22,7 @@ class TelnetTest(ProtocolTest):
         self.protocol = Telnet(timeout=1)
 
     def testConstructor(self):
-        self.assert_(isinstance(self.protocol, Telnet))
+        self.assertIsInstance(self.protocol, Telnet)
 
 
 def suite():

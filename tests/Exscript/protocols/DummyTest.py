@@ -18,10 +18,10 @@ class DummyTest(ProtocolTest):
         self.protocol = Dummy(device=self.device, timeout=1)
 
     def testConstructor(self):
-        self.assert_(isinstance(self.protocol, Dummy))
+        self.assertIsInstance(self.protocol, Dummy)
 
     def testIsDummy(self):
-        self.assert_(self.protocol.is_dummy())
+        self.assertTrue(self.protocol.is_dummy())
 
     def _create_dummy_and_eat_banner(self, device, port=None):
         protocol = Dummy(device=device)

@@ -41,17 +41,17 @@ class MailTest(unittest.TestCase):
 
     def testConstructor(self):
         mail = Mail()
-        self.failIfEqual(mail.get_sender(), None)
-        self.failIfEqual(mail.get_sender(), '')
+        self.assertNotEqual(mail.get_sender(), None)
+        self.assertNotEqual(mail.get_sender(), '')
         user = getuser()
-        self.assert_(mail.get_sender().startswith(user + '@'))
+        self.assertTrue(mail.get_sender().startswith(user + '@'))
 
     def testSetFromTemplateString(self):
         self.mail.set_from_template_string(template)
         tmpl = self.mail.get_smtp_mail().strip()
         self.assertEqual(tmpl, smtp)
         head = self.mail.get_smtp_header().strip()
-        self.assert_(tmpl.startswith(head))
+        self.assertTrue(tmpl.startswith(head))
 
     def testSetSender(self):
         self.assertEqual(self.mail.get_sender(), 'test')
@@ -149,14 +149,14 @@ class mailTest(unittest.TestCase):
     CORRELATE = Exscript.util.mail
 
     def checkResult(self, mail):
-        self.assert_(isinstance(mail, Mail))
+        self.assertIsInstance(mail, Mail)
 
         # Remove the "From:" line.
         result = mail.get_smtp_mail().split('\n', 1)[1].strip()
         expected = smtp.split('\n', 1)[1].strip()
 
         # Compare the results.
-        for key, value in list(vars.items()):
+        for key, value in vars.items():
             expected = expected.replace('{' + key + '}', value)
         self.assertEqual(result, expected)
 

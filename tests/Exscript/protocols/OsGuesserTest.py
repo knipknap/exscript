@@ -16,7 +16,7 @@ class OsGuesserTest(unittest.TestCase):
 
     def testConstructor(self):
         osg = OsGuesser()
-        self.assert_(isinstance(osg, OsGuesser))
+        self.assertIsInstance(osg, OsGuesser)
 
     def testReset(self):
         self.testSet()
@@ -71,7 +71,8 @@ class OsGuesserTest(unittest.TestCase):
             if not drivers.driver_map[osname].supports_os_guesser():
                 continue
             file = os.path.join(banner_dir, file)
-            banner = open(file).read().rstrip('\n')
+            with open(file) as fp:
+                banner = fp.read().rstrip('\n')
             osg = OsGuesser()
             for char in banner:
                 osg.data_received(char, False)

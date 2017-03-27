@@ -133,7 +133,7 @@ class ProtocolTest(unittest.TestCase):
                 self.fail('Prompt %s matches incorrecly.' % repr(prompt))
 
     def testConstructor(self):
-        self.assert_(isinstance(self.protocol, Protocol))
+        self.assertIsInstance(self.protocol, Protocol)
 
     def testCopy(self):
         self.assertEqual(self.protocol, self.protocol.__copy__())
@@ -145,19 +145,19 @@ class ProtocolTest(unittest.TestCase):
         self.assertEqual(self.protocol.is_dummy(), False)
 
     def testSetDriver(self):
-        self.assert_(self.protocol.get_driver() is not None)
+        self.assertTrue(self.protocol.get_driver() is not None)
         self.assertEqual(self.protocol.get_driver().name, 'generic')
 
         self.protocol.set_driver()
-        self.assert_(self.protocol.get_driver() is not None)
+        self.assertTrue(self.protocol.get_driver() is not None)
         self.assertEqual(self.protocol.get_driver().name, 'generic')
 
         self.protocol.set_driver('ios')
-        self.assert_(self.protocol.get_driver() is not None)
+        self.assertTrue(self.protocol.get_driver() is not None)
         self.assertEqual(self.protocol.get_driver().name, 'ios')
 
         self.protocol.set_driver()
-        self.assert_(self.protocol.get_driver() is not None)
+        self.assertTrue(self.protocol.get_driver() is not None)
         self.assertEqual(self.protocol.get_driver().name, 'generic')
 
     def testGetDriver(self):
@@ -168,14 +168,14 @@ class ProtocolTest(unittest.TestCase):
 
     def _test_prompt_setter(self, getter, setter):
         initial_regex = getter()
-        self.assert_(isinstance(initial_regex, list))
-        self.assert_(hasattr(initial_regex[0], 'groups'))
+        self.assertIsInstance(initial_regex, list)
+        self.assertTrue(hasattr(initial_regex[0], 'groups'))
 
         my_re = re.compile(r'% username')
         setter(my_re)
         regex = getter()
-        self.assert_(isinstance(regex, list))
-        self.assert_(hasattr(regex[0], 'groups'))
+        self.assertIsInstance(regex, list)
+        self.assertTrue(hasattr(regex[0], 'groups'))
         self.assertEqual(regex[0], my_re)
 
         setter()
@@ -218,17 +218,17 @@ class ProtocolTest(unittest.TestCase):
         pass  # Already tested in testSetLoginErrorPrompt()
 
     def testSetConnectTimeout(self):
-        self.assert_(self.protocol.get_connect_timeout() == 30)
+        self.assertEqual(self.protocol.get_connect_timeout(), 30)
         self.protocol.set_connect_timeout(60)
-        self.assert_(self.protocol.get_connect_timeout() == 60)
+        self.assertEqual(self.protocol.get_connect_timeout(), 60)
 
     def testGetConnectTimeout(self):
         pass  # Already tested in testSetConnectTimeout()
 
     def testSetTimeout(self):
-        self.assert_(self.protocol.get_timeout() == 1)
+        self.assertEqual(self.protocol.get_timeout(), 1)
         self.protocol.set_timeout(60)
-        self.assert_(self.protocol.get_timeout() == 60)
+        self.assertEqual(self.protocol.get_timeout(), 60)
 
     def testGetTimeout(self):
         pass  # Already tested in testSetTimeout()
@@ -252,11 +252,11 @@ class ProtocolTest(unittest.TestCase):
             return
         # Password login.
         self.doLogin(flush=False)
-        self.assert_(self.protocol.response is not None)
-        self.assert_(len(self.protocol.response) > 0)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.assert_(self.protocol.is_app_authorized())
+        self.assertTrue(self.protocol.response is not None)
+        self.assertTrue(len(self.protocol.response) > 0)
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertTrue(self.protocol.is_app_authorized())
 
         # Key login.
         self.tearDown()
@@ -264,13 +264,13 @@ class ProtocolTest(unittest.TestCase):
         key = PrivateKey.from_file('foo', keytype='rsa')
         account = Account(self.user, self.password, key=key)
         self.doConnect()
-        self.failIf(self.protocol.is_protocol_authenticated())
-        self.failIf(self.protocol.is_app_authenticated())
-        self.failIf(self.protocol.is_app_authorized())
+        self.assertFalse(self.protocol.is_protocol_authenticated())
+        self.assertFalse(self.protocol.is_app_authenticated())
+        self.assertFalse(self.protocol.is_app_authorized())
         self.protocol.login(account, flush=False)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.assert_(self.protocol.is_app_authorized())
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertTrue(self.protocol.is_app_authorized())
 
     def testAuthenticate(self):
         # Test can not work on the abstract base.
@@ -282,15 +282,15 @@ class ProtocolTest(unittest.TestCase):
         self.doConnect()
 
         # Password login.
-        self.failIf(self.protocol.is_protocol_authenticated())
-        self.failIf(self.protocol.is_app_authenticated())
-        self.failIf(self.protocol.is_app_authorized())
+        self.assertFalse(self.protocol.is_protocol_authenticated())
+        self.assertFalse(self.protocol.is_app_authenticated())
+        self.assertFalse(self.protocol.is_app_authorized())
         self.protocol.authenticate(self.account, flush=False)
-        self.assert_(self.protocol.response is not None)
-        self.assert_(len(self.protocol.response) > 0)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.failIf(self.protocol.is_app_authorized())
+        self.assertTrue(self.protocol.response is not None)
+        self.assertTrue(len(self.protocol.response) > 0)
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertFalse(self.protocol.is_app_authorized())
 
         # Key login.
         self.tearDown()
@@ -298,13 +298,13 @@ class ProtocolTest(unittest.TestCase):
         key = PrivateKey.from_file('foo', keytype='rsa')
         account = Account(self.user, self.password, key=key)
         self.doConnect()
-        self.failIf(self.protocol.is_protocol_authenticated())
-        self.failIf(self.protocol.is_app_authenticated())
-        self.failIf(self.protocol.is_app_authorized())
+        self.assertFalse(self.protocol.is_protocol_authenticated())
+        self.assertFalse(self.protocol.is_app_authenticated())
+        self.assertFalse(self.protocol.is_app_authorized())
         self.protocol.authenticate(account, flush=False)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.failIf(self.protocol.is_app_authorized())
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertFalse(self.protocol.is_app_authorized())
 
     def testProtocolAuthenticate(self):
         # Test can not work on the abstract base.
@@ -314,9 +314,9 @@ class ProtocolTest(unittest.TestCase):
         # There is no guarantee that the device provided any response
         # during protocol level authentification.
         self.doProtocolAuthenticate(flush=False)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.failIf(self.protocol.is_app_authenticated())
-        self.failIf(self.protocol.is_app_authorized())
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertFalse(self.protocol.is_app_authenticated())
+        self.assertFalse(self.protocol.is_app_authorized())
 
     def testIsProtocolAuthenticated(self):
         pass  # See testProtocolAuthenticate()
@@ -330,9 +330,9 @@ class ProtocolTest(unittest.TestCase):
             return
         self.testProtocolAuthenticate()
         self.doAppAuthenticate(flush=False)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.failIf(self.protocol.is_app_authorized())
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertFalse(self.protocol.is_app_authorized())
 
     def testIsAppAuthenticated(self):
         pass  # See testAppAuthenticate()
@@ -350,15 +350,15 @@ class ProtocolTest(unittest.TestCase):
         # and do nothing.
         self.doAppAuthorize(flush=False)
         self.assertEqual(self.protocol.response, response)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.assert_(self.protocol.is_app_authorized())
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertTrue(self.protocol.is_app_authorized())
 
         self.doAppAuthorize(flush=True)
-        self.failUnlessEqual(self.protocol.response, response)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.assert_(self.protocol.is_app_authorized())
+        self.assertEqual(self.protocol.response, response)
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertTrue(self.protocol.is_app_authorized())
 
     def testAppAuthorize2(self):
         # Same test as above, but using flush=True all the way.
@@ -374,9 +374,9 @@ class ProtocolTest(unittest.TestCase):
         # empty due to flush=True above. In other words, app_authorize
         # will wait for a prompt until a timeout happens.
         self.assertRaises(TimeoutException, self.doAppAuthorize)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.failIf(self.protocol.is_app_authorized())
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertFalse(self.protocol.is_app_authorized())
 
     def testAutoAppAuthorize(self):
         # Test can not work on the abstract base.
@@ -391,16 +391,16 @@ class ProtocolTest(unittest.TestCase):
         # support AAA. Can't think of a way to test against a
         # device using AAA.
         self.protocol.auto_app_authorize(self.account, flush=False)
-        self.failUnlessEqual(self.protocol.response, response)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.assert_(self.protocol.is_app_authorized())
+        self.assertEqual(self.protocol.response, response)
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertTrue(self.protocol.is_app_authorized())
 
         self.protocol.auto_app_authorize(self.account, flush=True)
-        self.failUnlessEqual(self.protocol.response, response)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.assert_(self.protocol.is_app_authorized())
+        self.assertEqual(self.protocol.response, response)
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertTrue(self.protocol.is_app_authorized())
 
     def testIsAppAuthorized(self):
         pass  # see testAppAuthorize()
@@ -414,12 +414,12 @@ class ProtocolTest(unittest.TestCase):
         self.protocol.execute('ls')
 
         self.protocol.send('df\r')
-        self.assert_(self.protocol.response is not None)
-        self.assert_(self.protocol.response.startswith('ls'))
+        self.assertTrue(self.protocol.response is not None)
+        self.assertTrue(self.protocol.response.startswith('ls'))
 
         self.protocol.send('exit\r')
-        self.assert_(self.protocol.response is not None)
-        self.assert_(self.protocol.response.startswith('ls'))
+        self.assertTrue(self.protocol.response is not None)
+        self.assertTrue(self.protocol.response.startswith('ls'))
 
     def testExecute(self):
         # Test can not work on the abstract base.
@@ -428,8 +428,8 @@ class ProtocolTest(unittest.TestCase):
             return
         self.doLogin()
         self.protocol.execute('ls')
-        self.assert_(self.protocol.response is not None)
-        self.assert_(self.protocol.response.startswith('ls'))
+        self.assertTrue(self.protocol.response is not None)
+        self.assertTrue(self.protocol.response.startswith('ls'))
 
         # Make sure that we raise an error if the device responds
         # with something that matches any of the error prompts.
@@ -448,7 +448,7 @@ class ProtocolTest(unittest.TestCase):
         self.protocol.send('ls\r')
         self.assertEqual(oldresponse, self.protocol.response)
         self.protocol.waitfor(re.compile(r'[\r\n]'))
-        self.failIfEqual(oldresponse, self.protocol.response)
+        self.assertNotEqual(oldresponse, self.protocol.response)
         oldresponse = self.protocol.response
         self.protocol.waitfor(re.compile(r'[\r\n]'))
         self.assertEqual(oldresponse, self.protocol.response)
@@ -463,7 +463,7 @@ class ProtocolTest(unittest.TestCase):
         self.protocol.send('ls\r')
         self.assertEqual(oldresponse, self.protocol.response)
         self.protocol.expect(re.compile(r'[\r\n]'))
-        self.failIfEqual(oldresponse, self.protocol.response)
+        self.assertNotEqual(oldresponse, self.protocol.response)
 
     def testExpectPrompt(self):
         # Test can not work on the abstract base.
@@ -475,7 +475,7 @@ class ProtocolTest(unittest.TestCase):
         self.protocol.send('ls\r')
         self.assertEqual(oldresponse, self.protocol.response)
         self.protocol.expect_prompt()
-        self.failIfEqual(oldresponse, self.protocol.response)
+        self.assertNotEqual(oldresponse, self.protocol.response)
 
     def testAddMonitor(self):
         # Set the monitor callback up.
@@ -543,7 +543,7 @@ class ProtocolTest(unittest.TestCase):
         self.protocol.close(True)
 
     def testGetHost(self):
-        self.assert_(self.protocol.get_host() is None)
+        self.assertTrue(self.protocol.get_host() is None)
         if self.protocol.__class__ == Protocol:
             return
         self.doConnect()
@@ -558,9 +558,9 @@ class ProtocolTest(unittest.TestCase):
         self.doConnect()
         self.assertEqual('unknown', self.protocol.guess_os())
         self.protocol.login(self.account)
-        self.assert_(self.protocol.is_protocol_authenticated())
-        self.assert_(self.protocol.is_app_authenticated())
-        self.assert_(self.protocol.is_app_authorized())
+        self.assertTrue(self.protocol.is_protocol_authenticated())
+        self.assertTrue(self.protocol.is_app_authenticated())
+        self.assertTrue(self.protocol.is_app_authorized())
         self.assertEqual('shell', self.protocol.guess_os())
 
 

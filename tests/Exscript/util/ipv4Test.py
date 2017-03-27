@@ -13,15 +13,15 @@ class ipv4Test(unittest.TestCase):
 
     def testIsIp(self):
         from Exscript.util.ipv4 import is_ip
-        self.assert_(is_ip('0.0.0.0'))
-        self.assert_(is_ip('255.255.255.255'))
-        self.assert_(is_ip('1.2.3.4'))
-        self.assert_(not is_ip(''))
-        self.assert_(not is_ip('1'))
-        self.assert_(not is_ip('1.2.3.'))
-        self.assert_(not is_ip('.1.2.3'))
-        self.assert_(not is_ip('1.23.4'))
-        self.assert_(not is_ip('1..3.4'))
+        self.assertTrue(is_ip('0.0.0.0'))
+        self.assertTrue(is_ip('255.255.255.255'))
+        self.assertTrue(is_ip('1.2.3.4'))
+        self.assertTrue(not is_ip(''))
+        self.assertTrue(not is_ip('1'))
+        self.assertTrue(not is_ip('1.2.3.'))
+        self.assertTrue(not is_ip('.1.2.3'))
+        self.assertTrue(not is_ip('1.23.4'))
+        self.assertTrue(not is_ip('1..3.4'))
 
     def testNormalizeIp(self):
         from Exscript.util.ipv4 import normalize_ip

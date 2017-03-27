@@ -50,7 +50,7 @@ class decoratorTest(unittest.TestCase):
     CORRELATE = Exscript.util.decorator
 
     def bind_cb(self, job, bound_arg1, bound_arg2, **kwargs):
-        self.assert_(isinstance(job, FakeJob))
+        self.assertIsInstance(job, FakeJob)
         self.assertEqual(bound_arg1, 'one')
         self.assertEqual(bound_arg2, 'two')
         self.assertEqual(kwargs.get('three'), 3)
@@ -60,7 +60,7 @@ class decoratorTest(unittest.TestCase):
         from Exscript.util.decorator import bind
         bound = bind(self.bind_cb, 'one', 'two', three=3)
         result = bound(FakeJob())
-        self.assert_(result == 123, result)
+        self.assertEqual(result, 123)
 
     def ios_cb(self, job, *args):
         return 'hello ios'

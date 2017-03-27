@@ -27,7 +27,7 @@ class IOSEmulatorTest(VirtualDeviceTest):
                       login_type=self.cls.LOGIN_TYPE_NONE)
 
         response = cs.do('show version')
-        self.assert_(response.startswith(
+        self.assertTrue(response.startswith(
             'Cisco Internetwork Operating'), response)
 
 

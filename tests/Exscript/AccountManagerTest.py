@@ -115,16 +115,16 @@ class AccountManagerTest(unittest.TestCase):
         self.am.add_account(account2)
         self.am.acquire_account(account2, 'two')
 
-        self.assert_(account1 not in pool.unlocked_accounts)
-        self.assert_(account2 not in self.am.default_pool.unlocked_accounts)
+        self.assertNotIn(account1, pool.unlocked_accounts)
+        self.assertNotIn(account2, self.am.default_pool.unlocked_accounts)
 
         self.am.release_accounts('two')
-        self.assert_(account1 not in pool.unlocked_accounts)
-        self.assert_(account2 in self.am.default_pool.unlocked_accounts)
+        self.assertNotIn(account1, pool.unlocked_accounts)
+        self.assertIn(account2, self.am.default_pool.unlocked_accounts)
 
         self.am.release_accounts('one')
-        self.assert_(account1 in pool.unlocked_accounts)
-        self.assert_(account2 in self.am.default_pool.unlocked_accounts)
+        self.assertIn(account1, pool.unlocked_accounts)
+        self.assertIn(account2, self.am.default_pool.unlocked_accounts)
 
 
 def suite():

@@ -50,9 +50,11 @@ def dummy_cb(job, host, conn, template_test):
         raise
     log.data = log.data.replace('\r\n', '\n')
     if sys.version_info[0] == 2:
-        expected_data = open(expected).read()
+        with open(expected) as fp:
+            expected_data = fp.read()
     else:
-        expected_data = open(expected, newline='').read()
+        with open(expected, newline='') as fp:
+            expected_data = fp.read()
     #open(expected, 'w').write(log.data)
     #open('output', 'w').write(log.data)
     #open('exp', 'w').write(expected_data)
@@ -93,7 +95,7 @@ class TemplateTest(unittest.TestCase):
         # was called from a subthread, so this is our workaround...
         failed = self.logger.get_aborted_logs()
         report = format(self.logger, show_successful=False)
-        self.assert_(not failed, report)
+        self.assertTrue(not failed, report)
 
 
 def suite():

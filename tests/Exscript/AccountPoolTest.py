@@ -71,7 +71,7 @@ class AccountPoolTest(unittest.TestCase):
         # Add three more accounts.
         filename = os.path.join(os.path.dirname(__file__), 'account_pool.cfg')
         self.accm.add_account(get_accounts_from_file(filename))
-        self.assert_(self.accm.n_accounts() == 5)
+        self.assertEqual(self.accm.n_accounts(), 5)
 
         for i in range(0, 2000):
             # Each time an account is acquired a different one should be
@@ -79,8 +79,8 @@ class AccountPoolTest(unittest.TestCase):
             acquired = {}
             for n in range(0, 5):
                 account = self.accm.acquire_account()
-                self.assert_(account is not None)
-                self.assert_(account.get_name() not in acquired)
+                self.assertTrue(account is not None)
+                self.assertNotIn(account.get_name(), acquired)
                 acquired[account.get_name()] = account
 
             # Release one account.
@@ -88,7 +88,7 @@ class AccountPoolTest(unittest.TestCase):
 
             # Acquire one account.
             account = self.accm.acquire_account()
-            self.assert_(account.get_name() == 'abc')
+            self.assertEqual(account.get_name(), 'abc')
 
             # Release all accounts.
             for account in list(acquired.values()):
@@ -103,17 +103,17 @@ class AccountPoolTest(unittest.TestCase):
         pool.acquire_account(account1, 'one')
         pool.acquire_account(account2, 'two')
 
-        self.assert_(account1 not in pool.unlocked_accounts)
-        self.assert_(account2 not in pool.unlocked_accounts)
+        self.assertNotIn(account1, pool.unlocked_accounts)
+        self.assertNotIn(account2, pool.unlocked_accounts)
         pool.release_accounts('one')
-        self.assert_(account1 in pool.unlocked_accounts)
-        self.assert_(account2 not in pool.unlocked_accounts)
+        self.assertIn(account1, pool.unlocked_accounts)
+        self.assertNotIn(account2, pool.unlocked_accounts)
         pool.release_accounts('one')
-        self.assert_(account1 in pool.unlocked_accounts)
-        self.assert_(account2 not in pool.unlocked_accounts)
+        self.assertIn(account1, pool.unlocked_accounts)
+        self.assertNotIn(account2, pool.unlocked_accounts)
         pool.release_accounts('two')
-        self.assert_(account1 in pool.unlocked_accounts)
-        self.assert_(account2 in pool.unlocked_accounts)
+        self.assertIn(account1, pool.unlocked_accounts)
+        self.assertIn(account2, pool.unlocked_accounts)
 
 
 def suite():

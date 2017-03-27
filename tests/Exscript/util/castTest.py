@@ -22,8 +22,8 @@ class castTest(unittest.TestCase):
 
     def testToHost(self):
         from Exscript.util.cast import to_host
-        self.assert_(isinstance(to_host('localhost'),       Host))
-        self.assert_(isinstance(to_host(Host('localhost')), Host))
+        self.assertIsInstance(to_host('localhost'),       Host)
+        self.assertIsInstance(to_host(Host('localhost')), Host)
         self.assertRaises(TypeError, to_host, None)
 
     def testToHosts(self):
@@ -31,30 +31,30 @@ class castTest(unittest.TestCase):
         self.assertRaises(TypeError, to_hosts, None)
 
         result = to_hosts([])
-        self.assert_(isinstance(result, list))
-        self.assert_(len(result) == 0)
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 0)
 
         result = to_hosts('localhost')
-        self.assert_(isinstance(result, list))
-        self.assert_(len(result) == 1)
-        self.assert_(isinstance(result[0], Host))
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 1)
+        self.assertIsInstance(result[0], Host)
 
         result = to_hosts(Host('localhost'))
-        self.assert_(isinstance(result, list))
-        self.assert_(len(result) == 1)
-        self.assert_(isinstance(result[0], Host))
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 1)
+        self.assertIsInstance(result[0], Host)
 
         hosts = ['localhost', Host('1.2.3.4')]
         result = to_hosts(hosts)
-        self.assert_(isinstance(result, list))
-        self.assert_(len(result) == 2)
-        self.assert_(isinstance(result[0], Host))
-        self.assert_(isinstance(result[1], Host))
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 2)
+        self.assertIsInstance(result[0], Host)
+        self.assertIsInstance(result[1], Host)
 
     def testToRegex(self):
         from Exscript.util.cast import to_regex
-        self.assert_(hasattr(to_regex('regex'), 'match'))
-        self.assert_(hasattr(to_regex(re.compile('regex')), 'match'))
+        self.assertTrue(hasattr(to_regex('regex'), 'match'))
+        self.assertTrue(hasattr(to_regex(re.compile('regex')), 'match'))
         self.assertRaises(TypeError, to_regex, None)
 
     def testToRegexs(self):
@@ -62,25 +62,25 @@ class castTest(unittest.TestCase):
         self.assertRaises(TypeError, to_regexs, None)
 
         result = to_regexs([])
-        self.assert_(isinstance(result, list))
-        self.assert_(len(result) == 0)
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 0)
 
         result = to_regexs('regex')
-        self.assert_(isinstance(result, list))
-        self.assert_(len(result) == 1)
-        self.assert_(hasattr(result[0], 'match'))
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 1)
+        self.assertTrue(hasattr(result[0], 'match'))
 
         result = to_regexs(re.compile('regex'))
-        self.assert_(isinstance(result, list))
-        self.assert_(len(result) == 1)
-        self.assert_(hasattr(result[0], 'match'))
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 1)
+        self.assertTrue(hasattr(result[0], 'match'))
 
         regexs = ['regex1', re.compile('regex2')]
         result = to_regexs(regexs)
-        self.assert_(isinstance(result, list))
-        self.assert_(len(result) == 2)
-        self.assert_(hasattr(result[0], 'match'))
-        self.assert_(hasattr(result[1], 'match'))
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 2)
+        self.assertTrue(hasattr(result[0], 'match'))
+        self.assertTrue(hasattr(result[1], 'match'))
         self.assertEqual(result[0].pattern, 'regex1')
         self.assertEqual(result[1].pattern, 'regex2')
 

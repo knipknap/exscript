@@ -97,7 +97,8 @@ def test_file(filename, **kwargs):
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
-    _compile(None, filename, open(filename).read(), {}, **kwargs)
+    with open(filename) as fp:
+        _compile(None, filename, fp.read(), {}, **kwargs)
 
 
 def eval(conn, string, strip_command=True, **kwargs):
@@ -154,9 +155,9 @@ def eval_file(conn, filename, strip_command=True, **kwargs):
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
-    template = open(filename, 'r').read()
     parser_args = {'strip_command': strip_command}
-    return _run(conn, filename, template, parser_args, **kwargs)
+    with open(filename, 'r') as fp:
+        return _run(conn, filename, fp.read(), parser_args, **kwargs)
 
 
 def paste(conn, string, **kwargs):
@@ -195,5 +196,5 @@ def paste_file(conn, filename, **kwargs):
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
-    template = open(filename, 'r').read()
-    return _run(conn, None, template, {'no_prompt': True}, **kwargs)
+    with open(filename, 'r') as fp:
+        return _run(conn, None, fp.read(), {'no_prompt': True}, **kwargs)

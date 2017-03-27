@@ -141,9 +141,8 @@ def run():
     if options.execute:
         script_content = options.execute
     else:
-        file           = open(filename, 'r')
-        script_content = file.read()
-        file.close()
+        with open(filename, 'r') as fp:
+            script_content = fp.read()
 
     # Prepare the code that is executed after the user script has completed.
     #FIXME: Move into the library, then use read_template_from_file instead of read_template().

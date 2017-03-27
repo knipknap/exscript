@@ -84,7 +84,7 @@ class LoggerTest(unittest.TestCase):
 
         self.logger.add_log(id(job), job.name, 1)
         self.assertEqual(count(self.logger.get_logs()), 1)
-        self.assert_(isinstance(nth(self.logger.get_logs(), 0), Log))
+        self.assertIsInstance(nth(self.logger.get_logs(), 0), Log)
 
         self.logger.log(id(job), 'hello world')
         self.assertEqual(count(self.logger.get_logs()), 1)
@@ -113,7 +113,7 @@ class LoggerTest(unittest.TestCase):
         self.logger.log_succeeded(id(job))
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
         self.assertEqual(count(self.logger.get_succeeded_logs()), 1)
-        self.assert_(isinstance(nth(self.logger.get_succeeded_logs(), 0), Log))
+        self.assertIsInstance(nth(self.logger.get_succeeded_logs(), 0), Log)
 
     def testGetAbortedLogs(self):
         self.assertEqual(count(self.logger.get_aborted_logs()), 0)
@@ -133,7 +133,7 @@ class LoggerTest(unittest.TestCase):
             self.logger.log_aborted(id(job), sys.exc_info())
         self.assertEqual(count(self.logger.get_succeeded_logs()), 0)
         self.assertEqual(count(self.logger.get_aborted_logs()), 1)
-        self.assert_(isinstance(nth(self.logger.get_aborted_logs(), 0), Log))
+        self.assertIsInstance(nth(self.logger.get_aborted_logs(), 0), Log)
 
     def testAddLog(self):
         self.assertEqual(count(self.logger.get_logs()), 0)
@@ -154,7 +154,7 @@ class LoggerTest(unittest.TestCase):
             raise FakeError()
         except Exception:
             self.logger.log_aborted(id(self.job), sys.exc_info())
-        self.assert_('FakeError' in str(log))
+        self.assertIn('FakeError', str(log))
         return log
 
     def testLogSucceeded(self):

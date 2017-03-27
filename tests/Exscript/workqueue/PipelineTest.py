@@ -32,16 +32,16 @@ class PipelineTest(unittest.TestCase):
     def testContains(self):
         item1 = object()
         item2 = object()
-        self.assert_(item1 not in self.pipeline)
-        self.assert_(item2 not in self.pipeline)
+        self.assertNotIn(item1, self.pipeline)
+        self.assertNotIn(item2, self.pipeline)
 
         self.pipeline.append(item1)
-        self.assert_(item1 in self.pipeline)
-        self.assert_(item2 not in self.pipeline)
+        self.assertIn(item1, self.pipeline)
+        self.assertNotIn(item2, self.pipeline)
 
         self.pipeline.append(item2)
-        self.assert_(item1 in self.pipeline)
-        self.assert_(item2 in self.pipeline)
+        self.assertIn(item1, self.pipeline)
+        self.assertIn(item2, self.pipeline)
 
     def testGetFromName(self):
         item1 = object()
@@ -313,10 +313,10 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(next(self.pipeline), item4)
         self.assertEqual(next(self.pipeline), item1)
         self.assertEqual(next(self.pipeline), item2)
-        self.assert_(item1 in self.pipeline)
-        self.assert_(item2 in self.pipeline)
-        self.assert_(item3 in self.pipeline)
-        self.assert_(item4 in self.pipeline)
+        self.assertIn(item1, self.pipeline)
+        self.assertIn(item2, self.pipeline)
+        self.assertIn(item3, self.pipeline)
+        self.assertIn(item4, self.pipeline)
         self.assertEqual(len(self.pipeline), 4)
         self.pipeline.clear()
         self.assertEqual(len(self.pipeline), 0)
@@ -330,22 +330,22 @@ class PipelineTest(unittest.TestCase):
 
         self.assertEqual(next(self.pipeline), item3)
         self.assertEqual(next(self.pipeline), item4)
-        self.assert_(item3 in self.pipeline)
-        self.assert_(item4 in self.pipeline)
+        self.assertIn(item3, self.pipeline)
+        self.assertIn(item4, self.pipeline)
         self.pipeline.task_done(item4)
-        self.assert_(item4 not in self.pipeline)
+        self.assertNotIn(item4, self.pipeline)
 
         self.assertEqual(next(self.pipeline), item1)
-        self.assert_(item1 in self.pipeline)
+        self.assertIn(item1, self.pipeline)
         self.pipeline.task_done(item3)
-        self.assert_(item3 not in self.pipeline)
+        self.assertNotIn(item3, self.pipeline)
 
         self.assertEqual(next(self.pipeline), item2)
-        self.assert_(item2 in self.pipeline)
+        self.assertIn(item2, self.pipeline)
         self.pipeline.task_done(item2)
-        self.assert_(item2 not in self.pipeline)
+        self.assertNotIn(item2, self.pipeline)
         self.pipeline.task_done(item1)
-        self.assert_(item1 not in self.pipeline)
+        self.assertNotIn(item1, self.pipeline)
         self.assertEqual(len(self.pipeline), 0)
 
         # Repeat with max_working = 1.
@@ -356,24 +356,24 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.appendleft(item4)
 
         self.assertEqual(next(self.pipeline), item3)
-        self.assert_(item3 in self.pipeline)
+        self.assertIn(item3, self.pipeline)
         self.pipeline.task_done(item3)
-        self.assert_(item3 not in self.pipeline)
+        self.assertNotIn(item3, self.pipeline)
 
         self.assertEqual(next(self.pipeline), item4)
-        self.assert_(item4 in self.pipeline)
+        self.assertIn(item4, self.pipeline)
         self.pipeline.task_done(item4)
-        self.assert_(item4 not in self.pipeline)
+        self.assertNotIn(item4, self.pipeline)
 
         self.assertEqual(next(self.pipeline), item1)
-        self.assert_(item1 in self.pipeline)
+        self.assertIn(item1, self.pipeline)
         self.pipeline.task_done(item1)
-        self.assert_(item1 not in self.pipeline)
+        self.assertNotIn(item1, self.pipeline)
 
         self.assertEqual(next(self.pipeline), item2)
-        self.assert_(item2 in self.pipeline)
+        self.assertIn(item2, self.pipeline)
         self.pipeline.task_done(item2)
-        self.assert_(item2 not in self.pipeline)
+        self.assertNotIn(item2, self.pipeline)
         self.assertEqual(len(self.pipeline), 0)
 
 
