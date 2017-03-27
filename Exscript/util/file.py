@@ -65,7 +65,7 @@ def get_accounts_from_file(filename):
     parser.optionxform = str
     parser.read(filename)
     for user, password in parser.items('account-pool'):
-        password = base64.decodestring(password.encode('latin1'))
+        password = base64.decodebytes(password.encode('latin1'))
         accounts.append(Account(user, password.decode('latin1')))
     return accounts
 
