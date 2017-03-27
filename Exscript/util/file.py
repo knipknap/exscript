@@ -27,11 +27,13 @@ from __future__ import print_function, absolute_import
 from builtins import str
 from future import standard_library
 standard_library.install_aliases()
+import sys
 import re
 import os
 import base64
 import codecs
-import imp
+import imp # Py2
+import importlib # Py3
 from .. import Account
 from .cast import to_host
 
@@ -226,6 +228,9 @@ def load_lib(filename):
         raise IOError('No such file: %s' % filename)
 
     name = os.path.splitext(os.path.basename(filename))[0]
-    module = imp.load_source(name, filename)
+    if sys.version_info[0] < 3:
+        module = imp.load_source(name, filename)
+    else:
+        module = importlib.machinery.SourceFileLoader(name, filename).load_module()
 
     return dict((name + '.' + k, v) for (k, v) in list(module.__lib__.items()))
