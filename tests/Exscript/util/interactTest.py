@@ -22,7 +22,8 @@ class InputHistoryTest(unittest.TestCase):
         h = InputHistory(t.name)
         h = InputHistory(t.name, 'foo')
         h.set('aaa', 'bbb')
-        self.assertEqual(open(t.name).read(), '[foo]\naaa = bbb\n\n')
+        with open(t.name) as fp:
+            self.assertEqual(fp.read(), '[foo]\naaa = bbb\n\n')
 
     def testGet(self):
         self.assertEqual(self.history.get('bar'), None)

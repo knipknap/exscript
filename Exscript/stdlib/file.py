@@ -48,8 +48,8 @@ def clear(scope, filename):
     :type  filename: string
     :param filename: A filename.
     """
-    file = open(filename[0], 'w')
-    file.close()
+    with open(filename[0], 'w'):
+        pass
     return True
 
 
@@ -97,9 +97,8 @@ def read(scope, filename):
     :rtype:  string
     :return: The content of the file.
     """
-    file = open(filename[0], 'r')
-    lines = file.readlines()
-    file.close()
+    with open(filename[0], 'r') as fp:
+        lines = fp.readlines()
     scope.define(__response__=lines)
     return lines
 
@@ -131,7 +130,6 @@ def write(scope, filename, lines, mode=['a']):
     :type  mode: string
     :param mode: Any of the above listed modes.
     """
-    file = open(filename[0], mode[0])
-    file.writelines(['%s\n' % line.rstrip() for line in lines])
-    file.close()
+    with open(filename[0], mode[0]) as fp:
+        fp.writelines(['%s\n' % line.rstrip() for line in lines])
     return True

@@ -1111,63 +1111,63 @@ class Protocol(object):
                           handle_window_size):
         # We need to make sure to use an unbuffered stdin, else multi-byte
         # chars (such as arrow keys) won't work properly.
-        stdin = os.fdopen(sys.stdin.fileno(), 'r', 0)
-        oldtty = termios.tcgetattr(stdin)
+        with os.fdopen(sys.stdin.fileno(), 'r', 0) as stdin:
+            oldtty = termios.tcgetattr(stdin)
 
-        # Update the terminal size whenever the size changes.
-        if handle_window_size:
-            def handle_sigwinch(signum, frame):
-                rows, cols = get_terminal_size()
-                self._set_terminal_size(rows, cols)
-            signal.signal(signal.SIGWINCH, handle_sigwinch)
-            handle_sigwinch(None, None)
+            # Update the terminal size whenever the size changes.
+            if handle_window_size:
+                def handle_sigwinch(signum, frame):
+                    rows, cols = get_terminal_size()
+                    self._set_terminal_size(rows, cols)
+                signal.signal(signal.SIGWINCH, handle_sigwinch)
+                handle_sigwinch(None, None)
 
-        # Read from stdin and write to the network, endlessly.
-        try:
-            tty.setraw(sys.stdin.fileno())
-            tty.setcbreak(sys.stdin.fileno())
-            channel.settimeout(0.0)
+            # Read from stdin and write to the network, endlessly.
+            try:
+                tty.setraw(sys.stdin.fileno())
+                tty.setcbreak(sys.stdin.fileno())
+                channel.settimeout(0.0)
 
-            while True:
-                try:
-                    r, w, e = select.select([channel, stdin], [], [])
-                except select.error as e:
-                    code, message = e
-                    if code == errno.EINTR:
-                        # This may happen when SIGWINCH is called
-                        # during the select; we just retry then.
-                        continue
-                    raise
-
-                if channel in r:
+                while True:
                     try:
-                        data = channel.recv(1024)
-                    except socket.timeout:
-                        pass
-                    if not data:
-                        self._dbg(1, 'EOF from remote')
-                        break
-                    self._receive_cb(data, False)
-                    self.buffer.append(data)
-                if stdin in r:
-                    data = stdin.read(1)
-                    self.buffer.clear()
-                    if len(data) == 0:
-                        break
+                        r, w, e = select.select([channel, stdin], [], [])
+                    except select.error as e:
+                        code, message = e
+                        if code == errno.EINTR:
+                            # This may happen when SIGWINCH is called
+                            # during the select; we just retry then.
+                            continue
+                        raise
 
-                    # Temporarily revert stdin behavior while callbacks are
-                    # active.
-                    curtty = termios.tcgetattr(stdin)
-                    termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
-                    is_handled = self._call_key_handlers(key_handlers, data)
-                    termios.tcsetattr(stdin, termios.TCSADRAIN, curtty)
+                    if channel in r:
+                        try:
+                            data = channel.recv(1024)
+                        except socket.timeout:
+                            pass
+                        if not data:
+                            self._dbg(1, 'EOF from remote')
+                            break
+                        self._receive_cb(data, False)
+                        self.buffer.append(data)
+                    if stdin in r:
+                        data = stdin.read(1)
+                        self.buffer.clear()
+                        if len(data) == 0:
+                            break
 
-                    if not is_handled:
-                        if not self.send_data is None:
-                            self.send_data.write(data)
-                        channel.send(data)
-        finally:
-            termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
+                        # Temporarily revert stdin behavior while callbacks are
+                        # active.
+                        curtty = termios.tcgetattr(stdin)
+                        termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
+                        is_handled = self._call_key_handlers(key_handlers, data)
+                        termios.tcsetattr(stdin, termios.TCSADRAIN, curtty)
+
+                        if not is_handled:
+                            if not self.send_data is None:
+                                self.send_data.write(data)
+                            channel.send(data)
+            finally:
+                termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
 
     def _open_windows_shell(self, channel, key_handlers):
         import threading

@@ -420,7 +420,8 @@ class QueueTest(unittest.TestCase):
         self.assertIn('dummy1.log', logfiles)
         self.assertIn('dummy2.log', logfiles)
         for file in logfiles:
-            content = open(os.path.join(self.tempdir, file)).read()
+            with open(os.path.join(self.tempdir, file)) as fp:
+                content = fp.read()
 
 
 class QueueTestMultiProcessing(QueueTest):
