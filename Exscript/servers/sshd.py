@@ -130,7 +130,10 @@ class SSHd(Server):
 
     def _shutdown_notify(self, conn):
         if self.channel:
-            self.channel.send('Server is shutting down.\n')
+            try:
+                self.channel.send('Server is shutting down.\n')
+            except socket.error:
+                pass
 
     def _handle_connection(self, conn):
         t = paramiko.Transport(conn)

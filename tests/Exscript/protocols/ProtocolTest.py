@@ -41,6 +41,8 @@ class ProtocolTest(unittest.TestCase):
         self.createProtocol()
 
     def tearDown(self):
+        if self.protocol.__class__ != Protocol:
+            self.protocol.close(True)
         if self.daemon is not None:
             self.daemon.exit()
             self.daemon.join()

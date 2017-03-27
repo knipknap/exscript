@@ -425,8 +425,8 @@ def from_template(filename, **kwargs):
     :rtype:  Mail
     :return: The resulting mail.
     """
-    tmpl = open(filename).read()
-    return from_template_string(tmpl, **kwargs)
+    with open(filename) as fp:
+        return from_template_string(fp.read(), **kwargs)
 
 
 def _get_mime_object(filename):
@@ -439,20 +439,19 @@ def _get_mime_object(filename):
 
     maintype, subtype = ctype.split('/', 1)
     if maintype == 'text':
-        fp = open(filename)
-        msg = MIMEText(fp.read(), _subtype=subtype)
+        with open(filename) as fp:
+            msg = MIMEText(fp.read(), _subtype=subtype)
     elif maintype == 'image':
-        fp = open(filename, 'rb')
-        msg = MIMEImage(fp.read(), _subtype=subtype)
+        with open(filename, 'rb') as fp:
+            msg = MIMEImage(fp.read(), _subtype=subtype)
     elif maintype == 'audio':
-        fp = open(filename, 'rb')
-        msg = MIMEAudio(fp.read(), _subtype=subtype)
+        with open(filename, 'rb') as fp:
+            msg = MIMEAudio(fp.read(), _subtype=subtype)
     else:
-        fp = open(filename, 'rb')
         msg = MIMEBase(maintype, subtype)
-        msg.set_payload(fp.read())
+        with open(filename, 'rb') as fp:
+            msg.set_payload(fp.read())
         encoders.encode_base64(msg)
-    fp.close()
 
     # Set the filename parameter
     msg.add_header('Content-Disposition', 'attachment', filename=filename)
