@@ -3,8 +3,9 @@ from builtins import object
 import sys
 import unittest
 import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import os
+dirname = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(dirname, '..', '..'))
 
 from Exscript import Queue, Account, Logger, protocols
 from Exscript.util import template
@@ -14,7 +15,7 @@ from Exscript.util.report import format
 from Exscript.protocols import Dummy
 from Exscript.emulators import IOSEmulator
 
-test_dir = '../templates'
+test_dir = os.path.join(os.path.dirname(dirname), 'templates')
 
 
 class Log(object):
