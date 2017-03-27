@@ -28,7 +28,8 @@ class HostTest(unittest.TestCase):
             uri = Url.from_string(url)
             self.assertEqual(host.get_name(),    uri.hostname)
             self.assertEqual(host.get_address(), uri.hostname)
-            self.assertEqual(host.get_uri(), str(uri))
+            self.assertEqual(host.get_uri().split('&').sort(),
+                             str(uri).split('&').sort())
 
     def testSetUri(self):
         for url, result in urls:
@@ -41,7 +42,8 @@ class HostTest(unittest.TestCase):
         for url, result in urls:
             host = Host(url)
             uri = Url.from_string(url)
-            self.assertEqual(host.get_uri(), str(uri))
+            self.assertEqual(host.get_uri().split('&').sort(),
+                             str(uri).split('&').sort())
 
     def testGetDict(self):
         host = Host('foo')
