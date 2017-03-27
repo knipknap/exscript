@@ -58,8 +58,7 @@ class ttyTest(unittest.TestCase):
         # If the stty program exists, it should be used.
         os.environ['PATH'] = oldpath
         try:
-            with Popen(['stty', 'size'], stdout=PIPE, stderr=PIPE,
-                       close_fds=True):
+            with Popen(['stty', 'size'], stdout=PIPE, stderr=PIPE):
                 self.assertNotEqual(get_terminal_size(), (1000, 1000))
                 self.assertNotEqual(get_terminal_size(10, 10), (1000, 1000))
         except OSError:
