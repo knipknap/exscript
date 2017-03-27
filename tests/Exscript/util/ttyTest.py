@@ -1,7 +1,8 @@
+from builtins import int
 import sys
 import unittest
 import re
-import os.path
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import tempfile
@@ -44,28 +45,28 @@ class ttyTest(unittest.TestCase):
         # now fail, and the default values are returned.
         os.environ['LINES'] = ''
         os.environ['COLUMNS'] = ''
-        self.assertEqual(get_terminal_size(),       (25, 80))
-        self.assertEqual(get_terminal_size(10, 10), (10, 10))
+        self.assertEqual(get_terminal_size(), (int(25), int(80)))
+        self.assertEqual(get_terminal_size(10, 10), (int(10), int(10)))
 
         # If the LINES and COLUMNS variables are set, they should be used.
         os.environ['LINES'] = '1000'
         os.environ['COLUMNS'] = '1000'
-        self.assertEqual(get_terminal_size(),       (1000, 1000))
-        self.assertEqual(get_terminal_size(10, 10), (1000, 1000))
+        self.assertEqual(get_terminal_size(), (int(1000), int(1000)))
+        self.assertEqual(get_terminal_size(10, 10), (int(1000), int(1000)))
 
         # If the stty program exists, it should be used.
         os.environ['PATH'] = oldpath
         try:
-            self.assertNotEqual(get_terminal_size(),       (1000, 1000))
-            self.assertNotEqual(get_terminal_size(10, 10), (1000, 1000))
+            self.assertNotEqual(get_terminal_size(), (int(1000), int(1000)))
+            self.assertNotEqual(get_terminal_size(10, 10), (int(1000), int(1000)))
         except OSError:
             pass  # "stty" not found.
 
         # Lastly, if stdin/stderr/stdout exist, they should tell us something.
         os.environ['PATH'] = ''
         self._unredirect()
-        self.assertNotEqual(get_terminal_size(),       (1000, 1000))
-        self.assertNotEqual(get_terminal_size(10, 10), (1000, 1000))
+        self.assertNotEqual(get_terminal_size(), (int(1000), int(1000)))
+        self.assertNotEqual(get_terminal_size(10, 10), (int(1000), int(1000)))
         os.environ['PATH'] = oldpath
 
 
