@@ -27,7 +27,7 @@ import os
 import sys
 import struct
 from subprocess import Popen, PIPE
-
+from builtins import int
 
 def _get_terminal_size(fd):
     try:
