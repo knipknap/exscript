@@ -22,10 +22,10 @@ class fileTest(unittest.TestCase):
 
     def setUp(self):
         data = '[account-pool]\n'
-        data += 'user1=' + base64.encodestring(b'password1').decode('utf8') + '\n'
-        data += 'user2:' + base64.encodestring(b'password2').decode('utf8') + '\n'
-        data += 'user3 = ' + base64.encodestring(b'password3').decode('utf8') + '\n'
-        data += 'user4 : ' + base64.encodestring(b'password4').decode('utf8') + '\n'
+        data += 'user1=' + base64.encodebytes(b'password1').decode('utf8') + '\n'
+        data += 'user2:' + base64.encodebytes(b'password2').decode('utf8') + '\n'
+        data += 'user3 = ' + base64.encodebytes(b'password3').decode('utf8') + '\n'
+        data += 'user4 : ' + base64.encodebytes(b'password4').decode('utf8') + '\n'
         self.account_file = NamedTemporaryFile()
         self.account_file.write(data.encode('utf8'))
         self.account_file.flush()
