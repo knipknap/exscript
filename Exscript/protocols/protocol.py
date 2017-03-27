@@ -34,6 +34,7 @@ import socket
 import signal
 import errno
 import os
+from io import StringIO
 from functools import partial
 from ..util.impl import Context, _Context
 from ..util.buffer import MonitoredBuffer
@@ -234,7 +235,7 @@ class Protocol(object):
 
         :keyword driver: Driver()|str
         :keyword stdout: Where to write the device response. Defaults to
-            os.devnull.
+            an in-memory buffer.
         :keyword stderr: Where to write debug info. Defaults to stderr.
         :keyword debug: An integer between 0 (no debugging) and 5 (very
             verbose debugging) that specifies the amount of debug info
@@ -282,7 +283,7 @@ class Protocol(object):
         self.encoding = encoding
         self.send_data = None
         if stdout is None:
-            self.stdout = open(os.devnull, 'w')
+            self.stdout = StringIO()
         else:
             self.stdout = stdout
         if stderr is None:
