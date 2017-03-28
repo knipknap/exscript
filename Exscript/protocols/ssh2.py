@@ -241,19 +241,24 @@ class SSH2(Protocol):
                        self._paramiko_auth_autokey,
                        self._paramiko_auth_none):
             self._dbg(1, 'Authenticating with %s' % method.__name__)
+            errors = []
             try:
                 method(username, password)
                 return
             except BadHostKeyException as e:
-                self._dbg(1, 'Bad host key!')
-                last_exception = e
+                msg = 'Bad host key: ' + str(e)
+                self._dbg(1, msg)
+                errors.append(msg)
             except AuthenticationException as e:
-                self._dbg(1, 'Authentication with %s failed' % method.__name__)
-                last_exception = e
+                msg = 'Authentication with %s failed' % method.__name__
+                msg += ': ' + str(e)
+                self._dbg(1, msg)
+                errors.append(msg)
             except SSHException as e:
-                self._dbg(1, 'Missing host key.')
-                last_exception = e
-        raise LoginFailure('Login failed: ' + str(last_exception))
+                msg = 'Missing host key: ' + str(e)
+                self._dbg(1, msg)
+                errors.append(msg)
+        raise LoginFailure('Login failed: ' + '; '.join(errors))
 
     def _paramiko_shell(self):
         rows, cols = get_terminal_size()
