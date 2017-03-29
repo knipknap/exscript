@@ -37,6 +37,7 @@ from paramiko.resource import ResourceManager
 from paramiko.ssh_exception import SSHException, AuthenticationException, \
         BadHostKeyException
 from ..util.tty import get_terminal_size
+from ..util.crypt import otp
 from ..key import PrivateKey
 from .protocol import Protocol, _skey_re
 from .exception import ProtocolException, LoginFailure, TimeoutException, \
