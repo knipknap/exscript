@@ -23,10 +23,10 @@
 """
 Handy shortcuts for converting types.
 """
+from __future__ import absolute_import
 from builtins import str
 import re
 import Exscript
-
 
 def to_list(item):
     """
