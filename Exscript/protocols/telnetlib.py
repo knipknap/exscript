@@ -82,77 +82,77 @@ DEBUGLEVEL = 0
 TELNET_PORT = 23
 
 # Telnet protocol characters (don't change)
-IAC = chr(255)  # "Interpret As Command"
-DONT = chr(254)
-DO = chr(253)
-WONT = chr(252)
-WILL = chr(251)
-SB = chr(250)
-SE = chr(240)
-theNULL = chr(0)
+IAC = chr(255).encode('latin-1')  # "Interpret As Command"
+DONT = chr(254).encode('latin-1')
+DO = chr(253).encode('latin-1')
+WONT = chr(252).encode('latin-1')
+WILL = chr(251).encode('latin-1')
+SB = chr(250).encode('latin-1')
+SE = chr(240).encode('latin-1')
+theNULL = chr(0).encode('latin-1')
 
-# Telnet protocol options code (don't change)
+# Telnet protocol options code (don't change).encode('latin-1')
 # These ones all come from arpa/telnet.h
-BINARY = chr(0)  # 8-bit data path
-ECHO = chr(1)  # echo
-RCP = chr(2)  # prepare to reconnect
-SGA = chr(3)  # suppress go ahead
-NAMS = chr(4)  # approximate message size
-STATUS = chr(5)  # give status
-TM = chr(6)  # timing mark
-RCTE = chr(7)  # remote controlled transmission and echo
-NAOL = chr(8)  # negotiate about output line width
-NAOP = chr(9)  # negotiate about output page size
-NAOCRD = chr(10)  # negotiate about CR disposition
-NAOHTS = chr(11)  # negotiate about horizontal tabstops
-NAOHTD = chr(12)  # negotiate about horizontal tab disposition
-NAOFFD = chr(13)  # negotiate about formfeed disposition
-NAOVTS = chr(14)  # negotiate about vertical tab stops
-NAOVTD = chr(15)  # negotiate about vertical tab disposition
-NAOLFD = chr(16)  # negotiate about output LF disposition
-XASCII = chr(17)  # extended ascii character set
-LOGOUT = chr(18)  # force logout
-BM = chr(19)  # byte macro
-DET = chr(20)  # data entry terminal
-SUPDUP = chr(21)  # supdup protocol
-SUPDUPOUTPUT = chr(22)  # supdup output
-SNDLOC = chr(23)  # send location
-TTYPE = chr(24)  # terminal type
-EOR = chr(25)  # end or record
-TUID = chr(26)  # TACACS user identification
-OUTMRK = chr(27)  # output marking
-TTYLOC = chr(28)  # terminal location number
-VT3270REGIME = chr(29)  # 3270 regime
-X3PAD = chr(30)  # X.3 PAD
-NAWS = chr(31)  # window size
-TSPEED = chr(32)  # terminal speed
-LFLOW = chr(33)  # remote flow control
-LINEMODE = chr(34)  # Linemode option
-XDISPLOC = chr(35)  # X Display Location
-OLD_ENVIRON = chr(36)  # Old - Environment variables
-AUTHENTICATION = chr(37)  # Authenticate
-ENCRYPT = chr(38)  # Encryption option
-NEW_ENVIRON = chr(39)  # New - Environment variables
+BINARY = chr(0).encode('latin-1')  # 8-bit data path
+ECHO = chr(1).encode('latin-1')  # echo
+RCP = chr(2).encode('latin-1')  # prepare to reconnect
+SGA = chr(3).encode('latin-1')  # suppress go ahead
+NAMS = chr(4).encode('latin-1')  # approximate message size
+STATUS = chr(5).encode('latin-1')  # give status
+TM = chr(6).encode('latin-1')  # timing mark
+RCTE = chr(7).encode('latin-1')  # remote controlled transmission and echo
+NAOL = chr(8).encode('latin-1')  # negotiate about output line width
+NAOP = chr(9).encode('latin-1')  # negotiate about output page size
+NAOCRD = chr(10).encode('latin-1')  # negotiate about CR disposition
+NAOHTS = chr(11).encode('latin-1')  # negotiate about horizontal tabstops
+NAOHTD = chr(12).encode('latin-1')  # negotiate about horizontal tab disposition
+NAOFFD = chr(13).encode('latin-1')  # negotiate about formfeed disposition
+NAOVTS = chr(14).encode('latin-1')  # negotiate about vertical tab stops
+NAOVTD = chr(15).encode('latin-1')  # negotiate about vertical tab disposition
+NAOLFD = chr(16).encode('latin-1')  # negotiate about output LF disposition
+XASCII = chr(17).encode('latin-1')  # extended ascii character set
+LOGOUT = chr(18).encode('latin-1')  # force logout
+BM = chr(19).encode('latin-1')  # byte macro
+DET = chr(20).encode('latin-1')  # data entry terminal
+SUPDUP = chr(21).encode('latin-1')  # supdup protocol
+SUPDUPOUTPUT = chr(22).encode('latin-1')  # supdup output
+SNDLOC = chr(23).encode('latin-1')  # send location
+TTYPE = chr(24).encode('latin-1')  # terminal type
+EOR = chr(25).encode('latin-1')  # end or record
+TUID = chr(26).encode('latin-1')  # TACACS user identification
+OUTMRK = chr(27).encode('latin-1')  # output marking
+TTYLOC = chr(28).encode('latin-1')  # terminal location number
+VT3270REGIME = chr(29).encode('latin-1')  # 3270 regime
+X3PAD = chr(30).encode('latin-1')  # X.3 PAD
+NAWS = chr(31).encode('latin-1')  # window size
+TSPEED = chr(32).encode('latin-1')  # terminal speed
+LFLOW = chr(33).encode('latin-1')  # remote flow control
+LINEMODE = chr(34).encode('latin-1')  # Linemode option
+XDISPLOC = chr(35).encode('latin-1')  # X Display Location
+OLD_ENVIRON = chr(36).encode('latin-1')  # Old - Environment variables
+AUTHENTICATION = chr(37).encode('latin-1')  # Authenticate
+ENCRYPT = chr(38).encode('latin-1')  # Encryption option
+NEW_ENVIRON = chr(39).encode('latin-1')  # New - Environment variables
 # the following ones come from
 # http://www.iana.org/assignments/telnet-options
 # Unfortunately, that document does not assign identifiers
 # to all of them, so we are making them up
-TN3270E = chr(40)  # TN3270E
-XAUTH = chr(41)  # XAUTH
-CHARSET = chr(42)  # CHARSET
-RSP = chr(43)  # Telnet Remote Serial Port
-COM_PORT_OPTION = chr(44)  # Com Port Control Option
-SUPPRESS_LOCAL_ECHO = chr(45)  # Telnet Suppress Local Echo
-TLS = chr(46)  # Telnet Start TLS
-KERMIT = chr(47)  # KERMIT
-SEND_URL = chr(48)  # SEND-URL
-FORWARD_X = chr(49)  # FORWARD_X
-PRAGMA_LOGON = chr(138)  # TELOPT PRAGMA LOGON
-SSPI_LOGON = chr(139)  # TELOPT SSPI LOGON
-PRAGMA_HEARTBEAT = chr(140)  # TELOPT PRAGMA HEARTBEAT
-EXOPL = chr(255)  # Extended-Options-List
+TN3270E = chr(40).encode('latin-1')  # TN3270E
+XAUTH = chr(41).encode('latin-1')  # XAUTH
+CHARSET = chr(42).encode('latin-1')  # CHARSET
+RSP = chr(43).encode('latin-1')  # Telnet Remote Serial Port
+COM_PORT_OPTION = chr(44).encode('latin-1')  # Com Port Control Option
+SUPPRESS_LOCAL_ECHO = chr(45).encode('latin-1')  # Telnet Suppress Local Echo
+TLS = chr(46).encode('latin-1')  # Telnet Start TLS
+KERMIT = chr(47).encode('latin-1')  # KERMIT
+SEND_URL = chr(48).encode('latin-1')  # SEND-URL
+FORWARD_X = chr(49).encode('latin-1')  # FORWARD_X
+PRAGMA_LOGON = chr(138).encode('latin-1')  # TELOPT PRAGMA LOGON
+SSPI_LOGON = chr(139).encode('latin-1')  # TELOPT SSPI LOGON
+PRAGMA_HEARTBEAT = chr(140).encode('latin-1')  # TELOPT PRAGMA HEARTBEAT
+EXOPL = chr(255).encode('latin-1')  # Extended-Options-List
 
-SEND_TTYPE = chr(1)
+SEND_TTYPE = chr(1).encode('latin-1')
 
 
 class Telnet(object):
@@ -414,7 +414,7 @@ class Telnet(object):
                 # Handle non-IAC first (normal data).
                 char = self.rawq_getchar()
                 if char != IAC:
-                    buf = buf + bytearray([char])
+                    buf = buf + char
                     continue
 
                 # Interpret the command byte that follows after the IAC code.
@@ -424,7 +424,7 @@ class Telnet(object):
                     continue
                 elif command == IAC:
                     self.msg('IAC DATA')
-                    buf = buf + bytearray([command])
+                    buf = buf + command
                     continue
 
                 # DO: Indicates the request that the other party perform,
@@ -434,14 +434,14 @@ class Telnet(object):
                     opt = self.rawq_getchar()
                     self.msg('IAC DO %s', ord(opt))
                     if opt == TTYPE:
-                        self.sock.send(bytearray([IAC,WILL,opt]))
+                        self.sock.send(IAC+WILL+opt)
                     elif opt == NAWS:
-                        self.sock.send(bytearray([IAC,WILL,opt]))
+                        self.sock.send(IAC+WILL+opt)
                         self.can_naws = True
                         if self.window_size:
                             self.set_window_size(*self.window_size)
                     else:
-                        self.sock.send(bytearray([IAC,WONT,opt]))
+                        self.sock.send(IAC+WONT+opt)
 
                 # DON'T: Indicates the demand that the other party stop
                 # performing, or confirmation that you are no longer
@@ -450,7 +450,7 @@ class Telnet(object):
                 elif command == DONT:
                     opt = self.rawq_getchar()
                     self.msg('IAC DONT %s', ord(opt))
-                    self.sock.send(bytearray([IAC,WONT,opt]))
+                    self.sock.send(IAC+WONT+opt)
 
                 # SB: Indicates that what follows is subnegotiation of the
                 # indicated option.
@@ -483,17 +483,17 @@ class Telnet(object):
                     self.msg('IAC SUBCOMMAND_END')
 
                     # Send the next supported terminal.
-                    ttype = self.termtype
+                    ttype = self.termtype.encode('latin1')
                     self.msg('indicating support for terminal type %s', ttype)
-                    self.sock.send(bytearray([IAC,SB,TTYPE,theNULL,ttype,IAC,SE]))
+                    self.sock.send(IAC+SB+TTYPE+theNULL+ttype+IAC+SE)
                 elif command in (WILL, WONT):
                     opt = self.rawq_getchar()
                     self.msg('IAC %s %d',
                              command == WILL and 'WILL' or 'WONT', ord(opt))
                     if opt == ECHO:
-                        self.sock.send(bytearray([IAC,DO,opt]))
+                        self.sock.send(IAC+DO+opt)
                     else:
-                        self.sock.send(bytearray([IAC,DONT,opt]))
+                        self.sock.send(IAC+DONT+opt)
                 else:
                     self.msg('IAC %d not recognized' % ord(command))
         except EOFError:  # raised by self.rawq_getchar()
