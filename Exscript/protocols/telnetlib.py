@@ -302,10 +302,12 @@ class Telnet(object):
         """
         if type(buffer) == type(0):
             buffer = chr(buffer)
-        elif isinstance(buffer, str) and IAC in buffer:
-            buffer = buffer.replace(IAC, IAC + IAC)
+        elif not isinstance(buffer, bytes):
+            buffer = buffer.encode(self.encoding)
+        if IAC in buffer:
+            buffer = buffer.replace(IAC, IAC+IAC)
         self.msg("send %s", repr(buffer))
-        self.sock.send(buffer.encode(self.encoding))
+        self.sock.send(buffer)
 
     def read_all(self):
         """Read all data until EOF; block until connection closed."""
