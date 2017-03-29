@@ -38,7 +38,7 @@ from paramiko.ssh_exception import SSHException, AuthenticationException, \
         BadHostKeyException
 from ..util.tty import get_terminal_size
 from ..key import PrivateKey
-from .protocol import Protocol
+from .protocol import Protocol, _skey_re
 from .exception import ProtocolException, LoginFailure, TimeoutException, \
         DriverReplacedException, ExpectCancelledException
 
@@ -183,6 +183,28 @@ class SSH2(Protocol):
     def _paramiko_auth_none(self, username, password=None):
         self.client.auth_none(username)
 
+    def _paramiko_auth_interactive(self, username, password=None):
+        def handler(title, instructions, prompt_list):
+            if not prompt_list:
+                return []
+            response = []
+            for prompt, visible in prompt_list:
+                match = _skey_re.search(prompt)
+                if match is not None:
+                    skey_password = otp(password,
+                                        match.group(2),
+                                        int(match.group(1)))
+                    response.append(skey_password)
+                    continue
+
+                for regex in self.get_password_prompt():
+                    match = password_re.search(prompt)
+                    if match is not None:
+                        response.append(password)
+                        break
+            return response
+        self.client.auth_interactive(username, handler)
+
     def _paramiko_auth_password(self, username, password):
         self.client.auth_password(username, password or '')
 
@@ -240,7 +262,8 @@ class SSH2(Protocol):
         for method in (self._paramiko_auth_password,
                        self._paramiko_auth_agent,
                        self._paramiko_auth_autokey,
-                       self._paramiko_auth_none):
+                       self._paramiko_auth_none,
+                       self._paramiko_auth_interactive):
             self._dbg(1, 'Authenticating with %s' % method.__name__)
             try:
                 method(username, password)
