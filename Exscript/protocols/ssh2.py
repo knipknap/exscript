@@ -236,12 +236,12 @@ class SSH2(Protocol):
         self._paramiko_auth_key(username, keyfiles, password)
 
     def _paramiko_auth(self, username, password):
+        errors = []
         for method in (self._paramiko_auth_password,
                        self._paramiko_auth_agent,
                        self._paramiko_auth_autokey,
                        self._paramiko_auth_none):
             self._dbg(1, 'Authenticating with %s' % method.__name__)
-            errors = []
             try:
                 method(username, password)
                 return
