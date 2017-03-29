@@ -74,6 +74,7 @@ import struct
 from io import StringIO
 
 __all__ = ["Telnet"]
+py2 = sys.version_info[0] == 2
 
 # Tunable parameters
 DEBUGLEVEL = 0
@@ -514,7 +515,12 @@ class Telnet(object):
             self.fill_rawq()
             if self.eof:
                 raise EOFError
-        c = bytes((self.rawq[self.irawq],))
+
+        # headaches for Py2/Py3 compatibility...
+        c = self.rawq[self.irawq]
+        if not py2:
+            c = c.to_bytes((c.bit_length()+7)//8, 'big')
+
         self.irawq += 1
         if self.irawq >= len(self.rawq):
             self.rawq = b''
