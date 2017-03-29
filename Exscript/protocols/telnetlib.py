@@ -514,8 +514,8 @@ class Telnet(object):
             self.fill_rawq()
             if self.eof:
                 raise EOFError
-        c = self.rawq[self.irawq]
-        self.irawq = self.irawq + 1
+        c = bytes((self.rawq[self.irawq],))
+        self.irawq += 1
         if self.irawq >= len(self.rawq):
             self.rawq = b''
             self.irawq = 0
