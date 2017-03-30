@@ -223,7 +223,7 @@ class Protocol(object):
                  termtype='dumb',
                  verify_fingerprint=True,
                  account_factory=None,
-                 banner_timeout=None,
+                 banner_timeout=20,
                  encoding='latin-1'):
         """
         Constructor.
