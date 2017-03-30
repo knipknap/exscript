@@ -207,7 +207,7 @@ Built-in Commands
 
 By default, any content of an Exscript template is sent to the remote host.
 However, you can also add instructions with special meanings. Such
-instructions are enclosed by curly brackets (``{`` and ``{``).
+instructions are enclosed by curly brackets (``{`` and ``}``).
 The following commands all use this syntax.
 
 Extracting Data From A Response
