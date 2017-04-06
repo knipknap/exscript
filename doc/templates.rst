@@ -211,14 +211,14 @@ instructions are enclosed by curly brackets (``{`` and ``}``).
 The following commands all use this syntax.
 
 Extracting Data From A Response
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Exscript lets you parse the response of a remote host using regular
 expressions. If you do not know what regular expressions are, please
 read a tutorial on regular expressions first.
 
 extract ... into ...
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 If you already know what regular expressions are, consider the following
 template::
@@ -248,7 +248,7 @@ multiple matches to the same response using the following syntax::
 There is no limit to the number of extract statements.
 
 extract ... into ... from ...
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When used without the "from" keyword, "extract" gets the values from the
 last command that was executed. You may however also instruct Exscript
@@ -263,7 +263,7 @@ this may be done.
     }
 
 extract ... as ...
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 The "as" keyword is similar to "into", the difference being that with
 as, the destination variable is cleared before new values are appended.
@@ -275,13 +275,13 @@ as, the destination variable is cleared before new values are appended.
 "as" may be used anywhere where "into" is used.
 
 If-Conditions
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
 You can execute commands depending on the runtime value of a variable or
 expression.
 
 if ... end
-~~~~~~~~~~
+^^^^^^^^^^
 
 The following Exscript template executes the ``ls`` command only if
 ``ls -l .profile`` did not produce a result::
@@ -292,7 +292,7 @@ The following Exscript template executes the ``ls`` command only if
     {end}
 
 if ... else ... end
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 You can also add an else condition::
 
@@ -304,7 +304,7 @@ You can also add an else condition::
     {end}
 
 if ... else if ...
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 You can perform multiple matches using else if::
 
@@ -318,7 +318,10 @@ You can perform multiple matches using else if::
     {end}
 
 Loops
-^^^^^
+~~~~~
+
+Loops with counters
+^^^^^^^^^^^^^^^^^^^
 
 You can execute commands multiple times using the "loop" statement. The
 following Exscript template executes the "ls" command three times::
@@ -351,8 +354,8 @@ allows you to specify a range of integers::
       ls $directory$number
     {end}
 
-Loops And Lists
-^^^^^^^^^^^^^^^
+Loops over lists
+^^^^^^^^^^^^^^^^
 
 The following Exscript template uses the ls command to show the content of a
 list of subdirectories::
@@ -380,7 +383,7 @@ in the previous section::
     {end}
 
 Functions
-^^^^^^^^^
+~~~~~~~~~
 
 Exscript provides builtin functions with the following syntax::
 
@@ -396,10 +399,10 @@ For a list of supported functions please check here:
 .. automodule:: Exscript.stdlib
 
 Exiting A Script
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 
 fail "message"
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 The "fail" keyword may be used where a script should terminate
 immediately.
@@ -413,7 +416,7 @@ immediately.
 In this script, the "show something else" line is never reached.
 
 fail "message" if ...
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 It is also possible to fail only if a specific condition is met. The
 following snippet terminates only if a Cisco router does not have a POS
@@ -425,7 +428,7 @@ interface::
     }
 
 Error Handling
-^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~
 
 Exscript attempts to detect errors, such as commands that are not
 understood by the remote host. By default, Exscript considers any
