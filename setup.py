@@ -1,7 +1,8 @@
 import sys
 import os
 from setuptools import setup, find_packages
-from Exscript.version import __version__
+sys.path.insert(0, 'Exscript')
+from version import __version__
 
 # Import the project description from the README.
 descr = '''
