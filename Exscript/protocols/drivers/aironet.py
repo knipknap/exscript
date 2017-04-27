@@ -29,7 +29,7 @@ from Exscript.protocols.drivers.driver import Driver
 _user_re = [re.compile(r'User:\s$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
 _prompt_re = [
-    re.compile(r'[\r\n](?:(?:.Cisco\sController.)|(?:\(WiSM\S+\))|(?:\(.+\)))\s>$')]
+    re.compile(r'[\r\n]\([^\)]+\)\s>$')]
 _error_re = [re.compile(r'Incorrect\susage', re.I),
              re.compile(r'Incorrect\sinput', re.I),
              re.compile(r'connection timed out', re.I),
