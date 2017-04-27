@@ -41,23 +41,28 @@ tests:
 ###################################################################
 # Package builders.
 ###################################################################
-targz:
+targz: clean
 	./version.sh
 	python setup.py sdist --formats gztar
 	./version.sh --reset
 
-tarbz:
+tarbz: clean
 	./version.sh
 	python setup.py sdist --formats bztar
 	./version.sh --reset
 
-deb:
+wheel: clean
+	./version.sh
+	python setup.py bdist_wheel --universal
+	./version.sh --reset
+
+deb: clean
 	./version.sh
 	debuild -S -sa
 	cd ..; sudo pbuilder build $(NAME)_$(VERSION)-0ubuntu1.dsc; cd -
 	./version.sh --reset
 
-dist: targz tarbz
+dist: targz tarbz wheel
 
 ###################################################################
 # Publishers.
