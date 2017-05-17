@@ -199,7 +199,7 @@ class SSH2(Protocol):
                     continue
 
                 for regex in self.get_password_prompt():
-                    match = password_re.search(prompt)
+                    match = regex.search(prompt)
                     if match is not None:
                         response.append(password)
                         break
