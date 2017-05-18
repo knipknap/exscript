@@ -1141,7 +1141,7 @@ class Protocol(object):
 
                     if channel in r:
                         try:
-                            data = channel.recv(1024)
+                            data = channel.recv(1024).decode(self.encoding)
                         except socket.timeout:
                             pass
                         if not data:
@@ -1150,7 +1150,7 @@ class Protocol(object):
                         self._receive_cb(data, False)
                         self.buffer.append(data)
                     if stdin in r:
-                        data = stdin.read(1)
+                        data = stdin.read(1).decode(self.encoding)
                         self.buffer.clear()
                         if len(data) == 0:
                             break
