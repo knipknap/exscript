@@ -33,7 +33,6 @@ import paramiko
 import Crypto
 from binascii import hexlify
 from paramiko import util
-from paramiko.resource import ResourceManager
 from paramiko.ssh_exception import SSHException, AuthenticationException, \
         BadHostKeyException
 from ..util.tty import get_terminal_size
@@ -161,7 +160,6 @@ class SSH2(Protocol):
         t = paramiko.Transport(sock)
         t.banner_timeout = self.banner_timeout
         t.start_client()
-        ResourceManager.register(self, t)
 
         # Check system host keys.
         server_key = t.get_remote_server_key()

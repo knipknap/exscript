@@ -1,4 +1,4 @@
 future
 configparser
 pycrypto
-paramiko
+paramiko>=1.17
