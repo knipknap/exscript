@@ -201,23 +201,31 @@ class Expression(Token):
         # start.rgt)
         if prio == 6:
             return
+
+        # Search the tree for the first node that has at least the
+        # given prio.
         root = start
         while root is not None and root.priority() <= prio:
             root = root.rgt
+
+        # If no such node exists, search for weaker priorities.
         if root is None:
             self.prioritize(start, prio + 1)
             return
 
-        # Find the next node that has the current priority.
+        # Check if there is any child node that has a better priority.
         previous = root
         current = root.rgt
-        while current is not None and current.priority() != prio:
+        while current is not None and current.priority() >= prio:
             previous = current
             current = current.rgt
+
+        # If none was found, continue with sorting weaker priorities.
         if current is None:
             self.prioritize(start, prio + 1)
             return
 
+        # So we found a node that has a better prio than it's parent.
         # Reparent the expressions.
         # print("Prio of", root.op, 'is higher than', current.op)
         previous.rgt = current.lft
