@@ -13,12 +13,9 @@ terminal; if this prints the version number, your installation is
 complete.
 
 We will also assume that you have at least a little bit of programming
-experience, though most of the examples should be pretty simple. If you
-already understand how to use Perl's
-`Net::Telnet <http://search.cpan.org/~jrogers/Net-Telnet-3.03/lib/Net/Telnet.pm>`_,
-you should feel right at home.
+experience, though most of the examples should be pretty simple.
 
-Exscript also has extensive :doc:`modules`, which may
+Exscript also has extensive :doc:`API documentation <modules>`, which may
 be used as a reference throughout this tutorial.
 
 Getting started
