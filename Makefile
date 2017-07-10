@@ -67,7 +67,7 @@ dist: targz tarbz wheel
 ###################################################################
 # Publishers.
 ###################################################################
-dist-publish: dist
+dist-publish:
 	./version.sh
 	python setup.py bdist_wheel --universal register upload
 	./version.sh --reset
