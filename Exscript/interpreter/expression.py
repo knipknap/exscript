@@ -216,7 +216,7 @@ class Expression(Token):
         # Check if there is any child node that has a better priority.
         previous = root
         current = root.rgt
-        while current is not None and current.priority() >= prio:
+        while current is not None and current.priority() != prio:
             previous = current
             current = current.rgt
 
