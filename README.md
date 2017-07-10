@@ -27,6 +27,20 @@ Exscript is supported by [Procedure 8](https://procedure8.com). Get in touch if 
 
 ## Method 1: Using Exscript with Python
 
+### Simple
+
+```python
+from Exscript.protocols import SSH2
+from Exscript.util.interact import read_login
+
+conn = SSH2()
+conn.connect('localhost')
+conn.login(read_login())
+conn.execute('uname -a')
+```
+
+### Slightly more advanced (multi threaded)
+
 ```python
 from Exscript.util.start import start
 from Exscript.util.file import get_hosts_from_file
