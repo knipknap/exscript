@@ -139,16 +139,16 @@ class Loop(Token):
         vars = self.iter_varnames
 
         # Make sure that all lists have the same length.
-        for list in lists:
-            if len(list) != len(lists[0]):
+        for thelist in lists:
+            if len(thelist) != len(lists[0]):
                 msg = 'All list variables must have the same length'
                 self.lexer.runtime_error(msg, self)
 
         # Iterate.
         for i in range(len(lists[0])):
             f = 0
-            for list in lists:
-                self.block.define(**{vars[f]: [list[i]]})
+            for thelist in lists:
+                self.block.define(**{vars[f]: [thelist[i]]})
                 f += 1
             if self.until is not None and self.until.value(context)[0]:
                 break
