@@ -14,6 +14,7 @@ from Exscript import Account, PrivateKey
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols.exception import TimeoutException, \
     InvalidCommandException, ExpectCancelledException
+from Exscript.protocols import drivers
 from Exscript.protocols.protocol import Protocol
 
 
@@ -63,6 +64,11 @@ class ProtocolTest(unittest.TestCase):
 
     def createProtocol(self):
         self.protocol = Protocol(timeout=1)
+
+    def disableDriver(self):
+        self.assertIn(drivers.driver_map, 'ios')
+        drivers.disable_driver('ios')
+        self.assertNotIn(drivers.driver_map, 'ios')
 
     def doConnect(self):
         self.protocol.connect(self.hostname, self.port)

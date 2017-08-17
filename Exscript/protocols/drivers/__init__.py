@@ -61,12 +61,16 @@ driver_map = {}
 def isdriver(o):
     return inspect.isclass(o) and issubclass(o, Driver) and not o is Driver
 
-
 def add_driver(cls):
     driver = cls()
     driver_classes.append(cls)
     drivers.append(driver)
     driver_map[driver.name] = driver
+
+def disable_driver(name):
+    driver = driver_map.pop(name)
+    drivers.pop(driver)
+    driver_classes.pop(driver.__class__)
 
 # Load built-in drivers.
 for name, obj in list(locals().items()):
