@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+from __future__ import print_function
+from builtins import input
+from builtins import str
+from builtins import range
+import sys
+import os
+import getpass
+from optparse import OptionParser, Option, OptionValueError
+from Exscript import __version__
+from Exscript.util.crypt import otp
+
+# Define the command line syntax.
+usage = '%prog sequence salt'
+parser = OptionParser(usage=usage, version=__version__)
+
+options, args = parser.parse_args(sys.argv)
+args.pop(0)
+
+try:
+    seq, salt = args
+except ValueError:
+    parser.error('invalid number of arguments')
+
+try:
+    seq = int(seq)
+except ValueError:
+    parser.error('first argument must be a number')
+
+password = getpass.getpass('Password: ')
+print(otp(password, salt, seq))
