@@ -115,6 +115,30 @@ class ipv4Test(unittest.TestCase):
         self.assertEqual(remote_ip('10.0.0.2'), '10.0.0.1')
         self.assertEqual(remote_ip('10.0.0.3'), '10.0.0.0')
 
+    def testMatchesPrefix(self):
+        from Exscript.util.ipv4 import matches_prefix
+        self.assertTrue(matches_prefix('10.0.0.0', '10.0.0.0/8'))
+        self.assertTrue(matches_prefix('10.255.255.255', '10.0.0.0/8'))
+        self.assertFalse(matches_prefix('11.0.0.0', '10.0.0.0/8'))
+        self.assertFalse(matches_prefix('9.255.255.255', '10.0.0.0/8'))
+
+    def testIsPrivate(self):
+        from Exscript.util.ipv4 import is_private
+        self.assertFalse(is_private('9.255.255.255'))
+        self.assertTrue(is_private('10.0.0.0'))
+        self.assertTrue(is_private('10.255.255.255'))
+        self.assertFalse(is_private('11.0.0.0'))
+
+        self.assertFalse(is_private('172.15.255.255'))
+        self.assertTrue(is_private('172.16.0.0'))
+        self.assertTrue(is_private('172.31.255.255'))
+        self.assertFalse(is_private('172.32.0.0'))
+
+        self.assertFalse(is_private('192.167.255.255'))
+        self.assertTrue(is_private('192.168.0.0'))
+        self.assertTrue(is_private('192.168.255.255'))
+        self.assertFalse(is_private('192.169.0.0'))
+
     def testSort(self):
         from Exscript.util.ipv4 import sort
         import random

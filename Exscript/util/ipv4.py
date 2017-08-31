@@ -71,7 +71,7 @@ def is_ip(string):
 
 def normalize_ip(ip):
     """
-    Transform the address into a fixed-length form, such as:
+    Transform the address into a fixed-length form, such as::
 
         192.168.0.1 -> 192.168.000.001
 
@@ -233,6 +233,44 @@ def remote_ip(local_ip):
     local_ip = ip2int(local_ip)
     network = local_ip & pfxlen2mask_int(30)
     return int2ip(network + 3 - (local_ip - network))
+
+
+def matches_prefix(ip, prefix):
+    """
+    Returns True if the given IP address is part of the given
+    network, returns False otherwise.
+
+    :type  ip: string
+    :param ip: An IP address.
+    :type  prefix: string
+    :param prefix: An IP prefix.
+    :rtype:  bool
+    :return: True if the IP is in the prefix, False otherwise.
+    """
+    ip_int = ip2int(ip)
+    network, pfxlen = parse_prefix(prefix)
+    network_int = ip2int(network)
+    mask_int = pfxlen2mask_int(pfxlen)
+    return ip_int&mask_int == network_int&mask_int
+
+
+def is_private(ip):
+    """
+    Returns True if the given IP address is private,
+    returns False otherwise.
+
+    :type  ip: string
+    :param ip: An IP address.
+    :rtype:  bool
+    :return: True if the IP is private, False otherwise.
+    """
+    if matches_prefix(ip, '10.0.0.0/8'):
+        return True
+    if matches_prefix(ip, '172.16.0.0/12'):
+        return True
+    if matches_prefix(ip, '192.168.0.0/16'):
+        return True
+    return False
 
 
 def sort(iterable):
