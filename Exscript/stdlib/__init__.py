@@ -66,6 +66,7 @@ functions = {
     'string.replace':            string.replace,
     'string.tolower':            string.tolower,
     'string.toupper':            string.toupper,
+    'sys.env':                   mysys.env,
     'sys.exec':                  mysys.execute,
     'sys.message':               mysys.message,
     'sys.wait':                  mysys.wait,

@@ -20,10 +20,22 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+import os
 import time
 import sys
 from subprocess import Popen, PIPE, STDOUT
 from Exscript.stdlib.util import secure_function
+
+
+def env(scope, varname):
+    """
+    Returns the value of the environment variable with the given
+    name.
+
+    :type varnames: string
+    :param varnames: A variable name.
+    """
+    return [os.environ.get(varname[0], '')]
 
 
 def execute(scope, command):
