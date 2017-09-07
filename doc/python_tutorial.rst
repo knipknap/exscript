@@ -24,7 +24,7 @@ Getting started
 As a first simple test, let's try to connect to a network device via
 SSH2, and execute the ``uname -a`` command on it.
 
-Create a file named ``test.py`` with the following content::
+Create a file named ``start.py`` with the following content::
 
     from Exscript.util.interact import read_login
     from Exscript.protocols import SSH2
