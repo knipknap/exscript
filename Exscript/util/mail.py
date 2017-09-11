@@ -104,7 +104,7 @@ def _cleanup_mail_addresses(receipients):
     if isinstance(receipients, list):
         receipients = ','.join(receipients)
     rcpt = re.split(r'\s*[,;\r\n]\s*', receipients.lower())
-    return [str(r) for r in rcpt if r.strip()]
+    return [str(r) for r in sorted(set(rcpt)) if r.strip()]
 
 #
 # Public.
