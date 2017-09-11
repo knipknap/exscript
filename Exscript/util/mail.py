@@ -103,7 +103,7 @@ def _get_var_from_header_line(line):
 def _cleanup_mail_addresses(receipients):
     if isinstance(receipients, list):
         receipients = ','.join(receipients)
-    rcpt = re.split(r'\s*[,;]\s*', receipients.lower())
+    rcpt = re.split(r'\s*[,;\r\n]\s*', receipients.lower())
     return [str(r) for r in rcpt if r.strip()]
 
 #
