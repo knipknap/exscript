@@ -309,7 +309,7 @@ class SSH2(Protocol):
         key_file = key.get_filename()
         if key_file is None:
             key_file = []
-        elif isinstance(key_file, (str, str)):
+        elif isinstance(key_file, (str, basestring, unicode)):
             key_file = [key_file]
 
         # Try each key.
