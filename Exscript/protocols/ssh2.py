@@ -25,6 +25,7 @@ SSH version 2 support, based on paramiko.
 """
 from __future__ import absolute_import, unicode_literals
 from builtins import str
+import sys
 import os
 import time
 import select
@@ -307,9 +308,16 @@ class SSH2(Protocol):
     def _protocol_authenticate_by_key(self, user, key):
         # Allow multiple key files.
         key_file = key.get_filename()
+
+        # Python3 does not support unicode and base string
+        if sys.version_info >= (3,0):
+            _str_types = (str)
+        else:
+            _str_types = (str, unicode, basestring)
+
         if key_file is None:
             key_file = []
-        elif isinstance(key_file, (str, str)):
+        elif isinstance(key_file, (str, _str_types)):
             key_file = [key_file]
 
         # Try each key.
