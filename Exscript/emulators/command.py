@@ -42,6 +42,13 @@ class CommandSet(object):
         self.strict = strict
         self.response_list = []
 
+    def __deepcopy__(self, memo):
+        cmdset = CommandSet(self.strict)
+        for regex, response in self.response_list:
+            regex = re.compile(regex.pattern, regex.flags)
+            cmdset.response_list.append((regex, response))
+        return cmdset
+
     def add(self, command, response):
         """
         Register a command/response pair.
