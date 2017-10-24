@@ -51,6 +51,12 @@ keymap = {'rsa': paramiko.RSAKey, 'dss': paramiko.DSSKey}
 for key in keymap:
     PrivateKey.keytypes.add(key)
 
+auth_types = {'publickey': ('_paramiko_auth_agent', '_paramiko_auth_autokey'),
+              'keyboard-interactive': ('_paramiko_auth_interactive',),
+              'password': ('_paramiko_auth_password',)}
+
+# See below for what this does.
+_authentication_reconnect_hack = True
 
 class SSH2(Protocol):
 
@@ -185,6 +191,8 @@ class SSH2(Protocol):
         self.client.auth_none(username)
 
     def _paramiko_auth_interactive(self, username, password=None):
+        if password is None:
+            return
         def handler(title, instructions, prompt_list):
             if not prompt_list:
                 return []
@@ -258,25 +266,34 @@ class SSH2(Protocol):
                 keyfiles.append((cls, file))
         self._paramiko_auth_key(username, keyfiles, password)
 
+    def _get_auth_methods(self, allowed_types):
+        auth_methods = []
+        for method in allowed_types:
+            for type_name in auth_types[method]:
+                auth_methods.append(getattr(self, type_name))
+        return auth_methods
+
     def _paramiko_auth(self, username, password):
-        errors = []
-        # Warning: The authentication order needs to take into account
-        # that some devices allow only three authentication attempts
-        # before dropping the session.
-        # Also take into account that self._paramiko_auth_autokey makes
-        # one attempt per SSH key that is found.
-        if password is None:
-            auth_methods = (self._paramiko_auth_agent,
-                            self._paramiko_auth_autokey,
-                            self._paramiko_auth_password,
-                            self._paramiko_auth_none)
+        # Try authentication using auth_none. This should (almost) always fail,
+        # but provides us with info about allowed authentication types.
+        try:
+            self.client.auth_none(username)
+        except SSHException as err:
+            self._dbg(1, 'auth_none failed, supported: %s' % err.allowed_types)
+            auth_methods = self._get_auth_methods(err.allowed_types)
         else:
-            auth_methods = (self._paramiko_auth_agent,
-                            self._paramiko_auth_interactive,
-                            self._paramiko_auth_autokey,
-                            self._paramiko_auth_password,
-                            self._paramiko_auth_none)
+            return
+
+        # Finally try all supported login methods.
+        errors = []
         for method in auth_methods:
+            # Some OSes (e.g. JunOS ERX OS) do not accept further login
+            # attempts after failing one. So in this hack, we
+            # re-connect after each attempt...
+            if _authentication_reconnect_hack:
+                self.close(force=True)
+                self.client = self._paramiko_connect()
+
             self._dbg(1, 'Authenticating with %s' % method.__name__)
             try:
                 method(username, password)
