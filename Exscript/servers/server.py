@@ -69,7 +69,8 @@ class Server(Process):
         self.socket = None
         self.device = device
         self.encoding = encoding
-        self.parent_conn, self.child_conn = Pipe()
+        self.to_child, self.to_parent = Pipe()
+        self.processes = []
 
     def _dbg(self, level, msg):
         if self.dbg >= level:
@@ -77,22 +78,19 @@ class Server(Process):
             print(msg)
 
     def _poll_child_process(self):
-        if not self.child_conn.poll():
-            return False
-        if not self.running:
+        if not self.to_parent.poll():
             return False
         try:
-            msg = self.child_conn.recv()
+            msg = self.to_parent.recv()
         except socket.error:
             self.running = False
             return False
         if msg == 'shutdown':
             self.running = False
             return False
+        if not self.running:
+            return False
         return True
-
-    def _shutdown_notify(self, conn):
-        raise NotImplementedError()
 
     def _handle_connection(self, conn):
         raise NotImplementedError()
@@ -112,21 +110,20 @@ class Server(Process):
                 continue
 
             conn, addr = self.socket.accept()
-            try:
-                self._handle_connection(conn)
-            except socket.error:
-                pass  # network error
-            finally:
-                self._shutdown_notify(conn)
-                conn.close()
+            proc = Process(target=self._handle_connection, args=(conn,))
+            self.processes.append(proc)
+            proc.start()
 
+        for proc in self.processes:
+            proc.join()
+        self.processes = []
         self.socket.close()
 
     def exit(self):
         """
         Stop the daemon without waiting for the thread to terminate.
         """
-        self.parent_conn.send('shutdown')
+        self.to_child.send('shutdown')
 
     def exit_command(self, cmd):
         """

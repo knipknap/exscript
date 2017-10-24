@@ -25,6 +25,7 @@ A Telnet server.
 """
 from __future__ import absolute_import, print_function
 import select
+from copy import deepcopy
 from .server import Server
 
 
@@ -44,7 +45,6 @@ class Telnetd(Server):
 
     def _recvline(self, conn):
         while not b'\n' in self.buf:
-            self._poll_child_process()
             r, w, x = select.select([conn], [], [], self.timeout)
             if not self.running:
                 return None
@@ -59,19 +59,19 @@ class Telnetd(Server):
         self.buf = b'\n'.join(lines[1:])
         return lines[0].decode(self.encoding) + '\n'
 
-    def _shutdown_notify(self, conn):
-        try:
-            conn.send('Server is shutting down.\n'.encode(self.encoding))
-        except Exception:
-            pass
-
     def _handle_connection(self, conn):
-        conn.send(self.device.init().encode('utf8'))
+        try:
+            device = deepcopy(self.device)
+            conn.send(device.init().encode('utf8'))
 
-        while self.running:
-            line = self._recvline(conn)
-            if not line:
-                continue
-            response = self.device.do(line)
-            if response:
-                conn.send(response.encode('utf8'))
+            while self.running:
+                line = self._recvline(conn)
+                if not line:
+                    continue
+                response = self.device.do(line)
+                if response:
+                    conn.send(response.encode('utf8'))
+        except Exception as err:
+            self._dbg("_handle_connection(): ", err)
+        finally:
+            conn.close()

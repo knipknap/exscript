@@ -30,6 +30,7 @@ import socket
 import threading
 import Crypto
 import paramiko
+from copy import deepcopy
 from paramiko import ServerInterface
 from .server import Server
 
@@ -109,15 +110,13 @@ class SSHd(Server):
         else:
             keyfile = os.path.expanduser('~/.ssh/id_rsa')
         self.host_key = paramiko.RSAKey(filename=keyfile)
-        self.channel = None
 
-    def _recvline(self):
+    def _recvline(self, channel):
         while not b'\n' in self.buf:
-            self._poll_child_process()
             if not self.running:
                 return None
             try:
-                data = self.channel.recv(1024)
+                data = channel.recv(1024)
             except socket.timeout:
                 continue
             if not data:
@@ -128,50 +127,68 @@ class SSHd(Server):
         self.buf = b'\n'.join(lines[1:])
         return lines[0].decode(self.encoding) + '\n'
 
-    def _shutdown_notify(self, conn):
-        if self.channel:
-            try:
-                self.channel.send('Server is shutting down.\n')
-            except socket.error:
-                pass
-
     def _handle_connection(self, conn):
         t = paramiko.Transport(conn)
         try:
             t.load_server_moduli()
         except:
             self._dbg(1, 'Failed to load moduli, gex will be unsupported.')
+            t.close()
+            conn.close()
             raise
+
+        # Start the connect negotiation.
         t.add_server_key(self.host_key)
         server = _ParamikoServer()
-        t.start_server(server=server)
+        try:
+            t.start_server(server=server)
+        except EOFError:
+            self._dbg(1, 'Client disappeared before establishing connection')
+            t.close()
+            conn.close()
+            raise
+
+        # Validate that the connection succeeded.
+        if not t.is_active():
+            self._dbg(1, 'Client negotiation failed')
+            t.close()
+            conn.close()
+            return
+
+        # Prepare virtual device.
+        device = deepcopy(self.device)
 
         # wait for auth
-        self.channel = t.accept(20)
-        if self.channel is None:
+        channel = t.accept(2)
+        if channel is None:
             self._dbg(1, 'Client disappeared before requesting channel.')
             t.close()
             return
-        self.channel.settimeout(self.timeout)
+        channel.settimeout(self.timeout)
 
-        # wait for shell request
-        server.event.wait(10)
-        if not server.event.isSet():
-            self._dbg(1, 'Client never asked for a shell.')
+        try:
+            # wait for shell request
+            server.event.wait(10)
+            if not server.event.isSet():
+                self._dbg(1, 'Client never asked for a shell.')
+                t.close()
+                return
+
+            # send the banner
+            res = self.device.init()
+            channel.send(res)
+
+            # accept commands
+            while self.running:
+                line = self._recvline(channel)
+                if not line:
+                    continue
+                response = self.device.do(line)
+                if response:
+                    channel.send(response)
+        except socket.error as err:
+            self._dbg(1, 'Client disappeared: ' + str(err))
+        finally:
+            # closing transport closes channel
             t.close()
-            return
-
-        # send the banner
-        self.channel.send(self.device.init())
-
-        # accept commands
-        while self.running:
-            line = self._recvline()
-            if not line:
-                continue
-            response = self.device.do(line)
-            if response:
-                self.channel.send(response)
-        # closing transport closes channel
-        self.channel = None
-        t.close()
+            conn.close()
