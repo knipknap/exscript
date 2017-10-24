@@ -259,11 +259,23 @@ class SSH2(Protocol):
 
     def _paramiko_auth(self, username, password):
         errors = []
-        for method in (self._paramiko_auth_password,
-                       self._paramiko_auth_agent,
-                       self._paramiko_auth_autokey,
-                       self._paramiko_auth_none,
-                       self._paramiko_auth_interactive):
+        # Warning: The authentication order needs to take into account
+        # that some devices allow only three authentication attempts
+        # before dropping the session.
+        # Also take into account that self._paramiko_auth_autokey makes
+        # one attempt per SSH key that is found.
+        if password is None:
+            auth_methods = (self._paramiko_auth_agent,
+                            self._paramiko_auth_autokey,
+                            self._paramiko_auth_password,
+                            self._paramiko_auth_none)
+        else:
+            auth_methods = (self._paramiko_auth_agent,
+                            self._paramiko_auth_interactive,
+                            self._paramiko_auth_autokey,
+                            self._paramiko_auth_password,
+                            self._paramiko_auth_none)
+        for method in auth_methods:
             self._dbg(1, 'Authenticating with %s' % method.__name__)
             try:
                 method(username, password)
