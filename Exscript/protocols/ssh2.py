@@ -251,7 +251,7 @@ class SSH2(Protocol):
         keyfiles = []
         for cls, file in ((paramiko.RSAKey, '~/.ssh/id_rsa'),  # Unix
                           (paramiko.DSSKey, '~/.ssh/id_dsa'),  # Unix
-                          (paramiko.RSAKey, '~/ssh/id_rsa'),  # Windows
+                          (paramiko.RSAKey, '~/ssh/id_rsa'),   # Windows
                           (paramiko.DSSKey, '~/ssh/id_dsa')):  # Windows
             file = os.path.expanduser(file)
             if os.path.isfile(file):
