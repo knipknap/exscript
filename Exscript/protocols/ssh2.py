@@ -269,7 +269,7 @@ class SSH2(Protocol):
                 method(username, password)
                 return
             except BadHostKeyException as e:
-                msg = 'Bad host key: ' + str(e)
+                msg = '%s: Bad host key: %s' % (method.__name__, str(e))
                 self._dbg(1, msg)
                 errors.append(msg)
             except AuthenticationException as e:
@@ -278,7 +278,7 @@ class SSH2(Protocol):
                 self._dbg(1, msg)
                 errors.append(msg)
             except SSHException as e:
-                msg = 'Missing host key: ' + str(e)
+                msg = '%s: SSHException: %s' % (method.__name__, str(e))
                 self._dbg(1, msg)
                 errors.append(msg)
         raise LoginFailure('Login failed: ' + '; '.join(errors))
