@@ -61,6 +61,7 @@ class SSH2(Protocol):
 
     def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
+        self.sock = None
         self.client = None
         self.shell = None
         self.cancel = False
@@ -150,15 +151,15 @@ class SSH2(Protocol):
                 break
 
         # Open a socket.
-        sock = socket.socket(af, socket.SOCK_STREAM)
+        self.sock = socket.socket(af, socket.SOCK_STREAM)
         try:
-            sock.settimeout(self.connect_timeout or None)
+            self.sock.settimeout(self.connect_timeout or None)
         except:
             pass
-        sock.connect(addr)
+        self.sock.connect(addr)
 
         # Init the paramiko protocol.
-        t = paramiko.Transport(sock)
+        t = paramiko.Transport(self.sock)
         t.banner_timeout = self.banner_timeout
         t.start_client()
 
@@ -425,4 +426,6 @@ class SSH2(Protocol):
         self.shell = None
         self.client.close()
         self.client = None
+        self.sock.close()
+        self.sock = None
         self.buffer.clear()
