@@ -31,7 +31,7 @@ from .driver import Driver
 
 _user_re = [re.compile(r'user ?name: ?$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n][Pp]assword: ?|last resort password:)$')]
-_tacacs_re = re.compile(r'[\r\n]s\/key[\S ]+\r?%s' % _password_re[0].pattern)
+_tacacs_re = re.compile(r'(?:[\r\n]s|^s)\/key[\S ]+\r?%s' % _password_re[0].pattern)
 _prompt_re = [re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re = [re.compile(r'%Error'),
              re.compile(r'invalid input', re.I),
