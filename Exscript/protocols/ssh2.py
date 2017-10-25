@@ -35,7 +35,7 @@ import Crypto
 from binascii import hexlify
 from paramiko import util
 from paramiko.ssh_exception import SSHException, AuthenticationException, \
-        BadHostKeyException
+        BadHostKeyException, BadAuthenticationType
 from ..util.tty import get_terminal_size
 from ..util.crypt import otp
 from ..key import PrivateKey
@@ -278,7 +278,7 @@ class SSH2(Protocol):
         # but provides us with info about allowed authentication types.
         try:
             self.client.auth_none(username)
-        except SSHException as err:
+        except BadAuthenticationType as err:
             self._dbg(1, 'auth_none failed, supported: %s' % err.allowed_types)
             auth_methods = self._get_auth_methods(err.allowed_types)
         else:
