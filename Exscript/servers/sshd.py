@@ -32,8 +32,10 @@ import Crypto
 import paramiko
 from copy import deepcopy
 from paramiko import ServerInterface
+from Exscript.version import __version__
 from .server import Server
 
+local_version = 'SSH-2.0-Exscript-' + __version__
 
 class _ParamikoServer(ServerInterface):
     # 'data' is the output of base64.encodestring(str(key))
@@ -129,6 +131,7 @@ class SSHd(Server):
 
     def _handle_connection(self, conn):
         t = paramiko.Transport(conn)
+        t.local_version = local_version
         try:
             t.load_server_moduli()
         except:
