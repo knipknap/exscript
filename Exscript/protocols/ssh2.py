@@ -359,6 +359,16 @@ class SSH2(Protocol):
 
         self._paramiko_shell()
 
+    def get_banner(self):
+        if not self.client:
+            return None
+        return self.client.get_banner()
+
+    def get_remote_version(self):
+        if not self.client:
+            return None
+        return self.client.remote_version
+
     def send(self, data):
         self._dbg(4, 'Sending %s' % repr(data))
         self.shell.sendall(data)

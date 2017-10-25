@@ -171,6 +171,22 @@ class ProtocolTest(unittest.TestCase):
     def testGetDriver(self):
         pass  # Already tested in testSetDriver()
 
+    def testGetBanner(self):
+        self.assertEqual(self.protocol.get_banner(), None)
+        if self.protocol.__class__ == Protocol:
+            self.assertRaises(Exception, self.protocol.connect)
+            return
+        self.doConnect()
+        self.assertEqual(self.protocol.get_banner(), None)
+
+    def testGetRemoteVersion(self):
+        self.assertEqual(self.protocol.get_remote_version(), None)
+        if self.protocol.__class__ == Protocol:
+            self.assertRaises(Exception, self.protocol.connect)
+            return
+        self.doConnect()
+        self.assertEqual(self.protocol.get_remote_version(), None)
+
     def testAutoinit(self):
         self.protocol.autoinit()
 

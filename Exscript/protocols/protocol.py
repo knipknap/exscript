@@ -408,6 +408,28 @@ class Protocol(object):
             return self.manual_driver
         return self.auto_driver
 
+    def get_banner(self):
+        """
+        Returns the banner that was received upon login.
+        Only supported on SSH2; returns None on all other protocols.
+        Also returns None if the client is not yet connected.
+
+        :rtype: str|None
+        :return: The banner as a string
+        """
+        return None
+
+    def get_remote_version(self):
+        """
+        Returns the remote version idstring that was received upon login.
+        Only supported on SSH2; returns None on all other protocols.
+        Also returns None if the client is not yet connected.
+
+        :rtype: str|None
+        :return: The idstring.
+        """
+        return None
+
     def autoinit(self):
         """
         Make the remote host more script-friendly by automatically executing

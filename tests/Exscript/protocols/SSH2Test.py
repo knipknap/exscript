@@ -6,7 +6,7 @@ import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from .ProtocolTest import ProtocolTest
-from Exscript.servers import SSHd
+from Exscript.servers import sshd, SSHd
 from Exscript.protocols import SSH2
 from Exscript import PrivateKey
 
@@ -25,6 +25,11 @@ class SSH2Test(ProtocolTest):
 
     def testConstructor(self):
         self.assertIsInstance(self.protocol, SSH2)
+
+    def testGetRemoteVersion(self):
+        self.assertEqual(self.protocol.get_remote_version(), None)
+        self.doConnect()
+        self.assertEqual(self.protocol.get_remote_version(), sshd.local_version)
 
     def testLogin(self):
         self.assertRaises(IOError, ProtocolTest.testLogin, self)
