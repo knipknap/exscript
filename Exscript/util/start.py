@@ -79,7 +79,7 @@ def quickrun(hosts, func, **kwargs):
     run(read_login(), hosts, func, **kwargs)
 
 
-def start(users, hosts, func,  only_authenticate=False, **kwargs):
+def start(users, hosts, func, only_authenticate=False, **kwargs):
     """
     Like run(), but automatically logs into the host before passing
     the host to the callback function.
