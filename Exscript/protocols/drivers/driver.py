@@ -88,6 +88,12 @@ class Driver(object):
         self.error_re = _error_re
         self.login_error_re = _login_fail_re
 
+    def check_protocol_for_os(self, string):
+        return 0
+
+    def _check_protocol(self, string):
+        return self.name, self.check_protocol_for_os(string)
+
     def check_head_for_os(self, string):
         return 0
 

@@ -78,6 +78,16 @@ class OsGuesserTest(unittest.TestCase):
                 osg.data_received(char, False)
             self.assertEqual(osg.get('os'), osname)
 
+    def testProtocolInfo(self):
+        osg = OsGuesser()
+        osg.protocol_info('')
+        self.assertEqual(osg.get('os'), "unknown")
+        osg.protocol_info(None)
+        self.assertEqual(osg.get('os'), "unknown")
+        osg.protocol_info("SSH-2.0-Cisco-1.25")
+        self.assertEqual(osg.get('os'), "ios")
+        pass
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(OsGuesserTest)

@@ -41,6 +41,7 @@ class OsGuesser(object):
     def __init__(self):
         self.info = {}
         self.debug = False
+        self.protocol_os_map = [d._check_protocol for d in drivers]
         self.auth_os_map = [d._check_head for d in drivers]
         self.os_map = [d._check_response for d in drivers]
         self.auth_buffer = ''
@@ -114,3 +115,8 @@ class OsGuesser(object):
             print("DEBUG: Matching buffer:", repr(self.auth_buffer))
         self.set_from_match('os', self.auth_os_map, self.auth_buffer)
         self.set_from_match('os', self.os_map,      self.auth_buffer)
+
+    def protocol_info(self, data):
+        if self.debug:
+            print("DEBUG: Protocol info:", repr(self.data))
+        self.set_from_match('os', self.protocol_os_map, data)

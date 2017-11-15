@@ -49,6 +49,13 @@ class IOSDriver(Driver):
         self.prompt_re = _prompt_re
         self.error_re = _error_re
 
+    def check_protocol_for_os(self, string):
+        if not string:
+            return 0
+        if 'Cisco' in string:
+            return 80
+        return 0
+
     def check_head_for_os(self, string):
         if 'User Access Verification' in string:
             return 60

@@ -628,7 +628,11 @@ class Protocol(object):
         """
         if hostname is not None:
             self.host = hostname
-        return self._connect_hook(self.host, port)
+        conn = self._connect_hook(self.host, port)
+        self.os_guesser.protocol_info(self.get_remote_version())
+        if self.get_banner():
+            self.os_guesser.data_received(self.get_banner(), False)
+        return conn
 
     def _get_account(self, account):
         if isinstance(account, Context) or isinstance(account, _Context):
