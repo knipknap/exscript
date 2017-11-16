@@ -118,5 +118,5 @@ class OsGuesser(object):
 
     def protocol_info(self, data):
         if self.debug:
-            print("DEBUG: Protocol info:", repr(self.data))
+            print("DEBUG: Protocol info:", repr(data))
         self.set_from_match('os', self.protocol_os_map, data)
