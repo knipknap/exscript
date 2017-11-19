@@ -3,7 +3,6 @@ VERSION=`python setup.py --version | sed s/^v//`
 PREFIX=/usr/local/
 BIN_DIR=$(PREFIX)/bin
 SITE_DIR=$(PREFIX)`python -c "import sys; from distutils.sysconfig import get_python_lib; print get_python_lib()[len(sys.prefix):]"`
-DISTDIR=/pub/code/releases/$(NAME)
 
 ###################################################################
 # Standard targets.
@@ -69,5 +68,5 @@ dist: targz tarbz wheel
 ###################################################################
 dist-publish:
 	./version.sh
-	python setup.py bdist_wheel --universal register upload
+	python setup.py bdist_wheel --universal upload
 	./version.sh --reset
