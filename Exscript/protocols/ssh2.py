@@ -31,7 +31,10 @@ import time
 import select
 import socket
 import paramiko
-import Crypto
+try:
+    import Cryptodome as Crypto
+except ImportError:
+    import Crypto
 from binascii import hexlify
 from paramiko import util
 from paramiko.ssh_exception import SSHException, AuthenticationException, \

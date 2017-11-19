@@ -31,7 +31,10 @@ from builtins import bytes
 import sys
 import string
 import random
-from Crypto.Hash import MD4
+try:
+    from Cryptodome.Hash import MD4
+except ImportError:
+    from Crypto.Hash import MD4
 
 _VALIDSEEDCHARACTERS = string.ascii_letters + string.digits
 

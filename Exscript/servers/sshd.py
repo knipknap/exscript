@@ -28,7 +28,10 @@ import os
 import base64
 import socket
 import threading
-import Crypto
+try:
+    import Cryptodome as Crypto
+except ImportError:
+    import Crypto
 import paramiko
 from copy import deepcopy
 from paramiko import ServerInterface
