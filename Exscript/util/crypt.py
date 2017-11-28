@@ -369,9 +369,10 @@ def otp(password, seed, sequence):
             raise ValueError('seed composition')
     if sequence < 0:
         raise ValueError('sequence')
-    if sys.version_info[0] >= 3:
-        seed = seed.encode('utf-8')
-        password = password.encode('utf-8')
+
+    # Pycryptodome only supports byte strings.
+    seed = seed.encode('utf-8')
+    password = password.encode('utf-8')
 
     # Discard the first <sequence> keys
     thehash = MD4.new(seed + password).digest()
