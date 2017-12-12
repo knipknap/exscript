@@ -133,3 +133,4 @@ class Dummy(Protocol):
     def close(self, force=False):
         self._say('\n')
         self.buffer.clear()
+        super(Dummy, self).close()

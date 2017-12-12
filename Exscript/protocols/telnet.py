@@ -128,3 +128,4 @@ class Telnet(Protocol):
         self.tn.close()
         self.tn = None
         self.buffer.clear()
+        super(Telnet, self).close()

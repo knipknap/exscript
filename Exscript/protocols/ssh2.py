@@ -449,6 +449,7 @@ class SSH2(Protocol):
 
     def close(self, force=False):
         if self.shell is None:
+            super(SSH2, self).close()
             return
         if not force:
             self._fill_buffer()
@@ -459,3 +460,4 @@ class SSH2(Protocol):
         self.sock.close()
         self.sock = None
         self.buffer.clear()
+        super(SSH2, self).close()

@@ -559,11 +559,8 @@ class ProtocolTest(unittest.TestCase):
         # Can't really be tested.
 
     def testClose(self):
-        # Test can not work on the abstract base.
-        if self.protocol.__class__ == Protocol:
-            self.assertRaises(Exception, self.protocol.close)
-            return
-        self.doConnect()
+        if self.protocol.__class__ != Protocol:
+            self.doConnect()
         self.protocol.close(True)
 
     def testGetHost(self):
@@ -577,7 +574,6 @@ class ProtocolTest(unittest.TestCase):
         self.assertEqual('unknown', self.protocol.guess_os())
         # Other tests can not work on the abstract base.
         if self.protocol.__class__ == Protocol:
-            self.assertRaises(Exception, self.protocol.close)
             return
         self.doConnect()
         self.assertEqual('unknown', self.protocol.guess_os())

@@ -1248,7 +1248,11 @@ class Protocol(object):
         """
         Closes the connection with the remote host.
         """
-        raise NotImplementedError()
+        if self.log:
+            try:
+                self.log.close()
+            except:
+                pass
 
     def get_host(self):
         """
