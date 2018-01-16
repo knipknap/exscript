@@ -117,7 +117,7 @@ def get_terminal_size(default_rows=25, default_cols=80):
         try:
             process = Popen(['stty', 'size'], stderr=devnull, stdout=PIPE,
                             close_fds=True)
-        except OSError:
+        except (OSError, ValueError):
             pass
         else:
             errcode = process.wait()
