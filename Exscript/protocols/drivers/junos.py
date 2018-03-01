@@ -57,7 +57,7 @@ _edit = r'(?:\[edit[^\]\r\n]*\])'
 _prefix = r'(?:[\r\n]+' + _re_re + r'?' + _edit + r'?)'
 _prompt = r'[\r\n]+[\w\-\.]+@[\-\w+\.:]+[%>#] $'
 _prompt_re = [re.compile(_prefix + r'?' + _prompt)]
-_error_re = [re.compile('^(unknown|invalid|error)', re.I)]
+_error_re = [re.compile('^(unknown|invalid|error|syntax error)', re.I)]
 _junos_re = re.compile(r'\bjunos\b', re.I)
 
 
