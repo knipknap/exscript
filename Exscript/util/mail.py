@@ -478,7 +478,7 @@ def send(mail, server='localhost'):
     message['Cc'] = ', '.join(mail.get_cc())
     message.preamble = 'Your mail client is not MIME aware.'
 
-    body = MIMEText(mail.get_body())
+    body = MIMEText(mail.get_body().encode("utf-8"), "plain", "utf-8")
     body.add_header('Content-Disposition', 'inline')
     message.attach(body)
 
