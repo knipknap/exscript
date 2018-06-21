@@ -25,6 +25,7 @@ Sending and formatting emails.
 """
 from builtins import str
 from builtins import object
+import os
 import time
 import re
 import socket
@@ -454,7 +455,7 @@ def _get_mime_object(filename):
         encoders.encode_base64(msg)
 
     # Set the filename parameter
-    msg.add_header('Content-Disposition', 'attachment', filename=filename)
+    msg.add_header('Content-Disposition', 'attachment', filename=os.path.basename(filename))
     return msg
 
 
