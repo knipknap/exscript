@@ -58,8 +58,6 @@ auth_types = {'publickey': ('_paramiko_auth_agent', '_paramiko_auth_autokey'),
               'keyboard-interactive': ('_paramiko_auth_interactive',),
               'password': ('_paramiko_auth_password',)}
 
-# See below for what this does.
-_authentication_reconnect_hack = True
 
 class SSH2(Protocol):
 
@@ -293,7 +291,7 @@ class SSH2(Protocol):
             # Some OSes (e.g. JunOS ERX OS) do not accept further login
             # attempts after failing one. So in this hack, we
             # re-connect after each attempt...
-            if _authentication_reconnect_hack:
+            if self.get_driver().reconnect_between_auth_methods:
                 self.close(force=True)
                 self.client = self._paramiko_connect()
 
