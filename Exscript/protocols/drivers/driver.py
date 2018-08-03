@@ -87,6 +87,7 @@ class Driver(object):
         self.prompt_re = _prompt_re
         self.error_re = _error_re
         self.login_error_re = _login_fail_re
+        self.reconnect_between_auth_methods = False
 
     def check_protocol_for_os(self, string):
         return 0
