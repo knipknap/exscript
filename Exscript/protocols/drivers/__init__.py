@@ -52,6 +52,7 @@ from Exscript.protocols.drivers.ericsson_ban import EricssonBanDriver
 from Exscript.protocols.drivers.rios import RIOSDriver
 from Exscript.protocols.drivers.eos import EOSDriver
 from Exscript.protocols.drivers.cienasaos import CienaSAOSDriver
+from Exscript.protocols.drivers.icotera import IcoteraDriver
 
 driver_classes = []
 drivers = []
