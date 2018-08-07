@@ -171,6 +171,20 @@ class ProtocolTest(unittest.TestCase):
     def testGetDriver(self):
         pass  # Already tested in testSetDriver()
 
+    def testSetAuthMethods(self):
+        self.assertListEqual(self.protocol.get_auth_methods(), [])
+
+        self.protocol.set_auth_methods([])
+        self.assertTrue(self.protocol.get_auth_methods() is not None)
+        self.assertListEqual(self.protocol.get_auth_methods(), [])
+
+        self.protocol.set_auth_methods(['password', 'publickey'])
+        self.assertTrue(self.protocol.get_auth_methods() is not None)
+        self.assertListEqual(self.protocol.get_auth_methods(), ['password', 'publickey'])
+
+    def testGetAuthMethods(self):
+        pass
+
     def testGetBanner(self):
         self.assertEqual(self.protocol.get_banner(), None)
         if self.protocol.__class__ == Protocol:

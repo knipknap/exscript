@@ -269,6 +269,8 @@ class SSH2(Protocol):
 
     def _get_auth_methods(self, allowed_types):
         auth_methods = []
+        if self.auth_methods:
+            allowed_types = self.auth_methods
         for method in allowed_types:
             for type_name in auth_types[method]:
                 auth_methods.append(getattr(self, type_name))

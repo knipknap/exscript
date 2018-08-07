@@ -224,7 +224,8 @@ class Protocol(object):
                  verify_fingerprint=True,
                  account_factory=None,
                  banner_timeout=20,
-                 encoding='latin-1'):
+                 encoding='latin-1',
+                 auth_methods=[]):
         """
         Constructor.
         The following events are provided:
@@ -252,6 +253,9 @@ class Protocol(object):
         :keyword banner_timeout: The time to wait for the banner.
         :type encoding: str
         :keyword encoding: The encoding of data received from the remote host.
+        :type auth_methods: list
+        :keyword auth_methods: The SSH authentication method to process (default to all supported
+            by the remote device)
         """
         self.data_received_event = Event()
         self.otp_requested_event = Event()
@@ -282,6 +286,8 @@ class Protocol(object):
         self.banner_timeout = banner_timeout
         self.encoding = encoding
         self.send_data = None
+        self.auth_methods = auth_methods
+
         if stdout is None:
             self.stdout = StringIO()
         else:
@@ -610,6 +616,24 @@ class Protocol(object):
         :return: The timeout in seconds.
         """
         return self.timeout
+
+    def set_auth_methods(self, methods):
+        """
+        Defines the SSH2 list of authentication methods allowed
+
+        :type  methods: list
+        :param methods: A list of authentication methods (check Exscript.protocols.ssh2.auth_type)
+        """
+        self.auth_methods = methods
+
+    def get_auth_methods(self):
+        """
+        Returns the current SSH2 authentication methods allowed.
+
+        :rtype:  list
+        :return: A list of authentication SSH2 methods allowed.
+        """
+        return self.auth_methods
 
     def _connect_hook(self, host, port):
         """
