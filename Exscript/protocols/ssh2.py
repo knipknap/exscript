@@ -270,6 +270,9 @@ class SSH2(Protocol):
     def _get_auth_methods(self, allowed_types):
         auth_methods = []
         for method in allowed_types:
+            if method not in auth_types:
+                self._dbg(1, 'Unsupported auth method %s' % repr(method))
+                continue
             for type_name in auth_types[method]:
                 auth_methods.append(getattr(self, type_name))
         return auth_methods
