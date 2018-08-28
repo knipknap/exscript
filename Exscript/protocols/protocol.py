@@ -1198,7 +1198,7 @@ class Protocol(object):
             finally:
                 termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
 
-    def _open_windows_shell(self, channel, key_handlers):
+    def _open_windows_shell(self, channel, key_handlers, handle_window_size):
         import threading
 
         def writeall(sock):
@@ -1238,6 +1238,9 @@ class Protocol(object):
         the user presses a specific key. For example, to catch CTRL+y::
 
             conn.interact({'\031': mycallback})
+
+        .. WARNING::
+           handle_window_size is not supported on Windows platforms.
 
         :type  key_handlers: dict(str: callable)
         :param key_handlers: A dictionary mapping chars to a functions.
