@@ -71,7 +71,7 @@ class Account(object):
         :param password: The authentication password.
         :type  password2: str
         :param password2: The authorization password, if required.
-        :type  key: PrivateKey
+        :type  key: Exscript.PrivateKey
         :param key: A private key, if required.
         :type needs_lock: bool
         :param needs_lock: True if the account will be locked during login.
@@ -198,7 +198,7 @@ class Account(object):
         """
         Returns the key of the account, if any.
 
-        :rtype:  PrivateKey|None
+        :rtype:  Exscript.PrivateKey|None
         :return: A key object.
         """
         return self.key
@@ -357,7 +357,7 @@ class AccountProxy(object):
         """
         Returns the key of the account, if any.
 
-        :rtype:  PrivateKey|None
+        :rtype:  Exscript.PrivateKey|None
         :return: A key object.
         """
         return self.key

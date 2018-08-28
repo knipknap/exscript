@@ -202,7 +202,7 @@ def prompt(key,
     :param strip: Whether to remove whitespace from the input.
     :type  check: callable
     :param check: A function that is called for validating the input.
-    :type  history: :class:`InputHistory`|None
+    :type  history: :class:`InputHistory` or None
     :param history: The history used for recording default values, or None.
     """
     if history is None:
@@ -229,7 +229,7 @@ def prompt(key,
 
 def get_filename(key, message, default=None, history=None):
     """
-    Like :class:`prompt()`, but only accepts the name of an existing file
+    Like :meth:`prompt`, but only accepts the name of an existing file
     as an input.
 
     :type  key: str
@@ -238,7 +238,7 @@ def get_filename(key, message, default=None, history=None):
     :param message: The user prompt.
     :type  default: str|None
     :param default: The offered default if none was found in the history.
-    :type  history: :class:`InputHistory`|None
+    :type  history: :class:`InputHistory` or None
     :param history: The history used for recording default values, or None.
     """
     def _validate(string):

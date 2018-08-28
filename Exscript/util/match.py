@@ -47,20 +47,20 @@ def first_match(string, regex, flags=re.M):
     Matches the given string against the given regex.
 
       - If no match is found and the regular expression has zero or one
-      groups, this function returns None.
+        groups, this function returns None.
 
       - If no match is found and the regular expression has more than one
-      group, this function returns a tuple of None. The number of elements
-      in the tuple equals the number of groups in the regular expression.
+        group, this function returns a tuple of None. The number of elements
+        in the tuple equals the number of groups in the regular expression.
 
       - If a match is found and the regular expression has no groups,
-      the entire string is returned.
+        the entire string is returned.
 
       - If a match is found and the regular expression has one group,
-      the matching string from the group is returned.
+        the matching string from the group is returned.
 
       - If a match is found and the regular expression has multiple groups,
-      a tuple containing the matching strings from the groups is returned.
+        a tuple containing the matching strings from the groups is returned.
 
     This behavior ensures that the following assignments can never fail::
 
@@ -93,13 +93,13 @@ def any_match(string, regex, flags=re.M):
       - If no match is found, this function returns an empty list.
 
       - If a match is found and the regular expression has no groups,
-      a list of matching lines returned.
+        a list of matching lines returned.
 
       - If a match is found and the regular expression has one group,
-      a list of matching strings is returned.
+        a list of matching strings is returned.
 
       - If a match is found and the regular expression has multiple groups,
-      a list containing tuples of matching strings is returned.
+        a list containing tuples of matching strings is returned.
 
     This behavior ensures that the following can never fail::
 

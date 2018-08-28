@@ -231,7 +231,7 @@ class Protocol(object):
 
           - data_received_event: A packet was received from the connected host.
           - otp_requested_event: The connected host requested a
-          one-time-password to be entered.
+            one-time-password to be entered.
 
         :keyword driver: Driver()|str
         :keyword stdout: Where to write the device response. Defaults to
@@ -1011,11 +1011,14 @@ class Protocol(object):
           and the match object.
 
         @raise TimeoutException: raised if the timeout was reached.
+
         @raise ExpectCancelledException: raised when cancel_expect() was
-            called in a callback.
+        called in a callback.
+
         @raise ProtocolException: on other internal errors.
+
         @raise Exception: May raise other exceptions that are caused
-            within the underlying protocol implementations.
+        within the underlying protocol implementations.
         """
         while True:
             try:
