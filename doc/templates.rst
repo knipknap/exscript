@@ -396,7 +396,10 @@ For example, the following function instructs Exscript to wait for
 
 For a list of supported functions please check here:
 
-.. automodule:: Exscript.stdlib
+.. toctree::
+   :maxdepth: 3
+
+   Exscript.stdlib
 
 Exiting A Script
 ~~~~~~~~~~~~~~~~
