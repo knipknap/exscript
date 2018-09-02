@@ -695,7 +695,8 @@ class Protocol(object):
             if app_account is None:
                 app_account = account
 
-            self.protocol_authenticate(account)
+            if not self.proto_authenticated:
+                self.protocol_authenticate(account)
             self.app_authenticate(app_account, flush=flush)
 
     def _protocol_authenticate(self, user, password):
