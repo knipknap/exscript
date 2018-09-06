@@ -22,6 +22,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import inspect
 from Exscript.protocols.drivers.driver import Driver
+from Exscript.protocols.drivers.adtran import AdtranDriver
 from Exscript.protocols.drivers.aironet import AironetDriver
 from Exscript.protocols.drivers.aix import AIXDriver
 from Exscript.protocols.drivers.arbor_peakflow import ArborPeakflowDriver
