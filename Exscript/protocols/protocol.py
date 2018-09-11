@@ -630,6 +630,7 @@ class Protocol(object):
             self.host = hostname
         conn = self._connect_hook(self.host, port)
         self.os_guesser.protocol_info(self.get_remote_version())
+        self.auto_driver = driver_map[self.guess_os()]
         if self.get_banner():
             self.os_guesser.data_received(self.get_banner(), False)
         return conn
