@@ -39,10 +39,6 @@ class JunOSERXDriver(Driver):
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
-        # JunOS ERX OS do not accept further login
-        # attempts after failing one. So in this hack, we
-        # re-connect after each attempt...
-        self.reconnect_between_auth_methods = True
 
     def check_head_for_os(self, string):
         if _junos_re.search(string):
