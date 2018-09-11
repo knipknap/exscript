@@ -48,6 +48,10 @@ class IOSDriver(Driver):
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.error_re = _error_re
+        # Some Cisco IOS devices (e.g. WS-C3750) do not accept further login
+        # attempts after failing one. So in this hack, we
+        # re-connect after each attempt...
+        self.reconnect_between_auth_methods = True
 
     def check_protocol_for_os(self, string):
         if not string:
