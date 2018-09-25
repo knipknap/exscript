@@ -246,7 +246,8 @@ class Telnet(object):
                 self.sock = socket.socket(af, socktype, proto)
                 self.sock.settimeout(self.connect_timeout)
                 self.sock.connect(sa)
-            except socket.error as msg:
+            except socket.error as msg_:
+                msg = '{} => telnet://{}:{}'.format(msg_, host, port)
                 if self.sock:
                     self.sock.close()
                 self.sock = None
