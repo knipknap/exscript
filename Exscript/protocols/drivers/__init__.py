@@ -54,6 +54,7 @@ from Exscript.protocols.drivers.rios import RIOSDriver
 from Exscript.protocols.drivers.eos import EOSDriver
 from Exscript.protocols.drivers.cienasaos import CienaSAOSDriver
 from Exscript.protocols.drivers.icotera import IcoteraDriver
+from Exscript.protocols.drivers.zyxel import ZyxelDriver
 
 driver_classes = []
 drivers = []
