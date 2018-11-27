@@ -68,5 +68,5 @@ dist: targz tarbz wheel
 ###################################################################
 dist-publish:
 	./version.sh
-	python setup.py bdist_wheel --universal upload
+	twine upload dist/*
 	./version.sh --reset
