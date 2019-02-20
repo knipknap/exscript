@@ -291,10 +291,10 @@ class SSH2(Protocol):
         # Finally try all supported login methods.
         errors = []
         for method in auth_methods:
-            # Some OSes (e.g. JunOS ERX OS) do not accept further login
+            # Some OSes (e.g. JunOS ERX OS, Huawei) do not accept further login
             # attempts after failing one. So in this hack, we
             # re-connect after each attempt...
-            if self.get_driver().reconnect_between_auth_methods:
+            if self.get_driver().reconnect_between_auth_methods or not self.client.active:
                 self.close(force=True)
                 self.client = self._paramiko_connect()
 
