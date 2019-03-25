@@ -28,7 +28,7 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re = [re.compile(r'user ?name: ?$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
-_prompt_re = [re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
+_prompt_re = [re.compile(r'[\r\n\x00][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re = [re.compile(r'%Error'),
              re.compile(r'invalid input', re.I),
              re.compile(r'(?:incomplete|ambiguous) command', re.I),
