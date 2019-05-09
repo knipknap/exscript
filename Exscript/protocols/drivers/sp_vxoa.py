@@ -33,6 +33,7 @@ _error_re = [re.compile(r'^(unknown|invalid|error|syntax error)', re.I)]
 _banner_re = re.compile(r'Silver[\r\n\s]Peak[\r\n\s]Systems[\r\n\s]Inc\.')
 _auth_banner_re = re.compile(r'Last login:\s')
 
+
 class SilverPeakVXOADriver(Driver):
 
     def __init__(self):
