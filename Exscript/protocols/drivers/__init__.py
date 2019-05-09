@@ -55,6 +55,7 @@ from Exscript.protocols.drivers.eos import EOSDriver
 from Exscript.protocols.drivers.cienasaos import CienaSAOSDriver
 from Exscript.protocols.drivers.icotera import IcoteraDriver
 from Exscript.protocols.drivers.zyxel import ZyxelDriver
+from Exscript.protocols.drivers.sp_vxoa import SilverPeakVXOADriver
 
 driver_classes = []
 drivers = []
