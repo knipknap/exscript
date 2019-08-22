@@ -54,9 +54,15 @@ keymap = {'rsa': paramiko.RSAKey, 'dss': paramiko.DSSKey}
 for key in keymap:
     PrivateKey.keytypes.add(key)
 
-auth_types = {'publickey': ('_paramiko_auth_agent', '_paramiko_auth_autokey'),
-              'keyboard-interactive': ('_paramiko_auth_interactive',),
-              'password': ('_paramiko_auth_password',)}
+auth_types = [
+    # This one automatically falls back to keyb-interecative with internal handler
+    {'ssh_method': 'password', 'function': '_paramiko_auth_password'},
+    {'ssh_method': 'none', 'function': '_paramiko_auth_none'},
+    {'ssh_method': 'publickey', 'function': '_paramiko_auth_agent', 'display_name': 'publickey (agent)'},
+    {'ssh_method': 'publickey', 'function': '_paramiko_auth_autokey', 'display_name': 'publickey (autokey)'},
+    # https://superuser.com/questions/894608/ssh-o-preferredauthentications-whats-the-difference-between-password-and-k
+    {'ssh_method': 'keyboard-interactive', 'function': '_paramiko_auth_interactive'}
+]
 
 
 class SSH2(Protocol):
@@ -189,7 +195,7 @@ class SSH2(Protocol):
         return t
 
     def _paramiko_auth_none(self, username, password=None):
-        self.client.auth_none(username)
+        return self.client.auth_none(username)
 
     def _paramiko_auth_interactive(self, username, password=None):
         if password is None:
@@ -213,10 +219,10 @@ class SSH2(Protocol):
                         response.append(password)
                         break
             return response
-        self.client.auth_interactive(username, handler)
+        return self.client.auth_interactive(username, handler)
 
     def _paramiko_auth_password(self, username, password):
-        self.client.auth_password(username, password or '')
+        return self.client.auth_password(username, password or '')
 
     def _paramiko_auth_agent(self, username, password=None):
         keys = paramiko.Agent().get_keys()
@@ -230,8 +236,7 @@ class SSH2(Protocol):
             try:
                 fp = hexlify(key.get_fingerprint())
                 self._dbg(1, 'Trying SSH agent key %s' % fp)
-                self.client.auth_publickey(username, key)
-                return
+                return self.client.auth_publickey(username, key)
             except SSHException as e:
                 saved_exception = e
         raise saved_exception
@@ -248,8 +253,7 @@ class SSH2(Protocol):
                 key = pkey_class.from_private_key_file(filename, password)
                 fp = hexlify(key.get_fingerprint())
                 self._dbg(1, 'Trying key %s in %s' % (fp, filename))
-                self.client.auth_publickey(username, key)
-                return
+                return self.client.auth_publickey(username, key)
             except SSHException as e:
                 saved_exception = e
             except IOError as e:
@@ -265,57 +269,56 @@ class SSH2(Protocol):
             file = os.path.expanduser(file)
             if os.path.isfile(file):
                 keyfiles.append((cls, file))
-        self._paramiko_auth_key(username, keyfiles, password)
+        return self._paramiko_auth_key(username, keyfiles, password)
 
-    def _get_auth_methods(self, allowed_types):
-        auth_methods = []
-        for method in allowed_types:
-            if method not in auth_types:
-                self._dbg(1, 'Unsupported auth method %s' % repr(method))
-                continue
-            for type_name in auth_types[method]:
-                auth_methods.append(getattr(self, type_name))
-        return auth_methods
+    def _add_auth_error(self, error, level=1):
+        self._dbg(level, error)
+        self.auth_errors.append(error)
 
-    def _paramiko_auth(self, username, password):
-        # Try authentication using auth_none. This should (almost) always fail,
-        # but provides us with info about allowed authentication types.
-        try:
-            self.client.auth_none(username)
-        except BadAuthenticationType as err:
-            self._dbg(1, 'auth_none failed, supported: %s' % err.allowed_types)
-            auth_methods = self._get_auth_methods(err.allowed_types)
+    def _paramiko_auth(self, username, password, partial_methods=[]):
+        if partial_methods == []:
+            self.auth_errors = []
+            allowed_methods = None
         else:
-            return
-
-        # Finally try all supported login methods.
-        errors = []
-        for method in auth_methods:
+            allowed_methods = partial_methods
+        for method in auth_types:
+            method_name = method.get('display_name', method['ssh_method'])
+            if allowed_methods is not None and method_name not in allowed_methods:
+                self._dbg(1, 'Skipping authentification method %s (unsupported)' % method_name)
+                continue
             # Some OSes (e.g. JunOS ERX OS, Huawei) do not accept further login
             # attempts after failing one. So in this hack, we
             # re-connect after each attempt...
-            if self.get_driver().reconnect_between_auth_methods or not self.client.active:
+            # But do not reconnect in case of partial auth
+            if self.get_driver().reconnect_between_auth_methods or (partial_methods == [] and not self.client.active):
                 self.close(force=True)
                 self.client = self._paramiko_connect()
 
-            self._dbg(1, 'Authenticating with %s' % method.__name__)
             try:
-                method(username, password)
-                return
-            except BadHostKeyException as e:
-                msg = '%s: Bad host key: %s' % (method.__name__, str(e))
-                self._dbg(1, msg)
-                errors.append(msg)
-            except AuthenticationException as e:
-                msg = 'Authentication with %s failed' % method.__name__
-                msg += ': ' + str(e)
-                self._dbg(1, msg)
-                errors.append(msg)
-            except SSHException as e:
-                msg = '%s: SSHException: %s' % (method.__name__, str(e))
-                self._dbg(1, msg)
-                errors.append(msg)
-        raise LoginFailure('Login failed: ' + '; '.join(errors))
+                self._dbg(1, 'Authenticating with %s' % method_name)
+                next_methods = getattr(self, method['function'])(username, password)
+                if next_methods == []:
+                    self.os_guesser.data_received(self.get_banner(), True)  # Auth done, get banner !
+                    self._dbg(1, 'Authentication successful')
+                    return
+                elif partial_methods == []:  # Only attempt partial methods once (1 recursion)
+                    self.os_guesser.data_received(self.get_banner(), False)  # Try to get banner before trying next method
+                    self._dbg(1, 'Partial authentication done, attempting next part')
+                    self._paramiko_auth(username, password, next_methods)
+            except (BadAuthenticationType, AuthenticationException, BadHostKeyException, SSHException) as e:
+                if type(e) is BadAuthenticationType:  # Should happen only once
+                    self._add_auth_error('{} reported as bad method, supported: {}'.format(method['ssh_method'], e.allowed_types))
+                elif type(e) is AuthenticationException:
+                    self._add_auth_error('Authentication with {} failed: {}'.format(method_name, e))
+                elif type(e) is BadHostKeyException:
+                    self._add_auth_error('{}: Bad host key: {}'.format(method_name, e))
+                elif type(e) is SSHException:
+                    self._add_auth_error('{}: SSHException: {}'.format(method_name, e))
+                if partial_methods == [] and hasattr(e, 'allowed_types'):
+                    allowed_methods = e.allowed_types
+            finally:
+                self.os_guesser.data_received(self.get_banner(), False)  # Log banner sent DURING auth
+        raise LoginFailure('Login failed: ' + '; '.join(self.auth_errors))
 
     def _paramiko_shell(self):
         rows, cols = get_terminal_size()
@@ -366,7 +369,12 @@ class SSH2(Protocol):
     def get_banner(self):
         if not self.client:
             return None
-        return self.client.get_banner()
+        banner = self.client.get_banner()
+        if banner is None:
+            banner = ''
+        elif not isinstance(banner, str):
+            banner = banner.decode('utf-8')
+        return banner
 
     def get_remote_version(self):
         if not self.client:
