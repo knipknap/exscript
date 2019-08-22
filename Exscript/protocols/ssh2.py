@@ -298,16 +298,19 @@ class SSH2(Protocol):
                 self._dbg(1, 'Authenticating with %s' % method_name)
                 next_methods = getattr(self, method['function'])(username, password)
                 if next_methods == []:
-                    self.os_guesser.data_received(self.get_banner(), True)  # Auth done, get banner !
+                    self.guess_os_from_banner(authenticated=True)  # Auth done, get banner !
                     self._dbg(1, 'Authentication successful')
                     return
                 elif partial_methods == []:  # Only attempt partial methods once (1 recursion)
-                    self.os_guesser.data_received(self.get_banner(), False)  # Try to get banner before trying next method
+                    self.guess_os_from_banner()  # Try to get banner before trying next method
                     self._dbg(1, 'Partial authentication done, attempting next part')
                     self._paramiko_auth(username, password, next_methods)
             except (BadAuthenticationType, AuthenticationException, BadHostKeyException, SSHException) as e:
                 if type(e) is BadAuthenticationType:  # Should happen only once
-                    self._add_auth_error('{} reported as bad method, supported: {}'.format(method['ssh_method'], e.allowed_types))
+                    self._add_auth_error('{} reported as bad method, supported: {}'.format(
+                        method['ssh_method'],
+                        e.allowed_types
+                    ))
                 elif type(e) is AuthenticationException:
                     self._add_auth_error('Authentication with {} failed: {}'.format(method_name, e))
                 elif type(e) is BadHostKeyException:
@@ -316,8 +319,7 @@ class SSH2(Protocol):
                     self._add_auth_error('{}: SSHException: {}'.format(method_name, e))
                 if partial_methods == [] and hasattr(e, 'allowed_types'):
                     allowed_methods = e.allowed_types
-            finally:
-                self.os_guesser.data_received(self.get_banner(), False)  # Log banner sent DURING auth
+                self.guess_os_from_banner()  # Log banner sent DURING auth
         raise LoginFailure('Login failed: ' + '; '.join(self.auth_errors))
 
     def _paramiko_shell(self):
@@ -369,12 +371,14 @@ class SSH2(Protocol):
     def get_banner(self):
         if not self.client:
             return None
-        banner = self.client.get_banner()
-        if banner is None:
-            banner = ''
-        elif not isinstance(banner, str):
-            banner = banner.decode('utf-8')
-        return banner
+        return self.client.get_banner()
+
+    def guess_os_from_banner(self, authenticated=False):
+        banner = self.get_banner()
+        if banner is not None:
+            if not isinstance(banner, str):
+                banner = banner.decode('utf-8')
+            self.os_guesser.data_received(banner, authenticated)
 
     def get_remote_version(self):
         if not self.client:
