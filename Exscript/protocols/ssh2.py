@@ -377,7 +377,7 @@ class SSH2(Protocol):
         banner = self.get_banner()
         if banner is not None:
             if not isinstance(banner, str):
-                banner = banner.decode('utf-8')
+                banner = banner.decode(self.encoding)
             self.os_guesser.data_received(banner, authenticated)
 
     def get_remote_version(self):
