@@ -72,6 +72,6 @@ class Telnetd(Server):
                 if response:
                     conn.send(response.encode('utf8'))
         except Exception as err:
-            self._dbg("_handle_connection(): ", err)
+            self._dbg(1, "_handle_connection(): %s" % err)
         finally:
             conn.close()
