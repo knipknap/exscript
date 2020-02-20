@@ -64,6 +64,7 @@ functions = {
     'list.length':               list.length,
     'list.unique':               list.unique,
     'string.replace':            string.replace,
+    'string.split':              string.split,
     'string.tolower':            string.tolower,
     'string.toupper':            string.toupper,
     'sys.env':                   mysys.env,

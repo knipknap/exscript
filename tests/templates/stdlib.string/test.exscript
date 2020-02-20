@@ -2,6 +2,17 @@
   string = string.replace("ssuccessss", "ss", "s")
   fail "string.otp" if string is not "success"
 
-  string = string.tolower("LOWER")
-  fail "string.otp" if string is not "lower"
+  string = string.tolower("Low3R")
+  fail "string.otp" if string is not "low3r"
+
+  string = string.toupper("Upp3R")
+  fail "string.otp" if string is not "UPP3R"
+
+  result = list.new()
+  append "10" to result
+  append "234" to result
+  append "65" to result
+  append "8" to result
+  string = string.split("10,234,65,8", ",")
+  fail "string.otp" if string is not result
 }

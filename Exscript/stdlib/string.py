@@ -40,6 +40,26 @@ def replace(scope, strings, source, dest):
     """
     return [s.replace(source[0], dest[0]) for s in strings]
 
+@secure_function
+def split(scope, strings, separator):
+    """
+    Returns a list with the split values of the given string (or list of strings).
+    The values are split at the seperator
+
+    :type  strings: string
+    :param strings: A string, or a list of strings.
+    :type  source: string
+    :param source: What to replace.
+    :type  dest: string
+    :param dest: What to replace it with.
+    :rtype:  string
+    :return: The resulting string, or list of strings.
+    """
+    result = []
+    for s in strings:
+        result.extend(s.split(separator[0]))
+    return result
+
 
 @secure_function
 def tolower(scope, strings):
