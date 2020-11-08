@@ -68,13 +68,13 @@ class PrivateKey(object):
         """
         if keytype is None:
             try:
-                key = RSAKey.from_private_key_file(filename)
+                RSAKey.from_private_key_file(filename, password=password)
                 keytype = 'rsa'
-            except SSHException as e:
+            except SSHException:
                 try:
-                    key = DSSKey.from_private_key_file(filename)
+                    DSSKey.from_private_key_file(filename, password=password)
                     keytype = 'dss'
-                except SSHException as e:
+                except SSHException:
                     msg = 'not a recognized private key: ' + repr(filename)
                     raise ValueError(msg)
         key = PrivateKey(keytype)
