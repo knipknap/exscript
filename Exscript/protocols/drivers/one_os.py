@@ -47,6 +47,12 @@ class OneOSDriver(Driver):
 
     def init_terminal(self, conn):
         conn.execute('term len 0')
+        # TERMINAL WIDTH ONEOS5
+        try:
+            conn.execute('stty columns 255')
+        except:
+            pass
+        
 
     def auto_authorize(self, conn, account, flush, bailout):
         conn.send('enable\r')
