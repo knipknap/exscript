@@ -4,6 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/knipknap/exscript/badge.svg?branch=master)](https://coveralls.io/github/knipknap/exscript?branch=master)
 [![Code Climate](https://lima.codeclimate.com/github/knipknap/exscript/badges/gpa.svg)](https://lima.codeclimate.com/github/knipknap/exscript)
 [![Documentation Status](https://readthedocs.org/projects/exscript/badge/?version=latest)](http://exscript.readthedocs.io/en/latest/?badge=latest)
+[![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
 
 ## Summary
 
