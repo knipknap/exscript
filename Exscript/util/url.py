@@ -182,7 +182,7 @@ class Url(object):
         :type  default_protocol: string
         :param default_protocol: A protocol name.
         :rtype:  Url
-        :return: The Url object contructed from the given URL.
+        :return: The Url object constructed from the given URL.
         """
         if url is None:
             raise TypeError('Expected string but got' + type(url))

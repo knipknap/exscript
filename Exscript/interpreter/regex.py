@@ -24,7 +24,7 @@ from __future__ import print_function, absolute_import
 import re
 from .string import String
 
-# Matches any opening parenthesis that is neither preceeded by a backslash
+# Matches any opening parenthesis that is neither preceded by a backslash
 # nor has a "?:" or "?<" appended.
 bracket_re = re.compile(r'(?<!\\)\((?!\?[:<])', re.I)
 
