@@ -65,7 +65,7 @@ class CommandSet(object):
         :type  command: str|regex
         :param command: A string or a compiled regular expression.
         :type  response: function|str
-        :param response: A reponse, or a response handler.
+        :param response: A response, or a response handler.
         """
         command = re.compile(command)
         self.response_list.append((command, response))

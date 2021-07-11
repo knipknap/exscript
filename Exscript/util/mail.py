@@ -101,10 +101,10 @@ def _get_var_from_header_line(line):
     return match.group(1).strip().lower(), match.group(2).strip()
 
 
-def _cleanup_mail_addresses(receipients):
-    if isinstance(receipients, list):
-        receipients = ','.join(receipients)
-    rcpt = re.split(r'\s*[,;\r\n]\s*', receipients.lower())
+def _cleanup_mail_addresses(recipients):
+    if isinstance(recipients, list):
+        recipients = ','.join(recipients)
+    rcpt = re.split(r'\s*[,;\r\n]\s*', recipients.lower())
     return [str(r) for r in sorted(set(rcpt)) if r.strip()]
 
 #
@@ -215,7 +215,7 @@ class Mail(object):
 
     def set_to(self, to):
         """
-        Replaces the current list of receipients in the 'to' field by
+        Replaces the current list of recipients in the 'to' field by
         the given value. The value may be one of the following:
 
           - A list of strings (email addresses).
@@ -229,7 +229,7 @@ class Mail(object):
 
     def add_to(self, to):
         """
-        Adds the given list of receipients to the 'to' field.
+        Adds the given list of recipients to the 'to' field.
         Accepts the same argument types as set_to().
 
         :type  to: string|list(string)
@@ -305,12 +305,12 @@ class Mail(object):
         """
         return self.bcc
 
-    def get_receipients(self):
+    def get_recipients(self):
         """
-        Returns a list of all receipients (to, cc, and bcc).
+        Returns a list of all recipients (to, cc, and bcc).
 
         :rtype:  list(string)
-        :return: The email addresses of all receipients.
+        :return: The email addresses of all recipients.
         """
         return self.get_to() + self.get_cc() + self.get_bcc()
 
@@ -469,7 +469,7 @@ def send(mail, server='localhost'):
     :param server: The address of the mailserver.
     """
     sender = mail.get_sender()
-    rcpt = mail.get_receipients()
+    rcpt = mail.get_recipients()
     session = smtplib.SMTP(server)
     message = MIMEMultipart()
     message['Subject'] = mail.get_subject()

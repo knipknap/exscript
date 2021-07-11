@@ -32,7 +32,7 @@ class PrivateKey(object):
 
     """
     Represents a cryptographic key, and may be used to authenticate
-    useing :class:`Exscript.protocols`.
+    using :class:`Exscript.protocols`.
     """
     keytypes = set()
 

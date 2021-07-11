@@ -67,7 +67,7 @@ class Template(Scope):
             elif lexer.current_is('escaped_data'):
                 token = lexer.token()[1]
                 if token[1] == '$':
-                    # An escaped $ is handeled by the Execute() token, so
+                    # An escaped $ is handled by the Execute() token, so
                     # we do not strip the \ here.
                     buffer += token
                 else:

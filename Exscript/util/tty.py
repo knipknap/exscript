@@ -65,21 +65,21 @@ def get_terminal_size(default_rows=25, default_cols=80):
         # Channel was redirected to an object that has no fileno()
         pass
     except ValueError:
-        # Channel was closed while attemting to read it
+        # Channel was closed while attempting to read it
         pass
     try:
         fileno_list.append(sys.stdin.fileno())
     except AttributeError:
         pass
     except ValueError:
-        # Channel was closed while attemting to read it
+        # Channel was closed while attempting to read it
         pass
     try:
         fileno_list.append(sys.stderr.fileno())
     except AttributeError:
         pass
     except ValueError:
-        # Channel was closed while attemting to read it
+        # Channel was closed while attempting to read it
         pass
 
     # Ask each channel for the terminal window size.
