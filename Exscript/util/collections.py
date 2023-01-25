@@ -6,7 +6,13 @@ from builtins import chr
 from builtins import range
 from builtins import object
 import copy
-from collections import OrderedDict, Callable, defaultdict
+import sys
+if sys.version_info[1] >= 10:
+    from collections.abc import Callable
+    from collections import OrderedDict
+else:
+    from collections import OrderedDict, Callable
+
 
 class OrderedDefaultDict(OrderedDict):
 
