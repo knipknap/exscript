@@ -172,6 +172,10 @@ class Telnet(object):
     raise EOFError when the end of the connection is read, because
     they can return an empty string for other reasons.  See the
     individual doc strings.
+    
+    read_until(expected, [timeout])
+        Read until the expected string has been seen, or a timeout is
+        hit (default is no timeout); may block.
 
     read_all()
         Read all data until EOF; may block.
@@ -309,6 +313,41 @@ class Telnet(object):
             buffer = buffer.replace(IAC, IAC+IAC)
         self.msg("send %s", repr(buffer))
         self.sock.send(buffer)
+        
+    def read_until(self, match, timeout=None):
+        """Read until a given string is encountered or until timeout.
+        When no match is found, return whatever is available instead,
+        possibly the empty string.  Raise EOFError if the connection
+        is closed and no cooked data is available.
+        """
+        n = len(match)
+        self.process_rawq()
+        i = self.cookedq.find(match)
+        if i >= 0:
+            i = i+n
+            buf = self.cookedq[:i]
+            self.cookedq = self.cookedq[i:]
+            return buf
+        if timeout is not None:
+            deadline = _time() + timeout
+        with _TelnetSelector() as selector:
+            selector.register(self, selectors.EVENT_READ)
+            while not self.eof:
+                if selector.select(timeout):
+                    i = max(0, len(self.cookedq)-n)
+                    self.fill_rawq()
+                    self.process_rawq()
+                    i = self.cookedq.find(match, i)
+                    if i >= 0:
+                        i = i+n
+                        buf = self.cookedq[:i]
+                        self.cookedq = self.cookedq[i:]
+                        return buf
+                if timeout is not None:
+                    timeout = deadline - _time()
+                    if timeout < 0:
+                        break
+        return self.read_very_lazy()
 
     def read_all(self):
         """Read all data until EOF; block until connection closed."""
