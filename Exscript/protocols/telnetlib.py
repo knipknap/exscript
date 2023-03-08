@@ -70,6 +70,8 @@ import sys
 import time
 import socket
 import select
+import selectors
+from time import monotonic as _time
 import struct
 from io import StringIO
 
@@ -155,6 +157,12 @@ EXOPL = chr(255).encode('latin-1')  # Extended-Options-List
 
 SEND_TTYPE = chr(1).encode('latin-1')
 
+# poll/select have the advantage of not requiring any extra file descriptor,
+# contrarily to epoll/kqueue (also, they require a single syscall).
+if hasattr(selectors, 'PollSelector'):
+    _TelnetSelector = selectors.PollSelector
+else:
+    _TelnetSelector = selectors.SelectSelector
 
 class Telnet(object):
 
@@ -322,11 +330,11 @@ class Telnet(object):
         """
         n = len(match)
         self.process_rawq()
-        i = self.cookedq.find(match)
+        i = self.rawq.find(match)
         if i >= 0:
             i = i+n
-            buf = self.cookedq[:i]
-            self.cookedq = self.cookedq[i:]
+            buf = self.rawq[:i]
+            self.rawq = self.rawq[i:]
             return buf
         if timeout is not None:
             deadline = _time() + timeout
@@ -334,14 +342,14 @@ class Telnet(object):
             selector.register(self, selectors.EVENT_READ)
             while not self.eof:
                 if selector.select(timeout):
-                    i = max(0, len(self.cookedq)-n)
+                    i = max(0, len(self.rawq)-n)
                     self.fill_rawq()
                     self.process_rawq()
-                    i = self.cookedq.find(match, i)
+                    i = self.rawq.find(match, i)
                     if i >= 0:
                         i = i+n
-                        buf = self.cookedq[:i]
-                        self.cookedq = self.cookedq[i:]
+                        buf = self.rawq[:i]
+                        self.rawq = self.rawq[i:]
                         return buf
                 if timeout is not None:
                     timeout = deadline - _time()
