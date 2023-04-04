@@ -27,13 +27,15 @@ from ..util.url import Url
 from .protocol import Protocol
 from .telnet import Telnet
 from .ssh2 import SSH2
+from .netconf import Netconf
 from .dummy import Dummy
 
 protocol_map = {'dummy':  Dummy,
                 'pseudo': Dummy,
                 'telnet': Telnet,
                 'ssh':    SSH2,
-                'ssh2':   SSH2}
+                'ssh2':   SSH2,
+                'netconf': Netconf}
 
 
 def get_protocol_from_name(name):
