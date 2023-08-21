@@ -1142,7 +1142,7 @@ class Protocol(object):
                           handle_window_size):
         # We need to make sure to use an unbuffered stdin, else multi-byte
         # chars (such as arrow keys) won't work properly.
-        with os.fdopen(sys.stdin.fileno(), 'r', 0) as stdin:
+        with os.fdopen(sys.stdin.fileno(), 'rb', 0) as stdin:
             oldtty = termios.tcgetattr(stdin)
 
             # Update the terminal size whenever the size changes.
@@ -1196,7 +1196,7 @@ class Protocol(object):
                         if not is_handled:
                             if not self.send_data is None:
                                 self.send_data.write(data)
-                            channel.send(data)
+                            channel.send(data.encode(self.encoding))
             finally:
                 termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
 
