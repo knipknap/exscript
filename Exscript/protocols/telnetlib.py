@@ -483,6 +483,10 @@ class Telnet(object):
                 # to perform, the indicated option.
                 elif command == DO:
                     opt = self.rawq_getchar()
+                    # int 0 produces an empty byte string which then has no ord
+                    # we can skip its processing
+                    if opt == b"":
+                        continue
                     self.msg('IAC DO %s', ord(opt))
                     if opt == TTYPE:
                         self.sock.send(IAC+WILL+opt)
