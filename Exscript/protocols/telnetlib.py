@@ -120,7 +120,7 @@ class Telnet(tn.Telnet):
             self.iacseq = b'' # Reset on EOF
             self.sb = 0
         self.cookedq = self.cookedq + buf[0].decode(self.encoding)
-        self.sbdataq = self.sbdataq + buf[1].decode(self.encoding)
+        self.sbdataq = self.sbdataq + buf[1]
 
 
     def listener(self):
