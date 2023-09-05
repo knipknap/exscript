@@ -39,16 +39,16 @@ class Telnet(tn.Telnet):
             first regular expression that matches; the match object
             returned; and the text read up till and including the match.
         """
-        return super().expect(list, timeout=timeout)
+        return super().expect(list=relist, timeout=timeout)
 
 
-    def expect(self, list, timeout=None, cleanup=None):
+    def expect(self, relist, timeout=None, cleanup=None):
         """
         Like waitfor(), but removes the matched data from the incoming
         buffer.
         """
-        index, match, data = self.waitfor(list, timeout=timeout)
-        return index, match, list[index].sub("", data)
+        index, match, data = self.waitfor(relist, timeout=timeout)
+        return index, match, relist[index].sub("", data)
 
 
     def process_rawq(self):
