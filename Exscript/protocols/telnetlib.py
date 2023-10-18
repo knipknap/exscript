@@ -573,7 +573,7 @@ class Telnet(object):
         # headaches for Py2/Py3 compatibility...
         c = self.rawq[self.irawq]
         if not py2:
-            c = c.to_bytes((c.bit_length()+7)//8, 'big')
+            c = c.to_bytes((c.bit_length()+7)//8 or 1, 'big')
 
         self.irawq += 1
         if self.irawq >= len(self.rawq):
