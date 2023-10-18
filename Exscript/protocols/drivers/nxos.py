@@ -26,7 +26,7 @@ A driver for Cisco Nexus OS (NXOS)
 import re
 from Exscript.protocols.drivers.driver import Driver
 
-_user_re = [re.compile(r'user ?name: ?$', re.I)]
+_user_re = [re.compile(r'user ?name: ?$', re.I), re.compile(r'[^:]* login: ?$', re.I)]
 _password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
 _prompt_re = [re.compile(r'[\r\n\x00][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re = [re.compile(r'%Error'),
