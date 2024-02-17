@@ -1,5 +1,9 @@
-from future import standard_library
-standard_library.install_aliases()
+try:
+    from future import standard_library
+    standard_library.install_aliases()
+except ModuleNotFoundError:
+    pass
+except Module
 import sys
 import unittest
 import re

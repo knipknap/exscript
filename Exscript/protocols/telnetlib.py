@@ -57,8 +57,11 @@ To do:
 
 """
 from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
+try:
+    from future import standard_library
+    standard_library.install_aliases()
+except ModuleNotFoundError:
+    pass
 from builtins import chr
 from builtins import bytes
 from builtins import range

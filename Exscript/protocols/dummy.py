@@ -24,8 +24,11 @@
 A client that talks to a :class:`Exscript.emulators.VirtualDevice`.
 """
 from __future__ import absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
+try:
+    from future import standard_library
+    standard_library.install_aliases()
+except ModuleNotFoundError:
+    pass
 from builtins import str
 from ..emulators import VirtualDevice
 from .protocol import Protocol

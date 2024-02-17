@@ -24,8 +24,11 @@
 Logging to memory.
 """
 from __future__ import print_function, absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
+try:
+    from future import standard_library
+    standard_library.install_aliases()
+except ModuleNotFoundError:
+    pass
 from builtins import filter
 from builtins import str
 from builtins import object
