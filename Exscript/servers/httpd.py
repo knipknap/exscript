@@ -24,8 +24,11 @@
 A threaded HTTP server with support for HTTP/Digest authentication.
 """
 from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
+try:
+    from future import standard_library
+    standard_library.install_aliases()
+except ModuleNotFoundError:
+    pass
 import sys
 import time
 import urllib.request, urllib.parse, urllib.error

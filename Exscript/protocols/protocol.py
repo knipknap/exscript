@@ -24,8 +24,11 @@
 An abstract base class for all protocols.
 """
 from __future__ import absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
+try:
+    from future import standard_library
+    standard_library.install_aliases()
+except ModuleNotFoundError:
+    pass
 from builtins import object
 import re
 import sys
