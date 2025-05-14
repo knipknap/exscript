@@ -1,4 +1,3 @@
-future
 configparser
 pycryptodomex
 paramiko>=1.17

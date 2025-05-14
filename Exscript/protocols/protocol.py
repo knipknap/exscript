@@ -24,8 +24,6 @@
 An abstract base class for all protocols.
 """
 from __future__ import absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 from builtins import object
 import re
 import sys
