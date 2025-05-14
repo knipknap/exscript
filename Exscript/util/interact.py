@@ -24,8 +24,6 @@
 Tools for interacting with the user on the command line.
 """
 from __future__ import print_function, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import input
 from builtins import str
 from builtins import object

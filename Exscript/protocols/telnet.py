@@ -24,8 +24,6 @@
 The Telnet protocol.
 """
 from __future__ import absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 from ..util.tty import get_terminal_size
 from . import telnetlib
 from .protocol import Protocol
