@@ -49,7 +49,7 @@ _prompt_re = [re.compile(_prompt_start
                          + _any_path + r'?'
                          + r'[: ]?'
                          + _any_path + r'?'
-                         + r'(?:\(' + _filename + '\))?'
+                         + r'(?:\(' + _filename + r'\))?'
                          + r'[\]\-]?'
                          + r'[#>%\$\]] ?'
                          + _unprintable + r'*'

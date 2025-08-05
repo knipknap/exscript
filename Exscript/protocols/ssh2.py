@@ -50,7 +50,7 @@ from .exception import ProtocolException, LoginFailure, TimeoutException, \
 util.log_to_file(os.devnull)
 
 # Register supported key types.
-keymap = {'rsa': paramiko.RSAKey, 'dss': paramiko.DSSKey}
+keymap = {'rsa': paramiko.RSAKey, 'ecdsa': paramiko.ECDSAKey, 'ed25519': paramiko.Ed25519Key}
 for key in keymap:
     PrivateKey.keytypes.add(key)
 
@@ -259,9 +259,11 @@ class SSH2(Protocol):
     def _paramiko_auth_autokey(self, username, password):
         keyfiles = []
         for cls, file in ((paramiko.RSAKey, '~/.ssh/id_rsa'),  # Unix
-                          (paramiko.DSSKey, '~/.ssh/id_dsa'),  # Unix
+                          (paramiko.ECDSAKey, '~/.ssh/id_ecdsa'),  # Unix
+                          (paramiko.Ed25519Key, '~/.ssh/id_ed25519'),  # Unix
                           (paramiko.RSAKey, '~/ssh/id_rsa'),   # Windows
-                          (paramiko.DSSKey, '~/ssh/id_dsa')):  # Windows
+                          (paramiko.ECDSAKey, '~/ssh/id_ecdsa'),  # Windows
+                          (paramiko.Ed25519Key, '~/ssh/id_ed25519')):  # Windows
             file = os.path.expanduser(file)
             if os.path.isfile(file):
                 keyfiles.append((cls, file))

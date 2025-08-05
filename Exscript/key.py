@@ -24,7 +24,7 @@
 Represents a private key.
 """
 from builtins import object
-from paramiko import RSAKey, DSSKey
+from paramiko import RSAKey, ECDSAKey, Ed25519Key
 from paramiko.ssh_exception import SSHException
 
 
@@ -72,11 +72,15 @@ class PrivateKey(object):
                 keytype = 'rsa'
             except SSHException:
                 try:
-                    DSSKey.from_private_key_file(filename, password=password)
-                    keytype = 'dss'
+                    ECDSAKey.from_private_key_file(filename, password=password)
+                    keytype = 'ecdsa'
                 except SSHException:
-                    msg = 'not a recognized private key: ' + repr(filename)
-                    raise ValueError(msg)
+                    try:
+                        Ed25519Key.from_private_key_file(filename, password=password)
+                        keytype = 'ed25519'
+                    except SSHException:
+                        msg = 'not a recognized private key: ' + repr(filename)
+                        raise ValueError(msg)
         key = PrivateKey(keytype)
         key.filename = filename
         key.password = password
