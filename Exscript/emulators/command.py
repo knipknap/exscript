@@ -23,7 +23,6 @@
 """
 Defines the behavior of commands by mapping commands to functions.
 """
-from past.builtins import execfile
 from builtins import str
 from builtins import object
 import re
@@ -84,7 +83,7 @@ class CommandSet(object):
                each of the handlers in the file.
         """
         args = {}
-        execfile(filename, args)
+        exec(filename, args)
         commands = args.get('commands')
         if commands is None:
             raise Exception(filename + ' has no variable named "commands"')
