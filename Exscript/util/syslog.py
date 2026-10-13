@@ -23,15 +23,13 @@
 """
 Send messages to a syslog server.
 """
+from __future__ import absolute_import
 import os
 import sys
-import imp
 import socket
 
-# This way of loading a module prevents Python from looking in the
-# current directory. (We need to avoid it due to the syslog module
-# name collision.)
-syslog = imp.load_module('syslog', *imp.find_module('syslog'))
+# Absolute import: this is the standard library module, not this one.
+import syslog
 
 
 def netlog(message,

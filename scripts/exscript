@@ -20,7 +20,6 @@ from builtins import range
 import sys
 import os
 import re
-import imp
 import getpass
 import Exscript.protocols.drivers
 from optparse import OptionParser, Option, OptionValueError
@@ -34,7 +33,8 @@ from Exscript.util.log import log_to_file
 from Exscript.util.file import get_accounts_from_file, \
                                get_hosts_from_file, \
                                get_hosts_from_csv, \
-                               load_lib
+                               load_lib, \
+                               _load_source
 from Exscript.util.decorator import autologin
 
 bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
@@ -118,7 +118,7 @@ def run():
         print('Searching drivers in %s...' % options.load_driver)
         name = os.path.splitext(os.path.basename(options.load_driver))[0]
         try:
-            driver_module = imp.load_source(name, options.load_driver)
+            driver_module = _load_source(name, options.load_driver)
         except IOError as e:
             parser.error(str(e))
         except Exception as e:

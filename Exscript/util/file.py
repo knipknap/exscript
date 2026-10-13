@@ -32,8 +32,6 @@ import re
 import os
 import base64
 import codecs
-import imp # Py2
-import importlib # Py3
 from .. import Account
 from .cast import to_host
 
@@ -203,6 +201,27 @@ def get_hosts_from_csv(filename,
     return hosts
 
 
+def _load_source(name, filename):
+    """
+    Loads the Python source file with the given name as a module, like
+    imp.load_source() did. The file does not need a .py extension.
+    """
+    if sys.version_info[0] < 3:
+        import imp
+        return imp.load_source(name, filename)
+
+    # The imp module was removed in Python 3.12, and
+    # SourceFileLoader.load_module() is deprecated.
+    import importlib.machinery
+    import importlib.util
+    loader = importlib.machinery.SourceFileLoader(name, filename)
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    loader.exec_module(module)
+    return module
+
+
 def load_lib(filename):
     """
     Loads a Python file containing functions, and returns the
@@ -228,9 +247,6 @@ def load_lib(filename):
         raise IOError('No such file: %s' % filename)
 
     name = os.path.splitext(os.path.basename(filename))[0]
-    if sys.version_info[0] < 3:
-        module = imp.load_source(name, filename)
-    else:
-        module = importlib.machinery.SourceFileLoader(name, filename).load_module()
+    module = _load_source(name, filename)
 
     return dict((name + '.' + k, v) for (k, v) in list(module.__lib__.items()))

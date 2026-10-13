@@ -41,12 +41,12 @@ from .server import Server
 local_version = 'SSH-2.0-Exscript-' + __version__
 
 class _ParamikoServer(ServerInterface):
-    # 'data' is the output of base64.encodestring(str(key))
+    # 'data' is the output of base64.b64encode(str(key))
     data = b'AAAAB3NzaC1yc2EAAAABIwAAAIEAyO4it3fHlmGZWJaGrfeHOVY7RWO3P9M7hp'\
            b'fAu7jJ2d7eothvfeuoRFtJwhUmZDluRdFyhFY/hFAh76PJKGAusIqIQKlkJxMC'\
            b'KDqIexkgHAfID/6mqvmnSJf0b5W8v5h2pI/stOSwTQ+pxVhwJ9ctYDhRSlF0iT'\
            b'UWT10hcuO4Ks8='
-    good_pub_key = paramiko.RSAKey(data=base64.decodestring(data))
+    good_pub_key = paramiko.RSAKey(data=base64.b64decode(data))
 
     def __init__(self):
         self.event = threading.Event()
