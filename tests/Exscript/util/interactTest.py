@@ -25,6 +25,13 @@ class InputHistoryTest(unittest.TestCase):
         with open(t.name) as fp:
             self.assertEqual(fp.read(), '[foo]\naaa = bbb\n\n')
 
+    def testReload(self):
+        t = NamedTemporaryFile()
+        h = InputHistory(t.name, 'foo')
+        h.set('aaa', 'bbb')
+        h = InputHistory(t.name, 'foo')
+        self.assertEqual(h.get('aaa'), 'bbb')
+
     def testGet(self):
         self.assertEqual(self.history.get('bar'), None)
         self.assertEqual(self.history.get('bar', None), None)

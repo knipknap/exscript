@@ -81,7 +81,9 @@ class InputHistory(object):
             warnings.warn('could not open %s, using tempfile' % filename)
             self.file = NamedTemporaryFile()
 
-        self.parser.readfp(self.file)
+        # 'a+' opens the file positioned at the end.
+        self.file.seek(0)
+        self.parser.read_file(self.file)
         if not self.parser.has_section(self.section):
             self.parser.add_section(self.section)
 
