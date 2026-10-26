@@ -75,6 +75,15 @@ class fileTest(unittest.TestCase):
         name = os.path.splitext(os.path.basename(self.lib_file.name))[0]
         self.assertEqual({name + '.test': object}, functions)
 
+    def testLoadLibNonPySuffix(self):
+        from Exscript.util.file import load_lib
+        with NamedTemporaryFile(suffix='.exlib') as lib_file:
+            lib_file.write(b'__lib__ = {"test": object}\n')
+            lib_file.flush()
+            functions = load_lib(lib_file.name)
+            name = os.path.splitext(os.path.basename(lib_file.name))[0]
+        self.assertEqual({name + '.test': object}, functions)
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(fileTest)
