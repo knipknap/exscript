@@ -162,7 +162,7 @@ class Lexer:
     def runtime_error(self, error, sender=None):
         self._error(ExecuteError, error, sender)
 
-    def _forward(self, chars=1):
+    def forward(self, chars=1):
         self.last_char = self.current_char
         self.current_char += chars
         self.token_buffer = None
@@ -172,7 +172,7 @@ class Lexer:
             if self.token_buffer[0] == 'EOF':
                 msg = "Unexpected EOF while iterating tokens."
                 raise StopIteration(msg)
-            self._forward(len(self.token_buffer[1]))
+            self.forward(len(self.token_buffer[1]))
 
     def next_if(self, types, token=None):
         if type(types) is not type([]):
