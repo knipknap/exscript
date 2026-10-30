@@ -23,6 +23,7 @@
 """
 Base class for all drivers.
 """
+
 import re
 import string
 
@@ -39,23 +40,32 @@ _host = r'(?:[\w+\-\.]+)'
 _user = r'(?:[\w+\-]+)'
 _user_host = r'(?:(?:' + _user + r'\@)?' + _host + r')'
 _prompt_re = [
-    re.compile(_prompt_start
-               + r'[\[\<]?'
-               + r'\w+'
-               + _user_host + r'?'
-               + r':?'
-               + _any_path + r'?'
-               + r'[: ]?'
-               + _any_path + r'?'
-               + r'(?:\(' + _filename + r'\))?'
-               + r'[\]\-]?'
-               + r'[#>%\$\]] ?'
-               + _unprintable + r'*'
-               + r'\Z', _flags),
+    re.compile(
+        _prompt_start
+        + r'[\[\<]?'
+        + r'\w+'
+        + _user_host
+        + r'?'
+        + r':?'
+        + _any_path
+        + r'?'
+        + r'[: ]?'
+        + _any_path
+        + r'?'
+        + r'(?:\('
+        + _filename
+        + r'\))?'
+        + r'[\]\-]?'
+        + r'[#>%\$\]] ?'
+        + _unprintable
+        + r'*'
+        + r'\Z',
+        _flags,
+    ),
 ]
 
 _user_re = [re.compile(r'(user ?name|user|login): *$', _flags)]
-_pass_re = [re.compile(r'password:? *$',               _flags)]
+_pass_re = [re.compile(r'password:? *$', _flags)]
 _errors = [
     r'error',
     r'invalid',
@@ -77,23 +87,24 @@ _login_fail = [
     r'failure',
 ]
 _login_fail_re = [
-    re.compile(_nl
-               + r'[^\r\n]*'
-               + r'(?:' + '|'.join(_login_fail) + r')', _flags),
+    re.compile(_nl + r'[^\r\n]*' + r'(?:' + '|'.join(_login_fail) + r')', _flags),
 ]
 _netconf_prompt_re = [
-    re.compile(r'(?<=>)'  # any XML closing tag (generic)
-               + r'[ \t\r\n]*'
-               + r'(?:]]>]]>|\n##\n)'  # 1.0 EOM or 1.1 EOC sequence
-               + r'[ \t\r\n]*'
-               + _unprintable + r'*'
-               + r'\Z', _flags),
+    re.compile(
+        r'(?<=>)'  # any XML closing tag (generic)
+        + r'[ \t\r\n]*'
+        + r'(?:]]>]]>|\n##\n)'  # 1.0 EOM or 1.1 EOC sequence
+        + r'[ \t\r\n]*'
+        + _unprintable
+        + r'*'
+        + r'\Z',
+        _flags,
+    ),
 ]
 _netconf_error_re = [re.compile(r'<(?:[\w.\-]+:)?rpc-error[\s/>]', _flags)]
 
 
 class Driver:
-
     def __init__(self, name):
         self.name = name
         self.user_re = _user_re
@@ -114,9 +125,9 @@ class Driver:
 
     def supports_os_guesser(self):
         return (
-            self.check_protocol_for_os.__code__ is not Driver.check_protocol_for_os.__code__ or
-            self.check_head_for_os.__code__ is not Driver.check_head_for_os.__code__ or
-            self.check_response_for_os.__code__ is not Driver.check_response_for_os.__code__
+            self.check_protocol_for_os.__code__ is not Driver.check_protocol_for_os.__code__
+            or self.check_head_for_os.__code__ is not Driver.check_head_for_os.__code__
+            or self.check_response_for_os.__code__ is not Driver.check_response_for_os.__code__
         )
 
     def check_protocol_for_os(self, string):

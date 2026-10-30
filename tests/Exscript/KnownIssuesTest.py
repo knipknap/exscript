@@ -6,6 +6,7 @@ failure while the issue exists. Once a fix makes a test pass, unittest reports
 an "unexpected success" and the suite fails, so the fix must remove the marker
 and move the test next to the tests of the fixed module.
 """
+
 import os
 import socket
 import sys
@@ -53,14 +54,13 @@ class ServerMixin:
         port = free_port()
         daemon = daemon_cls(HOST, port, device, **kwargs)
         daemon.start()
-        time.sleep(.2)
+        time.sleep(0.2)
         self.addCleanup(daemon.join)  # cleanups run LIFO: exit() first
         self.addCleanup(daemon.exit)
         return port
 
 
 class HostKeyTest(ServerMixin, unittest.TestCase):
-
     @unittest.expectedFailure  # S1: known_hosts is only loaded after the check; no [host]:port lookup
     def testKnownHostsMismatchIsRejected(self):
         port = self.start_daemon(SSHd, VirtualDevice(HOST), key=PrivateKey.from_file(KEYFILE))
@@ -101,13 +101,16 @@ class ExpectTest(ServerMixin, unittest.TestCase):
     @unittest.expectedFailure  # SSH2 only searches the last 150 characters after each read
     def testSSH2(self):
         port = self.start_daemon(SSHd, self.device, key=PrivateKey.from_file(KEYFILE))
-        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False,
-                    preferred_authentications=['password'])
+        conn = SSH2(
+            timeout=1,
+            connect_rate_limit=0,
+            verify_fingerprint=False,
+            preferred_authentications=['password'],
+        )
         self.expectMarker(conn, port)
 
 
 class SecretHygieneTest(unittest.TestCase):
-
     @unittest.expectedFailure  # S3: Protocol.send() logs passwords at debug level 4
     def testDebugLogRedactsPassword(self):
         conn = Dummy(device=VirtualDevice('r1', echo=False, strict=False), debug=4)
@@ -120,7 +123,6 @@ class SecretHygieneTest(unittest.TestCase):
 
 @unittest.skipIf(ExscriptInstrumentor is None, 'requires the "otel" extra')
 class OtelTest(unittest.TestCase):
-
     def setUp(self):
         self.exporter = InMemorySpanExporter()
         provider = TracerProvider()
@@ -145,22 +147,27 @@ class OtelTest(unittest.TestCase):
     @unittest.expectedFailure  # S2: commands (incl. passwords) and responses are exported
     def testNoSecretsOrDeviceOutputExportedByDefault(self):
         self.runSession(lambda conn, account: conn.login(account=account))
-        exported = [str(value)
-                    for span in self.exporter.get_finished_spans()
-                    for value in (span.attributes or {}).values()]
+        exported = [
+            str(value)
+            for span in self.exporter.get_finished_spans()
+            for value in (span.attributes or {}).values()
+        ]
         self.assertEqual([v for v in exported if PASSWORD in v or 'PRIVATE-COMMUNITY' in v], [])
 
 
 class DriverTest(unittest.TestCase):
-
     @unittest.expectedFailure  # assigned to self._error_re instead of self.error_re
     def testIsamUsesItsErrorPatterns(self):
         self.assertIs(driver_map['isam'].error_re, isam._error_re)
 
     @unittest.expectedFailure  # any "Last login" line selects ericsson_ban, which never matches "$"
     def testLastLoginLineDoesNotBreakLogin(self):
-        device = VirtualDevice('host', login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False,
-                               banner='Welcome\nLast login: Mon Oct 26 10:00:00 2026 from 192.0.2.1\n')
+        device = VirtualDevice(
+            'host',
+            login_type=VirtualDevice.LOGIN_TYPE_NONE,
+            strict=False,
+            banner='Welcome\nLast login: Mon Oct 26 10:00:00 2026 from 192.0.2.1\n',
+        )
         device.set_prompt('user@host:~$ ')
         device.add_command('uname', 'Linux')
         conn = Dummy(device=device)
@@ -171,7 +178,6 @@ class DriverTest(unittest.TestCase):
 
 
 class ConnectRateLimitTest(unittest.TestCase):
-
     def enforce(self, host, starts=None):
         conn = SSH2(connect_rate_limit=60)  # 1.1 s spacing per host
         conn.host = host
@@ -185,12 +191,12 @@ class ConnectRateLimitTest(unittest.TestCase):
         self.enforce(host + '-a')
         waiting = threading.Thread(target=self.enforce, args=(host + '-a',))
         waiting.start()
-        time.sleep(.05)
+        time.sleep(0.05)
         start = time.monotonic()
         self.enforce(host + '-b')
         elapsed = time.monotonic() - start
         waiting.join()
-        self.assertLess(elapsed, .5)
+        self.assertLess(elapsed, 0.5)
 
     @unittest.expectedFailure  # concurrent connects to one host may start together
     def testConcurrentConnectsToOneHostAreSpaced(self):
@@ -208,5 +214,7 @@ class ConnectRateLimitTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

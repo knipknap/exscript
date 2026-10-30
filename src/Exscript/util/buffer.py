@@ -23,13 +23,13 @@
 """
 A buffer object.
 """
+
 from io import StringIO
 
 from .cast import to_regexs
 
 
 class MonitoredBuffer:
-
     """
     A specialized string buffer that allows for monitoring
     the content using regular expression-triggered callbacks.
@@ -45,7 +45,7 @@ class MonitoredBuffer:
         :param io: A file-like object that is used for storing the data.
         """
         if io is None:
-            self.io = StringIO(u'')
+            self.io = StringIO('')
         else:
             self.io = io
         self.monitors = []

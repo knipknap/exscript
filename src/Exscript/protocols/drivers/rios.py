@@ -23,6 +23,7 @@
 """
 A driver for Riverbed RIOS.
 """
+
 import re
 
 from .driver import Driver
@@ -38,7 +39,6 @@ _error_re = [
 
 
 class RIOSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'rios')
         self.user_re = _user_re

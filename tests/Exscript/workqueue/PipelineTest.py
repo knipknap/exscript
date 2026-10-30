@@ -123,7 +123,6 @@ class PipelineTest(unittest.TestCase):
         thread_completed = Value('i', 0)
 
         class deadlock_until_stop(Thread):
-
             def run(inner_self):
                 self.assertEqual(next(self.pipeline), item1)
                 self.assertEqual(next(self.pipeline), None)  # ***
@@ -156,7 +155,6 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.pause()
 
         class complete_all(Thread):
-
             def run(inner_self):
                 while True:
                     task = next(self.pipeline)
@@ -168,7 +166,7 @@ class PipelineTest(unittest.TestCase):
         thread.daemon = True
         thread.start()
 
-        time.sleep(.2)  # hack: wait long enough for the task to complete.
+        time.sleep(0.2)  # hack: wait long enough for the task to complete.
         self.assertEqual(len(self.pipeline), 1)  # should not be completed.
         self.pipeline.unpause()
         self.pipeline.wait_all()  # now it should not deadlock.
@@ -210,10 +208,10 @@ class PipelineTest(unittest.TestCase):
         item = next(self.pipeline)
 
         class complete_item(Thread):
-
             def run(inner_self):
-                time.sleep(.1)
+                time.sleep(0.1)
                 self.pipeline.task_done(item)
+
         thread = complete_item()
         thread.daemon = True
         thread.start()
@@ -235,10 +233,10 @@ class PipelineTest(unittest.TestCase):
         item = next(self.pipeline)
 
         class complete_item(Thread):
-
             def run(inner_self):
-                time.sleep(.1)
+                time.sleep(0.1)
                 self.pipeline.task_done(item)
+
         thread = complete_item()
         thread.daemon = True
         thread.start()
@@ -253,13 +251,13 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.append(item2)
 
         class complete_all(Thread):
-
             def run(inner_self):
                 while True:
                     task = next(self.pipeline)
                     if task is None:
                         break
                     self.pipeline.task_done(task)
+
         thread = complete_all()
         thread.daemon = True
         thread.start()
@@ -373,5 +371,7 @@ class PipelineTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(PipelineTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

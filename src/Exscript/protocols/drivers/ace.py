@@ -23,6 +23,7 @@
 """
 A driver for Cisco Application Control Engine (ACE).
 """
+
 import re
 
 from .driver import Driver
@@ -40,7 +41,6 @@ _error_re = [
 
 
 class ACEDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'ace')
         self.user_re = _user_re

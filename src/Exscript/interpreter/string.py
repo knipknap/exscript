@@ -30,17 +30,17 @@ varstring_re = re.compile(r'(\\?)\$([\w_]*)')
 
 escaped_grammar = [
     # Unicode range: 0x00000000 to 0x0010FFFF
-    ('escaped_unicode_32bit',     r'\\U[0-9a-fA-F]{8}'),
-    ('escaped_unicode_16bit',     r'\\u[0-9a-fA-F]{4}'),
-    ('escaped_hex',               r'\\x[0-9a-fA-F]{2}'),
-    ('escaped_octal',             r'\\[0-7]{3}'),
+    ('escaped_unicode_32bit', r'\\U[0-9a-fA-F]{8}'),
+    ('escaped_unicode_16bit', r'\\u[0-9a-fA-F]{4}'),
+    ('escaped_hex', r'\\x[0-9a-fA-F]{2}'),
+    ('escaped_octal', r'\\[0-7]{3}'),
     ('escaped_extended_controls', r'\\[0abefv]'),
-    ('escaped_common_controls',   r'\\[nrt]'),
+    ('escaped_common_controls', r'\\[nrt]'),
 ]
 
 grammar = escaped_grammar + [
-    ('escaped_data',        r'\\.'),
-    ('newline',             r'[\r\n]'),
+    ('escaped_data', r'\\.'),
+    ('newline', r'[\r\n]'),
 ]
 
 grammar_c = []
@@ -49,7 +49,6 @@ for thetype, regex in grammar:
 
 
 class String(Token):
-
     def __init__(self, lexer, parser, parent, purpose='string'):
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
@@ -59,7 +58,7 @@ class String(Token):
         data_re = re.compile(r'[^\r\n\\' + escaped_delimiter + ']+')
         delimiter_re = re.compile(escaped_delimiter)
         grammar_with_delim = grammar_c[:]
-        grammar_with_delim.append((purpose + '_data',      data_re))
+        grammar_with_delim.append((purpose + '_data', data_re))
         grammar_with_delim.append((purpose + '_delimiter', delimiter_re))
         lexer.set_grammar(grammar_with_delim)
 
@@ -70,15 +69,17 @@ class String(Token):
             if lexer.current_is(purpose + '_data'):
                 self.string += lexer.token()[1]
                 next(lexer)
-            elif lexer.current_is([
-                'escaped_unicode_32bit',
-                'escaped_unicode_16bit',
-                'escaped_hex',
-                'escaped_octal',
-                'escaped_extended_controls',
-                'escaped_common_controls',
-                'escaped_data',
-            ]):
+            elif lexer.current_is(
+                [
+                    'escaped_unicode_32bit',
+                    'escaped_unicode_16bit',
+                    'escaped_hex',
+                    'escaped_octal',
+                    'escaped_extended_controls',
+                    'escaped_common_controls',
+                    'escaped_data',
+                ]
+            ):
                 self.string += self.eval_escape(*lexer.token())
                 next(lexer)
             elif lexer.next_if(purpose + '_delimiter'):

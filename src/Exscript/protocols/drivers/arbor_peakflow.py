@@ -23,6 +23,7 @@
 """
 A driver for Peakflow SP by Arbor Networks.
 """
+
 import re
 
 from .driver import Driver
@@ -30,7 +31,7 @@ from .driver import Driver
 _user_re = [re.compile(r'(user|login): $', re.I)]
 _password_re = [re.compile(r'Password: $')]
 _prompt_re = [
-    re.compile(r'(?:\r\n|[\r\n])[\-\w+\._]+@[\-\w+\._~]+:(?:/\w*)+[#%] $'), # arbos prompt
+    re.compile(r'(?:\r\n|[\r\n])[\-\w+\._]+@[\-\w+\._~]+:(?:/\w*)+[#%] $'),  # arbos prompt
     re.compile(r'Exit anyway\? \[.\] $'),  # confirm on exit
     re.compile(r'(?:\r\n|[\r\n])DIAG\>'),  # up to 8.0 shell
     re.compile(r'[\-\w+\._~()]+:.*#'),  # 8.3 shell
@@ -39,7 +40,6 @@ _os_re = re.compile(r'\b(arbo[rs]|peakflow)\b', re.I)
 
 
 class ArborPeakflowDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'arbor_peakflow')
         self.user_re = _user_re

@@ -23,6 +23,7 @@
 """
 A driver for HP ProCurve switches.
 """
+
 import re
 
 from .driver import Driver
@@ -43,7 +44,6 @@ _clean_res_re = [
 
 
 class HPProCurveDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'hp_pro_curve')
         self.user_re = _user_re

@@ -23,18 +23,21 @@
 """
 Send messages to a syslog server.
 """
+
 import os
 import socket
 import sys
 import syslog as _syslog
 
 
-def netlog(message,
-           source=None,
-           host='localhost',
-           port=514,
-           priority=_syslog.LOG_DEBUG,
-           facility=_syslog.LOG_USER):
+def netlog(
+    message,
+    source=None,
+    host='localhost',
+    port=514,
+    priority=_syslog.LOG_DEBUG,
+    facility=_syslog.LOG_USER,
+):
     """
     Python's built in syslog module does not support networking, so
     this is the alternative.

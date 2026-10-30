@@ -23,6 +23,7 @@
 """
 Representing a device to connect with.
 """
+
 from .account import Account
 from .util.cast import to_list
 from .util.ipv4 import clean_ip, is_ip
@@ -30,17 +31,11 @@ from .util.url import Url
 
 
 class Host:
-
     """
     Represents a device on which to open a connection.
     """
-    __slots__ = ('protocol',
-                 'vars',
-                 'account',
-                 'name',
-                 'address',
-                 'tcp_port',
-                 'options')
+
+    __slots__ = ('protocol', 'vars', 'account', 'name', 'address', 'tcp_port', 'options')
 
     def __init__(self, uri, default_protocol='ssh'):
         """
@@ -54,7 +49,7 @@ class Host:
         :param default_protocol: The protocol name.
         """
         self.protocol = default_protocol
-        self.vars = None    # To save memory, do not init with a dict.
+        self.vars = None  # To save memory, do not init with a dict.
         self.account = None
         self.name = None
         self.address = None
@@ -98,9 +93,7 @@ class Host:
         self.set_name(name)
         self.set_address(name)
 
-        if uri.username is not None \
-           or uri.password1 is not None \
-           or uri.password2:
+        if uri.username is not None or uri.password1 is not None or uri.password2:
             account = Account(uri.username, uri.password1, uri.password2)
             self.set_account(account)
 
@@ -120,9 +113,11 @@ class Host:
         url.protocol = self.get_protocol()
         url.hostname = self.get_address()
         url.port = self.get_tcp_port()
-        url.vars = dict((k, to_list(v))
-                        for (k, v) in list(self.get_all().items())
-                        if isinstance(v, str) or isinstance(v, list))
+        url.vars = dict(
+            (k, to_list(v))
+            for (k, v) in list(self.get_all().items())
+            if isinstance(v, str) or isinstance(v, list)
+        )
 
         if self.account:
             url.username = self.account.get_name()
@@ -144,10 +139,12 @@ class Host:
         :rtype:  dict
         :return: The resulting dictionary.
         """
-        return {'hostname': self.get_name(),
-                'address':  self.get_address(),
-                'protocol': self.get_protocol(),
-                'port':     self.get_tcp_port()}
+        return {
+            'hostname': self.get_name(),
+            'address': self.get_address(),
+            'protocol': self.get_protocol(),
+            'port': self.get_tcp_port(),
+        }
 
     def set_name(self, name):
         """

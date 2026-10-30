@@ -23,43 +23,43 @@
 
 
 class LexerException(Exception):
-
     """
     Fallback exception that is called when the error type is not known.
     """
+
     pass
 
 
 class LexerWarning(UserWarning):
-
     """
     Base class for minor warnings.
     """
+
     pass
 
 
 class CompileError(LexerException):
-
     """
     Raised during the compilation procedure if the template contained
     a syntax error.
     """
+
     pass
 
 
 class CompileWarning(LexerWarning):
-
     """
     Raised during the compilation procedure if the template contained
     a syntax error, that does not prevent compilation but should be noted.
     """
+
     pass
 
 
 class ExecuteError(LexerException):
-
     """
     Raised during the execution of the compiled template whenever any
     error occurs.
     """
+
     pass

@@ -23,6 +23,7 @@
 """
 Manages user accounts.
 """
+
 import multiprocessing
 from collections import defaultdict, deque
 
@@ -32,17 +33,11 @@ from .util.impl import Context
 
 
 class Account:
-
     """
     This class represents a user account.
     """
 
-    def __init__(self,
-                 name,
-                 password='',
-                 password2=None,
-                 key=None,
-                 needs_lock=True):
+    def __init__(self, name, password='', password2=None, key=None, needs_lock=True):
         """
         Constructor.
 
@@ -205,7 +200,6 @@ class Account:
 
 
 class AccountProxy:
-
     """
     An object that has a 1:1 relation to an account object in another
     process.
@@ -306,11 +300,9 @@ class AccountProxy:
         if response is None:
             return False
 
-        self.account_hash, \
-            self.user, \
-            self.password, \
-            self.authorization_password, \
-            self.key = response
+        self.account_hash, self.user, self.password, self.authorization_password, self.key = (
+            response
+        )
         return True
 
     def release(self):
@@ -364,7 +356,6 @@ class AccountProxy:
 
 
 class LoggerProxy:
-
     """
     An object that has a 1:1 relation to a Logger object in another
     process.
@@ -398,7 +389,6 @@ class LoggerProxy:
 
 
 class AccountPool:
-
     """
     This class manages a collection of available accounts.
     """
@@ -574,7 +564,6 @@ class AccountPool:
 
 
 class AccountManager:
-
     """
     Keeps track of available user accounts and assigns them to the
     worker threads.

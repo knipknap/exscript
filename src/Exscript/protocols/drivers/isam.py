@@ -23,6 +23,7 @@
 """
 A driver for devices running ISAM (runs on Alcatel ISAM).
 """
+
 import re
 
 from .driver import Driver
@@ -41,7 +42,6 @@ _isam_re = re.compile(
 
 
 class IsamDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'isam')
         self.user_re = _user_re

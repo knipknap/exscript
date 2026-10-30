@@ -23,6 +23,7 @@
 """
 A driver for Cisco IOS (not IOS XR).
 """
+
 import re
 
 from ..exception import InvalidCommandException
@@ -42,7 +43,6 @@ _error_re = [
 
 
 class IOSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'ios')
         self.user_re = _user_re

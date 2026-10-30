@@ -11,21 +11,16 @@ class AccountTest(unittest.TestCase):
         self.password1 = 'test1'
         self.password2 = 'test2'
         self.key = PrivateKey()
-        self.account = Account(self.user,
-                               self.password1,
-                               self.password2,
-                               self.key)
+        self.account = Account(self.user, self.password1, self.password2, self.key)
 
     def testConstructor(self):
         key = PrivateKey()
         account = Account(self.user, self.password1, key=key)
         self.assertEqual(account.get_key(), key)
-        self.assertEqual(account.get_password(),
-                         account.get_authorization_password())
+        self.assertEqual(account.get_password(), account.get_authorization_password())
 
         account = Account(self.user, self.password1, self.password2)
-        self.assertNotEqual(account.get_password(),
-                            account.get_authorization_password())
+        self.assertNotEqual(account.get_password(), account.get_authorization_password())
 
     def testContext(self):
         with self.account as account:
@@ -72,14 +67,12 @@ class AccountTest(unittest.TestCase):
         self.assertEqual(self.password1, self.account.get_password())
 
     def testSetAuthorizationPassword(self):
-        self.assertEqual(self.password2,
-                         self.account.get_authorization_password())
+        self.assertEqual(self.password2, self.account.get_authorization_password())
         self.account.set_authorization_password('foo')
         self.assertEqual('foo', self.account.get_authorization_password())
 
     def testGetAuthorizationPassword(self):
-        self.assertEqual(self.password2,
-                         self.account.get_authorization_password())
+        self.assertEqual(self.password2, self.account.get_authorization_password())
 
     def testGetKey(self):
         self.assertEqual(self.key, self.account.get_key())
@@ -87,5 +80,7 @@ class AccountTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

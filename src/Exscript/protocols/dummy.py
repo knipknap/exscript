@@ -34,7 +34,6 @@ _logger.addHandler(logging.NullHandler())
 
 
 class Dummy(Protocol):
-
     """
     This protocol adapter does not open a network connection, but talks to
     a :class:`Exscript.emulators.VirtualDevice` internally.

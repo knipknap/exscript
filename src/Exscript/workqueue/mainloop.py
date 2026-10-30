@@ -35,7 +35,6 @@ multiprocessing.process._cleanup = lambda: None  # type: ignore[attr-defined]
 
 
 class MainLoop(threading.Thread):
-
     def __init__(self, collection, job_cls):
         threading.Thread.__init__(self)
         self._logger = _logger
@@ -67,6 +66,7 @@ class MainLoop(threading.Thread):
             job = Job(function, name, times, data)
             job.id = queue.append(job, name)
             return job.id
+
         return self.collection.with_lock(conditional_append)
 
     def priority_enqueue(self, function, name, force_start, times, data):
@@ -74,12 +74,7 @@ class MainLoop(threading.Thread):
         job.id = self.collection.appendleft(job, name, force=force_start)
         return job.id
 
-    def priority_enqueue_or_raise(self,
-                                  function,
-                                  name,
-                                  force_start,
-                                  times,
-                                  data):
+    def priority_enqueue_or_raise(self, function, name, force_start, times, data):
         def conditional_append(queue):
             job = queue.get_from_name(name)
             if job is None:
@@ -88,6 +83,7 @@ class MainLoop(threading.Thread):
                 return job.id
             queue.prioritize(job, force=force_start)
             return None
+
         return self.collection.with_lock(conditional_append)
 
     def wait_for(self, job_id):

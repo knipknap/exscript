@@ -21,11 +21,11 @@ from Exscript.protocols.protocol import Protocol
 
 
 class ProtocolTest(unittest.TestCase):
-
     """
     Since protocols.Protocol is abstract, this test is only a base class
     for other protocols. It does not do anything fancy on its own.
     """
+
     CORRELATE = Protocol
 
     def setUp(self):
@@ -40,7 +40,7 @@ class ProtocolTest(unittest.TestCase):
         self.createDaemon()
         if self.daemon is not None:
             self.daemon.start()
-            time.sleep(.2)
+            time.sleep(0.2)
             # LIFO cleanup order!
             self.addCleanup(self.daemon.join)
             self.addCleanup(self.daemon.exit)
@@ -57,11 +57,10 @@ class ProtocolTest(unittest.TestCase):
         self.prompt = self.hostname + '> '
         self.device = VirtualDevice(self.hostname, echo=True)
         ls_response = '-rw-r--r--  1 sab  nmc    1628 Aug 18 10:02 file'
-        self.device.add_command('ls',   ls_response)
-        self.device.add_command('df',   'foobar')
+        self.device.add_command('ls', ls_response)
+        self.device.add_command('df', 'foobar')
         self.device.add_command('exit', '')
-        self.device.add_command('this-command-causes-an-error',
-                                '\ncommand not found')
+        self.device.add_command('this-command-causes-an-error', '\ncommand not found')
 
     def createDaemon(self):
         pass
@@ -99,35 +98,39 @@ class ProtocolTest(unittest.TestCase):
         return None
 
     def testPrompts(self):
-        prompts = ('[sam123@home ~]$',
-                   '[MyHost-A1]',
-                   '<MyHost-A1>',
-                   'sam@knip:~/Code/exscript$',
-                   'sam@MyHost-X123>',
-                   'sam@MyHost-X123#',
-                   'MyHost-ABC-CDE123>',
-                   'MyHost-A1#',
-                   'S-ABC#',
-                   '0123456-1-1-abc#',
-                   '0123456-1-1-a>',
-                   'MyHost-A1(config)#',
-                   'MyHost-A1(config)>',
-                   'RP/0/RP0/CPU0:A-BC2#',
-                   'FA/0/1/2/3>',
-                   'FA/0/1/2/3(config)>',
-                   'FA/0/1/2/3(config)#',
-                   'ec-c3-c27s99(su)->',
-                   'foobar:0>',
-                   'admin@s-x-a6.a.bc.de.fg:/# ',
-                   'admin@s-x-a6.a.bc.de.fg:/% ')
-        notprompts = ('one two',
-                      ' [MyHost-A1]',
-                      '[edit]\r',
-                      '[edit]\n',
-                      '[edit foo]\r',
-                      '[edit foo]\n',
-                      '[edit foo]\r\n',
-                      '[edit one two]')
+        prompts = (
+            '[sam123@home ~]$',
+            '[MyHost-A1]',
+            '<MyHost-A1>',
+            'sam@knip:~/Code/exscript$',
+            'sam@MyHost-X123>',
+            'sam@MyHost-X123#',
+            'MyHost-ABC-CDE123>',
+            'MyHost-A1#',
+            'S-ABC#',
+            '0123456-1-1-abc#',
+            '0123456-1-1-a>',
+            'MyHost-A1(config)#',
+            'MyHost-A1(config)>',
+            'RP/0/RP0/CPU0:A-BC2#',
+            'FA/0/1/2/3>',
+            'FA/0/1/2/3(config)>',
+            'FA/0/1/2/3(config)#',
+            'ec-c3-c27s99(su)->',
+            'foobar:0>',
+            'admin@s-x-a6.a.bc.de.fg:/# ',
+            'admin@s-x-a6.a.bc.de.fg:/% ',
+        )
+        notprompts = (
+            'one two',
+            ' [MyHost-A1]',
+            '[edit]\r',
+            '[edit]\n',
+            '[edit foo]\r',
+            '[edit foo]\n',
+            '[edit foo]\r\n',
+            '[edit one two]',
+        )
         prompt_re = self.protocol.get_prompt()
         for prompt in prompts:
             if not self._trymatch(prompt_re, '\n' + prompt):
@@ -240,36 +243,37 @@ class ProtocolTest(unittest.TestCase):
         self.assertEqual(regex, initial_regex)
 
     def testSetUsernamePrompt(self):
-        self._test_prompt_setter(self.protocol.get_username_prompt,
-                                 self.protocol.set_username_prompt)
+        self._test_prompt_setter(
+            self.protocol.get_username_prompt, self.protocol.set_username_prompt
+        )
 
     def testGetUsernamePrompt(self):
         pass  # Already tested in testSetUsernamePrompt()
 
     def testSetPasswordPrompt(self):
-        self._test_prompt_setter(self.protocol.get_password_prompt,
-                                 self.protocol.set_password_prompt)
+        self._test_prompt_setter(
+            self.protocol.get_password_prompt, self.protocol.set_password_prompt
+        )
 
     def testGetPasswordPrompt(self):
         pass  # Already tested in testSetPasswordPrompt()
 
     def testSetPrompt(self):
-        self._test_prompt_setter(self.protocol.get_prompt,
-                                 self.protocol.set_prompt)
+        self._test_prompt_setter(self.protocol.get_prompt, self.protocol.set_prompt)
 
     def testGetPrompt(self):
         pass  # Already tested in testSetPrompt()
 
     def testSetErrorPrompt(self):
-        self._test_prompt_setter(self.protocol.get_error_prompt,
-                                 self.protocol.set_error_prompt)
+        self._test_prompt_setter(self.protocol.get_error_prompt, self.protocol.set_error_prompt)
 
     def testGetErrorPrompt(self):
         pass  # Already tested in testSetErrorPrompt()
 
     def testSetLoginErrorPrompt(self):
-        self._test_prompt_setter(self.protocol.get_login_error_prompt,
-                                 self.protocol.set_login_error_prompt)
+        self._test_prompt_setter(
+            self.protocol.get_login_error_prompt, self.protocol.set_login_error_prompt
+        )
 
     def testGetLoginErrorPrompt(self):
         pass  # Already tested in testSetLoginErrorPrompt()
@@ -303,9 +307,7 @@ class ProtocolTest(unittest.TestCase):
     def testLogin(self):
         # Test can not work on the abstract base.
         if self.protocol.__class__ == Protocol:
-            self.assertRaises(Exception,
-                              self.protocol.login,
-                              self.account)
+            self.assertRaises(Exception, self.protocol.login, self.account)
             return
         # Password login.
         self.doLogin(flush=False)
@@ -332,9 +334,7 @@ class ProtocolTest(unittest.TestCase):
     def testAuthenticate(self):
         # Test can not work on the abstract base.
         if self.protocol.__class__ == Protocol:
-            self.assertRaises(Exception,
-                              self.protocol.authenticate,
-                              self.account)
+            self.assertRaises(Exception, self.protocol.authenticate, self.account)
             return
         self.doConnect()
 
@@ -381,9 +381,7 @@ class ProtocolTest(unittest.TestCase):
     def testAppAuthenticate(self):
         # Test can not work on the abstract base.
         if self.protocol.__class__ == Protocol:
-            self.assertRaises(Exception,
-                              self.protocol.app_authenticate,
-                              self.account)
+            self.assertRaises(Exception, self.protocol.app_authenticate, self.account)
             return
         self.testProtocolAuthenticate()
         self.doAppAuthenticate(flush=False)
@@ -574,9 +572,9 @@ class ProtocolTest(unittest.TestCase):
         # Make sure that we raise an error if the device responds
         # with something that matches any of the error prompts.
         self.protocol.set_error_prompt('.')
-        self.assertRaises(InvalidCommandException,
-                          self.protocol.execute,
-                          'this-command-causes-an-error')
+        self.assertRaises(
+            InvalidCommandException, self.protocol.execute, 'this-command-causes-an-error'
+        )
 
     def testWaitfor(self):
         # Test can not work on the abstract base.
@@ -619,15 +617,16 @@ class ProtocolTest(unittest.TestCase):
         def monitor_cb(thedata, *args, **kwargs):
             thedata['args'] = args
             thedata['kwargs'] = kwargs
+
         data = {}
         self.protocol.add_monitor('abc', partial(monitor_cb, data))
 
         # Simulate some non-matching data.
-        self.protocol._buffer.append(u'aaa')
+        self.protocol._buffer.append('aaa')
         self.assertEqual(data, {})
 
         # Simulate some matching data.
-        self.protocol._buffer.append(u'abc')
+        self.protocol._buffer.append('abc')
         self.assertEqual(len(data.get('args')), 3)
         self.assertEqual(data.get('args')[0], self.protocol)
         self.assertEqual(data.get('args')[1], 0)
@@ -658,9 +657,7 @@ class ProtocolTest(unittest.TestCase):
         self.doLogin()
         self.protocol.data_received_event.connect(self._cancel_cb)
         self.protocol.send('ls\r')
-        self.assertRaises(ExpectCancelledException,
-                          self.protocol.expect,
-                          'notgoingtohappen')
+        self.assertRaises(ExpectCancelledException, self.protocol.expect, 'notgoingtohappen')
 
     def testInteract(self):
         # Test can not work on the abstract base.
@@ -675,18 +672,18 @@ class ProtocolTest(unittest.TestCase):
 
         # Set up initial device state including OS guesser to verify capture/restore.
         # Simulate guesser state that would have been built up during a session.
-        self.protocol._os_guesser._info            = {'os': ('ios', 80)}
-        self.protocol._os_guesser._auth_buffer     = 'banner data'
+        self.protocol._os_guesser._info = {'os': ('ios', 80)}
+        self.protocol._os_guesser._auth_buffer = 'banner data'
         self.protocol._os_guesser._protocol_buffer = 'SSH-2.0-OpenSSH'
         self.protocol._os_guesser._response_buffer = 'router#'
         self.protocol._auto_driver = drivers.driver_map[self.protocol.guess_os()]
-        self.protocol._app_authenticated     = True
-        self.protocol._app_authorized        = True
-        self.protocol._last_account          = self.account
-        self.protocol._manual_prompt_re      = [re.compile(r'router#')]
-        self.protocol._manual_error_re       = [re.compile(r'% Error')]
-        self.protocol._manual_user_re        = [re.compile(r'Username:')]
-        self.protocol._manual_password_re    = [re.compile(r'Password:')]
+        self.protocol._app_authenticated = True
+        self.protocol._app_authorized = True
+        self.protocol._last_account = self.account
+        self.protocol._manual_prompt_re = [re.compile(r'router#')]
+        self.protocol._manual_error_re = [re.compile(r'% Error')]
+        self.protocol._manual_user_re = [re.compile(r'Username:')]
+        self.protocol._manual_password_re = [re.compile(r'Password:')]
         self.protocol._manual_login_error_re = [re.compile(r'Login failed')]
         self.protocol.set_driver('junos')
 
@@ -737,9 +734,9 @@ class ProtocolTest(unittest.TestCase):
 
         # -- Nested switch: local shell (reset_auth=False, no driver param) --
         hop_account = Account('hop_user', password='hop_pass')
-        self.protocol._app_authenticated = True   # simulate auth on the hop
-        self.protocol._app_authorized    = True
-        self.protocol._last_account      = hop_account
+        self.protocol._app_authenticated = True  # simulate auth on the hop
+        self.protocol._app_authorized = True
+        self.protocol._last_account = hop_account
         self.protocol.switch_device_context(reset_auth=False)
         self.assertEqual(len(self.protocol._device_context_stack), 2)
 
@@ -875,8 +872,8 @@ class ProtocolTest(unittest.TestCase):
 
         # close() resets session state; response and logfile path are preserved.
         self.assertFalse(self.protocol._connected)
-        self.assertIsNone(self.protocol._log)           # FD closed by _reset()
-        self.assertEqual(logpath, self.protocol.logfile) # path survives close
+        self.assertIsNone(self.protocol._log)  # FD closed by _reset()
+        self.assertEqual(logpath, self.protocol.logfile)  # path survives close
         self.assertEqual(0, self.protocol._buffer.size())
         self.assertEqual('unknown', self.protocol.guess_os())
         self.assertFalse(self.protocol.is_app_authenticated())
@@ -912,5 +909,7 @@ class ProtocolTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ProtocolTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

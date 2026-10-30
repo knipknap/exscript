@@ -23,6 +23,7 @@
 """
 A driver for devices running VRP (by Huawei).
 """
+
 import re
 
 from .driver import Driver
@@ -37,7 +38,6 @@ _huawei_re = [
 
 
 class VRPDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'vrp')
         self.user_re = _user_re

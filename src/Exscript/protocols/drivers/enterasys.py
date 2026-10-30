@@ -23,6 +23,7 @@
 """
 A driver for Enterasys devices.
 """
+
 import re
 
 from .driver import Driver
@@ -34,7 +35,6 @@ _enterasys_re = re.compile(r'\benterasys\b', re.I)
 
 
 class EnterasysDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'enterasys')
         self.user_re = _user_re

@@ -26,7 +26,6 @@ from uuid import uuid4
 
 
 class Pipeline:
-
     """
     A collection that is similar to Python's Queue object, except
     it also tracks items that are currently sleeping or in progress.
@@ -284,9 +283,7 @@ class Pipeline:
                     continue
 
                 # Wait until enough slots are available.
-                if len(self.working) - \
-                   len(self.sleeping) - \
-                   len(self.force) >= self.max_working:
+                if len(self.working) - len(self.sleeping) - len(self.force) >= self.max_working:
                     self.condition.wait()
                     continue
 

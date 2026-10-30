@@ -23,6 +23,7 @@
 """
 A driver for Aruba controllers.
 """
+
 import re
 
 from .driver import Driver
@@ -40,7 +41,6 @@ _error_re = [
 
 
 class ArubaDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'aruba')
         self.user_re = _user_re

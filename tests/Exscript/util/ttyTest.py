@@ -60,7 +60,7 @@ class ttyTest(unittest.TestCase):
             # (1111, 1111) if the LINES and COLUMNS env variables are set,
             # so there is no way to tests whether stty was used or the env
             # vars.
-            #self.assertNotEqual(get_terminal_size(), (1111, 1111))
+            # self.assertNotEqual(get_terminal_size(), (1111, 1111))
             self.assertNotEqual(get_terminal_size(10, 10), (25, 80))
         except OSError:
             pass  # "stty" not found.
@@ -69,13 +69,15 @@ class ttyTest(unittest.TestCase):
         os.environ['PATH'] = ''
         self._unredirect()
         # Same travis problem as above...
-        #self.assertNotEqual(get_terminal_size(), (1111, 1111))
-        #self.assertNotEqual(get_terminal_size(10, 10), (1111, 1111))
+        # self.assertNotEqual(get_terminal_size(), (1111, 1111))
+        # self.assertNotEqual(get_terminal_size(10, 10), (1111, 1111))
         self.assertNotEqual(get_terminal_size(10, 10), (25, 80))
         os.environ['PATH'] = oldpath
 
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ttyTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

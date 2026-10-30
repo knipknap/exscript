@@ -23,6 +23,7 @@
 """
 Shorthands for regular expression matching.
 """
+
 import re
 
 from ..protocols import Protocol

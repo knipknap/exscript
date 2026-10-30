@@ -23,6 +23,7 @@
 """
 A driver for Cisco IOS XR.
 """
+
 import re
 
 from .driver import Driver
@@ -36,7 +37,6 @@ _netconf_caps_re = [re.compile(r"Cisco-IOS-XR", re.I)]
 
 
 class IOSXRDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'ios_xr')
         self.user_re = _user_re

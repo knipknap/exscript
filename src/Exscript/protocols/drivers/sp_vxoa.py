@@ -23,6 +23,7 @@
 """
 A driver for devices running VXOA (by Silver Peak).
 """
+
 import re
 
 from .driver import Driver
@@ -36,7 +37,6 @@ _auth_banner_re = re.compile(r'Last login:\s')
 
 
 class SilverPeakVXOADriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'sp_vxoa')
         self.user_re = _user_re

@@ -25,7 +25,7 @@ import re
 from .string import String
 
 modifier_grammar = (
-    ('modifier',     r'[a-zA-Z]'),
+    ('modifier', r'[a-zA-Z]'),
     ('invalid_char', r'.'),  # used to implicitly exit the loop
 )
 
@@ -35,7 +35,6 @@ for thetype, regex in modifier_grammar:
 
 
 class Regex(String):
-
     def __init__(self, lexer, parser, parent):
         # String parser collects the regex.
         String.__init__(self, lexer, parser, parent, purpose='regex')

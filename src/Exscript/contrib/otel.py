@@ -33,6 +33,7 @@ Usage::
 
     ExscriptInstrumentor().instrument()
 """
+
 from __future__ import annotations
 
 import functools
@@ -50,7 +51,7 @@ from Exscript.protocols.protocol import Protocol
 # TODO (Netconf): Check whether Netconf is now similar enough to Protocol.
 try:
     from Exscript.protocols.netconf import Netconf
-except ImportError:          # ncclient may not be installed
+except ImportError:  # ncclient may not be installed
     Netconf = None  # type: ignore[misc,assignment]
 
 from Exscript.version import __version__ as _exscript_version
@@ -101,19 +102,19 @@ def _get_protocol_attributes(proto: Protocol) -> dict:
         pass
     try:
         prompt = proto.get_prompt()
-        attrs["protocol.prompt"] = [
-            getattr(p, "pattern", str(p)) for p in prompt
-        ] if isinstance(prompt, (list, tuple)) else getattr(
-            prompt, "pattern", str(prompt)
+        attrs["protocol.prompt"] = (
+            [getattr(p, "pattern", str(p)) for p in prompt]
+            if isinstance(prompt, (list, tuple))
+            else getattr(prompt, "pattern", str(prompt))
         )
     except Exception:  # noqa: BLE001, S110
         pass
     try:
         err_prompt = proto.get_error_prompt()
-        attrs["protocol.error_prompt"] = [
-            getattr(p, "pattern", str(p)) for p in err_prompt
-        ] if isinstance(err_prompt, (list, tuple)) else getattr(
-            err_prompt, "pattern", str(err_prompt)
+        attrs["protocol.error_prompt"] = (
+            [getattr(p, "pattern", str(p)) for p in err_prompt]
+            if isinstance(err_prompt, (list, tuple))
+            else getattr(err_prompt, "pattern", str(err_prompt))
         )
     except Exception:  # noqa: BLE001, S110
         pass
@@ -192,9 +193,7 @@ def _make_wrapper(
 
         # --- connect uses a long-lived span (ended in close) ---
         if action == "connect":
-            span = tracer.start_span(
-                name, kind=SpanKind.CLIENT, attributes=span_attributes
-            )
+            span = tracer.start_span(name, kind=SpanKind.CLIENT, attributes=span_attributes)
             exception = None
             if callable(request_hook):
                 request_hook(span, self)
@@ -287,8 +286,12 @@ def _instrument_class(
         if getattr(original, _APPLIED_ATTR, False):
             continue  # already instrumented
         wrapped = _make_wrapper(
-            original, method_name, tracer, duration_histogram,
-            request_hook, response_hook,
+            original,
+            method_name,
+            tracer,
+            duration_histogram,
+            request_hook,
+            response_hook,
         )
         setattr(cls, method_name, wrapped)
 
@@ -324,7 +327,9 @@ class ExscriptInstrumentor(BaseInstrumentor):
     def _instrument(self, **kwargs):
         tracer_provider = kwargs.get("tracer_provider")
         tracer = get_tracer(
-            __name__, _exscript_version, tracer_provider,
+            __name__,
+            _exscript_version,
+            tracer_provider,
         )
         meter_provider = kwargs.get("meter_provider")
         meter = get_meter(__name__, _exscript_version, meter_provider)
@@ -337,11 +342,19 @@ class ExscriptInstrumentor(BaseInstrumentor):
         response_hook = kwargs.get("response_hook")
 
         _instrument_class(
-            Protocol, tracer, duration_histogram, request_hook, response_hook,
+            Protocol,
+            tracer,
+            duration_histogram,
+            request_hook,
+            response_hook,
         )
         if Netconf is not None:
             _instrument_class(
-                Netconf, tracer, duration_histogram, request_hook, response_hook,
+                Netconf,
+                tracer,
+                duration_histogram,
+                request_hook,
+                response_hook,
             )
 
     def _uninstrument(self, **kwargs):

@@ -59,17 +59,19 @@ keymap = {'rsa': paramiko.RSAKey, 'ecdsa': paramiko.ECDSAKey, 'ed25519': paramik
 for key in keymap:
     PrivateKey.keytypes.add(key)
 
-auth_types = {'publickey': ('_paramiko_auth_agent', '_paramiko_auth_autokey'),
-              'keyboard-interactive': ('_paramiko_auth_interactive',),
-              'password': ('_paramiko_auth_password',)}
+auth_types = {
+    'publickey': ('_paramiko_auth_agent', '_paramiko_auth_autokey'),
+    'keyboard-interactive': ('_paramiko_auth_interactive',),
+    'password': ('_paramiko_auth_password',),
+}
 
 
 class SSH2(Protocol):
-
     """
     The SSH2 protocol adapter, based on Paramiko.
     """
-    KEEPALIVE_INTERVAL = 2.5 * 60    # Two and a half minutes
+
+    KEEPALIVE_INTERVAL = 2.5 * 60  # Two and a half minutes
 
     def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
@@ -212,6 +214,7 @@ class SSH2(Protocol):
     def _paramiko_auth_interactive(self, username, password=None):
         if password is None:
             return
+
         def handler(title, instructions, prompt_list):
             if not prompt_list:
                 return []
@@ -237,6 +240,7 @@ class SSH2(Protocol):
                         response.append(password)
                         break
             return response
+
         self._transport.auth_interactive(username, handler)
 
     def _paramiko_auth_password(self, username, password):
@@ -248,8 +252,7 @@ class SSH2(Protocol):
         if not keys:
             raise AuthenticationException('auth agent found no keys')
 
-        saved_exception = AuthenticationException(
-            'Failed to authenticate with given username')
+        saved_exception = AuthenticationException('Failed to authenticate with given username')
 
         for key in keys:
             try:
@@ -266,7 +269,8 @@ class SSH2(Protocol):
             password = ''
 
         saved_exception = AuthenticationException(
-            'Failed to authenticate with given username and password/key')
+            'Failed to authenticate with given username and password/key'
+        )
 
         for pkey_class, filename in keys:
             try:
@@ -283,12 +287,14 @@ class SSH2(Protocol):
 
     def _paramiko_auth_autokey(self, username, password):
         keyfiles = []
-        for cls, file in ((paramiko.RSAKey, '~/.ssh/id_rsa'),  # Unix
-                          (paramiko.ECDSAKey, '~/.ssh/id_ecdsa'),  # Unix
-                          (paramiko.Ed25519Key, '~/.ssh/id_ed25519'),  # Unix
-                          (paramiko.RSAKey, '~/ssh/id_rsa'),   # Windows
-                          (paramiko.ECDSAKey, '~/ssh/id_ecdsa'),  # Windows
-                          (paramiko.Ed25519Key, '~/ssh/id_ed25519')):  # Windows
+        for cls, file in (
+            (paramiko.RSAKey, '~/.ssh/id_rsa'),  # Unix
+            (paramiko.ECDSAKey, '~/.ssh/id_ecdsa'),  # Unix
+            (paramiko.Ed25519Key, '~/.ssh/id_ed25519'),  # Unix
+            (paramiko.RSAKey, '~/ssh/id_rsa'),  # Windows
+            (paramiko.ECDSAKey, '~/ssh/id_ecdsa'),  # Windows
+            (paramiko.Ed25519Key, '~/ssh/id_ed25519'),
+        ):  # Windows
             file = os.path.expanduser(file)
             if os.path.isfile(file):
                 keyfiles.append((cls, file))
@@ -327,7 +333,9 @@ class SSH2(Protocol):
             self._dbg(2, 'Authenticating with client.auth_none().')
             self._transport.auth_none(username)
         except BadAuthenticationType as err:
-            self._dbg(2, 'Authentication with client.auth_none() failed, allowed: %s' % err.allowed_types)
+            self._dbg(
+                2, 'Authentication with client.auth_none() failed, allowed: %s' % err.allowed_types
+            )
             auth_methods = self._get_auth_methods(err.allowed_types)
         else:
             return
@@ -344,10 +352,7 @@ class SSH2(Protocol):
             # Some OSes (e.g. JunOS ERX OS, Huawei) do not accept further login
             # attempts after failing one. So in this hack, we
             # re-connect after each attempt...
-            if (
-                self.get_driver().reconnect_between_auth_methods
-                or not self._transport.active
-            ):
+            if self.get_driver().reconnect_between_auth_methods or not self._transport.active:
                 if self.get_driver().reconnect_between_auth_methods:
                     self._dbg(1, 'Forced reconnect by driver.')
                 else:
@@ -464,9 +469,7 @@ class SSH2(Protocol):
         driver = self.get_driver()
         search_window_size = 150
         search_window = self._buffer.tail(search_window_size)
-        search_window, incomplete_tail = driver.clean_response_for_re_match(
-            search_window
-        )
+        search_window, incomplete_tail = driver.clean_response_for_re_match(search_window)
         n, match = -1, None
         for n, regex in enumerate(prompt):
             match = regex.search(search_window)

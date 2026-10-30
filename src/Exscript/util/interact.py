@@ -23,6 +23,7 @@
 """
 Tools for interacting with the user on the command line.
 """
+
 import configparser
 import getpass
 import os
@@ -33,7 +34,6 @@ from .cast import to_list
 
 
 class InputHistory:
-
     """
     When prompting a user for input it is often useful to record his
     input in a file, and use previous input as a default value.
@@ -41,9 +41,7 @@ class InputHistory:
     allow for such functionality.
     """
 
-    def __init__(self,
-                 filename='~/.exscript_history',
-                 section=os.path.basename(sys.argv[0])):
+    def __init__(self, filename='~/.exscript_history', section=os.path.basename(sys.argv[0])):
         """
         Constructor. The filename argument allows for listing on or
         more config files, and is passed to Python's RawConfigParser; please
@@ -114,13 +112,7 @@ class InputHistory:
         return value
 
 
-def prompt(key,
-           message,
-           default=None,
-           doverh=True,
-           strip=True,
-           check=None,
-           history=None):
+def prompt(key, message, default=None, doverh=True, strip=True, check=None, history=None):
     """
     Prompt the user for input. This function is similar to Python's built
     in raw_input, with the following differences:
@@ -216,9 +208,11 @@ def get_filename(key, message, default=None, history=None):
     :type  history: :class:`InputHistory` or None
     :param history: The history used for recording default values, or None.
     """
+
     def _validate(string):
         if not os.path.isfile(string):
             return 'File not found. Please enter a filename.'
+
     return prompt(key, message, default, True, _validate, history)
 
 

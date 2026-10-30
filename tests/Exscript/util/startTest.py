@@ -38,15 +38,12 @@ class startTest(unittest.TestCase):
         self.assertEqual(self.data.value, 3)
 
         # Run on multiple hosts with multiple threads.
-        function(self.account,
-                 hosts,
-                 self.callback,
-                 max_threads=2,
-                 verbose=0)
+        function(self.account, hosts, self.callback, max_threads=2, verbose=0)
         self.assertEqual(self.data.value, 5)
 
     def testRun(self):
         from Exscript.util.start import run
+
         self.doTest(run)
 
     def testQuickrun(self):
@@ -54,6 +51,7 @@ class startTest(unittest.TestCase):
 
     def testStart(self):
         from Exscript.util.start import start
+
         self.doTest(start)
 
     def testQuickstart(self):
@@ -62,5 +60,7 @@ class startTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(startTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

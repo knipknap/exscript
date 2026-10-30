@@ -23,16 +23,17 @@
 """
 Represents a private key.
 """
+
 from paramiko import ECDSAKey, Ed25519Key, RSAKey
 from paramiko.ssh_exception import SSHException
 
 
 class PrivateKey:
-
     """
     Represents a cryptographic key, and may be used to authenticate
     using :class:`Exscript.protocols`.
     """
+
     keytypes: set[str] = set()
 
     def __init__(self, keytype='rsa'):

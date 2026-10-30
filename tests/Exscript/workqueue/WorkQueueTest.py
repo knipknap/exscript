@@ -20,6 +20,7 @@ def burn_time(job):
         job.data.value += 1
     time.sleep(random.random())
 
+
 nop = lambda x: None
 
 
@@ -71,7 +72,7 @@ class WorkQueueTest(unittest.TestCase):
         self.wq.wait_until_done()
 
         # Check whether each has run successfully.
-        self.assertEqual(0,   self.wq.get_length())
+        self.assertEqual(0, self.wq.get_length())
         self.assertEqual(222, data.value)
         self.wq.shutdown(True)
         self.assertEqual(0, self.wq.get_length())
@@ -165,6 +166,7 @@ class WorkQueueTest(unittest.TestCase):
     def testGetRunningJobs(self):
         def function(job):
             self.assertEqual(self.wq.get_running_jobs(), [job])
+
         self.assertEqual(self.wq.get_running_jobs(), [])
         self.wq.enqueue(function)
         self.wq.shutdown(True)
@@ -176,5 +178,7 @@ class WorkQueueTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(WorkQueueTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

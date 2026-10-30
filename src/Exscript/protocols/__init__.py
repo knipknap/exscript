@@ -30,11 +30,11 @@ from .ssh2 import SSH2
 from .telnet import Telnet
 
 protocol_map = {
-    'dummy':  Dummy,
+    'dummy': Dummy,
     'pseudo': Dummy,
     'telnet': Telnet,
-    'ssh':    SSH2,
-    'ssh2':   SSH2,
+    'ssh': SSH2,
+    'ssh2': SSH2,
     'netconf': Netconf,
 }
 
@@ -116,7 +116,11 @@ def connect(host, default_protocol='ssh', **kwargs):
         conn.login(account)
     return conn
 
+
 import inspect
 
-__all__ = [name for name, obj in list(locals().items())
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+__all__ = [
+    name
+    for name, obj in list(locals().items())
+    if not (name.startswith('_') or inspect.ismodule(obj))
+]

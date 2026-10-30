@@ -23,6 +23,7 @@
 """
 IPv4 address calculation and conversion.
 """
+
 import math
 import re
 import socket
@@ -249,7 +250,7 @@ def matches_prefix(ip, prefix):
     network, pfxlen = parse_prefix(prefix)
     network_int = ip2int(network)
     mask_int = pfxlen2mask_int(pfxlen)
-    return ip_int&mask_int == network_int&mask_int
+    return ip_int & mask_int == network_int & mask_int
 
 
 def is_private(ip):

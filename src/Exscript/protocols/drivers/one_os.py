@@ -23,6 +23,7 @@
 """
 A driver for OneOS (OneAccess).
 """
+
 import re
 
 from .driver import Driver
@@ -34,7 +35,6 @@ _prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
 
 
 class OneOSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'one_os')
         self.user_re = _user_re

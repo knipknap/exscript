@@ -27,17 +27,17 @@ class ExscriptException(Exception):
 
 
 class FailException(ExscriptException):
-
     """
     This exception type is used if the "fail" command was used in a template.
     """
+
     pass
 
 
 class PermissionError(ExscriptException):
-
     """
     Raised if an insecure function was called when the parser is in secure
     mode.
     """
+
     pass

@@ -23,6 +23,7 @@
 """
 SSH2 Netconf support, based on ncclient and paramiko.
 """
+
 import functools
 import inspect
 import logging
@@ -55,7 +56,6 @@ _end_of_chunks_re = re.compile(r'\n##\n')
 
 
 class Netconf(SSH2):
-
     """
     The SSH Netconf protocol adapter, based on the SSH2 adapter and ncclient.
     """
@@ -169,9 +169,7 @@ class Netconf(SSH2):
             try:
                 self._channel = self._transport.open_session()
                 self._channel.invoke_subsystem(subname)
-                self._channel.set_name(
-                    "%s-subsystem-%s" % (subname, self._channel.get_id())
-                )
+                self._channel.set_name("%s-subsystem-%s" % (subname, self._channel.get_id()))
             except SSHException as e:
                 msg = 'Failed to open a channel with %s subsystem. (%s)'
                 self._dbg(1, msg % (repr(subname), e))
@@ -198,7 +196,7 @@ class Netconf(SSH2):
         session = SSHSession(device_handler)
         session._host = self.host
         session._transport = self._transport
-        session._channel   = self._channel
+        session._channel = self._channel
         session._channel_id = self._channel.get_id()
         session._channel_name = self._channel.get_name()
         session._connected = True
@@ -232,7 +230,7 @@ class Netconf(SSH2):
         # Setup the channel send wrapper. This is needed as Netconf does not
         # echo the sent data back to the client known from CLI shells.
         send = self._channel.send
-        param = next(iter(inspect.signature(send).parameters)) # first param
+        param = next(iter(inspect.signature(send).parameters))  # first param
 
         @functools.wraps(send)
         def send_wrapper(*args, **kwargs):
@@ -341,15 +339,15 @@ class Netconf(SSH2):
         assembled = ''
         while match:
             size = int(match.group(1))
-            response = response[match.end():]   # consume the chunk header
-            assembled += response[:size]   # extract exactly size chars of content
-            response = response[size:]          # consume the chunk content
+            response = response[match.end() :]  # consume the chunk header
+            assembled += response[:size]  # extract exactly size chars of content
+            response = response[size:]  # consume the chunk content
             match = _chunk_header_re.match(response)
         if response:
             # Internally this would be already consumed as the prompt.
             match = _end_of_chunks_re.match(response)
             if match:
-                response = response[match.end():]  # consume the end-of-chunks marker
+                response = response[match.end() :]  # consume the end-of-chunks marker
         if response:
             # This should only happen if we have internal issues with the prompt
             # or buffer handling before this reassembly is called. ncclient

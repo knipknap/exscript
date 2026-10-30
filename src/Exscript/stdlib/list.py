@@ -71,6 +71,7 @@ def get(scope, source, index):
     except IndexError:
         raise ValueError('no such item in the list')
 
+
 @secure_function
 def sort(scope, source):
     """
@@ -83,6 +84,7 @@ def sort(scope, source):
     """
     return sorted(source)
 
+
 @secure_function
 def reverse(scope, source):
     """
@@ -94,6 +96,7 @@ def reverse(scope, source):
     :return: The reversed list of strings.
     """
     return list(reversed(source))
+
 
 @secure_function
 def unique(scope, source):

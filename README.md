@@ -52,8 +52,10 @@ from Exscript.util.start import start
 from Exscript.util.file import get_hosts_from_file
 from Exscript.util.file import get_accounts_from_file
 
+
 def do_something(job, host, conn):
     conn.execute('uname -a')
+
 
 accounts = get_accounts_from_file('accounts.cfg')
 hosts = get_hosts_from_file('myhosts.txt')

@@ -23,6 +23,7 @@
 """
 Handy shortcuts for converting types.
 """
+
 import re
 
 import Exscript
@@ -80,8 +81,7 @@ def to_hosts(hosts, default_protocol='ssh', default_domain=''):
     :rtype:  list[Host]
     :return: A list of Host objects.
     """
-    return [to_host(h, default_protocol, default_domain)
-            for h in to_list(hosts)]
+    return [to_host(h, default_protocol, default_domain) for h in to_list(hosts)]
 
 
 def to_regex(regex, flags=0):

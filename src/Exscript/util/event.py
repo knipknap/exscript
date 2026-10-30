@@ -23,13 +23,13 @@
 """
 A simple signal/event mechanism.
 """
+
 from threading import Lock
 
 from . import weakmethod
 
 
 class Event:
-
     """
     A simple signal/event mechanism, to be used like this::
 

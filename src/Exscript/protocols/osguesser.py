@@ -33,7 +33,6 @@ _logger.addHandler(logging.NullHandler())
 
 
 class OsGuesser:
-
     """
     The OsGuesser monitors everything that happens on a Protocol, and attempts to
     collect data out of the network activity. It watches for specific patterns in the
@@ -85,9 +84,11 @@ class OsGuesser:
         old_value, old_confidence = self._info.get(key, (None, None))
         if old_confidence is not None and old_confidence >= confidence:
             return
-        self._dbg(2, "Higher confidence for %s: %s with %s -> %s with %s" % (
-            key, old_value, old_confidence, value, confidence
-        ))
+        self._dbg(
+            2,
+            "Higher confidence for %s: %s with %s -> %s with %s"
+            % (key, old_value, old_confidence, value, confidence),
+        )
         self._info[key] = (value, confidence)
 
     def set_from_match(self, key, regex_list, string):
@@ -141,14 +142,14 @@ class OsGuesser:
             if self.get('os', 80) in ('unknown', None):
                 self._dbg(3, "Matching received data: %r" % self._response_buffer)
                 self.set_from_match('os', self._response_os_map, self._response_buffer)
-            self._response_buffer = self._response_buffer[-self._buffer_limit:]
+            self._response_buffer = self._response_buffer[-self._buffer_limit :]
             return
 
         self._auth_buffer += data
         self._dbg(3, "Matching authentication buffer: %r" % self._auth_buffer)
         self.set_from_match('os', self._auth_os_map, self._auth_buffer)
         self.set_from_match('os', self._response_os_map, self._auth_buffer)
-        self._auth_buffer = self._auth_buffer[-self._buffer_limit:]
+        self._auth_buffer = self._auth_buffer[-self._buffer_limit :]
 
     def check_protocol_info(self, data):
         """
@@ -159,7 +160,7 @@ class OsGuesser:
         self._protocol_buffer += data
         self._dbg(3, "Matching protocol info: %r" % self._protocol_buffer)
         self.set_from_match('os', self._protocol_os_map, self._protocol_buffer)
-        self._protocol_buffer = self._protocol_buffer[-self._buffer_limit:]
+        self._protocol_buffer = self._protocol_buffer[-self._buffer_limit :]
 
     def check_netconf_capabilities(self, capabilities):
         """

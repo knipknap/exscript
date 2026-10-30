@@ -59,6 +59,7 @@ from .osguesser import OsGuesser
 try:
     import termios
     import tty
+
     _have_termios = True
 except ImportError:
     _have_termios = False
@@ -67,11 +68,11 @@ _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
 
 _ansi_escape_re = re.compile(
-    r'\x1b\['          # CSI: ESC[
+    r'\x1b\['  # CSI: ESC[
     + r'[\x30-\x3f]*'  # PARAMETER: 0–9:;<=>?
     + r'[\x20-\x2f]*'  # INTERMEDIATE: !"#$%&'( )*+,-./
-    + r'[\x40-\x7e]'   # FINAL: @A–Z[\]^_`a–z{|}~
-    + r'|\x1b'         # alternate lone ESC
+    + r'[\x40-\x7e]'  # FINAL: @A–Z[\]^_`a–z{|}~
+    + r'|\x1b'  # alternate lone ESC
 )
 _skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)(?=\s|[\r\n])')
 
@@ -88,7 +89,6 @@ _connection_monitor_lock = threading.RLock()
 
 
 class Protocol:
-
     """
     This is the base class for all protocols; it defines the common portions
     of the API.
@@ -257,22 +257,24 @@ class Protocol:
 
     _log: IO[str] | None  # managed by the logfile property
 
-    def __init__(self,
-                 driver=None,
-                 stdout=None,
-                 stderr=None,
-                 debug=0,
-                 connect_rate_limit=60,
-                 connect_timeout=30,
-                 timeout=30,
-                 logfile=None,
-                 termtype='dumb',
-                 disabled_algorithms=None,  # SSH2 only
-                 preferred_authentications=None,  # SSH2 only
-                 verify_fingerprint=True,  # SSH2 only
-                 account_factory=None,
-                 banner_timeout=20,  # SSH2 only
-                 encoding='latin-1'):
+    def __init__(
+        self,
+        driver=None,
+        stdout=None,
+        stderr=None,
+        debug=0,
+        connect_rate_limit=60,
+        connect_timeout=30,
+        timeout=30,
+        logfile=None,
+        termtype='dumb',
+        disabled_algorithms=None,  # SSH2 only
+        preferred_authentications=None,  # SSH2 only
+        verify_fingerprint=True,  # SSH2 only
+        account_factory=None,
+        banner_timeout=20,  # SSH2 only
+        encoding='latin-1',
+    ):
         """
         Constructor.
 
@@ -882,9 +884,7 @@ class Protocol:
         """
         return self._name
 
-    def get_response(
-        self, *, strip_command=True, strip_chars='\x00\x07\x08', strip_ansi=True
-    ):
+    def get_response(self, *, strip_command=True, strip_chars='\x00\x07\x08', strip_ansi=True):
         """
         Returns a clean copy of the latest plaintext response.
 
@@ -1026,9 +1026,7 @@ class Protocol:
 
         # Check whether a better driver is found based on the incoming data.
         self._os_guesser.check_protocol_info(self.get_remote_version() or '')
-        self._os_guesser.check_received_data(
-            self.get_banner() or '', self.is_app_authenticated()
-        )
+        self._os_guesser.check_received_data(self.get_banner() or '', self.is_app_authenticated())
         self._update_auto_driver()
         return self._connected
 
@@ -1148,11 +1146,7 @@ class Protocol:
         """
         return self._proto_authenticated
 
-    def _app_authenticate(self,
-                          account,
-                          password,
-                          flush=True,
-                          bailout=False):
+    def _app_authenticate(self, account, password, flush=True, bailout=False):
         """
         Generic implementation for app-level authentications or authorizations.
         """
@@ -1163,11 +1157,13 @@ class Protocol:
             # to find out which type of prompt was matched, so we build a
             # structure to allow for mapping the match index back to the
             # prompt type.
-            prompts = (('login-error', self.get_login_error_prompt()),
-                       ('username',    self.get_username_prompt()),
-                       ('skey',        [_skey_re]),
-                       ('password',    self.get_password_prompt()),
-                       ('cli',         self.get_prompt()))
+            prompts = (
+                ('login-error', self.get_login_error_prompt()),
+                ('username', self.get_username_prompt()),
+                ('skey', [_skey_re]),
+                ('password', self.get_password_prompt()),
+                ('cli', self.get_prompt()),
+            )
             prompt_map = []
             prompt_list = []
             for section, section_prompts in prompts:
@@ -1642,10 +1638,12 @@ class Protocol:
 
             # Update the terminal size whenever the size changes.
             if handle_window_size:
+
                 def handle_sigwinch(signum, frame):
                     rows, cols = get_terminal_size()
                     self._dbg(2, "Trying to update terminal size: %dx%d" % (rows, cols))
                     self._set_terminal_size(rows, cols)
+
                 signal.signal(signal.SIGWINCH, handle_sigwinch)
                 handle_sigwinch(None, None)
 
@@ -1715,9 +1713,7 @@ class Protocol:
 
         # NOTE: Thread in windows might need a daemon=True to avoid hanging on exit.
         #  Needs to be analyzed on next possible testing with a windows box.
-        writer = threading.Thread(
-            name="channel.recv", target=writeall, args=(channel,)
-        )
+        writer = threading.Thread(name="channel.recv", target=writeall, args=(channel,))
         writer.start()
 
         try:
@@ -1779,23 +1775,23 @@ class Protocol:
         """Captures all context-specific state into a plain dict snapshot."""
         return {
             # Authentication
-            'app_authenticated':       self._app_authenticated,
-            'app_authorized':          self._app_authorized,
-            'last_account':            self._last_account,
+            'app_authenticated': self._app_authenticated,
+            'app_authorized': self._app_authorized,
+            'last_account': self._last_account,
             # OS guesser
-            'guesser_info':            dict(self._os_guesser._info),
-            'guesser_auth_buffer':     self._os_guesser._auth_buffer,
+            'guesser_info': dict(self._os_guesser._info),
+            'guesser_auth_buffer': self._os_guesser._auth_buffer,
             'guesser_protocol_buffer': self._os_guesser._protocol_buffer,
             'guesser_response_buffer': self._os_guesser._response_buffer,
             # Driver
-            'auto_driver':             self._auto_driver,
-            'manual_driver':           self._manual_driver,
+            'auto_driver': self._auto_driver,
+            'manual_driver': self._manual_driver,
             # Prompts
-            'manual_prompt_re':        self._manual_prompt_re,
-            'manual_error_re':         self._manual_error_re,
-            'manual_user_re':          self._manual_user_re,
-            'manual_password_re':      self._manual_password_re,
-            'manual_login_error_re':   self._manual_login_error_re,
+            'manual_prompt_re': self._manual_prompt_re,
+            'manual_error_re': self._manual_error_re,
+            'manual_user_re': self._manual_user_re,
+            'manual_password_re': self._manual_password_re,
+            'manual_login_error_re': self._manual_login_error_re,
         }
 
     def switch_device_context(self, *, reset_auth=True):
@@ -1861,24 +1857,24 @@ class Protocol:
     def _restore_device_context(self, snapshot):
         """Restores all context-specific state from a snapshot dict."""
         # Authentication
-        self._app_authenticated           = snapshot['app_authenticated']
-        self._app_authorized              = snapshot['app_authorized']
-        self._last_account                = snapshot['last_account']
+        self._app_authenticated = snapshot['app_authenticated']
+        self._app_authorized = snapshot['app_authorized']
+        self._last_account = snapshot['last_account']
         # OS guesser
-        self._os_guesser._info            = dict(snapshot['guesser_info'])
-        self._os_guesser._auth_buffer     = snapshot['guesser_auth_buffer']
+        self._os_guesser._info = dict(snapshot['guesser_info'])
+        self._os_guesser._auth_buffer = snapshot['guesser_auth_buffer']
         self._os_guesser._protocol_buffer = snapshot['guesser_protocol_buffer']
         self._os_guesser._response_buffer = snapshot['guesser_response_buffer']
         # Driver
-        self._auto_driver                 = snapshot['auto_driver']
-        self._manual_driver               = snapshot['manual_driver']
+        self._auto_driver = snapshot['auto_driver']
+        self._manual_driver = snapshot['manual_driver']
         self._update_auto_driver()  # should only trigger notifications
         # Prompts
-        self._manual_prompt_re            = snapshot['manual_prompt_re']
-        self._manual_error_re             = snapshot['manual_error_re']
-        self._manual_user_re              = snapshot['manual_user_re']
-        self._manual_password_re          = snapshot['manual_password_re']
-        self._manual_login_error_re       = snapshot['manual_login_error_re']
+        self._manual_prompt_re = snapshot['manual_prompt_re']
+        self._manual_error_re = snapshot['manual_error_re']
+        self._manual_user_re = snapshot['manual_user_re']
+        self._manual_password_re = snapshot['manual_password_re']
+        self._manual_login_error_re = snapshot['manual_login_error_re']
 
     def restore_device_context(self):
         """

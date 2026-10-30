@@ -77,7 +77,6 @@ def setupLogging(*, package=False, parser=False, protocol=False, init=getConsole
     """
 
     class _LogFilter:
-
         def __init__(self, name, enabled):
             self.name = name
             self.enabled = enabled
@@ -117,10 +116,12 @@ def setupLogging(*, package=False, parser=False, protocol=False, init=getConsole
 # Exscript Logging
 
 
-logger_registry: 'weakref.WeakValueDictionary[int, Logger]' = weakref.WeakValueDictionary()  # Map id(logger) to Logger.
+logger_registry: 'weakref.WeakValueDictionary[int, Logger]' = (
+    weakref.WeakValueDictionary()
+)  # Map id(logger) to Logger.
+
 
 class Log:
-
     def __init__(self, name):
         self.name = name
         self.data = StringIO('')
@@ -176,7 +177,6 @@ class Log:
 
 
 class Logfile(Log):
-
     """
     This class logs to two files: The raw log, and sometimes a separate
     log containing the error message with a traceback.
@@ -241,7 +241,6 @@ class Logfile(Log):
 
 
 class Logger:
-
     """
     A QueueListener that implements logging for the queue.
     Logs are kept in memory, and not written to the disk.
@@ -316,7 +315,6 @@ class Logger:
 
 
 class LoggerProxy:
-
     """
     An object that has a 1:1 relation to a Logger object in another
     process.
@@ -355,16 +353,11 @@ class LoggerProxy:
 
 
 class FileLogger(Logger):
-
     """
     A Logger that stores logs into files.
     """
 
-    def __init__(self,
-                 logdir,
-                 mode='a',
-                 delete=False,
-                 clearmem=True):
+    def __init__(self, logdir, mode='a', delete=False, clearmem=True):
         """
         The logdir argument specifies the location where the logs
         are stored. The mode specifies whether to append the existing logs

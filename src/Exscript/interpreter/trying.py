@@ -27,7 +27,6 @@ from .scope import Scope
 
 
 class Try(Scope):
-
     def __init__(self, lexer, parser, parent):
         Scope.__init__(self, self.__class__.__name__, lexer, parser, parent)
         lexer.expect(self, 'keyword', 'try')

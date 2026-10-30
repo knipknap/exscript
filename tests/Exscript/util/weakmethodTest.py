@@ -5,7 +5,6 @@ from Exscript.util.weakmethod import DeadMethodCalled, WeakMethod, ref
 
 
 class TestClass:
-
     def callback(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
@@ -52,6 +51,7 @@ class weakmethodTest(unittest.TestCase):
         def function(data, *args, **kwargs):
             data['args'] = args
             data['kwargs'] = kwargs
+
         d = {}
         f = ref(function)
         f(d, 'one', two=True)
@@ -72,5 +72,7 @@ class weakmethodTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(weakmethodTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

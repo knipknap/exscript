@@ -23,6 +23,7 @@
 """
 Executing Exscript templates on a connection.
 """
+
 from Exscript import stdlib
 from Exscript.interpreter import Parser
 
@@ -198,7 +199,7 @@ def paste(conn, string, no_escaping=False, **kwargs):
     return _run(conn, None, string, parser_args, **kwargs)
 
 
-def paste_file(conn, filename, no_escaping=False,  **kwargs):
+def paste_file(conn, filename, no_escaping=False, **kwargs):
     """
     Convenience wrapper around paste() that reads the template from a file
     instead.

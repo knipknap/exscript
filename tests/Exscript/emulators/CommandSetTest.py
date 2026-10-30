@@ -25,6 +25,7 @@ class CommandSetTest(unittest.TestCase):
 
         def sayhello(cmd):
             return 'hello'
+
         cs.add('hi', sayhello)
         self.assertEqual(cs.eval('hi'), 'hello')
 
@@ -37,5 +38,7 @@ class CommandSetTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(CommandSetTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

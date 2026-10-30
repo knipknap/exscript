@@ -26,69 +26,66 @@ Network related error types.
 
 
 class ProtocolException(Exception):
-
     """
     Default exception that is thrown on most protocol related errors.
     """
+
     pass
 
 
 class TimeoutException(ProtocolException):
-
     """
     An exception that is thrown if the connected host did not
     respond for too long.
     """
+
     pass
 
 
 class ExpectCancelledException(ProtocolException):
-
     """
     An exception that is thrown if Protocol.cancel_expect()
     was called.
     """
+
     pass
 
 
 class DriverReplacedException(ProtocolException):
-
     """
     An exception that is thrown if the protocol driver
     was switched during a call to expect().
     """
+
     pass
 
 
 class LoginFailure(ProtocolException):
-
     """
     An exception that is thrown if the response of a connected host looked
     like it was trying to signal a login error during the authentication
     procedure.
     """
+
     pass
 
 
 class InvalidCommandException(ProtocolException):
-
     """
     An exception that is thrown if the response of a connected host contained
     a string that looked like an error.
     """
+
     pass
 
 
 class RPCError(InvalidCommandException):
-
     """
     An exception that is raised when a NETCONF rpc-reply contains one or
     more rpc-error elements with error severity.
     """
 
-    def __init__(
-        self, message, *, element, type, tag, severity, app_tag='', path='', info=''
-    ):
+    def __init__(self, message, *, element, type, tag, severity, app_tag='', path='', info=''):
         """
         :param message:   The primary rpc-error message (error-message).
         :param element:   The XML element of the rpc-error node.

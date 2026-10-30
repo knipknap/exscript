@@ -4,13 +4,12 @@ from collections.abc import Callable
 
 
 class OrderedDefaultDict(OrderedDict):
-
     """
     A fusion of Python's defaultdict and Python's OrderedDict.
     """
+
     def __init__(self, default_factory=None, *a, **kw):
-        if (default_factory is not None and
-           not isinstance(default_factory, Callable)):
+        if default_factory is not None and not isinstance(default_factory, Callable):
             raise TypeError('first argument must be callable')
         OrderedDict.__init__(self, *a, **kw)
         self.default_factory = default_factory
@@ -31,7 +30,7 @@ class OrderedDefaultDict(OrderedDict):
         if self.default_factory is None:
             args = tuple()
         else:
-            args = self.default_factory,
+            args = (self.default_factory,)
         return type(self), args, None, None, self.items()
 
     def copy(self):
@@ -41,9 +40,7 @@ class OrderedDefaultDict(OrderedDict):
         return type(self)(self.default_factory, self)
 
     def __deepcopy__(self, memo):
-        return type(self)(self.default_factory,
-                          copy.deepcopy(self.items()))
+        return type(self)(self.default_factory, copy.deepcopy(self.items()))
 
     def __repr__(self):
-        return 'OrderedDefaultDict(%s, %s)' % (self.default_factory,
-                                               OrderedDict.__repr__(self))
+        return 'OrderedDefaultDict(%s, %s)' % (self.default_factory, OrderedDict.__repr__(self))

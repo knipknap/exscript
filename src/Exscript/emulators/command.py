@@ -23,12 +23,12 @@
 """
 Defines the behavior of commands by mapping commands to functions.
 """
+
 import re
 from collections.abc import Iterable
 
 
 class CommandSet:
-
     """
     A set of commands to be used by the Dummy adapter.
     """

@@ -23,6 +23,7 @@
 """
 A driver for Ciena SAOS carrier Ethernet devices.
 """
+
 import re
 
 from .driver import Driver
@@ -40,7 +41,6 @@ _error_re = [
 
 
 class CienaSAOSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'cienasaos')
         self.user_re = _user_re

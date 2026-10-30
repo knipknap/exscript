@@ -23,6 +23,7 @@
 """
 Cisco IOS emulator used for internal testing.
 """
+
 import re
 
 from .vdevice import VirtualDevice
@@ -41,9 +42,11 @@ Unauthorized access prohibited!
 at '%s' port '/dev/vty0' from '12.34.56.78'
 '''
 
+
 def show_diag(data):
     slot = re.search(r'(\d+)', data).groups()[0]
-    return """
+    return (
+        """
 SLOT %s  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC connector
   MAIN: type 79,  800-19733-08 rev A0
         Deviation: 0
@@ -68,10 +71,15 @@ SLOT %s  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC
   TX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
   RX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
   0 crashes since restart
-""" % slot
+"""
+        % slot
+    )
+
 
 commands = (
-('show version', """
+    (
+        'show version',
+        """
 Cisco Internetwork Operating System Software
 IOS (tm) GS Software (C12KPRP-P-M), Version 12.0(32)SY6c, RELEASE SOFTWARE (fc3)
 Technical Support: http://www.cisco.com/techsupport
@@ -115,9 +123,11 @@ Channelized E1, Version 1.0.
 250880K bytes of ATA PCMCIA card at slot 0 (Sector size 512 bytes).
 65536K bytes of Flash internal SIMM (Sector size 256K).
 Configuration register is 0x2102
-"""),
-
-(r'sh\S* ip int\S* brie\S*', """
+""",
+    ),
+    (
+        r'sh\S* ip int\S* brie\S*',
+        """
 Interface     IP-Address     OK?  Method  Status                  Protocol
 Ethernet0     10.108.00.5    YES  NVRAM   up                      up
 Ethernet1     unassigned     YES  unset   administratively down   down
@@ -126,9 +136,11 @@ Serial0       10.108.100.5   YES  NVRAM   up                      up
 Serial1       10.108.40.5    YES  NVRAM   up                      up
 Serial2       10.108.100.5   YES  manual  up                      up
 Serial3       unassigned     YES  unset   administratively down   down
-"""),
-
-('show interface.*', """
+""",
+    ),
+    (
+        'show interface.*',
+        """
 FastEthernet0/2 is administratively down, line protocol is down
   Hardware is i82545, address is 0001.c9f4.c418 (bia 0001.c9f4.c418)
   MTU 1500 bytes, BW 100000 Kbit, DLY 100 usec, rely 255/255, load 1/255
@@ -153,29 +165,33 @@ FastEthernet0/2 is administratively down, line protocol is down
      0 babbles, 0 late collision, 0 deferred
      1 lost carrier, 0 no carrier
      0 output buffer failures, 0 output buffers swapped out
-"""),
-
-(r'show diag \d+', show_diag),
-
-(r'^!.*', '')
+""",
+    ),
+    (r'show diag \d+', show_diag),
+    (r'^!.*', ''),
 )
 
+
 class IOSEmulator(VirtualDevice):
-    def __init__(self,
-                 hostname,
-                 echo       = True,
-                 login_type = VirtualDevice.LOGIN_TYPE_BOTH,
-                 strict     = True,
-                 banner     = None):
+    def __init__(
+        self,
+        hostname,
+        echo=True,
+        login_type=VirtualDevice.LOGIN_TYPE_BOTH,
+        strict=True,
+        banner=None,
+    ):
         thebanner = iosbanner % (hostname, hostname, hostname)
-        VirtualDevice.__init__(self,
-                               hostname,
-                               echo       = echo,
-                               login_type = login_type,
-                               strict     = strict,
-                               banner     = banner or thebanner)
-        self.user_prompt     = 'Username: '
+        VirtualDevice.__init__(
+            self,
+            hostname,
+            echo=echo,
+            login_type=login_type,
+            strict=strict,
+            banner=banner or thebanner,
+        )
+        self.user_prompt = 'Username: '
         self.password_prompt = 'Password: '
-        self.prompt          = hostname + '#'
+        self.prompt = hostname + '#'
         for command, handler in commands:
             self.add_command(command, handler)

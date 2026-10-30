@@ -33,8 +33,7 @@ class FileLoggerTest(LoggerTest):
 
     def testAddLog(self):
         log = LoggerTest.testAddLog(self)
-        self.assertTrue(
-            os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
+        self.assertTrue(os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
         self.assertFalse(os.path.exists(self.errfile))
         return log
 
@@ -89,5 +88,7 @@ class FileLoggerTest(LoggerTest):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(FileLoggerTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

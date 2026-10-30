@@ -75,10 +75,7 @@ def summarize(logger):
     return '\n'.join(summary)
 
 
-def format(logger,
-           show_successful=True,
-           show_errors=True,
-           show_traceback=True):
+def format(logger, show_successful=True, show_errors=True, show_traceback=True):
     """
     Prints a report of the actions that were logged by the given Logger.
     The report contains a list of successful actions, as well as the full

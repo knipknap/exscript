@@ -23,6 +23,7 @@
 """
 TTY utilities.
 """
+
 import os
 import struct
 import sys
@@ -115,8 +116,7 @@ def get_terminal_size(default_rows=25, default_cols=80):
     # Try `stty size`
     with open(os.devnull, 'w') as devnull:
         try:
-            process = Popen(['stty', 'size'], stderr=devnull, stdout=PIPE,
-                            close_fds=True)
+            process = Popen(['stty', 'size'], stderr=devnull, stdout=PIPE, close_fds=True)
         except (OSError, ValueError):
             pass
         else:

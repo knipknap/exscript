@@ -15,14 +15,11 @@ class FakeQueue:
 
 
 class FakeJob:
-
     def __init__(self, name='fake'):
         self.function = lambda x: None
         self.name = name
         self.failures = 0
-        self.data = {'pipe':   0,
-                     'stdout': sys.stdout,
-                     'host':   Host('foo')}
+        self.data = {'pipe': 0, 'stdout': sys.stdout, 'host': Host('foo')}
 
 
 class FakeError(Exception):
@@ -62,6 +59,7 @@ class reportTest(unittest.TestCase):
 
     def testStatus(self):
         from Exscript.util.report import status
+
         self.createSucceededLog()
         expect = 'One action done (succeeded)'
         self.assertEqual(status(self.logger), expect)
@@ -76,6 +74,7 @@ class reportTest(unittest.TestCase):
 
     def testSummarize(self):
         from Exscript.util.report import summarize
+
         self.createSucceededLog()
         self.createAbortedLog()
         expected = 'fake1: ok\nfake2: FakeError'
@@ -83,11 +82,13 @@ class reportTest(unittest.TestCase):
 
     def testFormat(self):
         from Exscript.util.report import format
+
         self.createSucceededLog()
         self.createAbortedLog()
         self.createSucceededLog()
         file = os.path.splitext(__file__)[0]
-        expected = '''
+        expected = (
+            '''
 Failed actions:
 ---------------
 fake2:
@@ -100,13 +101,16 @@ FakeError
 Successful actions:
 -------------------
 fake1
-fake3'''.strip() % (file, self.createAbortedLog.__code__.co_firstlineno + 3)
-        expected = expected.replace('FakeError\n',
-                                    'util.reportTest.FakeError\n')
+fake3'''.strip()
+            % (file, self.createAbortedLog.__code__.co_firstlineno + 3)
+        )
+        expected = expected.replace('FakeError\n', 'util.reportTest.FakeError\n')
         self.assertEqual(format(self.logger), expected)
 
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(reportTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

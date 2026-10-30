@@ -23,6 +23,7 @@
 """
 The Telnet protocol.
 """
+
 import logging
 
 from ..util.tty import get_terminal_size
@@ -34,7 +35,6 @@ _logger.addHandler(logging.NullHandler())
 
 
 class Telnet(Protocol):
-
     """
     The Telnet protocol adapter.
     """
@@ -85,8 +85,7 @@ class Telnet(Protocol):
         # Wait for a prompt.
         cleanup_callback = self.get_driver().clean_response_for_re_match
         try:
-            result, match, self.response = func(
-                prompt, self.timeout, cleanup=cleanup_callback)
+            result, match, self.response = func(prompt, self.timeout, cleanup=cleanup_callback)
         except Exception:
             self._dbg(1, 'Error while waiting for ' + repr(prompt))
             raise

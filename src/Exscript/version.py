@@ -1,6 +1,7 @@
 """
 The version of the installed Exscript distribution.
 """
+
 from importlib.metadata import PackageNotFoundError, version
 
 try:

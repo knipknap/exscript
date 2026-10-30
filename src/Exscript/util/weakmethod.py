@@ -23,23 +23,24 @@
 """
 Weak references to bound and unbound methods.
 """
+
 import weakref
 
 
 class DeadMethodCalled(Exception):
-
     """
     Raised by :class:`WeakMethod` if it is called when the referenced object
     is already dead.
     """
+
     pass
 
 
 class WeakMethod:
-
     """
     Do not create this class directly; use :class:`ref()` instead.
     """
+
     __slots__ = 'name', 'callback'
 
     def __init__(self, name, callback):

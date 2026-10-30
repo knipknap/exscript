@@ -23,6 +23,7 @@
 """
 The core module.
 """
+
 import inspect
 
 from .account import Account, AccountPool
@@ -32,5 +33,8 @@ from .logger import FileLogger, Logger
 from .queue import Queue
 from .version import __version__
 
-__all__ = [name for name, obj in list(locals().items())
-           if not (name.startswith('_') or inspect.ismodule(obj))]
+__all__ = [
+    name
+    for name, obj in list(locals().items())
+    if not (name.startswith('_') or inspect.ismodule(obj))
+]

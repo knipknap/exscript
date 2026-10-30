@@ -23,10 +23,10 @@
 """
 The default driver that is used when the OS is not recognized.
 """
+
 from .driver import Driver
 
 
 class GenericDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'generic')

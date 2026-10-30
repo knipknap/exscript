@@ -23,6 +23,7 @@
 """
 A Telnet server.
 """
+
 import logging
 import select
 import socket
@@ -34,7 +35,6 @@ _logger.addHandler(logging.NullHandler())
 
 
 class Telnetd(Server):
-
     """
     A Telnet server. Usage::
 

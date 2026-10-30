@@ -23,6 +23,7 @@
 """
 A driver for MRV Linux.
 """
+
 import re
 
 from .driver import Driver
@@ -34,7 +35,6 @@ _prompt_re = [re.compile(r'(?:\r\n|[\r\n])+[^$\r\n]+\$ ?$')]
 
 
 class MRVDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'mrv')
         self.user_re = _user_re

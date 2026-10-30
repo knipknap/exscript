@@ -23,6 +23,7 @@
 """
 A driver for Redback Smart Edge OS.
 """
+
 import re
 
 from .driver import Driver
@@ -36,7 +37,6 @@ _model_re = re.compile(r'(?:\r\n|[\r\n])[^\r\n]+-se800(?:\r\n|[\r\n])')
 
 
 class SmartEdgeOSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'smart_edge_os')
         self.user_re = _user_re

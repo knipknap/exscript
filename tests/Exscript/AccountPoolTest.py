@@ -52,8 +52,7 @@ class AccountPoolTest(unittest.TestCase):
 
     def testGetAccountFromName(self):
         self.testAddAccount()
-        self.assertEqual(self.account2,
-                         self.accm.get_account_from_name(self.user2))
+        self.assertEqual(self.account2, self.accm.get_account_from_name(self.user2))
 
     def testNAccounts(self):
         self.testAddAccount()
@@ -115,5 +114,7 @@ class AccountPoolTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountPoolTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

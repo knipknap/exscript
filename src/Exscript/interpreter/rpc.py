@@ -26,12 +26,12 @@ from .execute import Execute
 from .scope import Scope
 
 grammar = (
-    ('line_comment',        r'(?:^|(?<=[\r\n]))[ \t]*#[^\r\n]*(?:[\r\n]|$)'),
-    ('open_rpc_tag',        r'<rpc>'),
-    ('close_rpc_tag',       r'<\/rpc>'),
-    ('newline',             r'[\r\n]'),
+    ('line_comment', r'(?:^|(?<=[\r\n]))[ \t]*#[^\r\n]*(?:[\r\n]|$)'),
+    ('open_rpc_tag', r'<rpc>'),
+    ('close_rpc_tag', r'<\/rpc>'),
+    ('newline', r'[\r\n]'),
     ('raw_data_before_tag', r'[^\r\n]+?(?=<\/?rpc>)'),
-    ('raw_data',            r'[^\r\n]+'),
+    ('raw_data', r'[^\r\n]+'),
 )
 
 grammar_c = []
@@ -40,7 +40,6 @@ for thetype, regex in grammar:
 
 
 class RPCBody(Scope):
-
     def __init__(self, lexer, parser, parent):
         Scope.__init__(self, self.__class__.__name__, lexer, parser, parent)
         lexer.set_grammar(grammar_c)
@@ -54,9 +53,7 @@ class RPCBody(Scope):
                 break
             # Line comments in multiline RPCs are handled later by the Execute
             # token, so we have to collect them too.
-            elif lexer.current_is(
-                ['line_comment', 'newline', 'raw_data_before_tag', 'raw_data']
-            ):
+            elif lexer.current_is(['line_comment', 'newline', 'raw_data_before_tag', 'raw_data']):
                 buffer += lexer.token()[1]
                 next(lexer)
             elif lexer.current_is('EOF'):

@@ -105,8 +105,7 @@ class MailTest(unittest.TestCase):
         self.mail.set_to('test1')
         self.mail.set_cc('test2')
         self.mail.set_bcc('test3')
-        self.assertEqual(self.mail.get_recipients(),
-                         ['test1', 'test2', 'test3'])
+        self.assertEqual(self.mail.get_recipients(), ['test1', 'test2', 'test3'])
 
     def testSetSubject(self):
         self.assertEqual(self.mail.get_subject(), '')
@@ -158,11 +157,13 @@ class mailTest(unittest.TestCase):
 
     def testFromTemplateString(self):
         from Exscript.util.mail import from_template_string
+
         mail = from_template_string(template, **vars)
         self.checkResult(mail)
 
     def testFromTemplate(self):
         from Exscript.util.mail import from_template
+
         tmpfile = tempfile.NamedTemporaryFile()
         tmpfile.write(template.encode('utf8'))
         tmpfile.flush()
@@ -178,5 +179,7 @@ def suite():
     mail_cls = unittest.TestLoader().loadTestsFromTestCase(MailTest)
     mail_module = unittest.TestLoader().loadTestsFromTestCase(mailTest)
     return unittest.TestSuite([mail_cls, mail_module])
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

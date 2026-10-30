@@ -26,7 +26,6 @@ from ..parselib import Token
 
 
 class ExpressionNode(Token):
-
     def __init__(self, lexer, parser, parent, parent_node=None):
         # Skip whitespace before initializing the token to make sure that self.start
         # points to the beginning of the expression (which makes for prettier error
@@ -47,20 +46,24 @@ class ExpressionNode(Token):
 
             # The expression may end already (a single term is also an expression).
             lexer.skip(['whitespace', 'newline'])
-            if not lexer.current_is('arithmetic_operator') and \
-               not lexer.current_is('logical_operator') and \
-               not lexer.current_is('comparison') and \
-               not lexer.current_is('regex_delimiter'):
+            if (
+                not lexer.current_is('arithmetic_operator')
+                and not lexer.current_is('logical_operator')
+                and not lexer.current_is('comparison')
+                and not lexer.current_is('regex_delimiter')
+            ):
                 # Early end of statement.
                 self.mark_end(rstrip=True)
                 return
 
         # Expect the operator.
         self.op_type, self.op = lexer.token()
-        if not lexer.next_if('arithmetic_operator') and \
-           not lexer.next_if('logical_operator') and \
-           not lexer.next_if('comparison') and \
-           not lexer.next_if('regex_delimiter'):
+        if (
+            not lexer.next_if('arithmetic_operator')
+            and not lexer.next_if('logical_operator')
+            and not lexer.next_if('comparison')
+            and not lexer.next_if('regex_delimiter')
+        ):
             self.mark_start()
             self.mark_end(distance=len(self.op))
             msg = 'Expected operator but got %s %s' % (self.op_type, repr(self.op))
@@ -186,7 +189,6 @@ class ExpressionNode(Token):
 
 
 class Expression(Token):
-
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 

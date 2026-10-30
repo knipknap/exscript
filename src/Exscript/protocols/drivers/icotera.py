@@ -23,13 +23,13 @@
 """
 A driver for Icotera CPE
 """
+
 import re
 
 from .driver import Driver
 
 
 class IcoteraDriver(Driver):
-
     def __init__(self):
         """
         Constructor of the IcoteraDriver.

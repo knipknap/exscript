@@ -46,5 +46,7 @@ class LogfileTest(LogTest):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LogfileTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

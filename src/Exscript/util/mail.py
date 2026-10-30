@@ -23,6 +23,7 @@
 """
 Sending and formatting emails.
 """
+
 import mimetypes
 import os
 import re
@@ -42,12 +43,11 @@ from Exscript.util.event import Event
 #
 # Helpers. (non-public)
 #
-_varname_re = re.compile(r'[a-z][\w_]*',     re.I)
+_varname_re = re.compile(r'[a-z][\w_]*', re.I)
 _string_re = re.compile(r'(\\?){([\w_]+)}', re.I)
 
 
 class _TemplateParser:
-
     """
     This exists for backward compatibility; Python 2.3 does not come
     with a similar way for string substitution yet.
@@ -84,8 +84,7 @@ class _TemplateParser:
 
 
 def _render_template(string, **vars):
-    default = {'date': time.strftime('%Y-%m-%d'),
-               'user': getuser()}
+    default = {'date': time.strftime('%Y-%m-%d'), 'user': getuser()}
     default.update(vars)
     parser = _TemplateParser()
     return parser.parse(string, **default)
@@ -106,24 +105,18 @@ def _cleanup_mail_addresses(recipients):
     rcpt = re.split(r'\s*[,;\r\n]\s*', recipients.lower())
     return [str(r) for r in sorted(set(rcpt)) if r.strip()]
 
+
 #
 # Public.
 #
 
 
 class Mail:
-
     """
     Represents an email.
     """
 
-    def __init__(self,
-                 sender=None,
-                 to='',
-                 cc='',
-                 bcc='',
-                 subject='',
-                 body=''):
+    def __init__(self, sender=None, to='', cc='', bcc='', subject='', body=''):
         """
         Creates a new email with the given values.
         If the given sender is None, one will be automatically chosen

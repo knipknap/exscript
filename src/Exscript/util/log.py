@@ -23,6 +23,7 @@
 """
 Logging utilities.
 """
+
 from .. import FileLogger
 from .impl import add_label
 
@@ -42,6 +43,7 @@ def log_to(logger):
     def decorator(function):
         func = add_label(function, 'log_to', logger_id=logger_id)
         return func
+
     return decorator
 
 

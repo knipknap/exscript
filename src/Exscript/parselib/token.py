@@ -23,13 +23,11 @@
 
 
 class Token:
-
     """
     Abstract base class for all tokens.
     """
 
     class Iterator:
-
         """
         A tree iterator that walks through all tokens.
         """
@@ -117,7 +115,7 @@ class Token:
                 isspace = lambda c: c in rstrip  # noqa: E731
             else:
                 isspace = lambda c: c.isspace()  # noqa: E731
-            while char > 0 and isspace(self.lexer.input[char - 1:char]):
+            while char > 0 and isspace(self.lexer.input[char - 1 : char]):
                 char -= 1
         # EOF will point behind the last character index (length of input)!
         self.end = max(self.start, min(char, self.lexer.input_length))

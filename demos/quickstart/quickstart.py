@@ -8,6 +8,7 @@ def do_something(job, host, conn):
     files = any_match(conn, r'(\S+)')
     print("Files found:", files)
 
+
 # Open a connection (SSH2, by default) to each of the hosts, and run do_something(). To
 # open the connection via Telnet or SSH Netconf, you may prefix the hostname by the
 # protocol, e.g.: 'telnet://hostname', 'netconf://hostname', etc.

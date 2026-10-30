@@ -23,6 +23,7 @@
 """
 A driver for devices running Juniper ERX OS.
 """
+
 import re
 
 from .driver import Driver
@@ -34,7 +35,6 @@ _junos_re = re.compile(r'\bJuniper Networks\b', re.I)
 
 
 class JunOSERXDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'junos_erx')
         self.user_re = _user_re

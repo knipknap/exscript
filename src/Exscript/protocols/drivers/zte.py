@@ -23,6 +23,7 @@
 """
 A driver for devices running Zte operating system.
 """
+
 import re
 
 from .driver import Driver
@@ -43,7 +44,6 @@ _zte_re = re.compile(r"ZTE", re.I)
 
 
 class ZteDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'zte')
         self.user_re = _user_re
