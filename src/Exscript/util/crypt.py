@@ -27,10 +27,7 @@ Encryption related utilities.
 import random
 import string
 
-try:
-    from Cryptodome.Hash import MD4
-except ImportError:
-    from Crypto.Hash import MD4
+from Cryptodome.Hash import MD4
 
 _VALIDSEEDCHARACTERS = string.ascii_letters + string.digits
 

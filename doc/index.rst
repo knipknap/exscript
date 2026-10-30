@@ -21,8 +21,8 @@
 What is Exscript?
 =================
 
-Exscript is a Python module and a template processor for automating network 
-connections over protocols such as Telnet or SSH. We attempt to create the 
+Exscript is a Python module and a template processor for automating network
+connections over protocols such as Telnet or SSH. We attempt to create the
 best possible set of tools for working with Telnet and SSH.
 
 Exscript also provides a set of tools and functions for sysadmins, that
@@ -30,9 +30,9 @@ simplify **regular expression matching**, **reporting** by email, **logging**,
 or **syslog** handling, **CSV parsing**, **ip address handling**,
 **template processing**, and many more.
 
-Exscript may be used to automate sessions with routers from Cisco, Juniper, 
-OneAccess, Huawei, or any others. If you want to configures machines 
-running Linux/Unix, IOS, IOS-XR, JunOS, VRP, or any other operating system 
+Exscript may be used to automate sessions with routers from Cisco, Juniper,
+OneAccess, Huawei, or any others. If you want to configures machines
+running Linux/Unix, IOS, IOS-XR, JunOS, VRP, or any other operating system
 that can be used with a terminal, Exscript is what you are looking for.
 
 Using Exscript with Python

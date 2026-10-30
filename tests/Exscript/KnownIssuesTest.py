@@ -60,7 +60,7 @@ class ServerMixin:
 
 
 class HostKeyTest(ServerMixin, unittest.TestCase):
-    @unittest.expectedFailure  # S1: known_hosts is only loaded after the check; no [host]:port lookup
+    @unittest.expectedFailure  # known_hosts is only loaded after the check; no [host]:port lookup
     def testKnownHostsMismatchIsRejected(self):
         port = self.start_daemon(SSHd, VirtualDevice(HOST), key=PrivateKey.from_file(KEYFILE))
         other_key = paramiko.RSAKey.generate(2048)
@@ -110,7 +110,7 @@ class ExpectTest(ServerMixin, unittest.TestCase):
 
 
 class SecretHygieneTest(unittest.TestCase):
-    @unittest.expectedFailure  # S3: Protocol.send() logs passwords at debug level 4
+    @unittest.expectedFailure  # Protocol.send() logs passwords at debug level 4
     def testDebugLogRedactsPassword(self):
         conn = Dummy(device=VirtualDevice('r1', echo=False, strict=False), debug=4)
         with self.assertLogs('Exscript.protocols', level='DEBUG') as logs:
@@ -139,11 +139,11 @@ class OtelTest(unittest.TestCase):
         conn.execute('show run')
         conn.close(force=True)
 
-    @unittest.expectedFailure  # S2: the wrapper reads args[1] for app_account -> IndexError
+    @unittest.expectedFailure  # the wrapper reads args[1] for app_account -> IndexError
     def testLoginWithPositionalAccount(self):
         self.runSession(lambda conn, account: conn.login(account))
 
-    @unittest.expectedFailure  # S2: commands (incl. passwords) and responses are exported
+    @unittest.expectedFailure  # commands (incl. passwords) and responses are exported
     def testNoSecretsOrDeviceOutputExportedByDefault(self):
         self.runSession(lambda conn, account: conn.login(account=account))
         exported = [
