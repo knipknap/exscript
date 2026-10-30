@@ -220,7 +220,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # Extract POST data, if any. Clumsy syntax due to Python 2 and
         # 2to3's lack of a byte literal.
-        self.data = "".encode()
+        self.data = b""
         length = self.headers.get('Content-Length')
         if length and length.isdigit():
             self.data = self.rfile.read(int(length))
@@ -262,7 +262,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
         self.send_response(404)
         self.end_headers()
-        self.wfile.write('not found'.encode('utf8'))
+        self.wfile.write(b'not found')
 
     def handle_GET(self):
         """
@@ -271,7 +271,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
         self.send_response(404)
         self.end_headers()
-        self.wfile.write('not found'.encode('utf8'))
+        self.wfile.write(b'not found')
 
     def send_response(self, code):
         """

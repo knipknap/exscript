@@ -3,7 +3,6 @@ import os.path
 import unittest
 import warnings
 
-
 warnings.simplefilter('ignore', DeprecationWarning)
 
 import ctypes

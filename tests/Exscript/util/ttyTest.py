@@ -1,9 +1,7 @@
 import os
 import sys
-import unittest
-
-
 import tempfile
+import unittest
 
 import Exscript.util.tty
 

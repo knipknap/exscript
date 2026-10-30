@@ -1,7 +1,6 @@
 import os.path
 import unittest
 
-
 from Exscript import PrivateKey
 from Exscript.protocols import SSH2
 from Exscript.servers import SSHd, sshd

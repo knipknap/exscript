@@ -24,14 +24,14 @@
 Daemonizing a process.
 """
 
-import sys
 import os
+import sys
 
 
 def _redirect_output(filename):
     out_log = open(filename, 'a+', 0)
     err_log = open(filename, 'a+', 0)
-    dev_null = open(os.devnull, 'r')
+    dev_null = open(os.devnull)
     os.close(sys.stdin.fileno())
     os.close(sys.stdout.fileno())
     os.close(sys.stderr.fileno())

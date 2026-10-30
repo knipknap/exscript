@@ -48,7 +48,7 @@ def read(path):
     _logger.info("Checking pidfile '%s'", path)
     try:
         return int(open(path).read())
-    except IOError as xxx_todo_changeme:
+    except OSError as xxx_todo_changeme:
         (code, text) = xxx_todo_changeme.args
         if code == errno.ENOENT:  # no such file or directory
             return None
@@ -140,5 +140,5 @@ def remove(path):
     _logger.info("Removing pidfile '%s'", path)
     try:
         os.unlink(path)
-    except IOError:
+    except OSError:
         pass

@@ -16,7 +16,6 @@ import json
 import os
 import unittest
 
-
 from Exscript.protocols.osguesser import OsGuesser
 
 DIRNAME = os.path.dirname(os.path.abspath(__file__))

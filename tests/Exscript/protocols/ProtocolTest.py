@@ -1,11 +1,9 @@
 import os
 import re
 import tempfile
+import time
 import unittest
 import unittest.mock
-
-
-import time
 from functools import partial
 
 from Exscript import Account, PrivateKey

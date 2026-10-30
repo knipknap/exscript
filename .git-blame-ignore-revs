@@ -1,0 +1,3 @@
+# Mechanical reformatting commits; use: git config blame.ignoreRevsFile .git-blame-ignore-revs
+# Format the code base with ruff
+466247c9eb884d2da1b9900bff82a6fa464c76a1

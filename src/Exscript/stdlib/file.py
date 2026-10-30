@@ -21,6 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import os
+
 from Exscript.stdlib.util import secure_function
 
 
@@ -97,7 +98,7 @@ def read(scope, filename):
     :rtype:  string
     :return: The content of the file.
     """
-    with open(filename[0], 'r') as fp:
+    with open(filename[0]) as fp:
         lines = fp.readlines()
     scope.define(__response__=lines)
     return lines

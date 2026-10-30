@@ -1,6 +1,6 @@
 import unittest
-
 from tempfile import NamedTemporaryFile
+
 import Exscript.util.interact
 from Exscript.util.interact import InputHistory
 

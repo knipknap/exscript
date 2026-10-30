@@ -299,7 +299,7 @@ class Netconf(SSH2):
             self.app_authorize()  # just to set the flag
 
     def authenticate(self, account=None, app_account=None, flush=True):
-        super(Netconf, self).authenticate(account, app_account, flush=flush)
+        super().authenticate(account, app_account, flush=flush)
         # Authentication is complete and the subsystem channel is open. The
         # server <hello> waits unread in the channel buffer. Hand the channel to
         # ncclient now — it will consume the <hello> and start its IO thread.
@@ -460,7 +460,7 @@ class Netconf(SSH2):
         # SSH2 closes the paramiko channel, transport, and socket.
         # Closing the channel causes channel.recv() to return b'', which —
         # combined with _closing being set — causes the IO thread to exit.
-        super(Netconf, self)._close(force=force)
+        super()._close(force=force)
 
         # Wait for ncclient's IO thread to fully terminate.
         # Must be after super() so the channel is already closed when we join.

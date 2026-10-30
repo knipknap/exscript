@@ -190,7 +190,7 @@ class _PipeHandler(threading.Thread):
         while True:
             try:
                 request = self.to_child.recv()
-            except (EOFError, IOError):
+            except (OSError, EOFError):
                 self.accm.release_accounts(self)
                 break
             self._handle_request(request)

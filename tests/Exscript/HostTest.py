@@ -1,6 +1,5 @@
 import unittest
 
-
 from util.urlTest import urls
 
 from Exscript import Account, Host

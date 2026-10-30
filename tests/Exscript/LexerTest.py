@@ -1,6 +1,5 @@
 import unittest
 
-
 from Exscript.parselib import Lexer
 
 

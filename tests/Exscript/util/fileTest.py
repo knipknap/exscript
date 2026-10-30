@@ -1,9 +1,9 @@
-import unittest
-import os.path
-
 import base64
-import Exscript.util.file
+import os.path
+import unittest
 from tempfile import NamedTemporaryFile
+
+import Exscript.util.file
 
 account_pool = [
     ('user1', 'password1'),

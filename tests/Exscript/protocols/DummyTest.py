@@ -1,7 +1,6 @@
 import re
 import unittest
 
-
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy
 

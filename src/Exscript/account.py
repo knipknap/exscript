@@ -292,7 +292,7 @@ class AccountProxy:
         elif self.account_hash:
             self.parent.send(('acquire-account-from-hash', self.account_hash))
         else:
-            self.parent.send(('acquire-account'))
+            self.parent.send('acquire-account')
 
         response = self.parent.recv()
         if isinstance(response, Exception):

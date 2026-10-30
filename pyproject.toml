@@ -88,10 +88,34 @@ quote-style = "preserve"
 select = ["E", "W", "F", "I", "UP", "B", "S"]
 ignore = [
     "UP031",  # printf-style formatting is used throughout
+    # Baseline of existing findings: fix a rule everywhere, then remove it here.
+    "B004", "B006", "B007", "B008", "B011", "B017", "B018", "B904", "B905",
+    "E402", "E501", "E721", "E722", "E731", "E741", "F401", "F841", "UP003",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S104", "S105", "S106", "S107", "S108", "S311"]
+# Security baseline: existing findings per file, to be reviewed (S1-S6); new code is checked.
+"demos/template/template.py" = ["S101"]
+"scripts/exscript" = ["S307", "S605"]
+"src/Exscript/emulators/iosemu.py" = ["S105"]
+"src/Exscript/emulators/vdevice.py" = ["S105"]
+"src/Exscript/interpreter/string.py" = ["S105"]
+"src/Exscript/interpreter/template.py" = ["S105"]
+"src/Exscript/protocols/netconf.py" = ["S110"]
+"src/Exscript/protocols/protocol.py" = ["S101", "S110"]
+"src/Exscript/protocols/ssh2.py" = ["S110"]
+"src/Exscript/protocols/telnet.py" = ["S101", "S110"]
+"src/Exscript/servers/httpd.py" = ["S105", "S324"]
+"src/Exscript/stdlib/mysys.py" = ["S602"]
+"src/Exscript/util/crypt.py" = ["S303"]
+"src/Exscript/util/file.py" = ["S107"]
+"src/Exscript/util/pidutil.py" = ["S110"]
+"src/Exscript/util/tty.py" = ["S607"]
+"src/Exscript/workqueue/pipeline.py" = ["S101"]
+"tests/Exscript/QueueTest.py" = ["S110"]
+"tests/Exscript/workqueue/JobTest.py" = ["S301"]
+"tools/bench_bulk.py" = ["S101"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

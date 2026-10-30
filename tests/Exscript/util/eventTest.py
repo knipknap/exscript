@@ -30,6 +30,7 @@ class eventTest(unittest.TestCase):
 
     def testListen(self):
         import gc
+
         from Exscript.util.weakmethod import WeakMethod
 
         def thefunction():

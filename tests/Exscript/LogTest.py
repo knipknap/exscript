@@ -1,7 +1,6 @@
 import sys
 import unittest
 
-
 from util.reportTest import FakeError
 
 from Exscript.logger import Log

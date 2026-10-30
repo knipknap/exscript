@@ -1,7 +1,7 @@
-import unittest
 import tempfile
-
+import unittest
 from getpass import getuser
+
 import Exscript.util.mail
 from Exscript.util.mail import Mail
 

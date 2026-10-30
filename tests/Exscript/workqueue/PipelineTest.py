@@ -1,8 +1,5 @@
 import time
 import unittest
-
-
-import time
 from multiprocessing import Value
 from threading import Thread
 

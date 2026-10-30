@@ -1,6 +1,5 @@
 import unittest
 
-
 from Exscript.protocols import SSH2
 from Exscript.servers import SSHd
 

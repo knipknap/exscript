@@ -1,6 +1,5 @@
 import unittest
 
-
 from Exscript.util.url import Url
 
 urls = [

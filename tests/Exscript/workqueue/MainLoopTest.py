@@ -1,7 +1,6 @@
 import threading
 import unittest
 
-
 from Exscript.workqueue.job import Process
 from Exscript.workqueue.mainloop import MainLoop
 from Exscript.workqueue.pipeline import Pipeline

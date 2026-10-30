@@ -2,7 +2,6 @@ import os
 import re
 import unittest
 
-
 from Exscript.protocols import drivers
 from Exscript.protocols.osguesser import OsGuesser
 

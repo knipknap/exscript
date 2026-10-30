@@ -1,6 +1,5 @@
 import unittest
 
-
 from Exscript.emulators import IOSEmulator
 from Exscript.emulators.iosemu import iosbanner
 
