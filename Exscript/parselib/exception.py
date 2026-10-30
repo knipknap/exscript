@@ -30,11 +30,28 @@ class LexerException(Exception):
     pass
 
 
+class LexerWarning(UserWarning):
+
+    """
+    Base class for minor warnings.
+    """
+    pass
+
+
 class CompileError(LexerException):
 
     """
     Raised during the compilation procedure if the template contained
     a syntax error.
+    """
+    pass
+
+
+class CompileWarning(LexerWarning):
+
+    """
+    Raised during the compilation procedure if the template contained
+    a syntax error, that does not prevent compilation but should be noted.
     """
     pass
 

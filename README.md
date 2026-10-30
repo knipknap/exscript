@@ -1,5 +1,6 @@
 # Exscript
 
+<!-- TODO: Readme links need to be reviewed. -->
 [![Build Status](https://travis-ci.org/knipknap/exscript.svg?branch=master)](https://travis-ci.org/knipknap/exscript)
 [![Coverage Status](https://coveralls.io/repos/github/knipknap/exscript/badge.svg?branch=master)](https://coveralls.io/github/knipknap/exscript?branch=master)
 [![Code Climate](https://lima.codeclimate.com/github/knipknap/exscript/badges/gpa.svg)](https://lima.codeclimate.com/github/knipknap/exscript)
@@ -8,23 +9,27 @@
 
 ## Summary
 
-Exscript is a Python module and a template processor for automating network 
-connections over protocols such as Telnet or SSH. We attempt to create the 
-best possible set of tools for working with Telnet and SSH.
+Exscript is a Python package and a template processor for automating network connections
+CLI-driven over protocols such as Telnet, SSH or alternatively structured Netconf. We
+attempt to create the best possible set of tools for working with Telnet, SSH and
+Netconf.
 
 Exscript also provides a set of tools and functions for sysadmins, that
 simplify **regular expression matching**, **reporting** by email, **logging**,
 or **syslog** handling, **CSV parsing**, **ip address handling**,
 **template processing**, and many more.
 
-Exscript may be used to automate sessions with routers from Cisco, Juniper, 
-OneAccess, Huawei, or any others. If you want to configures machines 
-running Linux/Unix, IOS, IOS-XR, JunOS, VRP, or any other operating system 
-that can be used with a terminal, Exscript is what you are looking for.
+Exscript may be used to automate sessions with routers from Cisco, Juniper, OneAccess,
+Huawei, or any others. If you want to configures machines running Linux/Unix, IOS,
+IOS-XR, JunOS, VRP, or any other operating system that can be used with a CLI terminal,
+Exscript is what you are looking for. Additionally any system that supports SSH Netconf
+1.0 and 1.1 can be automated with Exscript.
 
 ## Do you need commercial support?
 
-Exscript is supported by [Procedure 8](https://procedure8.com). Get in touch if you need anything!
+<!-- TODO: Does "Procedure 8" for commercial support exist? -->
+Exscript is supported by [Procedure 8](https://procedure8.com). Get in touch if you need
+anything!
 
 ## Method 1: Using Exscript with Python
 
@@ -59,21 +64,50 @@ start(accounts, hosts, do_something, max_threads=2)
 
 Create a file named `test.exscript` with the following content:
 
-```
+```plaintext
 uname -a
 ```
 
 To run this Exscript template, just start Exscript using the following command:
 
-```
+```shell
 exscript test.exscript ssh://localhost
 ```
 
-Awesome fact: Just replace `ssh://` by `telnet://` and it should still work with Telnet devices.
+Awesome fact: Just replace `ssh://` by `telnet://` and it should still work with Telnet
+devices. This also works for Netconf, just use `netconf://` instead and create a valid
+Netconf template:
 
+```xml
+<rpc>
+    <!-- your XML RPC body -->
+</rpc>
+```
+
+The RPC body will be sent to the device, automatically encapsulated with proper
+rpc-tags like:
+
+```xml
+<rpc xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="...">
+    <!-- your XML RPC body -->
+</rpc>`
+```
+
+No need to handle the message-id and namespaces manually. The reply will be available as
+plaintext (like with CLI) or a parsed XML tree element.
+
+## Release-Management
+
+Releases are created on demand without any strict interval. The versioning follows the
+packaging guidance for Python and supports the following canonical-like tag pattern,
+optionally with local version specifiers, for the build process.
+
+```plaintext
+N.N(.N)?[{a|b|rc}N][.postN][.devN][+{a..z0..9}(.{a..z0..9})*]
+```
+
+See also: [Python version-specifiers](https://packaging.python.org/en/latest/specifications/version-specifiers)
 
 ## Documentation
 
-Full documentation is here:
-
-http://exscript.readthedocs.io
+Full documentation is here: http://exscript.readthedocs.io

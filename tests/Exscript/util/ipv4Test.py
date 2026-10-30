@@ -1,8 +1,8 @@
-from builtins import range
+import os.path
+import re
 import sys
 import unittest
-import re
-import os.path
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import Exscript.util.ipv4
@@ -57,7 +57,7 @@ class ipv4Test(unittest.TestCase):
             self.assertEqual(int2ip(ip2int(ip)), ip)
 
     def testPfxlen2MaskInt(self):
-        from Exscript.util.ipv4 import pfxlen2mask_int, int2ip
+        from Exscript.util.ipv4 import int2ip, pfxlen2mask_int
         self.assertEqual(int2ip(pfxlen2mask_int(32)), '255.255.255.255')
         self.assertEqual(int2ip(pfxlen2mask_int(31)), '255.255.255.254')
         self.assertEqual(int2ip(pfxlen2mask_int(30)), '255.255.255.252')
@@ -140,8 +140,9 @@ class ipv4Test(unittest.TestCase):
         self.assertFalse(is_private('192.169.0.0'))
 
     def testSort(self):
-        from Exscript.util.ipv4 import sort
         import random
+
+        from Exscript.util.ipv4 import sort
         ip_list = ['0.0.0.0',
                    '0.0.0.255',
                    '1.2.3.4',

@@ -20,12 +20,15 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import
-from builtins import next
-import threading
+import logging
 import multiprocessing
+import threading
+
 from ..util.event import Event
 from .job import Job
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 # See http://bugs.python.org/issue1731717
 multiprocessing.process._cleanup = lambda: None
@@ -35,6 +38,7 @@ class MainLoop(threading.Thread):
 
     def __init__(self, collection, job_cls):
         threading.Thread.__init__(self)
+        self._logger = _logger
         self.job_init_event = Event()
         self.job_started_event = Event()
         self.job_error_event = Event()
@@ -43,12 +47,13 @@ class MainLoop(threading.Thread):
         self.queue_empty_event = Event()
         self.collection = collection
         self.job_cls = job_cls
-        self.debug = 5
+        self.debug = 0
         self.daemon = True
 
-    def _dbg(self, level, msg):
-        if self.debug >= level:
-            print(msg)
+    def _dbg(self, level, msg, exc_info=None):
+        if level > self.debug:
+            return
+        self._logger.debug(msg, exc_info=exc_info)
 
     def enqueue(self, function, name, times, data):
         job = Job(function, name, times, data)
@@ -94,30 +99,30 @@ class MainLoop(threading.Thread):
     def _on_job_completed(self, job, exc_info):
         # This function is called in a sub-thread, so we need to be
         # careful that we are not in a lock while sending an event.
-        self._dbg(1, 'Job "%s" called completed()' % job.name)
+        self._dbg(4, 'Job "%s" called completed()' % job.name)
 
         try:
             # Notify listeners of the error
             # *before* removing the job from the queue.
             # This is because wait_until_done() depends on
             # get_queue_length() being 0, and we don't want a listener
-            # to get a signal from a queue that already already had
+            # to get a signal from a queue that already had
             # wait_until_done() completed.
             if exc_info:
-                self._dbg(1, 'Error in job "%s"' % job.name)
+                self._dbg(3, 'Error in job "%s"' % job.name)
                 job.failures += 1
                 self.job_error_event(job.child, exc_info)
                 if job.failures >= job.times:
-                    self._dbg(1, 'Job "%s" finally failed' % job.name)
+                    self._dbg(3, 'Job "%s" finally failed' % job.name)
                     self.job_aborted_event(job.child)
             else:
-                self._dbg(1, 'Job "%s" succeeded.' % job.name)
+                self._dbg(3, 'Job "%s" succeeded.' % job.name)
                 self.job_succeeded_event(job.child)
 
         finally:
             # Remove the watcher from the queue, and re-enque if needed.
             if exc_info and job.failures < job.times:
-                self._dbg(1, 'Restarting job "%s"' % job.name)
+                self._dbg(3, 'Restarting job "%s"' % job.name)
                 job.start(self.job_cls, self._on_job_completed)
                 self.job_started_event(job.child)
             else:
@@ -136,5 +141,4 @@ class MainLoop(threading.Thread):
             self.job_init_event(job)
             job.start(self.job_cls, self._on_job_completed)
             self.job_started_event(job.child)
-            self._dbg(1, 'Job "%s" started.' % job.name)
-        self._dbg(2, 'Main loop terminated.')
+            self._dbg(3, 'Job "%s" started.' % job.name)

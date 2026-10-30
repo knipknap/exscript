@@ -23,17 +23,11 @@
 """
 Working with URLs (as used in URL formatted hostnames).
 """
-from __future__ import unicode_literals, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import chr
-from builtins import range
-from builtins import object
 import re
-from urllib.parse import urlencode, quote
-from urllib.parse import urlparse, urlsplit
+from urllib.parse import quote, urlencode, urlparse, urlsplit
+
 from .collections import OrderedDefaultDict
+
 
 def _make_hexmap():
     hexmap = dict()
@@ -45,15 +39,16 @@ def _make_hexmap():
 _HEXTOCHR = _make_hexmap()
 
 _WELL_KNOWN_PORTS = {
-    'ftp':    21,
-    'ssh':    22,
-    'ssh1':   22,
-    'ssh2':   22,
+    'ftp': 21,
+    'ssh': 22,
+    'ssh2': 22,
     'telnet': 23,
-    'smtp':   25,
-    'http':   80,
-    'pop3':  110,
-    'imap':  143
+    'smtp': 25,
+    'http': 80,
+    'pop3': 110,
+    'imap': 143,
+    'https': 443,
+    'netconf': 830,
 }
 
 def _unquote(string):
@@ -102,7 +97,7 @@ def _urlparse_qs(url):
 
     return result
 
-class Url(object):
+class Url:
 
     """
     Represents a URL.
@@ -164,7 +159,7 @@ class Url(object):
         return str(self)
 
     @staticmethod
-    def from_string(url, default_protocol='telnet'):
+    def from_string(url, default_protocol='ssh'):
         """
         Parses the given URL and returns an URL object. There are some
         differences to Python's built-in URL parser:

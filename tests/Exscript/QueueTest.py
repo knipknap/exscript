@@ -1,26 +1,30 @@
-from builtins import object
+import logging
+import os.path
+import re
 import sys
 import unittest
-import re
-import os.path
 import warnings
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 warnings.simplefilter('ignore', DeprecationWarning)
 
+import ctypes
 import shutil
 import time
-import ctypes
 from functools import partial
-from tempfile import mkdtemp
 from multiprocessing import Value
 from multiprocessing.managers import BaseManager
-from Exscript import Queue, Account, AccountPool, FileLogger
-from Exscript.protocols import Protocol, Dummy
+from tempfile import mkdtemp
+
+from Exscript import Account, AccountPool, FileLogger, Queue
 from Exscript.interpreter.exception import FailException
+from Exscript.protocols import Dummy, Protocol
 from Exscript.util.decorator import bind
 from Exscript.util.log import log_to
 
+logger = logging.getLogger('TestSuite.QueueTest')
+logger.addHandler(logging.NullHandler())
 
 def count_calls(job, data, **kwargs):
     assert hasattr(job, 'start')
@@ -72,7 +76,7 @@ def raise_if_not_myprotocol(job, host, conn):
         raise Exception('not a MyProtocol instance')
 
 
-class Log(object):
+class Log:
     data = ''
 
     def write(self, data):
@@ -137,6 +141,10 @@ class QueueTest(unittest.TestCase):
             msg = repr(expected) + ' not in ' + repr(data)
             self.assertTrue(expected in data, msg)
 
+    # IMPORTANT: If you see fails of this test, it might be related to the
+    # Logmanager as it uses Process, not Thread. Mixing both is not recommended
+    # and false-positive fails have been seen with stuck old processes. So check
+    # `ps -ef -u` on your system for any old test processes and kill them.
     def testConstructor(self):
         self.assertEqual(1, self.queue.get_max_threads())
 
@@ -158,8 +166,10 @@ class QueueTest(unittest.TestCase):
             (5,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
         )
         for level, max_threads, with_simple, with_error, with_fatal in levels:
-            # print("S:", level, max_threads, with_simple, with_error,)
-            # with_fatal
+            msg = 'Testing verbose=%s with max_threads=%s (%s)'
+
+            # with_simple
+            logger.debug(msg, level, max_threads, 'simple')
             stdout, stderr = with_simple
             self.createQueue(verbose=level, max_threads=max_threads)
             self.queue.run('dummy://mytest', say_hello)
@@ -167,8 +177,8 @@ class QueueTest(unittest.TestCase):
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
-            # print("E:", level, max_threads, with_simple, with_error,)
-            # with_fatal
+            # with_error
+            logger.debug(msg, level, max_threads, 'error')
             stdout, stderr = with_error
             self.createQueue(verbose=level, max_threads=max_threads)
             self.queue.run('dummy://mytest', error)
@@ -176,8 +186,8 @@ class QueueTest(unittest.TestCase):
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
-            # print("F:", level, max_threads, with_simple, with_error,)
             # with_fatal
+            logger.debug(msg, level, max_threads, 'fatal')
             stdout, stderr = with_fatal
             self.createQueue(verbose=level, max_threads=max_threads)
             self.queue.run('dummy://mytest', fatal_error)
@@ -404,15 +414,14 @@ class QueueTest(unittest.TestCase):
         self.queue.destroy()
         self.assertEqual(data.value, 10)
 
-    # FIXME: Not a method test; this should probably be elsewhere.
-    def testLogging(self):
+    def testQueueLogging(self):
         task = self.startTask()
         while not task.is_completed():
-            time.sleep(.1)
+            time.sleep(.2)
 
         # The following function is not synchronous with the above, so add
         # a timeout to avoid races.
-        time.sleep(.1)
+        time.sleep(.2)
         self.assertTrue(self.queue.is_completed())
 
         logfiles = os.listdir(self.tempdir)
@@ -424,14 +433,17 @@ class QueueTest(unittest.TestCase):
                 content = fp.read()
 
 
-class QueueTestMultiProcessing(QueueTest):
-    mode = 'multiprocessing'
+# Mode 'multiprocessing' is not recommended and officially not supported with
+# threads in parallel, see https://github.com/knipknap/exscript/issues/230
+#
+# class QueueTestMultiProcessing(QueueTest):
+#     mode = 'multiprocessing'
 
 
 def suite():
     loader = unittest.TestLoader()
     suite1 = loader.loadTestsFromTestCase(QueueTest)
-    suite2 = loader.loadTestsFromTestCase(QueueTestMultiProcessing)
-    return unittest.TestSuite((suite1, suite2))
+    # suite2 = loader.loadTestsFromTestCase(QueueTestMultiProcessing)
+    return unittest.TestSuite((suite1,))
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

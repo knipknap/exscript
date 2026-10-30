@@ -23,21 +23,13 @@
 """
 Representing a device to connect with.
 """
-from __future__ import absolute_import
-from builtins import str
-from builtins import object
 from .account import Account
 from .util.cast import to_list
-from .util.ipv4 import is_ip, clean_ip
+from .util.ipv4 import clean_ip, is_ip
 from .util.url import Url
 
 
-def _is_ip(string):
-    # Adds IPv6 support.
-    return ':' in string or is_ip(string)
-
-
-class Host(object):
+class Host:
 
     """
     Represents a device on which to open a connection.
@@ -50,7 +42,7 @@ class Host(object):
                  'tcp_port',
                  'options')
 
-    def __init__(self, uri, default_protocol='telnet'):
+    def __init__(self, uri, default_protocol='ssh'):
         """
         Constructor. The given uri is passed to Host.set_uri().
         The default_protocol argument defines the protocol that is used
@@ -206,9 +198,8 @@ class Host(object):
         supported:
 
             - telnet: Telnet
-            - ssh1: SSH version 1
+            - ssh: SSH version 2
             - ssh2: SSH version 2
-            - ssh: Automatically selects the best supported SSH version
             - dummy: A virtual device that accepts any command, but that
               does not respond anything useful.
             - pseudo: A virtual device that loads a file with the given
@@ -216,7 +207,7 @@ class Host(object):
               information on how the virtual device shall respond to
               commands. For more information please refer to the
               documentation of
-              protocols.Dummy.load_command_handler_from_file().
+              emulators.VirtualDevice.add_commands_from_file().
 
         :type  protocol: string
         :param protocol: The protocol name.
@@ -237,15 +228,40 @@ class Host(object):
         Defines a (possibly protocol-specific) option for the host.
         Possible options include:
 
-            verify_fingerprint: bool
+            banner_timeout: int  # SSH2 only
+            connect_rate_limit: int
+            connect_timeout: int
+            debug: int
+            disabled_algorithms: dict[str, list[str]]  # SSH2 only
+            driver: Driver()|str
+            encoding: str
+            preferred_authentications: list[str]|None  # SSH2 only
+            termtype: str
+            timeout: int
+            verify_fingerprint: bool  # SSH2 only
+
+        Please refer to the Protocol constructor for detailed descriptions.
 
         :type  name: str
         :param name: The option name.
         :type  value: object
         :param value: The option value.
         """
-        if name not in ('debug', 'verify_fingerprint', 'driver'):
-            raise TypeError('No such option: ' + repr(name))
+        valid_options = (
+            'banner_timeout',
+            'connect_rate_limit',
+            'connect_timeout',
+            'debug',
+            'disabled_algorithms',
+            'driver',
+            'encoding',
+            'preferred_authentications',
+            'termtype',
+            'timeout',
+            'verify_fingerprint',
+        )
+        if name not in valid_options:
+            raise TypeError('Invalid option: ' + repr(name))
         if self.options is None:
             self.options = {}
         self.options[name] = value

@@ -23,14 +23,9 @@
 """
 Encryption related utilities.
 """
-from __future__ import print_function, absolute_import
-from builtins import chr
-from builtins import ord
-from builtins import range
-from builtins import bytes
-import sys
-import string
 import random
+import string
+
 try:
     from Cryptodome.Hash import MD4
 except ImportError:
@@ -323,27 +318,16 @@ def _long_from_raw(thehash):
 def _sixword_from_raw(key):
     return _sixword_from_long(_long_from_raw(key))
 
-if sys.version_info[0] < 3:
-    def _fold_md4_or_md5(digest):
-        if len(digest) < 16:
-            raise ValueError('digest is too short')
-        result = b''
-        for i in range(0, 8):
-            one = ord(bytes(digest[i]))
-            two = ord(bytes(digest[i+8]))
-            result = result + bytes([one^two])
-        return result
-else:
-    def _fold_md4_or_md5(digest):
-        if len(digest) < 16:
-            raise ValueError('digest is too short')
-        result = b''
-        for i in range(0, 8):
-            #print(len(digest[i]))
-            one = ord(bytes([digest[i]]))
-            two = ord(bytes([digest[i+8]]))
-            result = result + bytes([one^two])
-        return result
+def _fold_md4_or_md5(digest):
+    if len(digest) < 16:
+        raise ValueError('digest is too short')
+    result = b''
+    for i in range(0, 8):
+        #print(len(digest[i]))
+        one = ord(bytes([digest[i]]))
+        two = ord(bytes([digest[i+8]]))
+        result = result + bytes([one^two])
+    return result
 
 def otp(password, seed, sequence):
     """

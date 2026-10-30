@@ -20,24 +20,24 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import
 from ..parselib import Token
 
 
 class Variable(Token):
 
     def __init__(self, lexer, parser, parent):
-        Token.__init__(self, 'Variable', lexer, parser, parent)
+        Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.varname = lexer.token()[1]
         lexer.expect(self, 'varname')
-        self.mark_end()
+        # End of statement.
+        self.mark_end(rstrip=True)
 
     def value(self, context):
         val = self.parent.get(self.varname)
         if val is None:
-            msg = 'Undefined variable %s' % self.varname
+            msg = 'Undefined variable %s' % repr(self.varname)
             self.lexer.runtime_error(msg, self)
         return val
 
     def dump(self, indent=0):
-        print((' ' * indent) + 'Variable', self.varname, '.')
+        print((' ' * indent) + self.name, self.varname)

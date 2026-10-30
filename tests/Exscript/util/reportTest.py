@@ -1,24 +1,23 @@
-from builtins import str
-from builtins import object
+import os
+import re
 import sys
 import unittest
-import re
-import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import traceback
+
 import Exscript.util.report
-from Exscript import Host
-from Exscript import Logger
+from Exscript import Host, Logger
 from Exscript.util.event import Event
 from Exscript.workqueue import WorkQueue
 
 
-class FakeQueue(object):
+class FakeQueue:
     workqueue = WorkQueue()
 
 
-class FakeJob(object):
+class FakeJob:
 
     def __init__(self, name='fake'):
         self.function = lambda x: None
@@ -39,6 +38,7 @@ class reportTest(unittest.TestCase):
     def setUp(self):
         self.logger = Logger()
         self.n_actions = 0
+        self.maxDiff = None
 
     def createLog(self):
         self.n_actions += 1
@@ -104,12 +104,9 @@ Successful actions:
 -------------------
 fake1
 fake3'''.strip() % file
-        expected_py3 = expected.replace('FakeError\n',
-                                        'util.reportTest.FakeError\n')
-        if sys.version_info[0] < 3:
-            self.assertEqual(format(self.logger), expected)
-        else:
-            self.assertEqual(format(self.logger), expected_py3)
+        expected = expected.replace('FakeError\n',
+                                    'util.reportTest.FakeError\n')
+        self.assertEqual(format(self.logger), expected)
 
 
 def suite():

@@ -26,24 +26,32 @@ Executing Exscript templates on a connection.
 from Exscript import stdlib
 from Exscript.interpreter import Parser
 
+debug = 0
+
 
 def _compile(conn, filename, template, parser_kwargs, **kwargs):
+    undefined = 'undefined'
     if conn:
         hostname = conn.get_host()
-        account = conn.last_account
-        username = account is not None and account.get_name() or None
+        account = conn._last_account
+        username = account is not None and account.get_name() or undefined
     else:
-        hostname = 'undefined'
-        username = None
+        hostname = undefined
+        username = undefined
 
     # Init the parser.
+    if "debug" not in parser_kwargs:
+        parser_kwargs["debug"] = debug
     parser = Parser(**parser_kwargs)
 
     # Define the built-in variables and functions.
-    builtin = dict(__filename__=[filename or 'undefined'],
-                   __username__=[username],
-                   __hostname__=[hostname],
-                   __connection__=conn)
+    builtin = dict(
+        __filename__=[filename or undefined],
+        __username__=[username],
+        __hostname__=[hostname],
+        __response__=[''],
+        __connection__=conn,
+    )
     parser.define_object(**builtin)
     parser.define_object(**stdlib.functions)
 
@@ -59,35 +67,28 @@ def _run(conn, filename, template, parser_kwargs, **kwargs):
     return compiled.execute()
 
 
-def test(string, **kwargs):
+def test(string, secure=False, **kwargs):
     """
     Compiles the given template, and raises an exception if that
     failed. Does nothing otherwise.
 
-    :type  string: string
-    :param string: The template to compile.
-    :type  kwargs: dict
-    :param kwargs: Variables to define in the template.
-    """
-    _compile(None, None, string, {}, **kwargs)
-
-
-def test_secure(string, **kwargs):
-    """
-    Like test(), but makes sure that each function that is used in
+    With secure mode enabled it makes sure that each function that is used in
     the template has the Exscript.stdlib.util.safe_function decorator.
-    Raises Exscript.interpreter.Exception.PermissionError if any
-    function lacks the decorator.
+    Raises Exscript.interpreter.Exception.PermissionError if any function
+    lacks the decorator.
 
     :type  string: string
     :param string: The template to compile.
+    :type  secure: bool
+    :param secure: Whether to enable secure mode.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
-    _compile(None, None, string, {'secure': True}, **kwargs)
+    parser_args = {'secure': secure, 'no_escaping': False}
+    _compile(None, None, string, parser_args, **kwargs)
 
 
-def test_file(filename, **kwargs):
+def test_file(filename, secure=False, **kwargs):
     """
     Convenience wrapper around test() that reads the template from a file
     instead.
@@ -97,17 +98,17 @@ def test_file(filename, **kwargs):
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
+    parser_args = {'secure': secure, 'no_escaping': False}
     with open(filename) as fp:
-        _compile(None, filename, fp.read(), {}, **kwargs)
+        _compile(None, filename, fp.read(), parser_args, **kwargs)
 
 
-def eval(conn, string, strip_command=True, **kwargs):
-    """
-    Compiles the given template and executes it on the given
-    connection.
+def eval(conn, string, strip_command=True, no_escaping=False, **kwargs):
+    r"""
+    Compiles the given template and executes it on the given connection.
     Raises an exception if the compilation fails.
 
-    if strip_command is True, the first line of each response that is
+    If strip_command is True, the first line of each response that is
     received after any command sent by the template is stripped. For
     example, consider the following template::
 
@@ -124,7 +125,7 @@ def eval(conn, string, strip_command=True, **kwargs):
         myfile2
         [...]
 
-    By setting strip_command to True, the first line is ommitted.
+    By setting strip_command to True, the first line is omitted.
 
     :type  conn: Exscript.protocols.Protocol
     :param conn: The connection on which to run the template.
@@ -132,16 +133,20 @@ def eval(conn, string, strip_command=True, **kwargs):
     :param string: The template to compile.
     :type  strip_command: bool
     :param strip_command: Whether to strip the command echo from the response.
+    :type  no_escaping: bool
+    :param no_escaping: Whether to disable advanced escape evaluation for
+        control characters, octal, hexadecimal and unicode character sequences.
+        Evaluation for CR, LF and TAB in strings is always enabled.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     :rtype:  dict
     :return: The variables that are defined after execution of the script.
     """
-    parser_args = {'strip_command': strip_command}
+    parser_args = {'strip_command': strip_command, 'no_escaping': no_escaping}
     return _run(conn, None, string, parser_args, **kwargs)
 
 
-def eval_file(conn, filename, strip_command=True, **kwargs):
+def eval_file(conn, filename, strip_command=True, no_escaping=False, **kwargs):
     """
     Convenience wrapper around eval() that reads the template from a file
     instead.
@@ -152,15 +157,19 @@ def eval_file(conn, filename, strip_command=True, **kwargs):
     :param filename: The name of the template file.
     :type  strip_command: bool
     :param strip_command: Whether to strip the command echo from the response.
+    :type  no_escaping: bool
+    :param no_escaping: Whether to disable advanced escape evaluation for
+        control characters, octal, hexadecimal and unicode character sequences.
+        Evaluation for CR, LF and TAB in strings is always enabled.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
-    parser_args = {'strip_command': strip_command}
+    parser_args = {'strip_command': strip_command, 'no_escaping': no_escaping}
     with open(filename, 'r') as fp:
         return _run(conn, filename, fp.read(), parser_args, **kwargs)
 
 
-def paste(conn, string, **kwargs):
+def paste(conn, string, no_escaping=False, **kwargs):
     """
     Compiles the given template and executes it on the given
     connection. This function differs from eval() such that it does not
@@ -176,15 +185,20 @@ def paste(conn, string, **kwargs):
     :param conn: The connection on which to run the template.
     :type  string: string
     :param string: The template to compile.
+    :type  no_escaping: bool
+    :param no_escaping: Whether to disable advanced escape evaluation for
+        control characters, octal, hexadecimal and unicode character sequences.
+        Evaluation for CR, LF and TAB in strings is always enabled.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     :rtype:  dict
     :return: The variables that are defined after execution of the script.
     """
-    return _run(conn, None, string, {'no_prompt': True}, **kwargs)
+    parser_args = {'no_prompt': True, 'no_escaping': no_escaping}
+    return _run(conn, None, string, parser_args, **kwargs)
 
 
-def paste_file(conn, filename, **kwargs):
+def paste_file(conn, filename, no_escaping=False,  **kwargs):
     """
     Convenience wrapper around paste() that reads the template from a file
     instead.
@@ -193,8 +207,13 @@ def paste_file(conn, filename, **kwargs):
     :param conn: The connection on which to run the template.
     :type  filename: string
     :param filename: The name of the template file.
+    :type  no_escaping: bool
+    :param no_escaping: Whether to disable advanced escape evaluation for
+        control characters, octal, hexadecimal and unicode character sequences.
+        Evaluation for CR, LF and TAB in strings is always enabled.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
+    parser_args = {'no_prompt': True, 'no_escaping': no_escaping}
     with open(filename, 'r') as fp:
-        return _run(conn, None, fp.read(), {'no_prompt': True}, **kwargs)
+        return _run(conn, filename, fp.read(), parser_args, **kwargs)

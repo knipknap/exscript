@@ -23,7 +23,6 @@
 """
 Weak references to bound and unbound methods.
 """
-from builtins import object
 import weakref
 
 
@@ -36,7 +35,7 @@ class DeadMethodCalled(Exception):
     pass
 
 
-class WeakMethod(object):
+class WeakMethod:
 
     """
     Do not create this class directly; use :class:`ref()` instead.

@@ -23,21 +23,22 @@
 """
 A driver for Cisco IOS (not IOS XR).
 """
-from __future__ import absolute_import
 import re
+
 from ..exception import InvalidCommandException
 from .driver import Driver
 
-
 _user_re = [re.compile(r'user ?name: ?$', re.I)]
-_password_re = [re.compile(r'(?:[\r\n][Pp]assword: ?|last resort password:)$')]
-_tacacs_re = re.compile(r'(?:[\r\n]s|^s)\/key[\S ]+\r?%s' % _password_re[0].pattern)
-_prompt_re = [re.compile(r'[\r\n][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
-_error_re = [re.compile(r'%Error'),
-             re.compile(r'invalid input', re.I),
-             re.compile(r'(?:incomplete|ambiguous) command', re.I),
-             re.compile(r'connection timed out', re.I),
-             re.compile(r'[^\r\n]+ not found', re.I)]
+_password_re = [re.compile(r'(?:(?:\r\n|[\r\n])[Pp]assword: ?|last resort password:)$')]
+_tacacs_re = re.compile(r'(?:(?:\r\n|[\r\n])s|^s)\/key[\S ]+\r?%s' % _password_re[0].pattern)
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
+_error_re = [
+    re.compile(r'%Error'),
+    re.compile(r'invalid input', re.I),
+    re.compile(r'(?:incomplete|ambiguous) command', re.I),
+    re.compile(r'connection timed out', re.I),
+    re.compile(r'[^\r\n]+ not found', re.I),
+]
 
 
 class IOSDriver(Driver):
@@ -48,9 +49,9 @@ class IOSDriver(Driver):
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.error_re = _error_re
-        # Some Cisco IOS devices (e.g. WS-C3750) do not accept further login
-        # attempts after failing one. So in this hack, we
-        # re-connect after each attempt...
+        # Some Cisco IOS devices (e.g. WS-C3750) do not accept further SSH login
+        # attempts after failing one, but also do not disconnect each time. So
+        # in this hack, we re-connect after each attempt...
         self.reconnect_between_auth_methods = True
 
     def check_protocol_for_os(self, string):

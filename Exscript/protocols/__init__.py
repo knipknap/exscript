@@ -20,20 +20,23 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import absolute_import
 from .. import Account
 from ..util.cast import to_host
 from ..util.url import Url
-from .protocol import Protocol
-from .telnet import Telnet
-from .ssh2 import SSH2
 from .dummy import Dummy
+from .netconf import Netconf
+from .protocol import Protocol
+from .ssh2 import SSH2
+from .telnet import Telnet
 
-protocol_map = {'dummy':  Dummy,
-                'pseudo': Dummy,
-                'telnet': Telnet,
-                'ssh':    SSH2,
-                'ssh2':   SSH2}
+protocol_map = {
+    'dummy':  Dummy,
+    'pseudo': Dummy,
+    'telnet': Telnet,
+    'ssh':    SSH2,
+    'ssh2':   SSH2,
+    'netconf': Netconf,
+}
 
 
 def get_protocol_from_name(name):
@@ -66,7 +69,7 @@ def create_protocol(name, **kwargs):
     return cls(**kwargs)
 
 
-def prepare(host, default_protocol='telnet', **kwargs):
+def prepare(host, default_protocol='ssh', **kwargs):
     """
     Creates an instance of the protocol by either parsing the given
     URL-formatted hostname using :class:`Exscript.util.url`, or according to
@@ -90,7 +93,7 @@ def prepare(host, default_protocol='telnet', **kwargs):
     return conn
 
 
-def connect(host, default_protocol='telnet', **kwargs):
+def connect(host, default_protocol='ssh', **kwargs):
     """
     Like :class:`prepare()`, but also connects to the host by calling
     :class:`Protocol.connect()`. If the URL or host contain any login info, this
@@ -114,5 +117,6 @@ def connect(host, default_protocol='telnet', **kwargs):
     return conn
 
 import inspect
+
 __all__ = [name for name, obj in list(locals().items())
            if not (name.startswith('_') or inspect.ismodule(obj))]

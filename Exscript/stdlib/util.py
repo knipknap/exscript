@@ -24,8 +24,13 @@ from functools import wraps
 
 
 def secure_function(function):
+    """Decorator to indicate a secure function in scripts.
+
+    The function is secure, if it does not have any side effects on and does not
+    read data from the system where the interpreter is running.
+    """
     @wraps(function)
     def wrapper(*args, **kwargs):
         return function(*args, **kwargs)
-    wrapper._is_secure = True
+    setattr(wrapper, '_is_secure', True)
     return wrapper

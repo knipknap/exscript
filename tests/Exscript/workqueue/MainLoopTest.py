@@ -1,14 +1,14 @@
-from builtins import range
-import sys
-import unittest
-import re
 import os.path
+import re
+import sys
 import threading
+import unittest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
+from Exscript.workqueue.job import Process
 from Exscript.workqueue.mainloop import MainLoop
 from Exscript.workqueue.pipeline import Pipeline
-from Exscript.workqueue.job import Process
 
 
 class MainLoopTest(unittest.TestCase):

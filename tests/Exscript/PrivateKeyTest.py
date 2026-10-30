@@ -19,19 +19,22 @@ class PrivateKeyTest(unittest.TestCase):
         self.key = PrivateKey()
         self.assertRaises(TypeError, PrivateKey, 'foo')
         PrivateKey('rsa')
-        PrivateKey('dss')
+        PrivateKey('ecdsa')
+        PrivateKey('ed25519')
 
     def testFromFile(self):
-        self.key = PrivateKey.from_file(self.filename, self.password, 'dss')
-        self.assertEqual(self.key.get_type(), 'dss')
+        self.key = PrivateKey.from_file(self.filename, self.password, 'ecdsa')
+        self.assertEqual(self.key.get_type(), 'ecdsa')
         self.assertEqual(self.filename, self.key.get_filename())
         self.assertEqual(self.password, self.key.get_password())
 
     def testGetType(self):
         self.testConstructor()
         self.assertEqual(self.key.get_type(), 'rsa')
-        self.key = PrivateKey('dss')
-        self.assertEqual(self.key.get_type(), 'dss')
+        self.key = PrivateKey('ecdsa')
+        self.assertEqual(self.key.get_type(), 'ecdsa')
+        self.key = PrivateKey('ed25519')
+        self.assertEqual(self.key.get_type(), 'ed25519')
 
     def testGetFilename(self):
         self.testConstructor()

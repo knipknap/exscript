@@ -24,9 +24,10 @@
 A driver for Alcatel SROS.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_prompt_re = [re.compile(r'[\r\n][*]?(?:A|B):[\-\w\.>]+[#\$] ?$')]
+from .driver import Driver
+
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[*]?(?:A|B):[\-\w\.>]+[#\$] ?$')]
 
 
 class SROSDriver(Driver):
@@ -44,3 +45,6 @@ class SROSDriver(Driver):
         conn.execute('environment no more')
         conn.execute('environment reduced-prompt 2')
         conn.execute('environment no saved-ind-prompt')
+
+    def logout(self, conn):
+        conn.send('logout\r')

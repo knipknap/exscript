@@ -23,18 +23,14 @@
 """
 The core module.
 """
-from __future__ import absolute_import
-import warnings
-with warnings.catch_warnings():
-    warnings.filterwarnings('ignore', category=DeprecationWarning)
-    import paramiko
-from .version import __version__
-from .account import Account, AccountPool
-from .key import PrivateKey
-from .queue import Queue
-from .host import Host
-from .logger import Logger, FileLogger
-
 import inspect
+
+from .account import Account, AccountPool
+from .host import Host
+from .key import PrivateKey
+from .logger import FileLogger, Logger
+from .queue import Queue
+from .version import __version__
+
 __all__ = [name for name, obj in list(locals().items())
            if not (name.startswith('_') or inspect.ismodule(obj))]

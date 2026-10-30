@@ -23,21 +23,20 @@
 """
 Sending and formatting emails.
 """
-from builtins import str
-from builtins import object
-import os
-import time
-import re
-import socket
-import smtplib
 import mimetypes
-from getpass import getuser
+import os
+import re
+import smtplib
+import socket
+import time
 from email import encoders
-from email.mime.multipart import MIMEMultipart
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from getpass import getuser
+
 from Exscript.util.event import Event
 
 #
@@ -47,7 +46,7 @@ _varname_re = re.compile(r'[a-z][\w_]*',     re.I)
 _string_re = re.compile(r'(\\?){([\w_]+)}', re.I)
 
 
-class _TemplateParser(object):
+class _TemplateParser:
 
     """
     This exists for backward compatibility; Python 2.3 does not come
@@ -112,7 +111,7 @@ def _cleanup_mail_addresses(recipients):
 #
 
 
-class Mail(object):
+class Mail:
 
     """
     Represents an email.

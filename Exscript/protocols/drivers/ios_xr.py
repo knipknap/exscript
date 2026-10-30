@@ -24,12 +24,15 @@
 A driver for Cisco IOS XR.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_user_re = [re.compile(r'[\r\n]Username: $')]
-_password_re = [re.compile(r'[\r\n]Password: $')]
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])Username: $')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
 _prompt_re = [
-    re.compile(r'[\r\n\x00]RP/\d+/(?:RS?P)?\d+\/CPU\d+:[^#]+(?:\([^\)]+\))?#$')]
+    re.compile(r'(?:\r\n\x00?|[\r\n\x00])RP/\d+/(?:RS?P)?\d+\/CPU\d+:[^#]+(?:\([^\)]+\))?#$'),
+]
+_netconf_caps_re = [re.compile(r"Cisco-IOS-XR", re.I)]
 
 
 class IOSXRDriver(Driver):
@@ -39,6 +42,7 @@ class IOSXRDriver(Driver):
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
+        self.netconf_capabilities_re = _netconf_caps_re
 
     def check_response_for_os(self, string):
         if _prompt_re[0].search(string):

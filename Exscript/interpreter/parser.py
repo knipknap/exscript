@@ -20,25 +20,26 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import absolute_import
-from builtins import object
 import copy
+from collections.abc import Callable, Iterable
+
 from ..parselib import Lexer
 from .program import Program
 
 
-class Parser(object):
+class Parser:
 
     def __init__(self, **kwargs):
-        self.no_prompt = kwargs.get('no_prompt',     False)
+        self.no_escaping = kwargs.get('no_escaping', False)
+        self.no_prompt = kwargs.get('no_prompt', False)
         self.strip_command = kwargs.get('strip_command', True)
-        self.secure_only = kwargs.get('secure',        False)
-        self.debug = kwargs.get('debug',         0)
+        self.secure_only = kwargs.get('secure', False)
+        self.debug = kwargs.get('debug', 0)
         self.variables = {}
 
     def define(self, **kwargs):
         for key, value in list(kwargs.items()):
-            if hasattr(value, '__iter__') or hasattr(value, '__call__'):
+            if not isinstance(value, str) and isinstance(value, Iterable) or isinstance(value, Callable):
                 self.variables[key] = value
             else:
                 self.variables[key] = [value]

@@ -24,16 +24,20 @@
 A driver for devices running Zte operating system.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
+
+from .driver import Driver
 
 _user_re = [re.compile(r'user ?name:', re.I), re.compile(r'login', re.I)]
 _password_re = [re.compile(r'(?:User )?Password:', re.I)]
-_prompt_re = [re.compile(
-    r'[\r\n][\-\w+\.\(\)]+(?:\([^\)]+\))?[>#$] ?$|(?:\(y/n\)\[n\])'),
-    re.compile(r"[\r\n]Password: ?", re.I)]  # password prompt to be used in privilege mode when it has
-# a password different from the login password.
-_error_re = [re.compile(r'%Error'),
-             re.compile(r'(?:Unrecognized|Incomplete) command', re.I), re.compile(r'Invalid input', re.I)]
+_prompt_re = [
+    re.compile(r'(?:\r\n|[\r\n])[\-\w+\.\(\)]+(?:\([^\)]+\))?[>#$] ?$|(?:\(y/n\)\[n\])'),
+    re.compile(r"(?:\r\n|[\r\n])Password: ?", re.I),  # password prompt to be used in privilege mode
+]
+_error_re = [
+    re.compile(r'%Error'),
+    re.compile(r'(?:Unrecognized|Incomplete) command', re.I),
+    re.compile(r'Invalid input', re.I),
+]
 
 _zte_re = re.compile(r"ZTE", re.I)
 

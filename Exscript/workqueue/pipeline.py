@@ -1,4 +1,3 @@
-from builtins import object
 #
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
@@ -21,12 +20,12 @@ from builtins import object
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from uuid import uuid4
 from collections import deque
 from multiprocessing import Condition, RLock
+from uuid import uuid4
 
 
-class Pipeline(object):
+class Pipeline:
 
     """
     A collection that is similar to Python's Queue object, except

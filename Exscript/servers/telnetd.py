@@ -23,10 +23,14 @@
 """
 A Telnet server.
 """
-from __future__ import absolute_import, print_function
+import logging
 import select
-from copy import deepcopy
+import socket
+
 from .server import Server
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 
 class Telnetd(Server):
@@ -43,35 +47,43 @@ class Telnetd(Server):
         daemon.join()  # Wait until it terminates.
     """
 
-    def _recvline(self, conn):
-        while not b'\n' in self.buf:
+    def __init__(self, host, port, device):
+        Server.__init__(self, host, port, device)
+        self._logger = _logger
+
+    def _recvline(self, conn, buf):
+        while b'\n' not in buf:
             r, w, x = select.select([conn], [], [], self.timeout)
             if not self.running:
-                return None
+                return None, buf
             if not r:
                 continue
-            buf = conn.recv(1024)
-            if not buf:
-                self.running = False
-                return None
-            self.buf += buf.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
-        lines = self.buf.split(b'\n')
-        self.buf = b'\n'.join(lines[1:])
-        return lines[0].decode(self.encoding) + '\n'
+            data = conn.recv(1024)
+            if not data:
+                return None, buf  # client disconnected — keep server running
+            buf += data.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+        lines = buf.split(b'\n')
+        return lines[0].decode(self.encoding) + '\n', b'\n'.join(lines[1:])
 
     def _handle_connection(self, conn):
         try:
-            device = deepcopy(self.device)
-            conn.send(device.init().encode('utf8'))
+            # send the banner
+            conn.send(self.device.init().encode('utf8'))
 
+            # accept commands
+            buf = b''
             while self.running:
-                line = self._recvline(conn)
-                if not line:
-                    continue
+                line, buf = self._recvline(conn, buf)
+                if line is None:
+                    break
                 response = self.device.do(line)
                 if response:
                     conn.send(response.encode('utf8'))
+        except (socket.error, EOFError) as err:
+            msg = 'Client disappeared: ' + str(err)
+            self._dbg(1, msg)
         except Exception as err:
-            self._dbg(1, "_handle_connection(): %s" % err)
+            msg = "%s in connection handler: %s"
+            self._dbg(1, msg % (type(err).__name__, str(err)))
         finally:
             conn.close()

@@ -24,10 +24,10 @@
 TTY utilities.
 """
 import os
-import sys
 import struct
-from subprocess import Popen, PIPE
-from builtins import int
+import sys
+from subprocess import PIPE, Popen
+
 
 def _get_terminal_size(fd):
     try:

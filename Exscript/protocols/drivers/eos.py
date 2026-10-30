@@ -24,10 +24,11 @@
 A driver for Arista EOS.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
+
+from .driver import Driver
 
 # Match following prompt pattern variations:
-# NOTE:  Upon first login, EOS does not return \r\n before prompt
+# Important: Upon first login, EOS does not return \r\n before prompt.
 # hostname(s1)>
 # hostname(s1)#
 # hostname(s1)(config)#
@@ -46,23 +47,27 @@ from Exscript.protocols.drivers.driver import Driver
 
 _user_re = [re.compile(r'user ?name: ?$', re.I),
             re.compile(r' login: ?$', re.I)]
-_password_re = [re.compile(r'[\r\n]Password: ?$', re.I)]
-_prompt_re = [re.compile(r'[\r\n]?[\-\w+\.:/]+(?:\([^\)]+\)){,3}[>#] ?$')]
-_error_re = [re.compile(r'% ?Error'),
-             re.compile(r'% ?Invalid input', re.I),
-             re.compile(r'% ?(?:Incomplete|Ambiguous) command', re.I),
-             re.compile(r'connection timed out', re.I)]
-_login_fail = [r'[Bb]ad secrets?',
-               r'denied',
-               r'invalid',
-               r'too short',
-               r'incorrect',
-               r'connection timed out',
-               r'failed',
-               r'failure']
-_login_fail_re = [re.compile(r'[\r\n]'
-                             + r'[^\r\n]*'
-                             + r'(?:' + '|'.join(_login_fail) + r')', re.I)]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])Password: ?$', re.I)]
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])?[\-\w+\.:/]+(?:\([^\)]+\)){,3}[>#] ?$')]
+_error_re = [
+    re.compile(r'% ?Error'),
+    re.compile(r'% ?Invalid input', re.I),
+    re.compile(r'% ?(?:Incomplete|Ambiguous) command', re.I),
+    re.compile(r'connection timed out', re.I),
+]
+_login_fail = [
+    r'[Bb]ad secrets?',
+    r'denied',
+    r'invalid',
+    r'too short',
+    r'incorrect',
+    r'connection timed out',
+    r'failed',
+    r'failure',
+]
+_login_fail_re = [
+    re.compile(r'(?:\r\n|[\r\n])[^\r\n]*(?:' + '|'.join(_login_fail) + r')', re.I),
+]
 
 
 class EOSDriver(Driver):

@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 #
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
@@ -22,12 +20,13 @@ from builtins import object
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+import multiprocessing
 import sys
 import threading
-import multiprocessing
 from copy import copy
 from functools import partial
 from multiprocessing import Pipe
+
 from Exscript.util.impl import serializeable_sys_exc_info
 
 
@@ -93,7 +92,7 @@ Thread = _make_process_class(threading.Thread, 'Thread')
 Process = _make_process_class(multiprocessing.Process, 'Process')
 
 
-class Job(object):
+class Job:
     __slots__ = ('id',
                  'func',
                  'name',

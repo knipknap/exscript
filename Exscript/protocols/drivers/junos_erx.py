@@ -24,11 +24,12 @@
 A driver for devices running Juniper ERX OS.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
-from Exscript.protocols.drivers.ios import _prompt_re
 
-_user_re = [re.compile(r'[\r\n]User: $')]
-_password_re = [re.compile(r'[\r\n](Telnet password:|Password:) $')]
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])User: $')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])(Telnet password:|Password:) $')]
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _junos_re = re.compile(r'\bJuniper Networks\b', re.I)
 
 

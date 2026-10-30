@@ -23,12 +23,11 @@
 """
 Represents a private key.
 """
-from builtins import object
-from paramiko import RSAKey, ECDSAKey, Ed25519Key
+from paramiko import ECDSAKey, Ed25519Key, RSAKey
 from paramiko.ssh_exception import SSHException
 
 
-class PrivateKey(object):
+class PrivateKey:
 
     """
     Represents a cryptographic key, and may be used to authenticate

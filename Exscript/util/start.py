@@ -23,10 +23,9 @@
 """
 Quickstart methods for the Exscript queue.
 """
-from __future__ import print_function, absolute_import
 from .. import Queue
+from .decorator import autoauthenticate, autologin
 from .interact import read_login
-from .decorator import autologin, autoauthenticate
 
 
 def run(users, hosts, func, **kwargs):

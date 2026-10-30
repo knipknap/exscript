@@ -23,10 +23,9 @@
 """
 Development tools.
 """
-from builtins import object
 import sys
-import warnings
 import traceback
+import warnings
 from functools import wraps
 
 
@@ -121,9 +120,9 @@ def deprecation(msg):
     """
     Prints a deprecation warning.
     """
-    warnings.warn('deprecated',
+    warnings.warn(msg,
                   category=DeprecationWarning,
-                  stacklevel=2)
+                  stacklevel=3)
 
 
 def deprecated(func):
@@ -132,9 +131,7 @@ def deprecated(func):
     a printed warning message when the function is used.
     """
     def decorated(*args, **kwargs):
-        warnings.warn('Call to deprecated function %s.' % func.__name__,
-                      category=DeprecationWarning,
-                      stacklevel=2)
+        deprecation('Call to deprecated function %s.' % func.__name__)
         return func(*args, **kwargs)
     decorated.__name__ = func.__name__
     decorated.__doc__ = func.__doc__
@@ -178,7 +175,7 @@ def debug(func):
     return wrapped
 
 
-class Decorator(object):
+class Decorator:
 
     def __init__(self, obj):
         self.__dict__['obj'] = obj

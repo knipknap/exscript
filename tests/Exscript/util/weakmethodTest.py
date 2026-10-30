@@ -1,14 +1,14 @@
-from builtins import object
+import os
+import re
 import sys
 import unittest
-import re
-import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from Exscript.util.weakmethod import ref, WeakMethod, DeadMethodCalled
+from Exscript.util.weakmethod import DeadMethodCalled, WeakMethod, ref
 
 
-class TestClass(object):
+class TestClass:
 
     def callback(self, *args, **kwargs):
         self.args = args

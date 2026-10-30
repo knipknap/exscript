@@ -24,11 +24,12 @@
 A driver for devices running VXOA (by Silver Peak).
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_user_re = [re.compile(r'[\r\n]login ?:as :')]
-_password_re = [re.compile(r'[\r\n][Pp]assword: ?$')]
-_prompt_re = [re.compile(r'[\r\n].*?[>#] ?$')]
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])login ?:as :')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])[Pp]assword: ?$')]
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n]).*?[>#] ?$')]
 _error_re = [re.compile(r'^(unknown|invalid|error|syntax error)', re.I)]
 _banner_re = re.compile(r'Silver[\r\n\s]Peak[\r\n\s]Systems[\r\n\s]Inc\.')
 _auth_banner_re = re.compile(r'Last login:\s')

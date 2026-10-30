@@ -1,13 +1,13 @@
-from __future__ import unicode_literals
-from builtins import str
+import os
+import re
 import sys
 import unittest
-import re
-import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from tempfile import TemporaryFile
 from functools import partial
+from tempfile import TemporaryFile
+
 from Exscript.util.buffer import MonitoredBuffer
 
 

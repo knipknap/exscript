@@ -20,15 +20,18 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import absolute_import
-from builtins import object
+import logging
+
 from ..util.event import Event
-from .job import Thread, Process
-from .pipeline import Pipeline
+from .job import Process, Thread
 from .mainloop import MainLoop
+from .pipeline import Pipeline
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 
-class WorkQueue(object):
+class WorkQueue:
 
     """
     This class implements the asynchronous workqueue and is the main API
@@ -37,20 +40,19 @@ class WorkQueue(object):
 
     def __init__(self,
                  collection=None,
-                 debug=0,
                  max_threads=1,
                  mode='threading'):
         """
         Constructor.
 
-        :type  debug: int
-        :param debug: The debug level.
         :type  max_threads: int
         :param max_threads: The maximum number of concurrent threads.
         """
+        self._logger = _logger
         if mode == 'threading':
             self.job_cls = Thread
         elif mode == 'multiprocessing':
+            self._logger.warning("Mode 'multiprocessing' is not recommended, see: https://github.com/knipknap/exscript/issues/230")
             self.job_cls = Process
         else:
             raise TypeError('invalid "mode" argument: ' + repr(mode))
@@ -65,7 +67,7 @@ class WorkQueue(object):
         self.job_succeeded_event = Event()
         self.job_aborted_event = Event()
         self.queue_empty_event = Event()
-        self.debug = debug
+        self.debug = 0
         self.main_loop = None
         self._init()
 
@@ -84,16 +86,21 @@ class WorkQueue(object):
         if self.main_loop is None:
             raise Exception('main loop is already destroyed')
 
-    def set_debug(self, debug=1):
+    def _dbg(self, level, msg, exc_info=None):
+        if level > self.debug:
+            return
+        self._logger.debug(msg, exc_info=exc_info)
+
+    def set_debug(self, level):
         """
         Set the debug level.
 
-        :type  debug: int
-        :param debug: The debug level.
+        :type  level: int
+        :param level: The debug level.
         """
         self._check_if_ready()
-        self.debug = debug
-        self.main_loop.debug = debug
+        self.debug = level
+        self.main_loop.debug = level
 
     def get_max_threads(self):
         """

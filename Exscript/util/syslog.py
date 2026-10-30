@@ -24,22 +24,17 @@
 Send messages to a syslog server.
 """
 import os
-import sys
-import imp
 import socket
-
-# This way of loading a module prevents Python from looking in the
-# current directory. (We need to avoid it due to the syslog module
-# name collision.)
-syslog = imp.load_module('syslog', *imp.find_module('syslog'))
+import sys
+import syslog as _syslog
 
 
 def netlog(message,
            source=None,
            host='localhost',
            port=514,
-           priority=syslog.LOG_DEBUG,
-           facility=syslog.LOG_USER):
+           priority=_syslog.LOG_DEBUG,
+           facility=_syslog.LOG_USER):
     """
     Python's built in syslog module does not support networking, so
     this is the alternative.

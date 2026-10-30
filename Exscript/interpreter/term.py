@@ -20,19 +20,18 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import
 from ..parselib import Token
-from .variable import Variable
-from .number import Number
 from .functioncall import FunctionCall
-from .string import String
+from .number import Number
 from .regex import Regex
+from .string import String
+from .variable import Variable
 
 
 class Term(Token):
 
     def __init__(self, lexer, parser, parent):
-        Token.__init__(self, 'Term', lexer, parser, parent)
+        Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.term = None
         self.lft = None
         self.rgt = None
@@ -42,7 +41,9 @@ class Term(Token):
         ttype, token = lexer.token()
         if lexer.current_is('varname'):
             if not parent.is_defined(token):
-                lexer.error('Undeclared variable %s' % token, self, ValueError)
+                self.mark_start()
+                self.mark_end(distance=len(token))
+                lexer.error('Undefined variable %s' % repr(token), self, NameError)
             self.term = Variable(lexer, parser, parent)
         elif lexer.current_is('open_function_call'):
             self.term = FunctionCall(lexer, parser, parent)
@@ -55,14 +56,18 @@ class Term(Token):
         elif lexer.next_if('keyword', 'true'):
             self.term = Number(1)
         elif lexer.next_if('octal_number'):
-            self.term = Number(int(token[1:], 8))
+            start = 2 if "o" in token else 1
+            self.term = Number(int(token[start:], 8))
         elif lexer.next_if('hex_number'):
             self.term = Number(int(token[2:], 16))
         elif lexer.current_is('regex_delimiter'):
             self.term = Regex(lexer, parser, parent)
         else:
-            lexer.syntax_error('Expected term but got %s' % ttype, self)
-        self.mark_end()
+            self.mark_start()
+            self.mark_end(distance=len(token))
+            lexer.syntax_error('Expected term but got %s %s' % (ttype, repr(token)), self)
+        # End of statement.
+        self.mark_end(rstrip=True)
 
     def priority(self):
         return 6

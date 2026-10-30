@@ -1,21 +1,22 @@
-from builtins import object
+import os.path
+import re
 import sys
 import unittest
-import re
-import os.path
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from functools import partial
-import Exscript.util.decorator
-from Exscript.util.impl import get_label
-from Exscript import Host, Account
-from Exscript.protocols import Protocol
-from Exscript.protocols.exception import LoginFailure
-from util.reportTest import FakeJob
 from multiprocessing import Value
 
+import Exscript.util.decorator
+from Exscript import Account, Host
+from Exscript.protocols import Protocol
+from Exscript.protocols.exception import LoginFailure
+from Exscript.util.impl import get_label
+from util.reportTest import FakeJob
 
-class FakeConnection(object):
+
+class FakeConnection:
 
     def __init__(self, os=None):
         self.os = os

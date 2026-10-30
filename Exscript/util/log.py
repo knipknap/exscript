@@ -47,10 +47,10 @@ def log_to(logger):
 
 def log_to_file(logdir, mode='a', delete=False, clearmem=True):
     """
-    Like :class:`log_to()`, but automatically creates a new FileLogger
+    Like :func:`log_to`, but automatically creates a new FileLogger
     instead of having one passed.
     Note that the logger stays alive (in memory) forever. If you need
-    to control the lifetime of a logger, use :class:`log_to()` instead.
+    to control the lifetime of a logger, use :func:`log_to` instead.
     """
     logger = FileLogger(logdir, mode, delete, clearmem)
     _loggers.append(logger)

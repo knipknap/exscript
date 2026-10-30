@@ -23,14 +23,14 @@
 """
 The Telnet protocol.
 """
-from __future__ import absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
+import logging
+
 from ..util.tty import get_terminal_size
 from . import telnetlib
 from .protocol import Protocol
-from .exception import ProtocolException, TimeoutException, \
-        DriverReplacedException, ExpectCancelledException
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 
 class Telnet(Protocol):
@@ -41,91 +41,92 @@ class Telnet(Protocol):
 
     def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
-        self.tn = None
+        # Module-Level
+        self._logger = _logger
+        # Internals
+        self._tn = None
 
     def _telnetlib_received(self, data):
-        self._receive_cb(data, False)
-        self.buffer.append(data)
+        self._receive_cb(data)
+        self._buffer.append(data)
 
-    def _connect_hook(self, hostname, port):
-        assert self.tn is None
+    def _connect(self):
+        assert self._tn is None
         rows, cols = get_terminal_size()
-        self.tn = telnetlib.Telnet(hostname,
-                                   port or 23,
-                                   encoding=self.encoding,
-                                   connect_timeout=self.connect_timeout,
-                                   termsize=(rows, cols),
-                                   termtype=self.termtype,
-                                   stderr=self.stderr,
-                                   receive_callback=self._telnetlib_received)
+        self._tn = telnetlib.Telnet(
+            self.host,
+            self.port,
+            encoding=self.encoding,
+            connect_timeout=self.connect_timeout,
+            termsize=(rows, cols),
+            termtype=self.termtype,
+            stderr=self.stderr,
+            receive_callback=self._telnetlib_received,
+        )
+        self._tn.cancel_expect = self._expect_canceled  # sync states
         if self.debug >= 5:
-            self.tn.set_debuglevel(1)
-        if self.tn is None:
-            return False
+            self._tn.set_debuglevel(1)
         return True
 
-    def send(self, data):
-        self._dbg(4, 'Sending %s' % repr(data))
+    def _send(self, data):
         try:
-            self.tn.write(data)
+            self._tn.write(data)  # telnetlib handles encoding
+            self._send_cb(data)
         except Exception:
             self._dbg(1, 'Error while writing to connection')
             raise
 
     def _domatch(self, prompt, flush):
         if flush:
-            func = self.tn.expect
+            func = self._tn.expect
         else:
-            func = self.tn.waitfor
+            func = self._tn.waitfor
 
         # Wait for a prompt.
-        clean = self.get_driver().clean_response_for_re_match
-        self.response = None
+        cleanup_callback = self.get_driver().clean_response_for_re_match
         try:
             result, match, self.response = func(
-                prompt, self.timeout, cleanup=clean)
+                prompt, self.timeout, cleanup=cleanup_callback)
         except Exception:
             self._dbg(1, 'Error while waiting for ' + repr(prompt))
             raise
 
         if match:
-            self._dbg(2, "Got a prompt, match was %s" % repr(match.group()))
-            self.buffer.pop(len(self.response))
-
-        self._dbg(5, "Response was %s" % repr(self.response))
+            self._dbg(2, "Got a prompt, match was: %s" % repr(match.group()))
+            self._dbg(4, "Response (flush=%s): %s" % (repr(flush), repr(self.response)))
+            if flush:
+                # Only to mimic the telnetlib cooked-queue behavior to keep the
+                # buffer clean for the buffer monitoring feature.
+                prompt_length = match.end() - match.start()
+                self._buffer.pop(len(self.response) + prompt_length)
 
         if result == -1:
-            error = 'Error while waiting for response from device'
-            raise TimeoutException(error)
+            self._raise_on_response_timeout()
         if result == -2:
-            if self.driver_replaced:
-                self.driver_replaced = False
-                raise DriverReplacedException()
-            else:
-                raise ExpectCancelledException()
+            self._raise_on_canceled_expect()
         if self.response is None:
-            raise ProtocolException('whoops - response is None')
+            self._raise_on_response_eof()
 
         return result, match
 
     def cancel_expect(self):
-        self.tn.cancel_expect = True
+        super(Telnet, self).cancel_expect()
+        if self._tn:
+            self._tn.cancel_expect = True
 
     def _set_terminal_size(self, rows, cols):
-        self.tn.set_window_size(rows, cols)
+        self._tn.set_window_size(rows, cols)
 
-    def interact(self, key_handlers=None, handle_window_size=True):
-        return self._open_shell(self.tn.sock, key_handlers, handle_window_size)
+    def _interact(self, key_handlers=None, handle_window_size=True):
+        return self._open_shell(self._tn.sock, key_handlers, handle_window_size)
 
-    def close(self, force=False):
-        if self.tn is None:
-            return
-        if not force:
-            try:
-                self.response = self.tn.read_all()
-            except Exception:
-                pass
-        self.tn.close()
-        self.tn = None
-        self.buffer.clear()
-        super(Telnet, self).close()
+    def _close(self, force=False):
+        if self._tn:
+            if not force:
+                try:
+                    self._tn.sock.settimeout(2)
+                    self._tn.read_all()
+                except Exception:
+                    pass
+            self._tn.close()
+            self._tn = None

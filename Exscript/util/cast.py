@@ -23,10 +23,10 @@
 """
 Handy shortcuts for converting types.
 """
-from __future__ import absolute_import
-from builtins import str
 import re
+
 import Exscript
+
 
 def to_list(item):
     """
@@ -44,7 +44,7 @@ def to_list(item):
     return [item]
 
 
-def to_host(host, default_protocol='telnet', default_domain=''):
+def to_host(host, default_protocol='ssh', default_domain=''):
     """
     Given a string or a Host object, this function returns a Host object.
 
@@ -66,7 +66,7 @@ def to_host(host, default_protocol='telnet', default_domain=''):
     return Exscript.Host(host, default_protocol=default_protocol)
 
 
-def to_hosts(hosts, default_protocol='telnet', default_domain=''):
+def to_hosts(hosts, default_protocol='ssh', default_domain=''):
     """
     Given a string or a Host object, or a list of strings or Host objects,
     this function returns a list of Host objects.

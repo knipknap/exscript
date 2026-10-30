@@ -23,15 +23,15 @@
 """
 Manages user accounts.
 """
-from builtins import object
 import multiprocessing
-from collections import deque, defaultdict
+from collections import defaultdict, deque
+
 from .util.cast import to_list
 from .util.event import Event
 from .util.impl import Context
 
 
-class Account(object):
+class Account:
 
     """
     This class represents a user account.
@@ -63,7 +63,7 @@ class Account(object):
         :meth:`protocols.Protocol.login` and the `*authenticate*` methods.
 
         .. warning::
-            Setting `lock` to True drastically degrades performance!
+            Setting `needs_lock` to True drastically degrades performance!
 
         :type  name: str
         :param name: A username.
@@ -106,7 +106,7 @@ class Account(object):
         """
         Locks the account.
         Method has no effect if the constructor argument `needs_lock`
-        wsa set to False.
+        was set to False.
 
         :type signal: bool
         :param signal: Whether to emit the acquired_event signal.
@@ -124,7 +124,7 @@ class Account(object):
         """
         Unlocks the account.
         Method has no effect if the constructor argument `needs_lock`
-        wsa set to False.
+        was set to False.
 
         :type signal: bool
         :param signal: Whether to emit the released_event signal.
@@ -204,7 +204,7 @@ class Account(object):
         return self.key
 
 
-class AccountProxy(object):
+class AccountProxy:
 
     """
     An object that has a 1:1 relation to an account object in another
@@ -363,7 +363,7 @@ class AccountProxy(object):
         return self.key
 
 
-class LoggerProxy(object):
+class LoggerProxy:
 
     """
     An object that has a 1:1 relation to a Logger object in another
@@ -397,7 +397,7 @@ class LoggerProxy(object):
         self.parent.send(('log-succeeded', (self.logger_id, job_id)))
 
 
-class AccountPool(object):
+class AccountPool:
 
     """
     This class manages a collection of available accounts.
@@ -573,7 +573,7 @@ class AccountPool(object):
             self.unlock_cond.notify_all()
 
 
-class AccountManager(object):
+class AccountManager:
 
     """
     Keeps track of available user accounts and assigns them to the

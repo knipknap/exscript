@@ -20,9 +20,8 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import, division
-from builtins import str
 import Exscript.interpreter.term
+
 from ..parselib import Token
 
 
@@ -34,7 +33,7 @@ class ExpressionNode(Token):
         # messages).
         lexer.skip(['whitespace', 'newline'])
 
-        Token.__init__(self, 'ExpressionNode', lexer, parser, parent)
+        Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.lft = None
         self.rgt = None
         self.op = None
@@ -46,14 +45,14 @@ class ExpressionNode(Token):
         if not lexer.current_is('logical_operator', 'not'):
             self.lft = Exscript.interpreter.term.Term(lexer, parser, parent)
 
-            # The expression may end already (a single term is also an
-            # expression).
+            # The expression may end already (a single term is also an expression).
             lexer.skip(['whitespace', 'newline'])
             if not lexer.current_is('arithmetic_operator') and \
                not lexer.current_is('logical_operator') and \
                not lexer.current_is('comparison') and \
                not lexer.current_is('regex_delimiter'):
-                self.mark_end()
+                # Early end of statement.
+                self.mark_end(rstrip=True)
                 return
 
         # Expect the operator.
@@ -62,13 +61,15 @@ class ExpressionNode(Token):
            not lexer.next_if('logical_operator') and \
            not lexer.next_if('comparison') and \
            not lexer.next_if('regex_delimiter'):
-            self.mark_end()
-            msg = 'Expected operator but got %s' % self.op_type
+            self.mark_start()
+            self.mark_end(distance=len(self.op))
+            msg = 'Expected operator but got %s %s' % (self.op_type, repr(self.op))
             lexer.syntax_error(msg, self)
 
         # Expect the second term.
         self.rgt = ExpressionNode(lexer, parser, parent, self)
-        self.mark_end()
+        # End of statement.
+        self.mark_end(rstrip=True)
 
     def priority(self):
         if self.op is None:
@@ -90,7 +91,7 @@ class ExpressionNode(Token):
         elif self.op_type == 'logical_operator':
             return 1
         else:
-            raise Exception('Invalid operator.')
+            raise Exception('Invalid operator: ' + repr(self.op))
 
     def value(self, context):
         # Special behavior where we only have one term.
@@ -181,20 +182,22 @@ class ExpressionNode(Token):
         print((' ' * (indent + 1)) + 'Operator', self.op)
         if self.rgt is not None:
             self.rgt.dump(indent + 1)
-        print((' ' * indent) + self.name, self.op, 'end.')
+        print((' ' * indent) + self.name, self.op, 'end')
 
 
 class Expression(Token):
 
     def __init__(self, lexer, parser, parent):
-        Token.__init__(self, 'Expression', lexer, parser, parent)
+        Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
         # Parse the expression.
         self.root = ExpressionNode(lexer, parser, parent)
 
         # Reorder the tree according to the operator priorities.
         self.prioritize(self.root)
-        self.mark_end()
+
+        # End of statement.
+        self.mark_end(rstrip=True)
 
     def prioritize(self, start, prio=1):
         # print("Prioritizing from", start.op, "with prio", prio, (start.lft,)
@@ -253,4 +256,4 @@ class Expression(Token):
     def dump(self, indent=0):
         print((' ' * indent) + self.name, 'start')
         self.root.dump(indent + 1)
-        print((' ' * indent) + self.name, 'end.')
+        print((' ' * indent) + self.name, 'end')

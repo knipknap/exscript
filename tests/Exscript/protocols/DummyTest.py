@@ -1,21 +1,21 @@
-from __future__ import absolute_import
-from builtins import str
+import os.path
+import re
 import sys
 import unittest
-import re
-import os.path
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from .ProtocolTest import ProtocolTest
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy
+
+from .ProtocolTest import ProtocolTest
 
 
 class DummyTest(ProtocolTest):
     CORRELATE = Dummy
 
     def createProtocol(self):
-        self.protocol = Dummy(device=self.device, timeout=1)
+        self.protocol = Dummy(device=self.device, timeout=1, debug=5)
 
     def testConstructor(self):
         self.assertIsInstance(self.protocol, Dummy)
@@ -26,7 +26,7 @@ class DummyTest(ProtocolTest):
     def _create_dummy_and_eat_banner(self, device, port=None):
         protocol = Dummy(device=device)
         protocol.connect(device.hostname, port)
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         self.assertEqual(protocol.response, None)
         protocol.expect(re.compile(re.escape(self.banner)))
         self.assertEqual(protocol.response, '')
@@ -36,17 +36,17 @@ class DummyTest(ProtocolTest):
         # Test simple instance with banner.
         protocol = Dummy(device=self.device)
         protocol.connect('testhost')
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         self.assertEqual(protocol.response, None)
         protocol.close()
 
         # Test login.
         protocol = Dummy(device=self.device)
         protocol.connect('testhost')
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         self.assertEqual(protocol.response, None)
         protocol.login(self.account, flush=False)
-        self.assertEqual(protocol.buffer.tail(len(self.prompt)), self.prompt)
+        self.assertEqual(protocol._buffer.tail(len(self.prompt)), self.prompt)
         protocol.close()
 
         # Test login with user prompt.
@@ -54,9 +54,9 @@ class DummyTest(ProtocolTest):
                                echo=True,
                                login_type=VirtualDevice.LOGIN_TYPE_USERONLY)
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), 'User: ')
+        self.assertEqual(str(protocol._buffer), 'User: ')
         protocol.login(self.account, flush=False)
-        self.assertEqual(protocol.buffer.tail(len(self.prompt)), self.prompt)
+        self.assertEqual(protocol._buffer.tail(len(self.prompt)), self.prompt)
         protocol.close()
 
         # Test login with password prompt.
@@ -64,9 +64,9 @@ class DummyTest(ProtocolTest):
                                echo=True,
                                login_type=VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), 'Password: ')
+        self.assertEqual(str(protocol._buffer), 'Password: ')
         protocol.login(self.account, flush=False)
-        self.assertEqual(protocol.buffer.tail(len(self.prompt)), self.prompt)
+        self.assertEqual(protocol._buffer.tail(len(self.prompt)), self.prompt)
         protocol.close()
 
         # Test login without user/password prompt.
@@ -74,7 +74,7 @@ class DummyTest(ProtocolTest):
                                echo=True,
                                login_type=VirtualDevice.LOGIN_TYPE_NONE)
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), self.prompt)
+        self.assertEqual(str(protocol._buffer), self.prompt)
         protocol.close()
 
         # Test login with user prompt and wait parameter.
@@ -82,10 +82,10 @@ class DummyTest(ProtocolTest):
                                echo=True,
                                login_type=VirtualDevice.LOGIN_TYPE_USERONLY)
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), 'User: ')
+        self.assertEqual(str(protocol._buffer), 'User: ')
         protocol.login(self.account)
-        self.assertEqual(str(protocol.buffer), '')
-        self.assertEqual(protocol.response, self.user + '\r')
+        self.assertEqual(str(protocol._buffer), '')
+        self.assertEqual(protocol.response, self.user)
         protocol.close()
 
         # Test login with password prompt and wait parameter.
@@ -93,18 +93,18 @@ class DummyTest(ProtocolTest):
                                echo=True,
                                login_type=VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), 'Password: ')
+        self.assertEqual(str(protocol._buffer), 'Password: ')
         protocol.login(self.account)
-        self.assertEqual(str(protocol.buffer),   '')
-        self.assertEqual(protocol.response, self.password + '\r')
+        self.assertEqual(str(protocol._buffer),   '')
+        self.assertEqual(protocol.response, self.password)
         protocol.close()
 
         # Test login with port number.
         protocol = self._create_dummy_and_eat_banner(device, 1234)
-        self.assertEqual(str(protocol.buffer), 'Password: ')
+        self.assertEqual(str(protocol._buffer), 'Password: ')
         protocol.login(self.account)
-        self.assertEqual(str(protocol.buffer), '')
-        self.assertEqual(protocol.response, self.password + '\r')
+        self.assertEqual(str(protocol._buffer), '')
+        self.assertEqual(protocol.response, self.password)
         protocol.close()
 
         # Test a custom response.
@@ -119,14 +119,14 @@ class DummyTest(ProtocolTest):
         protocol.connect('testhost')
         protocol.expect(re.compile(re.escape(self.banner)))
         self.assertEqual(protocol.response, '')
-        self.assertEqual(str(protocol.buffer), self.prompt)
+        self.assertEqual(str(protocol._buffer), self.prompt)
         protocol.expect_prompt()
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         self.assertEqual(protocol.response, self.hostname)
         protocol.execute('testcommand')
         expected = 'testcommand\rhello world\r\n' + self.hostname
         self.assertEqual(protocol.response, expected)
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         protocol.close()
 
 

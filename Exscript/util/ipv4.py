@@ -23,12 +23,10 @@
 """
 IPv4 address calculation and conversion.
 """
-from builtins import str
-from builtins import range
-import socket
-import struct
 import math
 import re
+import socket
+import struct
 
 
 def _least_bit(number):

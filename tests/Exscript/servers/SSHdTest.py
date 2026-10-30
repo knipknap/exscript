@@ -1,13 +1,14 @@
-from __future__ import absolute_import
+import os
+import re
 import sys
 import unittest
-import re
-import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from .ServerTest import ServerTest
-from Exscript.servers import SSHd
 from Exscript.protocols import SSH2
+from Exscript.servers import SSHd
+
+from .ServerTest import ServerTest
 
 
 class SSHdTest(ServerTest):

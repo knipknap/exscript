@@ -1,13 +1,15 @@
-from builtins import str
+import os.path
+import re
 import sys
 import unittest
-import re
-import os.path
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from tempfile import mkdtemp
 from shutil import rmtree
+from tempfile import mkdtemp
+
 from LogTest import LogTest
+
 from Exscript.logger import Logfile
 
 

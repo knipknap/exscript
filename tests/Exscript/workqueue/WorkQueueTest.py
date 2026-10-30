@@ -1,15 +1,16 @@
-from builtins import range
-import sys
-import unittest
-import re
 import os.path
+import re
+import sys
 import threading
 import time
+import unittest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import random
 import time
-from multiprocessing import Value, Lock
+from multiprocessing import Lock, Value
+
 from Exscript.workqueue import WorkQueue
 
 lock = Lock()

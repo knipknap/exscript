@@ -23,13 +23,11 @@
 """
 Defines the behavior of commands by mapping commands to functions.
 """
-from past.builtins import execfile
-from builtins import str
-from builtins import object
 import re
+from collections.abc import Iterable
 
 
-class CommandSet(object):
+class CommandSet:
 
     """
     A set of commands to be used by the Dummy adapter.
@@ -49,9 +47,9 @@ class CommandSet(object):
             cmdset.response_list.append((regex, response))
         return cmdset
 
-    def add(self, command, response):
+    def add(self, command, handler, handler_decorator=None):
         """
-        Register a command/response pair.
+        Register a command and response handler pair.
 
         The command may be either a string (which is then automatically
         compiled into a regular expression), or a pre-compiled regular
@@ -64,36 +62,45 @@ class CommandSet(object):
 
         :type  command: str|regex
         :param command: A string or a compiled regular expression.
-        :type  response: function|str
-        :param response: A response, or a response handler.
+        :type  handler: function|str
+        :param handler: A response, or a response handler.
+        :type  handler_decorator: function
+        :param handler_decorator: A function that is used to decorate
+               the response or response handler.
         """
         command = re.compile(command)
-        self.response_list.append((command, response))
+        if handler_decorator:
+            handler = handler_decorator(handler)
+        self.response_list.append((command, handler))
 
     def add_from_file(self, filename, handler_decorator=None):
         """
-        Wrapper around add() that reads the handlers from the
+        Wrapper around add() that reads the response handlers from the
         file with the given name. The file is a Python script containing
         a list named 'commands' of tuples that map command names to
-        handlers.
+        response handlers.
 
         :type  filename: str
         :param filename: The name of the file containing the tuples.
         :type  handler_decorator: function
         :param handler_decorator: A function that is used to decorate
-               each of the handlers in the file.
+               each of the responses or response handlers in the file.
+        :raises ValueError: Raised when the file does not define a variable
+            named "commands" or if "commands" is not iterable.
         """
         args = {}
-        execfile(filename, args)
+        with open(filename, "r", encoding="utf-8") as fin:
+            source = fin.read()
+        code = compile(source, filename, mode="exec")
+        exec(code, args)  # noqa: S102
+
         commands = args.get('commands')
         if commands is None:
-            raise Exception(filename + ' has no variable named "commands"')
-        elif not hasattr(commands, '__iter__'):
-            raise Exception(filename + ': "commands" is not iterable')
-        for key, handler in commands:
-            if handler_decorator:
-                handler = handler_decorator(handler)
-            self.add(key, handler)
+            raise ValueError(filename + ': no variable named "commands"')
+        elif not isinstance(commands, Iterable):
+            raise ValueError(filename + ': variable "commands" is not iterable')
+        for command, response in commands:
+            self.add(command, response, handler_decorator)
 
     def eval(self, command):
         """
@@ -104,16 +111,17 @@ class CommandSet(object):
         :param command: The command that is evaluated.
         :rtype:  str or None
         :return: The response, if one was defined.
+        :raises ValueError: Raised when the command is undefined (strict mode only).
         """
         for cmd, response in self.response_list:
             if not cmd.match(command):
                 continue
             if response is None:
                 return None
-            elif hasattr(response, '__call__'):
+            elif callable(response):
                 return response(command)
             else:
                 return response
         if self.strict:
-            raise Exception('Undefined command: ' + repr(command))
+            raise ValueError('Undefined command: ' + repr(command))
         return None

@@ -56,27 +56,21 @@ To do:
   option on one of the read calls only
 
 """
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import chr
-from builtins import bytes
-from builtins import range
-from builtins import object
 
-
-# Imported modules
-import sys
-import time
-import socket
+import logging
 import select
 import selectors
-from time import monotonic as _time
+import socket
 import struct
+import sys
+import time
 from io import StringIO
+from time import monotonic as _time
 
 __all__ = ["Telnet"]
-py2 = sys.version_info[0] == 2
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 # Tunable parameters
 DEBUGLEVEL = 0
@@ -164,7 +158,7 @@ if hasattr(selectors, 'PollSelector'):
 else:
     _TelnetSelector = selectors.SelectSelector
 
-class Telnet(object):
+class Telnet:
 
     """Telnet interface class.
 
@@ -180,7 +174,7 @@ class Telnet(object):
     raise EOFError when the end of the connection is read, because
     they can return an empty string for other reasons.  See the
     individual doc strings.
-    
+
     read_until(expected, [timeout])
         Read until the expected string has been seen, or a timeout is
         hit (default is no timeout); may block.
@@ -208,7 +202,7 @@ class Telnet(object):
         I/O.
     """
 
-    def __init__(self, host=None, port=0, encoding='latin1', **kwargs):
+    def __init__(self, host=None, port=0, encoding='latin-1', **kwargs):
         """Constructor.
 
         When called without arguments, create an unconnected instance.
@@ -216,6 +210,7 @@ class Telnet(object):
         number is optional.
 
         """
+        self._logger = _logger
         self.debuglevel = DEBUGLEVEL
         self.can_naws = False
         self.host = host
@@ -276,12 +271,10 @@ class Telnet(object):
 
         """
         if self.debuglevel > 0:
-            self.stderr.write('Telnet(%s,%d): ' % (self.host, self.port))
+            msg = '' + msg
             if args:
-                self.stderr.write(msg % args)
-            else:
-                self.stderr.write(msg)
-            self.stderr.write('\n')
+                msg = msg % args
+            self._logger.debug(msg)
 
     def set_debuglevel(self, debuglevel):
         """Set the debug level.
@@ -319,9 +312,9 @@ class Telnet(object):
             buffer = buffer.encode(self.encoding)
         if IAC in buffer:
             buffer = buffer.replace(IAC, IAC+IAC)
-        self.msg("send %s", repr(buffer))
+        self.msg("Send: %s", repr(buffer))
         self.sock.send(buffer)
-        
+
     def read_until(self, match, timeout=None):
         """Read until a given string is encountered or until timeout.
         When no match is found, return whatever is available instead,
@@ -534,12 +527,13 @@ class Telnet(object):
                     if (iac, end) != (IAC, SE):
                         # whoops, that's an unexpected response...
                         self.msg(
-                            'expected IAC SE, but got %d %d', ord(iac), ord(end))
+                            'Expected IAC SE, but got %d %d.', ord(iac), ord(end)
+                        )
                     self.msg('IAC SUBCOMMAND_END')
 
                     # Send the next supported terminal.
-                    ttype = self.termtype.encode('latin1')
-                    self.msg('indicating support for terminal type %s', ttype)
+                    ttype = self.termtype.encode('latin-1')
+                    self.msg('Indicating support for terminal type %s.', ttype)
                     self.sock.send(IAC+SB+TTYPE+theNULL+ttype+IAC+SE)
                 elif command in (WILL, WONT):
                     opt = self.rawq_getchar()
@@ -550,7 +544,7 @@ class Telnet(object):
                     else:
                         self.sock.send(IAC+DONT+opt)
                 else:
-                    self.msg('IAC %d not recognized' % ord(command))
+                    self.msg('IAC %d not recognized.' % ord(command))
         except EOFError:  # raised by self.rawq_getchar()
             pass
         buf = buf.decode(self.encoding)
@@ -561,8 +555,8 @@ class Telnet(object):
     def rawq_getchar(self):
         """Get next char from raw queue.
 
-        Block if no data is immediately available.  Raise EOFError
-        when connection is closed.
+        Block if no data is immediately available. Raise EOFError when
+        connection is closed.
 
         """
         if not self.rawq:
@@ -570,10 +564,8 @@ class Telnet(object):
             if self.eof:
                 raise EOFError
 
-        # headaches for Py2/Py3 compatibility...
         c = self.rawq[self.irawq]
-        if not py2:
-            c = c.to_bytes((c.bit_length()+7)//8, 'big')
+        c = c.to_bytes((c.bit_length()+7)//8, 'big')
 
         self.irawq += 1
         if self.irawq >= len(self.rawq):
@@ -594,7 +586,7 @@ class Telnet(object):
         # The buffer size should be fairly small so as to avoid quadratic
         # behavior in process_rawq() above.
         buf = self.sock.recv(64)
-        self.msg("recv %s", repr(buf))
+        self.msg("Recv: %s", repr(buf))
         self.eof = (not buf)
         self.rawq = self.rawq + buf
 
@@ -667,14 +659,14 @@ class Telnet(object):
                 if not re:
                     import re
                 relist[i] = re.compile(relist[i])
-        self.msg("Expecting %s" % [l.pattern for l in relist])
+        self.msg("Expecting: %s" % [l.pattern for l in relist])
         incomplete_tail = u''
         clean_sw_size = search_window_size
         while True:
             self.process_rawq()
             if self.cancel_expect:
                 self.cancel_expect = False
-                self.msg('cancelling expect()')
+                self.msg('Cancelling expect()')
                 return -2, None, ''
             qlen = self.cookedq.tell()
             if cleanup:
@@ -697,8 +689,9 @@ class Telnet(object):
             for i in indices:
                 m = relist[i].search(search_window)
                 if m is not None:
+                    self.msg("Match found: %s" % repr(m.group()))
                     e = m.end() - m.start()
-                    e = qlen - e + 1
+                    e = qlen - e
                     self.cookedq.seek(0)
                     text = self.cookedq.read(e)
                     if flush:
@@ -746,14 +739,14 @@ class Telnet(object):
         or if more than one expression can match the same input, the
         results are undeterministic, and may depend on the I/O timing.
         """
-        return self._waitfor(relist, timeout, False, cleanup)
+        return self._waitfor(relist, timeout, flush=False, cleanup=cleanup)
 
     def expect(self, relist, timeout=None, cleanup=None):
         """
         Like waitfor(), but removes the matched data from the incoming
         buffer.
         """
-        return self._waitfor(relist, timeout, True, cleanup=cleanup)
+        return self._waitfor(relist, timeout, flush=True, cleanup=cleanup)
 
 
 def test():

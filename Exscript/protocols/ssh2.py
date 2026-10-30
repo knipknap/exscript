@@ -23,31 +23,36 @@
 """
 SSH version 2 support, based on paramiko.
 """
-from __future__ import absolute_import, unicode_literals
-from builtins import str
-import sys
+
+import logging
 import os
-import time
 import select
 import socket
+import time
+from binascii import hexlify
+
 import paramiko
+
 try:
     import Cryptodome as Crypto
 except ImportError:
     import Crypto
-from binascii import hexlify
-from paramiko import util
-from paramiko.ssh_exception import SSHException, AuthenticationException, \
-        BadHostKeyException, BadAuthenticationType
-from ..util.tty import get_terminal_size
-from ..util.crypt import otp
-from ..key import PrivateKey
-from .protocol import Protocol, _skey_re
-from .exception import ProtocolException, LoginFailure, TimeoutException, \
-        DriverReplacedException, ExpectCancelledException
+from paramiko.ssh_exception import (
+    AuthenticationException,
+    BadAuthenticationType,
+    BadHostKeyException,
+    SSHException,
+)
 
-# Workaround for paramiko error; avoids a warning message.
-util.log_to_file(os.devnull)
+from ..account import Account
+from ..key import PrivateKey
+from ..util.crypt import otp
+from ..util.tty import get_terminal_size
+from .exception import LoginFailure
+from .protocol import Protocol, _skey_re
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 # Register supported key types.
 keymap = {'rsa': paramiko.RSAKey, 'ecdsa': paramiko.ECDSAKey, 'ed25519': paramiko.Ed25519Key}
@@ -62,16 +67,26 @@ auth_types = {'publickey': ('_paramiko_auth_agent', '_paramiko_auth_autokey'),
 class SSH2(Protocol):
 
     """
-    The secure shell protocol version 2 adapter, based on Paramiko.
+    The SSH2 protocol adapter, based on Paramiko.
     """
     KEEPALIVE_INTERVAL = 2.5 * 60    # Two and a half minutes
 
     def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
-        self.sock = None
-        self.client = None
-        self.shell = None
-        self.cancel = False
+        # Module-Level
+        self._logger = _logger
+        # Internals
+        self._sock = None
+        self._transport = None
+        self._channel = None
+
+        # Set default preferred auth types, that are supported.
+        if not self.preferred_authentications:
+            self.preferred_authentications = [
+                "publickey",
+                "keyboard-interactive",
+                "password",
+            ]
 
         # Since each protocol may be created in it's own thread, we must
         # re-initialize the random number generator to make sure that
@@ -99,13 +114,13 @@ class SSH2(Protocol):
         name = key.get_name()
         fp = hexlify(key.get_fingerprint())
         msg = 'Rejecting %s host key for %s: %s' % (name, self.host, fp)
-        self._dbg(1, msg)
+        self._dbg(2, msg)
 
     def _add_host_key(self, key):
         name = key.get_name()
         fp = hexlify(key.get_fingerprint())
         msg = 'Adding %s host key for %s: %s' % (name, self.host, fp)
-        self._dbg(1, msg)
+        self._dbg(2, msg)
         self._host_keys.add(self.host, name, key)
         if self._host_keys_filename is not None:
             self._save_host_keys()
@@ -158,26 +173,29 @@ class SSH2(Protocol):
                 break
 
         # Open a socket.
-        self.sock = socket.socket(af, socket.SOCK_STREAM)
+        self._sock = socket.socket(af, socket.SOCK_STREAM)
         try:
-            self.sock.settimeout(self.connect_timeout or None)
+            self._sock.settimeout(self.connect_timeout or None)
         except:
             pass
-        self.sock.connect(addr)
+        self._sock.connect(addr)
 
         # Init the paramiko protocol.
-        t = paramiko.Transport(self.sock)
+        t = paramiko.Transport(self._sock, disabled_algorithms=self.disabled_algorithms)
         t.banner_timeout = self.banner_timeout
+        t.name = self.host
+        if self.debug < 5:
+            t.logger.disabled = True
+        if self.debug > 5:
+            t.set_hexdump(True)
         t.start_client()
 
         # Check system host keys.
         server_key = t.get_remote_server_key()
         keytype = server_key.get_name()
-        our_server_key = self._system_host_keys.get(
-            self.host, {}).get(keytype, None)
+        our_server_key = self._system_host_keys.get(self.host, {}).get(keytype, None)
         if our_server_key is None:
-            our_server_key = self._host_keys.get(
-                self.host, {}).get(keytype, None)
+            our_server_key = self._host_keys.get(self.host, {}).get(keytype, None)
         if our_server_key is None:
             self._missing_host_key(server_key)
             # if the callback returns, assume the key is ok
@@ -189,7 +207,7 @@ class SSH2(Protocol):
         return t
 
     def _paramiko_auth_none(self, username, password=None):
-        self.client.auth_none(username)
+        self._transport.auth_none(username)
 
     def _paramiko_auth_interactive(self, username, password=None):
         if password is None:
@@ -201,22 +219,29 @@ class SSH2(Protocol):
             for prompt, visible in prompt_list:
                 match = _skey_re.search(prompt)
                 if match is not None:
-                    skey_password = otp(password,
-                                        match.group(2),
-                                        int(match.group(1)))
+                    self._receive_cb(prompt + '\n')  # Expose the prompt (hide the PW).
+                    self._dbg(2, "S/Key prompt received.")
+                    seq = int(match.group(1))
+                    seed = match.group(2)
+                    self.otp_requested_event(Account(username, password), seq, seed)
+                    self._dbg(3, "Seq: %s, Seed: %s" % (seq, seed))
+                    skey_password = otp(password, seed, seq)
                     response.append(skey_password)
                     continue
 
                 for regex in self.get_password_prompt():
                     match = regex.search(prompt)
                     if match is not None:
+                        self._receive_cb(prompt + '\n')  # Expose the prompt (hide the PW).
+                        self._dbg(2, "Password prompt received.")
                         response.append(password)
                         break
             return response
-        self.client.auth_interactive(username, handler)
+        self._transport.auth_interactive(username, handler)
 
     def _paramiko_auth_password(self, username, password):
-        self.client.auth_password(username, password or '')
+        self._receive_cb('Password: \n')  # Expose a prompt (hide the PW).
+        self._transport.auth_password(username, password or '')
 
     def _paramiko_auth_agent(self, username, password=None):
         keys = paramiko.Agent().get_keys()
@@ -229,8 +254,8 @@ class SSH2(Protocol):
         for key in keys:
             try:
                 fp = hexlify(key.get_fingerprint())
-                self._dbg(1, 'Trying SSH agent key %s' % fp)
-                self.client.auth_publickey(username, key)
+                self._dbg(2, 'Trying SSH agent key %s' % fp)
+                self._transport.auth_publickey(username, key)
                 return
             except SSHException as e:
                 saved_exception = e
@@ -247,8 +272,8 @@ class SSH2(Protocol):
             try:
                 key = pkey_class.from_private_key_file(filename, password)
                 fp = hexlify(key.get_fingerprint())
-                self._dbg(1, 'Trying key %s in %s' % (fp, filename))
-                self.client.auth_publickey(username, key)
+                self._dbg(2, 'Trying key %s in %s' % (fp, filename))
+                self._transport.auth_publickey(username, key)
                 return
             except SSHException as e:
                 saved_exception = e
@@ -270,10 +295,26 @@ class SSH2(Protocol):
         self._paramiko_auth_key(username, keyfiles, password)
 
     def _get_auth_methods(self, allowed_types):
+        if self.preferred_authentications:
+            self._dbg(3, 'Preferred auth. types: %s' % self.preferred_authentications)
+            requested_types = []
+            for method in self.preferred_authentications:
+                if method not in allowed_types:
+                    self._dbg(3, 'Preferred auth. type %s is not allowed.' % repr(method))
+                    continue
+                requested_types.append(method)
+            if not requested_types:
+                raise BadAuthenticationType(
+                    'invalid preferred auth. types: %s' % repr(self.preferred_authentications),
+                    allowed_types,
+                )
+        else:
+            requested_types = allowed_types
+
         auth_methods = []
-        for method in allowed_types:
+        for method in requested_types:
             if method not in auth_types:
-                self._dbg(1, 'Unsupported auth method %s' % repr(method))
+                self._dbg(1, 'Unsupported auth. type: %s' % repr(method))
                 continue
             for type_name in auth_types[method]:
                 auth_methods.append(getattr(self, type_name))
@@ -283,12 +324,19 @@ class SSH2(Protocol):
         # Try authentication using auth_none. This should (almost) always fail,
         # but provides us with info about allowed authentication types.
         try:
-            self.client.auth_none(username)
+            self._dbg(2, 'Authenticating with client.auth_none().')
+            self._transport.auth_none(username)
         except BadAuthenticationType as err:
-            self._dbg(1, 'auth_none failed, supported: %s' % err.allowed_types)
+            self._dbg(2, 'Authentication with client.auth_none() failed, allowed: %s' % err.allowed_types)
             auth_methods = self._get_auth_methods(err.allowed_types)
         else:
             return
+        finally:
+            # Expose the authentication banner to the user.
+            banner = self.get_banner()
+            if banner:
+                self._receive_cb(banner)
+                self._buffer.append(banner)
 
         # Finally try all supported login methods.
         errors = []
@@ -296,93 +344,103 @@ class SSH2(Protocol):
             # Some OSes (e.g. JunOS ERX OS, Huawei) do not accept further login
             # attempts after failing one. So in this hack, we
             # re-connect after each attempt...
-            if self.get_driver().reconnect_between_auth_methods or not self.client.active:
+            if (
+                self.get_driver().reconnect_between_auth_methods
+                or not self._transport.active
+            ):
+                if self.get_driver().reconnect_between_auth_methods:
+                    self._dbg(1, 'Forced reconnect by driver.')
+                else:
+                    self._dbg(1, 'Forced reconnect by inactive client.')
                 self.close(force=True)
-                self.client = self._paramiko_connect()
+                # Some devices (e.g. Cisco ASR9010) seem to have tight rate limits
+                # for reconnects, so connect() waits some time before the reconnect.
+                self.connect(self.host, self.port)
 
-            self._dbg(1, 'Authenticating with %s' % method.__name__)
+            self._dbg(2, 'Authenticating with %s().' % method.__name__)
             try:
                 method(username, password)
                 return
             except BadHostKeyException as e:
-                msg = '%s: Bad host key: %s' % (method.__name__, str(e))
+                msg = 'Bad host key with %s(): %s' % (method.__name__, str(e))
                 self._dbg(1, msg)
                 errors.append(msg)
             except AuthenticationException as e:
-                msg = 'Authentication with %s failed' % method.__name__
-                msg += ': ' + str(e)
+                msg = 'Authentication with %s() failed: %s' % (method.__name__, str(e))
                 self._dbg(1, msg)
                 errors.append(msg)
             except SSHException as e:
-                msg = '%s: SSHException: %s' % (method.__name__, str(e))
+                msg = 'SSHException with %s(): %s' % (method.__name__, str(e))
                 self._dbg(1, msg)
                 errors.append(msg)
         raise LoginFailure('Login failed: ' + '; '.join(errors))
 
-    def _paramiko_shell(self):
+    def _paramiko_channel(self):
         rows, cols = get_terminal_size()
-
         try:
-            self.shell = self.client.open_session()
-            self.shell.get_pty(self.termtype, cols, rows)
-            self.shell.invoke_shell()
+            self._channel = self._transport.open_session()
+            self._channel.get_pty(self.termtype, cols, rows)
+            self._channel.invoke_shell()
+            self._channel.set_name("pty-shell-%s" % self._channel.get_id())
         except SSHException as e:
-            self._dbg(1, 'Failed to open shell.')
-            raise LoginFailure('Failed to open shell: ' + str(e))
+            msg = 'Failed to open a channel with pty/shell. (%s)' % e
+            self._dbg(1, msg)
+            raise LoginFailure(msg)
 
-    def _connect_hook(self, hostname, port):
-        self.host = hostname
-        self.port = port or 22
-        self.client = self._paramiko_connect()
+    def _connect(self):
+        self._transport = self._paramiko_connect()
         self._load_system_host_keys()
         return True
 
     def _protocol_authenticate(self, user, password):
         self._paramiko_auth(user, password)
-        self._paramiko_shell()
+        self._paramiko_channel()
 
     def _protocol_authenticate_by_key(self, user, key):
         # Allow multiple key files.
         key_file = key.get_filename()
-
-        # Python3 does not support unicode and base string
-        if sys.version_info >= (3,0):
-            _str_types = (str)
-        else:
-            _str_types = (str, unicode, basestring)
-
         if key_file is None:
             key_file = []
-        elif isinstance(key_file, (str, _str_types)):
+        elif isinstance(key_file, str):
             key_file = [key_file]
 
         # Try each key.
         keys = []
         for file in key_file:
             keys.append((keymap[key.get_type()], file))
-        self._dbg(1, 'authenticating using _paramiko_auth_key().')
         self._paramiko_auth_key(user, keys, key.get_password())
 
-        self._paramiko_shell()
+        # Open the channel.
+        self._paramiko_channel()
 
     def get_banner(self):
-        if not self.client:
+        if not self._transport:
             return None
-        return self.client.get_banner()
+        banner = self._transport.get_banner()
+        if isinstance(banner, bytes):
+            return banner.decode(self.encoding)
+        return banner
 
     def get_remote_version(self):
-        if not self.client:
+        if not self._transport:
             return None
-        return self.client.remote_version
+        version = self._transport.remote_version
+        if isinstance(version, bytes):
+            return version.decode(self.encoding)
+        return version
 
-    def send(self, data):
-        self._dbg(4, 'Sending %s' % repr(data))
-        self.shell.sendall(data)
+    def _send(self, data):
+        try:
+            self._channel.sendall(data.encode(self.encoding))
+            self._send_cb(data)
+        except Exception:
+            self._dbg(1, 'Error while writing to connection')
+            raise
 
     def _wait_for_data(self):
         end = time.time() + self.timeout
         while True:
-            readable, writeable, excp = select.select([self.shell], [], [], 1)
+            readable, writeable, excp = select.select([self._channel], [], [], 1)
             if readable:
                 return True
             if time.time() > end:
@@ -391,76 +449,77 @@ class SSH2(Protocol):
     def _fill_buffer(self):
         # Wait for a response of the device.
         if not self._wait_for_data():
-            error = 'Timeout while waiting for response from device'
-            raise TimeoutException(error)
+            self._raise_on_response_timeout()
 
         # Read the response.
-        data = self.shell.recv(200)
+        data = self._channel.recv(1024).decode(self.encoding)
         if not data:
             return False
-        data = data.decode(self.encoding)
-        self._receive_cb(data, False)
-        self.buffer.append(data)
+        self._receive_cb(data)
+        self._buffer.append(data)
         return True
 
-    def _domatch(self, prompt, flush):
-        self._dbg(1, "Expecting a prompt")
-        self._dbg(2, "Expected pattern: " +
-                  repr([repr(p.pattern) for p in prompt]))
+    def _domatch_buffer(self, prompt):
+        # Check whether the buffered data we received so far matches the prompt.
+        driver = self.get_driver()
         search_window_size = 150
-        while not self.cancel:
-            # Check whether what's buffered matches the prompt.
-            driver = self.get_driver()
-            search_window = self.buffer.tail(search_window_size)
-            search_window, incomplete_tail = driver.clean_response_for_re_match(
-                search_window)
-            match = None
-            for n, regex in enumerate(prompt):
-                match = regex.search(search_window)
-                if match is not None:
-                    break
+        search_window = self._buffer.tail(search_window_size)
+        search_window, incomplete_tail = driver.clean_response_for_re_match(
+            search_window
+        )
+        n, match = -1, None
+        for n, regex in enumerate(prompt):
+            match = regex.search(search_window)
+            if match is not None:
+                break
+        if match:
+            self._dbg(2, "Got a prompt, match was: %s" % repr(match.group()))
+        return n, match, search_window
 
+    def _domatch_extract(self, match, search_window_length, flush):
+        # This extracts the response from the buffer. The end position is
+        # where the matched prompt starts. So the response is everything
+        # in the buffer up to this end position.
+        end = self._buffer.size() - search_window_length + match.start()
+        response = self._buffer.head(end)
+        if flush:
+            prompt_length = match.end() - match.start()
+            self._buffer.pop(end + prompt_length)
+        self._dbg(4, "Response (flush=%s): %s" % (repr(flush), repr(response)))
+        return response
+
+    def _domatch(self, prompt, flush):
+        while not self._expect_canceled:
+            n, match, search_window = self._domatch_buffer(prompt)
             if not match:
-                if not self._fill_buffer():
-                    error = 'EOF while waiting for response from device'
-                    raise ProtocolException(error)
+                if not self._fill_buffer():  # reads the channel
+                    self._raise_on_response_eof()
                 continue
-
-            end = self.buffer.size() - len(search_window) + match.start()
-            if flush:
-                self.response = self.buffer.pop(end)
-                self.buffer.pop(match.end() - match.start())
-            else:
-                self.response = self.buffer.head(end)
+            self.response = self._domatch_extract(match, len(search_window), flush)
             return n, match
-
-        # Ending up here, self.cancel_expect() was called.
-        self.cancel = False
-        if self.driver_replaced:
-            self.driver_replaced = False
-            raise DriverReplacedException()
-        raise ExpectCancelledException()
-
-    def cancel_expect(self):
-        self.cancel = True
+        self._raise_on_canceled_expect()
 
     def _set_terminal_size(self, rows, cols):
-        self.shell.resize_pty(cols, rows)
+        self._channel.resize_pty(cols, rows)
 
-    def interact(self, key_handlers=None, handle_window_size=True):
-        return self._open_shell(self.shell, key_handlers, handle_window_size)
+    def _interact(self, key_handlers=None, handle_window_size=True):
+        return self._open_shell(self._channel, key_handlers, handle_window_size)
 
-    def close(self, force=False):
-        if self.shell is None:
-            super(SSH2, self).close()
-            return
-        if not force:
-            self._fill_buffer()
-        self.shell.close()
-        self.shell = None
-        self.client.close()
-        self.client = None
-        self.sock.close()
-        self.sock = None
-        self.buffer.clear()
-        super(SSH2, self).close()
+    def _close(self, force=False):
+        if self._channel:
+            if not force:
+                try:
+                    if self._channel.recv_ready():
+                        self._fill_buffer()
+                except Exception:
+                    pass
+            self._channel.close()
+            self._channel = None
+
+        if self._transport:
+            self._transport.close()
+            self._transport = None
+
+        if self._sock:
+            self._sock.close()
+            self._sock = None
