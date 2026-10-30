@@ -26,7 +26,7 @@ Logging utilities.
 from .. import FileLogger
 from .impl import add_label
 
-_loggers = []
+_loggers: list[FileLogger] = []
 
 
 def log_to(logger):

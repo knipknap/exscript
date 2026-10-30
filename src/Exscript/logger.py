@@ -117,7 +117,7 @@ def setupLogging(*, package=False, parser=False, protocol=False, init=getConsole
 # Exscript Logging
 
 
-logger_registry = weakref.WeakValueDictionary()  # Map id(logger) to Logger.
+logger_registry: 'weakref.WeakValueDictionary[int, Logger]' = weakref.WeakValueDictionary()  # Map id(logger) to Logger.
 
 class Log:
 
@@ -243,8 +243,8 @@ class Logfile(Log):
 class Logger:
 
     """
-    A QueueListener that implements logging for the queue.
-    Logs are kept in memory, and not written to the disk.
+    Implements logging for the queue: keeps a log of each attempt of each
+    job. Logs are kept in memory, and not written to the disk.
     """
 
     def __init__(self):

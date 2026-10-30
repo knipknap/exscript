@@ -36,6 +36,7 @@ import threading
 import time
 from functools import partial
 from io import StringIO
+from typing import IO
 
 from ..util.buffer import MonitoredBuffer
 from ..util.cast import to_regexs
@@ -75,7 +76,7 @@ _ansi_escape_re = re.compile(
 _skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)(?=\s|[\r\n])')
 
 # Needed on module level as each host connection has its own thread.
-_connection_monitor = {}
+_connection_monitor: dict[str, float] = {}
 _connection_monitor_lock = threading.RLock()
 
 # NOTE: Encoding/Decoding non-ASCII byte-streams might not work properly.
@@ -92,167 +93,66 @@ class Protocol:
     This is the base class for all protocols; it defines the common portions
     of the API.
 
-    The goal of all protocol classes is to provide an interface that
-    is unified across protocols, such that the adapters may be used
-    interchangeably without changing any other code.
+    A protocol adapter connects to a host and provides this API for talking to
+    it, the same with every protocol, so the adapters can be used
+    interchangeably: :class:`~Exscript.protocols.telnet.Telnet`,
+    :class:`~Exscript.protocols.ssh2.SSH2`,
+    :class:`~Exscript.protocols.netconf.Netconf`, and
+    :class:`~Exscript.protocols.dummy.Dummy`, which talks to a virtual device
+    instead of a host.
 
-    In order to achieve this, the main challenge are the differences
-    arising from the authentication methods that are used. The reason
-    is that many devices may support the following variety of
-    authentication/authorization methods:
+    A login has up to three levels:
 
-        1. Protocol level authentication, such as SSH's built-in
-           authentication.
+    1. Protocol-level authentication: the protocol authenticates the user when
+       the connection opens, e.g. SSH with a password or a key
+       (:meth:`protocol_authenticate`).
+    2. Application-level authentication: after the connection was accepted,
+       the device asks for a user name, a password or both
+       (:meth:`app_authenticate`).
+    3. Authorization: to grant privileges, e.g. after "enable", the device
+       asks for the authorization password of the account
+       (:meth:`app_authorize`, or :meth:`auto_app_authorize`, which lets the
+       driver send such a command first).
 
-                - p1: password only
-                - p2: username
-                - p3: username + password
-                - p4: username + key
-                - p5: username + key + password
+    The protocols use them as follows:
 
-        2. App level authentication, such that the authentication may
-           happen long after a connection is already accepted.
-           This type of authentication is normally used in combination with
-           Telnet, but some SSH hosts also do this (users have reported
-           devices from Enterasys). These devices may also combine
-           protocol-level authentication with app-level authentication.
-           The following types of app-level authentication exist:
+    - Telnet and Dummy: no protocol-level authentication; the device may ask
+      for an application-level authentication and an authorization.
+    - SSH: the protocol-level authentication; the device may also ask for an
+      application-level authentication and an authorization.
+    - Netconf: only the protocol-level authentication.
 
-                - a1: password only
-                - a2: username
-                - a3: username + password
+    :meth:`login` performs all levels: it calls :meth:`authenticate`, which
+    performs the protocol-level authentication, once per connection, and the
+    application-level authentication, and then :meth:`auto_app_authorize`.
+    :meth:`authenticate` alone skips the authorization, e.g. to authorize
+    manually with :meth:`app_authorize`. The methods of the single levels can
+    be called separately, too: :meth:`protocol_authenticate` waits for no
+    prompt, and :meth:`app_authenticate` sends nothing if the device shows
+    its command prompt at once. With flush=True, the default, :meth:`login`
+    consumes the command prompt after the login from the buffer.
 
-        3. App level authorization: In order to implement the AAA protocol,
-           some devices ask for two separate app-level logins, whereas the
-           first serves to authenticate the user, and the second serves to
-           authorize him. App-level authorization may support the same
-           methods as app-level authentication:
+    Example::
 
-                - A1: password only
-                - A2: username
-                - A3: username + password
+        from Exscript import Account, PrivateKey
+        from Exscript.protocols import SSH2
 
-    We are assuming that the following methods are used:
+        key = PrivateKey.from_file('/home/myuser/.ssh/id_rsa', 'my_key_password')
 
-        - Telnet:
+        # The account for the protocol-level authentication; SSH uses only the
+        # key if the account has one.
+        account = Account('myuser', 'mypassword', key=key)
 
-          - p1 - p5: never
-          - a1 - a3: optional
-          - A1 - A3: optional
+        # The account for the application-level authentication and the
+        # authorization; password2 defaults to the password.
+        app_account = Account('myuser', 'my_app_password', password2='my_app_password2')
 
-        - SSH:
-
-          - p1 - p5: optional
-          - a1 - a3: optional
-          - A1 - A3: optional
-
-        - Netconf:
-
-          - p1 - p5: optional (derived from SSH)
-          - a1 - a3: never (not supported)
-          - A1 - A3: never (not supported)
-
-    To achieve authentication method compatibility across different
-    protocols, we must hide all this complexity behind one single API
-    call, and figure out which ones are supported.
-
-    As a use-case, our goal is that the following code will always work,
-    regardless of which combination of authentication methods a device
-    supports::
-
-        key = PrivateKey.from_file('~/.ssh/id_rsa', 'my_key_password')
-
-        # The user account to use for protocol level authentication.
-        # The key defaults to None, in which case key authentication is
-        # not attempted.
-        account = Account(name     = 'myuser',
-                          password = 'mypassword',
-                          key      = key)
-
-        # The account to use for app-level authentication.
-        # password2 defaults to password.
-        app_account = Account(name      = 'myuser',
-                              password  = 'my_app_password',
-                              password2 = 'my_app_password2')
-
-        # app_account defaults to account.
-        conn.login(account, app_account = None, flush = True)
-
-    Another important consideration is that once the login is complete, the
-    device must be in a clearly defined state, i.e. we need to
-    have processed the data that was retrieved from the connected host.
-
-    More precisely, the buffer that contains the incoming data must be in
-    a state such that the following call to expect_prompt() will either
-    always work, or always fail.
-
-    We hide the following methods behind the login() call::
-
-        # Protocol level authentication.
-        conn.protocol_authenticate(...)
-
-        # App-level authentication.
-        conn.app_authenticate(...)
-
-        # App-level authorization.
-        conn.app_authorize(...) via conn.auto_app_authorize(...)
-
-    The code produces the following result::
-
-        Telnet:
-            conn.protocol_authenticate -> NOOP
-            conn.app_authenticate
-                -> waits for username or password prompt, authenticates,
-                   returns after a CLI prompt was seen.
-            conn.app_authorize (via conn.auto_app_authorize)
-                -> delegates to driver.auto_authorize
-                -> calls specific implementation or conn.app_authorize
-                -> waits for username or password prompt, authorizes,
-                   returns after a CLI prompt was seen.
-
-        SSH:
-            conn.protocol_authenticate -> authenticates using user/key/password
-            conn.app_authenticate -> like Telnet
-            conn.app_authorize -> like Telnet
-
-        Netconf:
-            conn.protocol_authenticate -> derived from SSH
-            conn.app_authenticate -> NOOP (not supported)
-            conn.app_authorize -> NOOP (not supported)
-
-    We can see the following:
-
-        - protocol_authenticate() must not wait for a prompt, because else
-          app_authenticate() has no way of knowing whether an app-level
-          login is even necessary.
-
-        - app_authenticate() must check the buffer first, to see if
-          authentication has already succeeded. In the case that
-          app_authenticate() is not necessary (i.e. the buffer contains a
-          CLI prompt), it just returns.
-
-          app_authenticate() must NOT eat the prompt from the buffer, because
-          else the result may be inconsistent with devices that do not do
-          any authentication; i.e., when app_authenticate() is not called.
-
-        - Since the prompt must still be contained in the buffer,
-          conn.driver.auto_authorize() would somehow need to eat it before it
-          sends the command for starting the authorization procedure. This
-          will be handled internally by login(), but only if the call to
-          Driver.supports_auto_authorize() evaluates to `True` for a specific
-          driver. Otherwise the driver must fall back to app_authorize(), which
-          consumes the prompt internally.
-
-          If the user wants to handle app authorization manually, one may rely
-          on authenticate() instead of login(), which does not authorize
-          automatically.
-
-        - Once all logins are processed, it makes sense to eat the prompt
-          depending on the `flush` parameter. It should default to True,
-          because it's better that the connection stalls waiting forever,
-          than to risk that an error is not immediately discovered due to
-          timing issues (this is a race condition that is not detailed here).
+        conn = SSH2()
+        conn.connect('myhost')
+        conn.login(account, app_account)  # app_account defaults to account
     """
+
+    _log: IO[str] | None  # managed by the logfile property
 
     def __init__(self,
                  driver=None,
@@ -286,8 +186,9 @@ class Protocol:
             an in-memory buffer.
         :keyword stderr: Where to write debug info. Defaults to stderr.
         :keyword debug: An integer between 0 (no debugging) and 5 (very
-            verbose debugging) that specifies the amount of debug info
-            sent to the terminal. The default value is 0.
+            verbose debugging) that specifies the amount of debug output,
+            which the loggers under Exscript.protocols log at the DEBUG
+            level. The default value is 0.
         :keyword connect_rate_limit: Connection rate-limit per minute to avoid
             hitting rate limits of the host in case of multiple parallel connections.
         :keyword connect_timeout: Timeout for the initial TCP connection attempt
@@ -438,9 +339,10 @@ class Protocol:
     @logfile.setter
     def logfile(self, value) -> None:
         with self._write_lock:
-            if getattr(self, '_log', None):
+            old_log = getattr(self, '_log', None)
+            if old_log:
                 try:
-                    self._log.close()
+                    old_log.close()
                 except Exception:
                     pass
             self._logfile = value
@@ -484,8 +386,9 @@ class Protocol:
     @property
     def stderr(self):
         """
-        The stream to which the debug/error output is written. Defaults to
-        `sys.stderr`.
+        The error stream of the adapter, `sys.stderr` by default. The adapter
+        writes nothing to it: its debug output goes to the logging module
+        (see the debug argument of the constructor).
 
         :rtype:  file-like object
         :return: The current stderr stream.
@@ -957,7 +860,8 @@ class Protocol:
         Uses `self.connect_rate_limit`, if the given rate-limit is zero.
 
         :type  rate_limit: int
-        :param rate_limit: The connection rate-limit (connects per minute).
+        :param rate_limit: The connection rate-limit (connects per minute);
+            0 uses connect_rate_limit.
         """
         key = self.host.lower()
         wait = 0.0
@@ -1045,10 +949,11 @@ class Protocol:
     def login(self, account=None, app_account=None, flush=True):
         """
         Log into the connected host using the best method available.
-        If an account is not given, default to the account that was
-        used during the last call to login(). If a previous call was not
-        made, use the account-factory that was passed to the constructor.
-        If that also fails, raise a TypeError.
+        If no account is given, the account of the last call of login() or
+        of an authentication method is used. If the constructor got an
+        account_factory, it provides the account to use: it gets the given
+        account, else the one of the last call, or None. Without an account
+        and without an account factory, a TypeError is raised.
 
         The app_account is passed to :meth:`app_authenticate` and
         :meth:`app_authorize`. If app_account is not given, default
@@ -1399,8 +1304,7 @@ class Protocol:
         Netconf does not have prompts, so this attempts to use the Netconf 1.0
         EOM marker `]]>]]>` or the Netconf 1.1 EOC marker `LF HASH HASH LF` as
         a prompt-like delimiter. If that fails, a custom prompt may also be
-        defined using the set_prompt() method, while for Netconf as RFC 6142 is
-        quite strict on the framing behavior, the need might never arise.
+        defined using the set_prompt() method.
 
         This method also modifies the value of the response (self.response)
         attribute. For Netconf this refers to the raw RPC reply. Please use the
@@ -1523,8 +1427,7 @@ class Protocol:
         Netconf does not have prompts, so this attempts to use the Netconf 1.0
         EOM marker `]]>]]>` or the Netconf 1.1 EOC marker `LF HASH HASH LF` as
         a prompt-like delimiter. If that fails, a custom prompt may also be
-        defined using the set_prompt() method, while for Netconf as RFC 6142 is
-        quite strict on the framing behavior, the need might never arise.
+        defined using the set_prompt() method.
 
         This method also stores the received data in the response (self.response)
         attribute. For Netconf this refers to the raw RPC reply. Please use the
@@ -1534,7 +1437,7 @@ class Protocol:
 
         :type  consume: boolean
         :param consume: Whether to consume the response and prompt from the
-            buffer or not. The later allows consecutive calls to succeed.
+            buffer or not. The latter allows consecutive calls to succeed.
         :rtype:  int, re.MatchObject
         :return: The index of the prompt regular expression that matched,
           and the match object.
