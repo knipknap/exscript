@@ -41,7 +41,9 @@ import types
 from collections.abc import Callable, Collection
 from timeit import default_timer
 
-from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
+from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined]
+    BaseInstrumentor,  # mypy cannot resolve it in this namespace package
+)
 from opentelemetry.metrics import Histogram, get_meter
 from opentelemetry.trace import SpanKind, Tracer, get_tracer, set_span_in_context
 from opentelemetry.trace.span import Span

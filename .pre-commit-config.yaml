@@ -1,0 +1,26 @@
+# https://pre-commit.com - run with: uvx pre-commit run --all-files
+# Test data must stay byte-identical (trailing blanks and missing final newlines are intentional).
+exclude: ^tests/(templates|Exscript/protocols/banners)/
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 25bcf95026b96e2dd3c0aec3090c3d6ef6ca2e6c  # frozen: v0.17.3
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 46787482b9fb2003c56e0f7592e312ef381829d9  # frozen: 0.13.6
+    hooks:
+      - id: uv-lock
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: c92afdf2c6ca336aaa8f39e2bd8d48f62dbd8e1f  # frozen: v1.31.1
+    hooks:
+      - id: zizmor

@@ -63,7 +63,8 @@ test = [
     "opentelemetry-sdk>=1.12",
     "opentelemetry-instrumentation>=0.42b0",
 ]
-dev = [{ include-group = "test" }]
+types = ["mypy>=2.4"]
+dev = [{ include-group = "test" }, { include-group = "types" }]
 
 [tool.hatch.version]
 source = "vcs"
@@ -95,7 +96,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S104", "S105", "S106", "S107", "S108", "S311"]
-# Security baseline: existing findings per file, to be reviewed (S1-S6); new code is checked.
+# Security baseline: existing findings per file, to be reviewed; new code is checked.
 "demos/template/template.py" = ["S101"]
 "scripts/exscript" = ["S307", "S605"]
 "src/Exscript/emulators/iosemu.py" = ["S105"]
@@ -116,6 +117,17 @@ ignore = [
 "tests/Exscript/QueueTest.py" = ["S110"]
 "tests/Exscript/workqueue/JobTest.py" = ["S301"]
 "tools/bench_bulk.py" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+ignore_missing_imports = true  # paramiko, ncclient and others ship no type hints
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+module = ["Exscript.protocols.telnetlib"]
+ignore_errors = true  # vendored copy of the former standard library module
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

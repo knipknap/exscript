@@ -33,7 +33,7 @@ filename as an argument::
 
 When executing it from the command line, use::
 
-    exscript -d filename=.profile my.exscript localhost 
+    exscript -d filename=.profile my.exscript localhost
 
 Note that the -d switch allows passing variables into the template.
 The example executes the command ls -l .profile. You can also assign a

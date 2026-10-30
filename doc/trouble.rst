@@ -105,9 +105,9 @@ Using this script, the following conversation may take place:
     1. router> show interface descriptions
     2. Interface              Status         Protocol Description
     3. Lo0                    up             up       Description of my router>
-    4. PO0/0                  admin down     down     
+    4. PO0/0                  admin down     down
     5. Serial1/0              up             up       My WAN link
-    6. router> 
+    6. router>
 
 Note that line 3 happens to contain the string "Router>", which looks
 like a prompt when it really is just a description. So after receiving
