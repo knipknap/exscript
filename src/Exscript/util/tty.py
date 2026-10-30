@@ -39,7 +39,7 @@ def _get_terminal_size(fd):
     s = struct.pack('HHHH', 0, 0, 0, 0)
     try:
         x = fcntl.ioctl(fd, termios.TIOCGWINSZ, s)
-    except IOError:  # Window size ioctl not supported.
+    except OSError:  # Window size ioctl not supported.
         return None
     try:
         rows, cols, x_pixels, y_pixels = struct.unpack('HHHH', x)

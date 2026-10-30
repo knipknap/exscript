@@ -34,5 +34,5 @@ def secure_function(function):
     def wrapper(*args, **kwargs):
         return function(*args, **kwargs)
 
-    setattr(wrapper, '_is_secure', True)
+    wrapper._is_secure = True
     return wrapper

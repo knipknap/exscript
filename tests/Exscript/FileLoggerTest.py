@@ -1,10 +1,11 @@
-import unittest
 import os.path
-
-from tempfile import mkdtemp
+import unittest
 from shutil import rmtree
+from tempfile import mkdtemp
+
+from LoggerTest import FakeJob, LoggerTest
+
 from Exscript import FileLogger
-from LoggerTest import LoggerTest, FakeJob
 
 
 class FakeError(Exception):

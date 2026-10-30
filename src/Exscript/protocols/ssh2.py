@@ -160,7 +160,7 @@ class SSH2(Protocol):
             filename = os.path.expanduser('~/.ssh/known_hosts')
             try:
                 self._system_host_keys.load(filename)
-            except IOError:
+            except OSError:
                 pass
             return
         self._system_host_keys.load(filename)
@@ -281,7 +281,7 @@ class SSH2(Protocol):
                 return
             except SSHException as e:
                 saved_exception = e
-            except IOError as e:
+            except OSError as e:
                 saved_exception = e
         raise saved_exception
 

@@ -1,8 +1,8 @@
 import unittest
+from multiprocessing import Value
 
 import Exscript
 import Exscript.util.start
-from multiprocessing import Value
 
 
 def count_calls(job, host, conn, data, **kwargs):

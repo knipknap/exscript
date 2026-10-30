@@ -1656,7 +1656,7 @@ class Protocol:
                 while True:
                     try:
                         r, w, e = select.select([channel, stdin], [], [])
-                    except select.error as e:
+                    except OSError as e:
                         code, message = e
                         if code == errno.EINTR:
                             # This may happen when SIGWINCH is called
@@ -1667,7 +1667,7 @@ class Protocol:
                     if channel in r:
                         try:
                             data = channel.recv(1024).decode(self.encoding)
-                        except socket.timeout:
+                        except TimeoutError:
                             pass
                         if not data:
                             self._dbg(1, 'EOF from remote host')

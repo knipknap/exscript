@@ -17,7 +17,6 @@ import unittest
 import uuid
 from unittest import mock
 
-
 import paramiko
 
 from Exscript import Account, PrivateKey

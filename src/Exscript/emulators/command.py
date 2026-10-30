@@ -89,7 +89,7 @@ class CommandSet:
             named "commands" or if "commands" is not iterable.
         """
         args = {}
-        with open(filename, "r", encoding="utf-8") as fin:
+        with open(filename, encoding="utf-8") as fin:
             source = fin.read()
         code = compile(source, filename, mode="exec")
         exec(code, args)  # noqa: S102

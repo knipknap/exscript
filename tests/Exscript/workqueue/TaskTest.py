@@ -3,7 +3,7 @@ import warnings
 
 warnings.simplefilter('ignore', DeprecationWarning)
 
-from Exscript.workqueue import WorkQueue, Task
+from Exscript.workqueue import Task, WorkQueue
 from Exscript.workqueue.job import Thread
 
 

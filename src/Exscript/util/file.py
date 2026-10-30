@@ -98,12 +98,12 @@ def get_hosts_from_file(
     """
     # Open the file.
     if not os.path.exists(filename):
-        raise IOError('No such file: %s' % filename)
+        raise OSError('No such file: %s' % filename)
 
     # Read the hostnames.
     have = set()
     hosts = []
-    with open(filename, 'r', encoding=encoding) as file_handle:
+    with open(filename, encoding=encoding) as file_handle:
         for line in file_handle:
             hostname = line.split('#')[0].strip()
             if hostname == '':
@@ -153,9 +153,9 @@ def get_hosts_from_csv(filename, default_protocol='ssh', default_domain='', enco
     """
     # Open the file.
     if not os.path.exists(filename):
-        raise IOError('No such file: %s' % filename)
+        raise OSError('No such file: %s' % filename)
 
-    with open(filename, 'r', encoding=encoding) as file_handle:
+    with open(filename, encoding=encoding) as file_handle:
         # Read and check the header.
         header = file_handle.readline().rstrip()
         if re.search(r'^(?:hostname|address)\b', header) is None:
@@ -220,7 +220,7 @@ def load_lib(filename):
     """
     # Open the file.
     if not os.path.exists(filename):
-        raise IOError('No such file: %s' % filename)
+        raise OSError('No such file: %s' % filename)
 
     name = os.path.splitext(os.path.basename(filename))[0]
     # load_module() was removed in Python 3.15; an explicit loader also accepts other suffixes.

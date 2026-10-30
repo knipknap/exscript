@@ -1,6 +1,5 @@
 import unittest
 
-
 from Exscript.util.weakmethod import DeadMethodCalled, WeakMethod, ref
 
 

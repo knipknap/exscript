@@ -1,8 +1,7 @@
-import unittest
 import re
+import unittest
 
 import Exscript.util.cast
-import re
 from Exscript import Host
 
 

@@ -1,8 +1,6 @@
 import re
-import unittest
-
-
 import time
+import unittest
 
 from Exscript import Account
 from Exscript.emulators import VirtualDevice

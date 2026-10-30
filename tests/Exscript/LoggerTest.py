@@ -1,7 +1,5 @@
 import sys
 import unittest
-
-
 from itertools import islice
 
 from LogTest import FakeError

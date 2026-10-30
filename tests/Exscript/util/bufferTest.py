@@ -1,6 +1,4 @@
 import unittest
-
-
 from functools import partial
 from tempfile import TemporaryFile
 

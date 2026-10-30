@@ -253,15 +253,15 @@ class Telnet:
                 self.sock = socket.socket(af, socktype, proto)
                 self.sock.settimeout(self.connect_timeout)
                 self.sock.connect(sa)
-            except socket.error as msg_:
-                msg = '{} => telnet://{}:{}'.format(msg_, host, port)
+            except OSError as msg_:
+                msg = f'{msg_} => telnet://{host}:{port}'
                 if self.sock:
                     self.sock.close()
                 self.sock = None
                 continue
             break
         if not self.sock:
-            raise socket.error(msg)
+            raise OSError(msg)
 
     def msg(self, msg, *args):
         """Print a debug message, when the debug level is > 0.

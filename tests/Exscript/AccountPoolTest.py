@@ -1,7 +1,6 @@
 import os.path
 import unittest
 
-
 from Exscript import Account
 from Exscript.account import AccountPool
 from Exscript.util.file import get_accounts_from_file

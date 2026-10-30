@@ -91,7 +91,7 @@ class Server(threading.Thread):
         try:
             msg = self.to_parent.recv()
             self._dbg(1, 'Received command via pipe from parent: %s' % repr(msg))
-        except socket.error:
+        except OSError:
             self.running = False
             return False
         if msg == 'shutdown':

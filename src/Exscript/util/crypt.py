@@ -2148,7 +2148,7 @@ def otp(password, seed, sequence):
     if len(seed) not in list(range(1, 17)):
         raise ValueError('seed length')
     for x in seed:
-        if not x in _VALIDSEEDCHARACTERS:
+        if x not in _VALIDSEEDCHARACTERS:
             raise ValueError('seed composition')
     if sequence < 0:
         raise ValueError('sequence')

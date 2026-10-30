@@ -121,9 +121,9 @@ def run():
         if not args.filename:
             parser.error("Missing template filename")
         try:
-            with open(args.filename, "r") as fp:
+            with open(args.filename) as fp:
                 script_content = fp.read()
-        except IOError as e:
+        except OSError as e:
             parser.error(str(e))
 
     # Extract the hostnames out of the command line arguments.
@@ -136,7 +136,7 @@ def run():
         try:
             path = Path(os.path.expandvars(args.csv_hosts)).expanduser()
             csv_hosts = mkhosts_from_csv(path)
-        except IOError as e:
+        except OSError as e:
             parser.error(str(e))
         if not csv_hosts:
             print(f"Warning: {args.csv_hosts} is empty.")
@@ -147,7 +147,7 @@ def run():
         try:
             path = Path(os.path.expandvars(args.hosts)).expanduser()
             txt_hosts = mkhosts_from_file(path)
-        except IOError as e:
+        except OSError as e:
             parser.error(str(e))
         except ValueError as e:
             parser.error(e)
@@ -163,7 +163,7 @@ def run():
             spec = importlib.util.spec_from_file_location(path.stem, path)
             driver_module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(driver_module)
-        except IOError as e:
+        except OSError as e:
             parser.error(str(e))
         except Exception:
             sys.stderr.write(f"Error in driver {args.load_driver}\n")
@@ -201,7 +201,7 @@ def run():
     if args.lib:
         try:
             functions = load_lib(args.lib)
-        except IOError as e:
+        except OSError as e:
             parser.error(str(e))
 
     # Test whether the template compiles.
@@ -240,7 +240,7 @@ def run():
             path = Path(os.path.expandvars(args.account_pool)).expanduser()
             accounts = get_accounts_from_file(path)
             default_pool.add_account(accounts)
-    except IOError as e:
+    except OSError as e:
         parser.error(str(e))
     if args.account_pool and default_pool.n_accounts() == 0:
         print(f"WARNING: No accounts found in account pool file ({args.account_pool})!")
@@ -321,7 +321,7 @@ def run():
             print(f"Creating log directory ({args.logdir})...")
             try:
                 os.makedirs(args.logdir)
-            except IOError as e:
+            except OSError as e:
                 parser.error(str(e))
 
         # Enable logging.

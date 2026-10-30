@@ -1,6 +1,4 @@
 import unittest
-
-
 from multiprocessing import Pipe, get_all_start_methods
 from pickle import dumps, loads
 

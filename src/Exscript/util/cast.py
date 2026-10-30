@@ -62,7 +62,7 @@ def to_host(host, default_protocol='ssh', default_domain=''):
         raise TypeError('None can not be cast to Host')
     if hasattr(host, 'get_address'):
         return host
-    if default_domain and not '.' in host:
+    if default_domain and '.' not in host:
         host += '.' + default_domain
     return Exscript.Host(host, default_protocol=default_protocol)
 

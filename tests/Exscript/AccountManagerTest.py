@@ -1,6 +1,6 @@
 import unittest
 
-from Exscript.account import Account, AccountPool, AccountManager
+from Exscript.account import Account, AccountManager, AccountPool
 
 
 class AccountManagerTest(unittest.TestCase):

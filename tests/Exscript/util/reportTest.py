@@ -1,9 +1,7 @@
 import os
 import sys
-import unittest
-
-
 import traceback
+import unittest
 
 import Exscript.util.report
 from Exscript import Host, Logger

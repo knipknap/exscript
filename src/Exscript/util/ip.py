@@ -24,8 +24,7 @@
 Wrapper around the ipv4 and ipv6 modules to handle both, ipv4 and ipv6.
 """
 
-from Exscript.util import ipv4
-from Exscript.util import ipv6
+from Exscript.util import ipv4, ipv6
 
 
 def is_ip(string):

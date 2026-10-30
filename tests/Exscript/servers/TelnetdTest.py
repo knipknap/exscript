@@ -1,6 +1,5 @@
 import unittest
 
-
 from Exscript.protocols import Telnet
 from Exscript.servers import Telnetd
 

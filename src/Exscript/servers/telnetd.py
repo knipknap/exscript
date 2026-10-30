@@ -79,7 +79,7 @@ class Telnetd(Server):
                 response = self.device.do(line)
                 if response:
                     conn.send(response.encode('utf8'))
-        except (socket.error, EOFError) as err:
+        except (OSError, EOFError) as err:
             msg = 'Client disappeared: ' + str(err)
             self._dbg(1, msg)
         except Exception as err:

@@ -1,9 +1,6 @@
-import time
-import unittest
-
-
 import random
 import time
+import unittest
 from multiprocessing import Lock, Value
 
 from Exscript.workqueue import WorkQueue

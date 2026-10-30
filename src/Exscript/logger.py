@@ -200,10 +200,10 @@ class Logfile(Log):
     def __str__(self):
         data = ''
         if os.path.isfile(self.filename):
-            with open(self.filename, 'r') as thefile:
+            with open(self.filename) as thefile:
                 data += thefile.read()
         if os.path.isfile(self.errorname):
-            with open(self.errorname, 'r') as thefile:
+            with open(self.errorname) as thefile:
                 data += thefile.read()
         return data
 

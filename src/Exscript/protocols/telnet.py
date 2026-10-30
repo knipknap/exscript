@@ -109,7 +109,7 @@ class Telnet(Protocol):
         return result, match
 
     def cancel_expect(self):
-        super(Telnet, self).cancel_expect()
+        super().cancel_expect()
         if self._tn:
             self._tn.cancel_expect = True
 

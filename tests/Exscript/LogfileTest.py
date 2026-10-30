@@ -1,7 +1,5 @@
 import os.path
 import unittest
-
-
 from shutil import rmtree
 from tempfile import mkdtemp
 
