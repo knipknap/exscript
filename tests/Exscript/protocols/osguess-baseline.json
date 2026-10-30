@@ -1,0 +1,3822 @@
+{
+ "ace.1|-|64": {
+  "after_auth": [
+   "ace",
+   90
+  ],
+  "final": [
+   "ace",
+   90
+  ]
+ },
+ "ace.1|-|65536": {
+  "after_auth": [
+   "ace",
+   90
+  ],
+  "final": [
+   "ace",
+   90
+  ]
+ },
+ "ace.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ace",
+   90
+  ],
+  "final": [
+   "ace",
+   90
+  ]
+ },
+ "ace.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ace",
+   90
+  ],
+  "final": [
+   "ace",
+   90
+  ]
+ },
+ "ace.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ace",
+   90
+  ],
+  "final": [
+   "ace",
+   90
+  ]
+ },
+ "ace.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ace",
+   90
+  ],
+  "final": [
+   "ace",
+   90
+  ]
+ },
+ "adtran.1|-|64": {
+  "after_auth": [
+   "shell",
+   20
+  ],
+  "final": [
+   "shell",
+   20
+  ]
+ },
+ "adtran.1|-|65536": {
+  "after_auth": [
+   "shell",
+   20
+  ],
+  "final": [
+   "shell",
+   20
+  ]
+ },
+ "adtran.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "adtran.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "adtran.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "shell",
+   20
+  ],
+  "final": [
+   "shell",
+   20
+  ]
+ },
+ "adtran.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "shell",
+   20
+  ],
+  "final": [
+   "shell",
+   20
+  ]
+ },
+ "adtran.2|-|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "adtran.2|-|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "adtran.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "adtran.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "adtran.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "adtran.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "aironet.1|-|64": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.1|-|65536": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.2|-|64": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.2|-|65536": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aironet.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "aironet",
+   90
+  ],
+  "final": [
+   "aironet",
+   90
+  ]
+ },
+ "aix|-|64": {
+  "after_auth": [
+   "aix",
+   75
+  ],
+  "final": [
+   "aix",
+   75
+  ]
+ },
+ "aix|-|65536": {
+  "after_auth": [
+   "aix",
+   75
+  ],
+  "final": [
+   "aix",
+   75
+  ]
+ },
+ "aix|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "aix|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "aix|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "aix",
+   75
+  ],
+  "final": [
+   "aix",
+   75
+  ]
+ },
+ "aix|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "aix",
+   75
+  ],
+  "final": [
+   "aix",
+   75
+  ]
+ },
+ "arbor_peakflow.1|-|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.1|-|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.2|-|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.2|-|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.3|-|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.3|-|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.3|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.3|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.3|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.3|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.4|-|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.4|-|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.4|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.4|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.4|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.4|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.5|-|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.5|-|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.5|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.5|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.5|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.5|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.6|-|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.6|-|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.6|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.6|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.6|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "arbor_peakflow.6|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "arbor_peakflow",
+   97
+  ],
+  "final": [
+   "arbor_peakflow",
+   97
+  ]
+ },
+ "aruba.1|-|64": {
+  "after_auth": [
+   "aruba",
+   88
+  ],
+  "final": [
+   "aruba",
+   88
+  ]
+ },
+ "aruba.1|-|65536": {
+  "after_auth": [
+   "aruba",
+   88
+  ],
+  "final": [
+   "aruba",
+   88
+  ]
+ },
+ "aruba.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "aruba",
+   88
+  ],
+  "final": [
+   "aruba",
+   88
+  ]
+ },
+ "aruba.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "aruba",
+   88
+  ],
+  "final": [
+   "aruba",
+   88
+  ]
+ },
+ "aruba.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "aruba",
+   88
+  ],
+  "final": [
+   "aruba",
+   88
+  ]
+ },
+ "aruba.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "aruba",
+   88
+  ],
+  "final": [
+   "aruba",
+   88
+  ]
+ },
+ "bigip.1|-|64": {
+  "after_auth": [
+   "bigip",
+   90
+  ],
+  "final": [
+   "bigip",
+   90
+  ]
+ },
+ "bigip.1|-|65536": {
+  "after_auth": [
+   "bigip",
+   90
+  ],
+  "final": [
+   "bigip",
+   90
+  ]
+ },
+ "bigip.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "bigip",
+   90
+  ],
+  "final": [
+   "bigip",
+   90
+  ]
+ },
+ "bigip.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "bigip",
+   90
+  ],
+  "final": [
+   "bigip",
+   90
+  ]
+ },
+ "bigip.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "bigip",
+   90
+  ],
+  "final": [
+   "bigip",
+   90
+  ]
+ },
+ "bigip.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "bigip",
+   90
+  ],
+  "final": [
+   "bigip",
+   90
+  ]
+ },
+ "brocade.1|-|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.1|-|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.2|-|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.2|-|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.3|-|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.3|-|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.3|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.3|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.3|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.3|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.4|-|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.4|-|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.4|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.4|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.4|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "brocade.4|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "brocade",
+   90
+  ],
+  "final": [
+   "brocade",
+   90
+  ]
+ },
+ "cienasaos.1|-|64": {
+  "after_auth": [
+   "cienasaos",
+   90
+  ],
+  "final": [
+   "cienasaos",
+   90
+  ]
+ },
+ "cienasaos.1|-|65536": {
+  "after_auth": [
+   "cienasaos",
+   90
+  ],
+  "final": [
+   "cienasaos",
+   90
+  ]
+ },
+ "cienasaos.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "cienasaos",
+   90
+  ],
+  "final": [
+   "cienasaos",
+   90
+  ]
+ },
+ "cienasaos.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "cienasaos",
+   90
+  ],
+  "final": [
+   "cienasaos",
+   90
+  ]
+ },
+ "cienasaos.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "cienasaos",
+   90
+  ],
+  "final": [
+   "cienasaos",
+   90
+  ]
+ },
+ "cienasaos.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "cienasaos",
+   90
+  ],
+  "final": [
+   "cienasaos",
+   90
+  ]
+ },
+ "enterasys_wc|-|64": {
+  "after_auth": [
+   "enterasys_wc",
+   85
+  ],
+  "final": [
+   "enterasys_wc",
+   85
+  ]
+ },
+ "enterasys_wc|-|65536": {
+  "after_auth": [
+   "enterasys_wc",
+   85
+  ],
+  "final": [
+   "enterasys_wc",
+   85
+  ]
+ },
+ "enterasys_wc|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "enterasys_wc",
+   85
+  ],
+  "final": [
+   "enterasys_wc",
+   85
+  ]
+ },
+ "enterasys_wc|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "enterasys_wc",
+   85
+  ],
+  "final": [
+   "enterasys_wc",
+   85
+  ]
+ },
+ "enterasys_wc|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "enterasys_wc",
+   85
+  ],
+  "final": [
+   "enterasys_wc",
+   85
+  ]
+ },
+ "enterasys_wc|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "enterasys_wc",
+   85
+  ],
+  "final": [
+   "enterasys_wc",
+   85
+  ]
+ },
+ "enterasys|-|64": {
+  "after_auth": [
+   "enterasys",
+   80
+  ],
+  "final": [
+   "enterasys",
+   80
+  ]
+ },
+ "enterasys|-|65536": {
+  "after_auth": [
+   "enterasys",
+   80
+  ],
+  "final": [
+   "enterasys",
+   80
+  ]
+ },
+ "enterasys|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "enterasys|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "enterasys|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "enterasys",
+   80
+  ],
+  "final": [
+   "enterasys",
+   80
+  ]
+ },
+ "enterasys|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "enterasys",
+   80
+  ],
+  "final": [
+   "enterasys",
+   80
+  ]
+ },
+ "eos.1|-|64": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.1|-|65536": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.2|-|64": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.2|-|65536": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.3|-|64": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.3|-|65536": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.3|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.3|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.3|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.3|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.4|-|64": {
+  "after_auth": [
+   "isam",
+   20
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "eos.4|-|65536": {
+  "after_auth": [
+   "isam",
+   20
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "eos.4|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.4|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.4|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "isam",
+   20
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "eos.4|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "isam",
+   20
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "eos.5|-|64": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.5|-|65536": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.5|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.5|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "eos.5|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "eos.5|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "junos",
+   35
+  ],
+  "final": [
+   "junos",
+   35
+  ]
+ },
+ "ericsson_ban|-|64": {
+  "after_auth": [
+   "ericsson_ban",
+   90
+  ],
+  "final": [
+   "ericsson_ban",
+   90
+  ]
+ },
+ "ericsson_ban|-|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   90
+  ],
+  "final": [
+   "ericsson_ban",
+   90
+  ]
+ },
+ "ericsson_ban|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ericsson_ban",
+   90
+  ],
+  "final": [
+   "ericsson_ban",
+   90
+  ]
+ },
+ "ericsson_ban|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   90
+  ],
+  "final": [
+   "ericsson_ban",
+   90
+  ]
+ },
+ "ericsson_ban|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   90
+  ],
+  "final": [
+   "ericsson_ban",
+   90
+  ]
+ },
+ "ericsson_ban|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   90
+  ],
+  "final": [
+   "ericsson_ban",
+   90
+  ]
+ },
+ "fortios.1|-|64": {
+  "after_auth": [
+   "fortios",
+   50
+  ],
+  "final": [
+   "fortios",
+   50
+  ]
+ },
+ "fortios.1|-|65536": {
+  "after_auth": [
+   "fortios",
+   50
+  ],
+  "final": [
+   "fortios",
+   50
+  ]
+ },
+ "fortios.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "fortios.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "fortios.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "fortios",
+   50
+  ],
+  "final": [
+   "fortios",
+   50
+  ]
+ },
+ "fortios.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "fortios",
+   50
+  ],
+  "final": [
+   "fortios",
+   50
+  ]
+ },
+ "fortios.2|-|64": {
+  "after_auth": [
+   "fortios",
+   50
+  ],
+  "final": [
+   "fortios",
+   50
+  ]
+ },
+ "fortios.2|-|65536": {
+  "after_auth": [
+   "fortios",
+   50
+  ],
+  "final": [
+   "fortios",
+   50
+  ]
+ },
+ "fortios.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "fortios.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "fortios.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "fortios",
+   50
+  ],
+  "final": [
+   "fortios",
+   50
+  ]
+ },
+ "fortios.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "fortios",
+   50
+  ],
+  "final": [
+   "fortios",
+   50
+  ]
+ },
+ "hp_pro_curve.1|-|64": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.1|-|65536": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.2|-|64": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.2|-|65536": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "hp_pro_curve.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "hp_pro_curve",
+   95
+  ],
+  "final": [
+   "hp_pro_curve",
+   95
+  ]
+ },
+ "icotera|-|64": {
+  "after_auth": [
+   "icotera",
+   80
+  ],
+  "final": [
+   "icotera",
+   80
+  ]
+ },
+ "icotera|-|65536": {
+  "after_auth": [
+   "icotera",
+   80
+  ],
+  "final": [
+   "icotera",
+   80
+  ]
+ },
+ "icotera|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "icotera|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "icotera|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "icotera",
+   80
+  ],
+  "final": [
+   "icotera",
+   80
+  ]
+ },
+ "icotera|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "icotera",
+   80
+  ],
+  "final": [
+   "icotera",
+   80
+  ]
+ },
+ "ios.1|-|64": {
+  "after_auth": [
+   "ios",
+   60
+  ],
+  "final": [
+   "ios",
+   60
+  ]
+ },
+ "ios.1|-|65536": {
+  "after_auth": [
+   "ios",
+   60
+  ],
+  "final": [
+   "ios",
+   60
+  ]
+ },
+ "ios.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ios",
+   60
+  ],
+  "final": [
+   "ios",
+   60
+  ]
+ },
+ "ios.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ios",
+   60
+  ],
+  "final": [
+   "ios",
+   60
+  ]
+ },
+ "ios.2|-|64": {
+  "after_auth": [
+   "ios",
+   30
+  ],
+  "final": [
+   "ios",
+   30
+  ]
+ },
+ "ios.2|-|65536": {
+  "after_auth": [
+   "ios",
+   30
+  ],
+  "final": [
+   "ios",
+   30
+  ]
+ },
+ "ios.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ios",
+   30
+  ],
+  "final": [
+   "ios",
+   30
+  ]
+ },
+ "ios.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ios",
+   30
+  ],
+  "final": [
+   "ios",
+   30
+  ]
+ },
+ "ios.3|-|64": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.3|-|65536": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.3|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.3|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.3|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.3|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.4|-|64": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.4|-|65536": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.4|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.4|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.4|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.4|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.5|-|64": {
+  "after_auth": [
+   "ios",
+   60
+  ],
+  "final": [
+   "ios",
+   60
+  ]
+ },
+ "ios.5|-|65536": {
+  "after_auth": [
+   "ios",
+   60
+  ],
+  "final": [
+   "ios",
+   60
+  ]
+ },
+ "ios.5|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.5|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.5|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ios",
+   60
+  ],
+  "final": [
+   "ios",
+   60
+  ]
+ },
+ "ios.5|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ios",
+   60
+  ],
+  "final": [
+   "ios",
+   60
+  ]
+ },
+ "ios.6|-|64": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.6|-|65536": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.6|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.6|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "ios.6|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios.6|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ios",
+   50
+  ],
+  "final": [
+   "ios",
+   50
+  ]
+ },
+ "ios_xr|-|64": {
+  "after_auth": [
+   "ios_xr",
+   95
+  ],
+  "final": [
+   "ios_xr",
+   95
+  ]
+ },
+ "ios_xr|-|65536": {
+  "after_auth": [
+   "ios_xr",
+   95
+  ],
+  "final": [
+   "ios_xr",
+   95
+  ]
+ },
+ "ios_xr|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios_xr",
+   95
+  ],
+  "final": [
+   "ios_xr",
+   95
+  ]
+ },
+ "ios_xr|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios_xr",
+   95
+  ],
+  "final": [
+   "ios_xr",
+   95
+  ]
+ },
+ "ios_xr|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ios_xr",
+   95
+  ],
+  "final": [
+   "ios_xr",
+   95
+  ]
+ },
+ "ios_xr|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ios_xr",
+   95
+  ],
+  "final": [
+   "ios_xr",
+   95
+  ]
+ },
+ "isam|-|64": {
+  "after_auth": [
+   "isam",
+   90
+  ],
+  "final": [
+   "isam",
+   90
+  ]
+ },
+ "isam|-|65536": {
+  "after_auth": [
+   "isam",
+   90
+  ],
+  "final": [
+   "isam",
+   90
+  ]
+ },
+ "isam|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "isam",
+   90
+  ],
+  "final": [
+   "isam",
+   90
+  ]
+ },
+ "isam|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "isam",
+   90
+  ],
+  "final": [
+   "isam",
+   90
+  ]
+ },
+ "isam|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "isam",
+   90
+  ],
+  "final": [
+   "isam",
+   90
+  ]
+ },
+ "isam|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "isam",
+   90
+  ],
+  "final": [
+   "isam",
+   90
+  ]
+ },
+ "junos.1|-|64": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.1|-|65536": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.2|-|64": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.2|-|65536": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.3|-|64": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.3|-|65536": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.3|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos.3|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos.3|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.3|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos_erx|-|64": {
+  "after_auth": [
+   "junos_erx",
+   75
+  ],
+  "final": [
+   "junos_erx",
+   75
+  ]
+ },
+ "junos_erx|-|65536": {
+  "after_auth": [
+   "junos_erx",
+   75
+  ],
+  "final": [
+   "junos_erx",
+   75
+  ]
+ },
+ "junos_erx|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos_erx|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos_erx|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "junos_erx",
+   75
+  ],
+  "final": [
+   "junos_erx",
+   75
+  ]
+ },
+ "junos_erx|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "junos_erx",
+   75
+  ],
+  "final": [
+   "junos_erx",
+   75
+  ]
+ },
+ "mrv.1|-|64": {
+  "after_auth": [
+   "mrv",
+   75
+  ],
+  "final": [
+   "mrv",
+   75
+  ]
+ },
+ "mrv.1|-|65536": {
+  "after_auth": [
+   "mrv",
+   75
+  ],
+  "final": [
+   "mrv",
+   75
+  ]
+ },
+ "mrv.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "mrv.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "mrv.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "mrv",
+   75
+  ],
+  "final": [
+   "mrv",
+   75
+  ]
+ },
+ "mrv.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "mrv",
+   75
+  ],
+  "final": [
+   "mrv",
+   75
+  ]
+ },
+ "mrv.2|-|64": {
+  "after_auth": [
+   "mrv",
+   75
+  ],
+  "final": [
+   "mrv",
+   75
+  ]
+ },
+ "mrv.2|-|65536": {
+  "after_auth": [
+   "mrv",
+   75
+  ],
+  "final": [
+   "mrv",
+   75
+  ]
+ },
+ "mrv.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "mrv.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "mrv.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "mrv",
+   75
+  ],
+  "final": [
+   "mrv",
+   75
+  ]
+ },
+ "mrv.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "mrv",
+   75
+  ],
+  "final": [
+   "mrv",
+   75
+  ]
+ },
+ "nxos.1|-|64": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.1|-|65536": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "one_os.1|-|64": {
+  "after_auth": [
+   "one_os",
+   40
+  ],
+  "final": [
+   "one_os",
+   40
+  ]
+ },
+ "one_os.1|-|65536": {
+  "after_auth": [
+   "one_os",
+   40
+  ],
+  "final": [
+   "one_os",
+   40
+  ]
+ },
+ "one_os.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "one_os.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "one_os.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "one_os",
+   40
+  ],
+  "final": [
+   "one_os",
+   40
+  ]
+ },
+ "one_os.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "one_os",
+   40
+  ],
+  "final": [
+   "one_os",
+   40
+  ]
+ },
+ "one_os.2|-|64": {
+  "after_auth": [
+   "one_os",
+   40
+  ],
+  "final": [
+   "one_os",
+   40
+  ]
+ },
+ "one_os.2|-|65536": {
+  "after_auth": [
+   "one_os",
+   40
+  ],
+  "final": [
+   "one_os",
+   40
+  ]
+ },
+ "one_os.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "one_os.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "one_os.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "one_os",
+   40
+  ],
+  "final": [
+   "one_os",
+   40
+  ]
+ },
+ "one_os.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "one_os",
+   40
+  ],
+  "final": [
+   "one_os",
+   40
+  ]
+ },
+ "prompt-only:<HUAWEI>|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:<HUAWEI>|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:A:sros-pe1#|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:A:sros-pe1#|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:FGT60E #|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:FGT60E #|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:RP/0/RSP0/CPU0:xr-pe1#|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ios_xr",
+   95
+  ]
+ },
+ "prompt-only:RP/0/RSP0/CPU0:xr-pe1#|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ios_xr",
+   95
+  ]
+ },
+ "prompt-only:[admin@MikroTik] >|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:[admin@MikroTik] >|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:admin@junos-mx> |SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:admin@junos-mx> |SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:core-sw01(config)#|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:core-sw01(config)#|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:root@host:~#|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:root@host:~#|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:router#|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:router#|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:switch>|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:switch>|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:user@host:~$|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "prompt-only:user@host:~$|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "ericsson_ban",
+   20
+  ],
+  "final": [
+   "ericsson_ban",
+   20
+  ]
+ },
+ "rios.1|-|64": {
+  "after_auth": [
+   "isam",
+   20
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "rios.1|-|65536": {
+  "after_auth": [
+   "isam",
+   20
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "rios.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "rios.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "rios.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "isam",
+   20
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "rios.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "isam",
+   20
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "smart_edge_os.1|-|64": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os.1|-|65536": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "smart_edge_os.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "smart_edge_os.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os.2|-|64": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os.2|-|65536": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "smart_edge_os.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "smart_edge_os.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os|-|64": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os|-|65536": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "smart_edge_os|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "smart_edge_os|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "smart_edge_os|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "smart_edge_os",
+   60
+  ],
+  "final": [
+   "smart_edge_os",
+   60
+  ]
+ },
+ "sp_vxoa|-|64": {
+  "after_auth": [
+   "sp_vxoa",
+   90
+  ],
+  "final": [
+   "sp_vxoa",
+   90
+  ]
+ },
+ "sp_vxoa|-|65536": {
+  "after_auth": [
+   "sp_vxoa",
+   90
+  ],
+  "final": [
+   "sp_vxoa",
+   90
+  ]
+ },
+ "sp_vxoa|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "sp_vxoa",
+   90
+  ],
+  "final": [
+   "sp_vxoa",
+   90
+  ]
+ },
+ "sp_vxoa|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "sp_vxoa",
+   90
+  ],
+  "final": [
+   "sp_vxoa",
+   90
+  ]
+ },
+ "sp_vxoa|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "sp_vxoa",
+   90
+  ],
+  "final": [
+   "sp_vxoa",
+   90
+  ]
+ },
+ "sp_vxoa|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "sp_vxoa",
+   90
+  ],
+  "final": [
+   "sp_vxoa",
+   90
+  ]
+ },
+ "sros|-|64": {
+  "after_auth": [
+   "sros",
+   95
+  ],
+  "final": [
+   "sros",
+   95
+  ]
+ },
+ "sros|-|65536": {
+  "after_auth": [
+   "sros",
+   95
+  ],
+  "final": [
+   "sros",
+   95
+  ]
+ },
+ "sros|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "sros",
+   95
+  ],
+  "final": [
+   "sros",
+   95
+  ]
+ },
+ "sros|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "sros",
+   95
+  ],
+  "final": [
+   "sros",
+   95
+  ]
+ },
+ "sros|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "sros",
+   95
+  ],
+  "final": [
+   "sros",
+   95
+  ]
+ },
+ "sros|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "sros",
+   95
+  ],
+  "final": [
+   "sros",
+   95
+  ]
+ },
+ "unknown|-|64": {
+  "after_auth": [
+   "unknown",
+   0
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "unknown|-|65536": {
+  "after_auth": [
+   "unknown",
+   0
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "unknown|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "unknown|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "unknown|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "unknown",
+   0
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "unknown|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "unknown",
+   0
+  ],
+  "final": [
+   "isam",
+   20
+  ]
+ },
+ "vrp.1|-|64": {
+  "after_auth": [
+   "vrp",
+   70
+  ],
+  "final": [
+   "vrp",
+   70
+  ]
+ },
+ "vrp.1|-|65536": {
+  "after_auth": [
+   "vrp",
+   70
+  ],
+  "final": [
+   "vrp",
+   70
+  ]
+ },
+ "vrp.1|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "vrp.1|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "vrp.1|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "vrp",
+   70
+  ],
+  "final": [
+   "vrp",
+   70
+  ]
+ },
+ "vrp.1|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "vrp",
+   70
+  ],
+  "final": [
+   "vrp",
+   70
+  ]
+ },
+ "vxworks|-|64": {
+  "after_auth": [
+   "vxworks",
+   90
+  ],
+  "final": [
+   "vxworks",
+   90
+  ]
+ },
+ "vxworks|-|65536": {
+  "after_auth": [
+   "vxworks",
+   90
+  ],
+  "final": [
+   "vxworks",
+   90
+  ]
+ },
+ "vxworks|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "vxworks",
+   90
+  ],
+  "final": [
+   "vxworks",
+   90
+  ]
+ },
+ "vxworks|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "vxworks",
+   90
+  ],
+  "final": [
+   "vxworks",
+   90
+  ]
+ },
+ "vxworks|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "vxworks",
+   90
+  ],
+  "final": [
+   "vxworks",
+   90
+  ]
+ },
+ "vxworks|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "vxworks",
+   90
+  ],
+  "final": [
+   "vxworks",
+   90
+  ]
+ },
+ "zte|-|64": {
+  "after_auth": [
+   "zte",
+   90
+  ],
+  "final": [
+   "zte",
+   90
+  ]
+ },
+ "zte|-|65536": {
+  "after_auth": [
+   "zte",
+   90
+  ],
+  "final": [
+   "zte",
+   90
+  ]
+ },
+ "zte|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "zte",
+   90
+  ],
+  "final": [
+   "zte",
+   90
+  ]
+ },
+ "zte|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "zte",
+   90
+  ],
+  "final": [
+   "zte",
+   90
+  ]
+ },
+ "zte|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "zte",
+   90
+  ],
+  "final": [
+   "zte",
+   90
+  ]
+ },
+ "zte|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "zte",
+   90
+  ],
+  "final": [
+   "zte",
+   90
+  ]
+ },
+ "zyxel|-|64": {
+  "after_auth": [
+   "zyxel",
+   90
+  ],
+  "final": [
+   "zyxel",
+   90
+  ]
+ },
+ "zyxel|-|65536": {
+  "after_auth": [
+   "zyxel",
+   90
+  ],
+  "final": [
+   "zyxel",
+   90
+  ]
+ },
+ "zyxel|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "zyxel",
+   90
+  ],
+  "final": [
+   "zyxel",
+   90
+  ]
+ },
+ "zyxel|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "zyxel",
+   90
+  ],
+  "final": [
+   "zyxel",
+   90
+  ]
+ },
+ "zyxel|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "zyxel",
+   90
+  ],
+  "final": [
+   "zyxel",
+   90
+  ]
+ },
+ "zyxel|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "zyxel",
+   90
+  ],
+  "final": [
+   "zyxel",
+   90
+  ]
+ }
+}
