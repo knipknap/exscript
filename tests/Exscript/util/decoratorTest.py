@@ -1,18 +1,11 @@
-import os.path
-import re
-import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from functools import partial
 from multiprocessing import Value
 
 import Exscript.util.decorator
-from Exscript import Account, Host
-from Exscript.protocols import Protocol
 from Exscript.protocols.exception import LoginFailure
-from Exscript.util.impl import get_label
 from util.reportTest import FakeJob
 
 

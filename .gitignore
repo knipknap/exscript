@@ -11,3 +11,7 @@ config.xml
 dist
 run_suite.log
 unit_test.cfg
+.pytest_cache
+.ruff_cache
+htmlcov
+coverage.xml

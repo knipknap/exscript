@@ -1,13 +1,9 @@
-import os.path
-import re
 import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from util.reportTest import FakeError
 
-from Exscript import Host
 from Exscript.logger import Log
 
 

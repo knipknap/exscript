@@ -1,11 +1,8 @@
 import logging
 import os.path
-import re
-import sys
 import unittest
 import warnings
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 warnings.simplefilter('ignore', DeprecationWarning)
 

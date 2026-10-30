@@ -1,10 +1,6 @@
-import os.path
-import re
-import sys
 import threading
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from Exscript.workqueue.job import Process
 from Exscript.workqueue.mainloop import MainLoop

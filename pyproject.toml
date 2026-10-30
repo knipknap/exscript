@@ -1,0 +1,81 @@
+[build-system]
+requires = ["hatchling>=1.27", "hatch-vcs>=0.5"]
+build-backend = "hatchling.build"
+
+[project]
+name = "Exscript"
+dynamic = ["version"]
+description = "Automating Telnet, SSH and NETCONF"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["COPYING"]
+authors = [{ name = "Samuel Abels", email = "knipknap@gmail.com" }]
+keywords = [
+    "exscript",
+    "telnet",
+    "ssh",
+    "netconf",
+    "network",
+    "networking",
+    "automate",
+    "automation",
+    "library",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "lxml",
+    "ncclient>=0.7,<1",
+    "paramiko>=3.4,<6",
+    "pycryptodomex",
+]
+
+[project.optional-dependencies]
+otel = [
+    "opentelemetry-api>=1.12",
+    "opentelemetry-sdk>=1.12",
+    "opentelemetry-instrumentation>=0.42b0",
+]
+
+[project.urls]
+Homepage = "https://github.com/knipknap/exscript"
+Documentation = "https://exscript.readthedocs.io"
+Issues = "https://github.com/knipknap/exscript/issues"
+Changelog = "https://github.com/knipknap/exscript/blob/master/CHANGES.md"
+
+[dependency-groups]
+test = [
+    "pytest>=9.2",
+    "pytest-cov>=7.1",
+    "opentelemetry-sdk>=1.12",
+    "opentelemetry-instrumentation>=0.42b0",
+]
+dev = [{ include-group = "test" }]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/Exscript"]
+
+[tool.hatch.build.targets.wheel.shared-scripts]
+"scripts/exscript" = "exscript"
+"scripts/otp" = "otp"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["*Test.py"]
+addopts = ["-ra", "--strict-config", "--strict-markers"]

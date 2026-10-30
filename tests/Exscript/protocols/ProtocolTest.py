@@ -1,11 +1,9 @@
 import os
 import re
-import sys
 import tempfile
 import unittest
 import unittest.mock
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import time
 from functools import partial

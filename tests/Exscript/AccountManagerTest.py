@@ -1,9 +1,4 @@
-import sys
 import unittest
-import re
-import os.path
-import warnings
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from Exscript.account import Account, AccountPool, AccountManager
 

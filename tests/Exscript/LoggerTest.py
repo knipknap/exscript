@@ -1,14 +1,8 @@
-import os
-import re
 import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-import gc
 from itertools import islice
-from shutil import rmtree
-from tempfile import mkdtemp
 
 from LogTest import FakeError
 from util.reportTest import FakeJob
