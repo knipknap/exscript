@@ -10,14 +10,12 @@ driver is detected. Run from the repository root::
 """
 import argparse
 import json
-import os
 import socket
 import statistics
 import sys
 import threading
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 import paramiko
 

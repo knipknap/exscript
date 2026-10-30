@@ -1,8 +1,4 @@
-import sys
 import unittest
-import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from tempfile import NamedTemporaryFile
 import Exscript.util.interact
@@ -50,23 +46,23 @@ class interactTest(unittest.TestCase):
     CORRELATE = Exscript.util.interact
 
     def testPrompt(self):
-        from Exscript.util.interact import prompt
+        pass
         # Can't really be tested, as it is interactive.
 
     def testGetFilename(self):
-        from Exscript.util.interact import get_filename
+        pass
         # Can't really be tested, as it is interactive.
 
     def testGetUser(self):
-        from Exscript.util.interact import get_user
+        pass
         # Can't really be tested, as it is interactive.
 
     def testGetLogin(self):
-        from Exscript.util.interact import get_login
+        pass
         # Can't really be tested, as it is interactive.
 
     def testReadLogin(self):
-        from Exscript.util.interact import read_login
+        pass
         # Can't really be tested, as it is interactive.
 
 

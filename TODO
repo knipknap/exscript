@@ -1,5 +1,0 @@
-* Add tests for Transport class debug levels.
-* Add API docs for Exscript.parselib.
-* Test the exscript executable.
-* Test Queue constructor kwargs.
-* Create more stdlib tests like tests/templates/stdlib.crypt/.

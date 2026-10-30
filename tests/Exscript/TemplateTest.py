@@ -1,10 +1,7 @@
 import os
-import re
-import sys
 import unittest
 
 dirname = os.path.dirname(__file__)
-sys.path.insert(0, os.path.join(dirname, '..', '..'))
 
 from Exscript import Account, Host, Logger, Queue, protocols
 from Exscript.emulators import IOSEmulator

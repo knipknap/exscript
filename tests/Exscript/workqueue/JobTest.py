@@ -1,14 +1,8 @@
-import os.path
-import re
-import sys
-import threading
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from multiprocessing import Pipe
 from pickle import dumps, loads
-from tempfile import NamedTemporaryFile
 
 from Exscript.workqueue.job import Job, Process, Thread
 

@@ -1,15 +1,12 @@
 import os
-import re
 import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import traceback
 
 import Exscript.util.report
 from Exscript import Host, Logger
-from Exscript.util.event import Event
 from Exscript.workqueue import WorkQueue
 
 
@@ -95,7 +92,7 @@ Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 54, in createAbortedLog
+  File "%s.py", line %d, in createAbortedLog
     raise FakeError()
 FakeError
 
@@ -103,7 +100,7 @@ FakeError
 Successful actions:
 -------------------
 fake1
-fake3'''.strip() % file
+fake3'''.strip() % (file, self.createAbortedLog.__code__.co_firstlineno + 3)
         expected = expected.replace('FakeError\n',
                                     'util.reportTest.FakeError\n')
         self.assertEqual(format(self.logger), expected)

@@ -1,12 +1,9 @@
-import sys
 import unittest
-import re
 import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from tempfile import mkdtemp
 from shutil import rmtree
-from Exscript import Host, FileLogger
+from Exscript import FileLogger
 from LoggerTest import LoggerTest, FakeJob
 
 

@@ -1,13 +1,9 @@
-import sys
 import unittest
 import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import Exscript.util.cast
 import re
 from Exscript import Host
-from Exscript.logger import Log, Logfile
 
 
 class castTest(unittest.TestCase):
