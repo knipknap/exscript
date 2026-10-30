@@ -8,6 +8,7 @@ driver is detected. Run from the repository root::
 
     python tools/bench_bulk.py [--mib 4] [--runs 3] [--json results.json]
 """
+
 import argparse
 import json
 import socket
@@ -28,7 +29,6 @@ LINE = b' description uplink to core router number 0000 via ae1.100\r\n'
 
 
 class _SSHServerInterface(paramiko.ServerInterface):
-
     def __init__(self, allowed):
         self.allowed = allowed
 
@@ -126,8 +126,11 @@ def bench_reassembly(size):
 
 
 def bench_ios_login(host_key):
-    server = Server(host_key=host_key, version='SSH-2.0-Cisco-1.25',
-                    allowed='publickey,keyboard-interactive,password')
+    server = Server(
+        host_key=host_key,
+        version='SSH-2.0-Cisco-1.25',
+        allowed='publickey,keyboard-interactive,password',
+    )
     conn = SSH2(verify_fingerprint=False)  # default connect rate limit, like real usage
     start = time.perf_counter()
     conn.connect('127.0.0.1', server.port)
@@ -142,7 +145,9 @@ def bench_ios_login(host_key):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     parser.add_argument('--mib', type=int, default=4, help='response size in MiB (default: 4)')
-    parser.add_argument('--runs', type=int, default=3, help='runs per measurement, median is reported')
+    parser.add_argument(
+        '--runs', type=int, default=3, help='runs per measurement, median is reported'
+    )
     parser.add_argument('--json', help='also write the results to this file')
     args = parser.parse_args()
     size = args.mib * 1024 * 1024
@@ -152,7 +157,11 @@ def main():
 
     for name, make_conn, server_kwargs in (
         ('telnet_execute', lambda: Telnet(connect_rate_limit=0), {}),
-        ('ssh_execute', lambda: SSH2(connect_rate_limit=0, verify_fingerprint=False), {'host_key': host_key}),
+        (
+            'ssh_execute',
+            lambda: SSH2(connect_rate_limit=0, verify_fingerprint=False),
+            {'host_key': host_key},
+        ),
     ):
         server = Server(payload, **server_kwargs)
         runs = [bench_execute(make_conn(), server, size) for _ in range(args.runs)]
@@ -161,7 +170,8 @@ def main():
         results[name + '_cpu_s'] = round(statistics.median(r[1] for r in runs), 3)
 
     results['netconf_reassembly_s'] = round(
-        statistics.median(bench_reassembly(size) for _ in range(args.runs)), 3)
+        statistics.median(bench_reassembly(size) for _ in range(args.runs)), 3
+    )
     elapsed, handshakes, driver = bench_ios_login(host_key)
     results['ios_login_s'] = round(elapsed, 2)
     results['ios_login_handshakes'] = handshakes

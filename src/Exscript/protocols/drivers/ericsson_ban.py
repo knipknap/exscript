@@ -23,6 +23,7 @@
 """
 A driver for devices running Ericsson's Broadband Access Nodes (BAN) OS
 """
+
 import re
 
 from .driver import Driver
@@ -42,7 +43,6 @@ _login_fail_re = [r'Login failed']
 
 
 class EricssonBanDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'ericsson_ban')
 

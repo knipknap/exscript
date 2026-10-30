@@ -5,13 +5,15 @@ import base64
 import Exscript.util.file
 from tempfile import NamedTemporaryFile
 
-account_pool = [('user1', 'password1'),
-                ('user2', 'password2'),
-                ('user3', 'password3'),
-                ('user4', 'password4')]
+account_pool = [
+    ('user1', 'password1'),
+    ('user2', 'password2'),
+    ('user3', 'password3'),
+    ('user4', 'password4'),
+]
 
 hosts = ['localhost', '1.2.3.4', 'ssh://test', 'telnet://another:23']
-expected_hosts = ['localhost', '1.2.3.4', 'test',       'another']
+expected_hosts = ['localhost', '1.2.3.4', 'test', 'another']
 
 
 class fileTest(unittest.TestCase):
@@ -48,6 +50,7 @@ class fileTest(unittest.TestCase):
 
     def testGetAccountsFromFile(self):
         from Exscript.util.file import get_accounts_from_file
+
         accounts = get_accounts_from_file(self.account_file.name)
         result = [(a.get_name(), a.get_password()) for a in accounts]
         result.sort()
@@ -55,11 +58,13 @@ class fileTest(unittest.TestCase):
 
     def testGetHostsFromFile(self):
         from Exscript.util.file import get_hosts_from_file
+
         result = get_hosts_from_file(self.host_file.name)
         self.assertEqual([h.get_name() for h in result], expected_hosts)
 
     def testGetHostsFromCsv(self):
         from Exscript.util.file import get_hosts_from_csv
+
         result = get_hosts_from_csv(self.csv_host_file.name)
         hostnames = [h.get_name() for h in result]
         testvars = [h.get('test')[0] for h in result]
@@ -68,6 +73,7 @@ class fileTest(unittest.TestCase):
 
     def testLoadLib(self):
         from Exscript.util.file import load_lib
+
         functions = load_lib(self.lib_file.name)
         name = os.path.splitext(os.path.basename(self.lib_file.name))[0]
         self.assertEqual({name + '.test': object}, functions)
@@ -75,5 +81,7 @@ class fileTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(fileTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

@@ -23,6 +23,7 @@ def two(job, host, conn):
     conn.autoinit()
     conn.execute('show interface POS1/0')
 
+
 accounts = get_accounts_from_file('accounts.cfg')
 
 # Start on one host.

@@ -23,6 +23,7 @@
 """
 A driver for Arista EOS.
 """
+
 import re
 
 from .driver import Driver
@@ -45,8 +46,7 @@ from .driver import Driver
 # % Incomplete command
 # % Ambiguous command
 
-_user_re = [re.compile(r'user ?name: ?$', re.I),
-            re.compile(r' login: ?$', re.I)]
+_user_re = [re.compile(r'user ?name: ?$', re.I), re.compile(r' login: ?$', re.I)]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: ?$', re.I)]
 _prompt_re = [re.compile(r'(?:\r\n|[\r\n])?[\-\w+\.:/]+(?:\([^\)]+\)){,3}[>#] ?$')]
 _error_re = [
@@ -71,7 +71,6 @@ _login_fail_re = [
 
 
 class EOSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'eos')
         self.user_re = _user_re

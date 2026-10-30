@@ -25,6 +25,7 @@ A driver for Enterasys/Extreme (HiPath) Wireless Controller devices.
 
 Created using a C5110 device.
 """
+
 import re
 
 from .driver import Driver
@@ -39,7 +40,6 @@ _hwc_re = re.compile(r'Enterasys Wireless Convergence OS', re.I)
 
 
 class EnterasysWCDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'enterasys_wc')
         self.user_re = _user_re

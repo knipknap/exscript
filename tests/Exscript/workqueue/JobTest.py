@@ -32,14 +32,15 @@ class ThreadTest(unittest.TestCase):
         pass  # See testRun()
 
 
-@unittest.skipIf(get_all_start_methods()[0] != 'fork',
-                 'Process jobs need the "fork" start method (the default only on Linux < 3.14)')
+@unittest.skipIf(
+    get_all_start_methods()[0] != 'fork',
+    'Process jobs need the "fork" start method (the default only on Linux < 3.14)',
+)
 class ProcessTest(ThreadTest):
     CORRELATE = Process
 
 
 class JobTest(unittest.TestCase):
-
     def testConstructor(self):
         job = Job(do_nothing, 'myaction', 1, 'foo')
         self.assertEqual(job.name, 'myaction')
@@ -61,5 +62,7 @@ def suite():
     suite2 = loader.loadTestsFromTestCase(ProcessTest)
     suite3 = loader.loadTestsFromTestCase(JobTest)
     return unittest.TestSuite((suite1, suite2, suite3))
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

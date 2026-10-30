@@ -23,6 +23,7 @@
 """
 A driver for Alcatel SROS.
 """
+
 import re
 
 from .driver import Driver
@@ -31,7 +32,6 @@ _prompt_re = [re.compile(r'(?:\r\n|[\r\n])[*]?(?:A|B):[\-\w\.>]+[#\$] ?$')]
 
 
 class SROSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'sros')
         self.prompt_re = _prompt_re

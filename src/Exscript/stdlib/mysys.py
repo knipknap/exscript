@@ -46,13 +46,9 @@ def execute(scope, command):
     :type  command: string
     :param command: A shell command.
     """
-    process = Popen(command[0],
-                    shell=True,
-                    stdin=PIPE,
-                    stdout=PIPE,
-                    stderr=STDOUT,
-                    text=True,
-                    close_fds=True)
+    process = Popen(
+        command[0], shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, text=True, close_fds=True
+    )
     if process.stdout:
         scope.define(__response__=process.stdout.readlines())
     else:

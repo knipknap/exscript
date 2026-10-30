@@ -23,29 +23,22 @@
 """
 Defines the behavior of a virtual device, as needed by :class:`Exscript.servers`.
 """
+
 from . import CommandSet
 
 
 class VirtualDevice:
-
     """
     An object that emulates a remote device.
     """
-    LOGIN_TYPE_PASSWORDONLY, \
-        LOGIN_TYPE_USERONLY, \
-        LOGIN_TYPE_BOTH, \
-        LOGIN_TYPE_NONE = list(range(1, 5))
 
-    PROMPT_STAGE_USERNAME, \
-        PROMPT_STAGE_PASSWORD, \
-        PROMPT_STAGE_CUSTOM = list(range(1, 4))
+    LOGIN_TYPE_PASSWORDONLY, LOGIN_TYPE_USERONLY, LOGIN_TYPE_BOTH, LOGIN_TYPE_NONE = list(
+        range(1, 5)
+    )
 
-    def __init__(self,
-                 hostname,
-                 echo=True,
-                 login_type=LOGIN_TYPE_BOTH,
-                 strict=True,
-                 banner=None):
+    PROMPT_STAGE_USERNAME, PROMPT_STAGE_PASSWORD, PROMPT_STAGE_CUSTOM = list(range(1, 4))
+
+    def __init__(self, hostname, echo=True, login_type=LOGIN_TYPE_BOTH, strict=True, banner=None):
         """
         :type  hostname: str
         :param hostname: The hostname, used for the prompt.

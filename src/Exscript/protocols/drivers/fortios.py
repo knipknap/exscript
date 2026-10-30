@@ -25,6 +25,7 @@ A driver for FortiOS devices.
 
 Created using a Fortigate device and FortiOS 5.0.
 """
+
 import re
 
 from .driver import Driver
@@ -54,7 +55,6 @@ _error_re = [
 
 
 class FortiOSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'fortios')
         self.user_re = _user_re

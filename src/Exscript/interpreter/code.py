@@ -42,56 +42,50 @@ from .trying import Try
 #  check if there is some kind of None handling/comparison. If not, we should add it.
 
 varname = varname_re.pattern
-keywords = ['append',
-            'as',
-            'else',
-            'end',
-            'enter',
-            'extract',
-            'fail',
-            'false',
-            'from',
-            'if',
-            'into',
-            'loop',
-            'try',
-            'to',
-            'true',
-            'until',
-            'when',
-            'while']
-operators = ['in',
-             r'not\s+in',
-             r'is\s+not',
-             'is',
-             'ge',
-             'gt',
-             'le',
-             'lt',
-             'matches']
+keywords = [
+    'append',
+    'as',
+    'else',
+    'end',
+    'enter',
+    'extract',
+    'fail',
+    'false',
+    'from',
+    'if',
+    'into',
+    'loop',
+    'try',
+    'to',
+    'true',
+    'until',
+    'when',
+    'while',
+]
+operators = ['in', r'not\s+in', r'is\s+not', 'is', 'ge', 'gt', 'le', 'lt', 'matches']
 
 grammar = (
-    ('escaped_data',        r'\\.'),
-    ('line_comment',        r'(?:^|(?<=[\r\n{]))[ \t]*#[^\r\n]*(?:[\r\n]|$)'),
-    ('regex_delimiter',     r'/'),
-    ('string_delimiter',    r'"'),
-    ('open_curly_bracket',  r'{'),
+    ('escaped_data', r'\\.'),
+    ('line_comment', r'(?:^|(?<=[\r\n{]))[ \t]*#[^\r\n]*(?:[\r\n]|$)'),
+    ('regex_delimiter', r'/'),
+    ('string_delimiter', r'"'),
+    ('open_curly_bracket', r'{'),
     ('close_curly_bracket', r'}'),
-    ('close_bracket',       r'\)'),
-    ('comma',               r','),
-    ('whitespace',          r'[ \t]+'),
-    ('keyword',             r'\b(?:' + '|'.join(keywords) + r')\b'),
-    ('comparison',          r'\b(?:' + '|'.join(operators) + r')\b'),
+    ('close_bracket', r'\)'),
+    ('comma', r','),
+    ('whitespace', r'[ \t]+'),
+    ('keyword', r'\b(?:' + '|'.join(keywords) + r')\b'),
+    ('comparison', r'\b(?:' + '|'.join(operators) + r')\b'),
     ('arithmetic_operator', r'(?:\*|\+|-|%|\.)'),
-    ('logical_operator',    r'\b(?:and|or|not)\b'),
-    ('assign',              r'='),
-    ('hex_number',          r'\b0x[0-9a-fA-F]+\b'),
-    ('octal_number',        r'\b0o?[0-7]+\b'),
-    ('number',              r'\b\d+\b'),
-    ('open_function_call',  varname + r'(?:\.' + varname + r')*\('),
-    ('varname',             varname),
-    ('newline',             r'[\r\n]'),
-    ('raw_data',            r'[^\r\n{}]+')
+    ('logical_operator', r'\b(?:and|or|not)\b'),
+    ('assign', r'='),
+    ('hex_number', r'\b0x[0-9a-fA-F]+\b'),
+    ('octal_number', r'\b0o?[0-7]+\b'),
+    ('number', r'\b\d+\b'),
+    ('open_function_call', varname + r'(?:\.' + varname + r')*\('),
+    ('varname', varname),
+    ('newline', r'[\r\n]'),
+    ('raw_data', r'[^\r\n{}]+'),
 )
 
 grammar_c = []
@@ -100,7 +94,6 @@ for thetype, regex in grammar:
 
 
 class Code(Scope):
-
     def __init__(self, lexer, parser, parent):
         Scope.__init__(self, self.__class__.__name__, lexer, parser, parent)
         lexer.set_grammar(grammar_c)

@@ -23,6 +23,7 @@
 """
 A driver for AIX.
 """
+
 import re
 
 from .driver import Driver
@@ -33,7 +34,6 @@ _aix_re = re.compile(r'\bAIX\b')
 
 
 class AIXDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'aix')
         self.user_re = _user_re

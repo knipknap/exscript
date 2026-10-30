@@ -8,4 +8,5 @@ def do_something(job, host, conn):
     conn.execute('ls -1')
     eval_file(conn, 'template.exscript', foobar='hello-world')
 
+
 quickstart('ssh://localhost', do_something)

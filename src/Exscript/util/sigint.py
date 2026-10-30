@@ -23,6 +23,7 @@
 """
 A class for catching SIGINT, such that CTRL+c works.
 """
+
 import os
 import signal
 import sys
@@ -30,7 +31,6 @@ import time
 
 
 class SigIntWatcher:
-
     """
     This class solves two problems with multithreaded programs in Python:
 
@@ -56,7 +56,7 @@ class SigIntWatcher:
             self.child = os.fork()
         except AttributeError:  # platforms that don't have os.fork
             self.child = 0
-        except RuntimeError: # prevent "not holding the import lock" on some systems
+        except RuntimeError:  # prevent "not holding the import lock" on some systems
             self.child = 0
         if self.child:
             self._watch()

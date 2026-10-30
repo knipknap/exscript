@@ -23,5 +23,7 @@ class TelnetTest(ProtocolTest):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TelnetTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

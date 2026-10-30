@@ -23,44 +23,41 @@ class HostTest(unittest.TestCase):
         for url, result in urls:
             host = Host(url)
             uri = Url.from_string(url)
-            self.assertEqual(host.get_name(),    uri.hostname)
+            self.assertEqual(host.get_name(), uri.hostname)
             self.assertEqual(host.get_address(), uri.hostname)
-            self.assertEqual(host.get_uri().split('&').sort(),
-                             str(uri).split('&').sort())
+            self.assertEqual(host.get_uri().split('&').sort(), str(uri).split('&').sort())
 
     def testSetUri(self):
         for url, result in urls:
             self.host.set_uri(url)
             uri = Url.from_string(url)
-            self.assertEqual(self.host.get_name(),    uri.hostname)
+            self.assertEqual(self.host.get_name(), uri.hostname)
             self.assertEqual(self.host.get_address(), uri.hostname)
 
     def testGetUri(self):
         for url, result in urls:
             host = Host(url)
             uri = Url.from_string(url)
-            self.assertEqual(host.get_uri().split('&').sort(),
-                             str(uri).split('&').sort())
+            self.assertEqual(host.get_uri().split('&').sort(), str(uri).split('&').sort())
 
     def testGetDict(self):
         host = Host('foo')
         host.set_address('foo2')
-        self.assertEqual(host.get_dict(), {'hostname': 'foo',
-                                           'address':  'foo2',
-                                           'protocol': 'ssh',
-                                           'port':     22})
+        self.assertEqual(
+            host.get_dict(), {'hostname': 'foo', 'address': 'foo2', 'protocol': 'ssh', 'port': 22}
+        )
 
     def testSetAddress(self):
         self.host.set_protocol('dummy')
         self.host.set_address('test.org')
         self.assertEqual(self.host.get_protocol(), 'dummy')
-        self.assertEqual(self.host.get_name(),     'localhost')
-        self.assertEqual(self.host.get_address(),  'test.org')
+        self.assertEqual(self.host.get_name(), 'localhost')
+        self.assertEqual(self.host.get_address(), 'test.org')
 
         self.host.set_address('001.002.003.004')
         self.assertEqual(self.host.get_protocol(), 'dummy')
-        self.assertEqual(self.host.get_name(),     'localhost')
-        self.assertEqual(self.host.get_address(),  '1.2.3.4')
+        self.assertEqual(self.host.get_name(), 'localhost')
+        self.assertEqual(self.host.get_address(), '1.2.3.4')
 
     def testGetAddress(self):
         self.assertEqual(self.host.get_address(), 'localhost')
@@ -71,8 +68,8 @@ class HostTest(unittest.TestCase):
         self.host.set_protocol('dummy')
         self.host.set_name('test.org')
         self.assertEqual(self.host.get_protocol(), 'dummy')
-        self.assertEqual(self.host.get_name(),     'test.org')
-        self.assertEqual(self.host.get_address(),  'localhost')
+        self.assertEqual(self.host.get_name(), 'test.org')
+        self.assertEqual(self.host.get_address(), 'localhost')
         self.host.set_name('testhost')
         self.assertEqual(self.host.get_name(), 'testhost')
 
@@ -91,8 +88,7 @@ class HostTest(unittest.TestCase):
         self.assertRaises(TypeError, self.host.set_option, 'test', True)
         self.assertEqual(self.host.get_options(), {})
         self.assertEqual(self.host.get_option('verify_fingerprint'), None)
-        self.assertEqual(
-            self.host.get_option('verify_fingerprint', False), False)
+        self.assertEqual(self.host.get_option('verify_fingerprint', False), False)
         self.host.set_option('verify_fingerprint', True)
         self.assertEqual(self.host.get_option('verify_fingerprint'), True)
         self.assertEqual(self.host.get_options(), {'verify_fingerprint': True})
@@ -130,7 +126,7 @@ class HostTest(unittest.TestCase):
     def testSetAll(self):
         self.testSet()
         self.host.set_all({'test1': 1, 'test2': 2})
-        self.assertEqual(self.host.get('test'),  None)
+        self.assertEqual(self.host.get('test'), None)
         self.assertEqual(self.host.get('test1'), 1)
         self.assertEqual(self.host.get('test2'), 2)
 
@@ -151,11 +147,11 @@ class HostTest(unittest.TestCase):
 
     def testSetDefault(self):
         self.testSet()
-        self.assertEqual(self.host.get('test'),  3)
+        self.assertEqual(self.host.get('test'), 3)
         self.assertEqual(self.host.get('test2'), None)
-        self.host.set_default('test',  5)
+        self.host.set_default('test', 5)
         self.host.set_default('test2', 1)
-        self.assertEqual(self.host.get('test'),  3)
+        self.assertEqual(self.host.get('test'), 3)
         self.assertEqual(self.host.get('test2'), 1)
 
     def testHasKey(self):
@@ -165,13 +161,15 @@ class HostTest(unittest.TestCase):
 
     def testGet(self):
         self.testSet()
-        self.assertEqual(self.host.get('test'),     3)
-        self.assertEqual(self.host.get('test2'),    None)
-        self.assertEqual(self.host.get('test',  1), 3)
+        self.assertEqual(self.host.get('test'), 3)
+        self.assertEqual(self.host.get('test2'), None)
+        self.assertEqual(self.host.get('test', 1), 3)
         self.assertEqual(self.host.get('test2', 1), 1)
 
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(HostTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

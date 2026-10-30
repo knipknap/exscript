@@ -95,6 +95,7 @@ class bufferTest(unittest.TestCase):
         def monitor_cb(thedata, *args, **kwargs):
             thedata['args'] = args
             thedata['kwargs'] = kwargs
+
         data = {}
         b.add_monitor('abc', partial(monitor_cb, data))
 
@@ -127,5 +128,7 @@ class bufferTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(bufferTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

@@ -8,6 +8,7 @@ class cryptTest(unittest.TestCase):
 
     def testOtp(self):
         from Exscript.util.crypt import otp
+
         hash = otp('password', 'abc123', 9999)
         self.assertEqual('ACTA AMMO CAR WEB BIN YAP', hash)
         hash = otp('password', 'abc123', 9998)
@@ -20,5 +21,7 @@ class cryptTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(cryptTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

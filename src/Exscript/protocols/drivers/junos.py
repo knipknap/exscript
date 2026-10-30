@@ -23,6 +23,7 @@
 """
 A driver for devices running JunOS (by Juniper).
 """
+
 import re
 
 from .driver import Driver
@@ -64,7 +65,6 @@ _netconf_caps_re = [re.compile(r"juniper\.net", re.I)]
 
 
 class JunOSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'junos')
         self.user_re = _user_re

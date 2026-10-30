@@ -32,16 +32,12 @@ _logger.addHandler(logging.NullHandler())
 
 
 class WorkQueue:
-
     """
     This class implements the asynchronous workqueue and is the main API
     for using the workqueue module.
     """
 
-    def __init__(self,
-                 collection=None,
-                 max_threads=1,
-                 mode='threading'):
+    def __init__(self, collection=None, max_threads=1, mode='threading'):
         """
         Constructor.
 
@@ -52,7 +48,9 @@ class WorkQueue:
         if mode == 'threading':
             self.job_cls = Thread
         elif mode == 'multiprocessing':
-            self._logger.warning("Mode 'multiprocessing' is not recommended, see: https://github.com/knipknap/exscript/issues/230")
+            self._logger.warning(
+                "Mode 'multiprocessing' is not recommended, see: https://github.com/knipknap/exscript/issues/230"
+            )
             self.job_cls = Process
         else:
             raise TypeError('invalid "mode" argument: ' + repr(mode))
@@ -165,12 +163,7 @@ class WorkQueue:
         self._check_if_ready()
         return self.main_loop.enqueue_or_ignore(function, name, times, data)
 
-    def priority_enqueue(self,
-                         function,
-                         name=None,
-                         force_start=False,
-                         times=1,
-                         data=None):
+    def priority_enqueue(self, function, name=None, force_start=False, times=1, data=None):
         """
         Like :class:`enqueue()`, but adds the given function at the top of the
         queue.
@@ -191,18 +184,9 @@ class WorkQueue:
         :return: The id of the new job.
         """
         self._check_if_ready()
-        return self.main_loop.priority_enqueue(function,
-                                               name,
-                                               force_start,
-                                               times,
-                                               data)
+        return self.main_loop.priority_enqueue(function, name, force_start, times, data)
 
-    def priority_enqueue_or_raise(self,
-                                  function,
-                                  name=None,
-                                  force_start=False,
-                                  times=1,
-                                  data=None):
+    def priority_enqueue_or_raise(self, function, name=None, force_start=False, times=1, data=None):
         """
         Like priority_enqueue(), but if a function with the same name is
         already in the queue, the existing function is moved to the top of
@@ -221,11 +205,7 @@ class WorkQueue:
         :return: The id of the new job.
         """
         self._check_if_ready()
-        return self.main_loop.priority_enqueue_or_raise(function,
-                                                        name,
-                                                        force_start,
-                                                        times,
-                                                        data)
+        return self.main_loop.priority_enqueue_or_raise(function, name, force_start, times, data)
 
     def unpause(self):
         """

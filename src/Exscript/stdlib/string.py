@@ -40,6 +40,7 @@ def replace(scope, strings, source, dest):
     """
     return [s.replace(source[0], dest[0]) for s in strings]
 
+
 @secure_function
 def split(scope, strings, separator):
     """

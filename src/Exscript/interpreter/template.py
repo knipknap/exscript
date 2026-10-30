@@ -30,24 +30,24 @@ from .scope import Scope
 
 escaped_grammar = [
     # Unicode range: 0x00000000 to 0x0010FFFF
-    ('escaped_unicode_32bit',     r'\\U[0-9a-fA-F]{8}'),
-    ('escaped_unicode_16bit',     r'\\u[0-9a-fA-F]{4}'),
-    ('escaped_hex',               r'\\x[0-9a-fA-F]{2}'),
-    ('escaped_octal',             r'\\[0-7]{3}'),
+    ('escaped_unicode_32bit', r'\\U[0-9a-fA-F]{8}'),
+    ('escaped_unicode_16bit', r'\\u[0-9a-fA-F]{4}'),
+    ('escaped_hex', r'\\x[0-9a-fA-F]{2}'),
+    ('escaped_octal', r'\\[0-7]{3}'),
     ('escaped_extended_controls', r'\\[0abefv]'),
-    ('escaped_common_controls',   r'\\[nrt]'),
+    ('escaped_common_controls', r'\\[nrt]'),
 ]
 
 grammar = escaped_grammar + [
-    ('escaped_data',        r'\\.'),
-    ('line_comment',        r'(?:^|(?<=[\r\n}]))[ \t]*#[^\r\n]*(?:[\r\n]|$)'),
-    ('open_curly_bracket',  '{'),
+    ('escaped_data', r'\\.'),
+    ('line_comment', r'(?:^|(?<=[\r\n}]))[ \t]*#[^\r\n]*(?:[\r\n]|$)'),
+    ('open_curly_bracket', '{'),
     ('close_curly_bracket', '}'),
-    ('open_rpc_tag',        r'<rpc>'),
-    ('close_rpc_tag',       r'<\/rpc>'),
-    ('newline',             r'[\r\n]'),
+    ('open_rpc_tag', r'<rpc>'),
+    ('close_rpc_tag', r'<\/rpc>'),
+    ('newline', r'[\r\n]'),
     ('raw_data_before_tag', r'[^\r\n{}\\]+?(?=<\/?rpc>)'),
-    ('raw_data',            r'[^\r\n{}\\]+'),
+    ('raw_data', r'[^\r\n{}\\]+'),
 ]
 
 grammar_c = []
@@ -56,7 +56,6 @@ for thetype, regex in grammar:
 
 
 class Template(Scope):
-
     def __init__(self, lexer, parser, parent, *args, **kwargs):
         Scope.__init__(self, self.__class__.__name__, lexer, parser, parent, **kwargs)
         lexer.set_grammar(grammar_c)
@@ -86,15 +85,17 @@ class Template(Scope):
             elif lexer.current_is(['raw_data_before_tag', 'raw_data']):
                 buffer += lexer.token()[1]
                 next(lexer)
-            elif lexer.current_is([
-                'escaped_unicode_32bit',
-                'escaped_unicode_16bit',
-                'escaped_hex',
-                'escaped_octal',
-                'escaped_extended_controls',
-                'escaped_common_controls',
-                'escaped_data',
-            ]):
+            elif lexer.current_is(
+                [
+                    'escaped_unicode_32bit',
+                    'escaped_unicode_16bit',
+                    'escaped_hex',
+                    'escaped_octal',
+                    'escaped_extended_controls',
+                    'escaped_common_controls',
+                    'escaped_data',
+                ]
+            ):
                 ttype, token = lexer.token()
                 result = self.eval_escape(ttype, token)
                 buffer += result

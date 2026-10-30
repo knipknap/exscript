@@ -43,7 +43,6 @@ _error_re = [
 
 
 class BrocadeDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'brocade')
         self.user_re = _user_re

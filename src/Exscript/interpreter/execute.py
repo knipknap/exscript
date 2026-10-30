@@ -30,9 +30,9 @@ from ..util.xml import validate_xml
 from .string import String, varstring_re
 
 grammar = {
-    'leading_blank_lines':   r'^(?:[ \t]*[\r\n])+',
-    'trailing_blank_lines':  r'(?:[\r\n][ \t]*)+$',
-    'line_comment':          r'(?:^|(?<=[\r\n]))[ \t]*#[^\r\n]*(?:[\r\n]|$)',
+    'leading_blank_lines': r'^(?:[ \t]*[\r\n])+',
+    'trailing_blank_lines': r'(?:[\r\n][ \t]*)+$',
+    'line_comment': r'(?:^|(?<=[\r\n]))[ \t]*#[^\r\n]*(?:[\r\n]|$)',
 }
 leading_whitespace_re = re.compile(r'^[ \t\r\n]*')
 line_comment_re = re.compile(grammar['line_comment'])
@@ -40,7 +40,6 @@ strip_re = re.compile('|'.join(grammar.values()))
 
 
 class Execute(String):
-
     def __init__(self, lexer, parser, parent, command, escape_offset=0):
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.delimiter = ''  # Command strings are not delimited in Execute tokens.
@@ -85,10 +84,7 @@ class Execute(String):
             rpc_command = varstring_re.sub(self.variable_sigil_sub_cb, rpc_command)
 
             # Now we can validate the prepared RPC command.
-            msg = (
-                "XML validation of the RPC command has failed. The error was "
-                "caused by:\n"
-            )
+            msg = "XML validation of the RPC command has failed. The error was caused by:\n"
             try:
                 validate_xml(rpc_command, silent=False)
             except UnicodeEncodeError as exc:
@@ -102,10 +98,10 @@ class Execute(String):
                 # XMLSyntaxError position (line, offset) needs to be converted
                 # to an absolute character offset. Then adjust the start/end marks.
                 lines = rpc_command.splitlines(keepends=True)
-                exc_start = len(''.join(lines[:exc.lineno - 1]))
+                exc_start = len(''.join(lines[: exc.lineno - 1]))
                 exc_start += exc.offset
                 # We assume the end positions are either both set or not!
-                exc_end = len(''.join(lines[:(exc.end_lineno or exc.lineno) - 1]))
+                exc_end = len(''.join(lines[: (exc.end_lineno or exc.lineno) - 1]))
                 exc_end += exc.end_offset or exc.offset + 1
                 self.mark_start(original_start + exc_start)
                 self.mark_end(distance=(exc_end - exc_start))

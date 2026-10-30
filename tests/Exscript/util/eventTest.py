@@ -34,6 +34,7 @@ class eventTest(unittest.TestCase):
 
         def thefunction():
             pass
+
         ref = self.event.listen(thefunction)
         self.assertIsInstance(ref, WeakMethod)
         self.assertEqual(self.event.n_subscribers(), 1)
@@ -60,19 +61,19 @@ class eventTest(unittest.TestCase):
 
     def testEmit(self):
         self.event.connect(self.callback)
-        self.assertEqual(self.args,   None)
+        self.assertEqual(self.args, None)
         self.assertEqual(self.kwargs, None)
 
         self.event.emit()
-        self.assertEqual(self.args,   ())
+        self.assertEqual(self.args, ())
         self.assertEqual(self.kwargs, {})
 
         self.event.emit('test')
-        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.args, ('test',))
         self.assertEqual(self.kwargs, {})
 
         self.event.emit('test', foo='bar')
-        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.args, ('test',))
         self.assertEqual(self.kwargs, {'foo': 'bar'})
         self.event.disconnect(self.callback)
 
@@ -81,15 +82,15 @@ class eventTest(unittest.TestCase):
         self.kwargs = None
 
         self.event.emit()
-        self.assertEqual(self.args,   ())
+        self.assertEqual(self.args, ())
         self.assertEqual(self.kwargs, {})
 
         self.event.emit('test')
-        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.args, ('test',))
         self.assertEqual(self.kwargs, {})
 
         self.event.emit('test', foo='bar')
-        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.args, ('test',))
         self.assertEqual(self.kwargs, {'foo': 'bar'})
         self.event.disconnect(self.callback)
 
@@ -114,5 +115,7 @@ class eventTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(eventTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

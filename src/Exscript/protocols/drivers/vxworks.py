@@ -23,6 +23,7 @@
 """
 A driver for devices running Vxworks, which can be found on huawei5600T
 """
+
 import re
 
 from .driver import Driver
@@ -43,7 +44,6 @@ _banner_re = re.compile(r"User last login information", re.I)
 
 
 class VxworksDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'vxworks')
         self.user_re = _user_re

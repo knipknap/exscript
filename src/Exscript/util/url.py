@@ -23,6 +23,7 @@
 """
 Working with URLs (as used in URL formatted hostnames).
 """
+
 import re
 from urllib.parse import quote, urlencode, urlparse, urlsplit
 
@@ -35,6 +36,7 @@ def _make_hexmap():
         hexmap['%02x' % i] = chr(i)
         hexmap['%02X' % i] = chr(i)
     return hexmap
+
 
 _HEXTOCHR = _make_hexmap()
 
@@ -51,6 +53,7 @@ _WELL_KNOWN_PORTS = {
     'netconf': 830,
 }
 
+
 def _unquote(string):
     """_unquote('abc%20def') -> 'abc def'."""
     result = string.split('%')
@@ -63,6 +66,7 @@ def _unquote(string):
         except UnicodeDecodeError:
             result[i] = chr(int(item[:2], 16)) + item[2:]
     return ''.join(result)
+
 
 def _urlparse_qs(url):
     """
@@ -97,8 +101,8 @@ def _urlparse_qs(url):
 
     return result
 
-class Url:
 
+class Url:
     """
     Represents a URL.
     """
@@ -123,9 +127,7 @@ class Url:
         url = ''
         if self.protocol is not None:
             url += self.protocol + '://'
-        if self.username is not None or \
-           self.password1 is not None or \
-           self.password2 is not None:
+        if self.username is not None or self.password1 is not None or self.password2 is not None:
             if self.username is not None:
                 url += quote(self.username, '')
             if self.password1 is not None or self.password2 is not None:
@@ -200,7 +202,7 @@ class Url:
         # fails on our protocol names otherwise.
         prefix = result.protocol + '://'
         if url.startswith(prefix):
-            url = url[len(prefix):]
+            url = url[len(prefix) :]
         url = 'http://' + url
 
         # Parse the remaining url.

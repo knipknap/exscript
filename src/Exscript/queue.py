@@ -23,6 +23,7 @@
 """
 The heart of Exscript.
 """
+
 import gc
 import logging
 import os
@@ -67,6 +68,7 @@ def _prepare_connection(func):
     A decorator that unpacks the host and connection from the job argument
     and passes them as separate arguments to the wrapped function.
     """
+
     def _wrapped(job, *args, **kwargs):
         job_id = id(job)
         to_parent = job.data['pipe']
@@ -74,8 +76,7 @@ def _prepare_connection(func):
 
         # Create a protocol adapter.
         mkaccount = partial(_account_factory, to_parent, host)
-        pargs = {'account_factory': mkaccount,
-                 'stdout':          job.data['stdout']}
+        pargs = {'account_factory': mkaccount, 'stdout': job.data['stdout']}
         pargs.update(host.get_options())
         conn = prepare(host, **pargs)
 
@@ -128,7 +129,6 @@ def _call_logger(funcname, logger_id, *args):
 
 
 class _PipeHandler(threading.Thread):
-
     """
     Each PipeHandler holds an open pipe to a subprocess, to allow the
     sub-process to access the accounts and communicate status information.
@@ -144,11 +144,13 @@ class _PipeHandler(threading.Thread):
         if account is None:
             self.to_child.send(account)
             return
-        response = (account.__hash__(),
-                    account.get_name(),
-                    account.get_password(),
-                    account.get_authorization_password(),
-                    account.get_key())
+        response = (
+            account.__hash__(),
+            account.get_name(),
+            account.get_password(),
+            account.get_authorization_password(),
+            account.get_key(),
+        )
         self.to_child.send(response)
 
     def _handle_request(self, request):
@@ -195,20 +197,21 @@ class _PipeHandler(threading.Thread):
 
 
 class Queue:
-
     """
     Manages hosts/tasks, accounts, connections, and threads.
     """
 
-    def __init__(self,
-                 domain='',
-                 verbose=1,
-                 mode='threading',
-                 max_threads=1,
-                 host_driver=None,
-                 exc_cb=None,
-                 stdout=sys.stdout,
-                 stderr=sys.stderr):
+    def __init__(
+        self,
+        domain='',
+        verbose=1,
+        mode='threading',
+        max_threads=1,
+        host_driver=None,
+        exc_cb=None,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+    ):
         """
         Constructor. All arguments should be passed as keyword arguments.
         Depending on the verbosity level, the following types
@@ -655,10 +658,7 @@ class Queue:
         :rtype:  object
         :return: A task object, or None if all hosts were duplicates.
         """
-        return self._run(hosts,
-                         function,
-                         self.workqueue.enqueue_or_ignore,
-                         attempts)
+        return self._run(hosts, function, self.workqueue.enqueue_or_ignore, attempts)
 
     def priority_run(self, hosts, function, attempts=1):
         """
@@ -673,11 +673,7 @@ class Queue:
         :rtype:  object
         :return: An object representing the task.
         """
-        return self._run(hosts,
-                         function,
-                         self.workqueue.priority_enqueue,
-                         False,
-                         attempts)
+        return self._run(hosts, function, self.workqueue.priority_enqueue, False, attempts)
 
     def priority_run_or_raise(self, hosts, function, attempts=1):
         """
@@ -694,11 +690,7 @@ class Queue:
         :rtype:  object
         :return: A task object, or None if all hosts were duplicates.
         """
-        return self._run(hosts,
-                         function,
-                         self.workqueue.priority_enqueue_or_raise,
-                         False,
-                         attempts)
+        return self._run(hosts, function, self.workqueue.priority_enqueue_or_raise, False, attempts)
 
     def force_run(self, hosts, function, attempts=1):
         """
@@ -714,11 +706,7 @@ class Queue:
         :rtype:  object
         :return: An object representing the task.
         """
-        return self._run(hosts,
-                         function,
-                         self.workqueue.priority_enqueue,
-                         True,
-                         attempts)
+        return self._run(hosts, function, self.workqueue.priority_enqueue, True, attempts)
 
     def enqueue(self, function, name=None, attempts=1):
         """

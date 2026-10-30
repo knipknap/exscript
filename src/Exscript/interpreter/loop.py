@@ -28,7 +28,6 @@ from .term import Term
 
 
 class Loop(Token):
-
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.during = None
@@ -41,9 +40,11 @@ class Loop(Token):
         # Expect one ore more lists for the default loop.
         lexer.expect(self, 'keyword', 'loop')
         lexer.expect(self, 'whitespace')
-        if not lexer.current_is('keyword', 'while') and \
-           not lexer.current_is('keyword', 'until') and \
-           not lexer.current_is('keyword', 'from'):
+        if (
+            not lexer.current_is('keyword', 'while')
+            and not lexer.current_is('keyword', 'until')
+            and not lexer.current_is('keyword', 'from')
+        ):
             self.list_variables = [Term(lexer, parser, parent)]
             lexer.next_if('whitespace')
             while lexer.next_if('comma'):

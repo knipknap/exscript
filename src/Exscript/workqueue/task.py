@@ -23,11 +23,11 @@
 """
 Represents a batch of enqueued actions.
 """
+
 from Exscript.util.event import Event
 
 
 class Task:
-
     """
     Represents a batch of running actions.
     """

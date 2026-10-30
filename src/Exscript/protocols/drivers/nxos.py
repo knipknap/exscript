@@ -23,6 +23,7 @@
 """
 A driver for Cisco Nexus OS (NXOS).
 """
+
 import re
 
 from .driver import Driver
@@ -40,7 +41,6 @@ _error_re = [
 
 
 class NXOSDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'nxos')
         self.user_re = _user_re

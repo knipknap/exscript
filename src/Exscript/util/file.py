@@ -23,6 +23,7 @@
 """
 Utilities for reading data from files.
 """
+
 import base64
 import binascii
 import configparser
@@ -76,11 +77,9 @@ def get_accounts_from_file(filename, encoding='utf-8', password_encoding='utf-8'
     return accounts
 
 
-def get_hosts_from_file(filename,
-                        default_protocol='ssh',
-                        default_domain='',
-                        remove_duplicates=False,
-                        encoding='utf-8'):
+def get_hosts_from_file(
+    filename, default_protocol='ssh', default_domain='', remove_duplicates=False, encoding='utf-8'
+):
     """
     Reads a list of hostnames from the file with the given name.
 
@@ -117,10 +116,7 @@ def get_hosts_from_file(filename,
     return hosts
 
 
-def get_hosts_from_csv(filename,
-                       default_protocol='ssh',
-                       default_domain='',
-                       encoding='utf-8'):
+def get_hosts_from_csv(filename, default_protocol='ssh', default_domain='', encoding='utf-8'):
     """
     Reads a list of hostnames and variables from the tab-separated .csv file
     with the given name. The first line of the file must contain the column

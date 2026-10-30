@@ -23,6 +23,7 @@
 """
 Base class for all servers.
 """
+
 import logging
 import select
 import socket
@@ -38,7 +39,6 @@ _logger.addHandler(logging.NullHandler())
 # switch to threaded servers too. This will hopefully add more stability to the
 # test suite.
 class Server(threading.Thread):
-
     """
     Base class of the Telnet and SSH servers. Servers are intended to be
     used for tests and attempt to emulate a device using the behavior of
@@ -71,7 +71,7 @@ class Server(threading.Thread):
         self.name = '%s-%s:%s' % (self._get_server_type(), host, port)
         self.host = host
         self.port = int(port)
-        self.timeout = .5
+        self.timeout = 0.5
         self.dbg = 0
         self.running = False
         self.socket = None
@@ -131,9 +131,7 @@ class Server(threading.Thread):
                 proc = threading.Thread(
                     target=self._handle_connection,
                     args=(conn,),
-                    name='%s-handler-%s:%s' % (
-                        self._get_server_type(), addr[0], addr[1]
-                    ),
+                    name='%s-handler-%s:%s' % (self._get_server_type(), addr[0], addr[1]),
                     daemon=True,
                 )
                 self.processes.append(proc)

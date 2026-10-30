@@ -27,7 +27,6 @@ from .exception import PermissionError
 
 
 class FunctionCall(Token):
-
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.funcname = None
@@ -52,9 +51,7 @@ class FunctionCall(Token):
         while True:
             if lexer.next_if('close_bracket'):
                 break
-            self.arguments.append(
-                Exscript.interpreter.expression.Expression(lexer, parser, parent)
-            )
+            self.arguments.append(Exscript.interpreter.expression.Expression(lexer, parser, parent))
             ttype, token = lexer.token()
             if not lexer.next_if('comma') and not lexer.current_is('close_bracket'):
                 self.mark_start()
@@ -76,17 +73,13 @@ class FunctionCall(Token):
         function = self.parent.get(self.funcname)
         if function is None:
             self.mark_end(distance=len(self.funcname))
-            self.lexer.runtime_error(
-                'Undefined function %s' % repr(self.funcname), self
-            )
+            self.lexer.runtime_error('Undefined function %s' % repr(self.funcname), self)
         try:
             result = function(self.parent, *argument_values)
         except Exception as e:
             self.mark_end(distance=len(self.funcname))
             self.lexer.runtime_error(
-                '%s while executing function %s: %s' % (
-                    type(e).__name__, repr(self.funcname), e
-                ),
+                '%s while executing function %s: %s' % (type(e).__name__, repr(self.funcname), e),
                 self,
             )
         else:

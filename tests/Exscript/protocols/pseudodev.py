@@ -1,5 +1,7 @@
 commands = (
-    ('show version', """
+    (
+        'show version',
+        """
 Cisco Internetwork Operating System Software
 IOS (tm) GS Software (C12KPRP-P-M), Version 12.0(32)SY6c, RELEASE SOFTWARE (fc3)
 Technical Support: http://www.cisco.com/techsupport
@@ -43,9 +45,11 @@ Channelized E1, Version 1.0.
 250880K bytes of ATA PCMCIA card at slot 0 (Sector size 512 bytes).
 65536K bytes of Flash internal SIMM (Sector size 256K).
 Configuration register is 0x2102
-"""),
-
-    (r'show diag \d+', """
+""",
+    ),
+    (
+        r'show diag \d+',
+        """
 SLOT 0  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC connector
   MAIN: type 79,  800-19733-08 rev A0
         Deviation: 0
@@ -70,5 +74,6 @@ SLOT 0  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC 
   TX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
   RX Packet Memory size: 268435456 bytes, Packet Memory pagesize: 16384 bytes
   0 crashes since restart
-"""),
+""",
+    ),
 )

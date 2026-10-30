@@ -26,7 +26,6 @@ from ..parselib import Token
 
 
 class Scope(Token):
-
     def __init__(self, name, lexer, parser, parent=None, *args, **kwargs):
         Token.__init__(self, name, lexer, parser, parent)
         self.variables = kwargs.get('variables', {})
@@ -46,8 +45,7 @@ class Scope(Token):
         if self.parent is not None:
             return self.parent.define(**kwargs)
         for key in kwargs:
-            if key.find('.') >= 0 or key.startswith('_') \
-                    or type(kwargs[key]) is type([]):
+            if key.find('.') >= 0 or key.startswith('_') or type(kwargs[key]) is type([]):
                 self.variables[key] = kwargs[key]
             else:
                 self.variables[key] = [kwargs[key]]

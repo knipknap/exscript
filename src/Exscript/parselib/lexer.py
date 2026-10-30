@@ -28,7 +28,6 @@ from .exception import CompileError, CompileWarning, ExecuteError, LexerExceptio
 
 
 class Lexer:
-
     def __init__(self, parser_cls, *args, **kwargs):
         """
         The given args are passed to the parser_cls constructor.
@@ -113,7 +112,7 @@ class Lexer:
         lineno_last = self._get_line_number_from_char(sender.end)
         # When the sender marks a range, that ends with a newline character, the
         # end mark would point to an additional irrelevant line, so we fix that.
-        if self.input[sender.start:sender.end].endswith('\n'):
+        if self.input[sender.start : sender.end].endswith('\n'):
             lineno_last -= 1
         lines = self._get_lines(lineno_first, lineno_last)
 

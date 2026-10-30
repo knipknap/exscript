@@ -23,6 +23,7 @@
 """
 A threaded HTTP server with support for HTTP/Digest authentication.
 """
+
 import hashlib
 import logging
 import time
@@ -40,11 +41,12 @@ _logger.addHandler(logging.NullHandler())
 def md5hex(x):
     return hashlib.md5(x).hexdigest()
 
+
 default_realm = 'exscript'
 
 # This is convoluted because there's no way to tell 2to3 to insert a
 # byte literal.
-_HEADER_NEWLINES = [x.encode('ascii') for x in (u'\r\n', u'\n', u'')]
+_HEADER_NEWLINES = [x.encode('ascii') for x in ('\r\n', '\n', '')]
 
 
 def _parse_url(path):
@@ -69,12 +71,11 @@ def _parse_url(path):
 def _error_401(handler, msg):
     handler.send_response(401)
     realm = handler.server.realm
-    nonce = (u"%d:%s" % (time.time(), realm)).encode('utf8')
-    handler.send_header('WWW-Authenticate',
-                        'Digest realm="%s",'
-                        'qop="auth",'
-                        'algorithm="MD5",'
-                        'nonce="%s"' % (realm, nonce))
+    nonce = ("%d:%s" % (time.time(), realm)).encode('utf8')
+    handler.send_header(
+        'WWW-Authenticate',
+        'Digest realm="%s",qop="auth",algorithm="MD5",nonce="%s"' % (realm, nonce),
+    )
     handler.end_headers()
     handler.rfile.read()
     handler.rfile.close()
@@ -91,9 +92,9 @@ def _require_authenticate(func):
         if self.authenticated:
             return func(self)
 
-        auth = self.headers.get(u'Authorization')
+        auth = self.headers.get('Authorization')
         if auth is None:
-            msg = u"You are not allowed to access this page. Please login first!"
+            msg = "You are not allowed to access this page. Please login first!"
             return _error_401(self, msg)
 
         token, fields = auth.split(' ', 1)
@@ -103,7 +104,7 @@ def _require_authenticate(func):
         # Check the header fields of the request.
         cred = parse_http_list(fields)
         cred = parse_keqv_list(cred)
-        keys = u'realm', u'username', u'nonce', u'uri', u'response'
+        keys = 'realm', 'username', 'nonce', 'uri', 'response'
         if not all(cred.get(key) for key in keys):
             return _error_401(self, 'Incomplete authentication header')
         if cred['realm'] != self.server.realm:
@@ -118,20 +119,16 @@ def _require_authenticate(func):
             return _error_401(self, 'Invalid username or password')
 
         # Check the digest string.
-        location = u'%s:%s' % (self.command, self.path)
+        location = '%s:%s' % (self.command, self.path)
         location = md5hex(location.encode('utf8'))
         pwhash = md5hex('%s:%s:%s' % (username, self.server.realm, password))
 
         if 'qop' in cred:
-            info = (cred['nonce'],
-                    cred['nc'],
-                    cred['cnonce'],
-                    cred['qop'],
-                    location)
+            info = (cred['nonce'], cred['nc'], cred['cnonce'], cred['qop'], location)
         else:
             info = cred['nonce'], location
 
-        expect = u'%s:%s' % (pwhash, ':'.join(info))
+        expect = '%s:%s' % (pwhash, ':'.join(info))
         expect = md5hex(expect.encode('utf8'))
         if expect != cred['response']:
             return _error_401(self, 'Invalid username or password')
@@ -144,7 +141,6 @@ def _require_authenticate(func):
 
 
 class HTTPd(ThreadingMixIn, HTTPServer):
-
     """
     An HTTP server, derived from Python's HTTPServer but with added
     support for HTTP/Digest. Usage::
@@ -161,6 +157,7 @@ class HTTPd(ThreadingMixIn, HTTPServer):
         print('started httpserver...')
         server.serve_forever()
     """
+
     daemon_threads = True
 
     def __init__(self, addr, handler_cls, user_data=None):
@@ -208,7 +205,6 @@ class HTTPd(ThreadingMixIn, HTTPServer):
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-
     """
     A drop-in replacement for Python's BaseHTTPRequestHandler that
     handles HTTP/Digest.
@@ -224,7 +220,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # Extract POST data, if any. Clumsy syntax due to Python 2 and
         # 2to3's lack of a byte literal.
-        self.data = u"".encode()
+        self.data = "".encode()
         length = self.headers.get('Content-Length')
         if length and length.isdigit():
             self.data = self.rfile.read(int(length))
@@ -283,6 +279,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
         BaseHTTPRequestHandler.send_response(self, code)
         self.send_header("Connection", "close")
+
 
 if __name__ == '__main__':
     try:

@@ -39,5 +39,7 @@ class SSH2Test(ProtocolTest):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(SSH2Test)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

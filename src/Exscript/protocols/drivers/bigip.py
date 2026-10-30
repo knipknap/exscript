@@ -23,6 +23,7 @@
 """
 A driver for F5 Big-IP system (TMSH SHELL).
 """
+
 import re
 
 from .driver import Driver
@@ -37,7 +38,6 @@ _error_re = [
 
 
 class BigIPDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'bigip')
         self.user_re = _user_re

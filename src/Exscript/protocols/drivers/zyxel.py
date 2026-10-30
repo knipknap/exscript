@@ -23,6 +23,7 @@
 """
 A driver for devices running Zyxel operating system.
 """
+
 import re
 
 from .driver import Driver
@@ -34,8 +35,8 @@ _prompt_re = [
 
 _zyxel_re = re.compile(r"Copyright .* ZyXEL Communications Corp.", re.I)
 
-class ZyxelDriver(Driver):
 
+class ZyxelDriver(Driver):
     def __init__(self):
         Driver.__init__(self, 'zyxel')
         self.prompt_re = _prompt_re
@@ -44,4 +45,3 @@ class ZyxelDriver(Driver):
         if _zyxel_re.search(string):
             return 90
         return 0
-

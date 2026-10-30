@@ -33,9 +33,9 @@ class ServerTest(unittest.TestCase):
 
     def _add_commands(self):
         self.device.add_command('exit', self.daemon.exit_command)
-        self.device.add_command('ls',   'ok1')
-        self.device.add_command('ll',   'ok2\nfoobar:1>', prompt=False)
-        self.device.add_command('.+',   'Unknown command.')
+        self.device.add_command('ls', 'ok1')
+        self.device.add_command('ll', 'ok2\nfoobar:1>', prompt=False)
+        self.device.add_command('.+', 'Unknown command.')
 
     def testConstructor(self):
         # Test can not work on the abstract base.
@@ -81,5 +81,7 @@ class ServerTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ServerTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

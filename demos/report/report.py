@@ -13,6 +13,7 @@ logger = Logger()  # Logs everything to memory.
 def do_something(job, host, conn):
     conn.execute('show ip int brie')
 
+
 # Read input data.
 accounts = get_accounts_from_file('accounts.cfg')
 hosts = get_hosts_from_file('hostlist.txt')
@@ -21,9 +22,9 @@ hosts = get_hosts_from_file('hostlist.txt')
 # round-robin. "verbose=0" instructs the queue to not generate any
 # output on stdout.
 queue = Queue(verbose=0, max_threads=5)
-queue.add_account(accounts)     # Adds one or more accounts.
+queue.add_account(accounts)  # Adds one or more accounts.
 queue.run(hosts, do_something)  # Asynchronously enqueues all hosts.
-queue.shutdown()                # Waits until all hosts are completed.
+queue.shutdown()  # Waits until all hosts are completed.
 
 # Print a short report.
 print(status(logger))

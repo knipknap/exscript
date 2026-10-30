@@ -23,6 +23,7 @@
 """
 Development tools.
 """
+
 import sys
 import traceback
 import warnings
@@ -120,9 +121,7 @@ def deprecation(msg):
     """
     Prints a deprecation warning.
     """
-    warnings.warn(msg,
-                  category=DeprecationWarning,
-                  stacklevel=3)
+    warnings.warn(msg, category=DeprecationWarning, stacklevel=3)
 
 
 def deprecated(func):
@@ -130,9 +129,11 @@ def deprecated(func):
     A decorator for marking functions as deprecated. Results in
     a printed warning message when the function is used.
     """
+
     def decorated(*args, **kwargs):
         deprecation('Call to deprecated function %s.' % func.__name__)
         return func(*args, **kwargs)
+
     decorated.__name__ = func.__name__
     decorated.__doc__ = func.__doc__
     decorated.__dict__.update(func.__dict__)
@@ -143,15 +144,18 @@ def synchronized(func):
     """
     Decorator for synchronizing method access.
     """
+
     @wraps(func)
     def wrapped(self, *args, **kwargs):
         try:
             rlock = self._sync_lock
         except AttributeError:
             from multiprocessing import RLock
+
             rlock = self.__dict__.setdefault('_sync_lock', RLock())
         with rlock:
             return func(self, *args, **kwargs)
+
     return wrapped
 
 
@@ -159,6 +163,7 @@ def debug(func):
     """
     Decorator that prints a message whenever a function is entered or left.
     """
+
     @wraps(func)
     def wrapped(*args, **kwargs):
         arg = repr(args) + ' ' + repr(kwargs)
@@ -172,11 +177,11 @@ def debug(func):
         arg = repr(result)
         sys.stdout.write('Leaving ' + func.__name__ + '(): ' + arg + '\n')
         return result
+
     return wrapped
 
 
 class Decorator:
-
     def __init__(self, obj):
         self.__dict__['obj'] = obj
 
@@ -193,7 +198,6 @@ class Decorator:
 
 
 class _Context(Decorator):
-
     def __enter__(self):
         return self
 
@@ -202,7 +206,6 @@ class _Context(Decorator):
 
 
 class Context(_Context):
-
     def __exit__(self, thetype, value, traceback):
         return self.release()
 

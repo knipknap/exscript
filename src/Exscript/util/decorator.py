@@ -23,6 +23,7 @@
 """
 Decorators for callbacks passed to Queue.run().
 """
+
 from ..protocols.exception import LoginFailure
 from .impl import add_label, copy_labels, get_label  # noqa: F401
 
@@ -41,9 +42,11 @@ def bind(function, *args, **kwargs):
     :rtype:  function
     :return: The wrapped function.
     """
+
     def decorated(*inner_args, **inner_kwargs):
         kwargs.update(inner_kwargs)
         return function(*(inner_args + args), **kwargs)
+
     copy_labels(function, decorated)
     return decorated
 
@@ -80,12 +83,14 @@ def os_function_mapper(map):
     :rtype:  object
     :return: The return value of the called function.
     """
+
     def decorated(job, host, conn, *args, **kwargs):
         os = conn.guess_os()
         func = map.get(os)
         if func is None:
             raise Exception('No handler for %s found.' % os)
         return func(job, host, conn, *args, **kwargs)
+
     return decorated
 
 
@@ -105,6 +110,7 @@ def _decorate(flush=True, attempts=1, only_authenticate=False):
     :rtype:  function
     :return: The wrapped function.
     """
+
     def decorator(function):
         def decorated(job, host, conn, *args, **kwargs):
             failed = 0
@@ -121,8 +127,10 @@ def _decorate(flush=True, attempts=1, only_authenticate=False):
                     continue
                 break
             return function(job, host, conn, *args, **kwargs)
+
         copy_labels(function, decorated)
         return decorated
+
     return decorator
 
 

@@ -28,7 +28,6 @@ from .program import Program
 
 
 class Parser:
-
     def __init__(self, **kwargs):
         self.no_escaping = kwargs.get('no_escaping', False)
         self.no_prompt = kwargs.get('no_prompt', False)
@@ -39,7 +38,11 @@ class Parser:
 
     def define(self, **kwargs):
         for key, value in list(kwargs.items()):
-            if not isinstance(value, str) and isinstance(value, Iterable) or isinstance(value, Callable):
+            if (
+                not isinstance(value, str)
+                and isinstance(value, Iterable)
+                or isinstance(value, Callable)
+            ):
                 self.variables[key] = value
             else:
                 self.variables[key] = [value]
@@ -59,8 +62,10 @@ class Parser:
         lexer = self._create_lexer()
         return lexer.parse_file(filename)
 
+
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) == 1:
         filename = 'test.exscript'
     elif len(sys.argv) == 2:

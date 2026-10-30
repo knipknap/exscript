@@ -10,7 +10,6 @@ from util.reportTest import FakeJob
 
 
 class FakeConnection:
-
     def __init__(self, os=None):
         self.os = os
         self.data = {}
@@ -52,6 +51,7 @@ class decoratorTest(unittest.TestCase):
 
     def testBind(self):
         from Exscript.util.decorator import bind
+
         bound = bind(self.bind_cb, 'one', 'two', three=3)
         result = bound(FakeJob())
         self.assertEqual(result, 123)
@@ -64,6 +64,7 @@ class decoratorTest(unittest.TestCase):
 
     def testOsFunctionMapper(self):
         from Exscript.util.decorator import os_function_mapper
+
         cb_map = {'ios': self.ios_cb, 'junos': self.junos_cb}
         mapper = os_function_mapper(cb_map)
         job = FakeJob()
@@ -90,6 +91,7 @@ class decoratorTest(unittest.TestCase):
 
     def testAutologin(self):
         from Exscript.util.decorator import autologin
+
         job = FakeJob()
         host = job.data['host']
         conn = job.data['conn'] = FakeConnection()
@@ -107,6 +109,7 @@ class decoratorTest(unittest.TestCase):
         def fail(data, *args, **kwargs):
             data.value += 1
             raise LoginFailure('intended login failure')
+
         conn.login = partial(fail, data)
 
         # Test retry functionality.
@@ -114,14 +117,7 @@ class decoratorTest(unittest.TestCase):
         bound = decor(self.autologin_cb)
         job = FakeJob()
         job.data['conn'] = conn
-        self.assertRaises(LoginFailure,
-                          bound,
-                          job,
-                          host,
-                          conn,
-                          'one',
-                          'two',
-                          three=3)
+        self.assertRaises(LoginFailure, bound, job, host, conn, 'one', 'two', three=3)
         self.assertEqual(data.value, 5)
 
     def autoauthenticate_cb(self, job, host, conn, *args, **kwargs):
@@ -131,6 +127,7 @@ class decoratorTest(unittest.TestCase):
 
     def testAutoauthenticate(self):
         from Exscript.util.decorator import autoauthenticate
+
         job = FakeJob()
         host = job.data['host']
         conn = job.data['conn'] = FakeConnection()
@@ -148,6 +145,7 @@ class decoratorTest(unittest.TestCase):
         def fail(data, *args, **kwargs):
             data.value += 1
             raise LoginFailure('intended login failure')
+
         conn.authenticate = partial(fail, data)
 
         # Test retry functionality.
@@ -155,14 +153,7 @@ class decoratorTest(unittest.TestCase):
         bound = decor(self.autoauthenticate_cb)
         job = FakeJob()
         job.data['conn'] = conn
-        self.assertRaises(LoginFailure,
-                          bound,
-                          job,
-                          host,
-                          conn,
-                          'one',
-                          'two',
-                          three=3)
+        self.assertRaises(LoginFailure, bound, job, host, conn, 'one', 'two', three=3)
         self.assertEqual(data.value, 5)
 
     def testDeprecated(self):
@@ -171,5 +162,7 @@ class decoratorTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(decoratorTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

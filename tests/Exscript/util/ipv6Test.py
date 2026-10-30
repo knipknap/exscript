@@ -8,6 +8,7 @@ class ipv6Test(unittest.TestCase):
 
     def testIsIp(self):
         from Exscript.util.ipv6 import is_ip
+
         self.assertTrue(is_ip('::'))
         self.assertTrue(is_ip('1::'))
         self.assertTrue(is_ip('::A'))
@@ -25,16 +26,12 @@ class ipv6Test(unittest.TestCase):
 
     def testNormalizeIp(self):
         from Exscript.util.ipv6 import normalize_ip
-        self.assertEqual(normalize_ip('::'),
-                         '0000:0000:0000:0000:0000:0000:0000:0000')
-        self.assertEqual(normalize_ip('1::'),
-                         '0001:0000:0000:0000:0000:0000:0000:0000')
-        self.assertEqual(normalize_ip('::A'),
-                         '0000:0000:0000:0000:0000:0000:0000:000a')
-        self.assertEqual(normalize_ip('1234::2222'),
-                         '1234:0000:0000:0000:0000:0000:0000:2222')
-        self.assertEqual(normalize_ip('1234:0:01:02::'),
-                         '1234:0000:0001:0002:0000:0000:0000:0000')
+
+        self.assertEqual(normalize_ip('::'), '0000:0000:0000:0000:0000:0000:0000:0000')
+        self.assertEqual(normalize_ip('1::'), '0001:0000:0000:0000:0000:0000:0000:0000')
+        self.assertEqual(normalize_ip('::A'), '0000:0000:0000:0000:0000:0000:0000:000a')
+        self.assertEqual(normalize_ip('1234::2222'), '1234:0000:0000:0000:0000:0000:0000:2222')
+        self.assertEqual(normalize_ip('1234:0:01:02::'), '1234:0000:0001:0002:0000:0000:0000:0000')
 
     def testCleanIp(self):
         from Exscript.util.ipv6 import clean_ip
@@ -50,6 +47,7 @@ class ipv6Test(unittest.TestCase):
 
     def testParsePrefix(self):
         from Exscript.util.ipv6 import parse_prefix
+
         self.assertEqual(('A::A', 24), parse_prefix('A::A/24', 22))
         self.assertEqual(('1:0:1:2::', 128), parse_prefix('1:0:1:2::'))
         self.assertEqual(('1:0:1:2::', 64), parse_prefix('1:0:1:2::', 64))
@@ -57,5 +55,7 @@ class ipv6Test(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ipv6Test)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

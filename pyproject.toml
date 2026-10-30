@@ -75,6 +75,24 @@ packages = ["src/Exscript"]
 "scripts/exscript" = "exscript"
 "scripts/otp" = "otp"
 
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+extend-include = ["scripts/exscript", "scripts/otp"]
+extend-exclude = ["doc"]
+
+[tool.ruff.format]
+quote-style = "preserve"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "S"]
+ignore = [
+    "UP031",  # printf-style formatting is used throughout
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S104", "S105", "S106", "S107", "S108", "S311"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["*Test.py"]

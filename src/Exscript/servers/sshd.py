@@ -23,6 +23,7 @@
 """
 An SSH2 server.
 """
+
 import base64
 import logging
 import os
@@ -92,19 +93,13 @@ class _ParamikoServer(ServerInterface):
         self.event.set()
         return True
 
-    def check_channel_pty_request(self,
-                                  channel,
-                                  term,
-                                  width,
-                                  height,
-                                  pixelwidth,
-                                  pixelheight,
-                                  modes):
+    def check_channel_pty_request(
+        self, channel, term, width, height, pixelwidth, pixelheight, modes
+    ):
         return True
 
 
 class SSHd(Server):
-
     """
     A SSH2 server. Usage::
 

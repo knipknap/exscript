@@ -23,6 +23,7 @@
 """
 A generic shell driver that handles unknown unix shells.
 """
+
 import re
 
 from .driver import Driver
@@ -33,7 +34,6 @@ _linux_re = re.compile(r'\blinux\b', re.I)
 
 
 class ShellDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'shell')
         self.user_re = _user_re

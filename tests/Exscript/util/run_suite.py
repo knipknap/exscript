@@ -13,8 +13,10 @@ from inspect import isclass, isfunction, ismodule
 logger = logging.getLogger('TestSuite')
 logger.addHandler(logging.NullHandler())
 
+
 def uppercase(match):
     return match.group(1).upper()
+
 
 correlated = dict()
 
@@ -84,7 +86,9 @@ def log_call(msg):
         def wrapper(*args, **kwargs):
             logger.debug(msg)
             return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -105,7 +109,7 @@ def correlate_class(theclass):
             continue
 
         # Format the function names.
-        testname = re.sub(r'_(\w)',  uppercase, name)
+        testname = re.sub(r'_(\w)', uppercase, name)
         testname = re.sub(r'(\d\w)', uppercase, testname)
         testname = 'test' + re.sub(r'^(\w)', uppercase, testname)
         testmethod = theclass.__name__ + '.' + testname
@@ -115,8 +119,7 @@ def correlate_class(theclass):
         # Throw an error if the function does not have a test.
         if testname in dir(theclass):
             continue
-        if ismodule(theclass.CORRELATE) and \
-                value.__module__ != theclass.CORRELATE.__name__:
+        if ismodule(theclass.CORRELATE) and value.__module__ != theclass.CORRELATE.__name__:
             continue  # function was imported.
         if both in correlated:
             continue
@@ -169,6 +172,7 @@ def suite():
 
 def recursive_suite():
     return load_suite(find('.', '*Test.py'))
+
 
 if __name__ == '__main__':
     # Parse CLI options.

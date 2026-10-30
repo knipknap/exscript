@@ -23,6 +23,7 @@
 """
 A driver for Cisco Aironet Wireless Controllers.
 """
+
 import re
 
 from .driver import Driver
@@ -32,7 +33,6 @@ _prompt_re = [re.compile(r'(?:\r\n|[\r\n])(?:\([^\)]+\))\s>$')]
 
 
 class AironetDriver(Driver):
-
     def __init__(self):
         Driver.__init__(self, 'aironet')
         self.user_re = _user_re

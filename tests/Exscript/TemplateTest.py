@@ -47,23 +47,22 @@ def dummy_cb(job, host, conn, template_test):
     log.data = log.data.replace('\r\n', '\n')
     with open(expected, newline='') as fp:
         expected_data = fp.read()
-    #open(expected, 'w').write(log.data)
-    #open('output', 'w').write(log.data)
-    #open('exp', 'w').write(expected_data)
+    # open(expected, 'w').write(log.data)
+    # open('output', 'w').write(log.data)
+    # open('exp', 'w').write(expected_data)
     template_test.assertEqual(log.data, expected_data)
 
 
 class IOSDummy(Dummy):
-
     def __init__(self, *args, **kwargs):
         device = IOSEmulator('dummy', strict=False)
         Dummy.__init__(self, device=device, **kwargs)
+
 
 protocols.protocol_map['ios'] = IOSDummy
 
 
 class TemplateTest(unittest.TestCase):
-
     def setUp(self):
         account = Account('sab', '')
         self.queue = Queue(verbose=0, max_threads=1)
@@ -95,5 +94,7 @@ class TemplateTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TemplateTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

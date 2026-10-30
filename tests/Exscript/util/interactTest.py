@@ -72,5 +72,7 @@ def suite():
     thesuite.addTest(loader.loadTestsFromTestCase(InputHistoryTest))
     thesuite.addTest(loader.loadTestsFromTestCase(interactTest))
     return thesuite
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

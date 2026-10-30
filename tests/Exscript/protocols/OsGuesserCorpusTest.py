@@ -11,6 +11,7 @@ change of the guessing behavior shows up as a reviewable diff.
 After an intended change, regenerate the file with ``EXSCRIPT_UPDATE_GOLDEN=1``
 and review the diff.
 """
+
 import json
 import os
 import unittest
@@ -24,29 +25,48 @@ GOLDEN = os.path.join(DIRNAME, 'osguess-baseline.json')
 PROTOCOL_INFOS = ['', 'SSH-2.0-Cisco-1.25', 'SSH-2.0-OpenSSH_9.6']
 READ_SIZES = [64, 65536]
 GENERIC_OUTPUT = '\r\n'.join(
-    ['interface GigabitEthernet0/%d\r\n description uplink #%d to core\r\n'
-     ' ip address 10.0.%d.1 255.255.255.0\r\n!' % (i, i, i) for i in range(40)]
+    [
+        'interface GigabitEthernet0/%d\r\n description uplink #%d to core\r\n'
+        ' ip address 10.0.%d.1 255.255.255.0\r\n!' % (i, i, i)
+        for i in range(40)
+    ]
     + ['# end of config', 'Building configuration...', 'Current configuration : 8231 bytes']
 )
-PROMPT_ONLY = ['router#', 'switch>', 'RP/0/RSP0/CPU0:xr-pe1#', 'user@host:~$', 'root@host:~#',
-               '<HUAWEI>', 'A:sros-pe1#', '[admin@MikroTik] >', 'FGT60E #', 'core-sw01(config)#',
-               'admin@junos-mx> ']
+PROMPT_ONLY = [
+    'router#',
+    'switch>',
+    'RP/0/RSP0/CPU0:xr-pe1#',
+    'user@host:~$',
+    'root@host:~#',
+    '<HUAWEI>',
+    'A:sros-pe1#',
+    '[admin@MikroTik] >',
+    'FGT60E #',
+    'core-sw01(config)#',
+    'admin@junos-mx> ',
+]
 
 
 def feed(guesser, data, authenticated, size):
     for i in range(0, len(data), size):
-        guesser.check_received_data(data[i:i + size], authenticated)
+        guesser.check_received_data(data[i : i + size], authenticated)
 
 
 def snapshot(guesser):
-    return (dict(guesser._info), guesser._auth_buffer,
-            guesser._protocol_buffer, guesser._response_buffer)
+    return (
+        dict(guesser._info),
+        guesser._auth_buffer,
+        guesser._protocol_buffer,
+        guesser._response_buffer,
+    )
 
 
 def restore(state):
     guesser = OsGuesser()
-    (guesser._info, guesser._auth_buffer,
-     guesser._protocol_buffer, guesser._response_buffer) = dict(state[0]), *state[1:]
+    (guesser._info, guesser._auth_buffer, guesser._protocol_buffer, guesser._response_buffer) = (
+        dict(state[0]),
+        *state[1:],
+    )
     return guesser
 
 
@@ -76,13 +96,17 @@ def run_corpus():
         for info in PROTOCOL_INFOS:
             replay(name, banner, info, '\r\n' + GENERIC_OUTPUT + '\r\n' + last_line, results)
     for prompt in PROMPT_ONLY:
-        replay('prompt-only:' + prompt, 'Last login: Mon Oct 26 10:00:00 2026\r\n',
-               'SSH-2.0-OpenSSH_9.6', '\r\n' + GENERIC_OUTPUT + '\r\n' + prompt, results)
+        replay(
+            'prompt-only:' + prompt,
+            'Last login: Mon Oct 26 10:00:00 2026\r\n',
+            'SSH-2.0-OpenSSH_9.6',
+            '\r\n' + GENERIC_OUTPUT + '\r\n' + prompt,
+            results,
+        )
     return results
 
 
 class OsGuesserCorpusTest(unittest.TestCase):
-
     def testCorpusMatchesBaseline(self):
         results = run_corpus()
         if os.environ.get('EXSCRIPT_UPDATE_GOLDEN'):
@@ -92,13 +116,18 @@ class OsGuesserCorpusTest(unittest.TestCase):
             self.skipTest('golden file regenerated: ' + GOLDEN)
         with open(GOLDEN, encoding='utf-8') as fp:
             expected = json.load(fp)
-        changed = sorted(key for key in expected.keys() | results.keys()
-                         if expected.get(key) != results.get(key))
-        details = ['%s: %s -> %s' % (key, expected.get(key), results.get(key)) for key in changed[:20]]
+        changed = sorted(
+            key for key in expected.keys() | results.keys() if expected.get(key) != results.get(key)
+        )
+        details = [
+            '%s: %s -> %s' % (key, expected.get(key), results.get(key)) for key in changed[:20]
+        ]
         self.assertEqual(changed, [], 'OS guessing changed:\n' + '\n'.join(details))
 
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(OsGuesserCorpusTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

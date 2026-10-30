@@ -31,7 +31,6 @@ from Exscript.util.impl import serializeable_sys_exc_info
 
 
 class _ChildWatcher(threading.Thread):
-
     def __init__(self, child, callback):
         threading.Thread.__init__(self)
         self.child = child
@@ -60,7 +59,6 @@ class _ChildWatcher(threading.Thread):
 
 def _make_process_class(base, clsname):
     class process_cls(base):
-
         def __init__(self, id, function, name, data):
             base.__init__(self, name=name)
             self.id = id
@@ -85,22 +83,17 @@ def _make_process_class(base, clsname):
         def start(self, pipe):
             self.pipe = pipe
             base.start(self)
+
     process_cls.__name__ = clsname
     return process_cls
+
 
 Thread = _make_process_class(threading.Thread, 'Thread')
 Process = _make_process_class(multiprocessing.Process, 'Process')
 
 
 class Job:
-    __slots__ = ('id',
-                 'func',
-                 'name',
-                 'times',
-                 'failures',
-                 'data',
-                 'child',
-                 'watcher')
+    __slots__ = ('id', 'func', 'name', 'times', 'failures', 'data', 'child', 'watcher')
 
     def __init__(self, function, name, times, data):
         self.id = None

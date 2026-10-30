@@ -33,6 +33,7 @@ class XMLValidationError(Exception):
 
     Provides the XML string that failed in its `xmlstring` attribute.
     """
+
     def __init__(self, *args: object, xmlstring=None) -> None:
         super().__init__(*args)
         self.xmlstring = xmlstring

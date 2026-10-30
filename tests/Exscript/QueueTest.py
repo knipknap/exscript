@@ -23,6 +23,7 @@ from Exscript.util.log import log_to
 logger = logging.getLogger('TestSuite.QueueTest')
 logger.addHandler(logging.NullHandler())
 
+
 def count_calls(job, data, **kwargs):
     assert hasattr(job, 'start')
     assert 'testarg' in kwargs
@@ -88,6 +89,8 @@ class Log:
 
 class LogManager(BaseManager):
     pass
+
+
 LogManager.register('Log', Log)
 
 
@@ -100,10 +103,7 @@ class QueueTest(unittest.TestCase):
             self.queue.destroy()
         self.out = self.manager.Log()
         self.err = self.manager.Log()
-        self.queue = Queue(mode=self.mode,
-                           stdout=self.out,
-                           stderr=self.err,
-                           **kwargs)
+        self.queue = Queue(mode=self.mode, stdout=self.out, stderr=self.err, **kwargs)
         self.accm = self.queue.account_manager
         if logdir is not None:
             self.logger = FileLogger(logdir)
@@ -147,20 +147,20 @@ class QueueTest(unittest.TestCase):
 
         # Test all verbosity levels.
         levels = (
-            (-1, 1, ('',      ''), ('',      ''),      ('',      'tb')),
-            (-1, 2, ('',      ''), ('',      ''),      ('',      'tb')),
-            (0,  1, ('',      ''), ('',      'no_tb'), ('',      'tb')),
-            (0,  2, ('',      ''), ('',      'no_tb'), ('',      'tb')),
-            (1,  1, ('hello', ''), ('hello', 'no_tb'), ('hello', 'tb')),
-            (1,  2, ('[',     ''), ('[',     'no_tb'), ('[',     'tb')),
-            (2,  1, ('hello', ''), ('hello', 'tb'),    ('hello', 'tb')),
-            (2,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
-            (3,  1, ('hello', ''), ('hello', 'tb'),    ('hello', 'tb')),
-            (3,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
-            (4,  1, ('hello', ''), ('hello', 'tb'),    ('hello', 'tb')),
-            (4,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
-            (5,  1, ('hello', ''), ('hello', 'tb'),    ('hello', 'tb')),
-            (5,  2, ('[',     ''), ('[',     'tb'),    ('[',     'tb')),
+            (-1, 1, ('', ''), ('', ''), ('', 'tb')),
+            (-1, 2, ('', ''), ('', ''), ('', 'tb')),
+            (0, 1, ('', ''), ('', 'no_tb'), ('', 'tb')),
+            (0, 2, ('', ''), ('', 'no_tb'), ('', 'tb')),
+            (1, 1, ('hello', ''), ('hello', 'no_tb'), ('hello', 'tb')),
+            (1, 2, ('[', ''), ('[', 'no_tb'), ('[', 'tb')),
+            (2, 1, ('hello', ''), ('hello', 'tb'), ('hello', 'tb')),
+            (2, 2, ('[', ''), ('[', 'tb'), ('[', 'tb')),
+            (3, 1, ('hello', ''), ('hello', 'tb'), ('hello', 'tb')),
+            (3, 2, ('[', ''), ('[', 'tb'), ('[', 'tb')),
+            (4, 1, ('hello', ''), ('hello', 'tb'), ('hello', 'tb')),
+            (4, 2, ('[', ''), ('[', 'tb'), ('[', 'tb')),
+            (5, 1, ('hello', ''), ('hello', 'tb'), ('hello', 'tb')),
+            (5, 2, ('[', ''), ('[', 'tb'), ('[', 'tb')),
         )
         for level, max_threads, with_simple, with_error, with_fatal in levels:
             msg = 'Testing verbose=%s with max_threads=%s (%s)'
@@ -198,11 +198,13 @@ class QueueTest(unittest.TestCase):
         pipe = self.queue._create_pipe()
         pipe.send(('acquire-account', None))
         response = pipe.recv()
-        expected = (account.__hash__(),
-                    account.get_name(),
-                    account.get_password(),
-                    account.get_authorization_password(),
-                    account.get_key())
+        expected = (
+            account.__hash__(),
+            account.get_name(),
+            account.get_password(),
+            account.get_authorization_password(),
+            account.get_key(),
+        )
         self.assertEqual(response, expected)
         pipe.send(('release-account', account.__hash__()))
         response = pipe.recv()
@@ -258,9 +260,11 @@ class QueueTest(unittest.TestCase):
         match_called = Value(ctypes.c_bool, False)
         start_called = Value(ctypes.c_bool, False)
         account_hash = Value(ctypes.c_long, 0)
-        data = {'match-called': match_called,
-                'start-called': start_called,
-                'account-hash': account_hash}
+        data = {
+            'match-called': match_called,
+            'start-called': start_called,
+            'account-hash': account_hash,
+        }
         self.queue.add_account_pool(pool2, partial(match_cb, data))
         self.assertEqual(self.accm.default_pool, pool1)
 
@@ -269,9 +273,9 @@ class QueueTest(unittest.TestCase):
         self.queue.run('dummy://dummy', partial(start_cb, data))
         self.queue.shutdown()
         data = dict((k, v.value) for (k, v) in list(data.items()))
-        self.assertEqual(data, {'match-called': True,
-                                'start-called': True,
-                                'account-hash': account2.__hash__()})
+        self.assertEqual(
+            data, {'match-called': True, 'start-called': True, 'account-hash': account2.__hash__()}
+        )
 
     def startTask(self):
         self.testAddAccount()
@@ -295,14 +299,14 @@ class QueueTest(unittest.TestCase):
         self.assertTrue(self.queue.is_completed())
 
     def testShutdown(self):
-        task = self.startTask()   # this also adds an account
+        task = self.startTask()  # this also adds an account
         self.queue.shutdown()
         self.assertTrue(task.is_completed())
         self.assertTrue(self.queue.is_completed())
         self.assertEqual(self.accm.default_pool.n_accounts(), 1)
 
     def testDestroy(self):
-        task = self.startTask()   # this also adds an account
+        task = self.startTask()  # this also adds an account
         self.queue.destroy()
         self.assertTrue(self.queue.is_completed())
         self.assertEqual(self.accm.default_pool.n_accounts(), 0)
@@ -328,7 +332,7 @@ class QueueTest(unittest.TestCase):
         data = Value('i', 0)
         hosts = ['dummy://dummy1', 'dummy://dummy2']
         func = bind(count_calls2, data, testarg=1)
-        self.queue.run(hosts,    func)
+        self.queue.run(hosts, func)
         self.queue.run('dummy://dummy3', func)
         self.queue.shutdown()
         self.assertEqual(data.value, 3)
@@ -342,7 +346,7 @@ class QueueTest(unittest.TestCase):
         hosts = ['dummy://dummy1', 'dummy://dummy2', 'dummy://dummy1']
         func = bind(count_calls2, data, testarg=1)
         self.queue.workqueue.pause()
-        self.queue.run_or_ignore(hosts,    func)
+        self.queue.run_or_ignore(hosts, func)
         self.queue.run_or_ignore('dummy://dummy2', func)
         self.queue.workqueue.unpause()
         self.queue.shutdown()
@@ -372,7 +376,7 @@ class QueueTest(unittest.TestCase):
         hosts = ['dummy://dummy1', 'dummy://dummy2', 'dummy://dummy1']
         func = bind(count_calls2, data, testarg=1)
         self.queue.workqueue.pause()
-        self.queue.priority_run_or_raise(hosts,    func)
+        self.queue.priority_run_or_raise(hosts, func)
         self.queue.priority_run_or_raise('dummy://dummy2', func)
         self.queue.workqueue.unpause()
         self.queue.shutdown()
@@ -414,11 +418,11 @@ class QueueTest(unittest.TestCase):
     def testQueueLogging(self):
         task = self.startTask()
         while not task.is_completed():
-            time.sleep(.2)
+            time.sleep(0.2)
 
         # The following function is not synchronous with the above, so add
         # a timeout to avoid races.
-        time.sleep(.2)
+        time.sleep(0.2)
         self.assertTrue(self.queue.is_completed())
 
         logfiles = os.listdir(self.tempdir)
@@ -442,5 +446,7 @@ def suite():
     suite1 = loader.loadTestsFromTestCase(QueueTest)
     # suite2 = loader.loadTestsFromTestCase(QueueTestMultiProcessing)
     return unittest.TestSuite((suite1,))
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

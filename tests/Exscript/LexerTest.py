@@ -5,7 +5,6 @@ from Exscript.parselib import Lexer
 
 
 class LexerTest(unittest.TestCase):
-
     def testForward(self):
         # Public API for parsers built on parselib.
         lexer = Lexer(object)
@@ -16,5 +15,7 @@ class LexerTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LexerTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

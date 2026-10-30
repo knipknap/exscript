@@ -27,7 +27,6 @@ from .expression import Expression
 
 
 class IfCondition(Token):
-
     def __init__(self, lexer, parser, parent):
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 

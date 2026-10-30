@@ -158,8 +158,8 @@ if hasattr(selectors, 'PollSelector'):
 else:
     _TelnetSelector = selectors.SelectSelector
 
-class Telnet:
 
+class Telnet:
     """Telnet interface class.
 
     An instance of this class represents a connection to a telnet
@@ -311,7 +311,7 @@ class Telnet:
         elif not isinstance(buffer, bytes):
             buffer = buffer.encode(self.encoding)
         if IAC in buffer:
-            buffer = buffer.replace(IAC, IAC+IAC)
+            buffer = buffer.replace(IAC, IAC + IAC)
         self.msg("Send: %s", repr(buffer))
         self.sock.send(buffer)
 
@@ -325,7 +325,7 @@ class Telnet:
         self.process_rawq()
         i = self.rawq.find(match)
         if i >= 0:
-            i = i+n
+            i = i + n
             buf = self.rawq[:i]
             self.rawq = self.rawq[i:]
             return buf
@@ -335,12 +335,12 @@ class Telnet:
             selector.register(self, selectors.EVENT_READ)
             while not self.eof:
                 if selector.select(timeout):
-                    i = max(0, len(self.rawq)-n)
+                    i = max(0, len(self.rawq) - n)
                     self.fill_rawq()
                     self.process_rawq()
                     i = self.rawq.find(match, i)
                     if i >= 0:
-                        i = i+n
+                        i = i + n
                         buf = self.rawq[:i]
                         self.rawq = self.rawq[i:]
                         return buf
@@ -482,14 +482,14 @@ class Telnet:
                         continue
                     self.msg('IAC DO %s', ord(opt))
                     if opt == TTYPE:
-                        self.sock.send(IAC+WILL+opt)
+                        self.sock.send(IAC + WILL + opt)
                     elif opt == NAWS:
-                        self.sock.send(IAC+WILL+opt)
+                        self.sock.send(IAC + WILL + opt)
                         self.can_naws = True
                         if self.window_size:
                             self.set_window_size(*self.window_size)
                     else:
-                        self.sock.send(IAC+WONT+opt)
+                        self.sock.send(IAC + WONT + opt)
 
                 # DON'T: Indicates the demand that the other party stop
                 # performing, or confirmation that you are no longer
@@ -498,7 +498,7 @@ class Telnet:
                 elif command == DONT:
                     opt = self.rawq_getchar()
                     self.msg('IAC DONT %s', ord(opt))
-                    self.sock.send(IAC+WONT+opt)
+                    self.sock.send(IAC + WONT + opt)
 
                 # SB: Indicates that what follows is subnegotiation of the
                 # indicated option.
@@ -526,23 +526,20 @@ class Telnet:
                     end = self.rawq_getchar()
                     if (iac, end) != (IAC, SE):
                         # whoops, that's an unexpected response...
-                        self.msg(
-                            'Expected IAC SE, but got %d %d.', ord(iac), ord(end)
-                        )
+                        self.msg('Expected IAC SE, but got %d %d.', ord(iac), ord(end))
                     self.msg('IAC SUBCOMMAND_END')
 
                     # Send the next supported terminal.
                     ttype = self.termtype.encode('latin-1')
                     self.msg('Indicating support for terminal type %s.', ttype)
-                    self.sock.send(IAC+SB+TTYPE+theNULL+ttype+IAC+SE)
+                    self.sock.send(IAC + SB + TTYPE + theNULL + ttype + IAC + SE)
                 elif command in (WILL, WONT):
                     opt = self.rawq_getchar()
-                    self.msg('IAC %s %d',
-                             command == WILL and 'WILL' or 'WONT', ord(opt))
+                    self.msg('IAC %s %d', command == WILL and 'WILL' or 'WONT', ord(opt))
                     if opt == ECHO:
-                        self.sock.send(IAC+DO+opt)
+                        self.sock.send(IAC + DO + opt)
                     else:
-                        self.sock.send(IAC+DONT+opt)
+                        self.sock.send(IAC + DONT + opt)
                 else:
                     self.msg('IAC %d not recognized.' % ord(command))
         except EOFError:  # raised by self.rawq_getchar()
@@ -565,7 +562,7 @@ class Telnet:
                 raise EOFError
 
         c = self.rawq[self.irawq]
-        c = c.to_bytes((c.bit_length()+7)//8, 'big')
+        c = c.to_bytes((c.bit_length() + 7) // 8, 'big')
 
         self.irawq += 1
         if self.irawq >= len(self.rawq):
@@ -587,7 +584,7 @@ class Telnet:
         # behavior in process_rawq() above.
         buf = self.sock.recv(64)
         self.msg("Recv: %s", repr(buf))
-        self.eof = (not buf)
+        self.eof = not buf
         self.rawq = self.rawq + buf
 
     def sock_avail(self):
@@ -619,6 +616,7 @@ class Telnet:
     def mt_interact(self):
         """Multithreaded version of interact()."""
         import _thread
+
         _thread.start_new_thread(self.listener, ())
         while 1:
             line = sys.stdin.readline()
@@ -660,7 +658,7 @@ class Telnet:
                     import re
                 relist[i] = re.compile(relist[i])
         self.msg("Expecting: %s" % [l.pattern for l in relist])
-        incomplete_tail = u''
+        incomplete_tail = ''
         clean_sw_size = search_window_size
         while True:
             self.process_rawq()
@@ -671,7 +669,7 @@ class Telnet:
             qlen = self.cookedq.tell()
             if cleanup:
                 while True:
-                    pos = qlen-clean_sw_size-len(incomplete_tail)-head_loockback_size
+                    pos = qlen - clean_sw_size - len(incomplete_tail) - head_loockback_size
                     self.cookedq.seek(max(0, pos))
                     search_window = self.cookedq.read()
                     search_window, incomplete_tail = cleanup(search_window)
@@ -697,14 +695,16 @@ class Telnet:
                     if flush:
                         self.cookedq.seek(0)
                         self.cookedq.truncate()
-                        self.cookedq.write(search_window[m.end():])
+                        self.cookedq.write(search_window[m.end() :])
                     else:
                         self.cookedq.seek(qlen)
                     return i, m, text
             if self.eof:
                 break
             if timeout is not None:
-                if not self._wait_for_data(timeout):  # Workaround for the problem with select() below.
+                if not self._wait_for_data(
+                    timeout
+                ):  # Workaround for the problem with select() below.
                     break
                 # The following will sometimes lock even if data is available
                 # and I have no idea why. Do NOT reverse this unless you are sure
@@ -776,6 +776,7 @@ def test():
     tn.open(host, port)
     tn.interact()
     tn.close()
+
 
 if __name__ == '__main__':
     test()

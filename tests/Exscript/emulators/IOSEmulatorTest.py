@@ -18,17 +18,15 @@ class IOSEmulatorTest(VirtualDeviceTest):
     def testAddCommand(self):
         VirtualDeviceTest.testAddCommand(self)
 
-        cs = self.cls('myhost',
-                      strict=True,
-                      echo=False,
-                      login_type=self.cls.LOGIN_TYPE_NONE)
+        cs = self.cls('myhost', strict=True, echo=False, login_type=self.cls.LOGIN_TYPE_NONE)
 
         response = cs.do('show version')
-        self.assertTrue(response.startswith(
-            '\nCisco Internetwork Operating'), response)
+        self.assertTrue(response.startswith('\nCisco Internetwork Operating'), response)
 
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(IOSEmulatorTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
