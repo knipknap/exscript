@@ -1,2 +1,5 @@
 * text=auto eol=lf
 *.png binary
+# Device captures and expected outputs must stay byte-identical (CRLF is intentional).
+tests/Exscript/protocols/banners/** -text
+tests/templates/** -text
