@@ -1,13 +1,14 @@
-from __future__ import absolute_import
+import os
+import re
 import sys
 import unittest
-import re
-import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from .ServerTest import ServerTest
-from Exscript.servers import Telnetd
 from Exscript.protocols import Telnet
+from Exscript.servers import Telnetd
+
+from .ServerTest import ServerTest
 
 
 class TelnetdTest(ServerTest):

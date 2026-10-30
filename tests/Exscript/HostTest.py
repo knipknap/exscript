@@ -1,13 +1,14 @@
-from builtins import str
+import os.path
+import re
 import sys
 import unittest
-import re
-import os.path
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from Exscript import Host, Account
-from Exscript.util.url import Url
 from util.urlTest import urls
+
+from Exscript import Account, Host
+from Exscript.util.url import Url
 
 
 class HostTest(unittest.TestCase):
@@ -19,7 +20,7 @@ class HostTest(unittest.TestCase):
 
     def testConstructor(self):
         host = Host('localhost')
-        self.assertEqual(host.get_protocol(), 'telnet')
+        self.assertEqual(host.get_protocol(), 'ssh')
         host = Host('localhost', default_protocol='foo')
         self.assertEqual(host.get_protocol(), 'foo')
 
@@ -50,8 +51,8 @@ class HostTest(unittest.TestCase):
         host.set_address('foo2')
         self.assertEqual(host.get_dict(), {'hostname': 'foo',
                                            'address':  'foo2',
-                                           'protocol': 'telnet',
-                                           'port':     23})
+                                           'protocol': 'ssh',
+                                           'port':     22})
 
     def testSetAddress(self):
         self.host.set_protocol('dummy')
@@ -83,7 +84,7 @@ class HostTest(unittest.TestCase):
         pass  # Tested in testSetName().
 
     def testSetProtocol(self):
-        self.assertEqual(self.host.get_protocol(), 'telnet')
+        self.assertEqual(self.host.get_protocol(), 'ssh')
         self.host.set_protocol('dummy')
         self.assertEqual(self.host.get_protocol(), 'dummy')
 
@@ -107,9 +108,9 @@ class HostTest(unittest.TestCase):
         pass  # Tested in testSetOption().
 
     def testSetTcpPort(self):
-        self.assertEqual(self.host.get_tcp_port(), 23)
-        self.host.set_protocol('ssh')
-        self.assertEqual(self.host.get_tcp_port(), 23)
+        self.assertEqual(self.host.get_tcp_port(), 22)
+        self.host.set_protocol('telnet')
+        self.assertEqual(self.host.get_tcp_port(), 22)
         self.host.set_tcp_port(123)
         self.assertEqual(self.host.get_tcp_port(), 123)
 

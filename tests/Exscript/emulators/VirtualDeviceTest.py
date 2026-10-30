@@ -44,7 +44,7 @@ class VirtualDeviceTest(unittest.TestCase):
         self.assertEqual(cs.do('hi2'), 'hello')
 
     def testAddCommandsFromFile(self):
-        pass  # FIXME
+        pass  # TODO: Implement missing test.
 
     def testInit(self):
         cs = self.cls('myhost',

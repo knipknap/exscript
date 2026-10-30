@@ -24,11 +24,13 @@
 A driver for devices running Zyxel operating system.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_prompt_re = [re.compile(
-    r'[\r\n][\-\w+\.\(\)]+(?:\([^\)]+\))?[>#$]( \x1b7)?$|(?:\(y/n\)\[n\])'),
-    re.compile(r"[\r\n]Password: ?", re.I)]  # password prompt to be used in privilege mode when it has
+from .driver import Driver
+
+_prompt_re = [
+    re.compile(r'(?:\r\n|[\r\n])[\-\w+\.\(\)]+(?:\([^\)]+\))?[>#$]( \x1b7)?$|(?:\(y/n\)\[n\])'),
+    re.compile(r"(?:\r\n|[\r\n])Password: ?", re.I),  # password prompt to be used in privilege mode
+]
 
 _zyxel_re = re.compile(r"Copyright .* ZyXEL Communications Corp.", re.I)
 

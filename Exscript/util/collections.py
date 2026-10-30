@@ -1,17 +1,6 @@
-from __future__ import unicode_literals, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import chr
-from builtins import range
-from builtins import object
 import copy
-import sys
-if sys.version_info[1] >= 10:
-    from collections.abc import Callable
-    from collections import OrderedDict
-else:
-    from collections import OrderedDict, Callable
+from collections import OrderedDict
+from collections.abc import Callable
 
 
 class OrderedDefaultDict(OrderedDict):

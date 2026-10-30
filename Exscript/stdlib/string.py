@@ -20,7 +20,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from Exscript.stdlib.util import secure_function
+from .util import secure_function
 
 
 @secure_function
@@ -44,14 +44,12 @@ def replace(scope, strings, source, dest):
 def split(scope, strings, separator):
     """
     Returns a list with the split values of the given string (or list of strings).
-    The values are split at the seperator
+    The values are split at the separator.
 
     :type  strings: string
     :param strings: A string, or a list of strings.
-    :type  source: string
-    :param source: What to replace.
-    :type  dest: string
-    :param dest: What to replace it with.
+    :type  separator: string
+    :param separator: The separator to split the string at.
     :rtype:  string
     :return: The resulting string, or list of strings.
     """
@@ -59,6 +57,22 @@ def split(scope, strings, separator):
     for s in strings:
         result.extend(s.split(separator[0]))
     return result
+
+
+@secure_function
+def strip(scope, strings, chars=[None]):
+    """
+    Returns a copy of the given string (or list of strings) with leading and
+    trailing whitespace or custom characters removed.
+
+    :type  strings: string
+    :param strings: A string, or a list of strings.
+    :type  chars: string
+    :param chars: The characters to remove.
+    :rtype:  string
+    :return: The resulting string, or list of strings.
+    """
+    return [s.strip(chars[0]) for s in strings]
 
 
 @secure_function

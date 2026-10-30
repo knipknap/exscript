@@ -1,15 +1,16 @@
-from builtins import range
-import sys
-import unittest
-import re
 import os.path
+import re
+import sys
 import threading
 import time
+import unittest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import random
 import time
-from multiprocessing import Value, Lock
+from multiprocessing import Lock, Value
+
 from Exscript.workqueue import WorkQueue
 
 lock = Lock()
@@ -98,7 +99,6 @@ class WorkQueueTest(unittest.TestCase):
         # Stress testing from testEnqueue() not repeated here.
 
     def testPriorityEnqueue(self):
-        # Well, this test sucks.
         self.wq.pause()
         self.assertEqual(0, self.wq.get_length())
         id = self.wq.priority_enqueue(nop)

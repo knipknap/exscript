@@ -20,23 +20,29 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import
 from ..parselib import Token
-from .term import Term
+from .expression import Expression
 
 
 class Append(Token):
 
     def __init__(self, lexer, parser, parent):
-        Token.__init__(self, 'Append', lexer, parser, parent)
+        Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
         # First expect an expression.
         lexer.expect(self, 'keyword', 'append')
         lexer.expect(self, 'whitespace')
-        self.expr = Term(lexer, parser, parent)
+        # The later expression token skips all whitespaces and newlines, so we must
+        # fail on newlines here to keep the first expression term on the first line.
+        if lexer.current_is('newline'):
+            ttype, token = lexer.token()
+            self.mark_start()
+            self.mark_end(distance=len(token))
+            msg = 'Expected expression but got %s %s' % (ttype, repr(token))
+            lexer.syntax_error(msg, self)
+        self.expr = Expression(lexer, parser, parent)
 
         # Expect "to" keyword.
-        lexer.expect(self, 'whitespace')
         lexer.expect(self, 'keyword', 'to')
 
         # Expect a variable name.
@@ -45,7 +51,8 @@ class Append(Token):
         lexer.expect(self, 'varname')
         self.parent.define(**{self.varname: []})
 
-        self.mark_end()
+        # End of statement.
+        self.mark_end(rstrip=True)
 
     def value(self, context):
         existing = self.parent.get(self.varname)

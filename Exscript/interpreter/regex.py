@@ -20,17 +20,13 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import
 import re
+
 from .string import String
 
-# Matches any opening parenthesis that is neither preceded by a backslash
-# nor has a "?:" or "?<" appended.
-bracket_re = re.compile(r'(?<!\\)\((?!\?[:<])', re.I)
-
 modifier_grammar = (
-    ('modifier',     r'[i]'),
-    ('invalid_char', r'.'),
+    ('modifier',     r'[a-zA-Z]'),
+    ('invalid_char', r'.'),  # used to implicitly exit the loop
 )
 
 modifier_grammar_c = []
@@ -41,35 +37,43 @@ for thetype, regex in modifier_grammar:
 class Regex(String):
 
     def __init__(self, lexer, parser, parent):
-        self.delimiter = lexer.token()[1]
         # String parser collects the regex.
-        String.__init__(self, lexer, parser, parent)
-        self.n_groups = len(bracket_re.findall(self.string))
+        String.__init__(self, lexer, parser, parent, purpose='regex')
+        self.groups = 0
         self.flags = 0
 
-        # Collect modifiers.
+        # Collect trailing modifiers.
         lexer.set_grammar(modifier_grammar_c)
         while lexer.current_is('modifier'):
             if lexer.next_if('modifier', 'i'):
                 self.flags = self.flags | re.I
             else:
                 modifier = lexer.token()[1]
-                error = 'Invalid regular expression modifier "%s"' % modifier
-                lexer.syntax_error(error, self)
+                self.mark_start()
+                self.mark_end(distance=len(modifier))
+                msg = 'Invalid regular expression modifier %s' % repr(modifier)
+                lexer.syntax_error(msg, self)
         lexer.restore_grammar()
+        # End of statement.
+        self.mark_end(rstrip=True)
 
         # Compile the regular expression.
         try:
-            re.compile(self.string, self.flags)
+            regex = re.compile(self.string, self.flags)
         except Exception as e:
-            error = 'Invalid regular expression %s: %s' % (
-                repr(self.string), e)
-            lexer.syntax_error(error, self)
+            msg = 'Invalid regular expression %s: %s' % (repr(self.string), e)
+            # The current marks should span over the entire regular expression.
+            lexer.syntax_error(msg, self)
+        else:
+            self.groups = regex.groups
 
-    def _escape(self, token):
-        char = token[1]
-        if char == self.delimiter:
-            return char
+    def eval_escape(self, ttype, token):
+        # Simple escape sequence with one character.
+        if len(token) == 2:
+            char = token[1]
+            if char == self.delimiter:
+                return char
+        # Anything else will be handled by Python's regex compiler.
         return token
 
     def value(self, context):
@@ -77,4 +81,4 @@ class Regex(String):
         return re.compile(pattern, self.flags)
 
     def dump(self, indent=0):
-        print((' ' * indent) + self.name, self.string)
+        print((' ' * indent) + self.name, repr(self.string))

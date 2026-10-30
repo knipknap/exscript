@@ -20,10 +20,10 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import absolute_import
+import inspect
+
 from .lexer import Lexer
 from .token import Token
 
-import inspect
 __all__ = [name for name, obj in list(locals().items())
            if not (name.startswith('_') or inspect.ismodule(obj))]

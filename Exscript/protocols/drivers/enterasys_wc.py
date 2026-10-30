@@ -26,13 +26,14 @@ A driver for Enterasys/Extreme (HiPath) Wireless Controller devices.
 Created using a C5110 device.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_user_re = [re.compile(r'[\r\n]Username: $')]
-_password_re = [re.compile(r'[\r\n]Password: $')]
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])Username: $')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
 _prompt_re = [
-    re.compile(r'[\r\n][a-zA-Z0-9-_ .]+# $'),  # base prompt
-    re.compile(r'[\r\n][a-zA-Z0-9-_ .]+(?::[A-Za-z0-9_.-]+)*# $')
+    re.compile(r'(?:\r\n|[\r\n])[a-zA-Z0-9-_ .]+# $'),  # base prompt
+    re.compile(r'(?:\r\n|[\r\n])[a-zA-Z0-9-_ .]+(?::[A-Za-z0-9_.-]+)*# $'),
 ]
 _hwc_re = re.compile(r'Enterasys Wireless Convergence OS', re.I)
 

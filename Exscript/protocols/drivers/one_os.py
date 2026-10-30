@@ -24,12 +24,13 @@
 A driver for OneOS (OneAccess).
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_user_re = [re.compile(r'[\r\n]Username: ?$')]
-_password_re = [re.compile(r'[\r\n]Password: ?$')]
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])Username: ?$')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])Password: ?$')]
 _first_prompt_re = re.compile(r'\r?\n\r?\n[\-\w+\.]+[>#]$')
-_prompt_re = [re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
 
 
 class OneOSDriver(Driver):
@@ -50,7 +51,7 @@ class OneOSDriver(Driver):
         # TERMINAL WIDTH ONEOS5
         try:
             conn.execute('stty columns 255')
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
     def auto_authorize(self, conn, account, flush, bailout):

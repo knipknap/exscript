@@ -21,41 +21,42 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import inspect
-from Exscript.protocols.drivers.driver import Driver
-from Exscript.protocols.drivers.adtran import AdtranDriver
-from Exscript.protocols.drivers.aironet import AironetDriver
-from Exscript.protocols.drivers.aix import AIXDriver
-from Exscript.protocols.drivers.arbor_peakflow import ArborPeakflowDriver
-from Exscript.protocols.drivers.brocade import BrocadeDriver
-from Exscript.protocols.drivers.enterasys import EnterasysDriver
-from Exscript.protocols.drivers.generic import GenericDriver
-from Exscript.protocols.drivers.hp_pro_curve import HPProCurveDriver
-from Exscript.protocols.drivers.ios import IOSDriver
-from Exscript.protocols.drivers.nxos import NXOSDriver
-from Exscript.protocols.drivers.ios_xr import IOSXRDriver
-from Exscript.protocols.drivers.ace import ACEDriver
-from Exscript.protocols.drivers.junos import JunOSDriver
-from Exscript.protocols.drivers.junos_erx import JunOSERXDriver
-from Exscript.protocols.drivers.mrv import MRVDriver
-from Exscript.protocols.drivers.one_os import OneOSDriver
-from Exscript.protocols.drivers.shell import ShellDriver
-from Exscript.protocols.drivers.smart_edge_os import SmartEdgeOSDriver
-from Exscript.protocols.drivers.vrp import VRPDriver
-from Exscript.protocols.drivers.sros import SROSDriver
-from Exscript.protocols.drivers.aruba import ArubaDriver
-from Exscript.protocols.drivers.enterasys_wc import EnterasysWCDriver
-from Exscript.protocols.drivers.fortios import FortiOSDriver
-from Exscript.protocols.drivers.bigip import BigIPDriver
-from Exscript.protocols.drivers.isam import IsamDriver
-from Exscript.protocols.drivers.zte import ZteDriver
-from Exscript.protocols.drivers.vxworks import VxworksDriver
-from Exscript.protocols.drivers.ericsson_ban import EricssonBanDriver
-from Exscript.protocols.drivers.rios import RIOSDriver
-from Exscript.protocols.drivers.eos import EOSDriver
-from Exscript.protocols.drivers.cienasaos import CienaSAOSDriver
-from Exscript.protocols.drivers.icotera import IcoteraDriver
-from Exscript.protocols.drivers.zyxel import ZyxelDriver
-from Exscript.protocols.drivers.sp_vxoa import SilverPeakVXOADriver
+
+from .ace import ACEDriver as ACEDriver
+from .adtran import AdtranDriver as AdtranDriver
+from .aironet import AironetDriver as AironetDriver
+from .aix import AIXDriver as AIXDriver
+from .arbor_peakflow import ArborPeakflowDriver as ArborPeakflowDriver
+from .aruba import ArubaDriver as ArubaDriver
+from .bigip import BigIPDriver as BigIPDriver
+from .brocade import BrocadeDriver as BrocadeDriver
+from .cienasaos import CienaSAOSDriver as CienaSAOSDriver
+from .driver import Driver
+from .enterasys import EnterasysDriver as EnterasysDriver
+from .enterasys_wc import EnterasysWCDriver as EnterasysWCDriver
+from .eos import EOSDriver as EOSDriver
+from .ericsson_ban import EricssonBanDriver as EricssonBanDriver
+from .fortios import FortiOSDriver as FortiOSDriver
+from .generic import GenericDriver as GenericDriver
+from .hp_pro_curve import HPProCurveDriver as HPProCurveDriver
+from .icotera import IcoteraDriver as IcoteraDriver
+from .ios import IOSDriver as IOSDriver
+from .ios_xr import IOSXRDriver as IOSXRDriver
+from .isam import IsamDriver as IsamDriver
+from .junos import JunOSDriver as JunOSDriver
+from .junos_erx import JunOSERXDriver as JunOSERXDriver
+from .mrv import MRVDriver as MRVDriver
+from .nxos import NXOSDriver as NXOSDriver
+from .one_os import OneOSDriver as OneOSDriver
+from .rios import RIOSDriver as RIOSDriver
+from .shell import ShellDriver as ShellDriver
+from .smart_edge_os import SmartEdgeOSDriver as SmartEdgeOSDriver
+from .sp_vxoa import SilverPeakVXOADriver as SilverPeakVXOADriver
+from .sros import SROSDriver as SROSDriver
+from .vrp import VRPDriver as VRPDriver
+from .vxworks import VxworksDriver as VxworksDriver
+from .zte import ZteDriver as ZteDriver
+from .zyxel import ZyxelDriver as ZyxelDriver
 
 driver_classes = []
 drivers = []
@@ -63,7 +64,7 @@ driver_map = {}
 
 
 def isdriver(o):
-    return inspect.isclass(o) and issubclass(o, Driver) and not o is Driver
+    return inspect.isclass(o) and issubclass(o, Driver) and o is not Driver
 
 def add_driver(cls):
     driver = cls()

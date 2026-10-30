@@ -24,13 +24,15 @@
 A driver for Redback Smart Edge OS.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_user_re = [re.compile(r'[\r\n]login: ')]
-_password_re = [re.compile(r'[\r\n]Password: $')]
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])login: ')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
 _prompt_re = [
-    re.compile(r'[\r\n]\x00?\[\w+\][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
-_model_re = re.compile(r'[\r\n][^\r\n]+-se800[\r\n]')
+    re.compile(r'(?:\r\n|[\r\n])\x00?\[\w+\][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$'),
+]
+_model_re = re.compile(r'(?:\r\n|[\r\n])[^\r\n]+-se800(?:\r\n|[\r\n])')
 
 
 class SmartEdgeOSDriver(Driver):

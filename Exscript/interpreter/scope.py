@@ -20,8 +20,8 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import
-from copy import deepcopy
+import copy
+
 from ..parselib import Token
 
 
@@ -34,7 +34,10 @@ class Scope(Token):
         self.exit_requested = 0
         for key in self.variables:
             if key.find('.') < 0 and not key.startswith('_'):
-                assert type(self.variables[key]) == type([])
+                if type(self.variables[key]) is type([]):
+                    continue
+                msg = '%s: variable %s must be a list, but got %s'
+                raise TypeError(msg % (self.name, key, type(self.variables[key])))
 
     def exit_request(self):
         self.exit_requested = 1
@@ -44,7 +47,7 @@ class Scope(Token):
             return self.parent.define(**kwargs)
         for key in kwargs:
             if key.find('.') >= 0 or key.startswith('_') \
-                    or type(kwargs[key]) == type([]):
+                    or type(kwargs[key]) is type([]):
                 self.variables[key] = kwargs[key]
             else:
                 self.variables[key] = [kwargs[key]]
@@ -79,7 +82,7 @@ class Scope(Token):
         """
         vars = self.get_vars()
         vars = dict([k for k in list(vars.items()) if not k[0].startswith('_')])
-        return deepcopy(vars)
+        return copy.deepcopy(vars)
 
     def get(self, name, default=None):
         if name in self.variables:
@@ -100,8 +103,8 @@ class Scope(Token):
             child.dump(indent + 1)
         print((' ' * indent) + self.name, 'end')
 
-    def dump1(self):
+    def dump_vars(self):
         if self.parent is not None:
-            self.parent.dump1()
+            self.parent.dump_vars()
             return
         print("Scope:", self.variables)

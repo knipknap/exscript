@@ -1,6 +1,5 @@
 import sys
 import unittest
-import re
 import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
@@ -12,8 +11,8 @@ class castTest(unittest.TestCase):
 
     def testNetlog(self):
         from Exscript.util.syslog import netlog
-        # FIXME: dont really know how to test this; we'd need to know
-        # how to open a local syslog server.
+        # NOTE: No idea how to test netlog.
+        #  How to open a local syslog server? Mocking?
 
 
 def suite():

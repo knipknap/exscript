@@ -20,17 +20,15 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function
-from builtins import object
 
 
-class Token(object):
+class Token:
 
     """
     Abstract base class for all tokens.
     """
 
-    class Iterator(object):
+    class Iterator:
 
         """
         A tree iterator that walks through all tokens.
@@ -95,13 +93,34 @@ class Token(object):
         for child in self.get_children():
             child.value(context)
 
-    def mark_start(self):
-        self.start = self.lexer.current_char
+    def mark_start(self, char=None):
+        if char is None:
+            char = self.lexer.current_char
+        # EOF will point behind the last character index (length of input)!
+        self.start = max(0, min(char, self.lexer.input_length))
         if self.start >= self.end:
-            self.end = self.start + 1
+            self.mark_end(distance=1)
 
-    def mark_end(self, char=None):
-        self.end = char and char or self.lexer.current_char
+    def mark_end(self, char=None, distance=None, rstrip=False):
+        if char is not None and distance is not None:
+            msg = 'must not specify both arguments "char" and "distance"'
+            raise ValueError(msg)
+        if distance is not None:
+            char = self.start + distance
+        elif char is None:
+            char = self.lexer.current_char
+        # The rstrip flag emulates the str.rstrip block per char to rewind the end mark
+        # to the last non-whitespace character. This is useful when the end mark is set
+        # at the end of a Token init, that finally skipped trailing whitespaces.
+        if rstrip:
+            if isinstance(rstrip, str):
+                isspace = lambda c: c in rstrip  # noqa: E731
+            else:
+                isspace = lambda c: c.isspace()  # noqa: E731
+            while char > 0 and isspace(self.lexer.input[char - 1:char]):
+                char -= 1
+        # EOF will point behind the last character index (length of input)!
+        self.end = max(self.start, min(char, self.lexer.input_length))
 
     def __iter__(self):
         """

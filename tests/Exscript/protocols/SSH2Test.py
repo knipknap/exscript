@@ -1,14 +1,15 @@
-from __future__ import absolute_import
+import os.path
+import re
 import sys
 import unittest
-import re
-import os.path
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from .ProtocolTest import ProtocolTest
-from Exscript.servers import sshd, SSHd
-from Exscript.protocols import SSH2
 from Exscript import PrivateKey
+from Exscript.protocols import SSH2
+from Exscript.servers import SSHd, sshd
+
+from .ProtocolTest import ProtocolTest
 
 keyfile = os.path.join(os.path.dirname(__file__), 'id_rsa')
 key = PrivateKey.from_file(keyfile)
@@ -19,9 +20,10 @@ class SSH2Test(ProtocolTest):
 
     def createDaemon(self):
         self.daemon = SSHd(self.hostname, self.port, self.device, key=key)
+        self.daemon.dbg = 5
 
     def createProtocol(self):
-        self.protocol = SSH2(timeout=1)
+        self.protocol = SSH2(timeout=1, debug=5)
 
     def testConstructor(self):
         self.assertIsInstance(self.protocol, SSH2)

@@ -13,7 +13,7 @@ account_pool = [('user1', 'password1'),
                 ('user3', 'password3'),
                 ('user4', 'password4')]
 
-hosts = ['localhost', '1.2.3.4', 'ssh://test', 'ssh1://another:23']
+hosts = ['localhost', '1.2.3.4', 'ssh://test', 'telnet://another:23']
 expected_hosts = ['localhost', '1.2.3.4', 'test',       'another']
 
 

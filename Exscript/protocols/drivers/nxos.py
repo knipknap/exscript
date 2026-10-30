@@ -21,19 +21,22 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-A driver for Cisco Nexus OS (NXOS)
+A driver for Cisco Nexus OS (NXOS).
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
+
+from .driver import Driver
 
 _user_re = [re.compile(r'user ?name: ?$', re.I)]
-_password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
-_prompt_re = [re.compile(r'[\r\n\x00][\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
-_error_re = [re.compile(r'%Error'),
-             re.compile(r'invalid input', re.I),
-             re.compile(r'(?:incomplete|ambiguous) command', re.I),
-             re.compile(r'connection timed out', re.I),
-             re.compile(r'[^\r\n]+ not found', re.I)]
+_password_re = [re.compile(r'(?:(?:\r\n|[\r\n])Password: ?|last resort password:)$')]
+_prompt_re = [re.compile(r'(?:\r\n\x00?|[\r\n\x00])[\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
+_error_re = [
+    re.compile(r'%Error'),
+    re.compile(r'invalid input', re.I),
+    re.compile(r'(?:incomplete|ambiguous) command', re.I),
+    re.compile(r'connection timed out', re.I),
+    re.compile(r'[^\r\n]+ not found', re.I),
+]
 
 
 class NXOSDriver(Driver):

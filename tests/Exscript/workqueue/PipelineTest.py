@@ -1,17 +1,16 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import next
-import sys
-import unittest
-import re
 import os.path
+import re
+import sys
 import threading
 import time
+import unittest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import time
-from threading import Thread
 from multiprocessing import Value
+from threading import Thread
+
 from Exscript.workqueue import Pipeline
 
 

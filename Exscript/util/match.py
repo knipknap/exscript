@@ -23,8 +23,8 @@
 """
 Shorthands for regular expression matching.
 """
-from __future__ import print_function, absolute_import
 import re
+
 from ..protocols import Protocol
 
 
@@ -43,7 +43,7 @@ def _first_match(string, compiled):
 
 
 def first_match(string, regex, flags=re.M):
-    """
+    r"""
     Matches the given string against the given regex.
 
       - If no match is found and the regular expression has zero or one
@@ -82,12 +82,12 @@ def first_match(string, regex, flags=re.M):
     :return: A match, or a tuple of matches.
     """
     if isinstance(string, Protocol):
-        string = string.response
+        string = string.get_response()
     return _first_match(string, re.compile(regex, flags))
 
 
 def any_match(string, regex, flags=re.M):
-    """
+    r"""
     Matches the given string against the given regex.
 
       - If no match is found, this function returns an empty list.
@@ -103,7 +103,7 @@ def any_match(string, regex, flags=re.M):
 
     This behavior ensures that the following can never fail::
 
-        foo = '1 uno\\n2 due'
+        foo = '1 uno\n2 due'
         for m in any_match(foo, r'aaa'):         # Returns []
             print(m)
 
@@ -132,7 +132,7 @@ def any_match(string, regex, flags=re.M):
     :return: A list of strings, or a list of tuples.
     """
     if isinstance(string, Protocol):
-        string = string.response
+        string = string.get_response()
     compiled = re.compile(regex, flags)
     results = []
     if compiled.groups <= 1:

@@ -23,33 +23,44 @@
 """
 An SSH2 server.
 """
-from __future__ import absolute_import
-import os
 import base64
+import logging
+import os
 import socket
 import threading
+
 try:
     import Cryptodome as Crypto
 except ImportError:
     import Crypto
+
 import paramiko
-from copy import deepcopy
 from paramiko import ServerInterface
-from Exscript.version import __version__
+
+from ..version import __version__
 from .server import Server
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 local_version = 'SSH-2.0-Exscript-' + __version__
 
+
 class _ParamikoServer(ServerInterface):
-    # 'data' is the output of base64.encodestring(str(key))
-    data = b'AAAAB3NzaC1yc2EAAAABIwAAAIEAyO4it3fHlmGZWJaGrfeHOVY7RWO3P9M7hp'\
-           b'fAu7jJ2d7eothvfeuoRFtJwhUmZDluRdFyhFY/hFAh76PJKGAusIqIQKlkJxMC'\
-           b'KDqIexkgHAfID/6mqvmnSJf0b5W8v5h2pI/stOSwTQ+pxVhwJ9ctYDhRSlF0iT'\
-           b'UWT10hcuO4Ks8='
-    good_pub_key = paramiko.RSAKey(data=base64.decodestring(data))
+    # Must match the public key of the test suite!
+    data = (
+        b'AAAAB3NzaC1yc2EAAAADAQABAAABAQChbnHaPrmxa5NpvtKXSMfMJEklUlinrnaNc'
+        b'VsLZeQv+3DfZBrdR4pTwJVIeda60JS6IwqtAl+pkSgZxdgW1TTxteMYCNz/zCpJSC'
+        b'KQ6oVP3/DVyZYODkmZaLz44INFDQp6cOfFzrhjvyi1SsUAKHvJIhS74u1swGm7TbD'
+        b'Nw56WAhjeQqfk+mOcLdzwwSBYiw4q7TdJ/iVT3DFFcoikBajegUpbaG8GVypBkluN'
+        b'sW3FmKG3WH0+V6Zi8HrV2t+kh1jaSSOsZfN4QVNYKlDs+pn9ZJc/nhQ40wFPgWDSW'
+        b'rasB8FNmAy7rpRlfQJ6Mnv3ez2lbrhieMSsiwLoyPpqxn87'
+    )
+    good_pub_key = paramiko.RSAKey(data=base64.decodebytes(data))
 
     def __init__(self):
         self.event = threading.Event()
+        self._logger = _logger
 
         # Since each server is created in it's own thread, we must
         # re-initialize the random number generator to make sure that
@@ -110,31 +121,31 @@ class SSHd(Server):
 
     def __init__(self, host, port, device, key=None):
         Server.__init__(self, host, port, device)
+        self._logger = _logger
         if key:
             keyfile = key.get_filename()
         else:
             keyfile = os.path.expanduser('~/.ssh/id_rsa')
         self.host_key = paramiko.RSAKey(filename=keyfile)
 
-    def _recvline(self, channel):
-        while not b'\n' in self.buf:
+    def _recvline(self, channel, buf):
+        while b'\n' not in buf:
             if not self.running:
-                return None
+                return None, buf
             try:
                 data = channel.recv(1024)
             except socket.timeout:
                 continue
             if not data:
-                self.running = False
-                return None
-            self.buf += data.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
-        lines = self.buf.split(b'\n')
-        self.buf = b'\n'.join(lines[1:])
-        return lines[0].decode(self.encoding) + '\n'
+                return None, buf  # client disconnected — keep server running
+            buf += data.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+        lines = buf.split(b'\n')
+        return lines[0].decode(self.encoding) + '\n', b'\n'.join(lines[1:])
 
     def _handle_connection(self, conn):
         t = paramiko.Transport(conn)
         t.local_version = local_version
+        t.name = '%s-server-%s:%s' % (self._get_server_type(), self.host, self.port)
         try:
             t.load_server_moduli()
         except:
@@ -161,9 +172,6 @@ class SSHd(Server):
             conn.close()
             return
 
-        # Prepare virtual device.
-        device = deepcopy(self.device)
-
         # wait for auth
         channel = t.accept(2)
         if channel is None:
@@ -175,25 +183,29 @@ class SSHd(Server):
         try:
             # wait for shell request
             server.event.wait(10)
-            if not server.event.isSet():
+            if not server.event.is_set():
                 self._dbg(1, 'Client never asked for a shell.')
                 t.close()
                 return
 
             # send the banner
-            res = self.device.init()
-            channel.send(res)
+            channel.send(self.device.init().encode('utf8'))
 
             # accept commands
+            buf = b''
             while self.running:
-                line = self._recvline(channel)
-                if not line:
-                    continue
+                line, buf = self._recvline(channel, buf)
+                if line is None:
+                    break
                 response = self.device.do(line)
                 if response:
-                    channel.send(response)
-        except socket.error as err:
-            self._dbg(1, 'Client disappeared: ' + str(err))
+                    channel.send(response.encode('utf8'))
+        except (socket.error, EOFError) as err:
+            msg = 'Client disappeared: ' + str(err)
+            self._dbg(1, msg)
+        except Exception as err:
+            msg = "%s in connection handler: %s"
+            self._dbg(1, msg % (type(err).__name__, str(err)))
         finally:
             # closing transport closes channel
             t.close()

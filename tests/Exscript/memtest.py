@@ -1,12 +1,12 @@
-from __future__ import print_function
 # This script is not meant to provide a fully automated test, it's
 # merely a hack/starting point for investigating memory consumption
 # manually. The behavior also depends heavily on the version of meliae.
 import gc
 import re
+
+from Exscript import Account, Host, Queue
 from Exscript.protocols import connect
 from Exscript.util.decorator import bind
-from Exscript import Queue, Account, Host
 
 objnames = ('count_calls',)
 follow_modules = False
@@ -31,9 +31,11 @@ del func
 
 # Test memory consumption.
 from meliae import scanner
+
 gc.collect()
 scanner.dump_all_objects("test.dump")
 from meliae import loader
+
 om = loader.load('test.dump')
 om.remove_expensive_references()
 om.collapse_instance_dicts()

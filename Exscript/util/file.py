@@ -23,22 +23,18 @@
 """
 Utilities for reading data from files.
 """
-from __future__ import print_function, absolute_import
-from builtins import str
-from future import standard_library
-standard_library.install_aliases()
-import sys
-import re
-import os
 import base64
-import codecs
-import imp # Py2
-import importlib # Py3
+import binascii
+import configparser
+import importlib
+import os
+import re
+
 from .. import Account
 from .cast import to_host
 
 
-def get_accounts_from_file(filename):
+def get_accounts_from_file(filename, encoding='utf-8', password_encoding='utf-8'):
     """
     Reads a list of user/password combinations from the given file
     and returns a list of Account instances. The file content
@@ -54,26 +50,33 @@ def get_accounts_from_file(filename):
     Each password needs to be base64 encrypted. To encrypt a password,
     you may use the following command::
 
-        python -c 'import base64; print(base64.b64encode("thepassword"))'
+        python3 -c 'import base64; print(base64.b64encode("thepassword".encode()).decode())'
 
     :type  filename: string
     :param filename: The name of the file containing the list of accounts.
+    :type  encoding: str
+    :param encoding: The encoding of the file.
+    :type  password_encoding: str
+    :param password_encoding: The encoding of the original passwords.
     :rtype:  list[Account]
     :return: The newly created account instances.
     """
     accounts = []
-    cfgparser = __import__('configparser', {}, {}, [''])
-    parser = cfgparser.RawConfigParser()
+    parser = configparser.RawConfigParser()
     parser.optionxform = str
-    parser.read(filename)
+    parser.read(filename, encoding)
     for user, password in parser.items('account-pool'):
-        password = base64.decodebytes(password.encode('latin1'))
-        accounts.append(Account(user, password.decode('latin1')))
+        try:
+            password = base64.decodebytes(password.encode('ascii'))
+            accounts.append(Account(user, password.decode(password_encoding)))
+        except (UnicodeDecodeError, binascii.Error) as exc:
+            msg = 'Could not decode password for user: %s (%s)' % (user, exc)
+            raise Exception(msg)
     return accounts
 
 
 def get_hosts_from_file(filename,
-                        default_protocol='telnet',
+                        default_protocol='ssh',
                         default_domain='',
                         remove_duplicates=False,
                         encoding='utf-8'):
@@ -100,7 +103,7 @@ def get_hosts_from_file(filename,
     # Read the hostnames.
     have = set()
     hosts = []
-    with codecs.open(filename, 'r', encoding) as file_handle:
+    with open(filename, 'r', encoding=encoding) as file_handle:
         for line in file_handle:
             hostname = line.split('#')[0].strip()
             if hostname == '':
@@ -114,7 +117,7 @@ def get_hosts_from_file(filename,
 
 
 def get_hosts_from_csv(filename,
-                       default_protocol='telnet',
+                       default_protocol='ssh',
                        default_domain='',
                        encoding='utf-8'):
     """
@@ -155,7 +158,7 @@ def get_hosts_from_csv(filename,
     if not os.path.exists(filename):
         raise IOError('No such file: %s' % filename)
 
-    with codecs.open(filename, 'r', encoding) as file_handle:
+    with open(filename, 'r', encoding=encoding) as file_handle:
         # Read and check the header.
         header = file_handle.readline().rstrip()
         if re.search(r'^(?:hostname|address)\b', header) is None:
@@ -213,11 +216,6 @@ def load_lib(filename):
     callables. The namespace is the basename of the file, without file
     extension.
 
-    The result of this function can later be passed to run_template::
-
-        functions = load_lib('my_library.py')
-        run_template(conn, 'foo.exscript', **functions)
-
     :type  filename: string
     :param filename: A full filename.
     :rtype:  dict[string->object]
@@ -228,9 +226,6 @@ def load_lib(filename):
         raise IOError('No such file: %s' % filename)
 
     name = os.path.splitext(os.path.basename(filename))[0]
-    if sys.version_info[0] < 3:
-        module = imp.load_source(name, filename)
-    else:
-        module = importlib.machinery.SourceFileLoader(name, filename).load_module()
+    module = importlib.machinery.SourceFileLoader(name, filename).load_module()
 
     return dict((name + '.' + k, v) for (k, v) in list(module.__lib__.items()))

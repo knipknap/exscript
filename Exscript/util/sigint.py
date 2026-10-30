@@ -23,14 +23,13 @@
 """
 A class for catching SIGINT, such that CTRL+c works.
 """
-from __future__ import print_function
-from builtins import object
 import os
-import sys
 import signal
+import sys
+import time
 
 
-class SigIntWatcher(object):
+class SigIntWatcher:
 
     """
     This class solves two problems with multithreaded programs in Python:
@@ -60,19 +59,38 @@ class SigIntWatcher(object):
         except RuntimeError: # prevent "not holding the import lock" on some systems
             self.child = 0
         if self.child:
-            self.watch()
+            self._watch()
 
-    def watch(self):
+    def _watch(self):
         try:
             pid, status = os.wait()
         except KeyboardInterrupt:
             print('********** SIGINT RECEIVED - SHUTTING DOWN! **********')
-            self.kill()
+            # Child may also receive SIGINT, so we wait a bit for its cleanup.
+            deadline = time.monotonic() + 2.0
+            while time.monotonic() < deadline:
+                try:
+                    pid, status = os.waitpid(self.child, os.WNOHANG)
+                    if pid:  # child exited on its own
+                        self._exit_from_status(status)
+                    time.sleep(0.05)
+                except ChildProcessError:
+                    sys.exit(1)  # child already gone
+                except KeyboardInterrupt:
+                    pass  # second CTRL+C -> simply continue waiting
+            self._kill()
             sys.exit(1)
-        sys.exit(status >> 8)
+        self._exit_from_status(status)
 
-    def kill(self):
+    def _kill(self):
         try:
             os.kill(self.child, signal.SIGKILL)
         except OSError:
             pass
+
+    def _exit_from_status(self, status):
+        if os.WIFEXITED(status):
+            sys.exit(os.WEXITSTATUS(status))
+        else:
+            # Follows shell convention for signal-killed child processes.
+            sys.exit(128 + os.WTERMSIG(status))

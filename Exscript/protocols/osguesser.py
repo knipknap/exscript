@@ -20,36 +20,60 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function
-from builtins import object
-from Exscript.protocols.drivers import drivers
+"""
+OS guesser for any protocol to auto-select a device driver.
+"""
+
+import logging
+
+from .drivers import drivers
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 
-class OsGuesser(object):
+class OsGuesser:
 
     """
-    The OsGuesser monitors everything that happens on a Protocol,
-    and attempts to collect data out of the network activity.
-    It watches for specific patterns in the network traffic to decide
-    what operating system a connected host is running.
-    It is completely passive, and attempts no changes on the protocol
-    adapter. However, the protocol adapter may request information
-    from the OsGuesser, and perform changes based on the information
-    provided.
+    The OsGuesser monitors everything that happens on a Protocol, and attempts to
+    collect data out of the network activity. It watches for specific patterns in the
+    network traffic to decide what operating system a connected host is running. It is
+    completely passive, and attempts no changes on the protocol adapter. However, the
+    protocol adapter may request information from the OsGuesser, and perform changes
+    based on the information provided.
     """
 
     def __init__(self):
-        self.info = {}
-        self.debug = False
-        self.protocol_os_map = [d._check_protocol for d in drivers]
-        self.auth_os_map = [d._check_head for d in drivers]
-        self.os_map = [d._check_response for d in drivers]
-        self.auth_buffer = ''
-        self.set('os', 'unknown', 0)
+        self._logger = _logger
+        self._buffer_limit = 512
+        self._auth_os_map = [d._check_head for d in drivers]
+        self._netconf_os_map = [d._check_netconf for d in drivers]
+        self._protocol_os_map = [d._check_protocol for d in drivers]
+        self._response_os_map = [d._check_response for d in drivers]
+        self.debug = 0
+        self._init()
 
-    def reset(self, auth_buffer=''):
-        self.__init__()
-        self.auth_buffer = auth_buffer
+    def _init(self):
+        self._auth_buffer = ''
+        self._protocol_buffer = ''
+        self._response_buffer = ''
+        self._info = {"os": ("unknown", 0)}
+
+    def _dbg(self, level, msg, exc_info=None):
+        if level > self.debug:
+            return
+        self._logger.debug(msg, exc_info=exc_info)
+
+    def reset(self, auth_buffer='', protocol_buffer='', response_buffer=''):
+        """
+        Reset the guesser state and optionally pre-populate the monitoring buffers.
+        """
+        msg = "Reset with new buffers: auth=%r, protocol=%r, response=%r"
+        self._dbg(2, msg % (auth_buffer, protocol_buffer, response_buffer))
+        self._init()
+        self._auth_buffer = auth_buffer
+        self._protocol_buffer = protocol_buffer
+        self._response_buffer = response_buffer
 
     def set(self, key, value, confidence=100):
         """
@@ -58,11 +82,13 @@ class OsGuesser(object):
         """
         if value is None:
             return
-        if key in self.info:
-            old_confidence, old_value = self.info.get(key)
-            if old_confidence >= confidence:
-                return
-        self.info[key] = (confidence, value)
+        old_value, old_confidence = self._info.get(key, (None, None))
+        if old_confidence is not None and old_confidence >= confidence:
+            return
+        self._dbg(2, "Higher confidence for %s: %s with %s -> %s with %s" % (
+            key, old_value, old_confidence, value, confidence
+        ))
+        self._info[key] = (value, confidence)
 
     def set_from_match(self, key, regex_list, string):
         """
@@ -93,30 +119,55 @@ class OsGuesser(object):
         Returns the info with the given key, if it has at least the given
         confidence. Returns None otherwise.
         """
-        if key not in self.info:
+        if key not in self._info:
             return None
-        conf, value = self.info.get(key)
+        value, conf = self._info.get(key)
         if conf >= confidence:
             return value
         return None
 
-    def data_received(self, data, app_authentication_done):
-        # If the authentication procedure is complete, use the normal
-        # "runtime" matchers.
-        if app_authentication_done:
+    def check_received_data(self, data, authenticated):
+        """
+        Callback to search the received data for matching patterns.
+
+        The `authenticated` flag controls whether to also evaluate received data
+        from the authentication phase.
+        """
+        if not data:
+            return
+        if authenticated:
+            self._response_buffer += data
             # Stop looking if we are already 80 percent certain.
             if self.get('os', 80) in ('unknown', None):
-                self.set_from_match('os', self.os_map, data)
+                self._dbg(3, "Matching received data: %r" % self._response_buffer)
+                self.set_from_match('os', self._response_os_map, self._response_buffer)
+            self._response_buffer = self._response_buffer[-self._buffer_limit:]
             return
 
-        # Else, check the head that we collected so far.
-        self.auth_buffer += data
-        if self.debug:
-            print("DEBUG: Matching buffer:", repr(self.auth_buffer))
-        self.set_from_match('os', self.auth_os_map, self.auth_buffer)
-        self.set_from_match('os', self.os_map,      self.auth_buffer)
+        self._auth_buffer += data
+        self._dbg(3, "Matching authentication buffer: %r" % self._auth_buffer)
+        self.set_from_match('os', self._auth_os_map, self._auth_buffer)
+        self.set_from_match('os', self._response_os_map, self._auth_buffer)
+        self._auth_buffer = self._auth_buffer[-self._buffer_limit:]
 
-    def protocol_info(self, data):
-        if self.debug:
-            print("DEBUG: Protocol info:", repr(data))
-        self.set_from_match('os', self.protocol_os_map, data)
+    def check_protocol_info(self, data):
+        """
+        Callback to search the received protocol information for matching patterns.
+        """
+        if not data:
+            return
+        self._protocol_buffer += data
+        self._dbg(3, "Matching protocol info: %r" % self._protocol_buffer)
+        self.set_from_match('os', self._protocol_os_map, self._protocol_buffer)
+        self._protocol_buffer = self._protocol_buffer[-self._buffer_limit:]
+
+    def check_netconf_capabilities(self, capabilities):
+        """
+        Callback to search the received Netconf capabilities for matching patterns.
+        """
+        if not capabilities:
+            return
+        if not isinstance(capabilities, str):
+            capabilities = "\n".join(capabilities)
+        self._dbg(3, "Matching Netconf capabilities: %r" % capabilities)
+        self.set_from_match('os', self._netconf_os_map, capabilities)

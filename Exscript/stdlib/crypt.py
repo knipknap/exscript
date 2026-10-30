@@ -20,8 +20,8 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from Exscript.util import crypt
-from Exscript.stdlib.util import secure_function
+from ..util import crypt
+from .util import secure_function
 
 
 @secure_function
@@ -34,7 +34,7 @@ def otp(scope, password, seed, seqs):
     :type  password: string
     :param password: A password.
     :type  seed: string
-    :param seed: A username.
+    :param seed: A cryptographic seed.
     :type  seqs: int
     :param seqs: A sequence number, or a list of sequence numbers.
     :rtype:  string

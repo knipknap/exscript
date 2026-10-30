@@ -26,21 +26,22 @@ A driver for FortiOS devices.
 Created using a Fortigate device and FortiOS 5.0.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_user_re = [re.compile(r'[\r\n]Username: $')]
-_password_re = [re.compile(r'[\r\n]Password: $')]
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])Username: $')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
 _prompt_re = [
-    re.compile(r'^[a-zA-Z0-9-_ .]+ (?:\$|#) $'),  # first prompt
-    re.compile(r'[\r\n][a-zA-Z0-9-_ .]+ (?:\([A-Za-z0-9_/.-]+\) )?(?:\$|#) $')
+    re.compile(r'(?:\r\n|[\r\n])?[a-zA-Z0-9-_ .]+ (?:\([A-Za-z0-9_/.-]+\) )?(?:\$|#) $'),
 ]
 _fortios_re = [
-    _prompt_re[0],  # first prompt
-    re.compile(r'^[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+\'s password:')
+    _prompt_re[0],
+    re.compile(r'^[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+\'s password:'),
 ]
-_error_re = [re.compile(r'^Command fail.'),
-             re.compile(r'^object check operator error')
-             ]
+_error_re = [
+    re.compile(r'^Command fail.'),
+    re.compile(r'^object check operator error'),
+]
 
 # example errors:
 # invalid netmask.

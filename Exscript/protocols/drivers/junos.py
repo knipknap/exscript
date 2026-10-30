@@ -24,7 +24,8 @@
 A driver for devices running JunOS (by Juniper).
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
+
+from .driver import Driver
 
 # JunOS prompt examples:
 #   sab@DD-EA3>
@@ -48,17 +49,18 @@ from Exscript.protocols.drivers.driver import Driver
 #   pheller@fw1>
 #
 
-_user_re = [re.compile(r'[\r\n](?:[\-\w+]+ )?login: $')]
-_password_re = [re.compile(r'[\r\n](Local )?[Pp]assword: ?$')]
+_user_re = [re.compile(r'(?:\r\n|[\r\n])(?:[\-\w+]+ )?login: $')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])(Local )?[Pp]assword: ?$')]
 _mb = r'(?:\{master(?::\d+)?\}|\{backup(?::\d+)?\})'
 _ps = r'(?:\{primary:node\d+\}|\{secondary:node\d+\})'
 _re_re = r'(?:' + _mb + r'|' + _ps + r')'
 _edit = r'(?:\[edit[^\]\r\n]*\])'
-_prefix = r'(?:[\r\n]+' + _re_re + r'?' + _edit + r'?)'
-_prompt = r'[\r\n]+[\w\-\.]+@[\-\w+\.:]+[%>#] $'
+_prefix = r'(?:(?:\r\n|[\r\n])+' + _re_re + r'?' + _edit + r'?)'
+_prompt = r'(?:\r\n|[\r\n])+[\w\-\.]+@[\-\w+\.:]+[%>#] $'
 _prompt_re = [re.compile(_prefix + r'?' + _prompt)]
 _error_re = [re.compile(r'^(unknown|invalid|error|syntax error)', re.I)]
 _junos_re = re.compile(r'\bjunos\b', re.I)
+_netconf_caps_re = [re.compile(r"juniper\.net", re.I)]
 
 
 class JunOSDriver(Driver):
@@ -69,6 +71,7 @@ class JunOSDriver(Driver):
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.error_re = _error_re
+        self.netconf_capabilities_re = _netconf_caps_re
 
     def check_head_for_os(self, string):
         if _junos_re.search(string):

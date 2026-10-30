@@ -21,17 +21,20 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-A driver for Riverbed RIOS
+A driver for Riverbed RIOS.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
+
+from .driver import Driver
 
 _user_re = [re.compile(r'user ?name: ?$', re.I)]
-_password_re = [re.compile(r'(?:[\r\n]Password: ?|last resort password:)$')]
-_prompt_re = [re.compile(r'[\r\n][\-\w+\.:/]+\s?(?:\([^\)]+\))?\s+[>#]\s+$')]
-_error_re = [re.compile(r'%Error'),
-             re.compile(r'% Unrecognized', re.I),
-             re.compile(r'% Inactive', re.I)]
+_password_re = [re.compile(r'(?:(?:\r\n|[\r\n])Password: ?|last resort password:)$')]
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\-\w+\.:/]+\s?(?:\([^\)]+\))?\s+[>#]\s+$')]
+_error_re = [
+    re.compile(r'%Error'),
+    re.compile(r'% Unrecognized', re.I),
+    re.compile(r'% Inactive', re.I),
+]
 
 
 class RIOSDriver(Driver):

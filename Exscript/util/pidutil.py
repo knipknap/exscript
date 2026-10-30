@@ -23,11 +23,13 @@
 """
 Handling PID (process id) files.
 """
-from builtins import str
-import os
-import logging
-import fcntl
 import errno
+import fcntl
+import logging
+import os
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 
 def read(path):
@@ -42,7 +44,7 @@ def read(path):
     :return: The PID, or none if the file was not found.
     """
     # Try to read the pid from the pidfile.
-    logging.info("Checking pidfile '%s'", path)
+    _logger.info("Checking pidfile '%s'", path)
     try:
         return int(open(path).read())
     except IOError as xxx_todo_changeme:
@@ -91,7 +93,7 @@ def kill(path):
         return
 
     # Try to kill the process.
-    logging.info("Killing PID %s", pid)
+    _logger.info("Killing PID %s", pid)
     try:
         os.kill(pid, 9)
     except OSError as xxx_todo_changeme2:
@@ -110,7 +112,7 @@ def write(path):
     :param path: The name of the pidfile.
     """
     pid = os.getpid()
-    logging.info("Writing PID %s to '%s'", pid, path)
+    _logger.info("Writing PID %s to '%s'", pid, path)
     try:
         pidfile = open(path, 'wb')
         # get a non-blocking exclusive lock
@@ -134,7 +136,7 @@ def remove(path):
     :type  path: str
     :param path: The name of the pidfile.
     """
-    logging.info("Removing pidfile '%s'", path)
+    _logger.info("Removing pidfile '%s'", path)
     try:
         os.unlink(path)
     except IOError:

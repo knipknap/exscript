@@ -23,24 +23,16 @@
 """
 Tools for interacting with the user on the command line.
 """
-from __future__ import print_function, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import input
-from builtins import str
-from builtins import object
+import configparser
+import getpass
 import os
 import sys
-import getpass
-import configparser
-import codecs
-import shutil
-from tempfile import NamedTemporaryFile
+
 from .. import Account
 from .cast import to_list
 
 
-class InputHistory(object):
+class InputHistory:
 
     """
     When prompting a user for input it is often useful to record his
@@ -72,16 +64,9 @@ class InputHistory(object):
         """
         self.section = section
         self.parser = configparser.ConfigParser()
-        filename = os.path.expanduser(filename)
+        self.filename = os.path.expanduser(filename)
 
-        try:
-            self.file = open(filename, 'a+')
-        except IOError:
-            import warnings
-            warnings.warn('could not open %s, using tempfile' % filename)
-            self.file = NamedTemporaryFile()
-
-        self.parser.readfp(self.file)
+        self.parser.read(self.filename)
         if not self.parser.has_section(self.section):
             self.parser.add_section(self.section)
 
@@ -124,18 +109,8 @@ class InputHistory(object):
             return None
 
         self.parser.set(self.section, key, value)
-
-        # Unfortunately ConfigParser attempts to write a string to the file
-        # object, and NamedTemporaryFile uses binary mode. So we nee to create
-        # the tempfile, and then re-open it.
-        with NamedTemporaryFile(delete=False) as tmpfile:
-            pass
-        with codecs.open(tmpfile.name, 'w', encoding='utf8') as fp:
+        with open(self.filename, mode="w") as fp:
             self.parser.write(fp)
-
-        self.file.close()
-        shutil.move(tmpfile.name, self.file.name)
-        self.file = open(self.file.name)
         return value
 
 

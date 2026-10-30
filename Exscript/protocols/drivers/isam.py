@@ -24,16 +24,20 @@
 A driver for devices running ISAM (runs on Alcatel ISAM).
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
+
+from .driver import Driver
 
 _user_re = [re.compile(r'login: ?', re.I)]
-_password_re = [re.compile(r'[\r\n]password: ?', re.I)]
-_prompt_re = [re.compile(r'[\r\n][\- +\d+\w+\.]+(?:\([^\)]+\))?[>#] ?')]
-_error_re = [re.compile(r'%Error'),
-             re.compile(r'invalid token', re.I),
-             re.compile(r"command is not complete")]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])password: ?', re.I)]
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\- +\d+\w+\.]+(?:\([^\)]+\))?[>#] ?')]
+_error_re = [
+    re.compile(r'%Error'),
+    re.compile(r'invalid token', re.I),
+    re.compile(r"command is not complete"),
+]
 _isam_re = re.compile(
-    r"last login : \d{1,2}/\d{1,2}/\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}")
+    r"last login : \d{1,2}/\d{1,2}/\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}",
+)
 
 
 class IsamDriver(Driver):

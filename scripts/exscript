@@ -1,8 +1,5 @@
-#!/usr/bin/env python
-from __future__ import print_function
-from builtins import input
-from builtins import str
-from builtins import range
+#!/usr/bin/env python3
+"""TODO: Add missing doctring."""
 # Copyright (C) 2007-2010 Samuel Abels.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,206 +14,257 @@ from builtins import range
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys
+import argparse
+import getpass
+import importlib.util
 import os
 import re
-import imp
-import getpass
+import sys
+from pathlib import Path
+
 import Exscript.protocols.drivers
-from optparse import OptionParser, Option, OptionValueError
-from Exscript import Queue, Account, PrivateKey, __version__
+from Exscript import Account, PrivateKey, Queue
+from Exscript.logger import getConsoleLogger, setupLogging
 from Exscript.protocols import protocol_map
 from Exscript.util import template
-from Exscript.util.sigint import SigIntWatcher
-from Exscript.util.cast import to_list, to_host
+from Exscript.util.cast import to_host
+from Exscript.util.decorator import autologin
+from Exscript.util.file import (
+    get_accounts_from_file,
+    get_hosts_from_csv,
+    get_hosts_from_file,
+    load_lib,
+)
 from Exscript.util.interact import get_login
 from Exscript.util.log import log_to_file
-from Exscript.util.file import get_accounts_from_file, \
-                               get_hosts_from_file, \
-                               get_hosts_from_csv, \
-                               load_lib
-from Exscript.util.decorator import autologin
+from Exscript.util.sigint import SigIntWatcher
 
-bracket_expression_re = re.compile(r'^\{([^\]]*)\}$')
+_logger = getConsoleLogger("exscript-cli")
+
+bracket_expression = r"\{([^\]]*)\}"
+define_expression = rf"^\S+=(?:\S+|{bracket_expression})$"
+bracket_expression_re = re.compile(rf"^{bracket_expression}$")
+define_expression_re = re.compile(define_expression)
+
 
 def expand_bracket(value_name, value):
+    """TODO: Add missing doctring."""
     match = bracket_expression_re.match(value)
     if match is None:
         return value
-    prompt = match.group(1) or 'a value for "%s"' % value_name
-    if prompt.startswith('!'):
-        value = getpass.getpass('Please enter %s: ' % prompt[1:])
+    prompt = match.group(1) or f"a value for '{value_name}' "
+    if prompt.startswith("!"):
+        value = getpass.getpass(f"Please enter {prompt.lstrip('!')}: ")
     else:
-        value = eval(input('Please enter %s: ' % prompt))
+        value = input(f"Please enter {prompt.lstrip('#')}: ")
+        if prompt.startswith("#"):
+            try:
+                value = eval(value)
+            except (SyntaxError, NameError):
+                pass
     return value
 
+
 def expand_host_variables(host):
+    """TODO: Add missing doctring."""
     # Define host-specific variables.
     for key, value in list(host.get_all().items()):
         if isinstance(value, str):
             value = expand_bracket(key, value)
-        elif hasattr(value, '__iter__'):
+        elif hasattr(value, "__iter__"):
             for n in range(len(value)):
                 if not isinstance(value[n], str):
                     continue
                 value[n] = expand_bracket(key, value[n])
         host.set(key, value)
 
+
 def run():
+    """TODO: Add missing doctring."""
     # Parse options.
-    options, args = parser.parse_args(sys.argv)
-    args.pop(0)
+    args = parser.parse_args(sys.argv[1:])
 
     def mkhost(name):
-        return to_host(name,
-                       default_protocol = options.protocol,
-                       default_domain   = options.default_domain)
+        return to_host(
+            name,
+            default_protocol=args.protocol,
+            default_domain=args.default_domain,
+        )
 
     def mkhosts_from_file(filename):
-        return get_hosts_from_file(options.hosts,
-                                   default_protocol = options.protocol,
-                                   default_domain   = options.default_domain)
+        return get_hosts_from_file(
+            args.hosts,
+            default_protocol=args.protocol,
+            default_domain=args.default_domain,
+        )
 
     def mkhosts_from_csv(filename):
-        return get_hosts_from_csv(options.csv_hosts,
-                                  default_protocol = options.protocol,
-                                  default_domain   = options.default_domain)
+        return get_hosts_from_csv(
+            args.csv_hosts,
+            default_protocol=args.protocol,
+            default_domain=args.default_domain,
+        )
+
+    # Setup package logging.
+    setupLogging(
+        package=bool(args.verbose),
+        parser=bool(args.parser_verbose),
+        protocol=bool(args.protocol_verbose),
+    )
+
+    # Read the Exscript.
+    script_extra_content = ""  # init for later use
+    if args.execute:
+        script_content = args.execute
+    else:
+        if not args.filename:
+            parser.error("Missing template filename")
+        try:
+            with open(args.filename, "r") as fp:
+                script_content = fp.read()
+        except IOError as e:
+            parser.error(str(e))
 
     # Extract the hostnames out of the command line arguments.
-    filename = None
-    if not options.execute:
-        try:
-            filename = args.pop(0)
-        except IndexError:
-            parser.error('Missing filename')
-    hosts = [mkhost(h) for h in args]
+    if args.execute and args.filename:
+        args.host = [args.filename] + args.host
+    hosts = [mkhost(h) for h in args.host]
 
     # If a filename containing hostnames AND VARIABLES was given, read it.
-    if options.csv_hosts:
+    if args.csv_hosts:
         try:
-            csv_hosts = mkhosts_from_csv(options.csv_hosts)
+            path = Path(os.path.expandvars(args.csv_hosts)).expanduser()
+            csv_hosts = mkhosts_from_csv(path)
         except IOError as e:
             parser.error(str(e))
         if not csv_hosts:
-            print('Warning: %s is empty.' % options.csv_hosts)
+            print(f"Warning: {args.csv_hosts} is empty.")
         hosts += csv_hosts
 
     # If a filename containing hostnames was given, read it.
-    if options.hosts:
+    if args.hosts:
         try:
-            txt_hosts = mkhosts_from_file(options.hosts)
+            path = Path(os.path.expandvars(args.hosts)).expanduser()
+            txt_hosts = mkhosts_from_file(path)
         except IOError as e:
             parser.error(str(e))
         except ValueError as e:
             parser.error(e)
         if not txt_hosts:
-            print('Warning: %s is empty.' % options.hosts)
+            print(f"Warning: {args.hosts} is empty.")
         hosts += txt_hosts
 
     # If a filename of an Exscript driver was given, import it.
-    if options.load_driver:
-        print('Searching drivers in %s...' % options.load_driver)
-        name = os.path.splitext(os.path.basename(options.load_driver))[0]
+    if args.load_driver:
+        path = Path(os.path.expandvars(args.load_driver)).expanduser()
+        print(f"Searching drivers in {args.load_driver}...")
         try:
-            driver_module = imp.load_source(name, options.load_driver)
+            spec = importlib.util.spec_from_file_location(path.stem, path)
+            driver_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(driver_module)
         except IOError as e:
             parser.error(str(e))
-        except Exception as e:
-            sys.stderr.write('Error in driver ' + options.load_driver + '\n')
+        except Exception:
+            sys.stderr.write(f"Error in driver {args.load_driver}\n")
             raise
         for name, obj in list(driver_module.__dict__.items()):
             if Exscript.protocols.drivers.isdriver(obj):
                 Exscript.protocols.drivers.add_driver(obj)
-                print('Driver', repr(name), 'added.')
+                print(f"Driver {repr(name)} added.")
 
     # Make sure that all mandatory options are present.
     if not hosts:
-        parser.error('No hosts to connect to')
+        parser.error("No hosts to connect to")
 
     # Set host options.
     for host in hosts:
-        host.set_option('debug', options.protocol_verbose)
-        host.set_option('verify_fingerprint', not options.ssh_auto_verify)
-
-    # Read the Exscript.
-    if options.execute:
-        script_content = options.execute
-    else:
-        with open(filename, 'r') as fp:
-            script_content = fp.read()
+        host.set_option("debug", args.protocol_verbose)
+        if args.ssh_disabled_algs:
+            ssh_disabled_algs = {}
+            for algs_map in args.ssh_disabled_algs.split(";"):
+                key, algs = algs_map.split("=", maxsplit=1)
+                ssh_disabled_algs[key] = algs.split(",")
+            host.set_option("disabled_algorithms", ssh_disabled_algs)
+        if args.ssh_preferred_auth:
+            host.set_option("preferred_authentications", args.ssh_preferred_auth.split(","))
+        host.set_option("verify_fingerprint", not args.ssh_auto_verify)
 
     # Prepare the code that is executed after the user script has completed.
-    #FIXME: Move into the library, then use read_template_from_file instead of read_template().
-    if not options.no_auto_logout:
-        script_content += r'''
+    if not args.no_auto_logout:
+        script_extra_content += r"""
     ## Exscript generated commands. ##
-    {if connection.guess_os() is "vrp"}
-        {connection.sendline("quit")}
-    {else}
-        {connection.sendline("exit")}
-    {end}'''
+    {connection.close()}"""
 
     # Load extra functions.
     functions = {}
-    if options.lib:
+    if args.lib:
         try:
-            functions = load_lib(options.lib)
+            functions = load_lib(args.lib)
         except IOError as e:
             parser.error(str(e))
 
     # Test whether the template compiles.
+    template.debug = args.parser_verbose
     vars = functions.copy()
-    vars.update(options.define)
-    if filename:
-        vars['__filename__'] = filename
+    vars.update(args.define)
+    if args.filename:
+        vars["__filename__"] = args.filename
     vars.update(hosts[0].get_all())
     try:
         template.test(script_content, **vars)
+        template.test(script_extra_content, **vars)
     except Exception as e:
-        if options.parser_verbose > 0:
+        if args.parser_verbose > 0:
             raise
         parser.error(str(e))
+    script_content += script_extra_content
+    # NOTE: Disable debugging again until Parser logging is more than just dumping!
+    template.debug = 0
 
     # Create Exscript.
-    queue = Queue(domain      = options.default_domain,
-                  mode        = 'multiprocessing',
-                  host_driver = options.use_driver,
-                  verbose     = options.verbose,
-                  max_threads = options.connections)
+    # Switch to 'threading' mode to match API default.
+    # See also: https://github.com/knipknap/exscript/issues/230
+    queue = Queue(
+        domain=args.default_domain,
+        mode="threading",
+        host_driver=args.use_driver,
+        verbose=args.verbose,
+        max_threads=args.connections,
+    )
     default_pool = queue.account_manager.default_pool
 
     # Read the account pool file.
     try:
-        if options.account_pool:
-            accounts = get_accounts_from_file(options.account_pool)
+        if args.account_pool:
+            path = Path(os.path.expandvars(args.account_pool)).expanduser()
+            accounts = get_accounts_from_file(path)
             default_pool.add_account(accounts)
     except IOError as e:
         parser.error(str(e))
-    if options.account_pool and default_pool.n_accounts() == 0:
-        msg = r'WARNING: No accounts found in account pool file (%s)!'
-        print(msg % options.account_pool)
+    if args.account_pool and default_pool.n_accounts() == 0:
+        print(f"WARNING: No accounts found in account pool file ({args.account_pool})!")
 
     # Read username and password.
-    if options.non_interactive or default_pool.n_accounts() > 0:
-        user      = None
-        password  = None
+    if args.non_interactive or default_pool.n_accounts() > 0:
+        user = None
+        password = None
         password2 = None
     else:
         try:
             user, password = get_login()
         except KeyboardInterrupt:
             sys.exit(1)
-        if options.authorization:
-            prompt    = 'Please enter your authorization password: '
+        if args.authorization:
+            prompt = "Please enter your authorization password: "
             password2 = getpass.getpass(prompt)
         else:
             password2 = password
 
     # Read the SSH key.
-    if options.ssh_key:
-        print("Reading key from", options.ssh_key)
+    if args.ssh_key:
+        print(f"Reading key from {args.ssh_key}")
         try:
-            key = PrivateKey.from_file(options.ssh_key, password)
+            key = PrivateKey.from_file(args.ssh_key, password)
         except ValueError as e:
             parser.error(str(e))
         if user is None:
@@ -226,135 +274,151 @@ def run():
 
     # Add the account to the pool.
     if user is not None:
-        account = Account(user, password, password2, key = key)
+        account = Account(user, password, password2, key=key)
         default_pool.add_account(account)
 
     # Ask for values of marked variables.
     for host in hosts:
         expand_host_variables(host)
-    for key, val in list(options.define.items()):
-        options.define[key] = expand_bracket(key, val)
+    for key, val in list(args.define.items()):
+        args.define[key] = expand_bracket(key, val)
 
     # Choose the template processing type.
-    tmpl_vars = options.define
-    if options.no_prompt:
+    tmpl_vars = args.define
+    if args.no_prompt:
+
         def function(job, host, conn, **kwargs):
             kwargs.update(functions)
             kwargs.update(tmpl_vars)
+            if args.filename:
+                kwargs["__filename__"] = args.filename
             kwargs.update(host.get_all())
-            return template.paste(conn, script_content, **kwargs)
+            return template.paste(conn, script_content, args.no_escaping, **kwargs)
+
     else:
-        strip = not options.no_strip
+
         def function(job, host, conn, **kwargs):
             kwargs.update(functions)
             kwargs.update(tmpl_vars)
+            if args.filename:
+                kwargs["__filename__"] = args.filename
             kwargs.update(host.get_all())
-            return template.eval(conn, script_content, strip, **kwargs)
+            return template.eval(
+                conn, script_content, not args.no_strip, args.no_escaping, **kwargs
+            )
 
     # Wrap the template processor such that the login procedure is automated.
-    if not options.no_authentication:
-        attempts  = options.retry_login + 1
-        decorator = autologin(attempts = attempts)
-        function  = decorator(function)
+    if not args.no_authentication:
+        attempts = args.retry_login + 1
+        decorator = autologin(attempts=attempts)
+        function = decorator(function)
 
     # Wrap the template processor such that logging is enabled.
-    if options.logdir:
+    if args.logdir:
         # Create the log directory.
-        if not os.path.exists(options.logdir):
-            print('Creating log directory (%s)...' % options.logdir)
+        if not os.path.exists(args.logdir):
+            print(f"Creating log directory ({args.logdir})...")
             try:
-                os.makedirs(options.logdir)
+                os.makedirs(args.logdir)
             except IOError as e:
                 parser.error(str(e))
 
         # Enable logging.
-        mode      = options.overwrite_logs and 'w' or 'a'
-        decorator = log_to_file(options.logdir, mode, options.delete_logs)
-        function  = decorator(function)
+        mode = args.overwrite_logs and "w" or "a"
+        decorator = log_to_file(args.logdir, mode, args.delete_logs)
+        function = decorator(function)
 
     # Wait until the specified time. We are using os.system because
     # it allows for specifying absolute times, not just the number
     # of seconds like Python's time.sleep().
-    if options.sleep:
-        print("Waiting for %s..." % options.sleep, end='', flush=True)
-        os.system('sleep %s' % options.sleep)
+    if args.sleep:
+        print(f"Waiting for {args.sleep}...", end="", flush=True)
+        os.system(f"sleep {args.sleep}")
         print("time expired, starting script.")
 
     # Run the template.
-    for host in hosts:
-        queue.run(host, function, attempts = options.retry + 1)
+    queue.run(hosts, function, attempts=args.retry + 1)
     queue.join()
     failed = queue.failed
-    queue.destroy()
+    queue.destroy(force=True)
     return failed
 
+
 # Define command line option value types.
-def check_assignment(option, opt, value):
-    if not re.match(r'\S+=\S+', value):
-        raise OptionValueError('option %s: invalid value: %r' % (opt, value))
+def assignment(value, pattern=define_expression_re):
+    """TODO: Add missing doctring."""
+    if not pattern.match(value):
+        raise argparse.ArgumentTypeError(f"invalid value: {value}")
     return value
 
-def check_protocol(option, opt, value):
-    if value not in protocol_map:
-        raise OptionValueError('option %s: invalid value: %r' % (opt, value))
-    return value
 
-class AssignmentOption(Option):
-    # Define a new 'assignment' type for the '--define' command line option.
-    TYPES                      = Option.TYPES + ('assignment', 'protocol')
-    TYPE_CHECKER               = Option.TYPE_CHECKER.copy()
-    TYPE_CHECKER['assignment'] = check_assignment
-    TYPE_CHECKER['protocol']   = check_protocol
+class DefineAction(argparse.Action):
+    """TODO: Add missing doctring."""
 
-    # Define a new store action that parses 'assignment' values.
-    ACTIONS       = Option.ACTIONS + ('store_dict',)
-    STORE_ACTIONS = Option.STORE_ACTIONS + ('store_dict',)
-    TYPED_ACTIONS = Option.TYPED_ACTIONS + ('store_dict',)
-
-    def take_action(self, action, dest, opt, value, values, parser):
-        if action == "store_dict":
+    def __call__(self, parser, namespace, values, option_string=None):
+        """TODO: Add missing doctring."""
+        if type(values) == str:
+            values = [values]
+        d = getattr(namespace, self.dest)
+        for value in values:
             left, right = value.split("=")
-            values.ensure_value(dest, {})[left] = right
-            return
-        Option.take_action(self,
-                           action,
-                           dest,
-                           opt,
-                           value,
-                           values,
-                           parser)
+            if left.startswith('__') and left.endswith('__'):
+                parser.error('Assignment to internal variable %s' % repr(left))
+            d[left] = right
+        setattr(namespace, self.dest, d)
+
 
 # Define the command line syntax.
-usage  = '%prog [options] filename [hostname [hostname ...]]'
-usage += '\nCopyright (C) 2007-2010 by Samuel Abels.'
-parser = OptionParser(usage        = usage,
-                      version      = __version__,
-                      option_class = AssignmentOption)
+parser = argparse.ArgumentParser(epilog="\N{COPYRIGHT SIGN} 2007-2023 by Samuel Abels.")
 
-parser.add_option('--account-pool',
-                  dest    = 'account_pool',
-                  metavar = 'FILE',
-                  help    = '''
+parser.add_argument(
+    "filename",
+    default=None,
+    nargs="?",
+    help="""
+Filename of the template to be executed. Ignored with
+"-e/--execute" and taken as first positional host.
+""".strip(),
+)
+
+parser.add_argument(
+    "host",
+    default=list(),
+    nargs="*",
+    help="""
+List of hostnames.
+""".strip(),
+)
+
+parser.add_argument(
+    "--account-pool",
+    default=None,
+    metavar="FILE",
+    help="""
 Reads the user/password combination from the given file
 instead of prompting on the command line. The file may
 also contain more than one user/password combination, in
 which case the accounts are used round robin.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--connections', '-c',
-                  dest    = 'connections',
-                  type    = 'int',
-                  metavar = 'NUM',
-                  default = 1,
-                  help    = '''
+parser.add_argument(
+    "-c",
+    "--connections",
+    type=int,
+    metavar="NUM",
+    default=1,
+    help="""
 Maximum number of concurrent connections.
 NUM is a number between 1 and 20, default is 1.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--csv-hosts',
-                  dest    = 'csv_hosts',
-                  metavar = 'FILE',
-                  help    = '''
+parser.add_argument(
+    "--csv-hosts",
+    default=None,
+    metavar="FILE",
+    help="""
 Loads a list of hostnames and definitions from the given file.
 The first line of the file must have the column headers in the
 following syntax: "hostname [variable] [variable] ...", where
@@ -363,226 +427,315 @@ the fields are separated by tabs, "hostname" is the keyword
 column is accessed in the script.
 The following lines contain the hostname in the first column,
 and the values of the variables in the following columns.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--define', '-d',
-                  dest    = 'define',
-                  type    = 'assignment',
-                  action  = 'store_dict',
-                  default = {},
-                  metavar = 'PAIR',
-                  help    = '''
+parser.add_argument(
+    "-d",
+    "--define",
+    type=assignment,
+    action=DefineAction,
+    default=dict(),
+    metavar="PAIR",
+    help="""
 Defines a variable that is passed to the script.
 PAIR has the following syntax: STRING=STRING.
-'''.strip())
+Use a prompt with the following syntax: VAR={"PROMPT"}.
+Use a password prompt with the following syntax: VAR={\\!"PROMPT"}.
+Evaluate the value of a prompt with the following syntax: VAR={#"PROMPT"}.
+""".strip(),
+)
 
-parser.add_option('--default-domain',
-                  dest    = 'default_domain',
-                  metavar = 'STRING',
-                  default = '',
-                  help    = '''
+parser.add_argument(
+    "--default-domain",
+    metavar="STRING",
+    default="",
+    help="""
 The IP domain name that is used if a given hostname has no domain appended.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--delete-logs',
-                  dest    = 'delete_logs',
-                  action  = 'store_true',
-                  default = False,
-                  help    = 'Delete logs of successful operations when done.')
+parser.add_argument(
+    "--delete-logs",
+    action="store_true",
+    default=False,
+    help="Delete logs of successful operations when done.",
+)
 
-parser.add_option('--lib',
-                  dest    = 'lib',
-                  metavar = 'FILE',
-                  help    = '''
+parser.add_argument(
+    "--no-escaping",
+    action="store_true",
+    default=False,
+    help="""
+Disable additional evaluation of escaped control characters (NUL/BEL/BS/ESC/FF/VT),
+octal (\\ooo), hexadecimal (\\xhh) and unicode (\\uhhhh, \\Uhhhhhhhh) characters
+in the script. Evaluation of escaped CR, LF and TAB characters in strings is always
+enabled. This is irrelevant for RPC bodies in Netconf as XML does not support
+escaping (see XML entity syntax instead).
+""".strip(),
+)
+
+parser.add_argument(
+    "--lib",
+    default=None,
+    metavar="FILE",
+    help="""
 A python file containing a __lib__ dictionary that points to extra
 functions to be made available in the Exscript template.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--load-driver',
-                  dest    = 'load_driver',
-                  metavar = 'FILE',
-                  help    = '''
+parser.add_argument(
+    "--load-driver",
+    default=None,
+    metavar="FILE",
+    help="""
 A python file containing an Exscript driver class.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--use-driver',
-                  dest    = 'use_driver',
-                  default = None,
-                  help    = '''
+parser.add_argument(
+    "--use-driver",
+    default=None,
+    metavar="NAME",
+    help="""
 The name of an exscript driver to use for all connections (overriding os detection).
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--execute', '-e',
-                  dest    = 'execute',
-                  metavar = 'EXSCRIPT',
-                  help    = 'Interprets the given string as the script.')
+parser.add_argument(
+    "-e",
+    "--execute",
+    default=None,
+    metavar="EXSCRIPT",
+    help="""
+Interprets the given string as the script.
+""".strip(),
+)
 
-parser.add_option('--hosts',
-                  dest    = 'hosts',
-                  metavar = 'FILE',
-                  help    = '''
+parser.add_argument(
+    "--hosts",
+    default=None,
+    metavar="FILE",
+    help="""
 Loads a list of hostnames from the given file (one host per line).
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--non-interactive', '-i',
-                  dest    = 'non_interactive',
-                  action  = 'store_true',
-                  default = False,
-                  help    = '''
+parser.add_argument(
+    "-i",
+    "--non-interactive",
+    action="store_true",
+    default=False,
+    help="""
 Do not ask for a username or password, but still try to authenticate.
 May be used if the login credentials are passed as part of a URI formatted
 hostname.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--logdir', '-l',
-                  dest    = 'logdir',
-                  metavar = 'DIR',
-                  help    = '''
+parser.add_argument(
+    "-l",
+    "--logdir",
+    default=None,
+    metavar="DIR",
+    help="""
 Logs any communication into the directory with the given name.
 Each filename consists of the hostname with ".log" appended.
 Errors are written to a separate file, where the filename
 consists of the hostname with ".log.error" appended.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--no-authentication', '-n',
-                  dest    = 'no_authentication',
-                  action  = 'store_true',
-                  default = False,
-                  help    = '''
+parser.add_argument(
+    "-n",
+    "--no-authentication",
+    action="store_true",
+    default=False,
+    help="""
 When given, the automatic authentication procedure is skipped. Implies -i.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--authorization',
-                  dest    = 'authorization',
-                  action  = 'store_true',
-                  default = False,
-                  help    = '''
+parser.add_argument(
+    "--authorization",
+    action="store_true",
+    default=False,
+    help="""
 Ask for an authorization password in addition to the authentication password.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--no-auto-logout',
-                  dest    = 'no_auto_logout',
-                  action  = 'store_true',
-                  default = False,
-                  help    = '''
+parser.add_argument(
+    "--no-auto-logout",
+    action="store_true",
+    default=False,
+    help="""
 Do not attempt to execute the exit or quit command at the end of a script.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--no-prompt',
-                  dest    = 'no_prompt',
-                  action  = 'store_true',
-                  default = False,
-                  help    = '''
+parser.add_argument(
+    "--no-prompt",
+    action="store_true",
+    default=False,
+    help="""
 Do not wait for a prompt anywhere (except during the authentication
 procedure). Note that this will also cause Exscript to disable commands
 that require a prompt, such as "extract".
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--no-strip',
-                  dest    = 'no_strip',
-                  action  = 'store_true',
-                  default = False,
-                  help    = 'Do not strip the first line of each response.')
+parser.add_argument(
+    "--no-strip",
+    action="store_true",
+    default=False,
+    help="""
+Do not strip the command echo from each response. This is irrelevant for RPC
+bodies as Netconf does not echo commands.
+""".strip(),
+)
 
-parser.add_option('--overwrite-logs',
-                  dest    = 'overwrite_logs',
-                  action  = 'store_true',
-                  default = False,
-                  help    = '''
+parser.add_argument(
+    "--overwrite-logs",
+    action="store_true",
+    default=False,
+    help="""
 Instructs Exscript to overwrite existing logfiles. The default
 is to append the output if a log already exists.
-'''.strip())
+""".strip(),
+)
 
 protocols = list(protocol_map.keys())
 protocols.sort()
-parser.add_option('--protocol', '-p',
-                  dest    = 'protocol',
-                  type    = 'protocol',
-                  metavar = 'STRING',
-                  default = 'telnet',
-                  help    = '''
+parser.add_argument(
+    "-p",
+    "--protocol",
+    metavar="STRING",
+    default="ssh",
+    choices=protocols,
+    help=f"""
 Specify which protocol to use to connect to the remote host.
-Allowed values for STRING include: %s.
-The default protocol is telnet.
-'''.strip() % ', '.join(protocols))
+Allowed values for STRING include: {", ".join(protocols)}.
+The default protocol is ssh.
+""".strip(),
+)
 
-parser.add_option('--retry',
-                  dest    = 'retry',
-                  type    = 'int',
-                  metavar = 'NUM',
-                  default = 0,
-                  help    = '''
+parser.add_argument(
+    "--retry",
+    type=int,
+    metavar="NUM",
+    default=0,
+    help="""
 Defines the number of retries per host on failure. Default is 0.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--retry-login',
-                  dest    = 'retry_login',
-                  type    = 'int',
-                  metavar = 'NUM',
-                  default = 0,
-                  help    = '''
+parser.add_argument(
+    "--retry-login",
+    type=int,
+    metavar="NUM",
+    default=0,
+    help="""
 Defines the number of retries per host on login failure. Default is 0.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--sleep',
-                  dest    = 'sleep',
-                  metavar = 'TIME',
-                  default = '',
-                  help    = '''
+parser.add_argument(
+    "--sleep",
+    metavar="TIME",
+    default="",
+    help="""
 Waits for the specified time before running the script.
 TIME is a timespec as specified by the 'sleep' Unix command.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--ssh-auto-verify',
-                  dest    = 'ssh_auto_verify',
-                  action  = 'store_true',
-                  default = False,
-                  help    = '''
-Automatically confirms the 'Host key changed' SSH error 
+parser.add_argument(
+    "--ssh-auto-verify",
+    action="store_true",
+    default=False,
+    help="""
+Automatically confirms the 'Host key changed' SSH error
 message with 'yes'. Highly insecure and not recommended.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--ssh-key',
-                  dest    = 'ssh_key',
-                  metavar = 'FILE',
-                  help    = '''
+parser.add_argument(
+    "--ssh-disabled-algs",
+    default="",
+    metavar="STRING",
+    help="""
+Specify a mapping of disabled SSH algorithms according to Paramiko's
+SSHClient/Transport constructor. The syntax on the CLI goes like this:
+"ciphers=aes128-cbc,3des-cbc;pubkeys=ssh-rsa,ssh-dss". This will be
+parsed into a mapping as expected by the Paramiko constructor. Please
+refer to the "paramiko.Transport" documentation for details.
+""".strip(),
+)
+
+parser.add_argument(
+    "--ssh-preferred-auth",
+    default="",
+    metavar="STRING",
+    help="""
+Specify a comma-separated list of preferred SSH authentication
+types in the preferred order. This is equivalent to the
+"-o PreferredAuthentications" option of the openssh command
+line client and the corresponding SSH config option.
+The default is "publickey,keyboard-interactive,password" which
+is derived from the SSH config default value.
+""".strip(),
+)
+
+parser.add_argument(
+    "--ssh-key",
+    default=None,
+    metavar="FILE",
+    help="""
 Specify a key file that is passed to the SSH client.
 This is equivalent to using the "-i" parameter of the
 openssh command line client.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--verbose', '-v',
-                  dest    = 'verbose',
-                  type    = 'int',
-                  metavar = 'NUM',
-                  default = 1,
-                  help    = '''
+parser.add_argument(
+    "-v",
+    "--verbose",
+    type=int,
+    metavar="NUM",
+    default=1,
+    help="""
 Print out debug information about the queue.
 NUM is a number between 0 (min) and 5 (max). Default is 1.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--parser-verbose', '-V',
-                  dest    = 'parser_verbose',
-                  type    = 'int',
-                  metavar = 'NUM',
-                  default = 0,
-                  help    = '''
+parser.add_argument(
+    "-V",
+    "--parser-verbose",
+    type=int,
+    metavar="NUM",
+    default=0,
+    help="""
 Print out debug information about the Exscript template parser.
 NUM is a number between 0 (min) and 5 (max). Default is 0.
-'''.strip())
+""".strip(),
+)
 
-parser.add_option('--protocol-verbose',
-                  dest    = 'protocol_verbose',
-                  type    = 'int',
-                  metavar = 'NUM',
-                  default = 0,
-                  help    = '''
+parser.add_argument(
+    "--protocol-verbose",
+    type=int,
+    metavar="NUM",
+    default=0,
+    help="""
 Print out debug information about the network activity.
-NUM is a number between 0 (min) and 5 (max). Default is 1.
-'''.strip())
+NUM is a number between 0 (min) and 5 (max). Default is 0.
+""".strip(),
+)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     SigIntWatcher()
     failed = run()
     if failed != 0:
-        sys.exit('error: %d actions failed.' % failed)
+        sys.exit(f"error: {failed} actions failed.")

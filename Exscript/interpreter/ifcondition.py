@@ -20,22 +20,21 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import
-from ..parselib import Token
 import Exscript.interpreter.code
+
+from ..parselib import Token
 from .expression import Expression
 
 
 class IfCondition(Token):
 
     def __init__(self, lexer, parser, parent):
-        Token.__init__(self, 'If-condition', lexer, parser, parent)
+        Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
         # Expect an expression.
         lexer.expect(self, 'keyword', 'if')
         lexer.expect(self, 'whitespace')
         self.expression = Expression(lexer, parser, parent)
-        self.mark_end()
 
         # Body of the if block.
         self.if_block = Exscript.interpreter.code.Code(lexer, parser, parent)
@@ -45,6 +44,8 @@ class IfCondition(Token):
         # If there is no "else" statement, just return.
         lexer.skip(['whitespace', 'newline'])
         if not lexer.next_if('keyword', 'else'):
+            # End of statement.
+            self.mark_end(rstrip=True)
             return
 
         # If the "else" statement is followed by an "if" (=elif),
@@ -52,10 +53,15 @@ class IfCondition(Token):
         lexer.skip(['whitespace', 'newline'])
         if lexer.current_is('keyword', 'if'):
             self.else_block = IfCondition(lexer, parser, parent)
+            # End of statement.
+            self.mark_end(rstrip=True)
             return
 
         # There was no "elif", so we handle a normal "else" condition here.
         self.else_block = Exscript.interpreter.code.Code(lexer, parser, parent)
+
+        # End of statement.
+        self.mark_end(rstrip=True)
 
     def value(self, context):
         if self.expression.value(context)[0]:
@@ -70,4 +76,4 @@ class IfCondition(Token):
         self.if_block.dump(indent + 1)
         if self.else_block is not None:
             self.else_block.dump(indent + 1)
-        print((' ' * indent) + self.name, 'end.')
+        print((' ' * indent) + self.name, 'end')

@@ -1,5 +1,6 @@
-from Exscript.util.interact import read_login
+#!/usr/bin/env python3
 from Exscript.protocols import SSH2
+from Exscript.util.interact import read_login
 
 account = read_login()
 
@@ -8,7 +9,8 @@ conn.connect('localhost')
 conn.login(account)
 conn.execute('ls -l')
 
-print "Response was:", repr(conn.response)
+# Fetch a clean response (no command echo, no NUL/BEL/BS, no ANSI codes).
+print("Response was:", repr(conn.get_response()))
 
-conn.send('exit\r')
+# Close the session gracefully (driver sends logout command like 'exit')
 conn.close()

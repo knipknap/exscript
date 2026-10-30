@@ -23,7 +23,7 @@
 """
 The default driver that is used when the OS is not recognized.
 """
-from Exscript.protocols.drivers.driver import Driver
+from .driver import Driver
 
 
 class GenericDriver(Driver):

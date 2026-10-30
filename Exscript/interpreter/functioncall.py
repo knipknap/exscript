@@ -20,16 +20,16 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import
+import Exscript.interpreter.expression
+
 from ..parselib import Token
-from .expression import Expression
 from .exception import PermissionError
 
 
 class FunctionCall(Token):
 
     def __init__(self, lexer, parser, parent):
-        Token.__init__(self, 'FunctionCall', lexer, parser, parent)
+        Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.funcname = None
         self.arguments = []
 
@@ -39,35 +39,55 @@ class FunctionCall(Token):
         self.funcname = token[:-1]
         function = self.parent.get(self.funcname)
         if function is None:
-            lexer.syntax_error('Undefined function %s' % self.funcname, self)
+            self.mark_end(distance=len(self.funcname))
+            lexer.syntax_error('Undefined function %s' % repr(self.funcname), self)
+
+        if parser.secure_only and not hasattr(function, '_is_secure'):
+            self.mark_end(distance=len(self.funcname))
+            msg = 'Use of insecure function %s is not permitted' % repr(self.funcname)
+            lexer.error(msg, self, PermissionError)
 
         # Parse the argument list.
         _, token = lexer.token()
-        while 1:
+        while True:
             if lexer.next_if('close_bracket'):
                 break
-            self.arguments.append(Expression(lexer, parser, parent))
+            self.arguments.append(
+                Exscript.interpreter.expression.Expression(lexer, parser, parent)
+            )
             ttype, token = lexer.token()
             if not lexer.next_if('comma') and not lexer.current_is('close_bracket'):
-                error = 'Expected separator or argument list end but got %s'
-                lexer.syntax_error(error % ttype, self)
+                self.mark_start()
+                self.mark_end(distance=len(token))
+                msg = 'Expected comma or closing bracket but got %s %s'
+                lexer.syntax_error(msg % (ttype, repr(token)), self)
 
-        if parser.secure_only and not hasattr(function, '_is_secure'):
-            msg = 'Use of insecure function %s is not permitted' % self.funcname
-            lexer.error(msg, self, PermissionError)
-
-        self.mark_end()
+        # End of statement.
+        self.mark_end(rstrip=True)
 
     def dump(self, indent=0):
         print((' ' * indent) + self.name, self.funcname, 'start')
         for argument in self.arguments:
             argument.dump(indent + 1)
-        print((' ' * indent) + self.name, self.funcname, 'end.')
+        print((' ' * indent) + self.name, self.funcname, 'end')
 
     def value(self, context):
         argument_values = [arg.value(context) for arg in self.arguments]
         function = self.parent.get(self.funcname)
         if function is None:
+            self.mark_end(distance=len(self.funcname))
             self.lexer.runtime_error(
-                'Undefined function %s' % self.funcname, self)
-        return function(self.parent, *argument_values)
+                'Undefined function %s' % repr(self.funcname), self
+            )
+        try:
+            result = function(self.parent, *argument_values)
+        except Exception as e:
+            self.mark_end(distance=len(self.funcname))
+            self.lexer.runtime_error(
+                '%s while executing function %s: %s' % (
+                    type(e).__name__, repr(self.funcname), e
+                ),
+                self,
+            )
+        else:
+            return result

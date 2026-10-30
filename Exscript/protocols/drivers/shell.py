@@ -24,7 +24,8 @@
 A generic shell driver that handles unknown unix shells.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
+
+from .driver import Driver
 
 _user_re = [re.compile(r'(user|login): $', re.I)]
 _password_re = [re.compile(r'Password: ?$')]

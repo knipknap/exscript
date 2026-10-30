@@ -20,18 +20,18 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from Exscript.stdlib.util import secure_function
+from .util import secure_function
 
 
 @secure_function
-def new(scope):
+def new(scope, *args):
     """
-    Returns a new, empty list.
+    Returns a new list with optional initial values.
 
-    :rtype:  string
-    :return: The model of the remote device.
+    :rtype:  list
+    :return: A new list with optional initial values.
     """
-    return []
+    return [] + list(arg[0] for arg in args)
 
 
 @secure_function
@@ -39,8 +39,10 @@ def length(scope, mylist):
     """
     Returns the number of items in the list.
 
-    :rtype:  string
-    :return: The model of the remote device.
+    :type  mylist: list
+    :param mylist: A list of strings.
+    :rtype:  int
+    :return: The length
     """
     return [len(mylist)]
 
@@ -49,14 +51,14 @@ def length(scope, mylist):
 def get(scope, source, index):
     """
     Returns a copy of the list item with the given index.
-    It is an error if an item with teh given index does not exist.
+    It is an error if an item with the given index does not exist.
 
-    :type  source: string
+    :type  source: list
     :param source: A list of strings.
-    :type  index: string
-    :param index: A list of strings.
+    :type  index: int
+    :param index: The index of the item to retrieve.
     :rtype:  string
-    :return: The cleaned up list of strings.
+    :return: The string at the given index.
     """
     try:
         index = int(index[0])
@@ -69,6 +71,29 @@ def get(scope, source, index):
     except IndexError:
         raise ValueError('no such item in the list')
 
+@secure_function
+def sort(scope, source):
+    """
+    Returns a copy of the given list sorted in ascending order.
+
+    :type  source: list
+    :param source: A list of strings.
+    :rtype:  list
+    :return: The sorted list of strings.
+    """
+    return sorted(source)
+
+@secure_function
+def reverse(scope, source):
+    """
+    Returns a copy of the given list with the items in reverse order.
+
+    :type  source: list
+    :param source: A list of strings.
+    :rtype:  list
+    :return: The reversed list of strings.
+    """
+    return list(reversed(source))
 
 @secure_function
 def unique(scope, source):
@@ -76,9 +101,9 @@ def unique(scope, source):
     Returns a copy of the given list in which all duplicates are removed
     such that one of each item remains in the list.
 
-    :type  source: string
+    :type  source: list
     :param source: A list of strings.
-    :rtype:  string
+    :rtype:  list
     :return: The cleaned up list of strings.
     """
     return list(dict([(a, 1) for a in source]).keys())

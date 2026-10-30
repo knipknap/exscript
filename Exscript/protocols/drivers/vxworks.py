@@ -24,14 +24,18 @@
 A driver for devices running Vxworks, which can be found on huawei5600T
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
+
+from .driver import Driver
 
 _user_re = [re.compile(r'user ?name:', re.I)]
 _password_re = [re.compile(r'(?:User )?Password:', re.I)]
 _prompt_re = [
-    re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[>#] ?$|(?:\(y/n\)\[n\])')]
-_error_re = [re.compile(r'%Error'),
-             re.compile(r'(?:(?:Unknown|ambiguous|Incomplete) command)|Failure|Parameter error', re.I)]
+    re.compile(r'(?:\r\n|[\r\n])[\-\w+\.]+(?:\([^\)]+\))?[>#] ?$|(?:\(y/n\)\[n\])'),
+]
+_error_re = [
+    re.compile(r'%Error'),
+    re.compile(r'(?:(?:Unknown|ambiguous|Incomplete) command)|Failure|Parameter error', re.I),
+]
 
 _huawei_re = re.compile(r"Huawei Integrated Access Software", re.I)
 

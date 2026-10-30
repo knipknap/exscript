@@ -105,11 +105,11 @@ class MailTest(unittest.TestCase):
     def testGetBcc(self):
         pass  # see testSetBcc()
 
-    def testGetReceipients(self):
+    def testGetRecipients(self):
         self.mail.set_to('test1')
         self.mail.set_cc('test2')
         self.mail.set_bcc('test3')
-        self.assertEqual(self.mail.get_receipients(),
+        self.assertEqual(self.mail.get_recipients(),
                          ['test1', 'test2', 'test3'])
 
     def testSetSubject(self):

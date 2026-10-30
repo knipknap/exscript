@@ -24,10 +24,11 @@
 A driver for AIX.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_user_re = [re.compile(r'[\r\n]Authorized Login: $')]
-_password_re = [re.compile(r'[\r\n]\w+\'s Password: $')]
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])Authorized Login: $')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])\w+\'s Password: $')]
 _aix_re = re.compile(r'\bAIX\b')
 
 

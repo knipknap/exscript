@@ -24,12 +24,14 @@
 A driver for devices running Ericsson's Broadband Access Nodes (BAN) OS
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
+
+from .driver import Driver
 
 _user_re = [re.compile(r'user:', re.I)]
 _password_re = [re.compile(r'pass:', re.I)]
 _prompt_re = [
-    re.compile(r'[\r\n][\-\w+\.]+(?:\([^\)]+\))?[%#] ?$|(?:\(y/n\)\[n\])')]
+    re.compile(r'(?:\r\n|[\r\n])[\-\w+\.]+(?:\([^\)]+\))?[%#] ?$|(?:\(y/n\)\[n\])'),
+]
 _error_re = [re.compile(r'\(error\)')]
 
 _ban_re = re.compile(r"BLM\d+ - Broadband Loop Multiplexer", re.I)

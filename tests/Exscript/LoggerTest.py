@@ -1,18 +1,19 @@
-from builtins import next
-from builtins import str
+import os
+import re
 import sys
 import unittest
-import re
-import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import gc
 from itertools import islice
-from tempfile import mkdtemp
 from shutil import rmtree
-from Exscript.logger import Log, Logger
+from tempfile import mkdtemp
+
 from LogTest import FakeError
 from util.reportTest import FakeJob
+
+from Exscript.logger import Log, Logger
 
 
 def count(iterable):

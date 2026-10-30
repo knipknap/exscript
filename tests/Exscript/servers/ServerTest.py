@@ -1,14 +1,15 @@
-from builtins import str
+import os
+import re
 import sys
 import unittest
-import re
-import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import time
+
 from Exscript import Account
-from Exscript.servers.server import Server
 from Exscript.emulators import VirtualDevice
+from Exscript.servers.server import Server
 
 
 class ServerTest(unittest.TestCase):

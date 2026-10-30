@@ -21,16 +21,12 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-Defines the behavior of a device, as needed by :class:`Exscript.servers`.
+Defines the behavior of a virtual device, as needed by :class:`Exscript.servers`.
 """
-from __future__ import absolute_import, unicode_literals
-from builtins import range
-from builtins import object
-from builtins import str
 from . import CommandSet
 
 
-class VirtualDevice(object):
+class VirtualDevice:
 
     """
     An object that emulates a remote device.
@@ -53,7 +49,6 @@ class VirtualDevice(object):
         """
         :type  hostname: str
         :param hostname: The hostname, used for the prompt.
-
         :param echo: bool
         :keyword echo: whether to echo the command in a response.
         :param login_type: int
@@ -89,10 +84,10 @@ class VirtualDevice(object):
             self.logged_in = True
             return self.prompt
         else:
-            raise Exception('invalid prompt stage')
+            raise RuntimeError('invalid prompt stage')
 
     def _create_autoprompt_handler(self, handler):
-        if hasattr(handler, '__call__'):
+        if callable(handler):
             return lambda x: handler(x) + '\n' + self._get_prompt()
         else:
             return lambda x: handler + '\n' + self._get_prompt()
@@ -133,30 +128,24 @@ class VirtualDevice(object):
         :type  handler: function|str
         :param handler: A string, or a response handler.
         :type  prompt: bool
-        :param prompt: Whether to show a prompt after completing the command.
+        :param prompt: Whether to append a prompt to the response.
         """
-        if prompt:
-            thehandler = self._create_autoprompt_handler(handler)
-        else:
-            thehandler = handler
-        self.commands.add(command, thehandler)
+        deco = self._create_autoprompt_handler if prompt else None
+        self.commands.add(command, handler, deco)
 
-    def add_commands_from_file(self, filename, autoprompt=True):
+    def add_commands_from_file(self, filename, prompt=True):
         """
-        Wrapper around add_command_handler that reads the handlers from the
+        Wrapper around add_command that reads the response handlers from the
         file with the given name. The file is a Python script containing
         a list named 'commands' of tuples that map command names to
-        handlers.
+        response handlers.
 
         :type  filename: str
         :param filename: The name of the file containing the tuples.
-        :type  autoprompt: bool
-        :param autoprompt: Whether to append a prompt to each response.
+        :type  prompt: bool
+        :param prompt: Whether to append a prompt to each response.
         """
-        if autoprompt:
-            deco = self._create_autoprompt_handler
-        else:
-            deco = None
+        deco = self._create_autoprompt_handler if prompt else None
         self.commands.add_from_file(filename, deco)
 
     def init(self):
@@ -194,4 +183,5 @@ class VirtualDevice(object):
         response = self.commands.eval(command)
         if response is None:
             return echo + '\n' + self._get_prompt()
+        # Response or its handler was wrapped to add the prompt automatically!
         return echo + response

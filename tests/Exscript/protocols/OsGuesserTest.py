@@ -1,11 +1,12 @@
+import os
+import re
 import sys
 import unittest
-import re
-import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from Exscript.protocols.osguesser import OsGuesser
 from Exscript.protocols import drivers
+from Exscript.protocols.osguesser import OsGuesser
 
 
 class OsGuesserTest(unittest.TestCase):
@@ -61,7 +62,7 @@ class OsGuesserTest(unittest.TestCase):
     def testGet(self):
         pass  # See testSet().
 
-    def testDataReceived(self):
+    def testCheckReceivedData(self):
         dirname = os.path.dirname(__file__)
         banner_dir = os.path.join(dirname, 'banners')
         for file in os.listdir(banner_dir):
@@ -75,18 +76,27 @@ class OsGuesserTest(unittest.TestCase):
                 banner = fp.read().rstrip('\n')
             osg = OsGuesser()
             for char in banner:
-                osg.data_received(char, False)
+                osg.check_received_data(char, False)
             self.assertEqual(osg.get('os'), osname)
 
-    def testProtocolInfo(self):
+    def testCheckProtocolInfo(self):
         osg = OsGuesser()
-        osg.protocol_info('')
+        osg.check_protocol_info('')
         self.assertEqual(osg.get('os'), "unknown")
-        osg.protocol_info(None)
+        osg.check_protocol_info(None)
         self.assertEqual(osg.get('os'), "unknown")
-        osg.protocol_info("SSH-2.0-Cisco-1.25")
+        osg.check_protocol_info("SSH-2.0-Cisco-1.25")
         self.assertEqual(osg.get('os'), "ios")
-        pass
+
+    def testCheckNetconfCapabilities(self):
+        osg = OsGuesser()
+        osg.check_netconf_capabilities([
+            'urn:ietf:params:netconf:base:1.0',
+            'urn:ietf:params:netconf:capability:candidate:1.0',
+            'urn:ietf:params:netconf:capability:confirmed-commit:1.0',
+            'http://xml.juniper.net/netconf/junos/1.0'
+        ])
+        self.assertEqual(osg.get('os'), "junos")
 
 
 def suite():

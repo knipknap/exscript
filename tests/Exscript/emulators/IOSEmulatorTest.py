@@ -1,13 +1,14 @@
-from __future__ import absolute_import
+import os.path
+import re
 import sys
 import unittest
-import re
-import os.path
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from .VirtualDeviceTest import VirtualDeviceTest
 from Exscript.emulators import IOSEmulator
 from Exscript.emulators.iosemu import iosbanner
+
+from .VirtualDeviceTest import VirtualDeviceTest
 
 
 class IOSEmulatorTest(VirtualDeviceTest):
@@ -28,7 +29,7 @@ class IOSEmulatorTest(VirtualDeviceTest):
 
         response = cs.do('show version')
         self.assertTrue(response.startswith(
-            'Cisco Internetwork Operating'), response)
+            '\nCisco Internetwork Operating'), response)
 
 
 def suite():

@@ -1,4 +1,5 @@
-future
 configparser
+lxml
+ncclient>=0.7,<1
+paramiko>=2.2,<5
 pycryptodomex
-paramiko>=1.17,<5

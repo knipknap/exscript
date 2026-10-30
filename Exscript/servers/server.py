@@ -23,14 +23,21 @@
 """
 Base class for all servers.
 """
-from __future__ import print_function
-from builtins import str
+import logging
 import select
 import socket
-from multiprocessing import Process, Pipe
+import threading
+from multiprocessing import Pipe
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 
-class Server(Process):
+# This formerly was derived from multiprocessing.Process but as POSIX Python
+# does not support child processes in threaded environments/apps, we had to
+# switch to threaded servers too. This will hopefully add more stability to the
+# test suite.
+class Server(threading.Thread):
 
     """
     Base class of the Telnet and SSH servers. Servers are intended to be
@@ -52,36 +59,38 @@ class Server(Process):
 
         :type  host: str
         :param host: The address against which the daemon binds.
-        :type  port: str
+        :type  port: int
         :param port: The TCP port on which to listen.
         :type  device: VirtualDevice
         :param device: A virtual device instance.
         :type encoding: str
         :param encoding: The encoding of data between client and server.
         """
-        Process.__init__(self, target=self._run)
+        threading.Thread.__init__(self, target=self._run, daemon=True)
+        self._logger = _logger
+        self.name = '%s-%s:%s' % (self._get_server_type(), host, port)
         self.host = host
         self.port = int(port)
         self.timeout = .5
         self.dbg = 0
         self.running = False
-        self.buf = b''
         self.socket = None
-        self.device = device
+        self.device = device  # Shared device does not support concurrent connections!
         self.encoding = encoding
         self.to_child, self.to_parent = Pipe()
         self.processes = []
 
-    def _dbg(self, level, msg):
-        if self.dbg >= level:
-            print(self.host + ':' + str(self.port), '-', end=' ')
-            print(msg)
+    def _dbg(self, level, msg, exc_info=None):
+        if level > self.dbg:
+            return
+        self._logger.debug(msg, exc_info=exc_info)
 
     def _poll_child_process(self):
         if not self.to_parent.poll():
             return False
         try:
             msg = self.to_parent.recv()
+            self._dbg(1, 'Received command via pipe from parent: %s' % repr(msg))
         except socket.error:
             self.running = False
             return False
@@ -95,34 +104,51 @@ class Server(Process):
     def _handle_connection(self, conn):
         raise NotImplementedError()
 
+    def _get_server_type(self):
+        return type(self).__name__.lower()
+
     def _run(self):
+        self._dbg(1, 'Starting the %s server.' % self._get_server_type())
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((self.host, self.port))
         self.socket.listen(1)
         self.running = True
+        self._dbg(1, 'Server bound to: %s:%s' % (self.host, self.port))
 
-        while self.running:
-            self._poll_child_process()
+        try:
+            while self.running:
+                self._poll_child_process()
+                # Purge finished handlers to void zombie accumulation.
+                self.processes = [p for p in self.processes if p.is_alive()]
 
-            r, w, x = select.select([self.socket], [], [], self.timeout)
-            if not r:
-                continue
+                r, w, x = select.select([self.socket], [], [], self.timeout)
+                if not r:
+                    continue
 
-            conn, addr = self.socket.accept()
-            proc = Process(target=self._handle_connection, args=(conn,))
-            self.processes.append(proc)
-            proc.start()
-
-        for proc in self.processes:
-            proc.join()
-        self.processes = []
-        self.socket.close()
+                conn, addr = self.socket.accept()
+                self._dbg(1, 'Accepted connection from: %s:%s' % (addr[0], addr[1]))
+                proc = threading.Thread(
+                    target=self._handle_connection,
+                    args=(conn,),
+                    name='%s-handler-%s:%s' % (
+                        self._get_server_type(), addr[0], addr[1]
+                    ),
+                    daemon=True,
+                )
+                self.processes.append(proc)
+                proc.start()
+        finally:
+            for proc in self.processes:
+                proc.join()
+            self.processes = []
+            self.socket.close()
 
     def exit(self):
         """
         Stop the daemon without waiting for the thread to terminate.
         """
+        self._dbg(1, 'Shutdown the %s server.' % self._get_server_type())
         self.to_child.send('shutdown')
 
     def exit_command(self, cmd):

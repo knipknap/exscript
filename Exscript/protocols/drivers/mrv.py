@@ -24,12 +24,13 @@
 A driver for MRV Linux.
 """
 import re
-from Exscript.protocols.drivers.driver import Driver
 
-_user_re = [re.compile(r'[\r\n]Authorized Login: $')]
-_password_re = [re.compile(r'[\r\n]Password: $')]
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])Authorized Login: $')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
 _mrv_re = re.compile(r'\bMRV\b')
-_prompt_re = [re.compile(r'[\r\n]+[^$\r\n]+\$ ?$')]
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])+[^$\r\n]+\$ ?$')]
 
 
 class MRVDriver(Driver):

@@ -1,10 +1,13 @@
-*.py[co]
+.coverage
+.mypy_cache
+.tox
+.venv
 *.egg-info
+*.py[co]
 *.swp
 *~
-config.xml
 build
+config.xml
 dist
+run_suite.log
 unit_test.cfg
-.tox
-.coverage

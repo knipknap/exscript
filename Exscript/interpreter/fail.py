@@ -20,32 +20,37 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from __future__ import print_function, absolute_import
 from ..parselib import Token
-from .expression import Expression
 from .exception import FailException
+from .expression import Expression
 
 
 class Fail(Token):
 
     def __init__(self, lexer, parser, parent):
-        Token.__init__(self, 'Fail', lexer, parser, parent)
+        Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.expression = None
 
         # "fail" keyword.
         lexer.expect(self, 'keyword', 'fail')
         lexer.expect(self, 'whitespace')
+        # The later expression token skips all whitespaces and newlines, so we must
+        # fail on newlines here to keep the first expression term on the first line.
+        if lexer.current_is('newline'):
+            ttype, token = lexer.token()
+            self.mark_start()
+            self.mark_end(distance=len(token))
+            msg = 'Expected expression but got %s %s' % (ttype, repr(token))
+            lexer.syntax_error(msg, self)
         self.msg = Expression(lexer, parser, parent)
 
-        # 'If' keyword with an expression.
-        # token = lexer.token()
+        # "if" keyword with an expression.
         if lexer.next_if('keyword', 'if'):
             lexer.expect(self, 'whitespace')
             self.expression = Expression(lexer, parser, parent)
 
-        # End of expression.
-        self.mark_end()
-        lexer.skip(['whitespace', 'newline'])
+        # End of statement.
+        self.mark_end(rstrip=True)
 
     def value(self, context):
         if self.expression is None or self.expression.value(context)[0]:
@@ -55,5 +60,6 @@ class Fail(Token):
     def dump(self, indent=0):
         print((' ' * indent) + self.name, 'start')
         self.msg.dump(indent + 1)
-        self.expression.dump(indent + 1)
-        print((' ' * indent) + self.name, 'end.')
+        if self.expression:
+            self.expression.dump(indent + 1)
+        print((' ' * indent) + self.name, 'end')

@@ -23,14 +23,14 @@
 """
 A client that talks to a :class:`Exscript.emulators.VirtualDevice`.
 """
-from __future__ import absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
+
+import logging
+
 from ..emulators import VirtualDevice
 from .protocol import Protocol
-from .exception import TimeoutException, DriverReplacedException, \
-        ExpectCancelledException
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 
 class Dummy(Protocol):
@@ -46,13 +46,17 @@ class Dummy(Protocol):
             Also supports all keyword arguments that :class:`Protocol` supports.
 
         :keyword device: The :class:`Exscript.emulators.VirtualDevice` with
-            which to communicate.
+            which to communicate. If not given, a default device is created.
         """
         Protocol.__init__(self, **kwargs)
+        # Module-Level
+        self._logger = _logger
+        # Internals
+        self._default_port = 54321  # virtual port for testing
+        self._init_done = False
+        # Public
+        self.connect_rate_limit = 0
         self.device = device
-        self.init_done = False
-        self.cancel = False
-        self.response = None
         if not self.device:
             self.device = VirtualDevice('dummy', strict=False)
 
@@ -63,17 +67,16 @@ class Dummy(Protocol):
         self._doinit()
 
         # Cancelled by a callback during self._say().
-        if self.cancel:
-            self.cancel = False
+        if self._expect_canceled:
             return -2, None, self.response
 
         # Look for a match in the buffer.
         for i, prompt in enumerate(prompt_list):
-            matches = prompt.search(str(self.buffer))
+            matches = prompt.search(str(self._buffer))
             if matches is not None:
-                self.response = self.buffer.head(matches.start())
+                self.response = self._buffer.head(matches.start())
                 if flush:
-                    self.buffer.pop(matches.end())
+                    self._buffer.pop(matches.end())
                 return i, matches, self.response
 
         # "Timeout".
@@ -81,20 +84,17 @@ class Dummy(Protocol):
 
     def _say(self, string):
         self._receive_cb(string)
-        self.buffer.append(string)
+        self._buffer.append(string)
 
-    def cancel_expect(self):
-        self.cancel = True
-
-    def _connect_hook(self, hostname, port):
+    def _connect(self):
         # To more correctly mimic the behavior of a network device, we
         # do not send the banner here, but in authenticate() instead.
-        self.buffer.clear()
+        self._buffer.clear()
         return True
 
     def _doinit(self):
-        if not self.init_done:
-            self.init_done = True
+        if not self._init_done:
+            self._init_done = True
             self._say(self.device.init())
 
     def _protocol_authenticate(self, user, password):
@@ -103,34 +103,30 @@ class Dummy(Protocol):
     def _protocol_authenticate_by_key(self, user, key):
         self._doinit()
 
-    def send(self, data):
-        self._dbg(4, 'Sending %s' % repr(data))
-        self._say(self.device.do(data))
+    def _send(self, data):
+        response = self.device.do(data)
+        self._send_cb(data)
+        self._say(response)
 
     def _domatch(self, prompt, flush):
         # Wait for a prompt.
         result, match, self.response = self._expect_any(prompt, flush)
 
         if match:
-            self._dbg(2, "Got a prompt, match was %s" % repr(match.group()))
-        else:
-            self._dbg(2, "No prompt match")
-
-        self._dbg(5, "Response was %s" % repr(str(self.buffer)))
+            self._dbg(2, "Got a prompt, match was: %s" % repr(match.group()))
+            self._dbg(4, "Response (flush=%s): %s" % (repr(flush), repr(self.response)))
 
         if result == -1:
-            error = 'Error while waiting for response from device'
-            raise TimeoutException(error)
+            self._raise_on_response_timeout()
         if result == -2:
-            if self.driver_replaced:
-                self.driver_replaced = False
-                raise DriverReplacedException()
-            else:
-                raise ExpectCancelledException()
-
+            self._raise_on_canceled_expect()
+        if self.response is None:
+            self._raise_on_response_eof()
         return result, match
 
-    def close(self, force=False):
+    def _logout(self):
+        pass
+
+    def _close(self, force=False):
         self._say('\n')
-        self.buffer.clear()
-        super(Dummy, self).close()
+        self._init_done = False

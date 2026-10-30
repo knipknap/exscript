@@ -1,8 +1,8 @@
-from builtins import range
+import os.path
+import re
 import sys
 import unittest
-import re
-import os.path
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from Exscript import Account

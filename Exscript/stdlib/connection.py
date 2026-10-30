@@ -20,8 +20,8 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from Exscript import Account
-from Exscript.stdlib.util import secure_function
+from ..account import Account
+from .util import secure_function
 
 
 @secure_function
@@ -121,15 +121,19 @@ def autoinit(scope):
 
 
 @secure_function
-def close(scope):
+def close(scope, force=[False]):
     """
-    Closes the existing connection with the remote host. This function is
-    rarely used, as normally Exscript closes the connection automatically
+    Closes the existing connection with the remote host gracefully, sending
+    the driver-specific logout command first. This function is rarely used
+    from templates, as normally Exscript closes the connection automatically
     when the script has completed.
+
+    :type  force: boolean
+    :param force: Whether the connection is closed without logout.
     """
     conn = scope.get('__connection__')
-    conn.close(1)
-    scope.define(__response__=conn.response)
+    conn.close(force=force[0])
+    scope.define(__response__=conn.get_response().split('\n'))
     return True
 
 
@@ -152,7 +156,7 @@ def exec_(scope, data):
     for line in data:
         conn.send(line)
         conn.expect_prompt()
-        response += conn.response.split('\n')[1:]
+        response += conn.get_response().split('\n')
     scope.define(__response__=response)
     return True
 
@@ -160,8 +164,7 @@ def exec_(scope, data):
 @secure_function
 def execline(scope, data):
     """
-    Like exec(), but appends a newline to the command in data before sending
-    it.
+    Like exec(), but appends a newline to the data before sending it.
 
     :type  data: string
     :param data: The data that is sent.
@@ -169,10 +172,26 @@ def execline(scope, data):
     conn = scope.get('__connection__')
     response = []
     for line in data:
-        conn.execute(line)
-        response += conn.response.split('\n')[1:]
+        conn.send(line + '\r')
+        conn.expect_prompt()
+        response += conn.get_response().split('\n')
     scope.define(__response__=response)
     return True
+
+
+@secure_function
+def get_protocol(scope):
+    """
+    Returns the name of the connection protocol.
+
+    This is the class name of the protocol adapter in lower-case without
+    any trailing digits.
+
+    :rtype:  string
+    :return: The connection protocol.
+    """
+    conn = scope.get('__connection__')
+    return [conn.get_protocol()]
 
 
 @secure_function
@@ -195,7 +214,7 @@ def guess_os(scope):
 def send(scope, data):
     """
     Like exec(), but does not wait for a response of the remote host after
-    sending the command.
+    sending the data.
 
     :type  data: string
     :param data: The data that is sent.
@@ -203,6 +222,7 @@ def send(scope, data):
     conn = scope.get('__connection__')
     for line in data:
         conn.send(line)
+    scope.define(__response__=conn.get_response().split('\n'))
     return True
 
 
@@ -210,7 +230,7 @@ def send(scope, data):
 def sendline(scope, data):
     """
     Like execline(), but does not wait for a response of the remote host after
-    sending the command.
+    sending the data.
 
     :type  data: string
     :param data: The data that is sent.
@@ -218,6 +238,23 @@ def sendline(scope, data):
     conn = scope.get('__connection__')
     for line in data:
         conn.send(line + '\r')
+    scope.define(__response__=conn.get_response().split('\n'))
+    return True
+
+
+@secure_function
+def expect(scope, prompt):
+    """
+    Waits until the response of the remote host contains the given pattern.
+
+    Does consume the prompt, can be run only once, then it fails with a timeouts.
+
+    :type  prompt: regex
+    :param prompt: The prompt pattern.
+    """
+    conn = scope.get('__connection__')
+    conn.expect(prompt)
+    scope.define(__response__=conn.get_response().split('\n'))
     return True
 
 
@@ -226,12 +263,14 @@ def wait_for(scope, prompt):
     """
     Waits until the response of the remote host contains the given pattern.
 
+    Does not consume the prompt, can be rerun multiple times.
+
     :type  prompt: regex
     :param prompt: The prompt pattern.
     """
     conn = scope.get('__connection__')
-    conn.expect(prompt)
-    scope.define(__response__=conn.response)
+    conn.waitfor(prompt)
+    scope.define(__response__=conn.get_response().split('\n'))
     return True
 
 
@@ -252,7 +291,22 @@ def set_prompt(scope, prompt=None):
     :param prompt: The prompt pattern.
     """
     conn = scope.get('__connection__')
-    conn.set_prompt(prompt)
+    conn.set_prompt(prompt, extend=False)
+    return True
+
+
+@secure_function
+def add_prompt(scope, prompt):
+    """
+    Extends the current list of patterns, that are recognized at any future time
+    when Exscript needs to wait for a prompt, each time when called. Use
+    set_prompt() instead to replace the current/default pattern.
+
+    :type  prompt: regex
+    :param prompt: The additional prompt pattern.
+    """
+    conn = scope.get('__connection__')
+    conn.set_prompt(prompt, extend=True)
     return True
 
 
@@ -270,7 +324,22 @@ def set_error(scope, error_re=None):
     :param error_re: The error pattern.
     """
     conn = scope.get('__connection__')
-    conn.set_error_prompt(error_re)
+    conn.set_error_prompt(error_re, extend=False)
+    return True
+
+
+@secure_function
+def add_error(scope, error_re):
+    """
+    Extends the list of patterns, that, whenever detected in the response of the
+    remote host, cause an error to be raised. Use set_error() instead to replace
+    the current/default pattern.
+
+    :type  error_re: regex
+    :param error_re: The additional error pattern.
+    """
+    conn = scope.get('__connection__')
+    conn.set_error_prompt(error_re, extend=True)
     return True
 
 

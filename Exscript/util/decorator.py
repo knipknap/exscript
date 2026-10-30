@@ -23,9 +23,8 @@
 """
 Decorators for callbacks passed to Queue.run().
 """
-from __future__ import absolute_import
-from .impl import add_label, get_label, copy_labels
 from ..protocols.exception import LoginFailure
+from .impl import add_label, copy_labels, get_label  # noqa: F401
 
 
 def bind(function, *args, **kwargs):

@@ -23,24 +23,103 @@
 """
 Logging to memory.
 """
-from __future__ import print_function, absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import filter
-from builtins import str
-from builtins import object
-import os
+
 import errno
+import logging
+import os
+import threading
+import time
 import weakref
+from collections import defaultdict
 from io import StringIO
 from itertools import chain
-from collections import defaultdict
+
 from .util.impl import format_exception
 
-logger_registry = weakref.WeakValueDictionary() # Map id(logger) to Logger.
+# -----------------------------------------------------------------------------
+# Python Logging
+
+LOGGING_FORMAT = "%(levelname)s: %(name)s (%(threadName)s) %(message)s"
+LOGGING_LEVEL = logging.DEBUG
 
 
-class Log(object):
+def getConsoleLogger(name, *, level=LOGGING_LEVEL, fmt=LOGGING_FORMAT, utc=True):
+    """Get the console logger with the given name.
+
+    This function is not related to the host logging mechanics of Exscript.
+    Instead it configures the logging for the particular Python logger instance.
+    """
+    logger = logging.getLogger(name)
+
+    for hdlr in logger.handlers:
+        if type(hdlr) is logging.StreamHandler:
+            return logger
+
+    _fmt = logging.Formatter(fmt)
+    if utc:
+        _fmt.converter = time.gmtime
+
+    _console = logging.StreamHandler()
+    _console.setFormatter(_fmt)
+    _console.setLevel(level)
+
+    logger.addHandler(_console)
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+    return logger
+
+
+def setupLogging(*, package=False, parser=False, protocol=False, init=getConsoleLogger):
+    """Setup the package logging.
+
+    By default the setup adds a console/terminal handler to make the logs visible.
+    The relevant loggers get filtered according to the boolean flags.
+    """
+
+    class _LogFilter:
+
+        def __init__(self, name, enabled):
+            self.name = name
+            self.enabled = enabled
+
+        def filter(self, record):
+            if record.name == self.name:
+                return self.enabled
+            if record.name.startswith(self.name + "."):
+                return self.enabled
+            return False
+
+    states = {
+        "Exscript": package,
+        "Exscript.interpreter.parser": parser,
+        "Exscript.parselib.lexer": parser,
+        "Exscript.protocols": protocol,
+        "Exscript.servers": protocol,
+        # Netconf Client
+        "ncclient.capabilities": protocol,
+        "ncclient.devices": protocol,
+        "ncclient.manager": protocol,
+        "ncclient.operations": protocol,
+        "ncclient.transport.session": protocol,
+        "ncclient.transport.ssh": protocol,
+        # Paramiko
+        "paramiko.transport": protocol,
+    }
+
+    for name, enabled in states.items():
+        logger = init(name)
+        filter = _LogFilter(name, enabled)
+        for hdlr in logger.handlers:
+            hdlr.addFilter(filter)
+
+
+# -----------------------------------------------------------------------------
+# Exscript Logging
+
+
+logger_registry = weakref.WeakValueDictionary()  # Map id(logger) to Logger.
+
+class Log:
 
     def __init__(self, name):
         self.name = name
@@ -161,7 +240,7 @@ class Logfile(Log):
         Log.succeeded(self)
 
 
-class Logger(object):
+class Logger:
 
     """
     A QueueListener that implements logging for the queue.
@@ -174,6 +253,7 @@ class Logger(object):
         decorator to send messages to the logger.
         """
         logger_registry[id(self)] = self
+        self._lock = threading.Lock()
         self.logs = defaultdict(list)
         self.started = 0
         self.success = 0
@@ -212,7 +292,8 @@ class Logger(object):
         log = Log(name)
         log.started()
         self.logs[job_id].append(log)
-        self.started += 1
+        with self._lock:
+            self.started += 1
         return log
 
     def log(self, job_id, message):
@@ -224,15 +305,17 @@ class Logger(object):
     def log_aborted(self, job_id, exc_info):
         log = self._get_log(job_id)
         log.aborted(exc_info)
-        self.failed += 1
+        with self._lock:
+            self.failed += 1
 
     def log_succeeded(self, job_id):
         log = self._get_log(job_id)
         log.succeeded()
-        self.success += 1
+        with self._lock:
+            self.success += 1
 
 
-class LoggerProxy(object):
+class LoggerProxy:
 
     """
     An object that has a 1:1 relation to a Logger object in another
@@ -248,22 +331,27 @@ class LoggerProxy(object):
         """
         self.parent = parent
         self.logger_id = logger_id
+        self._lock = threading.Lock()
 
     def add_log(self, job_id, name, attempt):
-        self.parent.send(('log-add', (self.logger_id, job_id, name, attempt)))
-        response = self.parent.recv()
+        with self._lock:
+            self.parent.send(('log-add', (self.logger_id, job_id, name, attempt)))
+            response = self.parent.recv()
         if isinstance(response, Exception):
             raise response
         return response
 
     def log(self, job_id, message):
-        self.parent.send(('log-message', (self.logger_id, job_id, message)))
+        with self._lock:
+            self.parent.send(('log-message', (self.logger_id, job_id, message)))
 
     def log_aborted(self, job_id, exc_info):
-        self.parent.send(('log-aborted', (self.logger_id, job_id, exc_info)))
+        with self._lock:
+            self.parent.send(('log-aborted', (self.logger_id, job_id, exc_info)))
 
     def log_succeeded(self, job_id):
-        self.parent.send(('log-succeeded', (self.logger_id, job_id)))
+        with self._lock:
+            self.parent.send(('log-succeeded', (self.logger_id, job_id)))
 
 
 class FileLogger(Logger):

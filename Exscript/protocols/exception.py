@@ -77,3 +77,63 @@ class InvalidCommandException(ProtocolException):
     a string that looked like an error.
     """
     pass
+
+
+class RPCError(InvalidCommandException):
+
+    """
+    An exception that is raised when a NETCONF rpc-reply contains one or
+    more rpc-error elements with error severity.
+    """
+
+    def __init__(
+        self, message, *, element, type, tag, severity, app_tag='', path='', info=''
+    ):
+        """
+        :param message:   The primary rpc-error message (error-message).
+        :param element:   The XML element of the rpc-error node.
+        :param type:      The NETCONF error-type (e.g. 'application', 'protocol').
+        :param tag:       The NETCONF error-tag (e.g. 'invalid-value', 'bad-element').
+        :param severity:  The NETCONF error-severity ('error' or 'warning').
+        :param app_tag:   The optional data-model-specific error sub-tag.
+        :param path:      The optional NETCONF error-path.
+        :param info:      The optional NETCONF error-info node as XML string.
+        """
+        msg = ''
+        if severity:
+            msg += f'{severity}: '
+        msg += message or 'no message available'
+
+        super().__init__(msg)
+        self.element = element
+        self.type = type or ''
+        self.tag = tag or ''
+        self.severity = severity or ''
+        self.message = message or ''
+        self.app_tag = app_tag or ''
+        self.path = path or ''
+        self.info = info or ''
+        self.errlist = [self]
+
+    @classmethod
+    def _from_ncclient(cls, rpc_errors):
+        """
+        Translates a list of ncclient `RPCError` objects (from RPCReply.errors)
+        into Exscript :class:`RPCError` instances.
+        """
+        all_errors = [
+            cls(
+                error.message,
+                element=error.xml,
+                type=error.type,
+                tag=error.tag,
+                severity=error.severity,
+                app_tag=error.app_tag,
+                path=error.path,
+                info=error.info,
+            )
+            for error in rpc_errors
+        ]
+        primary = all_errors[0]
+        primary.errlist = all_errors
+        return primary

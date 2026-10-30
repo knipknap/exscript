@@ -23,11 +23,11 @@
 """
 Very simple servers, useful for emulating a device for testing.
 """
-from __future__ import absolute_import
-from .telnetd import Telnetd
-from .sshd import SSHd
-from .httpd import HTTPd
-
 import inspect
+
+from .httpd import HTTPd
+from .sshd import SSHd
+from .telnetd import Telnetd
+
 __all__ = [name for name, obj in list(locals().items())
            if not (name.startswith('_') or inspect.ismodule(obj))]

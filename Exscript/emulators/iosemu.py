@@ -1,7 +1,7 @@
-# 
+#
 # Copyright (C) 2010-2017 Samuel Abels
 # The MIT License (MIT)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -9,10 +9,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -21,12 +21,11 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-Cisco IOS emulator.
+Cisco IOS emulator used for internal testing.
 """
-from __future__ import unicode_literals
-#from builtins import str
 import re
-from Exscript.emulators import VirtualDevice
+
+from .vdevice import VirtualDevice
 
 iosbanner = '''
 Connected to %s.
@@ -36,7 +35,7 @@ Escape character is '^]'.
 Unauthorized access prohibited!
 
 
-%s line 2 
+%s line 2
 
 
 at '%s' port '/dev/vty0' from '12.34.56.78'
@@ -62,7 +61,7 @@ SLOT %s  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC
   ROM Monitor version 18.0
   Fabric Downloader version used 7.1 (ROM version is 7.1)
   Primary clock is CSC 1
-  Board is analyzed 
+  Board is analyzed
   Board State is Line Card Enabled (IOS  RUN )
   Insertion time: 00:00:30 (36w1d ago)
   Processor Memory size: 1073741824 bytes
@@ -73,7 +72,7 @@ SLOT %s  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC
 
 commands = (
 ('show version', """
-Cisco Internetwork Operating System Software 
+Cisco Internetwork Operating System Software
 IOS (tm) GS Software (C12KPRP-P-M), Version 12.0(32)SY6c, RELEASE SOFTWARE (fc3)
 Technical Support: http://www.cisco.com/techsupport
 Copyright (c) 1986-2008 by cisco Systems, Inc.
@@ -83,7 +82,7 @@ Image text-base: 0x00010000, data-base: 0x055CD000
 ROM: System Bootstrap, Version 12.0(20040128:214555) [assafb-PRP1P_20040101 1.8dev(2.83)] DEVELOPMENT SOFTWARE
 BOOTLDR: GS Software (C12KPRP-P-M), Version 12.0(32)SY6c, RELEASE SOFTWARE (fc3)
 
- S-EA1 uptime is 36 weeks, 1 day, 15 hours, 9 minutes
+ dummy uptime is 36 weeks, 1 day, 15 hours, 9 minutes
 Uptime for this control processor is 36 weeks, 1 day, 14 hours, 30 minutes
 System returned to ROM by reload at 03:32:54 MET Mon Feb 16 2009
 System restarted at 03:25:22 MET Tue Mar 10 2009
@@ -116,21 +115,21 @@ Channelized E1, Version 1.0.
 250880K bytes of ATA PCMCIA card at slot 0 (Sector size 512 bytes).
 65536K bytes of Flash internal SIMM (Sector size 256K).
 Configuration register is 0x2102
-""".lstrip()),
+"""),
 
 (r'sh\S* ip int\S* brie\S*', """
 Interface     IP-Address     OK?  Method  Status                  Protocol
-Ethernet0     10.108.00.5    YES  NVRAM   up                      up      
-Ethernet1     unassigned     YES  unset   administratively down   down    
-Loopback0     10.108.200.5   YES  NVRAM   up                      up      
-Serial0       10.108.100.5   YES  NVRAM   up                      up      
-Serial1       10.108.40.5    YES  NVRAM   up                      up      
-Serial2       10.108.100.5   YES  manual  up                      up      
-Serial3       unassigned     YES  unset   administratively down   down 
-""".lstrip()),
+Ethernet0     10.108.00.5    YES  NVRAM   up                      up
+Ethernet1     unassigned     YES  unset   administratively down   down
+Loopback0     10.108.200.5   YES  NVRAM   up                      up
+Serial0       10.108.100.5   YES  NVRAM   up                      up
+Serial1       10.108.40.5    YES  NVRAM   up                      up
+Serial2       10.108.100.5   YES  manual  up                      up
+Serial3       unassigned     YES  unset   administratively down   down
+"""),
 
 ('show interface.*', """
-FastEthernet0/2 is administratively down, line protocol is down 
+FastEthernet0/2 is administratively down, line protocol is down
   Hardware is i82545, address is 0001.c9f4.c418 (bia 0001.c9f4.c418)
   MTU 1500 bytes, BW 100000 Kbit, DLY 100 usec, rely 255/255, load 1/255
   Encapsulation ARPA, loopback not set

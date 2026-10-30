@@ -23,19 +23,19 @@
 """
 A threaded HTTP server with support for HTTP/Digest authentication.
 """
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-import sys
-import time
-import urllib.request, urllib.parse, urllib.error
 import hashlib
-from urllib.parse import urlparse, parse_qs
-from urllib.request import parse_http_list, parse_keqv_list
-from traceback import format_exc
-from http.server import BaseHTTPRequestHandler
-from http.server import HTTPServer
+import logging
+import time
+import urllib.parse
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
+from traceback import format_exc
+from urllib.parse import parse_qs, urlparse
+from urllib.request import parse_http_list, parse_keqv_list
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
+
 
 def md5hex(x):
     return hashlib.md5(x).hexdigest()
@@ -51,12 +51,7 @@ def _parse_url(path):
     """Given a urlencoded path, returns the path and the dictionary of
     query arguments, all in Unicode."""
 
-    # path changes from bytes to Unicode in going from Python 2 to
-    # Python 3.
-    if sys.version_info[0] < 3:
-        o = urlparse(urllib.parse.unquote_plus(path).decode('utf8'))
-    else:
-        o = urlparse(urllib.parse.unquote_plus(path))
+    o = urlparse(urllib.parse.unquote_plus(path))
 
     path = o.path
     args = {}
@@ -179,6 +174,7 @@ class HTTPd(ThreadingMixIn, HTTPServer):
         :type  user_data: object
         :param user_data: Optional data that, stored in self.user_data.
         """
+        self._logger = _logger
         self.debug = False
         self.realm = default_realm
         self.accounts = {}
@@ -205,9 +201,10 @@ class HTTPd(ThreadingMixIn, HTTPServer):
         """
         return self.accounts.get(username)
 
-    def _dbg(self, msg):
-        if self.debug:
-            print(msg)
+    def _dbg(self, msg, exc_info=None):
+        if not self.debug:
+            return
+        self._logger.debug(msg, exc_info=exc_info)
 
 
 class RequestHandler(BaseHTTPRequestHandler):

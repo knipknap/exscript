@@ -23,25 +23,26 @@
 """
 The heart of Exscript.
 """
-from __future__ import division, absolute_import
-from builtins import str
-from builtins import object
-import sys
-import os
 import gc
-import select
+import logging
+import os
+import sys
 import threading
 import weakref
 from functools import partial
 from multiprocessing import Pipe
-from .util.cast import to_hosts
-from .util.tty import get_terminal_size
-from .util.impl import format_exception, serializeable_sys_exc_info
-from .util.decorator import get_label
+
 from .account import AccountManager, AccountProxy
-from .logger import logger_registry, LoggerProxy
-from .workqueue import WorkQueue, Task
+from .logger import LoggerProxy, logger_registry
 from .protocols import prepare
+from .util.cast import to_hosts
+from .util.decorator import get_label
+from .util.impl import format_exception, serializeable_sys_exc_info
+from .util.tty import get_terminal_size
+from .workqueue import Task, WorkQueue
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 
 def _account_factory(accm, host, account):
@@ -86,6 +87,10 @@ def _prepare_connection(func):
             log_cb = partial(proxy.log, job_id)
             proxy.add_log(job_id, job.name, job.failures + 1)
             conn.data_received_event.listen(log_cb)
+            if not conn._receives_echo:
+                # The sent commands are either logged via the data_received_event
+                # when they are echoed back, or they are logged here explicitly.
+                conn.data_sent_event.listen(log_cb)
             try:
                 conn.connect(host.get_address(), host.get_tcp_port())
                 result = func(job, host, conn, *args, **kwargs)
@@ -97,6 +102,8 @@ def _prepare_connection(func):
                 proxy.log_succeeded(job_id)
             finally:
                 conn.data_received_event.disconnect(log_cb)
+                if not conn._receives_echo:
+                    conn.data_sent_event.disconnect(log_cb)
         else:
             conn.connect(host.get_address(), host.get_tcp_port())
             result = func(job, host, conn, *args, **kwargs)
@@ -187,7 +194,7 @@ class _PipeHandler(threading.Thread):
             self._handle_request(request)
 
 
-class Queue(object):
+class Queue:
 
     """
     Manages hosts/tasks, accounts, connections, and threads.
@@ -241,7 +248,9 @@ class Queue(object):
         :type  stderr: file
         :param stderr: The error channel, defaults to sys.stderr.
         """
+        self._logger = _logger
         self.workqueue = WorkQueue(mode=mode)
+        self.workqueue.set_debug(verbose)
         self.account_manager = AccountManager()
         self.pipe_handlers = weakref.WeakValueDictionary()
         self.domain = domain
@@ -250,9 +259,9 @@ class Queue(object):
         self.stderr = stderr
         self.host_driver = host_driver
         self.exc_cb = exc_cb
+        self.lock = threading.RLock()
         self.devnull = open(os.devnull, 'w')
-        self.channel_map = {'fatal_errors': self.stderr,
-                            'debug':        self.stdout}
+        self.channel_map = {'fatal_errors': self.stderr}
         self.completed = 0
         self.total = 0
         self.failed = 0
@@ -299,8 +308,9 @@ class Queue(object):
             self.channel_map['tracebacks'] = self.stderr
 
     def _write(self, channel, msg):
-        self.channel_map[channel].write(msg)
-        self.channel_map[channel].flush()
+        with self.lock:
+            self.channel_map[channel].write(msg)
+            self.channel_map[channel].flush()
 
     def _create_pipe(self):
         """
@@ -375,10 +385,10 @@ class Queue(object):
         self._write(channel, msg + '\n')
         self._print_status_bar()
 
-    def _dbg(self, level, msg):
+    def _dbg(self, level, msg, exc_info=None):
         if level > self.verbose:
             return
-        self._print('debug', msg)
+        self._logger.info(msg, exc_info=exc_info)
 
     def _on_job_init(self, job):
         if job.data is None:
@@ -407,17 +417,16 @@ class Queue(object):
     def _on_job_succeeded(self, job):
         self._on_job_destroy(job)
         self.completed += 1
-        self._print('status_bar', job.name + ' succeeded.')
-        self._dbg(2, job.name + ' job is done.')
         self._del_status_bar()
+        self._write('status_bar', job.name + ' succeeded.' + '\n')
         self._print_status_bar(exclude=job.name)
 
     def _on_job_aborted(self, job):
         self._on_job_destroy(job)
         self.completed += 1
         self.failed += 1
-        self._print('errors', job.name + ' finally failed.')
         self._del_status_bar()
+        self._write('errors', job.name + ' finally failed.' + '\n')
         self._print_status_bar(exclude=job.name)
 
     def set_max_threads(self, n_connections):
@@ -527,6 +536,7 @@ class Queue(object):
         self.workqueue.wait_until_done()
         for child in list(self.pipe_handlers.values()):
             child.join()
+        self._dbg(3, 'Queue has finished.')
         self._del_status_bar()
         self._print_status_bar()
         gc.collect()
@@ -546,9 +556,9 @@ class Queue(object):
         if not force:
             self.join()
 
-        self._dbg(2, 'Shutting down queue...')
+        self._dbg(2, 'Shutting down the queue.')
         self.workqueue.shutdown(True)
-        self._dbg(2, 'Queue shut down.')
+        self._dbg(3, 'Queue has shut down.')
         self._del_status_bar()
 
     def destroy(self, force=False):
@@ -564,28 +574,28 @@ class Queue(object):
             if not force:
                 self.join()
         finally:
-            self._dbg(2, 'Destroying queue...')
+            self._dbg(2, 'Destroying the queue.')
             self.workqueue.destroy()
             self.account_manager.reset()
             self.completed = 0
             self.total = 0
             self.failed = 0
             self.status_bar_length = 0
-            self._dbg(2, 'Queue destroyed.')
+            self._dbg(3, 'Queue was destroyed.')
             self._del_status_bar()
 
     def reset(self):
         """
         Remove all accounts, hosts, etc.
         """
-        self._dbg(2, 'Resetting queue...')
+        self._dbg(2, 'Resetting the queue.')
         self.account_manager.reset()
         self.workqueue.shutdown(True)
         self.completed = 0
         self.total = 0
         self.failed = 0
         self.status_bar_length = 0
-        self._dbg(2, 'Queue reset.')
+        self._dbg(3, 'Queue was reset.')
         self._del_status_bar()
 
     def _run(self, hosts, callback, queue_function, *args):

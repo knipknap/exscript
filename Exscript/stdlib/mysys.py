@@ -21,10 +21,11 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import os
-import time
 import sys
-from subprocess import Popen, PIPE, STDOUT
-from Exscript.stdlib.util import secure_function
+import time
+from subprocess import PIPE, STDOUT, Popen
+
+from .util import secure_function
 
 
 def env(scope, varname):
@@ -50,8 +51,12 @@ def execute(scope, command):
                     stdin=PIPE,
                     stdout=PIPE,
                     stderr=STDOUT,
+                    text=True,
                     close_fds=True)
-    scope.define(__response__=process.stdout.read())
+    if process.stdout:
+        scope.define(__response__=process.stdout.readlines())
+    else:
+        scope.define(__response__=[''])
     return True
 
 
