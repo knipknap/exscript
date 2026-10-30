@@ -117,7 +117,7 @@ def setupLogging(*, package=False, parser=False, protocol=False, init=getConsole
 # Exscript Logging
 
 
-logger_registry = weakref.WeakValueDictionary()  # Map id(logger) to Logger.
+logger_registry: 'weakref.WeakValueDictionary[int, Logger]' = weakref.WeakValueDictionary()  # Map id(logger) to Logger.
 
 class Log:
 

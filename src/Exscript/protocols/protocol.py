@@ -36,6 +36,7 @@ import threading
 import time
 from functools import partial
 from io import StringIO
+from typing import IO
 
 from ..util.buffer import MonitoredBuffer
 from ..util.cast import to_regexs
@@ -75,7 +76,7 @@ _ansi_escape_re = re.compile(
 _skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)(?=\s|[\r\n])')
 
 # Needed on module level as each host connection has its own thread.
-_connection_monitor = {}
+_connection_monitor: dict[str, float] = {}
 _connection_monitor_lock = threading.RLock()
 
 # NOTE: Encoding/Decoding non-ASCII byte-streams might not work properly.
@@ -253,6 +254,8 @@ class Protocol:
           than to risk that an error is not immediately discovered due to
           timing issues (this is a race condition that is not detailed here).
     """
+
+    _log: IO[str] | None  # managed by the logfile property
 
     def __init__(self,
                  driver=None,
@@ -438,9 +441,10 @@ class Protocol:
     @logfile.setter
     def logfile(self, value) -> None:
         with self._write_lock:
-            if getattr(self, '_log', None):
+            old_log = getattr(self, '_log', None)
+            if old_log:
                 try:
-                    self._log.close()
+                    old_log.close()
                 except Exception:
                     pass
             self._logfile = value

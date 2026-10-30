@@ -58,9 +58,9 @@ from .vxworks import VxworksDriver as VxworksDriver
 from .zte import ZteDriver as ZteDriver
 from .zyxel import ZyxelDriver as ZyxelDriver
 
-driver_classes = []
-drivers = []
-driver_map = {}
+driver_classes: list[type[Driver]] = []
+drivers: list[Driver] = []
+driver_map: dict[str, Driver] = {}
 
 
 def isdriver(o):

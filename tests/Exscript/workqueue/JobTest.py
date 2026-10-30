@@ -1,7 +1,7 @@
 import unittest
 
 
-from multiprocessing import Pipe
+from multiprocessing import Pipe, get_all_start_methods
 from pickle import dumps, loads
 
 from Exscript.workqueue.job import Job, Process, Thread
@@ -32,6 +32,8 @@ class ThreadTest(unittest.TestCase):
         pass  # See testRun()
 
 
+@unittest.skipIf(get_all_start_methods()[0] != 'fork',
+                 'Process jobs need the "fork" start method (the default only on Linux < 3.14)')
 class ProcessTest(ThreadTest):
     CORRELATE = Process
 

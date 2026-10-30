@@ -33,7 +33,7 @@ class PrivateKey:
     Represents a cryptographic key, and may be used to authenticate
     using :class:`Exscript.protocols`.
     """
-    keytypes = set()
+    keytypes: set[str] = set()
 
     def __init__(self, keytype='rsa'):
         """

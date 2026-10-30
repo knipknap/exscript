@@ -26,7 +26,8 @@ Utilities for reading data from files.
 import base64
 import binascii
 import configparser
-import importlib
+import importlib.machinery
+import importlib.util
 import os
 import re
 
@@ -226,6 +227,10 @@ def load_lib(filename):
         raise IOError('No such file: %s' % filename)
 
     name = os.path.splitext(os.path.basename(filename))[0]
-    module = importlib.machinery.SourceFileLoader(name, filename).load_module()
+    # load_module() was removed in Python 3.15; an explicit loader also accepts other suffixes.
+    loader = importlib.machinery.SourceFileLoader(name, filename)
+    spec = importlib.util.spec_from_file_location(name, filename, loader=loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
 
     return dict((name + '.' + k, v) for (k, v) in list(module.__lib__.items()))
