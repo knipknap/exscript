@@ -418,7 +418,7 @@ class Netconf(SSH2):
             )
             raise err
 
-    def _raise_on_response_with_errors(self):
+    def _raise_on_response_with_errors(self, line):
         # For device handlers that apply XSLT (e.g. Junos) or any transformation,
         # dispatch() returns NCElement instead of RPCReply.
         response = self._ncc_response

@@ -39,6 +39,13 @@ marked with **BREAKING**; a migration guide will accompany the release.
 
   To migrate, add the hosts to known_hosts (for example with `ssh-keyscan`), or pass
   `host_key_policy='auto-add'` or `host_key_policy='warn'`.
+- **Passwords in Debug Logs:** Passwords and S/Key responses sent by the app-level
+  login are logged as `<secret>`. Before, debug level 4 logged them in clear text.
+- **BREAKING - `InvalidCommandException` Message:** The message contains only the
+  line that matched an error pattern, for example `Error in the response from the
+  device: % Invalid input detected`. Before, it contained the full response, which
+  may include configuration secrets. The full response is still in `conn.response`.
+- **`repr(Account)`:** Shows only the account name, for example `Account('admin')`.
 
 ## Protocols
 

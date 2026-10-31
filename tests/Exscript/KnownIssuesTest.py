@@ -88,17 +88,6 @@ class ExpectTest(ServerMixin, unittest.TestCase):
         self.expectMarker(conn, port)
 
 
-class SecretHygieneTest(unittest.TestCase):
-    @unittest.expectedFailure  # Protocol.send() logs passwords at debug level 4
-    def testDebugLogRedactsPassword(self):
-        conn = Dummy(device=VirtualDevice('r1', echo=False, strict=False), debug=4)
-        with self.assertLogs('Exscript.protocols', level='DEBUG') as logs:
-            conn.connect('r1')
-            conn.login(Account('admin', PASSWORD, needs_lock=False))
-        conn.close(force=True)
-        self.assertEqual([line for line in logs.output if PASSWORD in line], [])
-
-
 @unittest.skipIf(ExscriptInstrumentor is None, 'requires the "otel" extra')
 class OtelTest(unittest.TestCase):
     def setUp(self):

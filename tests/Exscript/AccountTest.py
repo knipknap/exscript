@@ -58,6 +58,11 @@ class AccountTest(unittest.TestCase):
     def testGetName(self):
         self.assertEqual(self.user, self.account.get_name())
 
+    def testRepr(self):
+        self.assertEqual(repr(self.account), f'Account({self.user!r})')
+        self.assertNotIn(self.password1, repr(self.account))
+        self.assertNotIn(self.password2, repr(self.account))
+
     def testSetPassword(self):
         self.assertEqual(self.password1, self.account.get_password())
         self.account.set_password('foo')

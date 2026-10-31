@@ -1,8 +1,10 @@
 import re
 import unittest
 
+from Exscript import Account
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy
+from Exscript.protocols.exception import InvalidCommandException
 
 from .ProtocolTest import ProtocolTest
 
@@ -122,8 +124,41 @@ class DummyTest(ProtocolTest):
         protocol.close()
 
 
+class SecretHygieneTest(unittest.TestCase):
+    PASSWORD = 'S3cr3t-P@ss'
+
+    def testDebugLogRedactsPassword(self):
+        conn = Dummy(device=VirtualDevice('r1', echo=False, strict=False), debug=4)
+        with self.assertLogs('Exscript.protocols', level='DEBUG') as logs:
+            conn.connect('r1')
+            conn.login(Account('admin', self.PASSWORD, needs_lock=False))
+        conn.close(force=True)
+        self.assertIn('Sending: <secret>', '\n'.join(logs.output))
+        self.assertEqual([line for line in logs.output if self.PASSWORD in line], [])
+
+    def testErrorMessageShowsOnlyTheErrorLine(self):
+        device = VirtualDevice('r1', echo=False, strict=False)
+        device.add_command('show run', 'enable secret PRIVATE\r\n% Invalid input detected')
+        conn = Dummy(device=device)
+        conn.connect('r1')
+        conn.login(Account('admin', self.PASSWORD, needs_lock=False))
+        with self.assertRaises(InvalidCommandException) as cm:
+            conn.execute('show run')
+        self.assertEqual(
+            str(cm.exception), 'Error in the response from the device: % Invalid input detected'
+        )
+        self.assertIn('PRIVATE', conn.response)
+        conn.close(force=True)
+
+
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(DummyTest)
+    loader = unittest.TestLoader()
+    return unittest.TestSuite(
+        [
+            loader.loadTestsFromTestCase(DummyTest),
+            loader.loadTestsFromTestCase(SecretHygieneTest),
+        ]
+    )
 
 
 if __name__ == '__main__':

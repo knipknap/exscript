@@ -82,6 +82,9 @@ class Account:
         self.lock = multiprocessing.Lock()
         self.needs_lock = needs_lock
 
+    def __repr__(self):
+        return f'{type(self).__name__}({self.name!r})'  # never the passwords
+
     def __enter__(self):
         if self.needs_lock:
             self.acquire()
@@ -587,34 +590,34 @@ class AccountManager:
     def add_pool(self, pool, match=None):
         """
         Adds a new account pool. If the given match argument is
-        None, the pool the default pool. Otherwise, the match argument is
+        None, the pool is the default pool. Otherwise, the match argument is
         a callback function that is invoked to decide whether or not the
         given pool should be used for a host.
 
         When Exscript logs into a host, the account is chosen in the following
         order:
 
-            # Exscript checks whether an account was attached to the
-            :class:`Host` object using :class:`Host.set_account()`), and uses that.
+        #. Exscript checks whether an account was attached to the
+           :class:`Host` object using :class:`Host.set_account()`, and uses that.
 
-            # If the :class:`Host` has no account attached, Exscript walks
-            through all pools that were passed to :class:`Queue.add_account_pool()`.
-            For each pool, it passes the :class:`Host` to the function in the
-            given match argument. If the return value is True, the account
-            pool is used to acquire an account.
-            (Accounts within each pool are taken in a round-robin
-            fashion.)
+        #. If the :class:`Host` has no account attached, Exscript walks
+           through all pools that were passed to :class:`Queue.add_account_pool()`.
+           For each pool, it passes the :class:`Host` to the function in the
+           given match argument. If the return value is True, the account
+           pool is used to acquire an account.
+           (Accounts within each pool are taken in a round-robin
+           fashion.)
 
-            # If no matching account pool is found, an account is taken
-            from the default account pool.
+        #. If no matching account pool is found, an account is taken
+           from the default account pool.
 
-            # Finally, if all that fails and the default account pool
-            contains no accounts, an error is raised.
+        #. Finally, if all that fails and the default account pool
+           contains no accounts, an error is raised.
 
         Example usage::
 
-            def do_nothing(conn):
-                conn.autoinit()
+            def log_in(job, host, conn):
+                conn.login()
 
             def use_this_pool(host):
                 return host.get_name().startswith('foo')
@@ -630,7 +633,7 @@ class AccountManager:
             queue.account_manager.add_pool(other_pool, use_this_pool)
 
             host = Host('localhost')
-            queue.run(host, do_nothing)
+            queue.run(host, log_in)
 
         In the example code, the host has no account attached. As a result,
         the queue checks whether use_this_pool() returns True. Because the

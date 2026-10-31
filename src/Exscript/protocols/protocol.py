@@ -24,6 +24,7 @@
 An abstract base class for all protocols.
 """
 
+import contextlib
 import errno
 import logging
 import os
@@ -244,6 +245,7 @@ class Protocol:
         self._manual_login_error_re = None
         self._manual_driver = None
         self._receives_echo = True  # does the remote shell echo sent commands?
+        self._sending_secret = False  # set by _secret() while a password is sent
         self._write_lock = threading.Lock()
         # Init remaining per-session attributes.
         self._init()
@@ -1129,7 +1131,8 @@ class Protocol:
 
                 # A password prompt is now required.
                 self.expect(self.get_password_prompt())
-                self.send(phrase + '\r')
+                with self._secret():
+                    self.send(phrase + '\r')
                 if bailout:
                     break
                 continue
@@ -1138,7 +1141,8 @@ class Protocol:
             elif section == 'password':
                 self._dbg(2, "Password prompt received.")
                 self.expect(prompt)  # consume the prompt from the buffer
-                self.send(password + '\r')
+                with self._secret():
+                    self.send(password + '\r')
                 if bailout:
                     break
                 continue
@@ -1303,8 +1307,20 @@ class Protocol:
         :param data: The data that is sent to the remote host.
         """
         self.response = None
-        self._dbg(4, 'Sending: %s' % repr(data))
+        if self._sending_secret:
+            self._dbg(4, 'Sending: <secret>')
+        else:
+            self._dbg(4, 'Sending: %s' % repr(data))
         self._send(data)
+
+    @contextlib.contextmanager
+    def _secret(self):
+        """Marks the data sent within this context as secret, so it is not logged."""
+        self._sending_secret = True
+        try:
+            yield
+        finally:
+            self._sending_secret = False
 
     def execute(self, command, consume=True):
         """
@@ -1474,7 +1490,7 @@ class Protocol:
                     continue
                 args = repr(prompt.pattern), lineno, repr(line)
                 self._dbg(3, "Error prompt %s matches line %s: %s" % args)
-                self._raise_on_response_with_errors()
+                self._raise_on_response_with_errors(line)
 
     def add_monitor(self, pattern, callback, limit=80):
         """
@@ -1515,9 +1531,12 @@ class Protocol:
             raise DriverReplacedException()
         raise ExpectCancelledException()
 
-    def _raise_on_response_with_errors(self):
-        msg = 'Response from device:\n' + self.response
-        raise InvalidCommandException(msg)
+    def _raise_on_response_with_errors(self, line):
+        # Only the error line: the full response (self.response) may contain secrets.
+        line = line.strip()
+        if len(line) > 200:
+            line = line[:200] + '...'
+        raise InvalidCommandException('Error in the response from the device: ' + line)
 
     def _raise_on_response_timeout(self):
         buffer = str(self._buffer)[-200:]
