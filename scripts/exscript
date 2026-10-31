@@ -196,6 +196,7 @@ def run():
         if args.ssh_preferred_auth:
             host.set_option("preferred_authentications", args.ssh_preferred_auth.split(","))
         host.set_option("verify_fingerprint", not args.ssh_auto_verify)
+        host.set_option("host_key_policy", args.ssh_host_key_policy)
 
     # Prepare the code that is executed after the user script has completed.
     if not args.no_auto_logout:
@@ -664,8 +665,19 @@ parser.add_argument(
     action="store_true",
     default=False,
     help="""
-Automatically confirms the 'Host key changed' SSH error
-message with 'yes'. Highly insecure and not recommended.
+Disables the verification of SSH host keys, so that any key is accepted.
+Highly insecure and not recommended.
+""".strip(),
+)
+
+parser.add_argument(
+    "--ssh-host-key-policy",
+    choices=("reject", "warn", "auto-add"),
+    default="reject",
+    help="""
+What to do with SSH hosts that are not in ~/.ssh/known_hosts: reject the
+connection (the default), warn and connect, or add the host key to
+known_hosts and connect.
 """.strip(),
 )
 

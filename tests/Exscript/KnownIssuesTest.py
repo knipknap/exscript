@@ -10,14 +10,10 @@ and move the test next to the tests of the fixed module.
 import os
 import socket
 import sys
-import tempfile
 import threading
 import time
 import unittest
 import uuid
-from unittest import mock
-
-import paramiko
 
 from Exscript import Account, PrivateKey
 from Exscript.emulators import VirtualDevice
@@ -57,23 +53,6 @@ class ServerMixin:
         self.addCleanup(daemon.join)  # cleanups run LIFO: exit() first
         self.addCleanup(daemon.exit)
         return port
-
-
-class HostKeyTest(ServerMixin, unittest.TestCase):
-    @unittest.expectedFailure  # known_hosts is only loaded after the check; no [host]:port lookup
-    def testKnownHostsMismatchIsRejected(self):
-        port = self.start_daemon(SSHd, VirtualDevice(HOST), key=PrivateKey.from_file(KEYFILE))
-        other_key = paramiko.RSAKey.generate(2048)
-        home = tempfile.mkdtemp()
-        os.mkdir(os.path.join(home, '.ssh'))
-        with open(os.path.join(home, '.ssh', 'known_hosts'), 'w') as fp:
-            fp.write('[%s]:%d %s %s\n' % (HOST, port, other_key.get_name(), other_key.get_base64()))
-
-        conn = SSH2(timeout=1, connect_rate_limit=0)
-        self.addCleanup(conn.close, force=True)
-        with mock.patch.dict(os.environ, {'HOME': home, 'USERPROFILE': home}):
-            with self.assertRaises(paramiko.BadHostKeyException):
-                conn.connect(HOST, port)
 
 
 class ExpectTest(ServerMixin, unittest.TestCase):

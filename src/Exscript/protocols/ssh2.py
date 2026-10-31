@@ -28,6 +28,7 @@ import logging
 import os
 import select
 import socket
+import threading
 import time
 from binascii import hexlify
 
@@ -48,6 +49,17 @@ from .protocol import Protocol, _skey_re
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
+_known_hosts_lock = threading.Lock()
+
+
+def _prefer_key_type(options, keytype):
+    """Makes the server present a key of the known type, like paramiko's SSHClient."""
+    types = list(options.key_types)
+    if keytype == 'ssh-rsa':  # RSA keys are negotiated with SHA-2 signatures
+        keytype = next((t for t in ('rsa-sha2-512', 'rsa-sha2-256', 'ssh-rsa') if t in types), None)
+    if keytype in types:
+        options.key_types = [keytype] + [t for t in types if t != keytype]
+
 
 # Register supported key types.
 keymap = {'rsa': paramiko.RSAKey, 'ecdsa': paramiko.ECDSAKey, 'ed25519': paramiko.Ed25519Key}
@@ -85,68 +97,59 @@ class SSH2(Protocol):
                 "password",
             ]
 
-        # Paramiko client stuff.
-        self._system_host_keys = paramiko.HostKeys()
+        # Host keys accepted for unknown hosts, pinned for reconnects of this object.
         self._host_keys = paramiko.HostKeys()
-        self._host_keys_filename = None
 
-        if self.verify_fingerprint:
-            self._missing_host_key = self._reject_host_key
-        else:
-            self._missing_host_key = self._add_host_key
+    def _host_key_name(self):
+        # OpenSSH and paramiko store hosts on other ports than 22 as "[host]:port".
+        if self.port in (None, 22):
+            return self.host
+        return f'[{self.host}]:{self.port}'
 
-    def _reject_host_key(self, key):
-        name = key.get_name()
-        fp = hexlify(key.get_fingerprint())
-        msg = 'Rejecting %s host key for %s: %s' % (name, self.host, fp)
-        self._dbg(2, msg)
+    def _known_hosts_file(self):
+        return os.path.expanduser(self.known_hosts or '~/.ssh/known_hosts')
 
-    def _add_host_key(self, key):
-        name = key.get_name()
-        fp = hexlify(key.get_fingerprint())
-        msg = 'Adding %s host key for %s: %s' % (name, self.host, fp)
-        self._dbg(2, msg)
-        self._host_keys.add(self.host, name, key)
-        if self._host_keys_filename is not None:
-            self._save_host_keys()
+    def _load_known_hosts(self):
+        """Returns the keys in the known_hosts file; a missing file has none."""
+        keys = paramiko.HostKeys()
+        try:
+            keys.load(self._known_hosts_file())
+        except FileNotFoundError:
+            pass
+        return keys
 
-    def _save_host_keys(self):
-        with open(self._host_keys_filename, 'w') as file:
-            file.write('# SSH host keys collected by Exscript\n')
-            for hostname, keys in list(self._host_keys.items()):
-                for keytype, key in list(keys.items()):
-                    line = ' '.join((hostname, keytype, key.get_base64()))
-                    file.write(line + '\n')
-
-    def _load_system_host_keys(self, filename=None):
+    def _check_host_key(self, key, name, known):
         """
-        Load host keys from a system (read-only) file.  Host keys read with
-        this method will not be saved back by :class:`save_host_keys`.
-
-        This method can be called multiple times.  Each new set of host keys
-        will be merged with the existing set (new replacing old if there are
-        conflicts).
-
-        If C{filename} is left as ``None``, an attempt will be made to read
-        keys from the user's local "known hosts" file, as used by OpenSSH,
-        and no exception will be raised if the file can't be read.  This is
-        probably only useful on posix.
-
-        :param filename: the filename to read, or ``None``
-        :type filename: str
-
-        @raise IOError: if a filename was provided and the file could not be
-            read
+        Raises BadHostKeyException if the key differs from the known keys of
+        the host. If the host has no known keys, applies the host_key_policy.
         """
-        if filename is None:
-            # try the user's .ssh key file, and mask exceptions
-            filename = os.path.expanduser('~/.ssh/known_hosts')
-            try:
-                self._system_host_keys.load(filename)
-            except OSError:
-                pass
+        if known:
+            expected = known.get(key.get_name())
+            if expected != key:  # a changed key, or a key type that was never seen
+                raise BadHostKeyException(name, key, expected or next(iter(known.values())))
             return
-        self._system_host_keys.load(filename)
+        msg = f'unknown {key.get_name()} host key for {name}: {key.fingerprint}'
+        if self.host_key_policy == 'reject':
+            raise SSHException(f'Rejecting {msg} (not in {self._known_hosts_file()})')
+        if self.host_key_policy == 'auto-add':
+            self._append_known_host(name, key)
+            self._dbg(1, f'Added {msg} to {self._known_hosts_file()}')
+        else:
+            self._logger.warning('Accepting %s (not in known_hosts)', msg)
+        self._host_keys.add(name, key.get_name(), key)
+
+    def _append_known_host(self, name, key):
+        filename = self._known_hosts_file()
+        line = f'{name} {key.get_name()} {key.get_base64()}\n'
+        # shortcut: the lock serializes threads only; use separate files for parallel processes.
+        with _known_hosts_lock:
+            os.makedirs(os.path.dirname(filename) or os.curdir, mode=0o700, exist_ok=True)
+            with open(filename, 'ab+') as fp:
+                if fp.seek(0, os.SEEK_END):
+                    fp.seek(-1, os.SEEK_END)
+                    if fp.read(1) != b'\n':
+                        line = '\n' + line
+                fp.write(line.encode())
 
     def _paramiko_connect(self):
         # Find supported address families.
@@ -173,20 +176,22 @@ class SSH2(Protocol):
             t.logger.disabled = True
         if self.debug > 5:
             t.set_hexdump(True)
-        t.start_client()
 
-        # Check system host keys.
-        server_key = t.get_remote_server_key()
-        keytype = server_key.get_name()
-        our_server_key = self._system_host_keys.get(self.host, {}).get(keytype, None)
-        if our_server_key is None:
-            our_server_key = self._host_keys.get(self.host, {}).get(keytype, None)
-        if our_server_key is None:
-            self._missing_host_key(server_key)
-            # if the callback returns, assume the key is ok
-            our_server_key = server_key
-        if server_key != our_server_key:
-            raise BadHostKeyException(self.host, server_key, our_server_key)
+        # The known keys are loaded before the key exchange, so that the key is
+        # checked before any credentials are sent.
+        name = self._host_key_name()
+        known = None
+        if self.verify_fingerprint:
+            known = self._load_known_hosts().lookup(name) or self._host_keys.lookup(name)
+            if known:
+                _prefer_key_type(t.get_security_options(), next(iter(known)))
+        t.start_client()
+        if self.verify_fingerprint:
+            try:
+                self._check_host_key(t.get_remote_server_key(), name, known)
+            except Exception:
+                t.close()
+                raise
 
         t.set_keepalive(self.KEEPALIVE_INTERVAL)
         return t
@@ -377,7 +382,6 @@ class SSH2(Protocol):
 
     def _connect(self):
         self._transport = self._paramiko_connect()
-        self._load_system_host_keys()
         return True
 
     def _protocol_authenticate(self, user, password):

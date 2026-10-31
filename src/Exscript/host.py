@@ -103,7 +103,7 @@ class Host:
     def get_uri(self):
         """
         Returns a URI formatted representation of the host, including all
-        of it's attributes except for the name. Uses the
+        of its attributes except for the name. Uses the
         address, not the name of the host to build the URI.
 
         :rtype:  str
@@ -167,7 +167,7 @@ class Host:
 
     def set_address(self, address):
         """
-        Set the address of the remote host the is contacted, without
+        Set the address of the remote host that is contacted, without
         changing hostname, username, password, protocol, and TCP port
         number.
         This is the actual address that is used to open the connection.
@@ -232,6 +232,8 @@ class Host:
             disabled_algorithms: dict[str, list[str]]  # SSH2 only
             driver: Driver()|str
             encoding: str
+            host_key_policy: str  # SSH2 only
+            known_hosts: str  # SSH2 only
             preferred_authentications: list[str]|None  # SSH2 only
             termtype: str
             timeout: int
@@ -252,6 +254,8 @@ class Host:
             'disabled_algorithms',
             'driver',
             'encoding',
+            'host_key_policy',
+            'known_hosts',
             'preferred_authentications',
             'termtype',
             'timeout',

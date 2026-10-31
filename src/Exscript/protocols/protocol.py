@@ -171,6 +171,9 @@ class Protocol:
         account_factory=None,
         banner_timeout=20,  # SSH2 only
         encoding='latin-1',
+        *,
+        host_key_policy='reject',  # SSH2 only
+        known_hosts=None,  # SSH2 only
     ):
         """
         Constructor.
@@ -205,7 +208,19 @@ class Protocol:
         :type preferred_authentications: list[str]|None
         :keyword preferred_authentications: List of preferred SSH authentication
             methods, referring to SSH config option 'PreferredAuthentications'.
-        :keyword verify_fingerprint: Whether to verify the host's fingerprint.
+        :keyword verify_fingerprint: Whether to verify the host key of the
+            server. If False, any key is accepted, which allows
+            man-in-the-middle attacks.
+        :type host_key_policy: str
+        :keyword host_key_policy: What to do with a host key if known_hosts
+            has no key for the host: 'reject' (raise paramiko.SSHException),
+            'warn' (log a warning and accept the key), or 'auto-add' (accept
+            the key and append it to known_hosts). A key that differs from the
+            known key always raises paramiko.BadHostKeyException.
+        :type known_hosts: str|None
+        :keyword known_hosts: The known_hosts file. Defaults to
+            ~/.ssh/known_hosts. Entries for other ports than 22 have the form
+            [host]:port, like in OpenSSH.
         :keyword account_factory: A function that produces a new :class:`Account`.
         :type banner_timeout: bool
         :keyword banner_timeout: The time to wait for the banner.
@@ -259,6 +274,10 @@ class Protocol:
         self.disabled_algorithms = disabled_algorithms
         self.preferred_authentications = preferred_authentications
         self.verify_fingerprint = verify_fingerprint
+        if host_key_policy not in ('reject', 'warn', 'auto-add'):
+            raise ValueError(f'invalid host_key_policy: {host_key_policy!r}')
+        self.host_key_policy = host_key_policy
+        self.known_hosts = known_hosts
 
         # Set manual_driver:
         if driver is not None:

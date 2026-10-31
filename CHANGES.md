@@ -18,6 +18,28 @@ marked with **BREAKING**; a migration guide will accompany the release.
   execute, and close, and records operation durations. Span attributes may include
   host names, usernames, commands, and response contents.
 
+## Security
+
+- **BREAKING - SSH Host Key Verification:** `SSH2` and `Netconf` now verify the host
+  key before any credentials are sent. Before, known_hosts was read only after the
+  check, and unknown keys were accepted silently. The key is checked against
+  `~/.ssh/known_hosts` or the file given with the new `known_hosts` argument,
+  including `[host]:port` entries for other ports than 22 and hashed entries. A
+  changed key raises `paramiko.BadHostKeyException`. For a host without a known key,
+  the new `host_key_policy` argument decides:
+
+  - `'reject'` (default): raise `paramiko.SSHException`;
+  - `'warn'`: log a warning and accept the key;
+  - `'auto-add'`: accept the key and append it to known_hosts, like OpenSSH's
+    `StrictHostKeyChecking=accept-new`.
+
+  Accepted keys are pinned for reconnects of the same object. `verify_fingerprint=False`
+  still disables the verification completely. Both new arguments are also `Host`
+  options, and the CLI has `--ssh-host-key-policy`.
+
+  To migrate, add the hosts to known_hosts (for example with `ssh-keyscan`), or pass
+  `host_key_policy='auto-add'` or `host_key_policy='warn'`.
+
 ## Protocols
 
 - **BREAKING - Default Protocol:** The default protocol changed across all relevant

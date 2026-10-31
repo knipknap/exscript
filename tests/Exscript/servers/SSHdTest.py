@@ -13,7 +13,7 @@ class SSHdTest(ServerTest):
         self.daemon = SSHd(self.host, self.port, self.device)
 
     def _create_client(self):
-        return SSH2()
+        return SSH2(verify_fingerprint=False)
 
 
 def suite():
