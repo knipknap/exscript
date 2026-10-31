@@ -1,0 +1,71 @@
+{
+  "login": "ok",
+  "driver": "generic",
+  "os": "unknown",
+  "commands": [
+    {
+      "command": "uname -sr",
+      "error": null,
+      "lines": 2,
+      "sha256": "3cbc3fd8aee393a4d91615acfa6f59c14e10b97dd2158f66721ff4ecb75cefb3",
+      "first": "uname -sr",
+      "last": "Linux 6.18.54.1-microsoft-standard-WSL2"
+    },
+    {
+      "command": "cat /etc/os-release",
+      "error": null,
+      "lines": 7,
+      "sha256": "a37b836ba274652b2ca6f2444721a998419ac4fcd1ce2ce69efc935476a39e6d",
+      "first": "cat /etc/os-release",
+      "last": "BUG_REPORT_URL=\"https://gitlab.alpinelinux.org/alpine/aports/-/issues\""
+    },
+    {
+      "command": "ls -l --color=always /",
+      "error": null,
+      "lines": 19,
+      "sha256": "81b90d20ed47e9049a2a11ab51ee58dc809e41c55e16f75d8a69c9d25dcba10d",
+      "first": "ls -l --color=always /",
+      "last": "drwxr-xr-x   11 root     root          4096 Oct 21 19:59 \u001b[1;34mvar\u001b[m"
+    },
+    {
+      "command": "printf 'umlauts: \\303\\244\\303\\266\\303\\274, euro sign: \\342\\202\\254\\n'",
+      "error": null,
+      "lines": 3,
+      "sha256": "7006fb43f9319310a5f7143a1dc4af8045d44b9e68a4c951d846be29c786baa5",
+      "first": "",
+      "last": "umlauts: \u00c3\u00a4\u00c3\u00b6\u00c3\u00bc, euro sign: \u00e2\u0082\u00ac"
+    },
+    {
+      "command": "echo the quick brown fox jumps over the lazy dog, the quick brown fox jumps over the lazy dog, and again",
+      "error": null,
+      "lines": 3,
+      "sha256": "17fced575a130044d3ebc67b1c0836749d0ae0cf757816e5fce5d05324b74167",
+      "first": "",
+      "last": "the quick brown fox jumps over the lazy dog, the quick brown fox jumps over the lazy dog, and again"
+    },
+    {
+      "command": "seq 1 20000",
+      "error": null,
+      "lines": 20001,
+      "sha256": "de64cc695dbacf19a096fef9a7b898241e0984d9a0e54018e1458b798b80cda0",
+      "first": "seq 1 20000",
+      "last": "20000"
+    },
+    {
+      "command": "ls /nonexistent",
+      "error": null,
+      "lines": 2,
+      "sha256": "c44056b106b058656342e300441def2785e91ac86b8e7be94ba989ebe963466b",
+      "first": "ls /nonexistent",
+      "last": "ls: /nonexistent: No such file or directory"
+    },
+    {
+      "command": "exit",
+      "error": "ProtocolException",
+      "lines": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "first": "",
+      "last": ""
+    }
+  ]
+}

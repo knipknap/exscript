@@ -1,0 +1,11 @@
+<get-software-information/>
+---
+<get-config><source><running/></source></get-config>
+---
+<lock><target><candidate/></target></lock>
+---
+<lock><target><candidate/></target></lock>
+---
+<unlock><target><candidate/></target></unlock>
+---
+<get-config><source><no-such-datastore/></source></get-config>

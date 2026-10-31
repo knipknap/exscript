@@ -1,0 +1,15 @@
+# FRRouting vtysh over SSH (R1), an IOS-like CLI.
+terminal length 0
+show version
+show running-config
+show interface brief
+show ip route
+show nonexistent
+show ip
+sh i
+configure terminal
+interface lo
+description loopback for the Exscript tests
+end
+show running-config
+exit

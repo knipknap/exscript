@@ -1,0 +1,9 @@
+# Linux shell over SSH (R1): Alpine container with bash.
+uname -sr
+cat /etc/os-release
+ls -l --color=always /
+printf 'umlauts: \303\244\303\266\303\274, euro sign: \342\202\254\n'
+echo the quick brown fox jumps over the lazy dog, the quick brown fox jumps over the lazy dog, and again
+seq 1 20000
+ls /nonexistent
+exit

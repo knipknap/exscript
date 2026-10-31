@@ -1,0 +1,6 @@
+# Juniper Junos (R2): output with the pager on.
+show configuration
+!send \x20
+!send \x20
+!send q
+exit

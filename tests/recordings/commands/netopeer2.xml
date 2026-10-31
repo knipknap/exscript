@@ -1,0 +1,11 @@
+<get-config><source><running/></source></get-config>
+---
+<get><filter type="subtree"><netconf-state xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"><capabilities/></netconf-state></filter></get>
+---
+<lock><target><running/></target></lock>
+---
+<lock><target><running/></target></lock>
+---
+<unlock><target><running/></target></unlock>
+---
+<get><filter type="subtree"><yang-library xmlns="urn:ietf:params:xml:ns:yang:ietf-yang-library"/></filter></get>
