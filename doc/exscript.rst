@@ -46,6 +46,9 @@ following options are currently provided:
                             Interprets the given string as the script.
       --hosts=FILE          Loads a list of hostnames from the given file (one
                             host per line).
+      --insecure            Allow the template to call the functions that run
+                            local commands or access local files: sys.exec,
+                            sys.env and file.* (except file.exists).
       -i, --non-interactive
                             Do not ask for a username or password.
       -l DIR, --logdir=DIR  Logs any communication into the directory with the
@@ -82,9 +85,14 @@ following options are currently provided:
       --sleep=TIME          Waits for the specified time before running the
                             script. TIME is a timespec as specified by the 'sleep'
                             Unix command.
-      --ssh-auto-verify     Automatically confirms the 'Host key changed' SSH
-                            error  message with 'yes'. Highly insecure and not
+      --ssh-auto-verify     Disables the verification of SSH host keys, so that
+                            any key is accepted. Highly insecure and not
                             recommended.
+      --ssh-host-key-policy={reject,warn,auto-add}
+                            What to do with SSH hosts that are not in
+                            ~/.ssh/known_hosts: reject the connection (the
+                            default), warn and connect, or add the host key to
+                            known_hosts and connect.
       --ssh-key=FILE        Specify a key file that is passed to the SSH client.
                             This is equivalent to using the "-i" parameter of the
                             openssh command line client.

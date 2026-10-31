@@ -21,9 +21,10 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import os
+import shlex
 import sys
 import time
-from subprocess import PIPE, STDOUT, Popen
+from subprocess import DEVNULL, PIPE, STDOUT, run
 
 from .util import secure_function
 
@@ -41,18 +42,17 @@ def env(scope, varname):
 
 def execute(scope, command):
     """
-    Executes the given command locally.
+    Executes the given command locally, without a shell, and waits for it to
+    finish. Its output is stored in the __response__ variable.
 
     :type  command: string
-    :param command: A shell command.
+    :param command: A command line. On POSIX systems it is split like a shell
+        would split it, but pipes, redirections and variables are not
+        supported; use e.g. sh -c '...' to run a shell.
     """
-    process = Popen(
-        command[0], shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, text=True, close_fds=True
-    )
-    if process.stdout:
-        scope.define(__response__=process.stdout.readlines())
-    else:
-        scope.define(__response__=[''])
+    args = command[0] if os.name == 'nt' else shlex.split(command[0])
+    result = run(args, stdin=DEVNULL, stdout=PIPE, stderr=STDOUT, text=True, check=False)
+    scope.define(__response__=result.stdout.splitlines(keepends=True))
     return True
 
 

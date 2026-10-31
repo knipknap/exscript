@@ -57,6 +57,17 @@ marked with **BREAKING**; a migration guide will accompany the release.
   device: % Invalid input detected`. Before, it contained the full response, which
   may include configuration secrets. The full response is still in `conn.response`.
 - **`repr(Account)`:** Shows only the account name, for example `Account('admin')`.
+- **BREAKING - Templates Run in Secure Mode:** `Exscript.util.template.eval()`,
+  `eval_file()`, `paste()`, `paste_file()`, `test()` and `test_file()` forbid the
+  template functions that run local commands or access local files: `sys.exec`,
+  `sys.env`, and `file.*` except `file.exists`. Templates that call them raise
+  `Exscript.interpreter.exception.PermissionError` when they are compiled. Functions
+  that the caller passes as template variables are allowed. Before, secure mode was
+  available only for `test()` and off by default. To migrate, pass `secure=False`,
+  or use the new CLI option `--insecure`.
+- **BREAKING - `sys.exec` Without a Shell:** The template function `sys.exec` runs
+  the command without a shell and waits for it to finish. Pipes, redirections and
+  shell variables no longer work; use for example `sys.exec("sh -c '...'")`.
 
 ## Protocols
 

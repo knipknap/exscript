@@ -22,12 +22,27 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 Executing Exscript templates on a connection.
+
+All functions compile templates in secure mode by default: templates may not
+call the functions of the standard library that run local commands or access
+local files (``sys.exec``, ``sys.env``, and ``file.*`` except ``file.exists``).
+Such calls raise :class:`Exscript.interpreter.exception.PermissionError` when
+the template is compiled. Functions that the caller passes as variables are
+allowed. Pass ``secure=False`` to allow all functions.
 """
 
 from Exscript import stdlib
 from Exscript.interpreter import Parser
+from Exscript.stdlib.util import secure_function
 
 debug = 0
+
+
+def _trusted(value):
+    # Functions passed by the caller are allowed in secure mode.
+    if callable(value) and not hasattr(value, '_is_secure'):
+        return secure_function(value)
+    return value
 
 
 def _compile(conn, filename, template, parser_kwargs, **kwargs):
@@ -57,7 +72,7 @@ def _compile(conn, filename, template, parser_kwargs, **kwargs):
     parser.define_object(**stdlib.functions)
 
     # Allow for overriding built-in variables.
-    parser.define(**kwargs)
+    parser.define(**{name: _trusted(value) for name, value in kwargs.items()})
 
     # Compile the template.
     return parser.parse(template, parser.variables.get('__filename__')[0])
@@ -68,20 +83,16 @@ def _run(conn, filename, template, parser_kwargs, **kwargs):
     return compiled.execute()
 
 
-def test(string, secure=False, **kwargs):
+def test(string, secure=True, **kwargs):
     """
     Compiles the given template, and raises an exception if that
     failed. Does nothing otherwise.
 
-    With secure mode enabled it makes sure that each function that is used in
-    the template has the Exscript.stdlib.util.safe_function decorator.
-    Raises Exscript.interpreter.Exception.PermissionError if any function
-    lacks the decorator.
-
     :type  string: string
     :param string: The template to compile.
     :type  secure: bool
-    :param secure: Whether to enable secure mode.
+    :param secure: Whether to forbid the insecure functions (see the module
+        documentation).
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
@@ -89,13 +100,15 @@ def test(string, secure=False, **kwargs):
     _compile(None, None, string, parser_args, **kwargs)
 
 
-def test_file(filename, secure=False, **kwargs):
+def test_file(filename, secure=True, **kwargs):
     """
     Convenience wrapper around test() that reads the template from a file
     instead.
 
     :type  filename: string
     :param filename: The name of the template file.
+    :type  secure: bool
+    :param secure: Whether to forbid the insecure functions.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
@@ -104,7 +117,7 @@ def test_file(filename, secure=False, **kwargs):
         _compile(None, filename, fp.read(), parser_args, **kwargs)
 
 
-def eval(conn, string, strip_command=True, no_escaping=False, **kwargs):
+def eval(conn, string, strip_command=True, no_escaping=False, *, secure=True, **kwargs):
     r"""
     Compiles the given template and executes it on the given connection.
     Raises an exception if the compilation fails.
@@ -138,16 +151,19 @@ def eval(conn, string, strip_command=True, no_escaping=False, **kwargs):
     :param no_escaping: Whether to disable advanced escape evaluation for
         control characters, octal, hexadecimal and unicode character sequences.
         Evaluation for CR, LF and TAB in strings is always enabled.
+    :type  secure: bool
+    :param secure: Whether to forbid the insecure functions (see the module
+        documentation).
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     :rtype:  dict
     :return: The variables that are defined after execution of the script.
     """
-    parser_args = {'strip_command': strip_command, 'no_escaping': no_escaping}
+    parser_args = {'strip_command': strip_command, 'no_escaping': no_escaping, 'secure': secure}
     return _run(conn, None, string, parser_args, **kwargs)
 
 
-def eval_file(conn, filename, strip_command=True, no_escaping=False, **kwargs):
+def eval_file(conn, filename, strip_command=True, no_escaping=False, *, secure=True, **kwargs):
     """
     Convenience wrapper around eval() that reads the template from a file
     instead.
@@ -162,15 +178,17 @@ def eval_file(conn, filename, strip_command=True, no_escaping=False, **kwargs):
     :param no_escaping: Whether to disable advanced escape evaluation for
         control characters, octal, hexadecimal and unicode character sequences.
         Evaluation for CR, LF and TAB in strings is always enabled.
+    :type  secure: bool
+    :param secure: Whether to forbid the insecure functions.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
-    parser_args = {'strip_command': strip_command, 'no_escaping': no_escaping}
+    parser_args = {'strip_command': strip_command, 'no_escaping': no_escaping, 'secure': secure}
     with open(filename) as fp:
         return _run(conn, filename, fp.read(), parser_args, **kwargs)
 
 
-def paste(conn, string, no_escaping=False, **kwargs):
+def paste(conn, string, no_escaping=False, *, secure=True, **kwargs):
     """
     Compiles the given template and executes it on the given
     connection. This function differs from eval() such that it does not
@@ -190,16 +208,19 @@ def paste(conn, string, no_escaping=False, **kwargs):
     :param no_escaping: Whether to disable advanced escape evaluation for
         control characters, octal, hexadecimal and unicode character sequences.
         Evaluation for CR, LF and TAB in strings is always enabled.
+    :type  secure: bool
+    :param secure: Whether to forbid the insecure functions (see the module
+        documentation).
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     :rtype:  dict
     :return: The variables that are defined after execution of the script.
     """
-    parser_args = {'no_prompt': True, 'no_escaping': no_escaping}
+    parser_args = {'no_prompt': True, 'no_escaping': no_escaping, 'secure': secure}
     return _run(conn, None, string, parser_args, **kwargs)
 
 
-def paste_file(conn, filename, no_escaping=False, **kwargs):
+def paste_file(conn, filename, no_escaping=False, *, secure=True, **kwargs):
     """
     Convenience wrapper around paste() that reads the template from a file
     instead.
@@ -212,9 +233,11 @@ def paste_file(conn, filename, no_escaping=False, **kwargs):
     :param no_escaping: Whether to disable advanced escape evaluation for
         control characters, octal, hexadecimal and unicode character sequences.
         Evaluation for CR, LF and TAB in strings is always enabled.
+    :type  secure: bool
+    :param secure: Whether to forbid the insecure functions.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
     """
-    parser_args = {'no_prompt': True, 'no_escaping': no_escaping}
+    parser_args = {'no_prompt': True, 'no_escaping': no_escaping, 'secure': secure}
     with open(filename) as fp:
         return _run(conn, filename, fp.read(), parser_args, **kwargs)

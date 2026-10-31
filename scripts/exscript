@@ -220,8 +220,8 @@ def run():
         vars["__filename__"] = args.filename
     vars.update(hosts[0].get_all())
     try:
-        template.test(script_content, **vars)
-        template.test(script_extra_content, **vars)
+        template.test(script_content, secure=not args.insecure, **vars)
+        template.test(script_extra_content, secure=not args.insecure, **vars)
     except Exception as e:
         if args.parser_verbose > 0:
             raise
@@ -302,7 +302,9 @@ def run():
             if args.filename:
                 kwargs["__filename__"] = args.filename
             kwargs.update(host.get_all())
-            return template.paste(conn, script_content, args.no_escaping, **kwargs)
+            return template.paste(
+                conn, script_content, args.no_escaping, secure=not args.insecure, **kwargs
+            )
 
     else:
 
@@ -313,7 +315,12 @@ def run():
                 kwargs["__filename__"] = args.filename
             kwargs.update(host.get_all())
             return template.eval(
-                conn, script_content, not args.no_strip, args.no_escaping, **kwargs
+                conn,
+                script_content,
+                not args.no_strip,
+                args.no_escaping,
+                secure=not args.insecure,
+                **kwargs,
             )
 
     # Wrap the template processor such that the login procedure is automated.
@@ -491,6 +498,16 @@ parser.add_argument(
     help="""
 A python file containing a __lib__ dictionary that points to extra
 functions to be made available in the Exscript template.
+""".strip(),
+)
+
+parser.add_argument(
+    "--insecure",
+    action="store_true",
+    default=False,
+    help="""
+Allow the template to call the functions that run local commands or access
+local files: sys.exec, sys.env and file.* (except file.exists).
 """.strip(),
 )
 
