@@ -1,0 +1,6 @@
+# Cisco IOS, IOS XE and IOS XR (R2): output with the pager on.
+show running-config
+!send \x20
+!send \x20
+!send q
+exit

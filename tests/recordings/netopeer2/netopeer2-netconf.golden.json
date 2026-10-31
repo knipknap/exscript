@@ -1,0 +1,55 @@
+{
+  "login": "ok",
+  "driver": "isam",
+  "os": "isam",
+  "commands": [
+    {
+      "command": "<get-config><source><running/></source></get-config>",
+      "error": null,
+      "lines": 1,
+      "sha256": "da0a6eef846da19d7d140707c48dd66d602120196e48fe922fd5fa296a750188",
+      "first": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><data><keystore xmlns=\"urn:ietf:params:xml:ns:",
+      "last": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><data><keystore xmlns=\"urn:ietf:params:xml:ns:"
+    },
+    {
+      "command": "<get><filter type=\"subtree\"><netconf-state xmlns=\"urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring\"><capabilities/></",
+      "error": null,
+      "lines": 1,
+      "sha256": "e3293c248d0b213658df6629b0629745dec90cfcd1b29e17e2a24bb5d3d07696",
+      "first": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><data><netconf-state xmlns=\"urn:ietf:params:xm",
+      "last": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><data><netconf-state xmlns=\"urn:ietf:params:xm"
+    },
+    {
+      "command": "<lock><target><running/></target></lock>",
+      "error": null,
+      "lines": 1,
+      "sha256": "3c933c4e9edc9d377bef21fe7e0a1a8549ea0d71e6d0e47e41482c4753afb79e",
+      "first": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><ok/></rpc-reply>",
+      "last": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><ok/></rpc-reply>"
+    },
+    {
+      "command": "<lock><target><running/></target></lock>",
+      "error": "RPCError",
+      "lines": 1,
+      "sha256": "cecfbe1d8fc5f8ee829f80d9021c356e5bbb8ace38ef70850aa01c0113252481",
+      "first": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><rpc-error><error-type>application</error-type",
+      "last": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><rpc-error><error-type>application</error-type"
+    },
+    {
+      "command": "<unlock><target><running/></target></unlock>",
+      "error": null,
+      "lines": 1,
+      "sha256": "3c933c4e9edc9d377bef21fe7e0a1a8549ea0d71e6d0e47e41482c4753afb79e",
+      "first": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><ok/></rpc-reply>",
+      "last": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><ok/></rpc-reply>"
+    },
+    {
+      "command": "<get><filter type=\"subtree\"><yang-library xmlns=\"urn:ietf:params:xml:ns:yang:ietf-yang-library\"/></filter></get>",
+      "error": null,
+      "lines": 1,
+      "sha256": "85d97aba2989dcb93758b14c2754b63126602f64b633dc6f83e7e84129cb6bd3",
+      "first": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><data><yang-library xmlns=\"urn:ietf:params:xml",
+      "last": "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"*\"><data><yang-library xmlns=\"urn:ietf:params:xml"
+    }
+  ]
+}

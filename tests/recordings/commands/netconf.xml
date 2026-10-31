@@ -1,0 +1,9 @@
+<get-config><source><running/></source></get-config>
+---
+<lock><target><running/></target></lock>
+---
+<lock><target><running/></target></lock>
+---
+<unlock><target><running/></target></unlock>
+---
+<get-config><source><no-such-datastore/></source></get-config>

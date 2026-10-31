@@ -1,0 +1,19 @@
+# Juniper Junos and Junos Evolved (R2, lab devices only), with --os junos.
+# Enters configuration mode but commits nothing (commit check, then rollback 0).
+set cli screen-length 0
+set cli screen-width 0
+show version
+show configuration
+show interfaces terse
+show route
+show chassis hardware
+show nonexistent
+show i
+configure
+set interfaces lo0 description "Exscript test"
+show | compare
+commit check
+rollback 0
+exit configuration-mode
+show this-command-is-much-longer-than-the-terminal-width | match something-that-does-not-match-anything-at-all
+exit

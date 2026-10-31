@@ -3,3 +3,6 @@
 # Device captures and expected outputs must stay byte-identical (CRLF is intentional).
 tests/Exscript/protocols/banners/** -text
 tests/templates/** -text
+# Recorded sessions and their expected results are generated; collapse them in diffs.
+tests/recordings/*/*.jsonl linguist-generated
+tests/recordings/*/*.golden.json linguist-generated

@@ -1,0 +1,23 @@
+# Cisco IOS XR, cXR and eXR (R2, lab devices only), with --os ios_xr.
+# Changes the running config: creates and removes Loopback999 (two commits).
+terminal length 0
+terminal width 0
+show version
+show running-config
+show interfaces brief
+show route
+show inventory
+show nonexistent
+show ip
+configure terminal
+interface Loopback999
+description Exscript test, safe to remove
+commit
+end
+show running-config interface Loopback999
+configure terminal
+no interface Loopback999
+commit
+end
+show this-command-is-much-longer-than-the-terminal-width | include something-that-does-not-match-anything-at-all
+exit
