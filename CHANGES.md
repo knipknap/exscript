@@ -13,10 +13,21 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **Dependencies:**
 - **NETCONF Protocol:**
 - **OpenTelemetry Tracing (optional):** Install the `otel` extra (`Exscript[otel]`)
-  and use `Exscript.contrib.otel.ExscriptInstrumentor` to instrument `Protocol` and
-  `Netconf` operations. It creates spans for connect, login/authentication, send,
-  execute, and close, and records operation durations. Span attributes may include
-  host names, usernames, commands, and response contents.
+  and call `Exscript.contrib.otel.ExscriptInstrumentor().instrument()`. Every call of
+  `connect()`, `login()`, `authenticate()`, `send()`, `execute()` and `close()` creates
+  a client span such as `SSH2 execute`, with the attributes `server.address`,
+  `server.port`, `exscript.protocol`, `exscript.operation`, `exscript.os` and
+  `error.type`. The histogram `exscript.client.operation.duration` records the
+  durations in seconds. Commands and responses may contain secrets, so they are
+  recorded only with `instrument(capture_payload=True)`: truncated to
+  `max_payload_length` characters (default 1024), and with passwords as `<secret>`.
+  The extra installs only the OpenTelemetry API; the application provides the SDK.
+
+  Changes against the 2.9 development versions: spans are children of the current
+  span instead of the `connect` span, which also ended only on `close()`; the
+  `protocol.*` attributes are replaced by the ones above; payloads are no longer
+  recorded by default; and the histogram `exscript.client.duration` in milliseconds
+  is replaced. `login(account)` with a positional account no longer crashes.
 
 ## Security
 

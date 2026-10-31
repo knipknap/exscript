@@ -418,7 +418,6 @@ dependencies = [
 otel = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-instrumentation" },
-    { name = "opentelemetry-sdk" },
 ]
 
 [package.dev-dependencies]
@@ -443,9 +442,8 @@ types = [
 requires-dist = [
     { name = "lxml" },
     { name = "ncclient", specifier = ">=0.7,<1" },
-    { name = "opentelemetry-api", marker = "extra == 'otel'", specifier = ">=1.12" },
-    { name = "opentelemetry-instrumentation", marker = "extra == 'otel'", specifier = ">=0.42b0" },
-    { name = "opentelemetry-sdk", marker = "extra == 'otel'", specifier = ">=1.12" },
+    { name = "opentelemetry-api", marker = "extra == 'otel'", specifier = ">=1.27" },
+    { name = "opentelemetry-instrumentation", marker = "extra == 'otel'", specifier = ">=0.48b0" },
     { name = "paramiko", specifier = ">=3.4,<6" },
     { name = "pycryptodomex" },
 ]
@@ -454,14 +452,14 @@ provides-extras = ["otel"]
 [package.metadata.requires-dev]
 dev = [
     { name = "mypy", specifier = ">=2.4" },
-    { name = "opentelemetry-instrumentation", specifier = ">=0.42b0" },
-    { name = "opentelemetry-sdk", specifier = ">=1.12" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.48b0" },
+    { name = "opentelemetry-sdk", specifier = ">=1.27" },
     { name = "pytest", specifier = ">=9.2" },
     { name = "pytest-cov", specifier = ">=7.1" },
 ]
 test = [
-    { name = "opentelemetry-instrumentation", specifier = ">=0.42b0" },
-    { name = "opentelemetry-sdk", specifier = ">=1.12" },
+    { name = "opentelemetry-instrumentation", specifier = ">=0.48b0" },
+    { name = "opentelemetry-sdk", specifier = ">=1.27" },
     { name = "pytest", specifier = ">=9.2" },
     { name = "pytest-cov", specifier = ">=7.1" },
 ]

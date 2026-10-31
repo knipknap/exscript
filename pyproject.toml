@@ -45,9 +45,8 @@ dependencies = [
 
 [project.optional-dependencies]
 otel = [
-    "opentelemetry-api>=1.12",
-    "opentelemetry-sdk>=1.12",
-    "opentelemetry-instrumentation>=0.42b0",
+    "opentelemetry-api>=1.27",
+    "opentelemetry-instrumentation>=0.48b0",
 ]
 
 [project.urls]
@@ -60,8 +59,8 @@ Changelog = "https://github.com/knipknap/exscript/blob/master/CHANGES.md"
 test = [
     "pytest>=9.2",
     "pytest-cov>=7.1",
-    "opentelemetry-sdk>=1.12",
-    "opentelemetry-instrumentation>=0.42b0",
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-instrumentation>=0.48b0",
 ]
 types = ["mypy>=2.4"]
 dev = [{ include-group = "test" }, { include-group = "types" }]

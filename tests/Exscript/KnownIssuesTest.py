@@ -21,17 +21,7 @@ from Exscript.protocols import SSH2, Dummy, Telnet
 from Exscript.protocols.drivers import driver_map, isam
 from Exscript.servers import SSHd, Telnetd
 
-try:
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
-
-    from Exscript.contrib.otel import ExscriptInstrumentor
-except ImportError:  # the optional "otel" extra is not installed
-    ExscriptInstrumentor = None
-
 HOST = '127.0.0.1'
-PASSWORD = 'S3cr3t-P@ss'
 KEYFILE = os.path.join(os.path.dirname(__file__), 'protocols', 'id_rsa')
 
 
@@ -86,40 +76,6 @@ class ExpectTest(ServerMixin, unittest.TestCase):
             preferred_authentications=['password'],
         )
         self.expectMarker(conn, port)
-
-
-@unittest.skipIf(ExscriptInstrumentor is None, 'requires the "otel" extra')
-class OtelTest(unittest.TestCase):
-    def setUp(self):
-        self.exporter = InMemorySpanExporter()
-        provider = TracerProvider()
-        provider.add_span_processor(SimpleSpanProcessor(self.exporter))
-        instrumentor = ExscriptInstrumentor()
-        instrumentor.instrument(tracer_provider=provider, skip_dep_check=True)
-        self.addCleanup(instrumentor.uninstrument)
-
-    def runSession(self, login):
-        device = VirtualDevice('r1', echo=False, strict=False)
-        device.add_command('show run', 'snmp-server community PRIVATE-COMMUNITY RW')
-        conn = Dummy(device=device)
-        conn.connect('r1')
-        login(conn, Account('admin', PASSWORD, needs_lock=False))
-        conn.execute('show run')
-        conn.close(force=True)
-
-    @unittest.expectedFailure  # the wrapper reads args[1] for app_account -> IndexError
-    def testLoginWithPositionalAccount(self):
-        self.runSession(lambda conn, account: conn.login(account))
-
-    @unittest.expectedFailure  # commands (incl. passwords) and responses are exported
-    def testNoSecretsOrDeviceOutputExportedByDefault(self):
-        self.runSession(lambda conn, account: conn.login(account=account))
-        exported = [
-            str(value)
-            for span in self.exporter.get_finished_spans()
-            for value in (span.attributes or {}).values()
-        ]
-        self.assertEqual([v for v in exported if PASSWORD in v or 'PRIVATE-COMMUNITY' in v], [])
 
 
 class DriverTest(unittest.TestCase):

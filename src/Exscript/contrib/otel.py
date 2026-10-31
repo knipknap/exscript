@@ -21,355 +21,183 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-OpenTelemetry instrumentation for Exscript.
-
-Automatically creates spans and metrics for ``Protocol.connect``,
-``login``, ``send``, ``execute`` and ``close`` (plus the same on
-``Netconf``).
+OpenTelemetry instrumentation for Exscript. Requires the ``otel`` extra.
 
 Usage::
 
     from Exscript.contrib.otel import ExscriptInstrumentor
 
     ExscriptInstrumentor().instrument()
+
+Every call of ``connect()``, ``login()``, ``authenticate()``, ``send()``,
+``execute()`` and ``close()`` on a protocol adapter creates a client span named
+like ``SSH2 execute``, as a child of the current span. The duration of each call
+is recorded in the histogram ``exscript.client.operation.duration``, in seconds.
+
+Span attributes are ``server.address``, ``server.port``, ``exscript.protocol``
+(the class name, e.g. ``SSH2``), ``exscript.operation``, ``exscript.os`` (the
+guessed OS, once known), and ``error.type`` if the call raised. The histogram
+has the attributes ``exscript.protocol``, ``exscript.operation`` and
+``error.type``.
+
+Commands and responses may contain secrets, so they are recorded only with
+``instrument(capture_payload=True)``, as ``exscript.command`` and
+``exscript.response``. They are truncated to ``max_payload_length`` characters
+(default: 1024), and passwords sent by the login are recorded as ``<secret>``.
+
+Further options of ``instrument()``:
+
+- ``tracer_provider`` and ``meter_provider``, which default to the global ones;
+- ``request_hook(span, conn)``, called before each call;
+- ``response_hook(span, conn, result)``, called after each call that did not
+  raise.
 """
 
 from __future__ import annotations
 
+import contextvars
 import functools
-import types
+import inspect
+import time
 from collections.abc import Callable, Collection
-from timeit import default_timer
+from typing import Any
 
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined]
     BaseInstrumentor,  # mypy cannot resolve it in this namespace package
 )
-from opentelemetry.metrics import Histogram, get_meter
-from opentelemetry.trace import SpanKind, Tracer, get_tracer, set_span_in_context
-from opentelemetry.trace.span import Span
+from opentelemetry.metrics import get_meter
+from opentelemetry.trace import Span, SpanKind, get_tracer
 
-from Exscript.protocols.protocol import Protocol
+from Exscript.protocols import Protocol
+from Exscript.version import __version__
 
-# TODO (Netconf): Check whether Netconf is now similar enough to Protocol.
-try:
-    from Exscript.protocols.netconf import Netconf
-except ImportError:  # ncclient may not be installed
-    Netconf = None  # type: ignore[misc,assignment]
+RequestHook = Callable[[Span, Protocol], None]
+ResponseHook = Callable[[Span, Protocol, Any], None]
 
-from Exscript.version import __version__ as _exscript_version
-
-# ---------------------------------------------------------------------------
-# Public type aliases
-# ---------------------------------------------------------------------------
-_RequestHookT = Callable[[Span, Protocol], None] | None
-_ResponseHookT = Callable[[Span, Protocol], None] | None
-
-# Sentinel attribute set on patched methods
-_APPLIED_ATTR = "opentelemetry_instrumentation_exscript_applied"
-# Attribute stored on the Protocol *instance* by the connect wrapper
-_CONNECT_SPAN_ATTR = "opentelemetry_instrumentation_exscript_connect_span"
-
-# Methods to instrument — same set for Protocol and Netconf
-_INSTRUMENTED_METHODS = ("connect", "login", "authenticate", "close", "send", "execute")
+_OPERATIONS = ('connect', 'login', 'authenticate', 'send', 'execute', 'close')
+_APPLIED = '_exscript_otel_applied'
+_DISABLED = '_exscript_otel_disabled'
+# Calls take from milliseconds (send) to minutes (execute on a slow device).
+_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 120, 300)
+# The call in progress in this context, as (id(conn), operation).
+_active: contextvars.ContextVar[tuple[int, str] | None] = contextvars.ContextVar(
+    'exscript_otel_active', default=None
+)
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-def _get_parent_span(proto: Protocol) -> Span | None:
-    """Return the span started by ``connect``, if any."""
-    return getattr(proto, _CONNECT_SPAN_ATTR, None)
+def _protocol_classes():
+    """Returns Protocol and its subclasses, which may override instrumented methods."""
+    classes, todo = [], [Protocol]
+    while todo:
+        cls = todo.pop()
+        classes.append(cls)
+        todo.extend(cls.__subclasses__())
+    return classes
 
 
-def _get_protocol_attributes(proto: Protocol) -> dict:
-    """Collect common span attributes from a Protocol instance."""
-    attrs: dict = {
-        "protocol.type": proto.__class__.__name__,
-        "protocol.host": proto.host,
-        "protocol.port": proto.port,
-        "protocol.encoding": proto.encoding,
-    }
-    # These calls may fail before connect — be defensive
-    try:
-        attrs["protocol.timeout"] = proto.get_timeout()
-    except Exception:  # noqa: BLE001, S110
-        pass
-    try:
-        attrs["protocol.connect_timeout"] = proto.get_connect_timeout()
-    except Exception:  # noqa: BLE001, S110
-        pass
-    try:
-        attrs["protocol.os"] = proto.guess_os()
-    except Exception:  # noqa: BLE001, S110
-        pass
-    try:
-        prompt = proto.get_prompt()
-        attrs["protocol.prompt"] = (
-            [getattr(p, "pattern", str(p)) for p in prompt]
-            if isinstance(prompt, (list, tuple))
-            else getattr(prompt, "pattern", str(prompt))
-        )
-    except Exception:  # noqa: BLE001, S110
-        pass
-    try:
-        err_prompt = proto.get_error_prompt()
-        attrs["protocol.error_prompt"] = (
-            [getattr(p, "pattern", str(p)) for p in err_prompt]
-            if isinstance(err_prompt, (list, tuple))
-            else getattr(err_prompt, "pattern", str(err_prompt))
-        )
-    except Exception:  # noqa: BLE001, S110
-        pass
-    try:
-        attrs["protocol.protocol_authenticated"] = proto.is_protocol_authenticated()
-    except Exception:  # noqa: BLE001, S110
-        pass
-    try:
-        attrs["protocol.app_authenticated"] = proto.is_app_authenticated()
-    except Exception:  # noqa: BLE001, S110
-        pass
-    try:
-        attrs["protocol.app_authorized"] = proto.is_app_authorized()
-    except Exception:  # noqa: BLE001, S110
-        pass
-    return attrs
+def _truncate(value, limit):
+    value = str(value)
+    return value if len(value) <= limit else value[:limit] + '...'
 
 
-def _span_name(protocol_name: str, action: str) -> str:
-    return f"{protocol_name.strip()} {action.strip()}"
+def _set_connection_attributes(span, conn):
+    if conn.host:
+        span.set_attribute('server.address', str(conn.host))
+    if conn.port:
+        span.set_attribute('server.port', int(conn.port))
+    os_name = conn.guess_os()
+    if os_name and os_name != 'unknown':
+        span.set_attribute('exscript.os', os_name)
 
 
-# ---------------------------------------------------------------------------
-# Generic wrapper factory
-# ---------------------------------------------------------------------------
-def _make_wrapper(
-    original,
-    action: str,
-    tracer: Tracer,
-    duration_histogram: Histogram,
-    request_hook: _RequestHookT,
-    response_hook: _ResponseHookT,
-):
-    """Return an instrumented replacement for *original* method."""
+def _make_wrapper(original, operation, tracer, histogram, options):
+    signature = inspect.signature(original)
+    capture, limit = options['capture_payload'], options['max_payload_length']
 
     @functools.wraps(original)
-    def wrapper(self, *args, **kwargs):
-        protocol_name = self.__class__.__name__
-        name = _span_name(protocol_name, action)
+    def wrapper(conn, *args, **kwargs):
+        key = (id(conn), operation)
+        if getattr(conn, _DISABLED, False) or _active.get() == key:
+            return original(conn, *args, **kwargs)  # e.g. an override that calls super()
+        try:
+            arguments = signature.bind(conn, *args, **kwargs).arguments
+        except TypeError:
+            return original(conn, *args, **kwargs)  # raises the TypeError for the caller
 
-        # --- span attributes ---
-        span_attributes: dict = {"protocol.type": protocol_name}
-        span_attributes.update(_get_protocol_attributes(self))
+        protocol = type(conn).__name__
+        labels = {'exscript.protocol': protocol, 'exscript.operation': operation}
+        attributes = dict(labels)
+        if capture and operation == 'send':
+            secret = getattr(conn, '_sending_secret', False)
+            attributes['exscript.command'] = (
+                '<secret>' if secret else _truncate(arguments['data'], limit)
+            )
+        elif capture and operation == 'execute':
+            attributes['exscript.command'] = _truncate(arguments['command'], limit)
 
-        # action-specific attributes
-        if action == "connect":
-            hostname = kwargs.get("hostname") or (args[0] if args else None)
-            port = kwargs.get("port") or (args[1] if len(args) > 1 else None)
-            if hostname:
-                span_attributes["protocol.host"] = hostname
-            if port:
-                span_attributes["protocol.port"] = port
-        elif action in ("login", "authenticate"):
-            account = kwargs.get("account") or (args[0] if args else None)
-            app_account = kwargs.get("app_account") or (args[1] if args else None)
-            if account is not None:
-                try:
-                    span_attributes["protocol.username"] = account.get_name()
-                except Exception:  # noqa: BLE001, S110
-                    pass
-            if app_account is not None:
-                try:
-                    span_attributes["protocol.app_username"] = app_account.get_name()
-                except Exception:  # noqa: BLE001, S110
-                    pass
-        elif action == "close":
-            force = kwargs.get("force", False) or (args[0] if args else False)
-            span_attributes["protocol.force_close"] = force
-        elif action in ("send", "execute"):
-            data = kwargs.get("data")
-            command = kwargs.get("command", data) or (args[0] if args else None)
-            if command is not None:
-                span_attributes["protocol.command"] = command
-
-        metric_labels = {"protocol.type": protocol_name}
-
-        # --- connect uses a long-lived span (ended in close) ---
-        if action == "connect":
-            span = tracer.start_span(name, kind=SpanKind.CLIENT, attributes=span_attributes)
-            exception = None
-            if callable(request_hook):
-                request_hook(span, self)
-            start_time = default_timer()
+        with tracer.start_as_current_span(
+            f'{protocol} {operation}', kind=SpanKind.CLIENT, attributes=attributes
+        ) as span:
+            if options['request_hook']:
+                options['request_hook'](span, conn)
+            token = _active.set(key)
+            start = time.perf_counter()
             try:
-                result = original(self, *args, **kwargs)
-            except Exception as exc:  # noqa: BLE001
-                exception = exc
-                result = getattr(exc, "response", None)
+                result = original(conn, *args, **kwargs)
+            except BaseException as exc:
+                labels['error.type'] = type(exc).__qualname__
+                span.set_attribute('error.type', labels['error.type'])
+                raise
             finally:
-                elapsed = max(round((default_timer() - start_time) * 1000), 0)
-
-            if callable(response_hook):
-                response_hook(span, self, result)
-            duration_histogram.record(elapsed, attributes=metric_labels)
-
-            if exception is not None:
-                raise exception.with_traceback(exception.__traceback__)
-
-            # Store so child spans can use it as parent
-            setattr(self, _CONNECT_SPAN_ATTR, span)
+                _active.reset(token)
+                histogram.record(time.perf_counter() - start, labels)
+                _set_connection_attributes(span, conn)
+            if capture and operation == 'execute':
+                span.set_attribute('exscript.response', _truncate(conn.response, limit))
+            if options['response_hook']:
+                options['response_hook'](span, conn, result)
             return result
 
-        # --- all other actions use a child span scoped to the call ---
-        parent = _get_parent_span(self)
-        ctx = set_span_in_context(parent) if parent else None
-
-        span_kwargs: dict = {
-            "kind": SpanKind.CLIENT,
-            "attributes": span_attributes,
-        }
-        if ctx:
-            span_kwargs["context"] = ctx
-
-        with tracer.start_as_current_span(name, **span_kwargs) as span:
-            exception = None
-            if callable(request_hook):
-                request_hook(span, self)
-            start_time = default_timer()
-            try:
-                result = original(self, *args, **kwargs)
-            except Exception as exc:  # noqa: BLE001
-                exception = exc
-                result = getattr(exc, "response", None)
-            finally:
-                elapsed = max(round((default_timer() - start_time) * 1000), 0)
-
-            # Capture response on execute, send does not update response by design!
-            if action == "execute":
-                try:
-                    span.set_attribute("protocol.response", str(self.response))
-                except Exception:  # noqa: BLE001, S110
-                    pass
-
-            if callable(response_hook):
-                response_hook(span, self, result)
-            duration_histogram.record(elapsed, attributes=metric_labels)
-
-            if exception is not None:
-                raise exception.with_traceback(exception.__traceback__)
-
-        # End the connect span when close is called
-        if action == "close" and parent is not None:
-            try:
-                parent.end()
-            except Exception:  # noqa: BLE001, S110
-                pass
-
-        return result
-
-    setattr(wrapper, _APPLIED_ATTR, True)
+    setattr(wrapper, _APPLIED, True)
     return wrapper
 
 
-# ---------------------------------------------------------------------------
-# Patch / un-patch logic
-# ---------------------------------------------------------------------------
-def _instrument_class(
-    cls,
-    tracer: Tracer,
-    duration_histogram: Histogram,
-    request_hook: _RequestHookT,
-    response_hook: _ResponseHookT,
-):
-    """Monkey-patch all target methods on *cls*."""
-    for method_name in _INSTRUMENTED_METHODS:
-        original = getattr(cls, method_name, None)
-        if original is None:
-            continue
-        if getattr(original, _APPLIED_ATTR, False):
-            continue  # already instrumented
-        wrapped = _make_wrapper(
-            original,
-            method_name,
-            tracer,
-            duration_histogram,
-            request_hook,
-            response_hook,
-        )
-        setattr(cls, method_name, wrapped)
-
-
-def _uninstrument_class(cls):
-    """Restore original methods on *cls*."""
-    for method_name in _INSTRUMENTED_METHODS:
-        func = getattr(cls, method_name, None)
-        if func is None or not getattr(func, _APPLIED_ATTR, False):
-            continue
-        setattr(cls, method_name, func.__wrapped__)
-
-
-# ---------------------------------------------------------------------------
-# Public instrumentor
-# ---------------------------------------------------------------------------
 class ExscriptInstrumentor(BaseInstrumentor):
-    """OpenTelemetry instrumentor for Exscript Protocol & Netconf.
-
-    Usage::
-
-        ExscriptInstrumentor().instrument()
-        # optional hooks:
-        ExscriptInstrumentor().instrument(
-            request_hook=my_request_hook,
-            response_hook=my_response_hook,
-        )
-    """
+    """Instruments all protocol adapters; see the module documentation."""
 
     def instrumentation_dependencies(self) -> Collection[str]:
-        return ("exscript",)
+        return ('exscript',)
 
     def _instrument(self, **kwargs):
-        tracer_provider = kwargs.get("tracer_provider")
-        tracer = get_tracer(
-            __name__,
-            _exscript_version,
-            tracer_provider,
+        tracer = get_tracer(__name__, __version__, kwargs.get('tracer_provider'))
+        meter = get_meter(__name__, __version__, kwargs.get('meter_provider'))
+        histogram = meter.create_histogram(
+            'exscript.client.operation.duration',
+            unit='s',
+            description='Duration of Exscript protocol operations',
+            explicit_bucket_boundaries_advisory=_BUCKETS,
         )
-        meter_provider = kwargs.get("meter_provider")
-        meter = get_meter(__name__, _exscript_version, meter_provider)
-        duration_histogram = meter.create_histogram(
-            name="exscript.client.duration",
-            unit="ms",
-            description="Duration of Exscript protocol operations",
-        )
-        request_hook = kwargs.get("request_hook")
-        response_hook = kwargs.get("response_hook")
-
-        _instrument_class(
-            Protocol,
-            tracer,
-            duration_histogram,
-            request_hook,
-            response_hook,
-        )
-        if Netconf is not None:
-            _instrument_class(
-                Netconf,
-                tracer,
-                duration_histogram,
-                request_hook,
-                response_hook,
-            )
+        options = {
+            'capture_payload': kwargs.get('capture_payload', False),
+            'max_payload_length': kwargs.get('max_payload_length', 1024),
+            'request_hook': kwargs.get('request_hook'),
+            'response_hook': kwargs.get('response_hook'),
+        }
+        for cls in _protocol_classes():
+            for operation in _OPERATIONS:
+                method = cls.__dict__.get(operation)
+                if method is not None and not getattr(method, _APPLIED, False):
+                    wrapper = _make_wrapper(method, operation, tracer, histogram, options)
+                    setattr(cls, operation, wrapper)
 
     def _uninstrument(self, **kwargs):
-        _uninstrument_class(Protocol)
-        if Netconf is not None:
-            _uninstrument_class(Netconf)
+        for cls in _protocol_classes():
+            for operation in _OPERATIONS:
+                method = cls.__dict__.get(operation)
+                if getattr(method, _APPLIED, False):
+                    setattr(cls, operation, method.__wrapped__)
 
     @staticmethod
     def uninstrument_protocol(protocol):
-        """Disable instrumentation on a specific *protocol* instance."""
-        for method_name in _INSTRUMENTED_METHODS:
-            func = getattr(protocol, method_name, None)
-            if func is None or not getattr(func, _APPLIED_ATTR, False):
-                continue
-            original = types.MethodType(func.__wrapped__, protocol)
-            setattr(protocol, method_name, original)
+        """Disables the instrumentation for the given protocol adapter."""
+        setattr(protocol, _DISABLED, True)
