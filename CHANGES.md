@@ -68,6 +68,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **BREAKING - `sys.exec` Without a Shell:** The template function `sys.exec` runs
   the command without a shell and waits for it to finish. Pipes, redirections and
   shell variables no longer work; use for example `sys.exec("sh -c '...'")`.
+- **XML Parsing:** Exscript parses NETCONF RPCs and replies without resolving
+  entities, loading DTDs, or accessing the network, also with `huge_tree`. lxml 5.0 or
+  later is required, which no longer resolves external entities by default, also in
+  the parsers of ncclient.
 
 ## Protocols
 

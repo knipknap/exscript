@@ -26,6 +26,20 @@ Working with XML.
 
 from lxml import etree
 
+# Entities are never resolved and DTDs and other resources are never loaded,
+# which rules out XXE attacks; also with huge_tree, which only lifts size limits.
+_parsers = {
+    huge_tree: etree.XMLParser(
+        resolve_entities=False, load_dtd=False, no_network=True, huge_tree=huge_tree
+    )
+    for huge_tree in (False, True)
+}
+
+
+def _parse(string, huge_tree=False):
+    """Parses an XML string with the safe parser and returns the root element."""
+    return etree.fromstring(string.encode('utf-8'), _parsers[huge_tree])
+
 
 class XMLValidationError(Exception):
     """
@@ -52,7 +66,7 @@ def validate_xml(string, *, silent=False):
     :return: Whether the string is valid XML in UTF-8.
     """
     try:
-        etree.fromstring(string.encode("utf-8"))
+        _parse(string)
     except UnicodeEncodeError:
         if not silent:
             raise

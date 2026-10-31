@@ -37,7 +37,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "lxml",
+    "lxml>=5.0",  # 5.0 stopped resolving external entities by default, also in ncclient
     "ncclient>=0.7,<1",
     "paramiko>=3.4,<6",
     "pycryptodomex",

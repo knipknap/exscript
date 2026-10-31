@@ -36,10 +36,10 @@ from ncclient.manager import Manager, make_device_handler
 from ncclient.operations.errors import TimeoutExpiredError
 from ncclient.operations.rpc import RaiseMode, RPCReply
 from ncclient.transport.ssh import SSHSession
-from ncclient.xml_ import NCElement, to_ele, to_xml
+from ncclient.xml_ import NCElement, to_xml
 from paramiko.ssh_exception import SSHException
 
-from ..util.xml import XMLValidationError, validate_xml
+from ..util.xml import XMLValidationError, _parse, validate_xml
 from .exception import (
     LoginFailure,
     ProtocolException,
@@ -141,9 +141,9 @@ class Netconf(SSH2):
         if self.response is None:
             return None  # send() was called without expect_prompt()
         if isinstance(self._ncc_response, RPCReply):
-            return to_ele(self._ncc_response.xml, huge_tree=self.huge_tree)
+            return _parse(self._ncc_response.xml, huge_tree=self.huge_tree)
         if isinstance(self._ncc_response, NCElement):
-            return to_ele(self._ncc_response.data_xml, huge_tree=self.huge_tree)
+            return _parse(self._ncc_response.data_xml, huge_tree=self.huge_tree)
         return None
 
     @staticmethod
@@ -378,7 +378,7 @@ class Netconf(SSH2):
         self._ncc_response = None
         self._validate_rpc_body(data)
         try:
-            element = to_ele(data)
+            element = _parse(data)
             self._ncc_response = self._ncc_manager.dispatch(element)
             # wrappers handle the self.data_sent_event
         except TimeoutExpiredError:

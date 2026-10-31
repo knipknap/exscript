@@ -440,7 +440,7 @@ types = [
 
 [package.metadata]
 requires-dist = [
-    { name = "lxml" },
+    { name = "lxml", specifier = ">=5.0" },
     { name = "ncclient", specifier = ">=0.7,<1" },
     { name = "opentelemetry-api", marker = "extra == 'otel'", specifier = ">=1.27" },
     { name = "opentelemetry-instrumentation", marker = "extra == 'otel'", specifier = ">=0.48b0" },
