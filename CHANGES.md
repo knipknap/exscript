@@ -8,6 +8,9 @@ marked with **BREAKING**; a migration guide will accompany the release.
 
 ## General
 
+- **License Labels:** Exscript remains MIT-licensed. `Exscript.protocols.telnetlib` is
+  derived from CPython's telnetlib, so it carries the PSF notice, the license text is
+  in `LICENSES/PSF-2.0.txt`, and the package declares `MIT AND PSF-2.0`.
 - **Python 2.7 Support:**
 - **Python 3.11+ Support:**
 - **Dependencies:**

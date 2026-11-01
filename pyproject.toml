@@ -8,8 +8,8 @@ dynamic = ["version"]
 description = "Automating Telnet, SSH and NETCONF"
 readme = "README.md"
 requires-python = ">=3.12"
-license = "MIT"
-license-files = ["COPYING"]
+license = "MIT AND PSF-2.0"  # PSF-2.0: protocols/telnetlib.py is derived from CPython
+license-files = ["COPYING", "LICENSES/*"]
 authors = [{ name = "Samuel Abels", email = "knipknap@gmail.com" }]
 keywords = [
     "exscript",
