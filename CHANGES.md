@@ -75,6 +75,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
   entities, loading DTDs, or accessing the network, also with `huge_tree`. lxml 5.0 or
   later is required, which no longer resolves external entities by default, also in
   the parsers of ncclient.
+- **CLI Without `eval()` and Shell:** A value entered at a `-d VAR={#"PROMPT"}` prompt
+  is parsed as a Python literal, such as a number or a list, instead of being run as
+  Python code. `--sleep` no longer runs the `sleep` command in a shell; it accepts
+  seconds with an optional suffix `m`, `h` or `d`, also on Windows.
 
 ## Protocols
 

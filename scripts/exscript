@@ -23,11 +23,13 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import argparse
+import ast
 import getpass
 import importlib.util
 import os
 import re
 import sys
+import time
 from pathlib import Path
 
 import Exscript.protocols.drivers
@@ -53,6 +55,19 @@ bracket_expression = r"\{([^\]]*)\}"
 define_expression = rf"^\S+=(?:\S+|{bracket_expression})$"
 bracket_expression_re = re.compile(rf"^{bracket_expression}$")
 define_expression_re = re.compile(define_expression)
+duration_re = re.compile(r"(\d+(?:\.\d*)?|\.\d+)([smhd]?)")
+duration_units = {"": 1, "s": 1, "m": 60, "h": 3600, "d": 86400}
+
+
+def duration(text):
+    """Returns the seconds of a time like the sleep command takes it, e.g. "1h 30m"."""
+    seconds = 0.0
+    for part in text.split():
+        match = duration_re.fullmatch(part)
+        if match is None:
+            raise ValueError(part)
+        seconds += float(match.group(1)) * duration_units[match.group(2)]
+    return seconds
 
 
 def expand_bracket(value_name, value):
@@ -67,8 +82,8 @@ def expand_bracket(value_name, value):
         value = input(f"Please enter {prompt.lstrip('#')}: ")
         if prompt.startswith("#"):
             try:
-                value = eval(value)
-            except (SyntaxError, NameError):
+                value = ast.literal_eval(value)
+            except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
                 pass
     return value
 
@@ -344,12 +359,10 @@ def run():
         decorator = log_to_file(args.logdir, mode, args.delete_logs)
         function = decorator(function)
 
-    # Wait until the specified time. We are using os.system because
-    # it allows for specifying absolute times, not just the number
-    # of seconds like Python's time.sleep().
+    # Wait until the specified time.
     if args.sleep:
-        print(f"Waiting for {args.sleep}...", end="", flush=True)
-        os.system(f"sleep {args.sleep}")
+        print(f"Waiting for {args.sleep:g} seconds...", end="", flush=True)
+        time.sleep(args.sleep)
         print("time expired, starting script.")
 
     # Run the template.
@@ -458,7 +471,8 @@ Defines a variable that is passed to the script.
 PAIR has the following syntax: STRING=STRING.
 Use a prompt with the following syntax: VAR={"PROMPT"}.
 Use a password prompt with the following syntax: VAR={\\!"PROMPT"}.
-Evaluate the value of a prompt with the following syntax: VAR={#"PROMPT"}.
+Evaluate the value of a prompt as a Python literal (e.g. a number or a list)
+with the following syntax: VAR={#"PROMPT"}.
 """.strip(),
 )
 
@@ -670,10 +684,12 @@ Defines the number of retries per host on login failure. Default is 0.
 parser.add_argument(
     "--sleep",
     metavar="TIME",
+    type=duration,
     default="",
     help="""
 Waits for the specified time before running the script.
-TIME is a timespec as specified by the 'sleep' Unix command.
+TIME is a number of seconds, optionally with the suffix m, h or d,
+like for the 'sleep' Unix command; e.g. "90" or "1h 30m".
 """.strip(),
 )
 

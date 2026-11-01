@@ -83,8 +83,9 @@ following options are currently provided:
       --retry-login=NUM     Defines the number of retries per host on login
                             failure. Default is 0.
       --sleep=TIME          Waits for the specified time before running the
-                            script. TIME is a timespec as specified by the 'sleep'
-                            Unix command.
+                            script. TIME is a number of seconds, optionally with
+                            the suffix m, h or d, like for the 'sleep' Unix
+                            command; e.g. "90" or "1h 30m".
       --ssh-auto-verify     Disables the verification of SSH host keys, so that
                             any key is accepted. Highly insecure and not
                             recommended.
