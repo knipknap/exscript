@@ -61,6 +61,7 @@ test = [
     "pytest-cov>=7.1",
     "opentelemetry-sdk>=1.27",
     "opentelemetry-instrumentation>=0.48b0",
+    "hypothesis>=6.170.14",
 ]
 types = ["mypy>=2.4"]
 dev = [{ include-group = "test" }, { include-group = "types" }]
@@ -122,10 +123,6 @@ files = ["src"]
 ignore_missing_imports = true  # paramiko, ncclient and others ship no type hints
 warn_unused_ignores = true
 warn_redundant_casts = true
-
-[[tool.mypy.overrides]]
-module = ["Exscript.protocols.telnetlib"]
-ignore_errors = true  # vendored copy of the former standard library module
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

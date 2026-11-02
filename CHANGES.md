@@ -9,7 +9,7 @@ marked with **BREAKING**; a migration guide will accompany the release.
 ## General
 
 - **License Labels:** Exscript remains MIT-licensed. `Exscript.protocols.telnetlib` is
-  derived from CPython's telnetlib, so it carries the PSF notice, the license text is
+  derived from CPython's telnetlib (3.12), so it carries the PSF notice, the license text is
   in `LICENSES/PSF-2.0.txt`, and the package declares `MIT AND PSF-2.0`.
 - **Python 2.7 Support:**
 - **Python 3.11+ Support:**
@@ -96,6 +96,33 @@ marked with **BREAKING**; a migration guide will accompany the release.
   - `Exscript.util.file.get_hosts_from_file(filename, default_protocol='ssh', ...)`
   - `Exscript.util.url.Url.from_string(url, default_protocol='ssh')`
   - `exscript` CLI: `-p`/`--protocol`
+
+### Telnet
+
+- **Telnet Client Based on CPython 3.12:** `Exscript.protocols.telnetlib` is now based
+  on the last telnetlib of CPython (3.12; the module was removed in 3.13). Fixes:
+  - connections use IPv6, too, and try all addresses of the host;
+  - Telnet commands are parsed in whole reads instead of byte by byte, which cuts the
+    CPU time of large responses by about a quarter;
+  - a command split across two reads no longer blocks until more data arrives;
+  - `IAC NOP` and option code 0 no longer crash the connection with a `TypeError`; a
+    `DO` for option 0 is refused with `WONT` instead of being ignored;
+  - subnegotiations end at `IAC SE` only, as RFC 855 requires;
+  - multibyte characters split across reads are decoded correctly, e.g. with
+    `encoding='utf-8'`;
+  - sent data is written completely (`sendall()`), and window sizes that contain
+    the byte 255 are escaped;
+  - passwords are no longer logged at debug level 5.
+- **BREAKING - `Exscript.protocols.telnetlib` Is Internal:** The module contains only
+  what the Telnet adapter uses. Removed: the methods `read_until()`, `read_some()`,
+  `read_eager()`, `read_very_eager()`, `read_lazy()`, `read_very_lazy()`, `interact()`
+  and `mt_interact()` with their helpers, `sock_avail()`, `get_socket()`, `fileno()`
+  and `set_receive_callback()`; the function `test()`; the option constants other
+  than those Exscript negotiates; and the `stdout` and `stderr` arguments. The
+  remaining constants are integers instead of bytes, and the options of the
+  constructor are keyword-only. Use `Exscript.protocols.Telnet`. If you need a drop-in
+  replacement for the telnetlib module that Python 3.13 removed, use the package
+  `standard-telnetlib`.
 
 ### Protocol Drivers
 

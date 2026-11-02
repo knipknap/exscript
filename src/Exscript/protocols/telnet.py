@@ -60,7 +60,6 @@ class Telnet(Protocol):
             connect_timeout=self.connect_timeout,
             termsize=(rows, cols),
             termtype=self.termtype,
-            stderr=self.stderr,
             receive_callback=self._telnetlib_received,
         )
         self._tn.cancel_expect = self._expect_canceled  # sync states
