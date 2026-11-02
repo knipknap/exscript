@@ -119,8 +119,7 @@ class MainLoop(threading.Thread):
             # Remove the watcher from the queue, and re-enque if needed.
             if exc_info and job.failures < job.times:
                 self._dbg(3, 'Restarting job "%s"' % job.name)
-                job.start(self.job_cls, self._on_job_completed)
-                self.job_started_event(job.child)
+                job.start(self.job_cls, self._on_job_completed, self.job_started_event)
             else:
                 self.collection.task_done(job)
 
@@ -135,6 +134,5 @@ class MainLoop(threading.Thread):
                 break  # self.collection.stop() was called.
 
             self.job_init_event(job)
-            job.start(self.job_cls, self._on_job_completed)
-            self.job_started_event(job.child)
+            job.start(self.job_cls, self._on_job_completed, self.job_started_event)
             self._dbg(3, 'Job "%s" started.' % job.name)

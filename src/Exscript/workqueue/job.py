@@ -105,9 +105,11 @@ class Job:
         self.child = None
         self.watcher = None
 
-    def start(self, child_cls, on_complete):
+    def start(self, child_cls, on_complete, on_start=None):
         self.child = child_cls(self.id, self.func, self.name, self.data)
         self.child.failures = self.failures
+        if on_start is not None:
+            on_start(self.child)  # before the child runs, so it always precedes on_complete
         self.watcher = _ChildWatcher(self.child, partial(on_complete, self))
         self.watcher.start()
 
