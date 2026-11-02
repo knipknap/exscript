@@ -82,4 +82,5 @@ jobs:
       - name: Compare with the target branch
         env:
           BASE_REF: ${{ github.base_ref }}
-        run: uvx griffe check Exscript --search src --against "origin/$BASE_REF" --verbose
+        # Both search paths: the target branch may still have the package in the repository root.
+        run: uvx griffe check Exscript --search src --search . --against "origin/$BASE_REF" --verbose
