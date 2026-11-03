@@ -34,10 +34,8 @@ _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
 
 
-# This formerly was derived from multiprocessing.Process but as POSIX Python
-# does not support child processes in threaded environments/apps, we had to
-# switch to threaded servers too. This will hopefully add more stability to the
-# test suite.
+# A thread, not a process: on POSIX, forking a program that runs threads may
+# deadlock the child.
 class Server(threading.Thread):
     """
     Base class of the Telnet and SSH servers. Servers are intended to be
@@ -60,7 +58,8 @@ class Server(threading.Thread):
         :type  host: str
         :param host: The address against which the daemon binds.
         :type  port: int
-        :param port: The TCP port on which to listen.
+        :param port: The TCP port on which to listen; 0 lets start() choose a
+            free one.
         :type  device: VirtualDevice
         :param device: A virtual device instance.
         :type encoding: str
@@ -109,12 +108,7 @@ class Server(threading.Thread):
 
     def _run(self):
         self._dbg(1, 'Starting the %s server.' % self._get_server_type())
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((self.host, self.port))
-        self.socket.listen(1)
         self.running = True
-        self._dbg(1, 'Server bound to: %s:%s' % (self.host, self.port))
 
         try:
             while self.running:
@@ -141,6 +135,26 @@ class Server(threading.Thread):
                 proc.join()
             self.processes = []
             self.socket.close()
+
+    def start(self):
+        """
+        Starts listening, and then the thread that accepts the connections.
+        Clients can connect as soon as this returns. With port 0, the
+        operating system chooses a free port; the port attribute has it then.
+        """
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind((self.host, self.port))
+            sock.listen(1)
+        except OSError:
+            sock.close()
+            raise
+        self.socket = sock
+        self.port = sock.getsockname()[1]
+        self.name = '%s-%s:%s' % (self._get_server_type(), self.host, self.port)
+        self._dbg(1, 'Server bound to: %s:%s' % (self.host, self.port))
+        threading.Thread.start(self)
 
     def exit(self):
         """

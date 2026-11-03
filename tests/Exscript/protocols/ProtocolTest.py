@@ -30,7 +30,7 @@ class ProtocolTest(unittest.TestCase):
 
     def setUp(self):
         self.hostname = '127.0.0.1'
-        self.port = 1236
+        self.port = 0  # the daemon chooses a free port
         self.user = 'user'
         self.password = 'password'
         self.account = Account(self.user, password=self.password)
@@ -40,7 +40,7 @@ class ProtocolTest(unittest.TestCase):
         self.createDaemon()
         if self.daemon is not None:
             self.daemon.start()
-            time.sleep(0.2)
+            self.port = self.daemon.port
             # LIFO cleanup order!
             self.addCleanup(self.daemon.join)
             self.addCleanup(self.daemon.exit)

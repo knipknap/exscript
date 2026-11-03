@@ -374,3 +374,7 @@ The names below refer to functions callable from templates, not protocol methods
 - **Client Handling:** `SSHd` and `Telnetd` keep listening after a client disconnects,
   allowing sequential connections. They share the supplied emulator device; concurrent
   clients are not supported.
+- **Listening in `start()`:** `start()` of `SSHd` and `Telnetd` listens before it
+  returns, so clients can connect at once, and raises errors such as a port in use to
+  the caller. Before, the thread bound the port a moment later. Port 0 chooses a free
+  port, which the `port` attribute has after `start()`.

@@ -1,5 +1,4 @@
 import re
-import time
 import unittest
 
 from Exscript import Account
@@ -12,7 +11,7 @@ class ServerTest(unittest.TestCase):
 
     def setUp(self):
         self.host = 'localhost'
-        self.port = 1235
+        self.port = 0  # start() chooses a free port
         self.device = VirtualDevice(self.host, echo=False)
         self.daemon = Server(self.host, self.port, self.device)
         self.device.set_prompt(self.host + ':' + str(self.port) + '> ')
@@ -41,7 +40,6 @@ class ServerTest(unittest.TestCase):
             return
         self._create_daemon()
         self.daemon.start()
-        time.sleep(1)
 
     def testStart(self):
         # Test can not work on the abstract base.
@@ -50,11 +48,10 @@ class ServerTest(unittest.TestCase):
         self._create_daemon()
         self._add_commands()
         self.daemon.start()
-        time.sleep(1)
 
         client = self._create_client()
         client.set_prompt(re.compile(r'\w+:\d+> ?'))
-        client.connect(self.host, self.port)
+        client.connect(self.host, self.daemon.port)
         client.login(Account('user', 'password'))
         client.execute('ls')
         self.assertEqual(client.response, 'ok1\n')
