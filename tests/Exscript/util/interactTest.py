@@ -22,7 +22,7 @@ class InputHistoryTest(unittest.TestCase):
         h = InputHistory(filename)
         h = InputHistory(filename, 'foo')
         h.set('aaa', 'bbb')
-        with open(filename) as fp:
+        with open(filename, encoding='utf-8') as fp:
             self.assertEqual(fp.read(), '[foo]\naaa = bbb\n\n')
 
     def testGet(self):

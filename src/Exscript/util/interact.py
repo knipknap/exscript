@@ -107,7 +107,7 @@ class InputHistory:
             return None
 
         self.parser.set(self.section, key, value)
-        with open(self.filename, mode="w") as fp:
+        with open(self.filename, encoding='utf-8', mode="w") as fp:
             self.parser.write(fp)
         return value
 

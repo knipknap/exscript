@@ -881,7 +881,7 @@ class ProtocolTest(unittest.TestCase):
         self.assertEqual(first_response, self.protocol.response)
 
         # First session data must have been flushed to disk.
-        with open(logpath) as f:
+        with open(logpath, encoding='utf-8') as f:
             first_log_size = len(f.read())
         self.assertGreater(first_log_size, 0)
 
@@ -902,7 +902,7 @@ class ProtocolTest(unittest.TestCase):
         self.assertEqual(logpath, self.protocol.logfile)
 
         # Second session appended to the same logfile.
-        with open(logpath) as f:
+        with open(logpath, encoding='utf-8') as f:
             second_log_size = len(f.read())
         self.assertGreater(second_log_size, first_log_size)
 

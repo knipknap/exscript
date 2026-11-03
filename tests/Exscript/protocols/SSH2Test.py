@@ -95,7 +95,7 @@ class HostKeyTest(unittest.TestCase):
         self.known_hosts = os.path.join(tmpdir.name, 'known_hosts')
 
     def writeKnownHosts(self, *entries):
-        with open(self.known_hosts, 'w') as fp:
+        with open(self.known_hosts, 'w', encoding='utf-8') as fp:
             for name, host_key in entries:
                 fp.write(f'{name} {host_key.get_name()} {host_key.get_base64()}\n')
 
@@ -150,7 +150,7 @@ class HostKeyTest(unittest.TestCase):
             self.connect(conn)
 
     def testAutoAddPolicyAppendsToKnownHosts(self):
-        with open(self.known_hosts, 'w') as fp:
+        with open(self.known_hosts, 'w', encoding='utf-8') as fp:
             fp.write(f'192.0.2.1 {self.other_key.get_name()} {self.other_key.get_base64()}')
         self.connect(host_key_policy='auto-add')
         known = paramiko.HostKeys(self.known_hosts)

@@ -11,6 +11,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **License Labels:** Exscript remains MIT-licensed. `Exscript.protocols.telnetlib` is
   derived from CPython's telnetlib (3.12), so it carries the PSF notice, the license text is
   in `LICENSES/PSF-2.0.txt`, and the package declares `MIT AND PSF-2.0`.
+- **UTF-8 Files:** Exscript reads and writes text files, e.g. templates, host lists
+  and log files, as UTF-8 on every platform, as Python 3.15 does by default. Before,
+  it used the encoding of the locale, e.g. cp1252 on Windows, where writing device
+  output to a log file could fail. `util.daemonize` no longer fails with
+  `ValueError: can't have unbuffered text I/O`.
 - **Python 2.7 Support:**
 - **Python 3.11+ Support:**
 - **Dependencies:**

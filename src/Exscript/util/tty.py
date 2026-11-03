@@ -114,7 +114,7 @@ def get_terminal_size(default_rows=25, default_cols=80):
             os.close(fd)
 
     # Try `stty size`
-    with open(os.devnull, 'w') as devnull:
+    with open(os.devnull, 'w', encoding='utf-8') as devnull:
         try:
             process = Popen(['stty', 'size'], stderr=devnull, stdout=PIPE, close_fds=True)
         except (OSError, ValueError):

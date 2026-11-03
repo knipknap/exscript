@@ -45,7 +45,7 @@ def dummy_cb(job, host, conn, template_test):
         print(log.data)
         raise
     log.data = log.data.replace('\r\n', '\n')
-    with open(expected, newline='') as fp:
+    with open(expected, encoding='utf-8', newline='') as fp:
         expected_data = fp.read()
     # open(expected, 'w').write(log.data)
     # open('output', 'w').write(log.data)

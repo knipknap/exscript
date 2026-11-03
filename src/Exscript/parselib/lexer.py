@@ -240,5 +240,5 @@ class Lexer:
         return compiled
 
     def parse_file(self, filename):
-        with open(filename) as fp:
+        with open(filename, encoding='utf-8') as fp:
             return self.parse(fp.read(), filename)

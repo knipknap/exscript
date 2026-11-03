@@ -113,7 +113,7 @@ def test_file(filename, secure=True, **kwargs):
     :param kwargs: Variables to define in the template.
     """
     parser_args = {'secure': secure, 'no_escaping': False}
-    with open(filename) as fp:
+    with open(filename, encoding='utf-8') as fp:
         _compile(None, filename, fp.read(), parser_args, **kwargs)
 
 
@@ -184,7 +184,7 @@ def eval_file(conn, filename, strip_command=True, no_escaping=False, *, secure=T
     :param kwargs: Variables to define in the template.
     """
     parser_args = {'strip_command': strip_command, 'no_escaping': no_escaping, 'secure': secure}
-    with open(filename) as fp:
+    with open(filename, encoding='utf-8') as fp:
         return _run(conn, filename, fp.read(), parser_args, **kwargs)
 
 
@@ -239,5 +239,5 @@ def paste_file(conn, filename, no_escaping=False, *, secure=True, **kwargs):
     :param kwargs: Variables to define in the template.
     """
     parser_args = {'no_prompt': True, 'no_escaping': no_escaping, 'secure': secure}
-    with open(filename) as fp:
+    with open(filename, encoding='utf-8') as fp:
         return _run(conn, filename, fp.read(), parser_args, **kwargs)

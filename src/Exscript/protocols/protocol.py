@@ -430,7 +430,9 @@ class Protocol:
                 except Exception:
                     pass
             self._logfile = value
-            self._log = open(self._logfile, 'a') if value and self.connected else None
+            self._log = (
+                open(self._logfile, 'a', encoding='utf-8') if value and self.connected else None
+            )
 
     @property
     def os_guesser(self):
@@ -1003,7 +1005,7 @@ class Protocol:
         # Connecting...
         self._dbg(1, "Attempting to connect: '%s:%s'" % (self.host, self.port))
         if self.logfile and not self._log:
-            self._log = open(self.logfile, 'a')
+            self._log = open(self.logfile, 'a', encoding='utf-8')
         self._enforce_connect_rate_limit()
         self._connected = bool(self._connect())
         self._dbg(2, "Finished to connect: '%s:%s'" % (self.host, self.port))

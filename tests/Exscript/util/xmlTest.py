@@ -19,7 +19,7 @@ class xmlTest(unittest.TestCase):
         self.assertFalse(validate_xml('<a>\udcff</a>', silent=True))
 
     def testExternalEntitiesAreNotResolved(self):
-        with tempfile.NamedTemporaryFile('w', suffix='.txt', delete=False) as fp:
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', suffix='.txt', delete=False) as fp:
             fp.write('XXE-MARKER')
         self.addCleanup(os.remove, fp.name)
         url = pathlib.Path(fp.name).as_uri()

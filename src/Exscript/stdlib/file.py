@@ -29,7 +29,7 @@ def chmod(scope, filename, mode):
     """
     Changes the permissions of the given file (or list of files)
     to the given mode. You probably want to use an octal representation
-    for the integer, e.g. "chmod(myfile, 0644)".
+    for the integer, e.g. ``file.chmod(myfile, 0644)``.
 
     :type  filename: string
     :param filename: A filename.
@@ -49,7 +49,7 @@ def clear(scope, filename):
     :type  filename: string
     :param filename: A filename.
     """
-    with open(filename[0], 'w'):
+    with open(filename[0], 'w', encoding='utf-8'):
         pass
     return True
 
@@ -98,7 +98,7 @@ def read(scope, filename):
     :rtype:  string
     :return: The content of the file.
     """
-    with open(filename[0]) as fp:
+    with open(filename[0], encoding='utf-8') as fp:
         lines = fp.readlines()
     scope.define(__response__=lines)
     return lines
@@ -131,6 +131,6 @@ def write(scope, filename, lines, mode=['a']):
     :type  mode: string
     :param mode: Any of the above listed modes.
     """
-    with open(filename[0], mode[0]) as fp:
+    with open(filename[0], mode[0], encoding='utf-8') as fp:
         fp.writelines(['%s\n' % line.rstrip() for line in lines])
     return True

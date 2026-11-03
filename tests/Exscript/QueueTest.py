@@ -429,7 +429,7 @@ class QueueTest(unittest.TestCase):
         self.assertIn('dummy1.log', logfiles)
         self.assertIn('dummy2.log', logfiles)
         for file in logfiles:
-            with open(os.path.join(self.tempdir, file)) as fp:
+            with open(os.path.join(self.tempdir, file), encoding='utf-8') as fp:
                 content = fp.read()
 
 

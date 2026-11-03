@@ -71,7 +71,7 @@ class OsGuesserTest(unittest.TestCase):
             if not drivers.driver_map[osname].supports_os_guesser():
                 continue
             file = os.path.join(banner_dir, file)
-            with open(file) as fp:
+            with open(file, encoding='utf-8') as fp:
                 banner = fp.read().rstrip('\n')
             osg = OsGuesser()
             for char in banner:

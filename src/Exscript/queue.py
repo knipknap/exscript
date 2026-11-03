@@ -220,7 +220,6 @@ class Queue:
 
           - S = status bar
           - L = live conversation
-          - D = debug messages
           - E = errors
           - ! = errors with tracebacks
           - F = fatal errors with tracebacks
@@ -231,8 +230,11 @@ class Queue:
           - verbose =  0: stdout = None, stderr = EF
           - verbose =  1, max_threads = 1: stdout = L, stderr = EF
           - verbose =  1, max_threads = n: stdout = S, stderr = EF
-          - verbose >=  2, max_threads = 1: stdout = DL, stderr = !F
-          - verbose >=  2, max_threads = n: stdout = DS, stderr = !F
+          - verbose >=  2, max_threads = 1: stdout = L, stderr = !F
+          - verbose >=  2, max_threads = n: stdout = S, stderr = !F
+
+        From verbosity 2 on, the queue also logs debug messages to the Python
+        logger ``Exscript.queue``.
 
         :type  domain: str
         :param domain: The default domain of the contacted hosts.
@@ -263,7 +265,7 @@ class Queue:
         self.host_driver = host_driver
         self.exc_cb = exc_cb
         self.lock = threading.RLock()
-        self.devnull = open(os.devnull, 'w')
+        self.devnull = open(os.devnull, 'w', encoding='utf-8')
         self.channel_map = {'fatal_errors': self.stderr}
         self.completed = 0
         self.total = 0
@@ -454,34 +456,34 @@ class Queue:
     def add_account_pool(self, pool, match=None):
         """
         Adds a new account pool. If the given match argument is
-        None, the pool the default pool. Otherwise, the match argument is
+        None, the pool is the default pool. Otherwise, the match argument is
         a callback function that is invoked to decide whether or not the
         given pool should be used for a host.
 
         When Exscript logs into a host, the account is chosen in the following
         order:
 
-            # Exscript checks whether an account was attached to the
-            :class:`Host` object using :class:`Host.set_account()`), and uses that.
+        #. Exscript checks whether an account was attached to the
+           :class:`Host` object using :class:`Host.set_account()`, and uses that.
 
-            # If the :class:`Host` has no account attached, Exscript walks
-            through all pools that were passed to :class:`Queue.add_account_pool()`.
-            For each pool, it passes the :class:`Host` to the function in the
-            given match argument. If the return value is True, the account
-            pool is used to acquire an account.
-            (Accounts within each pool are taken in a round-robin
-            fashion.)
+        #. If the :class:`Host` has no account attached, Exscript walks
+           through all pools that were passed to :class:`Queue.add_account_pool()`.
+           For each pool, it passes the :class:`Host` to the function in the
+           given match argument. If the return value is True, the account
+           pool is used to acquire an account.
+           (Accounts within each pool are taken in a round-robin
+           fashion.)
 
-            # If no matching account pool is found, an account is taken
-            from the default account pool.
+        #. If no matching account pool is found, an account is taken
+           from the default account pool.
 
-            # Finally, if all that fails and the default account pool
-            contains no accounts, an error is raised.
+        #. Finally, if all that fails and the default account pool
+           contains no accounts, an error is raised.
 
         Example usage::
 
-            def do_nothing(conn):
-                conn.autoinit()
+            def log_in(job, host, conn):
+                conn.login()
 
             def use_this_pool(host):
                 return host.get_name().startswith('foo')
@@ -497,7 +499,7 @@ class Queue:
             queue.add_account_pool(other_pool, use_this_pool)
 
             host = Host('localhost')
-            queue.run(host, do_nothing)
+            queue.run(host, log_in)
 
         In the example code, the host has no account attached. As a result,
         the queue checks whether use_this_pool() returns True. Because the
@@ -524,7 +526,7 @@ class Queue:
     def is_completed(self):
         """
         Returns True if the task is completed, False otherwise.
-        In other words, this methods returns True if the queue is empty.
+        In other words, this method returns True if the queue is empty.
 
         :rtype:  bool
         :return: Whether all tasks are completed.
@@ -627,8 +629,8 @@ class Queue:
         """
         Add the given function to a queue, and call it once for each host
         according to the threading options.
-        Use decorators.bind() if you also want to pass additional
-        arguments to the callback function.
+        Use :func:`Exscript.util.decorator.bind` if you also want to pass
+        additional arguments to the callback function.
 
         Returns an object that represents the queued task, and that may be
         passed to is_completed() to check the status.

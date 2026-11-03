@@ -29,9 +29,9 @@ import sys
 
 
 def _redirect_output(filename):
-    out_log = open(filename, 'a+', 0)
-    err_log = open(filename, 'a+', 0)
-    dev_null = open(os.devnull)
+    out_log = open(filename, 'ab', 0)
+    err_log = open(filename, 'ab', 0)
+    dev_null = open(os.devnull, 'rb')
     os.close(sys.stdin.fileno())
     os.close(sys.stdout.fileno())
     os.close(sys.stderr.fileno())

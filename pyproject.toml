@@ -86,7 +86,11 @@ extend-exclude = ["doc"]
 quote-style = "preserve"
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "UP", "B", "S"]
+# PLW1514 (open() without an encoding) is a preview rule; only explicitly selected
+# preview rules are enabled.
+preview = true
+explicit-preview-rules = true
+select = ["E", "W", "F", "I", "UP", "B", "S", "PLW1514"]
 ignore = [
     "UP031",  # printf-style formatting is used throughout
     # Baseline of existing findings: fix a rule everywhere, then remove it here.

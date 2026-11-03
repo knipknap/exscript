@@ -418,7 +418,7 @@ def from_template(filename, **kwargs):
     :rtype:  Mail
     :return: The resulting mail.
     """
-    with open(filename) as fp:
+    with open(filename, encoding='utf-8') as fp:
         return from_template_string(fp.read(), **kwargs)
 
 
@@ -432,7 +432,7 @@ def _get_mime_object(filename):
 
     maintype, subtype = ctype.split('/', 1)
     if maintype == 'text':
-        with open(filename) as fp:
+        with open(filename, encoding='utf-8') as fp:
             msg = MIMEText(fp.read(), _subtype=subtype)
     elif maintype == 'image':
         with open(filename, 'rb') as fp:

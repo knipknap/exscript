@@ -47,7 +47,7 @@ def read(path):
     # Try to read the pid from the pidfile.
     _logger.info("Checking pidfile '%s'", path)
     try:
-        return int(open(path).read())
+        return int(open(path, encoding="utf-8").read())
     except OSError as xxx_todo_changeme:
         (code, text) = xxx_todo_changeme.args
         if code == errno.ENOENT:  # no such file or directory

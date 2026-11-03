@@ -65,7 +65,7 @@ class FileLoggerTest(LoggerTest):
         self.logger.add_log(id(self.job), self.job.name, 2)
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
-        with open(self.logfile) as fp:
+        with open(self.logfile, encoding='utf-8') as fp:
             content = fp.read()
         self.assertEqual(content, '')
 
@@ -75,7 +75,7 @@ class FileLoggerTest(LoggerTest):
         self.logger.log(id(self.job), 'hello world')
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
-        with open(self.logfile) as fp:
+        with open(self.logfile, encoding='utf-8') as fp:
             content = fp.read()
         self.assertEqual(content, 'hello world')
 

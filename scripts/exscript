@@ -143,7 +143,7 @@ def run():
         if not args.filename:
             parser.error("Missing template filename")
         try:
-            with open(args.filename) as fp:
+            with open(args.filename, encoding="utf-8") as fp:
                 script_content = fp.read()
         except OSError as e:
             parser.error(str(e))
