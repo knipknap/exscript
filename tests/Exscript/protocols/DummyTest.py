@@ -92,7 +92,7 @@ class DummyTest(ProtocolTest):
         self.assertEqual(str(protocol._buffer), 'Password: ')
         protocol.login(self.account)
         self.assertEqual(str(protocol._buffer), '')
-        self.assertEqual(protocol.response, self.password)
+        self.assertEqual(protocol.response, '')  # the password is not echoed
         protocol.close()
 
         # Test login with port number.
@@ -100,7 +100,7 @@ class DummyTest(ProtocolTest):
         self.assertEqual(str(protocol._buffer), 'Password: ')
         protocol.login(self.account)
         self.assertEqual(str(protocol._buffer), '')
-        self.assertEqual(protocol.response, self.password)
+        self.assertEqual(protocol.response, '')  # the password is not echoed
         protocol.close()
 
         # Test a custom response.

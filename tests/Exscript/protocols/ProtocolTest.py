@@ -312,7 +312,7 @@ class ProtocolTest(unittest.TestCase):
         # Password login.
         self.doLogin(flush=False)
         self.assertTrue(self.protocol.response is not None)
-        self.assertTrue(len(self.protocol.response) > 0)
+        self.assertNotIn(self.password, self.protocol.response)
         self.assertTrue(self.protocol.is_protocol_authenticated())
         self.assertTrue(self.protocol.is_app_authenticated())
         self.assertTrue(self.protocol.is_app_authorized())
@@ -344,7 +344,7 @@ class ProtocolTest(unittest.TestCase):
         self.assertFalse(self.protocol.is_app_authorized())
         self.protocol.authenticate(self.account, flush=False)
         self.assertTrue(self.protocol.response is not None)
-        self.assertTrue(len(self.protocol.response) > 0)
+        self.assertNotIn(self.password, self.protocol.response)
         self.assertTrue(self.protocol.is_protocol_authenticated())
         self.assertTrue(self.protocol.is_app_authenticated())
         self.assertFalse(self.protocol.is_app_authorized())

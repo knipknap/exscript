@@ -72,6 +72,7 @@ class VirtualDevice:
             return self.user_prompt
         elif self.prompt_stage == self.PROMPT_STAGE_PASSWORD:
             self.prompt_stage = self.PROMPT_STAGE_CUSTOM
+            self._hide_echo = True  # like real devices, do not echo the password
             return self.password_prompt
         elif self.prompt_stage == self.PROMPT_STAGE_CUSTOM:
             self.logged_in = True
@@ -149,6 +150,7 @@ class VirtualDevice:
         :return: The initial response of the virtual device.
         """
         self.logged_in = False
+        self._hide_echo = False
 
         if self.login_type == self.LOGIN_TYPE_PASSWORDONLY:
             self.prompt_stage = self.PROMPT_STAGE_PASSWORD
@@ -169,7 +171,8 @@ class VirtualDevice:
         :rtype:  str
         :return: The response of the virtual device.
         """
-        echo = self.echo and command or ''
+        echo = self.echo and not self._hide_echo and command or ''
+        self._hide_echo = False
         if not self.logged_in:
             return echo + '\n' + self._get_prompt()
 

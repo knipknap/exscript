@@ -281,6 +281,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
 
 ## Emulators
 
+- **BREAKING - Password Not Echoed:** `VirtualDevice`, which the `Dummy` protocol and
+  the test servers use, no longer echoes the password, like real devices. The log and
+  `response` of a login to it no longer contain the password; `response` after the
+  login is empty instead of the password.
+
 ### Class `Exscript.emulators.CommandSet`
 
 | Old                      | New                                             | Comment                                                                                                    |

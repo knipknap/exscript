@@ -53,6 +53,18 @@ class VirtualDeviceTest(unittest.TestCase):
         cs = self.cls('myhost', login_type=self.cls.LOGIN_TYPE_NONE)
         self.assertEqual(cs.init(), self.banner + self.prompt)
 
+    def testDoHidesPassword(self):
+        # Like real devices, the device echoes the user name but not the password.
+        cs = self.cls('myhost', strict=False)
+        self.assertEqual(cs.init(), self.banner + self.userprompt)
+        self.assertEqual(cs.do('user'), 'user\n' + self.passwdprompt)
+        self.assertEqual(cs.do('secret'), '\n' + self.prompt)
+        self.assertEqual(cs.do('ls'), 'ls\n' + self.prompt)
+
+        cs = self.cls('myhost', strict=False, login_type=self.cls.LOGIN_TYPE_PASSWORDONLY)
+        self.assertEqual(cs.init(), self.banner + self.passwdprompt)
+        self.assertEqual(cs.do('secret'), '\n' + self.prompt)
+
     def testDo(self):
         pass  # See testAddCommand()
 
