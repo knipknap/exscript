@@ -32,26 +32,26 @@ class FileLoggerTest(LoggerTest):
         self.assertFalse(os.path.exists(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
 
-    def testAddLog(self):
-        log = LoggerTest.testAddLog(self)
+    def _addLog(self):
+        log = LoggerTest._addLog(self)
         self.assertTrue(os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
         self.assertFalse(os.path.exists(self.errfile))
         return log
 
-    def testLog(self):
-        log = LoggerTest.testLog(self)
+    def _log(self):
+        log = LoggerTest._log(self)
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
         return log
 
-    def testLogAborted(self):
-        log = LoggerTest.testLogAborted(self)
+    def _logAborted(self):
+        log = LoggerTest._logAborted(self)
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertTrue(os.path.isfile(self.errfile))
         return log
 
-    def testLogSucceeded(self):
-        log = LoggerTest.testLogSucceeded(self)
+    def _logSucceeded(self):
+        log = LoggerTest._logSucceeded(self)
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.isfile(self.errfile))
         return log

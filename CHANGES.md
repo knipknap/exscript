@@ -323,6 +323,10 @@ The names below refer to functions callable from templates, not protocol methods
   which has no `syslog` module.
 - **Pseudo Protocol on Windows:** `pseudo://` URLs accept absolute Windows paths such
   as `pseudo://C:\devices\router.py`; the drive letter was taken for a port number.
+- **`Exscript.util.tty.get_terminal_size()`:** Uses `shutil.get_terminal_size()`: the
+  `LINES` and `COLUMNS` environment variables, then the terminal of the standard
+  output, then the defaults. It no longer asks standard input, standard error and the
+  controlling terminal, and no longer runs `stty size`, which leaked a pipe.
 
 ## Multi-Threading
 

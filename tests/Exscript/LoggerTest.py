@@ -128,21 +128,23 @@ class LoggerTest(unittest.TestCase):
         self.assertEqual(count(self.logger.get_aborted_logs()), 1)
         self.assertIsInstance(nth(self.logger.get_aborted_logs(), 0), Log)
 
-    def testAddLog(self):
+    # The helpers return the log, so that the steps build on each other, also
+    # with the checks that FileLoggerTest adds; test methods must return None.
+    def _addLog(self):
         self.assertEqual(count(self.logger.get_logs()), 0)
         log = self.logger.add_log(id(self.job), self.job.name, 1)
         self.assertEqual(count(self.logger.get_logs()), 1)
         self.assertEqual(str(log), '')
         return log
 
-    def testLog(self):
-        log = self.testAddLog()
+    def _log(self):
+        log = self._addLog()
         self.logger.log(id(self.job), 'hello world')
         self.assertEqual(str(log), 'hello world')
         return log
 
-    def testLogAborted(self):
-        log = self.testLog()
+    def _logAborted(self):
+        log = self._log()
         try:
             raise FakeError()
         except Exception:
@@ -150,11 +152,23 @@ class LoggerTest(unittest.TestCase):
         self.assertIn('FakeError', str(log))
         return log
 
-    def testLogSucceeded(self):
-        log = self.testLog()
+    def _logSucceeded(self):
+        log = self._log()
         self.logger.log_succeeded(id(self.job))
         self.assertEqual(str(log), 'hello world')
         return log
+
+    def testAddLog(self):
+        self._addLog()
+
+    def testLog(self):
+        self._log()
+
+    def testLogAborted(self):
+        self._logAborted()
+
+    def testLogSucceeded(self):
+        self._logSucceeded()
 
 
 def suite():

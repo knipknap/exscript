@@ -137,11 +137,11 @@ class SSHd(Server):
         server = _ParamikoServer()
         try:
             t.start_server(server=server)
-        except EOFError:
-            self._dbg(1, 'Client disappeared before establishing connection')
+        except (EOFError, OSError, paramiko.SSHException) as err:
+            self._dbg(1, 'Client disappeared before establishing connection: %s' % err)
             t.close()
             conn.close()
-            raise
+            return
 
         # Validate that the connection succeeded.
         if not t.is_active():

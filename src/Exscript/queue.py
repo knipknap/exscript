@@ -26,7 +26,6 @@ The heart of Exscript.
 
 import gc
 import logging
-import os
 import sys
 import threading
 import weakref
@@ -44,6 +43,16 @@ from .workqueue import Task, WorkQueue
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
+
+
+class _Discard:
+    """Discards what is written to it, like os.devnull, but has no file to close."""
+
+    def write(self, data):
+        return len(data)
+
+    def flush(self):
+        pass
 
 
 def _account_factory(accm, host, account):
@@ -265,7 +274,7 @@ class Queue:
         self.host_driver = host_driver
         self.exc_cb = exc_cb
         self.lock = threading.RLock()
-        self.devnull = open(os.devnull, 'w', encoding='utf-8')
+        self.devnull = _Discard()
         self.channel_map = {'fatal_errors': self.stderr}
         self.completed = 0
         self.total = 0
