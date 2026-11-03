@@ -30,7 +30,7 @@ from .driver import Driver
 
 _user_re = [re.compile(r'login: ?', re.I)]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])password: ?', re.I)]
-_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\- +\d+\w+\.]+(?:\([^\)]+\))?[>#] ?')]
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\- +\d+\w+\.]++(?:\([^\)]++\))?[>#] ?')]
 _error_re = [
     re.compile(r'%Error'),
     re.compile(r'invalid token', re.I),

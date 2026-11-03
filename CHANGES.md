@@ -168,7 +168,8 @@ marked with **BREAKING**; a migration guide will accompany the release.
   prompt: a line with a run of 100 word characters took 1.3 seconds to check, 200
   characters 25 seconds, so hex or base64 output could stall a session. The pattern
   matches the same strings, verified against the old one, in linear time. A test
-  checks every driver pattern for this.
+  checks every driver pattern for this. The isam driver's prompt pattern, which the
+  OS guesser runs on all received data, matches the same strings 3.5 times faster.
 
 - **BREAKING - Graceful Logout:** `Protocol.close(force=False)` now calls the driver's
   new `logout()` method before the connection is closed. The base `Driver` sends
