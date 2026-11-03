@@ -1,0 +1,72 @@
+name: Release
+
+# Publishes a tag such as v3.0.0 or v3.0.0rc1 to PyPI and creates a GitHub release.
+# Needs, once: a "pypi" environment in the repository settings, and a trusted
+# publisher for this workflow and environment on pypi.org.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read  # checkout only; the jobs below add what they need
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false  # never stop a release halfway
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # hatch-vcs derives the version from the tag
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+        with:
+          enable-cache: false  # a release does not restore caches that other runs wrote
+      - run: uv build
+      - run: uvx twine check --strict dist/*
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/Exscript/
+    permissions:
+      id-token: write  # Trusted Publishing, and signing the attestations
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@aef6c9b6e301dc803e1bc9133e9ce67ae9b0906b  # v1.14.3
+
+  github-release:
+    name: Create the GitHub release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # creates the release and uploads the distributions
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - name: Create the release with the distributions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease=()
+          if [[ "$GITHUB_REF_NAME" =~ [0-9](a|b|rc)[0-9]+$ ]]; then prerelease=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "Exscript ${GITHUB_REF_NAME#v}" "${prerelease[@]}" \
+            --notes "Changes: https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/CHANGES.md"
