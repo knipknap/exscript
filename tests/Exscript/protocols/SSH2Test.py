@@ -210,6 +210,20 @@ class ReconnectTest(unittest.TestCase):
         self.assertEqual(self.handshakes('generic'), 1)
 
 
+class ConnectTest(unittest.TestCase):
+    def testTriesAllAddresses(self):
+        server = KeyServer(self, paramiko.RSAKey(filename=keyfile))
+        addresses = [
+            (socket.AF_INET6, socket.SOCK_STREAM, 6, '', ('::1', server.port, 0, 0)),  # refused
+            (socket.AF_INET, socket.SOCK_STREAM, 6, '', (HOST, server.port)),
+        ]
+        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False)
+        self.addCleanup(conn.close, force=True)
+        with mock.patch('socket.getaddrinfo', return_value=addresses):
+            conn.connect('router.example', server.port)
+        self.assertTrue(conn.connected)
+
+
 def suite():
     loader = unittest.TestLoader()
     return unittest.TestSuite(
@@ -217,6 +231,7 @@ def suite():
             loader.loadTestsFromTestCase(SSH2Test),
             loader.loadTestsFromTestCase(HostKeyTest),
             loader.loadTestsFromTestCase(ReconnectTest),
+            loader.loadTestsFromTestCase(ConnectTest),
         ]
     )
 

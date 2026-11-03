@@ -1,8 +1,10 @@
 import os
 import re
 import socket
+import threading
 import time
 import unittest
+from unittest import mock
 
 from Exscript import Account, PrivateKey
 from Exscript.emulators import VirtualDevice
@@ -201,23 +203,42 @@ class LoginErrorTest(unittest.TestCase):
         self.assertRaises(LoginFailure, conn.app_authorize, self.account)
 
 
+class CloseTest(unittest.TestCase):
+    def testForceNeverRaises(self):
+        conn = connect([])
+        conn._close = mock.Mock(side_effect=EOFError)  # paramiko, if the host closed first
+        conn.close(force=True)
+        conn._close.assert_called_once_with(force=True)
+        self.assertFalse(conn.connected)
+
+    def testFailedLogoutStillCloses(self):
+        conn = connect([])
+        conn._logout = mock.Mock(side_effect=TimeoutException('no response to exit'))
+        conn._close = mock.Mock()
+        self.assertRaises(TimeoutException, conn.close)
+        conn._close.assert_called_once_with(force=False)
+        self.assertFalse(conn.connected)
+
+
+def start_daemon(test, daemon_cls, device, **kwargs):
+    """Starts a test server for the device; it stops when the test ends."""
+    with socket.socket() as sock:
+        sock.bind((HOST, 0))
+        port = sock.getsockname()[1]
+    daemon = daemon_cls(HOST, port, device, **kwargs)
+    daemon.start()
+    time.sleep(0.2)
+    test.addCleanup(daemon.join)  # cleanups run LIFO: exit() first
+    test.addCleanup(daemon.exit)
+    return daemon, port
+
+
 class ServerExpectTest(unittest.TestCase):
     """expect() finds a pattern regardless of how much data follows it."""
 
     def setUp(self):
         self.device = VirtualDevice(HOST, login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False)
         self.device.add_command('show big', 'Please confirm: MARKER ' + 'x' * 2000)
-
-    def start_daemon(self, daemon_cls, **kwargs):
-        with socket.socket() as sock:
-            sock.bind((HOST, 0))
-            port = sock.getsockname()[1]
-        daemon = daemon_cls(HOST, port, self.device, **kwargs)
-        daemon.start()
-        time.sleep(0.2)
-        self.addCleanup(daemon.join)  # cleanups run LIFO: exit() first
-        self.addCleanup(daemon.exit)
-        return port
 
     def expectMarker(self, conn, port=None):
         self.addCleanup(conn.close, force=True)
@@ -230,11 +251,11 @@ class ServerExpectTest(unittest.TestCase):
         self.expectMarker(Dummy(device=self.device))
 
     def testTelnet(self):
-        port = self.start_daemon(Telnetd)
+        port = start_daemon(self, Telnetd, self.device)[1]
         self.expectMarker(Telnet(timeout=1, connect_rate_limit=0), port)
 
     def testSSH2(self):
-        port = self.start_daemon(SSHd, key=PrivateKey.from_file(KEYFILE))
+        port = start_daemon(self, SSHd, self.device, key=PrivateKey.from_file(KEYFILE))[1]
         conn = SSH2(
             timeout=1,
             connect_rate_limit=0,
@@ -242,3 +263,50 @@ class ServerExpectTest(unittest.TestCase):
             preferred_authentications=['password'],
         )
         self.expectMarker(conn, port)
+
+
+@unittest.skipUnless(hasattr(os, 'openpty'), 'interact() reads from a POSIX terminal')
+class InteractTest(unittest.TestCase):
+    """interact() passes typed keys and received text, also multibyte characters."""
+
+    def setUp(self):
+        self.device = VirtualDevice(HOST, login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False)
+        self.device.add_command(r'say \S+', lambda command: command.split()[1] + '!')
+
+    def interact(self, daemon_cls, conn, **kwargs):
+        daemon, port = start_daemon(self, daemon_cls, self.device, **kwargs)
+        self.device.add_command('exit', daemon.exit_command)
+        self.addCleanup(conn.close, force=True)
+        conn.connect(HOST, port)
+        conn.protocol_authenticate(Account('user', 'password', needs_lock=False))
+        received = []
+        conn.data_received_event.connect(received.append)
+
+        master, slave = os.openpty()  # interact() closes the slave
+        self.addCleanup(os.close, master)
+
+        def type_keys():
+            time.sleep(0.3)
+            os.write(master, 'say grüße\r'.encode())
+            time.sleep(0.3)
+            os.write(master, b'exit\r')
+
+        typist = threading.Thread(target=type_keys)
+        typist.start()
+        with mock.patch('sys.stdin', mock.Mock(encoding='utf-8', fileno=lambda: slave)):
+            conn.interact(handle_window_size=False)
+        typist.join()
+        self.assertIn('grüße!', ''.join(received))
+
+    def testTelnet(self):
+        self.interact(Telnetd, Telnet(timeout=1, connect_rate_limit=0, encoding='utf-8'))
+
+    def testSSH2(self):
+        conn = SSH2(
+            timeout=1,
+            connect_rate_limit=0,
+            verify_fingerprint=False,
+            preferred_authentications=['password'],
+            encoding='utf-8',
+        )
+        self.interact(SSHd, conn, key=PrivateKey.from_file(KEYFILE))

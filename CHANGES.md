@@ -108,6 +108,20 @@ marked with **BREAKING**; a migration guide will accompany the release.
   reconnected before every method, also before the public key methods when there was
   no key: a password login to an IOS device that also offers public keys and
   keyboard-interactive took 5 SSH connections, now 3.
+- **All Addresses for SSH:** SSH and NETCONF connections try all addresses of the
+  host, e.g. IPv4 if IPv6 fails, as Telnet does; before, they tried only the first.
+- **Reliable `close()`:** `close()` closes the connection and resets the object even
+  if the logout fails, and raises the error of the logout afterwards. Errors while
+  closing, e.g. because the host closed the connection first, are only logged;
+  before, `close(force=True)` could raise an `EOFError`.
+
+### Interactive Shell
+
+- **`interact()` Fixes:** Typed characters of several bytes, e.g. umlauts on a UTF-8
+  terminal, no longer crash the session. Telnet commands from the host are processed
+  instead of shown, and typed text is sent like with `send()`, so Telnet escapes the
+  byte 255. The previous `SIGWINCH` handler is restored when the session ends. On
+  Windows, the thread that receives no longer keeps the process alive.
 
 ### Waiting for Responses
 

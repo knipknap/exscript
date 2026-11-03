@@ -24,14 +24,13 @@
 An abstract base class for all protocols.
 """
 
+import codecs
 import contextlib
-import errno
 import logging
 import os
 import re
 import select
 import signal
-import socket
 import sys
 import threading
 import time
@@ -145,12 +144,10 @@ def _ends_with_anchor(regex):
 _connection_monitor: dict[str, float] = {}
 _connection_monitor_lock = threading.RLock()
 
-# NOTE: Encoding/Decoding non-ASCII byte-streams might not work properly.
-#  Right now the default encoding is latin-1 and most devices stick to 7 bit
-#  ASCII, even in Netconf XML/RPC (usually UTF-8). ASCII is a subset of UTF-8.
-#  This will start to break if a device sends or expects true UTF-8 encoded
-#  data, which is not ASCII. Then byte-stream decoding of stdin and the channel
-#  should be modernized to use an incremental decoder (see "codecs" package).
+# NOTE: The default encoding is latin-1: it decodes any byte, and most devices
+#  send 7-bit ASCII, even in Netconf XML/RPC (usually UTF-8). For devices that
+#  send UTF-8, pass encoding='utf-8'; the adapters decode incrementally, so a
+#  character split across two reads is decoded correctly.
 
 
 class Protocol:
@@ -1747,6 +1744,8 @@ class Protocol:
         raise NotImplementedError()
 
     def _open_posix_shell(self, channel, key_handlers, handle_window_size):
+        # Typed characters may take several bytes.
+        decoder = codecs.getincrementaldecoder(sys.stdin.encoding or 'utf-8')(errors='replace')
         # We need to make sure to use an unbuffered stdin, else multi-byte
         # chars (such as arrow keys) won't work properly.
         with os.fdopen(sys.stdin.fileno(), 'rb', 0) as stdin:
@@ -1760,41 +1759,28 @@ class Protocol:
                     self._dbg(2, "Trying to update terminal size: %dx%d" % (rows, cols))
                     self._set_terminal_size(rows, cols)
 
-                signal.signal(signal.SIGWINCH, handle_sigwinch)
+                old_handler = signal.signal(signal.SIGWINCH, handle_sigwinch)
                 handle_sigwinch(None, None)
 
             # Read from stdin and write to the network, endlessly.
             try:
                 tty.setraw(sys.stdin.fileno())
                 tty.setcbreak(sys.stdin.fileno())
-                channel.settimeout(0.0)
 
                 while True:
-                    try:
-                        r, w, e = select.select([channel, stdin], [], [])
-                    except OSError as e:
-                        code, message = e
-                        if code == errno.EINTR:
-                            # This may happen when SIGWINCH is called
-                            # during the select; we just retry then.
-                            continue
-                        raise
-
-                    if channel in r:
-                        try:
-                            data = channel.recv(1024).decode(self.encoding)
-                        except TimeoutError:
-                            pass
-                        if not data:
-                            self._dbg(1, 'EOF from remote host')
-                            break
-                        self._receive_cb(data)
-                        self._buffer.append(data)
+                    # select() retries by itself if SIGWINCH interrupts it.
+                    r, w, e = select.select([channel, stdin], [], [])
+                    if channel in r and self._fill_buffer(0) is False:
+                        self._dbg(1, 'EOF from remote host')
+                        break
                     if stdin in r:
-                        data = stdin.read(1).decode(sys.stdin.encoding)
+                        byte = stdin.read(1)
                         self._buffer.clear()
-                        if len(data) == 0:
+                        if not byte:
                             break
+                        data = decoder.decode(byte)
+                        if not data:
+                            continue  # more bytes of the character follow
 
                         # Temporarily revert stdin behavior while callbacks are
                         # active.
@@ -1804,33 +1790,25 @@ class Protocol:
                         termios.tcsetattr(stdin, termios.TCSADRAIN, curtty)
 
                         if not is_handled:
-                            channel.send(data.encode(self.encoding))
-                            self._send_cb(data)
+                            self._send(data)
                             if self.send_data is not None:
                                 self.send_data.write(data)
             finally:
                 termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
+                if handle_window_size:
+                    signal.signal(signal.SIGWINCH, old_handler or signal.SIG_DFL)
 
     def _open_windows_shell(self, channel, key_handlers, handle_window_size):
-        import threading
+        def receive():
+            # NOTE: Windows stdin is always cooked, remote may send double-echos.
+            #  With remote PTY/Shell connections we might see our echos from
+            #  our cooked stdin and also from the remote channel. Needs to be
+            #  analyzed on next possible testing with a windows box.
+            while self._fill_buffer(None) is not False:
+                pass
+            self._dbg(1, 'EOF from remote host')
 
-        def writeall(sock):
-            while True:
-                # NOTE: Windows stdin is always cooked, remote may send double-echos.
-                #  With remote PTY/Shell connections we might see our echos from
-                #  our cooked stdin and also from the remote channel. Needs to be
-                #  analyzed on next possible testing with a windows box.
-                data = sock.recv(1024).decode(self.encoding)
-                if not data:
-                    self._dbg(1, 'EOF from remote host')
-                    break
-                self._receive_cb(data)
-                self._buffer.append(data)
-
-        # NOTE: Thread in windows might need a daemon=True to avoid hanging on exit.
-        #  Needs to be analyzed on next possible testing with a windows box.
-        writer = threading.Thread(name="channel.recv", target=writeall, args=(channel,))
-        writer.start()
+        threading.Thread(name="channel.recv", target=receive, daemon=True).start()
 
         try:
             while True:
@@ -1843,8 +1821,7 @@ class Protocol:
                 if not data:
                     break
                 if not self._call_key_handlers(key_handlers, data):
-                    channel.send(data.encode(self.encoding))
-                    self._send_cb(data)
+                    self._send(data)
                     if self.send_data is not None:
                         self.send_data.write(data)
         except EOFError:
@@ -2030,7 +2007,9 @@ class Protocol:
 
         With `force=False` the driver-specific logout() method is called before
         the connection is closed. Dummy and Netconf adapters have a special
-        static logout sequence.
+        static logout sequence. The connection is closed even if the logout
+        fails, and the error of the logout is raised afterwards; errors while
+        closing are only logged, because the host may have closed first.
 
         .. WARNING::
             Ensure the remote host has already left any previously used submode
@@ -2042,8 +2021,15 @@ class Protocol:
         """
         msg = 'Closing connection to %s:%s (force=%s).'
         self._dbg(1, msg % (self.host, self.port, repr(force)))
-        if self.connected:
+        if not self.connected:
+            self._reset()
+            return
+        try:
             if not force:
                 self._logout()
-            self._close(force=force)
-        self._reset()
+        finally:
+            try:
+                self._close(force=force)
+            except Exception as e:  # e.g. the host closed the connection first
+                self._dbg(1, 'Error while closing the connection: %s' % repr(e))
+            self._reset()

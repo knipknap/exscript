@@ -152,21 +152,8 @@ class SSH2(Protocol):
                 fp.write(line.encode())
 
     def _paramiko_connect(self):
-        # Find supported address families.
-        addrinfo = socket.getaddrinfo(self.host, self.port)
-        for family, socktype, proto, canonname, sockaddr in addrinfo:
-            af = family
-            addr = sockaddr
-            if socktype == socket.SOCK_STREAM:
-                break
-
-        # Open a socket.
-        self._sock = socket.socket(af, socket.SOCK_STREAM)
-        try:
-            self._sock.settimeout(self.connect_timeout or None)
-        except:
-            pass
-        self._sock.connect(addr)
+        # Tries all addresses of the host, e.g. IPv4 after IPv6.
+        self._sock = socket.create_connection((self.host, self.port), self.connect_timeout or None)
 
         # Init the paramiko protocol.
         t = paramiko.Transport(self._sock, disabled_algorithms=self.disabled_algorithms)
