@@ -33,28 +33,28 @@ _unprintable = r'[^' + _printable + r']'
 _ignore = r'[\x1b\x07\x00]'
 _nl = r'(?:\r\n|[\r\n])'
 _prompt_start = _nl + r'(?:' + _unprintable + r'*|' + _ignore + '*)'
-_filename = r'(?:[\w\+\-\._]+)'
-_path = r'(?:(?:' + _filename + r')?(?:/' + _filename + r')*/?)'
-_any_path = r'(?:' + _path + r'|~' + _path + r'?)'
-_host = r'(?:[\w+\-\.]+)'
-_user = r'(?:[\w+\-]+)'
-_user_host = r'(?:(?:' + _user + r'\@)?' + _host + r')'
+# A prompt like "[user@host:~/path (config)]#", where most parts are optional.
+# The runs of name characters are matched possessively (++, *+): the parts are
+# separated by @, :, ~, / or a space, so a run never needs to be split. This
+# keeps the time linear on long lines that are no prompt.
+_name = r'[\w+\-.]'
+_path = r'~?' + _name + r'*+(?:/' + _name + r'++)*+/?'
 _prompt_re = [
     re.compile(
         _prompt_start
         + r'[\[\<]?'
-        + r'\w+'
-        + _user_host
-        + r'?'
+        + r'\w(?:[\w+\-]++@'  # user@host, at least two characters before the @
+        + _name
+        + r'++|'
+        + _name
+        + r'*+)'
         + r':?'
-        + _any_path
-        + r'?'
+        + _path
         + r'[: ]?'
-        + _any_path
-        + r'?'
+        + _path
         + r'(?:\('
-        + _filename
-        + r'\))?'
+        + _name
+        + r'++\))?'
         + r'[\]\-]?'
         + r'[#>%\$\]] ?'
         + _unprintable

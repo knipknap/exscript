@@ -126,6 +126,13 @@ marked with **BREAKING**; a migration guide will accompany the release.
 
 ### Protocol Drivers
 
+- **Generic Prompt Pattern in Linear Time:** The prompt pattern of the generic driver,
+  which other drivers inherit, backtracked catastrophically on long lines that are no
+  prompt: a line with a run of 100 word characters took 1.3 seconds to check, 200
+  characters 25 seconds, so hex or base64 output could stall a session. The pattern
+  matches the same strings, verified against the old one, in linear time. A test
+  checks every driver pattern for this.
+
 - **BREAKING - Graceful Logout:** `Protocol.close(force=False)` now calls the driver's
   new `logout()` method before the connection is closed. The base `Driver` sends
   `exit\r`, the custom `VRPDriver` sends `quit\r` and `SROSDriver` sends `logout\r`.
