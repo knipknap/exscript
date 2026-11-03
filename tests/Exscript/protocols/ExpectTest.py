@@ -13,7 +13,13 @@ from Exscript.protocols.exception import (
     ProtocolException,
     TimeoutException,
 )
-from Exscript.protocols.protocol import Protocol, _ends_with_anchor
+from Exscript.protocols.protocol import (
+    _SETTLE_TIME,
+    Protocol,
+    _ends_with_anchor,
+    _strip_escapes,
+    _unstrip,
+)
 from Exscript.servers import SSHd, Telnetd
 
 HOST = '127.0.0.1'
@@ -23,12 +29,15 @@ KEYFILE = os.path.join(os.path.dirname(__file__), 'id_rsa')
 class Scripted(Protocol):
     """
     Receives the given chunks, one per read; None is a read that times out.
-    After the last chunk, the host closes the connection. Records what was sent.
+    The host pauses before each item, so a read for the settle time gets
+    nothing; a tuple of chunks arrives without pauses. After the last chunk,
+    the host closes the connection. Records what was sent.
     """
 
     def __init__(self, chunks, **kwargs):
         super().__init__(connect_rate_limit=0, **kwargs)
         self.chunks = list(chunks)
+        self.burst = []
         self.sent = []
         self.timeouts = []
 
@@ -41,11 +50,16 @@ class Scripted(Protocol):
 
     def _fill_buffer(self, timeout):
         self.timeouts.append(timeout)
-        if not self.chunks:
-            return False
-        chunk = self.chunks.pop(0)
-        if chunk is None:
-            return None
+        if not self.burst:
+            if not self.chunks:
+                return False
+            if timeout == _SETTLE_TIME:
+                return None
+            item = self.chunks.pop(0)
+            if item is None:
+                return None
+            self.burst = list(item) if isinstance(item, tuple) else [item]
+        chunk = self.burst.pop(0)
         self._receive_cb(chunk)
         self._buffer.append(chunk)
         return True
@@ -100,6 +114,56 @@ class ExpectTest(unittest.TestCase):
         for pattern in r'#', r'\$', r'a\\\$', r'\\Z', r'[$]', r'(a$|b)':
             self.assertFalse(_ends_with_anchor(re.compile(pattern)), pattern)
         self.assertFalse(_ends_with_anchor(re.compile(r'#$', re.M)))  # $ ends every line
+
+
+class PromptTest(unittest.TestCase):
+    """The settle time of the generic prompt pattern, and escape sequences."""
+
+    def testPromptLikeOutputLine(self):
+        # FRR's route code "S>" ends a read, but more output follows at once.
+        reads = ('show ip route\r\nS>', '* 10.0.0.0/8 via 192.0.2.1\r\nrouter# ')
+        conn = connect([reads], driver='generic')
+        conn.expect_prompt()
+        self.assertEqual(conn.response, 'show ip route\r\nS>* 10.0.0.0/8 via 192.0.2.1')
+
+    def testPromptBeforeAPause(self):
+        conn = connect(['show version\r\nrouter# ', 'later'], driver='generic')
+        conn.expect_prompt()
+        self.assertEqual(conn.response, 'show version')
+        self.assertEqual(conn.timeouts, [conn.timeout, _SETTLE_TIME])
+        self.assertEqual(conn.chunks, ['later'])
+
+    def testKnownDriverPromptCountsAtOnce(self):
+        conn = connect(['show version\r\nrouter#'], driver='ios')
+        conn.expect_prompt()
+        self.assertEqual(conn.timeouts, [conn.timeout])
+
+    def testPromptAfterBracketedPasteMode(self):
+        conn = connect(['ls\r\nfile\r\n\x1b[?2004hrouter1:~$ '], driver='generic')
+        conn.expect_prompt()
+        self.assertEqual(conn.response, 'ls\r\nfile')
+        self.assertEqual(conn._buffer.size(), 0)
+
+    def testPromptAfterWindowTitle(self):
+        conn = connect(['\r\n\x1b]0;admin@router1: ~\x07admin@router1:~$ \x1b(B'], driver='generic')
+        conn.expect_prompt()
+        self.assertEqual(conn.response, '')
+        self.assertEqual(conn._buffer.size(), 0)
+
+    def testPatternWithEscapeSequences(self):
+        # Matched against the raw data first.
+        conn = connect(['out\r\n\x1b[32muser\x1b[0m$ '])
+        conn.set_prompt(r'\x1b\[32m\w+\x1b\[0m\$ $')
+        conn.expect_prompt()
+        self.assertEqual(conn.response, 'out\r\n')
+
+    def testUnstrip(self):
+        text, cuts = _strip_escapes('a\x1b[1mb\x1b[0m\x1b[K')
+        self.assertEqual(text, 'ab')
+        self.assertEqual(_unstrip(cuts, 1, after=False), 1)
+        self.assertEqual(_unstrip(cuts, 1, after=True), 5)
+        self.assertEqual(_unstrip(cuts, 2, after=False), 6)
+        self.assertEqual(_unstrip(cuts, 2, after=True), 13)
 
 
 class LoginErrorTest(unittest.TestCase):

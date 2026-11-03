@@ -122,6 +122,16 @@ marked with **BREAKING**; a migration guide will accompany the release.
   a banner such as "Access denied for unauthorized users" failed the login before any
   credentials were sent. A login error is detected with the next prompt, when the host
   closes the connection, or at the timeout.
+- **Prompts After Escape Sequences:** A prompt after terminal escape sequences is
+  found now, e.g. after bash's `ESC[?2004h` (bracketed paste mode, with a `termtype`
+  other than the default `dumb`) or a window title; before, `login()` timed out.
+  Patterns are matched against the received text first, so patterns that contain
+  escape sequences match as before.
+- **Settle Time for the Generic Prompt:** The prompt pattern of the generic driver,
+  which the `adtran`, `aix` and `shell` drivers use too, also matches output lines such
+  as FRR's route codes (`S>`). Its match now counts only if no more data arrives
+  within 20 ms, so each prompt over these drivers takes 20 ms longer. The prompts of
+  the other drivers, and prompts set with `set_prompt()`, count at once.
 
 ### Telnet
 

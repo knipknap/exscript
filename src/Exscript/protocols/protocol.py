@@ -47,6 +47,7 @@ from ..util.impl import Context, _Context
 from ..util.tty import get_terminal_size
 from ..util.url import _WELL_KNOWN_PORTS
 from .drivers import Driver, driver_map
+from .drivers.driver import _prompt_re as _generic_prompt_re
 from .exception import (
     ConnectionClosedException,
     DriverReplacedException,
@@ -84,6 +85,45 @@ _PROMPT_WINDOW = 1024
 # The other patterns are searched in the data that arrived since the last
 # search, plus this many characters before it, so a match may span two reads.
 _LOOKBEHIND = 150
+# The generic prompt pattern also matches output lines such as the "S>" route
+# codes of FRR, so its match counts only if no more data follows within this
+# many seconds.
+_SETTLE_TIME = 0.02
+_generic_prompt = _generic_prompt_re[0]
+# Terminal escape sequences around a prompt: CSI (e.g. ESC[?2004h, bash's
+# bracketed paste mode), OSC (e.g. the window title), and character sets.
+_terminal_escape_re = re.compile(
+    r'\x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[()][\x20-\x7e]'
+)
+
+
+def _strip_escapes(text):
+    """
+    Removes terminal escape sequences. Returns the remaining text and, for
+    each removed sequence, its position in the remaining text and the number
+    of characters removed up to and including it.
+    """
+    parts, cuts, removed, last = [], [], 0, 0
+    for match in _terminal_escape_re.finditer(text):
+        parts.append(text[last : match.start()])
+        cuts.append((match.start() - removed, removed + match.end() - match.start()))
+        removed += match.end() - match.start()
+        last = match.end()
+    parts.append(text[last:])
+    return ''.join(parts), cuts
+
+
+def _unstrip(cuts, pos, after):
+    """
+    Maps a position in the text from _strip_escapes() back to the original
+    text. Sequences at the position itself are skipped if after is true.
+    """
+    removed = 0
+    for cut, total in cuts:
+        if cut > pos or (cut == pos and not after):
+            break
+        removed = total
+    return pos + removed
 
 
 def _ends_with_anchor(regex):
@@ -1387,11 +1427,9 @@ class Protocol:
     def _domatch(self, prompt, flush):
         """
         Waits until one of the given regular expressions matches the received
-        data, and sets self.response to the data before the match. With flush,
-        removes the data up to the end of the match from the buffer.
-
-        Raises TimeoutException if no data arrives for self.timeout seconds,
-        and ConnectionClosedException if the host closed the connection.
+        data, and sets self.response to the data before the match. A match of
+        the generic prompt pattern counts only if no more data arrives within
+        _SETTLE_TIME seconds.
 
         :type  prompt: list(re.Pattern)
         :param prompt: The regular expressions.
@@ -1408,9 +1446,11 @@ class Protocol:
             if self._expect_canceled:
                 self._raise_on_canceled_expect()
             n, match, start, end = self._search(prompt, searched)
-            if match is not None:
-                break
             searched = self._buffer.size()
+            if match is not None:
+                if prompt[n] is not _generic_prompt or not self._fill_buffer(_SETTLE_TIME):
+                    break
+                continue  # more data followed, so it was no prompt
             received = self._fill_buffer(self.timeout)
             if received is None:
                 self._raise_on_response_timeout()
@@ -1430,8 +1470,9 @@ class Protocol:
         Searches the buffer for the first of the given regular expressions
         that matches. A regular expression that ends with $ or \\Z is searched
         in the last _PROMPT_WINDOW characters, after the driver's cleanup of
-        the response; the others in the data from the given position on, plus
-        _LOOKBEHIND characters before it.
+        the response, and if none matches, without terminal escape sequences;
+        the others in the data from the given position on, plus _LOOKBEHIND
+        characters before it.
 
         :type  prompt: list(re.Pattern)
         :param prompt: The regular expressions.
@@ -1443,8 +1484,9 @@ class Protocol:
         """
         size = self._buffer.size()
         tail = new = None
+        anchored = [_ends_with_anchor(regex) for regex in prompt]
         for n, regex in enumerate(prompt):
-            if _ends_with_anchor(regex):
+            if anchored[n]:
                 if tail is None:
                     raw = self._buffer.tail(_PROMPT_WINDOW)
                     tail, incomplete = self.get_driver().clean_response_for_re_match(raw)
@@ -1459,6 +1501,14 @@ class Protocol:
                 offset = new_offset
             if match is not None:
                 return n, match, offset + match.start(), offset + match.end()
+        # Only then without the escape sequences, because patterns that contain
+        # escape sequences match only the raw text.
+        if tail is not None and '\x1b' in tail:
+            text, cuts = _strip_escapes(tail)
+            for n, regex in enumerate(prompt):
+                if anchored[n] and (match := regex.search(text)) is not None:
+                    start = tail_offset + _unstrip(cuts, match.start(), after=False)
+                    return n, match, start, tail_offset + _unstrip(cuts, match.end(), after=True)
         return -1, None, 0, 0
 
     def _fill_buffer(self, timeout):
