@@ -71,7 +71,7 @@ def first_match(string, regex, flags=re.M):
        match = first_match(foo, r'(aaa)')       # Returns None
        match = first_match(foo, r'(\S+)')       # Returns 'my'
        match = first_match(foo, r'(aaa) (\S+)') # Returns (None, None)
-       match = first_match(foo, r'(\S+) (\S+)') # Returns ('my', 'foo')
+       match = first_match(foo, r'(\S+) (\S+)') # Returns ('my', 'test')
 
     :type  string: string|Exscript.protocols.Protocol
     :param string: The string that is matched, or a Protocol object.
@@ -118,10 +118,10 @@ def any_match(string, regex, flags=re.M):
             print(m)
 
         for one, two in any_match(foo, r'(aaa) (\S+)'): # Returns []
-            print(m)
+            print(one, two)
 
         for one, two in any_match(foo, r'(\S+) (\S+)'): # Returns [('1', 'uno'), ('2', 'due')]
-            print(m)
+            print(one, two)
 
     :type  string: string|Exscript.protocols.Protocol
     :param string: The string that is matched, or a Protocol object.

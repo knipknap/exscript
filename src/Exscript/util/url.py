@@ -168,7 +168,7 @@ class Url:
 
         - It is less strict, many more inputs are accepted. This is
           necessary to allow for passing a simple hostname as a URL.
-        - You may specify a default protocol that is used when the http://
+        - You may specify a default protocol that is used when the ``http://``
           portion is missing.
         - The port number defaults to the well-known port of the given
           protocol.

@@ -66,7 +66,7 @@ class Host:
         """
         Defines the protocol, hostname/address, TCP port number, username,
         and password from the given URL. The hostname may be URL formatted,
-        so the following formats are all valid:
+        so the following formats are all valid::
 
             - myhostname
             - myhostname.domain

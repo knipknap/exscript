@@ -49,8 +49,9 @@ def get_accounts_from_file(filename, encoding='utf-8', password_encoding='utf-8'
     Note that "cGFzc3dvcmQ=" is a base64 encoded password.
     If the input file contains extra config sections other than
     "account-pool", they are ignored.
-    Each password needs to be base64 encrypted. To encrypt a password,
-    you may use the following command::
+    Each password needs to be base64 encoded. Base64 does not protect the
+    passwords: anyone who can read the file can decode them. To encode a
+    password, you may use the following command::
 
         python3 -c 'import base64; print(base64.b64encode("thepassword".encode()).decode())'
 
