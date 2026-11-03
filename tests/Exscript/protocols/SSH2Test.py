@@ -45,10 +45,11 @@ class SSH2Test(ProtocolTest):
 
 
 class KeyServer:
-    """Completes the SSH key exchange with its host keys; nothing else."""
+    """Completes the SSH key exchange with its host keys; nothing else unless the interface allows it."""
 
-    def __init__(self, test, *keys):
+    def __init__(self, test, *keys, interface=paramiko.ServerInterface):
         self.keys = keys
+        self.interface = interface
         self._transports = []
         self._closing = threading.Event()
         self._listener = socket.create_server((HOST, 0))
@@ -70,7 +71,7 @@ class KeyServer:
             self._transports.append(transport)
             # With an event, the key exchange runs in the transport's thread, and the
             # transport stays open until the client or close() closes it.
-            transport.start_server(event=threading.Event(), server=paramiko.ServerInterface())
+            transport.start_server(event=threading.Event(), server=self.interface())
 
     def close(self):
         self._closing.set()
@@ -173,12 +174,49 @@ class HostKeyTest(unittest.TestCase):
         self.assertRaises(ValueError, SSH2, host_key_policy='yes')
 
 
+class _PasswordOnly(paramiko.ServerInterface):
+    """Offers three methods, but accepts only the password."""
+
+    def get_allowed_auths(self, username):
+        return 'publickey,keyboard-interactive,password'
+
+    def check_auth_password(self, username, password):
+        return paramiko.AUTH_SUCCESSFUL
+
+
+class ReconnectTest(unittest.TestCase):
+    """Drivers like ios reconnect between methods, but only after a request that failed."""
+
+    def handshakes(self, driver):
+        server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=_PasswordOnly)
+        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, driver=driver)
+        self.addCleanup(conn.close, force=True)
+        home = tempfile.TemporaryDirectory()  # no key files
+        self.addCleanup(home.cleanup)
+        with (
+            mock.patch.dict(os.environ, {'HOME': home.name, 'USERPROFILE': home.name}),
+            mock.patch('paramiko.Agent') as agent,
+        ):
+            agent.return_value.get_keys.return_value = []
+            conn.connect(HOST, server.port)
+            conn._paramiko_auth('admin', 'password')
+        return len(server._transports)
+
+    def testReconnectAfterFailedRequests(self):
+        # auth_none(), then keyboard-interactive fail; the public key methods send nothing.
+        self.assertEqual(self.handshakes('ios'), 3)
+
+    def testNoReconnectByDefault(self):
+        self.assertEqual(self.handshakes('generic'), 1)
+
+
 def suite():
     loader = unittest.TestLoader()
     return unittest.TestSuite(
         [
             loader.loadTestsFromTestCase(SSH2Test),
             loader.loadTestsFromTestCase(HostKeyTest),
+            loader.loadTestsFromTestCase(ReconnectTest),
         ]
     )
 

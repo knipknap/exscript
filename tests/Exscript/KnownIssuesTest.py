@@ -8,14 +8,11 @@ and move the test next to the tests of the fixed module.
 """
 
 import sys
-import threading
-import time
 import unittest
-import uuid
 
 from Exscript import Account
 from Exscript.emulators import VirtualDevice
-from Exscript.protocols import SSH2, Dummy
+from Exscript.protocols import Dummy
 from Exscript.protocols.drivers import driver_map, isam
 
 
@@ -39,41 +36,6 @@ class DriverTest(unittest.TestCase):
         conn.login(Account('user', 'password', needs_lock=False))
         conn.execute('uname')
         self.assertEqual(conn.get_response().strip(), 'Linux')
-
-
-class ConnectRateLimitTest(unittest.TestCase):
-    def enforce(self, host, starts=None):
-        conn = SSH2(connect_rate_limit=60)  # 1.1 s spacing per host
-        conn.host = host
-        conn._enforce_connect_rate_limit()
-        if starts is not None:
-            starts.append(time.monotonic())
-
-    @unittest.expectedFailure  # the limiter sleeps while holding a process-wide lock
-    def testOtherHostsAreNotDelayed(self):
-        host = uuid.uuid4().hex
-        self.enforce(host + '-a')
-        waiting = threading.Thread(target=self.enforce, args=(host + '-a',))
-        waiting.start()
-        time.sleep(0.05)
-        start = time.monotonic()
-        self.enforce(host + '-b')
-        elapsed = time.monotonic() - start
-        waiting.join()
-        self.assertLess(elapsed, 0.5)
-
-    @unittest.expectedFailure  # concurrent connects to one host may start together
-    def testConcurrentConnectsToOneHostAreSpaced(self):
-        host = uuid.uuid4().hex
-        starts = []
-        self.enforce(host, starts)
-        threads = [threading.Thread(target=self.enforce, args=(host, starts)) for _ in range(2)]
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
-        starts.sort()
-        self.assertGreaterEqual(min(b - a for a, b in zip(starts, starts[1:])), 1.0)
 
 
 def suite():

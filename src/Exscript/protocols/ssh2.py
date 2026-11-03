@@ -336,12 +336,14 @@ class SSH2(Protocol):
 
         # Finally try all supported login methods.
         errors = []
+        attempted = True  # auth_none() above was an attempt
         for method in auth_methods:
-            # Some OSes (e.g. JunOS ERX OS, Huawei) do not accept further login
-            # attempts after failing one. So in this hack, we
-            # re-connect after each attempt...
-            if self.get_driver().reconnect_between_auth_methods or not self._transport.active:
-                if self.get_driver().reconnect_between_auth_methods:
+            # Some devices (e.g. Cisco WS-C3750 with IOS) do not accept further
+            # login attempts after failing one. So in this hack, we re-connect
+            # after each attempt that reached the server, auth_none() included.
+            reconnect = self.get_driver().reconnect_between_auth_methods and attempted
+            if reconnect or not self._transport.active:
+                if reconnect:
                     self._dbg(1, 'Forced reconnect by driver.')
                 else:
                     self._dbg(1, 'Forced reconnect by inactive client.')
@@ -349,8 +351,12 @@ class SSH2(Protocol):
                 # Some devices (e.g. Cisco ASR9010) seem to have tight rate limits
                 # for reconnects, so connect() waits some time before the reconnect.
                 self.connect(self.host, self.port)
+                attempted = False
 
             self._dbg(2, 'Authenticating with %s().' % method.__name__)
+            # paramiko creates a new auth handler for each request that it sends;
+            # without keys, the public key methods send none.
+            handler = self._transport.auth_handler
             try:
                 method(username, password)
                 return
@@ -366,6 +372,7 @@ class SSH2(Protocol):
                 msg = 'SSHException with %s(): %s' % (method.__name__, str(e))
                 self._dbg(1, msg)
                 errors.append(msg)
+            attempted = attempted or self._transport.auth_handler is not handler
         raise LoginFailure('Login failed: ' + '; '.join(errors))
 
     def _paramiko_channel(self):

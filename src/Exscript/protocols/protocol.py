@@ -942,18 +942,16 @@ class Protocol:
 
     def _enforce_connect_rate_limit(self, rate_limit=0):
         """
-        Enforce a connection rate-limit to prevent remote connection resets.
-        The limit represents the maximum number of connects per minute. However,
-        an offset of 0.1s is added per login to avoid exactly hitting the limit.
-        Uses `self.connect_rate_limit`, if the given rate-limit is zero.
+        Waits until the connect keeps the rate limit: connects to the same
+        host, also concurrent ones, are spaced by 60 / rate_limit + 0.1
+        seconds, while connects to other hosts are not delayed.
 
         :type  rate_limit: int
         :param rate_limit: The connection rate-limit (connects per minute);
             0 uses connect_rate_limit.
         """
         key = self.host.lower()
-        wait = 0.0
-        offset = 0.1
+        interval = 0.0
         precision = 3
 
         if not rate_limit:
@@ -961,19 +959,20 @@ class Protocol:
 
         if rate_limit > 0:
             self._dbg(1, "Connection rate limit: %s per minute" % rate_limit)
-            wait = round((60 / rate_limit) + offset, precision)
-            self._dbg(2, "Maximum connection delay: %s seconds" % wait)
+            interval = round((60 / rate_limit) + 0.1, precision)
+            self._dbg(2, "Maximum connection delay: %s seconds" % interval)
 
+        # Reserve the next free time for this host under the lock, but wait
+        # outside of it.
         with self._connection_monitor_lock:
-            now = time.time()
-            if wait:
-                # Calculate the remaining wait time since last connection attempt.
-                last = self._connection_monitor.get(key, 0.0)
-                wait = round(wait - min((now - last), wait), precision)
-                if wait:
-                    self._dbg(2, "Remaining connection delay: %s seconds" % wait)
-                    time.sleep(wait)
-            self._connection_monitor[key] = now
+            now = time.monotonic()
+            last = self._connection_monitor.get(key)
+            start = now if last is None or not interval else max(now, last + interval)
+            self._connection_monitor[key] = start if last is None else max(start, last)
+        delay = round(start - now, precision)
+        if delay > 0:
+            self._dbg(2, "Remaining connection delay: %s seconds" % delay)
+            time.sleep(delay)
 
     def _connect(self):
         """

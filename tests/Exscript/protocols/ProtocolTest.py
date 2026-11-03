@@ -1,9 +1,11 @@
 import os
 import re
 import tempfile
+import threading
 import time
 import unittest
 import unittest.mock
+import uuid
 from functools import partial
 
 from Exscript import Account, PrivateKey
@@ -905,8 +907,51 @@ class ProtocolTest(unittest.TestCase):
         self.assertGreater(second_log_size, first_log_size)
 
 
+class ConnectRateLimitTest(unittest.TestCase):
+    def enforce(self, host, rate_limit=60):  # 60: 1.1 s spacing per host
+        conn = Protocol(connect_rate_limit=rate_limit)
+        conn.host = host
+        conn._enforce_connect_rate_limit()
+
+    def testOtherHostsAreNotDelayed(self):
+        host = uuid.uuid4().hex
+        self.enforce(host + '-a')
+        waiting = threading.Thread(target=self.enforce, args=(host + '-a',))
+        waiting.start()
+        time.sleep(0.05)
+        start = time.monotonic()
+        self.enforce(host + '-b')
+        elapsed = time.monotonic() - start
+        waiting.join()
+        self.assertLess(elapsed, 0.5)
+
+    def testConnectsToOneHostAreSpaced(self):
+        host = uuid.uuid4().hex
+        with unittest.mock.patch('Exscript.protocols.protocol.time.sleep') as sleep:
+            for _ in range(3):
+                self.enforce(host)
+        delays = [call.args[0] for call in sleep.call_args_list]
+        self.assertEqual(len(delays), 2)
+        self.assertAlmostEqual(delays[0], 1.1, delta=0.05)
+        self.assertAlmostEqual(delays[1], 2.2, delta=0.05)  # after the slot reserved for the second
+
+    def testNoLimitDoesNotWait(self):
+        host = uuid.uuid4().hex
+        with unittest.mock.patch('Exscript.protocols.protocol.time.sleep') as sleep:
+            self.enforce(host)
+            self.enforce(host)  # reserves a slot 1.1 s ahead
+            self.enforce(host, rate_limit=0)
+        self.assertEqual(sleep.call_count, 1)
+
+
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(ProtocolTest)
+    loader = unittest.TestLoader()
+    return unittest.TestSuite(
+        [
+            loader.loadTestsFromTestCase(ProtocolTest),
+            loader.loadTestsFromTestCase(ConnectRateLimitTest),
+        ]
+    )
 
 
 if __name__ == '__main__':

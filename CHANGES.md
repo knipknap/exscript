@@ -97,6 +97,18 @@ marked with **BREAKING**; a migration guide will accompany the release.
   - `Exscript.util.url.Url.from_string(url, default_protocol='ssh')`
   - `exscript` CLI: `-p`/`--protocol`
 
+### Connecting
+
+- **Connect Rate Limit Per Host:** `connect_rate_limit` no longer delays connects to
+  other hosts. The limiter slept while it held a process-wide lock, so one waiting
+  connect blocked all others, by default for up to 1.1 seconds. Concurrent connects
+  to the same host are now spaced, too; before, they could start together.
+- **Fewer SSH Reconnects:** Drivers that reconnect between authentication methods
+  (`ios`) now reconnect only after a method sent a request that failed. Before, they
+  reconnected before every method, also before the public key methods when there was
+  no key: a password login to an IOS device that also offers public keys and
+  keyboard-interactive took 5 SSH connections, now 3.
+
 ### Waiting for Responses
 
 - **One Implementation for All Protocols:** `expect()`, `waitfor()`, `expect_prompt()`
