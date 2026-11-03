@@ -336,13 +336,14 @@ class Netconf(SSH2):
         match = _chunk_header_re.match(response)
         if not match:
             return response
-        assembled = ''
+        parts = []
         while match:
-            size = int(match.group(1))
-            response = response[match.end() :]  # consume the chunk header
-            assembled += response[:size]  # extract exactly size chars of content
-            response = response[size:]  # consume the chunk content
-            match = _chunk_header_re.match(response)
+            start = match.end()  # after the chunk header
+            end = start + int(match.group(1))  # exactly size chars of content
+            parts.append(response[start:end])
+            match = _chunk_header_re.match(response, end)
+        assembled = ''.join(parts)
+        response = response[end:]
         if response:
             # Internally this would be already consumed as the prompt.
             match = _end_of_chunks_re.match(response)

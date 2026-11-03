@@ -137,6 +137,8 @@ marked with **BREAKING**; a migration guide will accompany the release.
   received data instead of a copy of all of it for each read: 8 MiB of output in
   1 KiB reads take 0.015 seconds instead of 9.4. The positions in the match object
   that the callback gets refer to the searched text, not to the whole buffer.
+- **NETCONF 1.1 Chunks:** `Netconf.reassemble_chunks()` takes linear time: a 16 MiB
+  reply in 4 KiB chunks takes 0.013 seconds instead of 5.2.
 
 ### Telnet
 
