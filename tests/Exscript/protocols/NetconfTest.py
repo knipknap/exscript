@@ -1,6 +1,8 @@
 """Tests for the parts of the NETCONF adapter that need no server."""
 
 import inspect
+import subprocess
+import sys
 import threading
 import unittest
 
@@ -58,8 +60,9 @@ class NcclientContractTest(unittest.TestCase):
         self.assertIs(NCElement(reply, lambda root: root)._NCElement__result, reply)
 
     def testPrettyPrintOnlyForExscript(self):
-        self.assertIs(ncclient.operations.rpc.to_xml, netconf._to_xml)
-        self.assertIs(ncclient.transport.session.to_xml, netconf._to_xml)
+        to_xml = netconf._install_to_xml()
+        self.assertIs(ncclient.operations.rpc.to_xml, to_xml)
+        self.assertIs(ncclient.transport.session.to_xml, to_xml)
         rpc = RPC.__new__(RPC)  # _wrap() needs only these two attributes
         rpc._id, rpc._device_handler = '1', self.handler
         for serialize in (
@@ -70,3 +73,13 @@ class NcclientContractTest(unittest.TestCase):
             with netconf._pretty():
                 self.assertIn('\n  <', serialize())
             self.assertNotIn('\n  <', serialize())
+
+
+class LazyImportTest(unittest.TestCase):
+    def testImportLoadsNoLxml(self):
+        # lxml enables the GIL of free-threaded Python, so only NETCONF and RPC templates load it.
+        code = 'import sys, Exscript.protocols; print([m for m in ("lxml", "ncclient") if m in sys.modules])'
+        result = subprocess.run(  # noqa: S603 (constant arguments)
+            [sys.executable, '-c', code], capture_output=True, text=True, check=True
+        )
+        self.assertEqual(result.stdout.strip(), '[]')

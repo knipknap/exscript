@@ -23,8 +23,6 @@
 import re
 import textwrap
 
-from lxml.etree import XMLSyntaxError
-
 from ..parselib import Token
 from ..util.xml import validate_xml
 from .string import String, varstring_re
@@ -71,6 +69,8 @@ class Execute(String):
         # to create an XML tree as valid as possible. The XML body will be
         # tested once more at runtime by the protocol adapter (evaluated vars).
         if type(parent).__name__ == 'RPCBody':
+            from lxml.etree import XMLSyntaxError  # only templates with RPCs need lxml
+
             # The start mark points to the first non-whitespace character of the
             # RPC body. We will need the original start position of the command.
             original_start = self.start - len(

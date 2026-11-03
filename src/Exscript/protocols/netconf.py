@@ -32,15 +32,6 @@ import logging
 import re
 import time
 
-import ncclient.operations.rpc
-import ncclient.transport.session
-from lxml.etree import XMLSyntaxError
-from ncclient import NCClientError
-from ncclient.manager import Manager, make_device_handler
-from ncclient.operations.errors import TimeoutExpiredError
-from ncclient.operations.rpc import RaiseMode, RPCReply
-from ncclient.transport.ssh import SSHSession
-from ncclient.xml_ import NCElement, to_xml
 from paramiko.ssh_exception import SSHException
 
 from ..util.xml import XMLValidationError, _parse, validate_xml
@@ -51,6 +42,9 @@ from .exception import (
 )
 from .ssh2 import SSH2
 
+# ncclient and lxml are imported when the first NETCONF session starts, not
+# with Exscript: lxml enables the GIL of free-threaded Python.
+
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
 
@@ -59,21 +53,28 @@ _chunk_header_re = re.compile(r'\n#(\d+)\n')
 _end_of_chunks_re = re.compile(r'\n##\n')
 
 # Exscript sends its <hello> and RPCs pretty-printed, so that they are readable
-# in logs. ncclient serializes them with the to_xml() of these two modules, in
-# the thread that sends; the replacement pretty-prints only within _pretty(),
-# so other users of ncclient in the process are not affected.
+# in logs. ncclient serializes them with the to_xml() of two of its modules, in
+# the thread that sends; _install_to_xml() replaces it with a function that
+# pretty-prints only within _pretty(), so other users of ncclient in the
+# process are not affected.
 _pretty_print = contextvars.ContextVar('exscript_netconf_pretty_print', default=False)
 
 
-@functools.wraps(to_xml)
-def _to_xml(*args, **kwargs):
-    if _pretty_print.get():
-        kwargs['pretty_print'] = True
-    return to_xml(*args, **kwargs)
+@functools.cache
+def _install_to_xml():
+    import ncclient.operations.rpc
+    import ncclient.transport.session
+    from ncclient.xml_ import to_xml
 
+    @functools.wraps(to_xml)
+    def _to_xml(*args, **kwargs):
+        if _pretty_print.get():
+            kwargs['pretty_print'] = True
+        return to_xml(*args, **kwargs)
 
-ncclient.operations.rpc.to_xml = _to_xml
-ncclient.transport.session.to_xml = _to_xml
+    ncclient.operations.rpc.to_xml = _to_xml
+    ncclient.transport.session.to_xml = _to_xml
+    return _to_xml
 
 
 @contextlib.contextmanager
@@ -168,6 +169,9 @@ class Netconf(SSH2):
 
         :rtype: lxml.etree.Element | None
         """
+        from ncclient.operations.rpc import RPCReply
+        from ncclient.xml_ import NCElement
+
         if self.response is None:
             return None  # send() was called without expect_prompt()
         if isinstance(self._ncc_response, RPCReply):
@@ -192,6 +196,8 @@ class Netconf(SSH2):
         # This is a bit different from the SSH2 adapter. Here we need to init
         # the Netconf subsystem. We integrate ncclient's device params in the
         # drivers to support customization.
+        from ncclient.manager import make_device_handler
+
         driver = self.get_driver()
         device_handler = make_device_handler(driver.netconf_device_params)
         subsystems = device_handler.get_ssh_subsystem_names()
@@ -219,6 +225,11 @@ class Netconf(SSH2):
         # complete the <hello> exchange and start ncclient's IO thread.
         if self._ncc_manager:
             return
+        from ncclient.manager import Manager
+        from ncclient.operations.rpc import RaiseMode
+        from ncclient.transport.ssh import SSHSession
+
+        _install_to_xml()
         self._dbg(1, 'Initialize ncclient and hand over channel ownership.')
 
         # Build a bare SSHSession — no connect() call, we inject everything.
@@ -390,6 +401,9 @@ class Netconf(SSH2):
         return True
 
     def _send(self, data):
+        from ncclient import NCClientError
+        from ncclient.operations.errors import TimeoutExpiredError
+
         self._ncc_response = None
         self._validate_rpc_body(data)
         try:
@@ -408,6 +422,8 @@ class Netconf(SSH2):
         self._dbg(4, 'Received response type: %s' % type(self._ncc_response).__name__)
 
     def _validate_rpc_body(self, data):
+        from lxml.etree import XMLSyntaxError
+
         _wrapper_start_tag = '<rpc>\n'
         _wrapper_end_tag = '\n</rpc>'
         data = f'{_wrapper_start_tag}{data}{_wrapper_end_tag}'

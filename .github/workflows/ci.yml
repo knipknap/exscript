@@ -38,7 +38,9 @@ jobs:
         python: ["3.12", "3.13", "3.14", "3.15"]
         experimental: [false]
         include:
-          - { os: ubuntu-latest, python: "3.14t", experimental: true }
+          # lxml has not declared support for free-threading, so importing it enables the GIL;
+          # PYTHON_GIL=0 keeps it off, so that this job tests without the GIL.
+          - { os: ubuntu-latest, python: "3.14t", experimental: true, gil: "0" }
           - { os: windows-latest, python: "3.14", experimental: true }
           - { os: macos-latest, python: "3.14", experimental: true }
     steps:
@@ -51,6 +53,7 @@ jobs:
         shell: bash  # also on Windows, where the default shell does not expand "$PYTHON"
         env:
           PYTHON: ${{ matrix.python }}
+          PYTHON_GIL: ${{ matrix.gil }}  # empty, i.e. ignored, except for free-threading
         run: uv run --frozen --python "$PYTHON" pytest --cov=Exscript --cov-report=term-missing:skip-covered
 
   build:

@@ -175,6 +175,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   position at which the thread wrote. Exscript still sends its `<hello>` and RPCs
   pretty-printed, but no longer makes other users of ncclient in the same process do
   so (changes against the 2.9 development versions).
+- **Free-Threaded Python:** `import Exscript` no longer imports lxml and ncclient;
+  NETCONF sessions and templates with RPCs load them when they need them. lxml
+  enables the GIL of free-threaded Python (3.14t), so before, Exscript always ran with
+  the GIL there. XML is parsed with a new parser for each call, so threads no longer
+  wait for each other.
 
 ### Telnet
 

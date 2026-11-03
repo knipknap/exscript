@@ -22,23 +22,25 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 Working with XML.
+
+lxml is imported on first use, not with Exscript: it enables the GIL of
+free-threaded Python.
 """
-
-from lxml import etree
-
-# Entities are never resolved and DTDs and other resources are never loaded,
-# which rules out XXE attacks; also with huge_tree, which only lifts size limits.
-_parsers = {
-    huge_tree: etree.XMLParser(
-        resolve_entities=False, load_dtd=False, no_network=True, huge_tree=huge_tree
-    )
-    for huge_tree in (False, True)
-}
 
 
 def _parse(string, huge_tree=False):
-    """Parses an XML string with the safe parser and returns the root element."""
-    return etree.fromstring(string.encode('utf-8'), _parsers[huge_tree])
+    """
+    Parses an XML string and returns the root element, safe from XXE
+    attacks: the parser never resolves entities or loads DTDs or other
+    resources (huge_tree only lifts size limits). Each call creates its own
+    parser, because lxml lets only one thread at a time use a parser.
+    """
+    from lxml import etree
+
+    parser = etree.XMLParser(
+        resolve_entities=False, load_dtd=False, no_network=True, huge_tree=huge_tree
+    )
+    return etree.fromstring(string.encode('utf-8'), parser)
 
 
 class XMLValidationError(Exception):
@@ -65,6 +67,8 @@ def validate_xml(string, *, silent=False):
     :rtype: bool
     :return: Whether the string is valid XML in UTF-8.
     """
+    from lxml import etree
+
     try:
         _parse(string)
     except UnicodeEncodeError:
