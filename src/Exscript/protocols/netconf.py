@@ -24,12 +24,16 @@
 SSH2 Netconf support, based on ncclient and paramiko.
 """
 
+import contextlib
+import contextvars
 import functools
 import inspect
 import logging
 import re
 import time
 
+import ncclient.operations.rpc
+import ncclient.transport.session
 from lxml.etree import XMLSyntaxError
 from ncclient import NCClientError
 from ncclient.manager import Manager, make_device_handler
@@ -53,6 +57,32 @@ _logger.addHandler(logging.NullHandler())
 # Matches a NETCONF 1.1 chunk header: LF HASH chunk-size LF (RFC 6242 §4.2).
 _chunk_header_re = re.compile(r'\n#(\d+)\n')
 _end_of_chunks_re = re.compile(r'\n##\n')
+
+# Exscript sends its <hello> and RPCs pretty-printed, so that they are readable
+# in logs. ncclient serializes them with the to_xml() of these two modules, in
+# the thread that sends; the replacement pretty-prints only within _pretty(),
+# so other users of ncclient in the process are not affected.
+_pretty_print = contextvars.ContextVar('exscript_netconf_pretty_print', default=False)
+
+
+@functools.wraps(to_xml)
+def _to_xml(*args, **kwargs):
+    if _pretty_print.get():
+        kwargs['pretty_print'] = True
+    return to_xml(*args, **kwargs)
+
+
+ncclient.operations.rpc.to_xml = _to_xml
+ncclient.transport.session.to_xml = _to_xml
+
+
+@contextlib.contextmanager
+def _pretty():
+    token = _pretty_print.set(True)
+    try:
+        yield
+    finally:
+        _pretty_print.reset(token)
 
 
 class Netconf(SSH2):
@@ -251,26 +281,10 @@ class Netconf(SSH2):
 
         self._channel.send = send_wrapper
 
-        # Setup the RPC relevant to_xml wrapper so that ncclient's RPCs are
-        # always send (and logged by Exscript) in a pretty formatted style.
-        # This is quite hacky, but the only way to achieve it on the fly
-        # without additional XML parsing and reformatting.
-        import ncclient.operations.retrieve as retrieve_module
-        import ncclient.operations.rpc as rpc_module
-        import ncclient.transport.session as session_module
-
-        @functools.wraps(to_xml)
-        def to_xml_wrapper(*args, **kwargs):
-            kwargs['pretty_print'] = True
-            return to_xml(*args, **kwargs)
-
-        retrieve_module.to_xml = to_xml_wrapper  # for retrieved RPC replies
-        rpc_module.to_xml = to_xml_wrapper  # for all kinds of sent RPCs
-        session_module.to_xml = to_xml_wrapper  # where client hello is build
-
         # Starts IO thread, sends client <hello>, consumes server <hello>.
         self._buffer.clear()  # keeps the first self.response clean
-        session._post_connect(self.get_timeout())
+        with _pretty():
+            session._post_connect(self.get_timeout())
 
         # Selects the driver/device-specific XML parser for all subsequent RPCs.
         session.parser = device_handler.get_xml_parser(session)
@@ -380,7 +394,8 @@ class Netconf(SSH2):
         self._validate_rpc_body(data)
         try:
             element = _parse(data)
-            self._ncc_response = self._ncc_manager.dispatch(element)
+            with _pretty():
+                self._ncc_response = self._ncc_manager.dispatch(element)
             # wrappers handle the self.data_sent_event
         except TimeoutExpiredError:
             self._raise_on_response_timeout()
@@ -435,7 +450,8 @@ class Netconf(SSH2):
 
     def _logout(self):
         try:
-            self._ncc_manager.close_session()
+            with _pretty():
+                self._ncc_manager.close_session()
         except Exception:
             pass
 

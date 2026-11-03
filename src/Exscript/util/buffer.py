@@ -24,6 +24,8 @@
 A buffer object.
 """
 
+import functools
+import threading
 from io import StringIO
 
 from .cast import to_regexs
@@ -33,10 +35,21 @@ from .cast import to_regexs
 _CONTEXT = 256
 
 
+def _locked(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 class MonitoredBuffer:
     """
     A specialized string buffer that allows for monitoring
     the content using regular expression-triggered callbacks.
+    The methods are thread-safe: the NETCONF adapter, for example, appends
+    in ncclient's thread while the caller searches.
     """
 
     def __init__(self, io=None):
@@ -53,14 +66,17 @@ class MonitoredBuffer:
         else:
             self.io = io
         self.monitors = []
+        self._lock = threading.RLock()
         self.clear()
 
+    @_locked
     def __str__(self):
         """
         Returns the content of the buffer.
         """
         return self.io.getvalue()
 
+    @_locked
     def size(self):
         """
         Returns the size of the buffer.
@@ -70,6 +86,7 @@ class MonitoredBuffer:
         """
         return self.io.tell()
 
+    @_locked
     def head(self, bytes):
         """
         Returns the number of given bytes from the head of the buffer.
@@ -84,6 +101,7 @@ class MonitoredBuffer:
         self.io.seek(oldpos)
         return head
 
+    @_locked
     def tail(self, bytes):
         """
         Returns the number of given bytes from the tail of the buffer.
@@ -95,6 +113,7 @@ class MonitoredBuffer:
         self.io.seek(max(0, self.size() - bytes))
         return self.io.read()
 
+    @_locked
     def pop(self, bytes):
         """
         Like :class:`head()`, but also removes the head from the buffer.
@@ -112,6 +131,7 @@ class MonitoredBuffer:
             item[2] = max(0, item[2] - len(head))
         return head
 
+    @_locked
     def append(self, data):
         """
         Appends the given data to the buffer, and triggers all connected
@@ -141,6 +161,7 @@ class MonitoredBuffer:
                     item[2] = offset + match.end()
                     callback(i, match)
 
+    @_locked
     def clear(self):
         """
         Removes all data from the buffer.
@@ -150,6 +171,7 @@ class MonitoredBuffer:
         for item in self.monitors:
             item[2] = 0
 
+    @_locked
     def add_monitor(self, pattern, callback, limit=80):
         """
         Calls the given function whenever the given pattern matches the

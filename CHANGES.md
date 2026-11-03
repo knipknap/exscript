@@ -170,6 +170,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   that the callback gets refer to the searched text, not to the whole buffer.
 - **NETCONF 1.1 Chunks:** `Netconf.reassemble_chunks()` takes linear time: a 16 MiB
   reply in 4 KiB chunks takes 0.013 seconds instead of 5.2.
+- **NETCONF Threads:** ncclient's thread appends the received data to the buffer that
+  the caller searches. The buffer is locked now; before, a search could move the
+  position at which the thread wrote. Exscript still sends its `<hello>` and RPCs
+  pretty-printed, but no longer makes other users of ncclient in the same process do
+  so (changes against the 2.9 development versions).
 
 ### Telnet
 
