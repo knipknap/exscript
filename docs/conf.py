@@ -7,6 +7,35 @@ Build it from the repository root::
 """
 
 import importlib.metadata
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+# The command line reference includes the output of "exscript --help". Sphinx
+# runs this file in the docs directory.
+_help = subprocess.run(
+    [sys.executable, "../scripts/exscript", "--help"],
+    capture_output=True,
+    check=True,
+    encoding="utf-8",
+    env=dict(os.environ, COLUMNS="80", NO_COLOR="1"),
+).stdout
+Path("_generated").mkdir(exist_ok=True)
+Path("_generated/exscript-help.txt").write_text(_help, encoding="utf-8")
+
+# The list of drivers, from the docstrings of their modules.
+from Exscript.protocols.drivers import driver_map  # noqa: E402
+
+_rows = ["   * - Name\n     - System\n"]
+for _name, _driver in sorted(driver_map.items()):
+    if _name != "unknown":  # an alias of generic
+        _doc = sys.modules[type(_driver).__module__].__doc__.strip().splitlines()[0]
+        _doc = _doc.removeprefix("A driver for ")
+        _rows.append(f"   * - ``{_name}``\n     - {_doc[0].upper()}{_doc[1:]}\n")
+Path("_generated/drivers.inc").write_text(
+    ".. list-table::\n   :header-rows: 1\n\n" + "".join(_rows), encoding="utf-8"
+)
 
 project = "Exscript"
 author = "Samuel Abels and contributors"

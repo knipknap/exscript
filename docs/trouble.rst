@@ -20,8 +20,29 @@ Generally, the following kinds of errors that may happen at runtime:
 The following sections explain when these problems may happen and how to
 fix them.
 
+Seeing What Happens
+-------------------
+
+To see the conversation with the device, pass ``logfile='session.log'``
+to the protocol adapter, or use the command line option ``--logdir``. To
+also see what Exscript waits for and which driver it chose, connect with
+``debug=5`` after enabling Python's logging::
+
+    import logging
+
+    logging.basicConfig(level=logging.DEBUG)
+    conn = SSH2(debug=5)
+
+The command line tool has ``--protocol-verbose 5`` for the same.
+
 Deadlocks
 ---------
+
+When Exscript misses a prompt, it waits until the timeout, 30 seconds by
+default (``timeout=``), and raises
+:class:`~Exscript.protocols.exception.TimeoutException`. A frequent cause
+is a wrong driver: check ``conn.guess_os()``, and set the driver if it is
+wrong (:doc:`drivers`).
 
 Exscript tries to automatically detect a prompt, so generally you
 should not have to worry about prompt recognition. The following prompt

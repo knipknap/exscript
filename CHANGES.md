@@ -15,10 +15,27 @@ marked with **BREAKING**; a migration guide will accompany the release.
   and log files, as UTF-8 on every platform, as Python 3.15 does by default. Before,
   it used the encoding of the locale, e.g. cp1252 on Windows, where writing device
   output to a log file could fail.
-- **Python 2.7 Support:**
-- **Python 3.11+ Support:**
-- **Dependencies:**
-- **NETCONF Protocol:**
+- **BREAKING - Python 3.12 or Later:** Exscript runs on Python 3.12 to 3.15 and on the
+  free-threaded build of 3.14, on Linux, macOS and Windows. Python 2.7 and Python 3
+  versions before 3.12 are no longer supported.
+- **Dependencies:** `future` and `configparser`, backports for Python 2, are no longer
+  needed. paramiko 3.4 to 5.x is supported (before: 1.17 to 4.x). New: ncclient and
+  lxml 5.0 or later, for NETCONF.
+- **NETCONF Protocol:** The new adapter `Exscript.protocols.Netconf` (scheme
+  `netconf://`, port 830) sends RPCs over SSH with ncclient, and returns the replies as
+  text or as lxml elements; an `<rpc-error>` raises `RPCError`. The IOS XR and Junos
+  drivers recognize their devices by the NETCONF capabilities.
+- **BREAKING - Internal Attributes and Helpers:** Attributes and helpers that were
+  meant for internal use are private or removed; the migration guide lists their
+  public replacements. Among them are the attributes `buffer`, `auto_driver`,
+  `manual_driver`, `manual_*_re`, `*_authenticated`, `last_account`, `cancel` and `log`
+  of the protocol adapters, `SSH2.client`, `shell` and `sock`, and `Telnet.tn`;
+  `OsGuesser.data_received()` and `protocol_info()`, now `check_received_data()` and
+  `check_protocol_info()`; `Exscript.util.template.test_secure()`, now
+  `test(secure=True)`; `InputHistory.file`, now `filename`; the `debug` argument of
+  `WorkQueue`, whose `set_debug()` argument is now `level`; the `type` argument of
+  `parselib.Lexer.expect()` and `current_is()`, now `types`; and the `dump1()` methods
+  of the template interpreter.
 - **OpenTelemetry Tracing (optional):** Install the `otel` extra (`Exscript[otel]`)
   and call `Exscript.contrib.otel.ExscriptInstrumentor().instrument()`. Every call of
   `connect()`, `login()`, `authenticate()`, `send()`, `execute()` and `close()` creates

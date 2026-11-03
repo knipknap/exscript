@@ -29,29 +29,35 @@ Create a file named ``start.py`` with the following content::
     from Exscript.util.interact import read_login
     from Exscript.protocols import SSH2
 
-    account = read_login()    # Prompt the user for his name and password
+    account = read_login()    # Prompt the user for their name and password
     conn = SSH2()             # We choose to use SSH2
     conn.connect('localhost') # Open the SSH connection
     conn.login(account)       # Authenticate on the remote host
     conn.execute('uname -a')  # Execute the "uname -a" command
-    conn.send('exit\r')       # Send the "exit" command
-    conn.close()              # Wait for the connection to close
+    print(conn.get_response())  # Print the output of the command
+    conn.close()              # Log out and close the connection
 
 Awesome fact: Just replace ``SSH2`` by ``Telnet`` and it should
 still work with Telnet devices.
 
 As you can see, we prompt the user for a username and a password, and
 connect to ``localhost`` using the entered login details. Once logged
-in, we execute ``uname -a``, log out, and make sure to wait until the
-remote host has closed the connection.
+in, we execute ``uname -a``, print its output, log out, and close the
+connection.
 
-You can see one important difference: We used ``conn.execute`` to run
-``uname -a``, but we used ``conn.send`` to execute the ``exit`` command.
-The reason is that *``conn.execute`` waits until the server has
-acknowledged that the command has completed*, while ``conn.send`` does
-not. Since the server won't acknowledge the ``exit`` command (instead,
-it just closes the connection), using ``conn.execute`` would lead to an
-error.
+``conn.execute()`` sends the command and waits until the remote host
+shows its prompt again, which means that the command has completed.
+``conn.send()`` sends text without waiting. ``conn.close()`` logs out
+with the command that the device expects, ``exit`` on most devices,
+before it closes the connection; ``conn.close(force=True)`` closes it
+right away.
+
+.. note::
+
+   Exscript connects only to SSH hosts whose key it knows: like OpenSSH,
+   it checks the key against ``~/.ssh/known_hosts`` and rejects unknown
+   hosts. Connect once with ``ssh localhost`` and accept the key, or see
+   :doc:`security` for the other options.
 
 Making it easier
 ----------------
@@ -202,16 +208,24 @@ seen in the API documentation for
 Logging
 -------
 
-Exscript has built-in support for logging. In a simple case, just pass
-the ``stdout`` and ``stderr`` parameters for log and errors to
-``start()`` or ``quickstart()`` and you are done::
+Exscript has built-in support for logging. In a simple case, pass a
+file as ``stdout`` to ``start()`` or ``quickstart()``; Exscript writes
+the conversations with all hosts into it::
 
-    with open('log.txt','w+') as fp:
+    with open('log.txt', 'w') as fp:
         start(accounts, hosts, do_something, stdout=fp)
 
-Exscript creates one logfile per device. In the case that an error
-happened on the remote device, it creates an additional file that
-contains the error (including Python's traceback).
+For one log file per host, decorate the function with
+:func:`Exscript.util.log.log_to_file`. Exscript then writes the
+conversation with each host into ``logs/<host>.log``, and if an error
+happened, the error with Python's traceback into
+``logs/<host>.log.error``::
+
+    from Exscript.util.log import log_to_file
+
+    @log_to_file('logs')
+    def do_something(job, host, conn):
+        conn.execute('uname -a')
 
 Interacting with a device
 -------------------------
@@ -227,10 +241,10 @@ an example::
 
     def do_something(job, host, conn):
         conn.execute('uname -a')
-        print "The response was", repr(conn.response)
+        print("The response was", repr(conn.get_response()))
         os, hostname = first_match(conn, r'^(\S+)\s+(\S+)')
-        print "The hostname is:", hostname
-        print "Operating system:", os
+        print("The hostname is:", hostname)
+        print("Operating system:", os)
 
     quickstart('ssh://localhost', do_something)
 
@@ -243,9 +257,9 @@ containing the same number of elements as there are groups (bracket
 expressions) in the regular expression. This is more terse than the
 following typical regular idiom::
 
-    match = re.match(r'^(\S+)\s+(\S+)', conn.response)
+    match = re.match(r'^(\S+)\s+(\S+)', conn.get_response())
     if match:
-        print match.group(1)
+        print(match.group(1))
 
 Similarly, the following use of :func:`Exscript.util.match.any_match`
 can never fail::
@@ -256,8 +270,8 @@ can never fail::
     def do_something(job, host, conn):
         conn.execute('ls -l')
         for permissions, filename in any_match(conn, r'^(\S+).*\s+(\S+)$'):
-            print "The filename is:", filename
-            print "The permissions are:", permissions
+            print("The filename is:", filename)
+            print("The permissions are:", permissions)
 
     quickstart('ssh://localhost', do_something)
 

@@ -395,7 +395,11 @@ For example, the following function instructs Exscript to wait for
     {sys.wait(10)}
 
 The supported functions are documented in the API reference of
-:doc:`Exscript.stdlib <_autosummary/Exscript.stdlib>`.
+:doc:`Exscript.stdlib <_autosummary/Exscript.stdlib>`. The functions
+that run local commands or access local files, ``sys.exec``,
+``sys.env`` and ``file.*`` except ``file.exists``, work only if the
+template runs with ``secure=False`` or the command line option
+``--insecure`` (:doc:`security`).
 
 Exiting A Script
 ~~~~~~~~~~~~~~~~
@@ -471,3 +475,39 @@ example, the following will also work::
       show running-config
     {end}
     show ip int brief
+
+Templates And Jinja2
+--------------------
+
+An Exscript template is a program that runs during the session: it sends
+a line, reads the response, and can react to it with ``extract``, ``if``
+or ``loop``. `Jinja2 <https://jinja.palletsprojects.com>`_ renders text,
+which suits generating commands or configurations from inventory data.
+The two combine well: render the commands with Jinja2, then send them
+with Exscript::
+
+    from jinja2.sandbox import SandboxedEnvironment
+
+    commands = SandboxedEnvironment().from_string("""
+    configure terminal
+    {% for vlan in vlans %}
+    vlan {{ vlan.id }}
+     name {{ vlan.name }}
+    {% endfor %}
+    end
+    """).render(vlans=[{"id": 10, "name": "users"}, {"id": 20, "name": "voice"}])
+
+    def configure(job, host, conn):
+        for line in commands.splitlines():
+            if line.strip():
+                conn.execute(line)
+
+``execute()`` waits for the prompt after each line, and raises
+:class:`~Exscript.protocols.exception.InvalidCommandException` if the
+device reports an error. The sandboxed environment keeps Jinja2 templates
+from inventories or users from running Python code.
+
+To use Exscript template commands in the rendered text, run it with
+:func:`Exscript.util.template.eval` instead. Exscript then interprets
+``$``, ``{``, ``}`` and ``\`` in it, so escape them with a backslash in
+the values that you insert, e.g. ``\$``.

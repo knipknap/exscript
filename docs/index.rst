@@ -8,7 +8,7 @@
     :target: https://pypi.org/project/Exscript/
 
 .. image:: https://img.shields.io/github/stars/knipknap/exscript.svg
-    :target: https://github.com/knipknap/exscript/stargazers
+    :target: https://github.com/knipknap/exscript
 
 .. image:: https://img.shields.io/github/license/knipknap/exscript.svg
     :target: https://github.com/knipknap/exscript/blob/master/COPYING
@@ -17,8 +17,8 @@ What is Exscript?
 =================
 
 Exscript is a Python module and a template processor for automating network
-connections over protocols such as Telnet or SSH. We attempt to create the
-best possible set of tools for working with Telnet and SSH.
+connections over SSH, Telnet and NETCONF. We attempt to create the best
+possible set of tools for working with network devices over these protocols.
 
 Exscript also provides a set of tools and functions for sysadmins, that
 simplify **regular expression matching**, **reporting** by email, **logging**,
@@ -36,6 +36,7 @@ Using Exscript with Python
 Make sure to check out the :doc:`python_tutorial`.
 You may also want to look at the
 `Python examples <https://github.com/knipknap/exscript/tree/master/demos/>`_.
+If you upgrade from Exscript 2.x, read :doc:`migration`.
 
 Using the Exscript command line tool
 ------------------------------------
@@ -49,19 +50,22 @@ Main design goals
 - Exscript provides **high reliability** and **scalability**. Exscript is
   used by some of the world's largest ISPs to maintain hundreds of thousands
   of sessions every day.
-- Exscript is **extremely well tested**. The Exscript public API has almost
-  100% test coverage.
+- Exscript is **well tested**: unit tests, replays of sessions recorded
+  from devices, and benchmarks run on Linux, macOS and Windows.
 - Exscript is **protocol agnostic**, so if you are migrating from Telnet to
   SSH later, you can switch easily by simply changing an import statement.
 
 Development
 -----------
 
-Exscript is on `GitHub <https://github.com/knipknap/exscript>`_.
+Exscript is on `GitHub <https://github.com/knipknap/exscript>`_; see
+:doc:`contributing`.
 
 License
 -------
 Exscript is published under the `MIT licence <https://opensource.org/licenses/MIT>`_.
+``Exscript.protocols.telnetlib`` is derived from CPython and published under the
+`PSF License 2.0 <https://docs.python.org/3/license.html>`_.
 
 Contents
 --------
@@ -74,6 +78,12 @@ Contents
    cli_tutorial
    exscript
    templates
+   drivers
+   netconf
+   security
+   platforms
    trouble
+   migration
    api
    changelog
+   contributing
