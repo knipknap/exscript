@@ -132,6 +132,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   as FRR's route codes (`S>`). Its match now counts only if no more data arrives
   within 20 ms, so each prompt over these drivers takes 20 ms longer. The prompts of
   the other drivers, and prompts set with `set_prompt()`, count at once.
+- **Monitors:** The callbacks of `add_monitor()` no longer miss matches after
+  `expect()` consumed the data before them. Monitors search only the end of the
+  received data instead of a copy of all of it for each read: 8 MiB of output in
+  1 KiB reads take 0.015 seconds instead of 9.4. The positions in the match object
+  that the callback gets refer to the searched text, not to the whole buffer.
 
 ### Telnet
 

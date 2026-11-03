@@ -28,6 +28,10 @@ from io import StringIO
 
 from .cast import to_regexs
 
+# Monitors search only the tail of the buffer, but still see this many
+# characters before it, e.g. for \b or a lookbehind.
+_CONTEXT = 256
+
 
 class MonitoredBuffer:
     """
@@ -104,6 +108,8 @@ class MonitoredBuffer:
         self.io.seek(0)
         self.io.write(tail)
         self.io.truncate()
+        for item in self.monitors:
+            item[2] = max(0, item[2] - len(head))
         return head
 
     def append(self, data):
@@ -122,14 +128,17 @@ class MonitoredBuffer:
         # If it does, we need to disable that monitor until the matching
         # data is no longer in the buffer. We accomplish this by keeping
         # track of the position of the last matching byte.
-        buf = str(self)
+        size = self.size()
+        start = min(max(item[2], size - item[3]) for item in self.monitors)
+        offset = max(0, start - _CONTEXT)
+        text = self.tail(size - offset)
         for item in self.monitors:
             regex_list, callback, bytepos, limit = item
-            bytepos = max(bytepos, len(buf) - limit)
+            bytepos = max(bytepos, size - limit)
             for i, regex in enumerate(regex_list):
-                match = regex.search(buf, bytepos)
+                match = regex.search(text, bytepos - offset)
                 if match is not None:
-                    item[2] = match.end()
+                    item[2] = offset + match.end()
                     callback(i, match)
 
     def clear(self):
@@ -147,7 +156,8 @@ class MonitoredBuffer:
         buffer.
 
         Arguments passed to the callback are the index of the match, and
-        the match object of the regular expression.
+        the match object of the regular expression. The positions in the
+        match object refer to the searched end of the buffer.
 
         :type  pattern: str|re.RegexObject|list(str|re.RegexObject)
         :param pattern: One or more regular expressions.

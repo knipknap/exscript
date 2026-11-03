@@ -123,6 +123,23 @@ class bufferTest(unittest.TestCase):
         self.assertEqual(data.get('args')[1].group(0), 'abc')
         self.assertEqual(data.get('kwargs'), {})
 
+    def testMonitorAfterPop(self):
+        b = MonitoredBuffer()
+        matches = []
+        b.add_monitor('abc', lambda index, match: matches.append(match.group()))
+        b.append('xxabc')
+        b.pop(5)  # e.g. expect() consumed the data
+        b.append('abc')
+        self.assertEqual(matches, ['abc', 'abc'])
+
+    def testMonitorSeesContextBeforeTheTail(self):
+        b = MonitoredBuffer()
+        matches = []
+        b.add_monitor(r'(?<=foo)bar\b', lambda index, match: matches.append(match.group()), limit=3)
+        b.append('x' * 1000 + 'foo')
+        b.append('bar')
+        self.assertEqual(matches, ['bar'])
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(bufferTest)

@@ -1668,6 +1668,8 @@ class Protocol:
 
         Arguments passed to the callback are the protocol instance, the
         index of the match, and the match object of the regular expression.
+        The positions in the match object refer to the searched end of the
+        buffer, not to the whole buffer.
 
         :type  pattern: str|re.RegexObject|list(str|re.RegexObject)
         :param pattern: One or more regular expressions.
