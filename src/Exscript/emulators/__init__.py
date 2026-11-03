@@ -24,14 +24,12 @@
 Emulating a device for testing your scripts.
 """
 
-import inspect
-
 from .command import CommandSet
 from .iosemu import IOSEmulator
 from .vdevice import VirtualDevice
 
 __all__ = [
-    name
-    for name, obj in list(locals().items())
-    if not (name.startswith('_') or inspect.ismodule(obj))
+    'CommandSet',
+    'IOSEmulator',
+    'VirtualDevice',
 ]

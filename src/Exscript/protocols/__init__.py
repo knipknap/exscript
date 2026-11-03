@@ -117,10 +117,18 @@ def connect(host, default_protocol='ssh', **kwargs):
     return conn
 
 
-import inspect
-
 __all__ = [
-    name
-    for name, obj in list(locals().items())
-    if not (name.startswith('_') or inspect.ismodule(obj))
+    'Account',
+    'to_host',
+    'Url',
+    'Dummy',
+    'Netconf',
+    'Protocol',
+    'SSH2',
+    'Telnet',
+    'protocol_map',
+    'get_protocol_from_name',
+    'create_protocol',
+    'prepare',
+    'connect',
 ]

@@ -24,3 +24,10 @@ repos:
     rev: c92afdf2c6ca336aaa8f39e2bd8d48f62dbd8e1f  # frozen: v1.31.1
     hooks:
       - id: zizmor
+  - repo: https://github.com/econchick/interrogate
+    rev: a6268877efd41a21197445cc04cbf28f9c6facba  # frozen: 1.7.0
+    hooks:
+      - id: interrogate
+        # The coverage of the whole package, configured in pyproject.toml.
+        args: [src/Exscript]
+        pass_filenames: false

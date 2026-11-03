@@ -124,9 +124,154 @@ ignore = [
 [tool.mypy]
 python_version = "3.12"
 files = ["src"]
+strict = true
 ignore_missing_imports = true  # paramiko, ncclient and others ship no type hints
-warn_unused_ignores = true
-warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+# Modules that are not annotated yet (P8). Remove a module from this list when
+# it passes the strict checks; the list only shrinks.
+module = [
+    "Exscript.account",
+    "Exscript.contrib.otel",
+    "Exscript.emulators.command",
+    "Exscript.emulators.iosemu",
+    "Exscript.emulators.vdevice",
+    "Exscript.host",
+    "Exscript.interpreter.append",
+    "Exscript.interpreter.assign",
+    "Exscript.interpreter.code",
+    "Exscript.interpreter.enter",
+    "Exscript.interpreter.execute",
+    "Exscript.interpreter.expression",
+    "Exscript.interpreter.extract",
+    "Exscript.interpreter.fail",
+    "Exscript.interpreter.functioncall",
+    "Exscript.interpreter.ifcondition",
+    "Exscript.interpreter.loop",
+    "Exscript.interpreter.number",
+    "Exscript.interpreter.parser",
+    "Exscript.interpreter.program",
+    "Exscript.interpreter.regex",
+    "Exscript.interpreter.rpc",
+    "Exscript.interpreter.scope",
+    "Exscript.interpreter.string",
+    "Exscript.interpreter.template",
+    "Exscript.interpreter.term",
+    "Exscript.interpreter.trying",
+    "Exscript.interpreter.variable",
+    "Exscript.key",
+    "Exscript.logger",
+    "Exscript.parselib.lexer",
+    "Exscript.parselib.token",
+    "Exscript.protocols",
+    "Exscript.protocols.drivers",
+    "Exscript.protocols.drivers.ace",
+    "Exscript.protocols.drivers.adtran",
+    "Exscript.protocols.drivers.aironet",
+    "Exscript.protocols.drivers.aix",
+    "Exscript.protocols.drivers.arbor_peakflow",
+    "Exscript.protocols.drivers.aruba",
+    "Exscript.protocols.drivers.bigip",
+    "Exscript.protocols.drivers.brocade",
+    "Exscript.protocols.drivers.cienasaos",
+    "Exscript.protocols.drivers.driver",
+    "Exscript.protocols.drivers.enterasys",
+    "Exscript.protocols.drivers.enterasys_wc",
+    "Exscript.protocols.drivers.eos",
+    "Exscript.protocols.drivers.ericsson_ban",
+    "Exscript.protocols.drivers.fortios",
+    "Exscript.protocols.drivers.generic",
+    "Exscript.protocols.drivers.hp_pro_curve",
+    "Exscript.protocols.drivers.icotera",
+    "Exscript.protocols.drivers.ios",
+    "Exscript.protocols.drivers.ios_xr",
+    "Exscript.protocols.drivers.isam",
+    "Exscript.protocols.drivers.junos",
+    "Exscript.protocols.drivers.junos_erx",
+    "Exscript.protocols.drivers.mrv",
+    "Exscript.protocols.drivers.nxos",
+    "Exscript.protocols.drivers.one_os",
+    "Exscript.protocols.drivers.rios",
+    "Exscript.protocols.drivers.shell",
+    "Exscript.protocols.drivers.smart_edge_os",
+    "Exscript.protocols.drivers.sp_vxoa",
+    "Exscript.protocols.drivers.sros",
+    "Exscript.protocols.drivers.vrp",
+    "Exscript.protocols.drivers.vxworks",
+    "Exscript.protocols.drivers.zte",
+    "Exscript.protocols.drivers.zyxel",
+    "Exscript.protocols.dummy",
+    "Exscript.protocols.exception",
+    "Exscript.protocols.netconf",
+    "Exscript.protocols.osguesser",
+    "Exscript.protocols.protocol",
+    "Exscript.protocols.ssh2",
+    "Exscript.protocols.telnet",
+    "Exscript.protocols.telnetlib",
+    "Exscript.queue",
+    "Exscript.servers.httpd",
+    "Exscript.servers.server",
+    "Exscript.servers.sshd",
+    "Exscript.servers.telnetd",
+    "Exscript.stdlib.connection",
+    "Exscript.stdlib.crypt",
+    "Exscript.stdlib.file",
+    "Exscript.stdlib.ipv4",
+    "Exscript.stdlib.list",
+    "Exscript.stdlib.mysys",
+    "Exscript.stdlib.string",
+    "Exscript.stdlib.util",
+    "Exscript.util.buffer",
+    "Exscript.util.cast",
+    "Exscript.util.collections",
+    "Exscript.util.crypt",
+    "Exscript.util.decorator",
+    "Exscript.util.event",
+    "Exscript.util.file",
+    "Exscript.util.impl",
+    "Exscript.util.interact",
+    "Exscript.util.ip",
+    "Exscript.util.ipv4",
+    "Exscript.util.ipv6",
+    "Exscript.util.log",
+    "Exscript.util.mail",
+    "Exscript.util.match",
+    "Exscript.util.report",
+    "Exscript.util.sigint",
+    "Exscript.util.start",
+    "Exscript.util.syslog",
+    "Exscript.util.template",
+    "Exscript.util.tty",
+    "Exscript.util.url",
+    "Exscript.util.weakmethod",
+    "Exscript.util.xml",
+    "Exscript.workqueue.job",
+    "Exscript.workqueue.mainloop",
+    "Exscript.workqueue.pipeline",
+    "Exscript.workqueue.task",
+    "Exscript.workqueue.workqueue",
+]
+disallow_any_generics = false
+disallow_subclassing_any = false
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+disallow_untyped_decorators = false
+warn_return_any = false
+implicit_reexport = true
+strict_equality = false
+extra_checks = false
+
+[tool.interrogate]
+# Docstring coverage (P8). Private functions count; other dunder methods than
+# __init__, nested functions and property setters do not. Raise fail-under as
+# docstrings are added; the goal is 100.
+fail-under = 49
+ignore-magic = true
+ignore-nested-functions = true
+ignore-setters = true
+exclude = ["docs", "tests", "tools", "demos", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

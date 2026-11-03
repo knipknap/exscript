@@ -43,7 +43,10 @@ recorded sessions. To run them with another Python version, use e.g.
   **BREAKING**, and say how to migrate.
 - Document new functions, classes and modules with docstrings in the style of the existing
   code (`:param:`, `:type:`, `:return:`, `:rtype:`). The API reference is generated from
-  them.
+  them, and pre-commit fails if the share of documented functions drops.
+- Annotate new code with types. mypy checks every module strictly, except those that are
+  still in the list of `[[tool.mypy.overrides]]` in `pyproject.toml`; remove a module from
+  that list when you annotate it.
 - The public API and the template language stay compatible. Please open an issue before you
   work on a change that breaks them.
 
