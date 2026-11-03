@@ -24,17 +24,19 @@ class FakeSock:
     def sendall(self, data):
         self.sent.append(bytes(data))
 
+    def settimeout(self, timeout):
+        pass
+
 
 def process(chunks, encoding='latin-1'):
-    """Returns the cooked text, the text passed to the callback, and the sent bytes."""
+    """Returns the text passed to the callback and the sent bytes."""
     tn = Telnet(encoding=encoding, termtype='vt100', termsize=(24, 80))
     tn.sock = FakeSock(chunks)
     received = []
     tn.data_callback = received.append
-    while not tn.eof:
-        tn.fill_rawq()
-        tn.process_rawq()
-    return tn.cookedq.getvalue(), ''.join(received), b''.join(tn.sock.sent)
+    while tn.receive(None):
+        pass
+    return ''.join(received), b''.join(tn.sock.sent)
 
 
 def iac(*codes):
@@ -56,9 +58,8 @@ class telnetlibTest(unittest.TestCase):
 
     def testData(self):
         stream = b'a\x00b\x11c' + iac(IAC) + b'd' + iac(NOP) + iac(0) + b'e'
-        text, received, sent = process([stream])
+        text, sent = process([stream])
         self.assertEqual(text, 'ab\x11c\xffde')  # NUL is removed, XON is kept
-        self.assertEqual(received, text)
         self.assertEqual(sent, b'')
 
     def testNegotiation(self):
@@ -78,7 +79,7 @@ class telnetlibTest(unittest.TestCase):
             iac(SB, BINARY, 1) + iac(SE): b'',
         }
         for stream, reply in replies.items():
-            self.assertEqual(process([b'x' + stream + b'y']), ('xy', 'xy', reply), stream)
+            self.assertEqual(process([b'x' + stream + b'y']), ('xy', reply), stream)
 
     def testSubnegotiation(self):
         # An escaped IAC inside the subnegotiation does not end it.
@@ -86,11 +87,11 @@ class telnetlibTest(unittest.TestCase):
         self.assertEqual(process([stream])[0], 'x')
         # An unterminated subnegotiation ends at the next command.
         stream = iac(SB, TTYPE, 1) + iac(DO, TTYPE) + b'x'
-        self.assertEqual(process([stream]), ('x', 'x', iac(WILL, TTYPE)))
+        self.assertEqual(process([stream]), ('x', iac(WILL, TTYPE)))
 
     def testIncompleteCommandAtEof(self):
         for stream in iac(), iac(DO), iac(SB, TTYPE, 1), iac(SB, TTYPE, 1, IAC):
-            self.assertEqual(process([b'x' + stream]), ('x', 'x', b''))
+            self.assertEqual(process([b'x' + stream]), ('x', b''))
 
     def testEveryReadSplit(self):
         stream = (
@@ -113,8 +114,26 @@ class telnetlibTest(unittest.TestCase):
     def testMultibyteCharacterSplit(self):
         stream = 'Grüße 20 €'.encode()
         for cut in range(1, len(stream)):
-            text, received, _ = process([stream[:cut], stream[cut:]], encoding='utf-8')
-            self.assertEqual((text, received), ('Grüße 20 €', 'Grüße 20 €'), cut)
+            text, _ = process([stream[:cut], stream[cut:]], encoding='utf-8')
+            self.assertEqual(text, 'Grüße 20 €', cut)
+
+    def testReceive(self):
+        local, remote = socket.socketpair()
+        self.addCleanup(remote.close)
+        tn = Telnet(connect_timeout=7)
+        tn.sock = local
+        received = []
+        tn.data_callback = received.append
+        self.assertIsNone(tn.receive(0))  # no data yet
+        self.assertIsNone(tn.receive(0.05))
+        remote.sendall(b'hello')
+        self.assertTrue(tn.receive(5))
+        self.assertEqual(received, ['hello'])
+        self.assertEqual(local.gettimeout(), 7)  # restored for sendall()
+        remote.close()
+        self.assertFalse(tn.receive(5))
+        self.assertFalse(tn.receive(5))
+        tn.close()
 
     def testWrite(self):
         tn = Telnet()

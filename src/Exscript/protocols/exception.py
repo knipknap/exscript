@@ -42,6 +42,15 @@ class TimeoutException(ProtocolException):
     pass
 
 
+class ConnectionClosedException(ProtocolException, EOFError):
+    """
+    An exception that is thrown if the connected host closed the
+    connection while a prompt was expected. It is also an EOFError.
+    """
+
+    pass
+
+
 class ExpectCancelledException(ProtocolException):
     """
     An exception that is thrown if Protocol.cancel_expect()

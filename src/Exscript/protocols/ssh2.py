@@ -24,12 +24,11 @@
 SSH version 2 support, based on paramiko.
 """
 
+import codecs
 import logging
 import os
-import select
 import socket
 import threading
-import time
 from binascii import hexlify
 
 import paramiko
@@ -50,6 +49,7 @@ from .protocol import Protocol, _skey_re
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
 _known_hosts_lock = threading.Lock()
+_READ_SIZE = 65536
 
 
 def _prefer_key_type(options, keytype):
@@ -379,6 +379,8 @@ class SSH2(Protocol):
             msg = 'Failed to open a channel with pty/shell. (%s)' % e
             self._dbg(1, msg)
             raise LoginFailure(msg)
+        # Decodes characters that span two reads, too.
+        self._decoder = codecs.getincrementaldecoder(self.encoding)()
 
     def _connect(self):
         self._transport = self._paramiko_connect()
@@ -429,65 +431,19 @@ class SSH2(Protocol):
             self._dbg(1, 'Error while writing to connection')
             raise
 
-    def _wait_for_data(self):
-        end = time.time() + self.timeout
-        while True:
-            readable, writeable, excp = select.select([self._channel], [], [], 1)
-            if readable:
-                return True
-            if time.time() > end:
-                return False
-
-    def _fill_buffer(self):
-        # Wait for a response of the device.
-        if not self._wait_for_data():
-            self._raise_on_response_timeout()
-
-        # Read the response.
-        data = self._channel.recv(1024).decode(self.encoding)
-        if not data:
-            return False
-        self._receive_cb(data)
-        self._buffer.append(data)
-        return True
-
-    def _domatch_buffer(self, prompt):
-        # Check whether the buffered data we received so far matches the prompt.
-        driver = self.get_driver()
-        search_window_size = 150
-        search_window = self._buffer.tail(search_window_size)
-        search_window, incomplete_tail = driver.clean_response_for_re_match(search_window)
-        n, match = -1, None
-        for n, regex in enumerate(prompt):
-            match = regex.search(search_window)
-            if match is not None:
-                break
-        if match:
-            self._dbg(2, "Got a prompt, match was: %s" % repr(match.group()))
-        return n, match, search_window
-
-    def _domatch_extract(self, match, search_window_length, flush):
-        # This extracts the response from the buffer. The end position is
-        # where the matched prompt starts. So the response is everything
-        # in the buffer up to this end position.
-        end = self._buffer.size() - search_window_length + match.start()
-        response = self._buffer.head(end)
-        if flush:
-            prompt_length = match.end() - match.start()
-            self._buffer.pop(end + prompt_length)
-        self._dbg(4, "Response (flush=%s): %s" % (repr(flush), repr(response)))
-        return response
-
-    def _domatch(self, prompt, flush):
-        while not self._expect_canceled:
-            n, match, search_window = self._domatch_buffer(prompt)
-            if not match:
-                if not self._fill_buffer():  # reads the channel
-                    self._raise_on_response_eof()
-                continue
-            self.response = self._domatch_extract(match, len(search_window), flush)
-            return n, match
-        self._raise_on_canceled_expect()
+    def _fill_buffer(self, timeout):
+        self._channel.settimeout(timeout)
+        try:
+            data = self._channel.recv(_READ_SIZE)
+        except TimeoutError:
+            return None
+        finally:
+            self._channel.settimeout(None)  # sendall() blocks without limit, as before
+        text = self._decoder.decode(data, final=not data)
+        if text:
+            self._receive_cb(text)
+            self._buffer.append(text)
+        return bool(data)
 
     def _set_terminal_size(self, rows, cols):
         self._channel.resize_pty(cols, rows)
@@ -500,7 +456,7 @@ class SSH2(Protocol):
             if not force:
                 try:
                     if self._channel.recv_ready():
-                        self._fill_buffer()
+                        self._fill_buffer(0)
                 except Exception:
                     pass
             self._channel.close()

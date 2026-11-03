@@ -97,6 +97,32 @@ marked with **BREAKING**; a migration guide will accompany the release.
   - `Exscript.util.url.Url.from_string(url, default_protocol='ssh')`
   - `exscript` CLI: `-p`/`--protocol`
 
+### Waiting for Responses
+
+- **One Implementation for All Protocols:** `expect()`, `waitfor()`, `expect_prompt()`
+  and `execute()` work the same for SSH, Telnet, NETCONF and the dummy protocol, and
+  the adapters read up to 64 KiB at a time:
+  - patterns that end with `$` or `\Z`, like most driver prompts, are searched in the
+    last 1024 characters of the received data (before: 150);
+  - other patterns are searched in all data received since the last match. Before,
+    SSH searched only the last 150 characters after each read, so it missed a match
+    that was followed by more output in the same read and waited until the timeout.
+    Telnet found it, because it read 64 bytes at a time;
+  - a large response is searched once instead of after every read: `execute()` with a
+    4 MiB response takes 0.6 seconds of CPU time over Telnet instead of 4.3.
+- **BREAKING - `ConnectionClosedException`:** If the host closes the connection while
+  Exscript waits for a response, all protocols raise the new
+  `Exscript.protocols.exception.ConnectionClosedException`. Before, SSH raised a
+  `ProtocolException`, and Telnet an `EOFError`, or a `TimeoutException` if unmatched
+  data was left. The new exception is a `ProtocolException` and an `EOFError`, so only
+  code that expects a `TimeoutException` for a closed connection must change.
+- **Login Errors After Sending Only:** `login()`, `app_authenticate()` and
+  `app_authorize()` raise `LoginFailure` only if the driver's login error patterns
+  match data that arrived after Exscript sent something, e.g. the password. Before,
+  a banner such as "Access denied for unauthorized users" failed the login before any
+  credentials were sent. A login error is detected with the next prompt, when the host
+  closes the connection, or at the timeout.
+
 ### Telnet
 
 - **Telnet Client Based on CPython 3.12:** `Exscript.protocols.telnetlib` is now based
@@ -115,14 +141,15 @@ marked with **BREAKING**; a migration guide will accompany the release.
   - passwords are no longer logged at debug level 5.
 - **BREAKING - `Exscript.protocols.telnetlib` Is Internal:** The module contains only
   what the Telnet adapter uses. Removed: the methods `read_until()`, `read_some()`,
-  `read_eager()`, `read_very_eager()`, `read_lazy()`, `read_very_lazy()`, `interact()`
-  and `mt_interact()` with their helpers, `sock_avail()`, `get_socket()`, `fileno()`
-  and `set_receive_callback()`; the function `test()`; the option constants other
-  than those Exscript negotiates; and the `stdout` and `stderr` arguments. The
-  remaining constants are integers instead of bytes, and the options of the
-  constructor are keyword-only. Use `Exscript.protocols.Telnet`. If you need a drop-in
-  replacement for the telnetlib module that Python 3.13 removed, use the package
-  `standard-telnetlib`.
+  `read_eager()`, `read_very_eager()`, `read_lazy()`, `read_very_lazy()`, `read_all()`,
+  `expect()`, `waitfor()`, `interact()` and `mt_interact()` with their helpers,
+  `sock_avail()`, `get_socket()`, `fileno()` and `set_receive_callback()`; the
+  attribute `cancel_expect`; the function `test()`; the option constants other than
+  those Exscript negotiates; and the `stdout` and `stderr` arguments. The new method
+  `receive(timeout)` reads once and passes the text to the callback. The remaining
+  constants are integers instead of bytes, and the options of the constructor are
+  keyword-only. Use `Exscript.protocols.Telnet`. If you need a drop-in replacement for
+  the telnetlib module that Python 3.13 removed, use the package `standard-telnetlib`.
 
 ### Protocol Drivers
 

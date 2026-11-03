@@ -14,10 +14,9 @@
 # a callback, and NUL bytes are removed from it (the original also removed
 # XON); the terminal type (TTYPE) and window size (NAWS) options are
 # negotiated and the echo option is accepted, all other options are refused;
-# commands are parsed in whole reads instead of byte by byte; the client waits
-# for any of several regular expressions in a search window that a cleanup
-# function can process; the read_*() variants, interact(), the option
-# negotiation callback and the deprecation warning were removed.
+# commands are parsed in whole reads instead of byte by byte; receive() waits
+# for one read with a timeout; expect(), the read_*() variants, interact(),
+# the option negotiation callback and the deprecation warning were removed.
 """
 The Telnet client (RFC 854) of Exscript's Telnet adapter, derived from the
 telnetlib module of CPython.
@@ -27,12 +26,8 @@ This module is internal; use :class:`Exscript.protocols.Telnet` instead.
 
 import codecs
 import logging
-import re
-import select
 import socket
 import struct
-from io import StringIO
-from time import monotonic
 
 __all__ = ['Telnet']
 
@@ -58,9 +53,7 @@ TTYPE_SEND = 1
 _NEGOTIATION = {DO: 'DO', DONT: 'DONT', WILL: 'WILL', WONT: 'WONT'}
 _IAC = bytes([IAC])
 
-# _waitfor() searches the end of the received text after every read, so its
-# search window covers all data only with small reads.
-_READ_SIZE = 64
+_READ_SIZE = 65536
 
 
 def _command(*codes):
@@ -111,11 +104,9 @@ class Telnet:
         self.window_size = termsize
         self.termtype = termtype
         self.data_callback = receive_callback
-        self.cancel_expect = False
         self.can_naws = False
         self.eof = False
         self.rawq = b''  # received bytes that end with an incomplete command
-        self.cookedq = StringIO()
         self._decoder = codecs.getincrementaldecoder(encoding)()
         self._sb = None  # the data of the subnegotiation in progress
         if host:
@@ -264,10 +255,8 @@ class Telnet:
             self.rawq = b''
             self._sb = None
         text = self._decoder.decode(bytes(cooked).replace(b'\0', b''), self.eof)
-        if text:
-            self.cookedq.write(text)
-            if self.data_callback is not None:
-                self.data_callback(text)
+        if text and self.data_callback is not None:
+            self.data_callback(text)
 
     def fill_rawq(self):
         """
@@ -279,123 +268,27 @@ class Telnet:
         self.eof = not data
         self.rawq += data
 
-    def _read_cooked(self):
-        text = self.cookedq.getvalue()
-        self.cookedq.seek(0)
-        self.cookedq.truncate()
-        return text
-
-    def read_all(self):
+    def receive(self, timeout):
         """
-        Reads until the connection is closed.
+        Waits for data, reads it once and passes the received text to the
+        callback.
 
-        :rtype:  str
-        :return: The received text that expect() did not consume.
+        :type  timeout: float|None
+        :param timeout: The maximum time to wait, in seconds; None waits
+            without limit.
+        :rtype:  bool|None
+        :return: True if data was received, None if the time ran out, False
+            if the connection was closed.
         """
+        if self.eof:
+            return False
+        self.sock.settimeout(timeout)
+        try:
+            self.fill_rawq()
+        except (TimeoutError, BlockingIOError):  # BlockingIOError: timeout 0
+            return None
+        finally:
+            if self.sock:
+                self.sock.settimeout(self.connect_timeout)  # for sendall()
         self.process_rawq()
-        while not self.eof:
-            self.fill_rawq()
-            self.process_rawq()
-        return self._read_cooked()
-
-    def _wait_for_data(self, timeout):
-        # Waits in steps of one second; a single select() with the full timeout
-        # did not always return when data arrived.
-        end = monotonic() + timeout
-        while True:
-            readable, _, _ = select.select([self.sock], [], [], 1)
-            if readable:
-                return True
-            if monotonic() > end:
-                return False
-
-    def _waitfor(self, relist, timeout=None, flush=False, cleanup=None):
-        relist = [regex if hasattr(regex, 'search') else re.compile(regex) for regex in relist]
-        search_window_size = 150
-        head_lookback_size = 10
-        self.msg('Expecting: %s', [regex.pattern for regex in relist])
-        incomplete_tail = ''
-        clean_sw_size = search_window_size
-        while True:
-            self.process_rawq()
-            if self.cancel_expect:
-                self.cancel_expect = False
-                self.msg('Cancelling expect()')
-                return -2, None, ''
-            qlen = self.cookedq.tell()
-            if cleanup:
-                while True:
-                    pos = qlen - clean_sw_size - len(incomplete_tail) - head_lookback_size
-                    self.cookedq.seek(max(0, pos))
-                    search_window = self.cookedq.read()
-                    search_window, incomplete_tail = cleanup(search_window)
-                    search_window_len = len(search_window)
-                    if clean_sw_size > qlen or search_window_len >= search_window_size:
-                        search_window = search_window[-search_window_size:]
-                        if search_window_len > search_window_size:
-                            clean_sw_size -= search_window_size
-                        break
-                    clean_sw_size += search_window_size
-            else:
-                self.cookedq.seek(max(0, qlen - search_window_size))
-                search_window = self.cookedq.read()
-            for index, regex in enumerate(relist):
-                match = regex.search(search_window)
-                if match is None:
-                    continue
-                self.msg('Match found: %r', match.group())
-                self.cookedq.seek(0)
-                text = self.cookedq.read(qlen - (match.end() - match.start()))
-                if flush:
-                    self.cookedq.seek(0)
-                    self.cookedq.truncate()
-                    self.cookedq.write(search_window[match.end() :])
-                else:
-                    self.cookedq.seek(qlen)
-                return index, match, text
-            if self.eof:
-                break
-            if timeout is not None and not self._wait_for_data(timeout):
-                break
-            self.fill_rawq()
-        text = self._read_cooked()
-        if not text and self.eof:
-            raise EOFError('telnet connection closed')
-        return -1, None, text
-
-    def waitfor(self, relist, timeout=None, cleanup=None):
-        """
-        Reads until one of the regular expressions matches the end of the
-        received text, and keeps the text.
-
-        Returns a tuple of the index of the first regular expression that
-        matched, the match object, and the text up to the match. When nothing
-        matched until the timeout, returns (-1, None, text) with the received
-        text; when expect was cancelled, returns (-2, None, ''). Raises
-        EOFError if the connection was closed and no text was received.
-
-        :type  relist: list(str|re.Pattern)
-        :param relist: The regular expressions.
-        :type  timeout: float|None
-        :param timeout: Seconds without received data until the timeout.
-        :type  cleanup: callable|None
-        :param cleanup: Returns the text to search and an incomplete tail.
-        :rtype:  tuple(int, re.Match|None, str)
-        :return: The index, the match, and the text.
-        """
-        return self._waitfor(relist, timeout, flush=False, cleanup=cleanup)
-
-    def expect(self, relist, timeout=None, cleanup=None):
-        """
-        Like waitfor(), but removes the text up to the end of the match.
-
-        :type  relist: list(str|re.Pattern)
-        :param relist: The regular expressions.
-        :type  timeout: float|None
-        :param timeout: Seconds without received data until the timeout.
-        :type  cleanup: callable|None
-        :param cleanup: Returns the text to search and an incomplete tail.
-        :rtype:  tuple(int, re.Match|None, str)
-        :return: The index, the match, and the text.
-        """
-        return self._waitfor(relist, timeout, flush=True, cleanup=cleanup)
+        return not self.eof

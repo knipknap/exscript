@@ -7,75 +7,16 @@ an "unexpected success" and the suite fails, so the fix must remove the marker
 and move the test next to the tests of the fixed module.
 """
 
-import os
-import socket
 import sys
 import threading
 import time
 import unittest
 import uuid
 
-from Exscript import Account, PrivateKey
+from Exscript import Account
 from Exscript.emulators import VirtualDevice
-from Exscript.protocols import SSH2, Dummy, Telnet
+from Exscript.protocols import SSH2, Dummy
 from Exscript.protocols.drivers import driver_map, isam
-from Exscript.servers import SSHd, Telnetd
-
-HOST = '127.0.0.1'
-KEYFILE = os.path.join(os.path.dirname(__file__), 'protocols', 'id_rsa')
-
-
-def free_port():
-    """Returns a currently unused TCP port on the loopback interface."""
-    with socket.socket() as sock:
-        sock.bind((HOST, 0))
-        return sock.getsockname()[1]
-
-
-class ServerMixin:
-    """Starts an Exscript test server for the test and stops it afterwards."""
-
-    def start_daemon(self, daemon_cls, device, **kwargs):
-        port = free_port()
-        daemon = daemon_cls(HOST, port, device, **kwargs)
-        daemon.start()
-        time.sleep(0.2)
-        self.addCleanup(daemon.join)  # cleanups run LIFO: exit() first
-        self.addCleanup(daemon.exit)
-        return port
-
-
-class ExpectTest(ServerMixin, unittest.TestCase):
-    """expect() must find a pattern regardless of how much data follows it."""
-
-    def setUp(self):
-        self.device = VirtualDevice(HOST, login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False)
-        self.device.add_command('show big', 'Please confirm: MARKER ' + 'x' * 2000)
-
-    def expectMarker(self, conn, port=None):
-        self.addCleanup(conn.close, force=True)
-        conn.connect(HOST if port else 'dummy', port)
-        conn.protocol_authenticate(Account('user', 'password', needs_lock=False))
-        conn.send('show big\r')
-        conn.expect('MARKER')
-
-    def testDummy(self):
-        self.expectMarker(Dummy(device=self.device))
-
-    def testTelnet(self):
-        port = self.start_daemon(Telnetd, self.device)
-        self.expectMarker(Telnet(timeout=1, connect_rate_limit=0), port)
-
-    @unittest.expectedFailure  # SSH2 only searches the last 150 characters after each read
-    def testSSH2(self):
-        port = self.start_daemon(SSHd, self.device, key=PrivateKey.from_file(KEYFILE))
-        conn = SSH2(
-            timeout=1,
-            connect_rate_limit=0,
-            verify_fingerprint=False,
-            preferred_authentications=['password'],
-        )
-        self.expectMarker(conn, port)
 
 
 class DriverTest(unittest.TestCase):

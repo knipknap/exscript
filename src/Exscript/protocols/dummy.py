@@ -62,25 +62,6 @@ class Dummy(Protocol):
     def is_dummy(self):
         return True
 
-    def _expect_any(self, prompt_list, flush=True):
-        self._doinit()
-
-        # Cancelled by a callback during self._say().
-        if self._expect_canceled:
-            return -2, None, self.response
-
-        # Look for a match in the buffer.
-        for i, prompt in enumerate(prompt_list):
-            matches = prompt.search(str(self._buffer))
-            if matches is not None:
-                self.response = self._buffer.head(matches.start())
-                if flush:
-                    self._buffer.pop(matches.end())
-                return i, matches, self.response
-
-        # "Timeout".
-        return -1, None, self.response
-
     def _say(self, string):
         self._receive_cb(string)
         self._buffer.append(string)
@@ -108,20 +89,11 @@ class Dummy(Protocol):
         self._say(response)
 
     def _domatch(self, prompt, flush):
-        # Wait for a prompt.
-        result, match, self.response = self._expect_any(prompt, flush)
+        self._doinit()
+        return super()._domatch(prompt, flush)
 
-        if match:
-            self._dbg(2, "Got a prompt, match was: %s" % repr(match.group()))
-            self._dbg(4, "Response (flush=%s): %s" % (repr(flush), repr(self.response)))
-
-        if result == -1:
-            self._raise_on_response_timeout()
-        if result == -2:
-            self._raise_on_canceled_expect()
-        if self.response is None:
-            self._raise_on_response_eof()
-        return result, match
+    def _fill_buffer(self, timeout):
+        return None  # the device answers only in _send(), so nothing more arrives
 
     def _logout(self):
         pass

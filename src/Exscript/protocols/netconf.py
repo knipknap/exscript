@@ -357,22 +357,22 @@ class Netconf(SSH2):
         return assembled
 
     def _domatch(self, prompt, flush):
-        # This mimics the behavior of CLI-driven prompt matching to keep API
-        # parity with the Telnet and SSH2 adapter.
-        deadline = time.monotonic() + self.get_timeout()
-        while not self._expect_canceled:
-            n, match, search_window = self._domatch_buffer(prompt)
-            if not match:
-                # This is just a safety-net as the buffer is always filled by
-                # the replication wrapper and ncclient's blocking dispatch.
-                if time.monotonic() > deadline:
-                    self._raise_on_response_timeout()
-                time.sleep(0.05)
-                continue
-            self.response = self._domatch_extract(match, len(search_window), flush)
-            self.response = self.reassemble_chunks(self.response)
-            return n, match
-        self._raise_on_canceled_expect()
+        n, match = super()._domatch(prompt, flush)
+        self.response = self.reassemble_chunks(self.response)
+        return n, match
+
+    def _fill_buffer(self, timeout):
+        # ncclient's thread reads the channel and appends to the buffer (see the
+        # recv wrapper in _init_ncclient()), so this only waits for new data.
+        size = self._buffer.size()
+        deadline = None if timeout is None else time.monotonic() + timeout
+        while self._buffer.size() == size:
+            if not self._replicate:  # the channel was closed
+                return False
+            if deadline is not None and time.monotonic() >= deadline:
+                return None
+            time.sleep(0.01)
+        return True
 
     def _send(self, data):
         self._ncc_response = None

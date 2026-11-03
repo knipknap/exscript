@@ -62,7 +62,6 @@ class Telnet(Protocol):
             termtype=self.termtype,
             receive_callback=self._telnetlib_received,
         )
-        self._tn.cancel_expect = self._expect_canceled  # sync states
         if self.debug >= 5:
             self._tn.set_debuglevel(1)
         return True
@@ -75,42 +74,8 @@ class Telnet(Protocol):
             self._dbg(1, 'Error while writing to connection')
             raise
 
-    def _domatch(self, prompt, flush):
-        if flush:
-            func = self._tn.expect
-        else:
-            func = self._tn.waitfor
-
-        # Wait for a prompt.
-        cleanup_callback = self.get_driver().clean_response_for_re_match
-        try:
-            result, match, self.response = func(prompt, self.timeout, cleanup=cleanup_callback)
-        except Exception:
-            self._dbg(1, 'Error while waiting for ' + repr(prompt))
-            raise
-
-        if match:
-            self._dbg(2, "Got a prompt, match was: %s" % repr(match.group()))
-            self._dbg(4, "Response (flush=%s): %s" % (repr(flush), repr(self.response)))
-            if flush:
-                # Only to mimic the telnetlib cooked-queue behavior to keep the
-                # buffer clean for the buffer monitoring feature.
-                prompt_length = match.end() - match.start()
-                self._buffer.pop(len(self.response) + prompt_length)
-
-        if result == -1:
-            self._raise_on_response_timeout()
-        if result == -2:
-            self._raise_on_canceled_expect()
-        if self.response is None:
-            self._raise_on_response_eof()
-
-        return result, match
-
-    def cancel_expect(self):
-        super().cancel_expect()
-        if self._tn:
-            self._tn.cancel_expect = True
+    def _fill_buffer(self, timeout):
+        return self._tn.receive(timeout)  # the callback appends the text to the buffer
 
     def _set_terminal_size(self, rows, cols):
         self._tn.set_window_size(rows, cols)
@@ -122,8 +87,9 @@ class Telnet(Protocol):
         if self._tn:
             if not force:
                 try:
-                    self._tn.sock.settimeout(2)
-                    self._tn.read_all()
+                    # Receive the rest until the host closes the connection.
+                    while self._fill_buffer(2):
+                        pass
                 except Exception:
                     pass
             self._tn.close()

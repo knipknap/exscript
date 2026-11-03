@@ -48,6 +48,7 @@ from ..util.tty import get_terminal_size
 from ..util.url import _WELL_KNOWN_PORTS
 from .drivers import Driver, driver_map
 from .exception import (
+    ConnectionClosedException,
     DriverReplacedException,
     ExpectCancelledException,
     InvalidCommandException,
@@ -76,6 +77,29 @@ _ansi_escape_re = re.compile(
     + r'|\x1b'  # alternate lone ESC
 )
 _skey_re = re.compile(r'(?:s\/key|otp-md4) (\d+) (\S+)(?=\s|[\r\n])')
+
+# Prompts end the received data, so patterns that end with $ or \Z are searched
+# only in the end of the buffer.
+_PROMPT_WINDOW = 1024
+# The other patterns are searched in the data that arrived since the last
+# search, plus this many characters before it, so a match may span two reads.
+_LOOKBEHIND = 150
+
+
+def _ends_with_anchor(regex):
+    """Whether the regular expression ends with an unescaped $ or \\Z."""
+    pattern = regex.pattern.rstrip(')')
+    if pattern.endswith('$') and not regex.flags & re.MULTILINE:
+        stem = pattern[:-1]
+    elif pattern.endswith('Z'):
+        stem = pattern[:-1]
+        if not stem.endswith('\\'):
+            return False
+        stem = stem[:-1]
+    else:
+        return False
+    return (len(stem) - len(stem.rstrip('\\'))) % 2 == 0  # the anchor itself is not escaped
+
 
 # Needed on module level as each host connection has its own thread.
 _connection_monitor: dict[str, float] = {}
@@ -440,6 +464,8 @@ class Protocol:
         self._driver_replaced = False
         self._expect_canceled = False
         self._last_account = None
+        # The buffer position at the last send(); None before the first one.
+        self._sent_at = None
 
     def _reset(self):
         # Reset all per-session state settings when close() is called.
@@ -764,12 +790,13 @@ class Protocol:
 
     def set_timeout(self, timeout):
         """
-        Defines the maximum time that the adapter waits before a call to
-        :meth:`expect()`, :meth:`waitfor()` or :meth:`expect_prompt()` fails
-        with a raised TimeoutException.
+        Defines how long :meth:`expect()`, :meth:`waitfor()` or
+        :meth:`expect_prompt()` wait for data from the remote host before they
+        fail with a raised TimeoutException. The time starts again whenever
+        data arrives, so a long output that keeps arriving does not time out.
 
         :type  timeout: int
-        :param timeout: The maximum response time in seconds.
+        :param timeout: The maximum time without data, in seconds.
         """
         self.timeout = int(timeout)
 
@@ -1071,6 +1098,10 @@ class Protocol:
     def _app_authenticate(self, account, password, flush=True, bailout=False):
         """
         Generic implementation for app-level authentications or authorizations.
+
+        A login error counts only if the host sent it after the last call of
+        send(), e.g. after the password: banners and the message of the day
+        may contain words like "denied" or "failed".
         """
         user = account.get_name()
 
@@ -1080,7 +1111,6 @@ class Protocol:
             # structure to allow for mapping the match index back to the
             # prompt type.
             prompts = (
-                ('login-error', self.get_login_error_prompt()),
                 ('username', self.get_username_prompt()),
                 ('skey', [_skey_re]),
                 ('password', self.get_password_prompt()),
@@ -1097,23 +1127,22 @@ class Protocol:
             try:
                 index, match = self._waitfor(prompt_list)
             except TimeoutException:
+                self._raise_on_login_error()
                 self._raise_on_response_timeout()
             except DriverReplacedException:
                 msg = "Handling DriverReplacedException, retrying to wait for a prompt."
                 self._dbg(4, msg)
                 continue
-            except ExpectCancelledException:
-                raise
-            except EOFError:
+            except ConnectionClosedException:
+                self._raise_on_login_error()
                 raise
 
-            # Login error detected.
+            # Login error detected, e.g. followed by a new user name prompt.
+            self._raise_on_login_error()
             section, prompt = prompt_map[index]
-            if section == 'login-error':
-                raise LoginFailure("Login failed")
 
             # User name prompt.
-            elif section == 'username':
+            if section == 'username':
                 self._dbg(2, "Username prompt received.")
                 self.expect(prompt)  # consume the prompt from the buffer
                 self.send(user + '\r')
@@ -1311,6 +1340,7 @@ class Protocol:
             self._dbg(4, 'Sending: <secret>')
         else:
             self._dbg(4, 'Sending: %s' % repr(data))
+        self._sent_at = self._buffer.size()  # before: Dummy answers within _send()
         self._send(data)
 
     @contextlib.contextmanager
@@ -1356,7 +1386,92 @@ class Protocol:
 
     def _domatch(self, prompt, flush):
         """
-        Should be overwritten. That's the place where self.response should be set.
+        Waits until one of the given regular expressions matches the received
+        data, and sets self.response to the data before the match. With flush,
+        removes the data up to the end of the match from the buffer.
+
+        Raises TimeoutException if no data arrives for self.timeout seconds,
+        and ConnectionClosedException if the host closed the connection.
+
+        :type  prompt: list(re.Pattern)
+        :param prompt: The regular expressions.
+        :type  flush: bool
+        :param flush: Whether to remove the response and the match from the
+            buffer.
+        :rtype:  int, re.Match
+        :return: The index of the regular expression that matched, and the match.
+        :raises TimeoutException: If no data arrives for self.timeout seconds.
+        :raises ConnectionClosedException: If the host closed the connection.
+        """
+        searched = 0
+        while True:
+            if self._expect_canceled:
+                self._raise_on_canceled_expect()
+            n, match, start, end = self._search(prompt, searched)
+            if match is not None:
+                break
+            searched = self._buffer.size()
+            received = self._fill_buffer(self.timeout)
+            if received is None:
+                self._raise_on_response_timeout()
+            if not received:
+                self._raise_on_response_eof()
+        self._dbg(2, 'Got a prompt, match was: %s' % repr(match.group()))
+        self.response = self._buffer.head(start)
+        if flush:
+            self._buffer.pop(end)
+            if self._sent_at is not None:
+                self._sent_at = max(0, self._sent_at - end)
+        self._dbg(4, 'Response (flush=%s): %s' % (repr(flush), repr(self.response)))
+        return n, match
+
+    def _search(self, prompt, searched):
+        """
+        Searches the buffer for the first of the given regular expressions
+        that matches. A regular expression that ends with $ or \\Z is searched
+        in the last _PROMPT_WINDOW characters, after the driver's cleanup of
+        the response; the others in the data from the given position on, plus
+        _LOOKBEHIND characters before it.
+
+        :type  prompt: list(re.Pattern)
+        :param prompt: The regular expressions.
+        :type  searched: int
+        :param searched: The size of the buffer at the last search.
+        :rtype:  tuple(int, re.Match|None, int, int)
+        :return: The index of the regular expression, the match, and the start
+            and end of the match in the buffer; -1, None, 0, 0 if none matched.
+        """
+        size = self._buffer.size()
+        tail = new = None
+        for n, regex in enumerate(prompt):
+            if _ends_with_anchor(regex):
+                if tail is None:
+                    raw = self._buffer.tail(_PROMPT_WINDOW)
+                    tail, incomplete = self.get_driver().clean_response_for_re_match(raw)
+                    tail_offset = size - len(incomplete) - len(tail)
+                match = regex.search(tail)
+                offset = tail_offset
+            else:
+                if new is None:
+                    new_offset = max(0, searched - _LOOKBEHIND)
+                    new = self._buffer.tail(size - new_offset)
+                match = regex.search(new)
+                offset = new_offset
+            if match is not None:
+                return n, match, offset + match.start(), offset + match.end()
+        return -1, None, 0, 0
+
+    def _fill_buffer(self, timeout):
+        """
+        Should be overwritten. Waits for data from the remote host, and passes
+        the received text to _receive_cb() and to the buffer.
+
+        :type  timeout: float|None
+        :param timeout: The maximum time to wait, in seconds; None waits
+            without limit.
+        :rtype:  bool|None
+        :return: True if data was received, None if the time ran out, False
+            if the host closed the connection.
         """
         raise NotImplementedError()
 
@@ -1538,6 +1653,19 @@ class Protocol:
             line = line[:200] + '...'
         raise InvalidCommandException('Error in the response from the device: ' + line)
 
+    def _raise_on_login_error(self):
+        """
+        Raises LoginFailure if one of the login error patterns matches the
+        data that the host sent after the last call of send().
+        """
+        if self._sent_at is None:
+            return
+        size = self._buffer.size()
+        text = self._buffer.tail(size - min(self._sent_at, size))
+        for regex in self.get_login_error_prompt():
+            if regex.search(text):
+                raise LoginFailure('Login failed')
+
     def _raise_on_response_timeout(self):
         buffer = str(self._buffer)[-200:]
         if buffer:
@@ -1550,7 +1678,7 @@ class Protocol:
         if buffer:
             buffer = '...' + buffer
         msg = 'EOF while waiting for a response/prompt. Buffer: %s'
-        raise ProtocolException(msg % repr(buffer))
+        raise ConnectionClosedException(msg % repr(buffer))
 
     def _call_key_handlers(self, key_handlers, data):
         if key_handlers is not None:
