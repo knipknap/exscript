@@ -69,6 +69,32 @@ jobs:
           name: dist
           path: dist/
 
+  benchmarks:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Run the benchmarks (fails on 4x the targets)
+        run: uv run --frozen --python 3.14 python tools/bench_bulk.py --json bench.json --check 2>&1 | tee bench.txt
+      - name: Add the results to the summary
+        if: always()
+        run: |
+          {
+            echo '### Benchmarks (4 MiB, median of 3 runs)'
+            echo '```'
+            cat bench.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        if: always()
+        with:
+          name: benchmarks
+          path: bench.json
+
   api-diff:
     name: Public API changes (report only)
     if: github.event_name == 'pull_request'

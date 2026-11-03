@@ -3,16 +3,18 @@
 Connection-layer benchmarks on loopback (no real devices needed).
 
 Measures ``execute()`` with a large response over Telnet and SSH, NETCONF 1.1
-chunk reassembly, and the SSH handshakes needed for one login when the IOS
-driver is detected. Run from the repository root::
+chunk reassembly, the SSH handshakes needed for one login when the IOS driver
+is detected, and the time of ``import Exscript``. With --check, it fails if a
+result exceeds its limit in LIMITS. Run from the repository root::
 
-    python tools/bench_bulk.py [--mib 4] [--runs 3] [--json results.json]
+    python tools/bench_bulk.py [--mib 4] [--runs 3] [--json results.json] [--check]
 """
 
 import argparse
 import json
 import socket
 import statistics
+import subprocess
 import sys
 import threading
 import time
@@ -141,6 +143,25 @@ def bench_ios_login(host_key):
     return elapsed, server.connections, driver
 
 
+def bench_import():
+    """Returns the seconds that ``import Exscript`` takes in a new interpreter."""
+    # The arguments are constant: this interpreter, importing Exscript.
+    command = [sys.executable, '-X', 'importtime', '-c', 'import Exscript']
+    output = subprocess.run(command, capture_output=True, text=True, check=True).stderr  # noqa: S603
+    return int(output.strip().splitlines()[-1].split('|')[1]) / 1e6  # cumulative microseconds
+
+
+# Limits for --check, per MiB where they scale: loose enough that slower CI
+# machines pass, but quadratic regressions fail.
+LIMITS = {
+    'telnet_execute_cpu_s': lambda mib: 0.5 * mib,
+    'ssh_execute_cpu_s': lambda mib: 0.3 * mib,
+    'netconf_reassembly_s': lambda mib: 0.025 * mib,
+    'ios_login_handshakes': lambda mib: 3,
+    'import_s': lambda mib: 0.5,
+}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     parser.add_argument('--mib', type=int, default=4, help='response size in MiB (default: 4)')
@@ -148,6 +169,7 @@ def main():
         '--runs', type=int, default=3, help='runs per measurement, median is reported'
     )
     parser.add_argument('--json', help='also write the results to this file')
+    parser.add_argument('--check', action='store_true', help='fail if a result exceeds its limit')
     args = parser.parse_args()
     size = args.mib * 1024 * 1024
     payload = LINE * (size // len(LINE) + 1)
@@ -175,12 +197,21 @@ def main():
     results['ios_login_s'] = round(elapsed, 2)
     results['ios_login_handshakes'] = handshakes
     results['ios_login_driver'] = driver
+    results['import_s'] = round(statistics.median(bench_import() for _ in range(args.runs)), 3)
 
     for key, value in results.items():
         print('%-28s %s' % (key, value))
     if args.json:
         with open(args.json, 'w', encoding='utf-8') as fp:
             json.dump(results, fp, indent=1)
+    if args.check:
+        exceeded = [
+            '%s: %s > %s' % (key, results[key], limit(args.mib))
+            for key, limit in LIMITS.items()
+            if results[key] > limit(args.mib)
+        ]
+        if exceeded:
+            sys.exit('Limits exceeded:\n  ' + '\n  '.join(exceeded))
 
 
 if __name__ == '__main__':
