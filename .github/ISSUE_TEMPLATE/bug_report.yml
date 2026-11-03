@@ -1,0 +1,65 @@
+name: Bug report
+description: Something does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thank you for reporting a problem. Please report security problems
+        privately instead, as described in SECURITY.md. Remove passwords, host
+        names, addresses and other data of your network from everything you
+        paste here.
+  - type: input
+    id: version
+    attributes:
+      label: Exscript version
+      description: 'Output of: python -c "import Exscript; print(Exscript.__version__)"'
+      placeholder: 3.0.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Python version and operating system
+      placeholder: Python 3.13.9 on Ubuntu 24.04
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Connecting and logging in (SSH, Telnet)
+        - Sending commands and waiting for responses
+        - NETCONF
+        - Template language or the exscript command
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device operating system and version
+      description: If a device is involved.
+      placeholder: Cisco IOS XR 7.11.2
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Script or template that shows the problem
+      description: As short as possible.
+      render: python
+  - type: textarea
+    id: log
+    attributes:
+      label: Traceback and log
+      description: >
+        The traceback, and the conversation with the device: connect with
+        logfile="session.log", or with debug=5 after
+        logging.basicConfig(level=logging.DEBUG).
+      render: text
