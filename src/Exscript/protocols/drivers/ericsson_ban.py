@@ -37,8 +37,6 @@ _error_re = [re.compile(r'\(error\)')]
 
 _ban_re = re.compile(r"BLM\d+ - Broadband Loop Multiplexer", re.I)
 
-_banner_re = re.compile(r"Last login", re.I)
-
 _login_fail_re = [r'Login failed']
 
 
@@ -59,9 +57,4 @@ class EricssonBanDriver(Driver):
     def check_head_for_os(self, string):
         if _ban_re.search(string):
             return 90
-        return 0
-
-    def check_response_for_os(self, string):
-        if _banner_re.search(string):
-            return 20
         return 0

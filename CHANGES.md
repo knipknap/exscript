@@ -228,6 +228,26 @@ marked with **BREAKING**; a migration guide will accompany the release.
   checks every driver pattern for this. The isam driver's prompt pattern, which the
   OS guesser runs on all received data, matches the same strings 3.5 times faster.
 
+- **BREAKING - More Accurate OS Guessing:** On the test corpus (60 device banners and
+  5 recorded sessions), `guess_os()` is right for 213 of 245 sessions instead of 204,
+  and no guess that was right changed. Signals that other systems show, too, no
+  longer select a driver:
+  - `isam` claimed every `name#` and `name>` prompt, e.g. of FRR, NETCONF servers and
+    unknown devices, which then ran with ISAM's prompt pattern; now it claims only
+    ISAM's `name>#` prompts. Its error patterns are used now; a typo had disabled
+    them.
+  - `ericsson_ban` and `sp_vxoa` claimed every "Last login" line, so logins to Linux
+    hosts with a `$` prompt timed out. Their banner checks stay.
+  - `junos` claimed every `router1 login:` prompt, e.g. of Linux and BusyBox Telnet
+    logins; now only after the `(ttyp0)` line that Junos prints before `login:`.
+  - `shell` is also recognized by prompts like `router1:~$ ` or
+    `admin@router1:/etc# `.
+
+  Devices whose banner has no vendor signature, e.g. some EOS, ADTRAN and RiOS
+  devices, are now guessed as `unknown` (generic driver) instead of a wrong driver.
+  The CI job "OS-guess accuracy" reports the accuracy per OS
+  (`tools/osguess_report.py`). Pass `driver=` if a device needs a specific driver.
+
 - **BREAKING - Graceful Logout:** `Protocol.close(force=False)` now calls the driver's
   new `logout()` method before the connection is closed. The base `Driver` sends
   `exit\r`, the custom `VRPDriver` sends `quit\r` and `SROSDriver` sends `logout\r`.

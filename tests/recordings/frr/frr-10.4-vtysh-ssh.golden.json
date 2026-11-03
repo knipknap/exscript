@@ -1,0 +1,119 @@
+{
+  "login": "ok",
+  "driver": "generic",
+  "os": "unknown",
+  "commands": [
+    {
+      "command": "terminal length 0",
+      "error": null,
+      "lines": 1,
+      "sha256": "fad757df55a72a893a0b38650bdfb70b3eba94e0115682d4bca0b3ddac92b95c",
+      "first": "terminal length 0",
+      "last": "terminal length 0"
+    },
+    {
+      "command": "show version",
+      "error": null,
+      "lines": 5,
+      "sha256": "64c6d8f5dcc9153c7e73b80388631b432511dd467cc6e9eca1a083bba54c6716",
+      "first": "show version",
+      "last": "    '--prefix=/usr' '--sysconfdir=/etc' '--localstatedir=/var' '--sbindir=/usr/lib/frr' '--libdir=/usr/lib' '--enable-rp"
+    },
+    {
+      "command": "show running-config",
+      "error": null,
+      "lines": 15,
+      "sha256": "25ae6c900bc991bd2d6224e274bbe1111804dca1dde2de98cc055f948b37719b",
+      "first": "show running-config",
+      "last": "end"
+    },
+    {
+      "command": "show interface brief",
+      "error": null,
+      "lines": 5,
+      "sha256": "e05bf0b4ac2a411ce311564466044a8eae23b579dc107946e342709b4aa15a7d",
+      "first": "show interface brief",
+      "last": "lo              up      default         "
+    },
+    {
+      "command": "show ip route",
+      "error": null,
+      "lines": 14,
+      "sha256": "9f5abd51bda361deb0a277acb8d643e55d1f98b0e4c23acb727ea4048e0baa7f",
+      "first": "show ip route",
+      "last": "S>* 198.51.100.0/24 [1/0] unreachable (blackhole), weight 1, 00:00:26"
+    },
+    {
+      "command": "show nonexistent",
+      "error": "InvalidCommandException",
+      "lines": 2,
+      "sha256": "472b430eb716a63610ac6127a8296403fadd4b0928b6baa0b7e237cb3564fc14",
+      "first": "show nonexistent",
+      "last": "% Unknown command: show nonexistent"
+    },
+    {
+      "command": "show ip",
+      "error": null,
+      "lines": 2,
+      "sha256": "27eab082a4deef01d1a85917af453b9dba92570b6363d0159ec47d676bccc0da",
+      "first": "show ip",
+      "last": "% Command incomplete: show ip"
+    },
+    {
+      "command": "sh i",
+      "error": null,
+      "lines": 30,
+      "sha256": "4ee6e30dc23e9d8c82cab57885322da9784dc3c30c354bc3e88a8c10da497de9",
+      "first": "sh i",
+      "last": "  protodown: off "
+    },
+    {
+      "command": "configure terminal",
+      "error": null,
+      "lines": 1,
+      "sha256": "4c4a842f65abce035cfe0297cc753a244e6e0bc74dca1f7e95b50b3e97dcd1ff",
+      "first": "configure terminal",
+      "last": "configure terminal"
+    },
+    {
+      "command": "interface lo",
+      "error": null,
+      "lines": 1,
+      "sha256": "f99ce7a196f42339ee65521fe4c0ff6cdfc751be2d25c42abc5cba3d2f0244a6",
+      "first": "interface lo",
+      "last": "interface lo"
+    },
+    {
+      "command": "description loopback for the Exscript tests",
+      "error": null,
+      "lines": 1,
+      "sha256": "fde7b1c5ed8d64ed77dbe72d67333822c4e99697f21ea90f9b1ee63a33ad6875",
+      "first": "description loopback for the Exscript tests",
+      "last": "description loopback for the Exscript tests"
+    },
+    {
+      "command": "end",
+      "error": null,
+      "lines": 1,
+      "sha256": "361e48d0308f20e32dba5fb56328baf18d72ef0ccb43b84f5c262d2a6a1fc6c8",
+      "first": "end",
+      "last": "end"
+    },
+    {
+      "command": "show running-config",
+      "error": null,
+      "lines": 19,
+      "sha256": "167d2a05c5f592ccc705f22319ba66cef3236fa493740ce22bae9676ee27527e",
+      "first": "show running-config",
+      "last": "end"
+    },
+    {
+      "command": "exit",
+      "error": "ConnectionClosedException",
+      "lines": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "first": "",
+      "last": ""
+    }
+  ]
+}

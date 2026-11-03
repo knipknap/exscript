@@ -121,22 +121,22 @@
  },
  "adtran.2|-|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "adtran.2|-|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "adtran.2|SSH-2.0-Cisco-1.25|64": {
@@ -161,22 +161,22 @@
  },
  "adtran.2|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "adtran.2|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "aironet.1|-|64": {
@@ -1261,22 +1261,22 @@
  },
  "eos.1|-|64": {
   "after_auth": [
-   "junos",
-   35
+   "shell",
+   20
   ],
   "final": [
-   "junos",
-   35
+   "shell",
+   20
   ]
  },
  "eos.1|-|65536": {
   "after_auth": [
-   "junos",
-   35
+   "shell",
+   20
   ],
   "final": [
-   "junos",
-   35
+   "shell",
+   20
   ]
  },
  "eos.1|SSH-2.0-Cisco-1.25|64": {
@@ -1301,42 +1301,42 @@
  },
  "eos.1|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "junos",
-   35
+   "shell",
+   20
   ],
   "final": [
-   "junos",
-   35
+   "shell",
+   20
   ]
  },
  "eos.1|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "junos",
-   35
+   "shell",
+   20
   ],
   "final": [
-   "junos",
-   35
+   "shell",
+   20
   ]
  },
  "eos.2|-|64": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.2|-|65536": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.2|SSH-2.0-Cisco-1.25|64": {
@@ -1361,42 +1361,42 @@
  },
  "eos.2|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.2|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.3|-|64": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.3|-|65536": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.3|SSH-2.0-Cisco-1.25|64": {
@@ -1421,42 +1421,42 @@
  },
  "eos.3|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.3|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.4|-|64": {
   "after_auth": [
-   "isam",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "eos.4|-|65536": {
   "after_auth": [
-   "isam",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "eos.4|SSH-2.0-Cisco-1.25|64": {
@@ -1481,42 +1481,42 @@
  },
  "eos.4|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "isam",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "eos.4|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "isam",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "eos.5|-|64": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.5|-|65536": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.5|SSH-2.0-Cisco-1.25|64": {
@@ -1541,22 +1541,22 @@
  },
  "eos.5|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "eos.5|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "junos",
-   35
+   "unknown",
+   0
   ],
   "final": [
-   "junos",
-   35
+   "unknown",
+   0
   ]
  },
  "ericsson_ban|-|64": {
@@ -2941,68 +2941,68 @@
  },
  "prompt-only:<HUAWEI>|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:<HUAWEI>|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:A:sros-pe1#|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:A:sros-pe1#|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:FGT60E #|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:FGT60E #|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:RP/0/RSP0/CPU0:xr-pe1#|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
    "ios_xr",
@@ -3011,8 +3011,8 @@
  },
  "prompt-only:RP/0/RSP0/CPU0:xr-pe1#|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
    "ios_xr",
@@ -3021,162 +3021,162 @@
  },
  "prompt-only:[admin@MikroTik] >|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:[admin@MikroTik] >|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:admin@junos-mx> |SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:admin@junos-mx> |SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:core-sw01(config)#|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:core-sw01(config)#|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:root@host:~#|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "shell",
+   30
   ]
  },
  "prompt-only:root@host:~#|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "shell",
+   30
   ]
  },
  "prompt-only:router#|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:router#|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:switch>|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:switch>|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ]
  },
  "prompt-only:user@host:~$|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "shell",
+   30
   ]
  },
  "prompt-only:user@host:~$|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "ericsson_ban",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "ericsson_ban",
-   20
+   "shell",
+   30
   ]
  },
  "rios.1|-|64": {
   "after_auth": [
-   "isam",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "rios.1|-|65536": {
   "after_auth": [
-   "isam",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "rios.1|SSH-2.0-Cisco-1.25|64": {
@@ -3201,22 +3201,22 @@
  },
  "rios.1|SSH-2.0-OpenSSH_9.6|64": {
   "after_auth": [
-   "isam",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "rios.1|SSH-2.0-OpenSSH_9.6|65536": {
   "after_auth": [
-   "isam",
-   20
+   "unknown",
+   0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "smart_edge_os.1|-|64": {
@@ -3525,8 +3525,8 @@
    0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "unknown|-|65536": {
@@ -3535,8 +3535,8 @@
    0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "unknown|SSH-2.0-Cisco-1.25|64": {
@@ -3565,8 +3565,8 @@
    0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "unknown|SSH-2.0-OpenSSH_9.6|65536": {
@@ -3575,8 +3575,8 @@
    0
   ],
   "final": [
-   "isam",
-   20
+   "unknown",
+   0
   ]
  },
  "vrp.1|-|64": {

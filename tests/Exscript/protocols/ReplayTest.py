@@ -21,16 +21,9 @@ RECORDINGS = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, 'reco
 UPDATE_GOLDEN = os.environ.get('EXSCRIPT_UPDATE_GOLDEN') == '1'
 ADAPTERS = {'ssh': SSH2, 'telnet': Telnet, 'netconf': Netconf}
 # Recordings that Exscript does not handle like the recorded device yet, and why.
-KNOWN_ISSUES = {
-    'linux/alpine-3.22-bash-ssh': 'bash prompts are not guessed as shell',
-    'linux/alpine-3.22-bash-ssh-vt100': 'bash prompts are not guessed as shell',
-    'linux/busybox-1.37-ash-telnet': '"router3 login:" is guessed as junos, whose prompt does not match',
-    'netopeer2/netopeer2-netconf': 'the unanchored isam prompt regex matches NETCONF replies',
-}
-# Recordings whose results depend on the read sizes until the issue is fixed; their tests are skipped.
-TIMING_ISSUES = {
-    'frr/frr-10.4-vtysh-ssh': 'guessed as isam, whose unanchored prompt pattern matches route codes like "S>"',
-}
+KNOWN_ISSUES: dict[str, str] = {}
+# Recordings whose results depend on read timing until the issue is fixed; their tests are skipped.
+TIMING_ISSUES: dict[str, str] = {}
 _message_id = re.compile(r'message-id="[^"]*"')
 _results = {}
 

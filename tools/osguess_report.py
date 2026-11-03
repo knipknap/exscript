@@ -28,7 +28,7 @@ from tests.Exscript.protocols import OsGuesserCorpusTest as corpus  # noqa: E402
 from tests.Exscript.protocols import ReplayTest as replays  # noqa: E402
 from tests.Exscript.protocols.replay import Recording  # noqa: E402
 
-MIN_CORRECT = 204  # 2026-11-03; raise it when a change guesses more sessions right
+MIN_CORRECT = 213  # 2026-11-03; raise it when a change guesses more sessions right
 
 
 def banner_sessions():
@@ -46,7 +46,11 @@ def banner_sessions():
     for key, result in sorted(results.items()):
         name, info, size = key.split('|')
         protocol = 'Telnet' if info == '-' else 'SSH'
-        yield f'banner {name}, {protocol}, {size}-byte reads', name.split('.')[0], result['final'][0]
+        yield (
+            f'banner {name}, {protocol}, {size}-byte reads',
+            name.split('.')[0],
+            result['final'][0],
+        )
 
 
 def recording_sessions():

@@ -1,7 +1,7 @@
 {
   "login": "ok",
-  "driver": "generic",
-  "os": "unknown",
+  "driver": "shell",
+  "os": "shell",
   "commands": [
     {
       "command": "uname -sr",

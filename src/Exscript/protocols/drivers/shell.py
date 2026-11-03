@@ -31,6 +31,14 @@ from .driver import Driver
 _user_re = [re.compile(r'(user|login): $', re.I)]
 _password_re = [re.compile(r'Password: ?$')]
 _linux_re = re.compile(r'\blinux\b', re.I)
+# The guesser also sees the data that ends with "Last login: " for a moment
+# when a read ends there.
+_login_prompt_re = re.compile(r'(?<!last )(?:user|login): $', re.I)
+# Prompts like "router1:~$ " or "admin@router1:/etc# ", maybe after escape
+# sequences such as bash's ESC[?2004h.
+_shell_prompt_re = re.compile(
+    r'(?:\r\n|[\r\n])(?:\x1b\[[\d;?]*[A-Za-z])*(?:[\w.-]+@)?[\w.-]+:[~/][^\r\n]*[$#] ?$'
+)
 
 
 class ShellDriver(Driver):
@@ -42,6 +50,11 @@ class ShellDriver(Driver):
     def check_head_for_os(self, string):
         if _linux_re.search(string):
             return 70
-        if _user_re[0].search(string):
+        if _login_prompt_re.search(string):
             return 20
+        return 0
+
+    def check_response_for_os(self, string):
+        if _shell_prompt_re.search(string):
+            return 30
         return 0

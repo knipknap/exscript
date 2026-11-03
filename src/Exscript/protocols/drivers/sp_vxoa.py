@@ -33,7 +33,6 @@ _password_re = [re.compile(r'(?:\r\n|[\r\n])[Pp]assword: ?$')]
 _prompt_re = [re.compile(r'(?:\r\n|[\r\n]).*?[>#] ?$')]
 _error_re = [re.compile(r'^(unknown|invalid|error|syntax error)', re.I)]
 _banner_re = re.compile(r'Silver[\r\n\s]Peak[\r\n\s]Systems[\r\n\s]Inc\.')
-_auth_banner_re = re.compile(r'Last login:\s')
 
 
 class SilverPeakVXOADriver(Driver):
@@ -47,11 +46,6 @@ class SilverPeakVXOADriver(Driver):
     def check_head_for_os(self, string):
         if _banner_re.search(string):
             return 90
-        return 0
-
-    def check_response_for_os(self, string):
-        if _auth_banner_re.search(string):
-            return 20
         return 0
 
     def init_terminal(self, conn):

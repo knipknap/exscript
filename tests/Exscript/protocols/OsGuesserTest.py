@@ -2,7 +2,10 @@ import os
 import re
 import unittest
 
-from Exscript.protocols import drivers
+from Exscript import Account
+from Exscript.emulators import VirtualDevice
+from Exscript.protocols import Dummy, drivers
+from Exscript.protocols.drivers import isam
 from Exscript.protocols.osguesser import OsGuesser
 
 
@@ -100,8 +103,65 @@ class OsGuesserTest(unittest.TestCase):
         self.assertEqual(osg.get('os'), "junos")
 
 
+def guess(head='', response='', protocol_info=''):
+    """Returns the guess after the given data, fed one character per read (the worst case)."""
+    guesser = OsGuesser()
+    guesser.check_protocol_info(protocol_info)
+    for char in head:
+        guesser.check_received_data(char, False)
+    for char in response:
+        guesser.check_received_data(char, True)
+    return guesser.get('os')
+
+
+class SignalTest(unittest.TestCase):
+    """Weak signals must not claim what other systems print, too."""
+
+    def testLastLoginIsNoSign(self):
+        # Linux, EOS, IOS XR and many others print it, so no driver may claim it.
+        last_login = '\r\nLast login: Mon Oct 26 10:00:00 2026 from 192.0.2.1\r\n'
+        self.assertEqual(guess(head=last_login), 'unknown')
+        self.assertEqual(guess(response=last_login + 'switch>'), 'unknown')
+
+    def testLoginPrompt(self):
+        self.assertEqual(guess(head='\r\nrouter3 login: '), 'shell')  # Linux, BusyBox
+        self.assertEqual(guess(head='\r\nrouter1 (ttyp0)\r\n\r\nlogin: '), 'junos')
+
+    def testShellPrompt(self):
+        for prompt in 'router1:~$ ', 'admin@router1:/etc# ', '\x1b[?2004hrouter1:~$ ':
+            self.assertEqual(guess(response='\r\nuname\r\nLinux\r\n' + prompt), 'shell', prompt)
+        for prompt in 'router#', 'RP/0/RSP0/CPU0:xr-pe1#', 'A:sros-pe1#', 'admin@junos-mx> ':
+            self.assertNotEqual(guess(response='\r\nshow\r\n' + prompt), 'shell', prompt)
+
+    def testIsamPrompt(self):
+        self.assertEqual(guess(response='\r\ninfo\r\ntyp:isadmin>#'), 'isam')
+        for prompt in 'router#', 'switch>', 'hostname >', 'S>* 10.0.0.0/8 is directly connected':
+            self.assertEqual(guess(response='\r\nshow\r\n' + prompt), 'unknown', prompt)
+
+    def testIsamUsesItsErrorPatterns(self):
+        self.assertIs(drivers.driver_map['isam'].error_re, isam._error_re)
+
+    def testLastLoginLineDoesNotBreakLogin(self):
+        device = VirtualDevice(
+            'host',
+            login_type=VirtualDevice.LOGIN_TYPE_NONE,
+            strict=False,
+            banner='Welcome\nLast login: Mon Oct 26 10:00:00 2026 from 192.0.2.1\n',
+        )
+        device.set_prompt('user@host:~$ ')
+        device.add_command('uname', 'Linux')
+        conn = Dummy(device=device)
+        conn.connect('host')
+        conn.login(Account('user', 'password', needs_lock=False))
+        conn.execute('uname')
+        self.assertEqual(conn.get_response().strip(), 'Linux')
+
+
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(OsGuesserTest)
+    loader = unittest.TestLoader()
+    return unittest.TestSuite(
+        [loader.loadTestsFromTestCase(OsGuesserTest), loader.loadTestsFromTestCase(SignalTest)]
+    )
 
 
 if __name__ == '__main__':

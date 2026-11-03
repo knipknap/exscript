@@ -89,3 +89,10 @@ class PromptRegexTest(unittest.TestCase):
                         regex.search(text)
                         elapsed = time.perf_counter() - start
                         self.assertLess(elapsed, 0.2, f'{name}.{attr} on {text[:30]!r}')
+            # The OS guesser runs these on every read until it is sure.
+            for check in 'check_protocol_for_os', 'check_head_for_os', 'check_response_for_os':
+                for text in texts:
+                    start = time.perf_counter()
+                    getattr(driver, check)(text)
+                    elapsed = time.perf_counter() - start
+                    self.assertLess(elapsed, 0.2, f'{name}.{check} on {text[:30]!r}')

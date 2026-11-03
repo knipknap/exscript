@@ -1,7 +1,7 @@
 {
   "login": "ok",
-  "driver": "isam",
-  "os": "isam",
+  "driver": "generic",
+  "os": "unknown",
   "commands": [
     {
       "command": "<get-config><source><running/></source></get-config>",

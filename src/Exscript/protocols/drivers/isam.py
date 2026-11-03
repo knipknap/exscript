@@ -39,6 +39,8 @@ _error_re = [
 _isam_re = re.compile(
     r"last login : \d{1,2}/\d{1,2}/\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}",
 )
+# ISAM prompts end with ">#", e.g. "typ:isadmin>#"; "name#" and "name>" are common.
+_isam_prompt_re = re.compile(r'(?:\r\n|[\r\n])[\w:.\-]+>#\s*$')
 
 
 class IsamDriver(Driver):
@@ -47,10 +49,10 @@ class IsamDriver(Driver):
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
-        self._error_re = _error_re
+        self.error_re = _error_re
 
     def check_response_for_os(self, string):
-        if _prompt_re[0].search(string):
+        if _isam_prompt_re.search(string):
             return 20
         return 0
 
