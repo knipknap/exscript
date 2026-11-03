@@ -114,7 +114,6 @@ ignore = [
 "src/Exscript/stdlib/mysys.py" = ["S603"]
 "src/Exscript/util/crypt.py" = ["S303"]
 "src/Exscript/util/file.py" = ["S107"]
-"src/Exscript/util/pidutil.py" = ["S110"]
 "src/Exscript/util/tty.py" = ["S607"]
 "src/Exscript/workqueue/pipeline.py" = ["S101"]
 "tests/Exscript/QueueTest.py" = ["S110"]

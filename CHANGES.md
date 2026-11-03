@@ -14,8 +14,7 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **UTF-8 Files:** Exscript reads and writes text files, e.g. templates, host lists
   and log files, as UTF-8 on every platform, as Python 3.15 does by default. Before,
   it used the encoding of the locale, e.g. cp1252 on Windows, where writing device
-  output to a log file could fail. `util.daemonize` no longer fails with
-  `ValueError: can't have unbuffered text I/O`.
+  output to a log file could fail.
 - **Python 2.7 Support:**
 - **Python 3.11+ Support:**
 - **Dependencies:**
@@ -327,6 +326,10 @@ The names below refer to functions callable from templates, not protocol methods
   `LINES` and `COLUMNS` environment variables, then the terminal of the standard
   output, then the defaults. It no longer asks standard input, standard error and the
   controlling terminal, and no longer runs `stty size`, which leaked a pipe.
+- **BREAKING - Removed Modules:** `Exscript.util.daemonize`, `Exscript.util.pidutil`
+  and `Exscript.util.sigintcatcher` are removed, and
+  `daemonize()` failed on Python 3 with `ValueError: can't have unbuffered text I/O`.
+  Run long-lived scripts under a service manager such as systemd instead.
 
 ## Multi-Threading
 
