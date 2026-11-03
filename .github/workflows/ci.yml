@@ -116,7 +116,6 @@ jobs:
     name: Public API changes (report only)
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -124,7 +123,17 @@ jobs:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
       - name: Compare with the target branch
+        shell: bash
         env:
           BASE_REF: ${{ github.base_ref }}
+        # griffe exits with 1 when it finds breaking changes; this job only reports them.
         # Both search paths: the target branch may still have the package in the repository root.
-        run: uvx griffe check Exscript --search src --search . --against "origin/$BASE_REF" --verbose
+        run: |
+          status=0
+          uvx griffe check Exscript --search src --search . --against "origin/$BASE_REF" --verbose \
+            > api-changes.txt 2>&1 || status=$?
+          cat api-changes.txt
+          {
+            echo "### Breaking API changes against $BASE_REF"
+            if [ "$status" -eq 0 ]; then echo 'None.'; else echo '```'; cat api-changes.txt; echo '```'; fi
+          } >> "$GITHUB_STEP_SUMMARY"
