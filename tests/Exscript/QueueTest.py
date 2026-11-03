@@ -258,7 +258,7 @@ class QueueTest(unittest.TestCase):
 
         match_called = Value(ctypes.c_bool, False)
         start_called = Value(ctypes.c_bool, False)
-        account_hash = Value(ctypes.c_long, 0)
+        account_hash = Value(ctypes.c_ssize_t, 0)  # c_long has only 32 bits on Windows
         data = {
             'match-called': match_called,
             'start-called': start_called,

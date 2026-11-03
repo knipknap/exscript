@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 from getpass import getuser
@@ -164,11 +165,12 @@ class mailTest(unittest.TestCase):
     def testFromTemplate(self):
         from Exscript.util.mail import from_template
 
-        tmpfile = tempfile.NamedTemporaryFile()
-        tmpfile.write(template.encode('utf8'))
-        tmpfile.flush()
+        with tempfile.NamedTemporaryFile(
+            delete=False
+        ) as tmpfile:  # Windows: close before reopening
+            tmpfile.write(template.encode('utf8'))
+        self.addCleanup(os.remove, tmpfile.name)
         mail = from_template(tmpfile.name, **vars)
-        tmpfile.close()
         self.checkResult(mail)
 
     def testSend(self):

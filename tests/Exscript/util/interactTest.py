@@ -1,5 +1,6 @@
+import os
+import tempfile
 import unittest
-from tempfile import NamedTemporaryFile
 
 import Exscript.util.interact
 from Exscript.util.interact import InputHistory
@@ -9,16 +10,19 @@ class InputHistoryTest(unittest.TestCase):
     CORRELATE = InputHistory
 
     def setUp(self):
-        t = NamedTemporaryFile()
-        self.history = InputHistory(t.name)
+        # A file name in a temporary directory: Windows cannot reopen an open temporary file.
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        self.filename = os.path.join(tmpdir.name, 'history')
+        self.history = InputHistory(self.filename)
 
     def testConstructor(self):
-        t = NamedTemporaryFile()
+        filename = self.filename + '2'
         h = InputHistory()
-        h = InputHistory(t.name)
-        h = InputHistory(t.name, 'foo')
+        h = InputHistory(filename)
+        h = InputHistory(filename, 'foo')
         h.set('aaa', 'bbb')
-        with open(t.name) as fp:
+        with open(filename) as fp:
             self.assertEqual(fp.read(), '[foo]\naaa = bbb\n\n')
 
     def testGet(self):

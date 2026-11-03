@@ -25,28 +25,19 @@ class fileTest(unittest.TestCase):
         data += 'user2:' + base64.encodebytes(b'password2').decode('utf8') + '\n'
         data += 'user3 = ' + base64.encodebytes(b'password3').decode('utf8') + '\n'
         data += 'user4 : ' + base64.encodebytes(b'password4').decode('utf8') + '\n'
-        self.account_file = NamedTemporaryFile()
-        self.account_file.write(data.encode('utf8'))
-        self.account_file.flush()
-
-        self.host_file = NamedTemporaryFile()
-        self.host_file.write('\n'.join(hosts).encode('utf8'))
-        self.host_file.flush()
-
+        self.account_file = self.write_tempfile(data.encode('utf8'))
+        self.host_file = self.write_tempfile('\n'.join(hosts).encode('utf8'))
         content = '\n'.join([h + '	blah' for h in hosts])
-        self.csv_host_file = NamedTemporaryFile()
-        self.csv_host_file.write(b'hostname	test\n')
-        self.csv_host_file.write(content.encode('utf8'))
-        self.csv_host_file.flush()
+        self.csv_host_file = self.write_tempfile(b'hostname	test\n' + content.encode('utf8'))
+        self.lib_file = self.write_tempfile(b'__lib__ = {"test": object}\n')
 
-        self.lib_file = NamedTemporaryFile()
-        self.lib_file.write(b'__lib__ = {"test": object}\n')
-        self.lib_file.flush()
-
-    def tearDown(self):
-        self.account_file.close()
-        self.host_file.close()
-        self.csv_host_file.close()
+    def write_tempfile(self, data):
+        # Closed before the test opens it by name, which Windows requires.
+        file = NamedTemporaryFile(delete=False)
+        with file:
+            file.write(data)
+        self.addCleanup(os.remove, file.name)
+        return file
 
     def testGetAccountsFromFile(self):
         from Exscript.util.file import get_accounts_from_file
