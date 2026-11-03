@@ -236,6 +236,8 @@ class Protocol:
         *,
         host_key_policy='reject',  # SSH2 only
         known_hosts=None,  # SSH2 only
+        term_width=511,
+        term_height=1000,
     ):
         """
         Constructor.
@@ -264,6 +266,17 @@ class Protocol:
             device is dumped.
         :keyword termtype: The terminal type to request from the remote host,
             e.g. 'vt100'.
+        :type term_width: int
+        :keyword term_width: The width of the terminal on the remote host, in
+            characters, for SSH and Telnet. Hosts wrap or cut longer lines
+            unless the driver changes the width, e.g. on Linux or NX-OS. The
+            default, 511, is the widest that many devices accept. The size
+            does not depend on the terminal that the script runs in;
+            interact() changes it to the size of that terminal.
+        :type term_height: int
+        :keyword term_height: The height of the terminal on the remote host,
+            in lines. Hosts may wait for a key press after this many lines
+            unless the driver turns paging off.
         :type disabled_algorithms: dict[str, list[str]]|None
         :keyword disabled_algorithms: Dictionary to disable SSH algorithms via
             'paramiko.Transport(disabled_algorithms=...)' constructor.
@@ -330,6 +343,8 @@ class Protocol:
         self.stdout = stdout
         self.stderr = stderr
         self.termtype = termtype
+        self.term_width = term_width
+        self.term_height = term_height
         self.timeout = timeout
 
         # SSH2:

@@ -7,7 +7,7 @@ from unittest import mock
 
 import paramiko
 
-from Exscript import PrivateKey
+from Exscript import Account, PrivateKey
 from Exscript.protocols import SSH2, Netconf
 from Exscript.protocols.ssh2 import _prefer_key_type
 from Exscript.servers import SSHd, sshd
@@ -224,6 +224,43 @@ class ConnectTest(unittest.TestCase):
         self.assertTrue(conn.connected)
 
 
+class _Shell(_PasswordOnly):
+    """Opens a shell with a terminal, and records the size of each terminal requested."""
+
+    sizes: list[tuple[int, int]] = []
+
+    def check_channel_request(self, kind, chanid):
+        return paramiko.OPEN_SUCCEEDED
+
+    def check_channel_pty_request(
+        self, channel, term, width, height, pixelwidth, pixelheight, modes
+    ):
+        self.sizes.append((width, height))
+        return True
+
+    def check_channel_shell_request(self, channel):
+        return True
+
+
+class TerminalSizeTest(unittest.TestCase):
+    """The terminal size does not depend on the terminal that runs the script."""
+
+    def requestedSize(self, **kwargs):
+        interface = type('Shell', (_Shell,), {'sizes': []})
+        server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=interface)
+        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, **kwargs)
+        self.addCleanup(conn.close, force=True)
+        conn.connect(HOST, server.port)
+        conn.protocol_authenticate(Account('admin', 'password', needs_lock=False))
+        return interface.sizes
+
+    def testDefault(self):
+        self.assertEqual(self.requestedSize(), [(511, 1000)])
+
+    def testOptions(self):
+        self.assertEqual(self.requestedSize(term_width=80, term_height=25), [(80, 25)])
+
+
 def suite():
     loader = unittest.TestLoader()
     return unittest.TestSuite(
@@ -232,6 +269,7 @@ def suite():
             loader.loadTestsFromTestCase(HostKeyTest),
             loader.loadTestsFromTestCase(ReconnectTest),
             loader.loadTestsFromTestCase(ConnectTest),
+            loader.loadTestsFromTestCase(TerminalSizeTest),
         ]
     )
 

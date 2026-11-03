@@ -42,7 +42,6 @@ from paramiko.ssh_exception import (
 from ..account import Account
 from ..key import PrivateKey
 from ..util.crypt import otp
-from ..util.tty import get_terminal_size
 from .exception import LoginFailure
 from .protocol import Protocol, _skey_re
 
@@ -363,10 +362,9 @@ class SSH2(Protocol):
         raise LoginFailure('Login failed: ' + '; '.join(errors))
 
     def _paramiko_channel(self):
-        rows, cols = get_terminal_size()
         try:
             self._channel = self._transport.open_session()
-            self._channel.get_pty(self.termtype, cols, rows)
+            self._channel.get_pty(self.termtype, self.term_width, self.term_height)
             self._channel.invoke_shell()
             self._channel.set_name("pty-shell-%s" % self._channel.get_id())
         except SSHException as e:

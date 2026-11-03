@@ -235,6 +235,8 @@ class Host:
             host_key_policy: str  # SSH2 only
             known_hosts: str  # SSH2 only
             preferred_authentications: list[str]|None  # SSH2 only
+            term_height: int
+            term_width: int
             termtype: str
             timeout: int
             verify_fingerprint: bool  # SSH2 only
@@ -257,6 +259,8 @@ class Host:
             'host_key_policy',
             'known_hosts',
             'preferred_authentications',
+            'term_height',
+            'term_width',
             'termtype',
             'timeout',
             'verify_fingerprint',

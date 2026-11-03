@@ -115,6 +115,15 @@ marked with **BREAKING**; a migration guide will accompany the release.
   keyboard-interactive took 5 SSH connections, now 3.
 - **All Addresses for SSH:** SSH and NETCONF connections try all addresses of the
   host, e.g. IPv4 if IPv6 fails, as Telnet does; before, they tried only the first.
+- **BREAKING - Terminal Size:** SSH and Telnet sessions get a terminal of 511 columns
+  and 1000 lines; the new options `term_width` and `term_height` (also `Host`
+  options) choose another size. Before, Exscript used the size of the terminal that
+  ran the script, or 80×25 without one (cron, services), so the same script could
+  get differently wrapped output. Where the driver does not set the width or turn
+  off paging itself, e.g. on Linux hosts, NX-OS, EOS, VRP or unknown devices, long
+  lines are no longer wrapped or cut at 80 characters, and pagers stop only after
+  1000 lines. `interact()` still uses the size of the local terminal. For the
+  previous behavior without a terminal, pass `term_width=80, term_height=25`.
 - **Reliable `close()`:** `close()` closes the connection and resets the object even
   if the logout fails, and raises the error of the logout afterwards. Errors while
   closing, e.g. because the host closed the connection first, are only logged;

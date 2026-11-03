@@ -26,7 +26,6 @@ The Telnet protocol.
 
 import logging
 
-from ..util.tty import get_terminal_size
 from . import telnetlib
 from .protocol import Protocol
 
@@ -52,13 +51,12 @@ class Telnet(Protocol):
 
     def _connect(self):
         assert self._tn is None
-        rows, cols = get_terminal_size()
         self._tn = telnetlib.Telnet(
             self.host,
             self.port,
             encoding=self.encoding,
             connect_timeout=self.connect_timeout,
-            termsize=(rows, cols),
+            termsize=(self.term_height, self.term_width),
             termtype=self.termtype,
             receive_callback=self._telnetlib_received,
         )
