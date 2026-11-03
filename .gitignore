@@ -15,3 +15,5 @@ unit_test.cfg
 .ruff_cache
 htmlcov
 coverage.xml
+docs/_build
+docs/_autosummary

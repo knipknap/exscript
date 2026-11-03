@@ -1,15 +1,11 @@
 .. image:: _static/logo.png
-    :target: http://exscript.readthedocs.io
+    :target: https://exscript.readthedocs.io
 
-.. image:: https://travis-ci.org/knipknap/exscript.svg?branch=master
-    :target: https://travis-ci.org/knipknap/exscript
+.. image:: https://github.com/knipknap/exscript/actions/workflows/ci.yml/badge.svg?branch=master
+    :target: https://github.com/knipknap/exscript/actions/workflows/ci.yml
 
-.. image:: https://coveralls.io/repos/github/knipknap/exscript/badge.svg?branch=master
-    :target: https://coveralls.io/github/knipknap/exscript?branch=master
-
-.. image:: https://lima.codeclimate.com/github/knipknap/exscript/badges/gpa.svg
-    :target: https://lima.codeclimate.com/github/knipknap/exscript
-    :alt: Code Climate
+.. image:: https://img.shields.io/pypi/v/Exscript.svg
+    :target: https://pypi.org/project/Exscript/
 
 .. image:: https://img.shields.io/github/stars/knipknap/exscript.svg
     :target: https://github.com/knipknap/exscript/stargazers
@@ -17,7 +13,6 @@
 .. image:: https://img.shields.io/github/license/knipknap/exscript.svg
     :target: https://github.com/knipknap/exscript/blob/master/COPYING
 
-|
 What is Exscript?
 =================
 
@@ -80,4 +75,5 @@ Contents
    exscript
    templates
    trouble
-   API Documentation<modules>
+   api
+   changelog

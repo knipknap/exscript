@@ -15,7 +15,7 @@ complete.
 We will also assume that you have at least a little bit of programming
 experience, though most of the examples should be pretty simple.
 
-Exscript also has extensive :doc:`API documentation <modules>`, which may
+Exscript also has extensive :doc:`API documentation <api>`, which may
 be used as a reference throughout this tutorial.
 
 Getting started

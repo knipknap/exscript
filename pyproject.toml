@@ -64,6 +64,7 @@ test = [
     "hypothesis>=6.170.14",
 ]
 types = ["mypy>=2.4"]
+docs = ["sphinx>=9", "furo>=2025.12", "myst-parser>=5"]
 dev = [{ include-group = "test" }, { include-group = "types" }]
 
 [tool.hatch.version]
@@ -80,7 +81,7 @@ packages = ["src/Exscript"]
 line-length = 100
 src = ["src", "tests"]
 extend-include = ["scripts/exscript", "scripts/otp"]
-extend-exclude = ["doc"]
+extend-exclude = ["docs/_build"]
 
 [tool.ruff.format]
 quote-style = "preserve"

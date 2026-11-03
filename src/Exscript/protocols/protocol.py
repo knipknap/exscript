@@ -1576,7 +1576,7 @@ class Protocol:
             called in a callback.
         :raise ProtocolException: On other internal errors.
         :raise Exception: May raise other exceptions that are caused
-        within the underlying protocol implementations.
+            within the underlying protocol implementations.
         """
         while True:
             try:

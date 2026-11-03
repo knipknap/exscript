@@ -131,7 +131,7 @@ def eval(conn, string, strip_command=True, no_escaping=False, *, secure=True, **
             touch $filename
         {end}
 
-    If strip_command is False, the response, (and hence, the `filenames'
+    If strip_command is False, the response, (and hence, the ``filenames``
     variable) contains the following::
 
         ls -1
@@ -194,7 +194,7 @@ def paste(conn, string, no_escaping=False, *, secure=True, **kwargs):
     connection. This function differs from eval() such that it does not
     wait for a prompt after sending each command to the connected host.
     That means that the script can no longer read the response of the
-    host, making commands such as `extract' or `set_prompt' useless.
+    host, making commands such as ``extract`` or ``set_prompt`` useless.
 
     The function raises an exception if the compilation fails, or if
     the template contains a command that requires a response from the

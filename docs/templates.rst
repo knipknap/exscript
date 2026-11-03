@@ -394,12 +394,8 @@ For example, the following function instructs Exscript to wait for
 
     {sys.wait(10)}
 
-For a list of supported functions please check here:
-
-.. toctree::
-   :maxdepth: 3
-
-   Exscript.stdlib
+The supported functions are documented in the API reference of
+:doc:`Exscript.stdlib <_autosummary/Exscript.stdlib>`.
 
 Exiting A Script
 ~~~~~~~~~~~~~~~~
