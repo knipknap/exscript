@@ -99,6 +99,19 @@ jobs:
           name: benchmarks
           path: bench.json
 
+  os-guessing:
+    name: OS-guess accuracy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Compare the guesses with the ground truth (fails if fewer are right)
+        shell: bash  # with pipefail; the default shell lets tee hide a failure
+        run: uv run --frozen --python 3.14 python tools/osguess_report.py --check | tee -a "$GITHUB_STEP_SUMMARY"
+
   api-diff:
     name: Public API changes (report only)
     if: github.event_name == 'pull_request'

@@ -7,7 +7,9 @@ recorded device output, so the tests need no devices.
 
 Each recording runs twice: with the output as recorded, and split into small random pieces. Both
 runs must give the same result. A third test checks the device's ground truth: login succeeds and
-`guess_os()` returns `device.os`.
+`guess_os()` returns `device.os`. `tools/osguess_report.py` compares the guesses for all recordings
+and for the banners in `tests/Exscript/protocols/banners` with their ground truth; CI shows its
+report in the job summary and fails if fewer sessions are guessed right than before.
 
 ## Adding a recording
 
