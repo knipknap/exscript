@@ -82,6 +82,7 @@ jobs:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
       - name: Run the benchmarks (fails on 4x the targets)
+        shell: bash  # with pipefail; the default shell lets tee hide a failure
         run: uv run --frozen --python 3.14 python tools/bench_bulk.py --json bench.json --check 2>&1 | tee bench.txt
       - name: Add the results to the summary
         if: always()
