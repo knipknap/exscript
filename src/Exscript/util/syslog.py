@@ -27,7 +27,10 @@ Send messages to a syslog server.
 import os
 import socket
 import sys
-import syslog as _syslog
+
+# The values of syslog.LOG_DEBUG and syslog.LOG_USER, which exist only on Unix.
+LOG_DEBUG = 7
+LOG_USER = 1 << 3
 
 
 def netlog(
@@ -35,10 +38,11 @@ def netlog(
     source=None,
     host='localhost',
     port=514,
-    priority=_syslog.LOG_DEBUG,
-    facility=_syslog.LOG_USER,
+    priority=LOG_DEBUG,
+    facility=LOG_USER,
 ):
     """
+    Sends a message to a syslog server over UDP, like the logger -n command.
     Python's built in syslog module does not support networking, so
     this is the alternative.
     The source argument specifies the message source that is
@@ -47,20 +51,22 @@ def netlog(
     The priority and facility arguments are equivalent to those of
     Python's built in syslog module.
 
+    :type  message: str
+    :param message: The message.
     :type  source: str
     :param source: The source address.
     :type  host: str
     :param host: The IP address or hostname of the receiving server.
-    :type  port: str
-    :param port: The TCP port number of the receiving server.
+    :type  port: int
+    :param port: The UDP port number of the receiving server.
     :type  priority: int
     :param priority: The message priority.
     :type  facility: int
     :param facility: The message facility.
     """
     if not source:
-        source = '%s[%s]' + (sys.argv[0], os.getpid())
-    data = '<%d>%s: %s' % (priority + facility, source, message)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto(data, (host, port))
-    sock.close()
+        source = '%s[%s]' % (sys.argv[0], os.getpid())
+    data = ('<%d>%s: %s' % (priority + facility, source, message)).encode('utf-8')
+    family, type_, proto, _, address = socket.getaddrinfo(host, port, type=socket.SOCK_DGRAM)[0]
+    with socket.socket(family, type_, proto) as sock:
+        sock.sendto(data, address)
