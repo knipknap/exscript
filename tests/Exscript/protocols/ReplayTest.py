@@ -101,8 +101,11 @@ def replay(path, chunks):
         return _results[path, chunks]
     recording = Recording(path)
     options = {'timeout': 2, 'connect_timeout': 2, 'connect_rate_limit': 0}
-    if recording.header.get('terminal'):
-        options['termtype'] = recording.header['terminal']['type']
+    terminal = recording.header.get('terminal')
+    if terminal:  # request what the device was asked for when recorded
+        options.update(
+            termtype=terminal['type'], term_width=terminal['width'], term_height=terminal['height']
+        )
     if recording.protocol != 'telnet':
         methods = (recording.header.get('ssh') or {}).get('auth_methods') or []
         options['verify_fingerprint'] = False

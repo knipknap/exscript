@@ -26,8 +26,8 @@ runs must give the same result. A third test checks the device's ground truth: l
    - The protocol is `ssh`, `telnet` or `netconf`.
    - `--os` is the ground truth: the Exscript driver name that `guess_os()` should return
      (`unknown` if no driver fits).
-   - Keep the default terminal type `dumb`. It is Exscript's default, and the replay test uses the
-     recorded type.
+   - Keep the default terminal type `dumb` and size 511×1000. They are Exscript's defaults, and
+     the replay test uses the recorded values.
    - Use `--auth password` for SSH servers that drop the connection after a failed
      keyboard-interactive attempt.
    - See `--help` for the other options.

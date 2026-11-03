@@ -29,6 +29,7 @@ import json
 import os
 import re
 import socket
+import struct
 import sys
 import time
 
@@ -105,7 +106,8 @@ class TelnetLink(Link):
     def __init__(self, conn, recording, term, width, height):
         super().__init__(conn, recording)
         self.term = term.encode('ascii')
-        self.size = bytes([width >> 8, width & 255, height >> 8, height & 255])
+        # The byte 255 (e.g. in a width of 511) is doubled, like all IAC bytes in data.
+        self.size = struct.pack('!HH', width, height).replace(b'\xff', b'\xff\xff')
         self.pending = b''
         self.answered = set()
 
@@ -321,8 +323,12 @@ def main():
     parser.add_argument(
         '--term', default='dumb', help="terminal type (default: Exscript's default)"
     )
-    parser.add_argument('--width', type=int, default=80)
-    parser.add_argument('--height', type=int, default=24)
+    parser.add_argument(
+        '--width', type=int, default=511, help='terminal width (default: 511, like Exscript)'
+    )
+    parser.add_argument(
+        '--height', type=int, default=1000, help='terminal height (default: 1000, like Exscript)'
+    )
     parser.add_argument('-y', '--yes', action='store_true', help='accept unknown SSH host keys')
     args = parser.parse_args()
     if args.protocol == 'netconf' and not args.port:

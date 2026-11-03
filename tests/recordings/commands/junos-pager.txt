@@ -1,4 +1,6 @@
 # Juniper Junos (R2): output with the pager on.
+# The recorder asks for 1000 lines, so set the pager length explicitly.
+set cli screen-length 24
 show configuration
 !send \x20
 !send \x20
