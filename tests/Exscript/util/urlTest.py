@@ -59,6 +59,8 @@ urls = [
     ('pseudo://filename', 'pseudo://filename'),
     ('pseudo:///abspath', 'pseudo:///abspath'),
     ('pseudo:///abs/path', 'pseudo:///abs/path'),
+    ('pseudo://C:\\abs\\path', 'pseudo://C:\\abs\\path'),
+    ('pseudo://C:/abs/path', 'pseudo://C:/abs/path'),
 ]
 
 

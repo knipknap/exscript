@@ -221,10 +221,11 @@ class Url:
             except IndexError:
                 pass
 
-        # Parse hostname and port number.
+        # Parse hostname and port number. The address of the pseudo protocol is
+        # a file name, which may start with a drive letter (C:).
         result.hostname = netloc + parsed.path
         result.port = _WELL_KNOWN_PORTS.get(result.protocol)
-        if ':' in netloc:
+        if ':' in netloc and result.protocol != 'pseudo':
             result.hostname, port = netloc.split(':')
             result.port = int(port)
 

@@ -194,6 +194,14 @@ The names below refer to functions callable from templates, not protocol methods
 | -                                            | `string.strip(strings, ...)`                 | Removes leading/trailing whitespace or specified characters.                                                                                                       |
 | `sys.exec()`                                 | `sys.exec()`                                 | **BREAKING:** Local command output is now text rather than bytes, decoded using Python's default subprocess encoding; line endings are retained.                   |
 
+## Utilities
+
+- **`Exscript.util.syslog.netlog()`:** Works again; on Python 3 it always raised a
+  `TypeError`. It also works over IPv6, and the module can be imported on Windows,
+  which has no `syslog` module.
+- **Pseudo Protocol on Windows:** `pseudo://` URLs accept absolute Windows paths such
+  as `pseudo://C:\devices\router.py`; the drive letter was taken for a port number.
+
 ## Multi-Threading
 
 ## Demos
