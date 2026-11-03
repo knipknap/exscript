@@ -68,6 +68,13 @@ def isdriver(o):
 
 
 def add_driver(cls):
+    """
+    Registers a driver class, so that the OS guesser and ``driver=`` can use
+    it in connections that are created afterwards.
+
+    :type  cls: type[Driver]
+    :param cls: The driver class; it is instantiated without arguments.
+    """
     driver = cls()
     driver_classes.append(cls)
     drivers.append(driver)
@@ -75,9 +82,16 @@ def add_driver(cls):
 
 
 def disable_driver(name):
+    """
+    Unregisters the driver with the given name. Connections that are created
+    afterwards neither guess it nor accept its name.
+
+    :type  name: str
+    :param name: The name of the driver.
+    """
     driver = driver_map.pop(name)
-    drivers.pop(driver)
-    driver_classes.pop(driver.__class__)
+    drivers.remove(driver)
+    driver_classes.remove(type(driver))
 
 
 # Load built-in drivers.

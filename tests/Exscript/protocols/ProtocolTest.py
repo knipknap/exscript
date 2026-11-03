@@ -68,11 +68,6 @@ class ProtocolTest(unittest.TestCase):
     def createProtocol(self):
         self.protocol = Protocol(timeout=1, debug=5)
 
-    def disableDriver(self):
-        self.assertIn(drivers.driver_map, 'ios')
-        drivers.disable_driver('ios')
-        self.assertNotIn(drivers.driver_map, 'ios')
-
     def doConnect(self):
         self.protocol.connect(self.hostname, self.port)
 

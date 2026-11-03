@@ -157,10 +157,68 @@ class SignalTest(unittest.TestCase):
         self.assertEqual(conn.get_response().strip(), 'Linux')
 
 
+class AcmeDriver(drivers.Driver):
+    """The custom driver of the documentation (docs/drivers.rst)."""
+
+    def __init__(self):
+        drivers.Driver.__init__(self, 'acme')
+        self.prompt_re = [re.compile(r'[\r\n]acme-[\w-]+[>#] ?$')]
+
+    def check_head_for_os(self, string):
+        if 'Acme Networks OS' in string:
+            return 90
+        return 0
+
+    def init_terminal(self, conn):
+        conn.execute('terminal length 0')
+
+
+class DriverRegistryTest(unittest.TestCase):
+    def setUp(self):
+        self.sent = []
+        self.device = VirtualDevice(
+            'acme-pe1', login_type=VirtualDevice.LOGIN_TYPE_NONE, banner='Acme Networks OS 1.0\n'
+        )
+        self.device.add_command(
+            'terminal length 0', lambda command: self.sent.append(command) or ''
+        )
+
+    def tearDown(self):
+        if 'acme' in drivers.driver_map:
+            drivers.disable_driver('acme')
+
+    def login(self):
+        conn = Dummy(device=self.device)
+        conn.connect('acme-pe1')
+        conn.login(Account('user', 'password', needs_lock=False))
+        return conn
+
+    def testAddDriver(self):
+        drivers.add_driver(AcmeDriver)
+        conn = self.login()
+        self.assertEqual(conn.guess_os(), 'acme')
+        self.assertIsInstance(conn.get_driver(), AcmeDriver)
+        conn.autoinit()
+        self.assertEqual(len(self.sent), 1)
+
+    def testDisableDriver(self):
+        drivers.add_driver(AcmeDriver)
+        drivers.disable_driver('acme')
+        self.assertNotIn('acme', drivers.driver_map)
+        self.assertNotIn(AcmeDriver, drivers.driver_classes)
+        self.assertNotIn('acme', [driver.name for driver in drivers.drivers])
+        self.assertEqual(self.login().guess_os(), 'unknown')
+        self.assertRaises(TypeError, Dummy().set_driver, 'acme')
+
+
 def suite():
     loader = unittest.TestLoader()
     return unittest.TestSuite(
-        [loader.loadTestsFromTestCase(OsGuesserTest), loader.loadTestsFromTestCase(SignalTest)]
+        [
+            loader.loadTestsFromTestCase(OsGuesserTest),
+            loader.loadTestsFromTestCase(SignalTest),
+            loader.loadTestsFromTestCase(DriverRegistryTest),
+        ]
     )
 
 
