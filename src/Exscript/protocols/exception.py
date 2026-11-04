@@ -24,6 +24,12 @@
 Network related error types.
 """
 
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from lxml.etree import _Element
+
 
 class ProtocolException(Exception):
     """
@@ -94,8 +100,22 @@ class RPCError(InvalidCommandException):
     more rpc-error elements with error severity.
     """
 
-    def __init__(self, message, *, element, type, tag, severity, app_tag='', path='', info=''):
+    def __init__(
+        self,
+        message: str | None,
+        *,
+        element: '_Element',
+        type: str | None,
+        tag: str | None,
+        severity: str | None,
+        app_tag: str | None = '',
+        path: str | None = '',
+        info: str | None = '',
+    ) -> None:
         """
+        Creates the exception for one rpc-error. The text fields may be None
+        if the rpc-error has no such element; the attributes are '' then.
+
         :param message:   The primary rpc-error message (error-message).
         :param element:   The XML element of the rpc-error node.
         :param type:      The NETCONF error-type (e.g. 'application', 'protocol').
@@ -121,11 +141,14 @@ class RPCError(InvalidCommandException):
         self.info = info or ''
         self.errlist = [self]
 
+    # The errors are Any: ncclient has no type hints.
     @classmethod
-    def _from_ncclient(cls, rpc_errors):
+    def _from_ncclient(cls, rpc_errors: Iterable[Any]) -> 'RPCError':
         """
         Translates a list of ncclient `RPCError` objects (from RPCReply.errors)
         into Exscript :class:`RPCError` instances.
+
+        :return: The first error; its errlist holds all of them.
         """
         all_errors = [
             cls(

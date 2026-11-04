@@ -25,6 +25,8 @@ OS guesser for any protocol to auto-select a device driver.
 """
 
 import logging
+from collections.abc import Iterable
+from typing import Any, cast
 
 from .drivers import drivers
 
@@ -42,7 +44,11 @@ class OsGuesser:
     based on the information provided.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Constructor. Gets the checks of all drivers that are registered at
+        this time.
+        """
         self._logger = _logger
         self._buffer_limit = 512
         self._auth_os_map = [d._check_head for d in drivers]
@@ -52,18 +58,27 @@ class OsGuesser:
         self.debug = 0
         self._init()
 
-    def _init(self):
+    def _init(self) -> None:
+        """
+        Clears the buffers and sets the guess to 'unknown' with a confidence
+        of 0.
+        """
         self._auth_buffer = ''
         self._protocol_buffer = ''
         self._response_buffer = ''
         self._info = {"os": ("unknown", 0)}
 
-    def _dbg(self, level, msg, exc_info=None):
+    def _dbg(self, level: int, msg: str, exc_info: bool | BaseException | None = None) -> None:
+        """
+        Logs the given message if the debug level is at least the given level.
+        """
         if level > self.debug:
             return
         self._logger.debug(msg, exc_info=exc_info)
 
-    def reset(self, auth_buffer='', protocol_buffer='', response_buffer=''):
+    def reset(
+        self, auth_buffer: str = '', protocol_buffer: str = '', response_buffer: str = ''
+    ) -> None:
         """
         Reset the guesser state and optionally pre-populate the monitoring buffers.
         """
@@ -74,7 +89,7 @@ class OsGuesser:
         self._protocol_buffer = protocol_buffer
         self._response_buffer = response_buffer
 
-    def set(self, key, value, confidence=100):
+    def set(self, key: str, value: str | None, confidence: int = 100) -> None:
         """
         Defines the given value with the given confidence, unless the same
         value is already defined with a higher confidence level.
@@ -91,7 +106,9 @@ class OsGuesser:
         )
         self._info[key] = (value, confidence)
 
-    def set_from_match(self, key, regex_list, string):
+    # The items are Any: mypy does not tell the functions from the tuples by
+    # the hasattr() check below.
+    def set_from_match(self, key: str, regex_list: Iterable[Any], string: str) -> None:
         """
         Given a list of functions or three-tuples (regex, value, confidence),
         this function walks through them and checks whether any of the
@@ -115,24 +132,26 @@ class OsGuesser:
                 if regex.search(string):
                     self.set(key, value, confidence)
 
-    def get(self, key, confidence=0):
+    def get(self, key: str, confidence: int = 0) -> str | None:
         """
         Returns the info with the given key, if it has at least the given
         confidence. Returns None otherwise.
         """
         if key not in self._info:
             return None
-        value, conf = self._info.get(key)
+        value, conf = cast(tuple[str, int], self._info.get(key))
         if conf >= confidence:
             return value
         return None
 
-    def check_received_data(self, data, authenticated):
+    def check_received_data(self, data: str, authenticated: bool) -> None:
         """
         Callback to search the received data for matching patterns.
 
-        The `authenticated` flag controls whether to also evaluate received data
-        from the authentication phase.
+        Before the authentication, the data is matched with the head and the
+        response checks of the drivers. Afterwards (`authenticated` is True),
+        only the response checks are used, and only until the guess has a
+        confidence of 80 or more.
         """
         if not data:
             return
@@ -151,7 +170,7 @@ class OsGuesser:
         self.set_from_match('os', self._response_os_map, self._auth_buffer)
         self._auth_buffer = self._auth_buffer[-self._buffer_limit :]
 
-    def check_protocol_info(self, data):
+    def check_protocol_info(self, data: str | None) -> None:
         """
         Callback to search the received protocol information for matching patterns.
         """
@@ -162,9 +181,11 @@ class OsGuesser:
         self.set_from_match('os', self._protocol_os_map, self._protocol_buffer)
         self._protocol_buffer = self._protocol_buffer[-self._buffer_limit :]
 
-    def check_netconf_capabilities(self, capabilities):
+    def check_netconf_capabilities(self, capabilities: str | Iterable[str] | None) -> None:
         """
         Callback to search the received Netconf capabilities for matching patterns.
+
+        :param capabilities: The capabilities, as a list or one per line.
         """
         if not capabilities:
             return

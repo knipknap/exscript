@@ -25,11 +25,19 @@ Shorthands for regular expression matching.
 """
 
 import re
+from typing import Any
 
 from ..protocols import Protocol
 
+# The functions return Any: the shape of a match (None, a string, or a tuple)
+# depends on the number of groups in the regular expression.
 
-def _first_match(string, compiled):
+
+def _first_match(string: str, compiled: re.Pattern[str]) -> Any:
+    """
+    Returns the first match of the compiled regular expression in the
+    given string, shaped as described in first_match().
+    """
     match = compiled.search(string)
     if match is None and compiled.groups <= 1:
         return None
@@ -43,7 +51,7 @@ def _first_match(string, compiled):
         return match.groups()
 
 
-def first_match(string, regex, flags=re.M):
+def first_match(string: str | Protocol, regex: str, flags: int = re.M) -> Any:
     r"""
     Matches the given string against the given regex.
 
@@ -87,7 +95,7 @@ def first_match(string, regex, flags=re.M):
     return _first_match(string, re.compile(regex, flags))
 
 
-def any_match(string, regex, flags=re.M):
+def any_match(string: str | Protocol, regex: str, flags: int = re.M) -> list[Any]:
     r"""
     Matches the given string against the given regex.
 
@@ -135,7 +143,7 @@ def any_match(string, regex, flags=re.M):
     if isinstance(string, Protocol):
         string = string.get_response()
     compiled = re.compile(regex, flags)
-    results = []
+    results: list[Any] = []
     if compiled.groups <= 1:
         for line in string.split('\n'):
             match = _first_match(line, compiled)

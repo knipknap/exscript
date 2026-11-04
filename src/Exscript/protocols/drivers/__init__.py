@@ -20,7 +20,14 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The drivers for the supported operating systems, and the registry of drivers
+that the OS guesser and the driver arguments of the protocols use.
+"""
+
 import inspect
+from collections.abc import Callable
+from typing import TypeGuard, cast
 
 from .ace import ACEDriver as ACEDriver
 from .adtran import AdtranDriver as AdtranDriver
@@ -31,7 +38,7 @@ from .aruba import ArubaDriver as ArubaDriver
 from .bigip import BigIPDriver as BigIPDriver
 from .brocade import BrocadeDriver as BrocadeDriver
 from .cienasaos import CienaSAOSDriver as CienaSAOSDriver
-from .driver import Driver
+from .driver import Driver as Driver
 from .enterasys import EnterasysDriver as EnterasysDriver
 from .enterasys_wc import EnterasysWCDriver as EnterasysWCDriver
 from .eos import EOSDriver as EOSDriver
@@ -63,11 +70,15 @@ drivers: list[Driver] = []
 driver_map: dict[str, Driver] = {}
 
 
-def isdriver(o):
+def isdriver(o: object) -> TypeGuard[type[Driver]]:
+    """
+    Returns whether the given object is a subclass of Driver, other than
+    Driver itself.
+    """
     return inspect.isclass(o) and issubclass(o, Driver) and o is not Driver
 
 
-def add_driver(cls):
+def add_driver(cls: type[Driver]) -> None:
     """
     Registers a driver class, so that the OS guesser and ``driver=`` can use
     it in connections that are created afterwards.
@@ -75,13 +86,14 @@ def add_driver(cls):
     :type  cls: type[Driver]
     :param cls: The driver class; it is instantiated without arguments.
     """
-    driver = cls()
+    # Unlike Driver itself, driver classes take no constructor arguments.
+    driver = cast(Callable[[], Driver], cls)()
     driver_classes.append(cls)
     drivers.append(driver)
     driver_map[driver.name] = driver
 
 
-def disable_driver(name):
+def disable_driver(name: str) -> None:
     """
     Unregisters the driver with the given name. Connections that are created
     afterwards neither guess it nor accept its name.

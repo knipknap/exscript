@@ -34,9 +34,11 @@ import signal
 import sys
 import threading
 import time
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from functools import partial
 from io import StringIO
-from typing import IO
+from types import FrameType, TracebackType
+from typing import IO, TYPE_CHECKING, Any, NoReturn, Self, cast
 
 from ..util.buffer import MonitoredBuffer
 from ..util.cast import to_regexs
@@ -57,6 +59,12 @@ from .exception import (
     TimeoutException,
 )
 from .osguesser import OsGuesser
+
+if TYPE_CHECKING:
+    from _typeshed import FileDescriptorLike
+
+    from ..account import Account, AccountProxy
+    from ..key import PrivateKey
 
 try:
     import termios
@@ -96,7 +104,7 @@ _terminal_escape_re = re.compile(
 )
 
 
-def _strip_escapes(text):
+def _strip_escapes(text: str) -> tuple[str, list[tuple[int, int]]]:
     """
     Removes terminal escape sequences. Returns the remaining text and, for
     each removed sequence, its position in the remaining text and the number
@@ -112,7 +120,7 @@ def _strip_escapes(text):
     return ''.join(parts), cuts
 
 
-def _unstrip(cuts, pos, after):
+def _unstrip(cuts: list[tuple[int, int]], pos: int, after: bool) -> int:
     """
     Maps a position in the text from _strip_escapes() back to the original
     text. Sequences at the position itself are skipped if after is true.
@@ -125,7 +133,7 @@ def _unstrip(cuts, pos, after):
     return pos + removed
 
 
-def _ends_with_anchor(regex):
+def _ends_with_anchor(regex: re.Pattern[str]) -> bool:
     """Whether the regular expression ends with an unescaped $ or \\Z."""
     pattern = regex.pattern.rstrip(')')
     if pattern.endswith('$') and not regex.flags & re.MULTILINE:
@@ -218,27 +226,29 @@ class Protocol:
 
     def __init__(
         self,
-        driver=None,
-        stdout=None,
-        stderr=None,
-        debug=0,
-        connect_rate_limit=60,
-        connect_timeout=30,
-        timeout=30,
-        logfile=None,
-        termtype='dumb',
-        disabled_algorithms=None,  # SSH2 only
-        preferred_authentications=None,  # SSH2 only
-        verify_fingerprint=True,  # SSH2 only
-        account_factory=None,
-        banner_timeout=20,  # SSH2 only
-        encoding='latin-1',
+        driver: Driver | str | None = None,
+        stdout: Any = None,  # any object with write() and flush(), see the stdout property
+        stderr: IO[str] | None = None,
+        debug: int = 0,
+        connect_rate_limit: int = 60,
+        connect_timeout: int = 30,
+        timeout: int = 30,
+        logfile: str | None = None,
+        termtype: str = 'dumb',
+        disabled_algorithms: dict[str, list[str]] | None = None,  # SSH2 only
+        preferred_authentications: list[str] | None = None,  # SSH2 only
+        verify_fingerprint: bool = True,  # SSH2 only
+        account_factory: (
+            Callable[['Account | AccountProxy | None'], 'Account | AccountProxy'] | None
+        ) = None,
+        banner_timeout: float = 20,  # SSH2 only
+        encoding: str = 'latin-1',
         *,
-        host_key_policy='reject',  # SSH2 only
-        known_hosts=None,  # SSH2 only
-        term_width=511,
-        term_height=1000,
-    ):
+        host_key_policy: str = 'reject',  # SSH2 only
+        known_hosts: str | None = None,  # SSH2 only
+        term_width: int = 511,
+        term_height: int = 1000,
+    ) -> None:
         """
         Constructor.
 
@@ -251,9 +261,11 @@ class Protocol:
 
         :type driver: Driver()|str|None
         :keyword driver: The manually picked device driver.
-        :keyword stdout: Where to write the device response. Defaults to
-            an in-memory buffer.
-        :keyword stderr: Where to write debug info. Defaults to stderr.
+        :keyword stdout: Where to write the device response: any object with
+            write() and flush(). Defaults to an in-memory buffer.
+        :keyword stderr: The stream that the stderr property returns;
+            defaults to sys.stderr. The adapter writes nothing to it: its
+            debug output goes to the logging module (see debug).
         :keyword debug: An integer between 0 (no debugging) and 5 (very
             verbose debugging) that specifies the amount of debug output,
             which the loggers under Exscript.protocols log at the DEBUG
@@ -296,9 +308,12 @@ class Protocol:
         :keyword known_hosts: The known_hosts file. Defaults to
             ~/.ssh/known_hosts. Entries for other ports than 22 have the form
             [host]:port, like in OpenSSH.
-        :keyword account_factory: A function that produces a new :class:`Account`.
-        :type banner_timeout: bool
-        :keyword banner_timeout: The time to wait for the banner.
+        :keyword account_factory: A function that returns the account to use,
+            locked already, whenever an account is needed. It gets the account
+            that was passed to login() or to the authentication methods, else
+            the one of the last call, or None.
+        :type banner_timeout: float
+        :keyword banner_timeout: The time to wait for the banner, in seconds.
         :type encoding: str
         :keyword encoding: The encoding of data received from the remote host.
         """
@@ -312,12 +327,12 @@ class Protocol:
         self._os_guesser = OsGuesser()
         self._os_guesser.debug = debug
         self._default_port = _WELL_KNOWN_PORTS.get(self._name)
-        self._manual_user_re = None
-        self._manual_password_re = None
-        self._manual_prompt_re = None
-        self._manual_error_re = None
-        self._manual_login_error_re = None
-        self._manual_driver = None
+        self._manual_user_re: list[re.Pattern[str]] | None = None
+        self._manual_password_re: list[re.Pattern[str]] | None = None
+        self._manual_prompt_re: list[re.Pattern[str]] | None = None
+        self._manual_error_re: list[re.Pattern[str]] | None = None
+        self._manual_login_error_re: list[re.Pattern[str]] | None = None
+        self._manual_driver: Driver | None = None
         self._receives_echo = True  # does the remote shell echo sent commands?
         self._sending_secret = False  # set by _secret() while a password is sent
         self._write_lock = threading.Lock()
@@ -327,19 +342,19 @@ class Protocol:
         self.data_received_event = Event()
         self.data_sent_event = Event()
         self.otp_requested_event = Event()
-        self.host = None
-        self.port = None
+        self.host: str | None = None
+        self.port: int | None = None
         self.account_factory = account_factory
         self.connect_rate_limit = connect_rate_limit
         self.connect_timeout = connect_timeout
         self.debug = debug
         self.encoding = encoding
         self.logfile = logfile
-        self.response = None
+        self.response: str | None = None
         # FIXME: Remove self.send_data in favor of self.data_sent_event!
         #  Right now this "buffer" is only used in interactive sessions but grows
         #  indefinitely, which is a memory leak.
-        self.send_data = None
+        self.send_data: IO[str] | None = None
         self.stdout = stdout
         self.stderr = stderr
         self.termtype = termtype
@@ -369,7 +384,7 @@ class Protocol:
             else:
                 self._dbg(1, 'Invalid driver given. Ignoring.')
 
-    def __copy__(self):
+    def __copy__(self) -> Self:
         """
         Overwritten to return the very same object instead of copying the
         stream, because copying a network connection is impossible.
@@ -379,25 +394,30 @@ class Protocol:
         """
         return self
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: dict[int, Any]) -> Self:
         """
         Overwritten to return the very same object instead of copying the
         stream, because copying a network connection is impossible.
 
-        :type  memo: object
+        :type  memo: dict[int, Any]
         :param memo: Please refer to Python's standard library documentation.
         :rtype:  Protocol
         :return: self
         """
         return self
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """
         Enter the runtime context related to this object.
         """
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         """
         Ensures to close the connection when context is left.
 
@@ -406,7 +426,7 @@ class Protocol:
         """
         self.close(force=exc_type is not None)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         clsname = type(self).__name__
         host = self.host or 'unknown'
         port = self.port or self._default_port
@@ -414,7 +434,7 @@ class Protocol:
         return f'<{clsname}({host}:{port} [{state}]) at {hex(id(self))}>'
 
     @property
-    def connected(self):
+    def connected(self) -> bool:
         """
         Whether the connection to the remote host is currently open (read-only).
 
@@ -424,7 +444,7 @@ class Protocol:
         return self._connected
 
     @property
-    def logfile(self):
+    def logfile(self) -> str | None:
         """
         The path of the current logfile, or None if logging to file is disabled.
         This also maintains any open logfile descriptor internally, especially
@@ -436,7 +456,7 @@ class Protocol:
         return self._logfile
 
     @logfile.setter
-    def logfile(self, value) -> None:
+    def logfile(self, value: str | None) -> None:
         with self._write_lock:
             old_log = getattr(self, '_log', None)
             if old_log:
@@ -446,11 +466,13 @@ class Protocol:
                     pass
             self._logfile = value
             self._log = (
-                open(self._logfile, 'a', encoding='utf-8') if value and self.connected else None
+                open(cast(str, self._logfile), 'a', encoding='utf-8')
+                if value and self.connected
+                else None
             )
 
     @property
-    def os_guesser(self):
+    def os_guesser(self) -> OsGuesser:
         """
         The OS guesser used to auto-detect the remote host's OS/driver (read-only).
 
@@ -463,8 +485,10 @@ class Protocol:
         """
         return self._os_guesser
 
+    # The stream is Any: any object with write() and flush() works, and
+    # Exscript.queue passes one that is not an IO[str].
     @property
-    def stdout(self):
+    def stdout(self) -> Any:
         """
         The stream to which device responses are written. Defaults to an internal
         StringIO buffer which will be cleared when the connection is closed.
@@ -475,17 +499,17 @@ class Protocol:
         return self._stdout
 
     @stdout.setter
-    def stdout(self, value):
+    def stdout(self, value: Any) -> None:
         with self._write_lock:
             if value is None:
-                self._stdout = StringIO()
+                self._stdout: Any = StringIO()
                 self._stdout_owner = True
             else:
                 self._stdout = value
                 self._stdout_owner = False
 
     @property
-    def stderr(self):
+    def stderr(self) -> IO[str]:
         """
         The error stream of the adapter, `sys.stderr` by default. The adapter
         writes nothing to it: its debug output goes to the logging module
@@ -497,31 +521,42 @@ class Protocol:
         return self._stderr
 
     @stderr.setter
-    def stderr(self, value):
+    def stderr(self, value: IO[str] | None) -> None:
         with self._write_lock:
             self._stderr = sys.stderr if value is None else value
 
-    def _dbg(self, level, msg, exc_info=None):
+    def _dbg(self, level: int, msg: str, exc_info: bool | BaseException | None = None) -> None:
+        """
+        Logs the given message, with the name of the driver, if the debug
+        level is at least the given level.
+        """
         if level > self.debug:
             return
         msg = '[%s] %s' % (self.get_driver().name, msg)
         self._logger.debug(msg, exc_info=exc_info)
 
-    def _init(self):
+    def _init(self) -> None:
+        """
+        Sets the state of a new session: the constructor and close() call it.
+        """
         # Init all per-session state settings.
         self._app_authenticated = False
         self._app_authorized = False
         self._proto_authenticated = False
         self._connected = False
-        self._device_context_stack = []
+        self._device_context_stack: list[dict[str, Any]] = []
         self._auto_driver = driver_map[self.guess_os()]
         self._driver_replaced = False
         self._expect_canceled = False
-        self._last_account = None
+        self._last_account: Account | AccountProxy | None = None
         # The buffer position at the last send(); None before the first one.
-        self._sent_at = None
+        self._sent_at: int | None = None
 
-    def _reset(self):
+    def _reset(self) -> None:
+        """
+        Clears the buffer, the OS guess and stdout (if it is the internal
+        buffer), closes the logfile, and sets the state of a new session.
+        """
         # Reset all per-session state settings when close() is called.
         self._buffer.clear()
         self._os_guesser.reset()
@@ -536,7 +571,12 @@ class Protocol:
             self.stdout.seek(0)
         self._init()
 
-    def _receive_cb(self, data):
+    def _receive_cb(self, data: str) -> None:
+        """
+        Handles data that was received from the host: writes it to stdout and
+        to the logfile, updates the OS guess and the driver, and emits
+        data_received_event.
+        """
         with self._write_lock:
             self._write_to_streams(data)
             self._write_to_logs(data)
@@ -548,7 +588,11 @@ class Protocol:
         # Send signals to subscribers.
         self.data_received_event(data)
 
-    def _send_cb(self, data):
+    def _send_cb(self, data: str) -> None:
+        """
+        Handles data that was sent to the host: writes it to stdout and to the
+        logfile if the host does not echo it, and emits data_sent_event.
+        """
         if not self._receives_echo:
             # The sent commands are either logged via the _receive_cb() when
             # they are echoed back, or they are logged here explicitly.
@@ -559,17 +603,23 @@ class Protocol:
         # Send signals to subscribers.
         self.data_sent_event(data)
 
-    def _write_to_logs(self, data):
+    def _write_to_logs(self, data: str) -> None:
+        """
+        Writes the given data to the logfile, if one is open.
+        """
         if self._log is None:
             return
         self._log.write(data)
         self._log.flush()
 
-    def _write_to_streams(self, data):
+    def _write_to_streams(self, data: str) -> None:
+        """
+        Writes the given data to stdout.
+        """
         self.stdout.write(data)
         self.stdout.flush()
 
-    def is_dummy(self):
+    def is_dummy(self) -> bool:
         """
         Returns True if the adapter implements a virtual device, i.e.
         it isn't an actual network connection.
@@ -580,7 +630,12 @@ class Protocol:
         return False
 
     # OPTIMIZE: OsGuesser should take this method as a callback on OS change.
-    def _update_auto_driver(self):
+    def _update_auto_driver(self) -> None:
+        """
+        Sets the automatically chosen driver to the one of the guessed OS. If
+        this changes the driver in use while connected, cancels a running
+        expect() or waitfor(), which then restarts with the new driver.
+        """
         old_driver = self.get_driver()
         self._auto_driver = driver_map[self.guess_os()]
         new_driver = self.get_driver()
@@ -591,7 +646,7 @@ class Protocol:
                 self._driver_replaced = True
                 self.cancel_expect()
 
-    def set_driver(self, driver=None):
+    def set_driver(self, driver: Driver | str | None = None) -> None:
         """
         Defines the driver that is used to recognize prompts and implement
         behavior depending on the remote system. The driver argument may be an
@@ -623,7 +678,7 @@ class Protocol:
                 self._driver_replaced = True
                 self.cancel_expect()
 
-    def get_driver(self):
+    def get_driver(self) -> Driver:
         """
         Returns the currently used driver.
 
@@ -634,7 +689,7 @@ class Protocol:
             return self._manual_driver
         return self._auto_driver
 
-    def get_banner(self):
+    def get_banner(self) -> str | None:
         """
         Returns the banner that was received upon login.
         Only supported on SSH2/Netconf. Returns `None` on all other protocols.
@@ -645,7 +700,7 @@ class Protocol:
         """
         return None
 
-    def get_remote_version(self):
+    def get_remote_version(self) -> str | None:
         """
         Returns the remote version id-string that was received upon login.
         Only supported on SSH2/Netconf. Returns `None` on all other protocols.
@@ -656,7 +711,7 @@ class Protocol:
         """
         return None
 
-    def autoinit(self):
+    def autoinit(self) -> None:
         """
         Make the remote host more script-friendly by automatically executing
         one or more commands on it to prepare the session/environment.
@@ -671,57 +726,68 @@ class Protocol:
         self._dbg(4, 'Calling %s.init_terminal().' % repr(driver))
         driver.init_terminal(self)
 
-    def set_username_prompt(self, regex=None):
+    def set_username_prompt(
+        self, regex: str | re.Pattern[str] | Iterable[str | re.Pattern[str]] | None = None
+    ) -> None:
         """
         Defines a pattern that is used to monitor the response of the
         connected host for a username prompt.
 
-        :type  regex: RegEx
-        :param regex: The pattern that, when matched, causes an error.
+        :type  regex: str|re.RegexObject|list(str|re.RegexObject)|None
+        :param regex: One or more patterns that match the username prompt, or
+            None to use the patterns of the driver.
         """
         if regex is None:
             self._manual_user_re = regex
         else:
             self._manual_user_re = to_regexs(regex)
 
-    def get_username_prompt(self):
+    def get_username_prompt(self) -> list[re.Pattern[str]]:
         """
-        Returns the regular expression that is used to monitor the response
+        Returns the regular expressions that are used to monitor the response
         of the connected host for a username prompt.
 
-        :rtype:  regex
-        :return: A regular expression.
+        :rtype:  list(re.RegexObject)
+        :return: A list of regular expression objects.
         """
         if self._manual_user_re:
             return self._manual_user_re
         return self.get_driver().user_re
 
-    def set_password_prompt(self, regex=None):
+    def set_password_prompt(
+        self, regex: str | re.Pattern[str] | Iterable[str | re.Pattern[str]] | None = None
+    ) -> None:
         """
         Defines a pattern that is used to monitor the response of the
         connected host for a password prompt.
 
-        :type  regex: RegEx
-        :param regex: The pattern that, when matched, causes an error.
+        :type  regex: str|re.RegexObject|list(str|re.RegexObject)|None
+        :param regex: One or more patterns that match the password prompt, or
+            None to use the patterns of the driver.
         """
         if regex is None:
             self._manual_password_re = regex
         else:
             self._manual_password_re = to_regexs(regex)
 
-    def get_password_prompt(self):
+    def get_password_prompt(self) -> list[re.Pattern[str]]:
         """
-        Returns the regular expression that is used to monitor the response
+        Returns the regular expressions that are used to monitor the response
         of the connected host for a password prompt.
 
-        :rtype:  regex
-        :return: A regular expression.
+        :rtype:  list(re.RegexObject)
+        :return: A list of regular expression objects.
         """
         if self._manual_password_re:
             return self._manual_password_re
         return self.get_driver().password_re
 
-    def set_prompt(self, prompt=None, *, extend=False):
+    def set_prompt(
+        self,
+        prompt: str | re.Pattern[str] | Iterable[str | re.Pattern[str]] | None = None,
+        *,
+        extend: bool = False,
+    ) -> None:
         """
         Defines a pattern that is waited for when calling the expect_prompt()
         method. If the set_prompt() method is not called, or if it is called
@@ -730,7 +796,7 @@ class Protocol:
         others. Netconf uses the EOM or EOC markers to emulate prompt matching.
         This should *NOT* be changed as its RFC is strict about this.
 
-        :type  prompt: RegEx
+        :type  prompt: str|re.RegexObject|list(str|re.RegexObject)|None
         :param prompt: The pattern that matches the prompt of the remote host.
         :type  extend: bool
         :param extend: Whether to extend the default pattern instead of setting
@@ -745,7 +811,7 @@ class Protocol:
         else:
             self._manual_prompt_re = to_regexs(prompt)
 
-    def get_prompt(self):
+    def get_prompt(self) -> list[re.Pattern[str]]:
         """
         Returns the regular expressions that is matched against the host
         response when calling the expect_prompt() method.
@@ -757,7 +823,12 @@ class Protocol:
             return self._manual_prompt_re
         return self.get_driver().prompt_re
 
-    def set_error_prompt(self, error=None, *, extend=False):
+    def set_error_prompt(
+        self,
+        error: str | re.Pattern[str] | Iterable[str | re.Pattern[str]] | None = None,
+        *,
+        extend: bool = False,
+    ) -> None:
         """
         Defines a pattern that is used to monitor the response of the connected
         host. If the set_error_prompt() method is not called, or if it is called
@@ -770,7 +841,7 @@ class Protocol:
         are used, but not waitfor()), an InvalidCommandException is raised.
         Netconf raises the RPCError exception (subclass) with structured details.
 
-        :type  error: RegEx
+        :type  error: str|re.RegexObject|list(str|re.RegexObject)|None
         :param error: The pattern that, when matched, causes an error.
         :type  extend: bool
         :param extend: Whether to extend the default pattern instead of setting
@@ -785,25 +856,27 @@ class Protocol:
         else:
             self._manual_error_re = to_regexs(error)
 
-    def get_error_prompt(self):
+    def get_error_prompt(self) -> list[re.Pattern[str]]:
         """
-        Returns the regular expression that is used to monitor the response
+        Returns the regular expressions that are used to monitor the response
         of the connected host for errors.
 
-        :rtype:  regex
-        :return: A regular expression.
+        :rtype:  list(re.RegexObject)
+        :return: A list of regular expression objects.
         """
         if self._manual_error_re:
             return self._manual_error_re
         return self.get_driver().error_re
 
-    def set_login_error_prompt(self, error=None):
+    def set_login_error_prompt(
+        self, error: str | re.Pattern[str] | Iterable[str | re.Pattern[str]] | None = None
+    ) -> None:
         """
         Defines a pattern that is used to monitor the response of the
         connected host during the authentication procedure.
         If the pattern matches a LoginFailure exception is raised.
 
-        :type  error: RegEx
+        :type  error: str|re.RegexObject|list(str|re.RegexObject)|None
         :param error: The pattern that, when matched, causes an error.
         """
         if error is None:
@@ -811,20 +884,20 @@ class Protocol:
         else:
             self._manual_login_error_re = to_regexs(error)
 
-    def get_login_error_prompt(self):
+    def get_login_error_prompt(self) -> list[re.Pattern[str]]:
         """
-        Returns the regular expression that is used to monitor the response
+        Returns the regular expressions that are used to monitor the response
         of the connected host for login errors; this is only used during
         the login procedure, i.e. app_authenticate() or app_authorize().
 
-        :rtype:  regex
-        :return: A regular expression.
+        :rtype:  list(re.RegexObject)
+        :return: A list of regular expression objects.
         """
         if self._manual_login_error_re:
             return self._manual_login_error_re
         return self.get_driver().login_error_re
 
-    def set_connect_timeout(self, timeout):
+    def set_connect_timeout(self, timeout: int) -> None:
         """
         Defines the maximum time that the adapter waits for initial connection.
 
@@ -833,7 +906,7 @@ class Protocol:
         """
         self.connect_timeout = int(timeout)
 
-    def get_connect_timeout(self):
+    def get_connect_timeout(self) -> int:
         """
         Returns the current connect timeout in seconds.
 
@@ -842,7 +915,7 @@ class Protocol:
         """
         return self.connect_timeout
 
-    def set_timeout(self, timeout):
+    def set_timeout(self, timeout: int) -> None:
         """
         Defines how long :meth:`expect()`, :meth:`waitfor()` or
         :meth:`expect_prompt()` wait for data from the remote host before they
@@ -854,7 +927,7 @@ class Protocol:
         """
         self.timeout = int(timeout)
 
-    def get_timeout(self):
+    def get_timeout(self) -> int:
         """
         Returns the current response timeout in seconds.
 
@@ -863,16 +936,17 @@ class Protocol:
         """
         return self.timeout
 
-    def get_host(self):
+    def get_host(self) -> str | None:
         """
         Returns the name or address of the currently connected host.
 
-        :rtype:  string
-        :return: A name or an address (whatever was used initially).
+        :rtype:  str|None
+        :return: A name or an address (whatever was used initially), or None
+            before the first call of connect().
         """
         return self.host
 
-    def get_protocol(self):
+    def get_protocol(self) -> str:
         """
         Returns the name of this protocol.
 
@@ -885,7 +959,13 @@ class Protocol:
         """
         return self._name
 
-    def get_response(self, *, strip_command=True, strip_chars='\x00\x07\x08', strip_ansi=True):
+    def get_response(
+        self,
+        *,
+        strip_command: bool = True,
+        strip_chars: str = '\x00\x07\x08',
+        strip_ansi: bool = True,
+    ) -> str:
         """
         Returns a clean copy of the latest plaintext response.
 
@@ -903,8 +983,12 @@ class Protocol:
 
     @staticmethod
     def cleanup_response(
-        response, *, strip_command=True, strip_chars='\x00\x07\x08', strip_ansi=True
-    ):
+        response: str | None,
+        *,
+        strip_command: bool = True,
+        strip_chars: str = '\x00\x07\x08',
+        strip_ansi: bool = True,
+    ) -> str:
         """
         Returns a clean copy of the given plaintext response.
 
@@ -938,7 +1022,7 @@ class Protocol:
             response = _ansi_escape_re.sub('', response)
         return response
 
-    def guess_os(self):
+    def guess_os(self) -> str:
         """
         Returns an identifier that specifies the operating system that is
         running on the remote host. This OS is obtained by watching the
@@ -952,9 +1036,10 @@ class Protocol:
         :rtype:  string
         :return: A string to help identify the remote operating system.
         """
-        return self._os_guesser.get('os')
+        # The guesser always has an 'os' with a confidence of at least 0.
+        return cast(str, self._os_guesser.get('os'))
 
-    def _enforce_connect_rate_limit(self, rate_limit=0):
+    def _enforce_connect_rate_limit(self, rate_limit: int = 0) -> None:
         """
         Waits until the connect keeps the rate limit: connects to the same
         host, also concurrent ones, are spaced by 60 / rate_limit + 0.1
@@ -964,7 +1049,7 @@ class Protocol:
         :param rate_limit: The connection rate-limit (connects per minute);
             0 uses connect_rate_limit.
         """
-        key = self.host.lower()
+        key = cast(str, self.host).lower()  # connect() checks that the host is set
         interval = 0.0
         precision = 3
 
@@ -988,24 +1073,27 @@ class Protocol:
             self._dbg(2, "Remaining connection delay: %s seconds" % delay)
             time.sleep(delay)
 
-    def _connect(self):
+    def _connect(self) -> bool:
         """
         Should be overwritten. That's the place where the connection should be
         established.
+
+        :return: True if the connection is open.
         """
         raise NotImplementedError()
 
-    def connect(self, hostname=None, port=None):
+    def connect(self, hostname: str | None = None, port: int | None = None) -> bool:
         """
         Opens the connection to the remote host or IP address. Raises a
         ProtocolException if the adapter is already connected or hostname/port
         is missing or invalid (e.g. first connect). The hostname and port may
         be omitted for reconnects to the same device.
 
-        :type  hostname: string
+        :type  hostname: str|None
         :param hostname: The remote host or IP address.
-        :type  port: int
+        :type  port: int|None
         :param port: The remote TCP port number.
+        :return: True if the connection is open.
         """
         if self.connected:
             msg = 'already connected to %s:%s' % (self.host, self.port)
@@ -1031,9 +1119,20 @@ class Protocol:
         self._update_auto_driver()
         return self._connected
 
-    def _get_account(self, account):
+    def _get_account(self, account: 'Account | AccountProxy | _Context | None') -> _Context:
+        """
+        Returns a context for the given account, or for that of the last call
+        if None is given, and keeps the account for the next call; the account
+        factory, if any, provides the account, else it is locked. Leaving the
+        returned context releases the account; a given context gets a new
+        context of the same account.
+
+        :raises TypeError: If there is neither an account nor an account
+            factory.
+        """
         if isinstance(account, Context) or isinstance(account, _Context):
-            return account.context()
+            # A _Context passes the call on to the Context that it wraps.
+            return cast(_Context, account.context())
         if account is None:
             account = self._last_account
         if self.account_factory:
@@ -1045,7 +1144,12 @@ class Protocol:
         self._last_account = account
         return account.context()
 
-    def login(self, account=None, app_account=None, flush=True):
+    def login(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        app_account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+    ) -> None:
         """
         Log into the connected host using the best method available.
         If no account is given, the account of the last call of login() or
@@ -1079,7 +1183,12 @@ class Protocol:
                 self.expect_prompt()
             self.auto_app_authorize(app_account, flush=flush)
 
-    def authenticate(self, account=None, app_account=None, flush=True):
+    def authenticate(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        app_account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+    ) -> None:
         """
         Like login(), but skips the authorization procedure.
 
@@ -1101,19 +1210,21 @@ class Protocol:
                 self.protocol_authenticate(account)
             self.app_authenticate(app_account, flush=flush)
 
-    def _protocol_authenticate(self, user, password):
+    def _protocol_authenticate(self, user: str, password: str | None) -> None:
         """
         Should be overwritten if protocol authentication is supported.
         """
         pass
 
-    def _protocol_authenticate_by_key(self, user, key):
+    def _protocol_authenticate_by_key(self, user: str, key: 'PrivateKey') -> None:
         """
         Should be overwritten if protocol authentication is supported.
         """
         pass
 
-    def protocol_authenticate(self, account=None):
+    def protocol_authenticate(
+        self, account: 'Account | AccountProxy | _Context | None' = None
+    ) -> None:
         """
         Low-level API to perform protocol-level authentication on protocols
         that support it.
@@ -1138,7 +1249,7 @@ class Protocol:
         self._proto_authenticated = True
         self._dbg(2, "Finished to protocol-authenticate %s." % user)
 
-    def is_protocol_authenticated(self):
+    def is_protocol_authenticated(self) -> bool:
         """
         Returns True if the protocol-level authentication procedure was
         completed, False otherwise.
@@ -1148,13 +1259,27 @@ class Protocol:
         """
         return self._proto_authenticated
 
-    def _app_authenticate(self, account, password, flush=True, bailout=False):
+    def _app_authenticate(
+        self,
+        account: _Context,
+        password: str,
+        flush: bool = True,
+        bailout: bool = False,
+    ) -> None:
         """
         Generic implementation for app-level authentications or authorizations.
 
         A login error counts only if the host sent it after the last call of
         send(), e.g. after the password: banners and the message of the day
         may contain words like "denied" or "failed".
+
+        :param account: The context of the account whose name is sent at a
+            username prompt.
+        :param password: The password that is sent at a password prompt, or
+            from which the response to an S/Key challenge is computed.
+        :param flush: Whether to consume the CLI prompt from the buffer.
+        :param bailout: Whether to return after sending the password, without
+            waiting for a CLI prompt.
         """
         user = account.get_name()
 
@@ -1239,7 +1364,12 @@ class Protocol:
             else:
                 assert False  # No such section
 
-    def app_authenticate(self, account=None, flush=True, bailout=False):
+    def app_authenticate(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+        bailout: bool = False,
+    ) -> None:
         """
         Attempt to perform application-level authentication. Application
         level authentication is needed on devices where the username and
@@ -1272,7 +1402,8 @@ class Protocol:
         :type  flush: bool
         :param flush: Whether to flush the last prompt from the buffer.
         :type  bailout: bool
-        :param bailout: Whether to wait for a prompt after sending the password.
+        :param bailout: Whether to return right after sending the password,
+            without waiting for a prompt.
         """
         with self._get_account(account) as account:
             user = account.get_name()
@@ -1282,7 +1413,7 @@ class Protocol:
         self._app_authenticated = True
         self._dbg(2, "Finished to app-authenticate %s." % user)
 
-    def is_app_authenticated(self):
+    def is_app_authenticated(self) -> bool:
         """
         Returns True if the application-level authentication procedure was
         completed, False otherwise.
@@ -1292,7 +1423,12 @@ class Protocol:
         """
         return self._app_authenticated
 
-    def app_authorize(self, account=None, flush=True, bailout=False):
+    def app_authorize(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+        bailout: bool = False,
+    ) -> None:
         """
         Like app_authenticate(), but uses the authorization password
         of the account.
@@ -1311,7 +1447,8 @@ class Protocol:
         :type  flush: bool
         :param flush: Whether to flush the last prompt from the buffer.
         :type  bailout: bool
-        :param bailout: Whether to wait for a prompt after sending the password.
+        :param bailout: Whether to return right after sending the password,
+            without waiting for a prompt.
         """
         with self._get_account(account) as account:
             user = account.get_name()
@@ -1323,7 +1460,12 @@ class Protocol:
         self._app_authorized = True
         self._dbg(2, "Finished to app-authorize %s." % user)
 
-    def auto_app_authorize(self, account=None, flush=True, bailout=False):
+    def auto_app_authorize(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+        bailout: bool = False,
+    ) -> None:
         """
         Like app_authorize(), but instead of just waiting for a user or
         password prompt, it automatically initiates the authorization
@@ -1343,14 +1485,15 @@ class Protocol:
         :type  flush: bool
         :param flush: Whether to flush the last prompt from the buffer.
         :type  bailout: bool
-        :param bailout: Whether to wait for a prompt after sending the password.
+        :param bailout: Whether to return right after sending the password,
+            without waiting for a prompt.
         """
         with self._get_account(account) as account:
             driver = self.get_driver()
             self._dbg(4, 'Calling %s.auto_authorize().' % repr(driver))
             driver.auto_authorize(self, account, flush, bailout)
 
-    def is_app_authorized(self):
+    def is_app_authorized(self) -> bool:
         """
         Returns True if the application-level authorization procedure was
         completed, False otherwise.
@@ -1360,14 +1503,14 @@ class Protocol:
         """
         return self._app_authorized
 
-    def _send(self, data):
+    def _send(self, data: str) -> None:
         """
         Should be overwritten. That's the place where the data is sent to the
         remote host without waiting for response.
         """
         raise NotImplementedError()
 
-    def send(self, data):
+    def send(self, data: str) -> None:
         """
         Sends the given data to the remote host. Returns without waiting for a
         response while the response (self.response) attribute is cleared. Please
@@ -1397,7 +1540,7 @@ class Protocol:
         self._send(data)
 
     @contextlib.contextmanager
-    def _secret(self):
+    def _secret(self) -> Iterator[None]:
         """Marks the data sent within this context as secret, so it is not logged."""
         self._sending_secret = True
         try:
@@ -1405,7 +1548,7 @@ class Protocol:
         finally:
             self._sending_secret = False
 
-    def execute(self, command, consume=True):
+    def execute(self, command: str, consume: bool = True) -> tuple[int, re.Match[str]]:
         """
         Sends the given command to the remote host (with a CR appended) and
         waits for a prompt in the response. Netconf expects the RPC body as
@@ -1437,7 +1580,7 @@ class Protocol:
         self.send(command + '\r')
         return self.expect_prompt(consume)
 
-    def _domatch(self, prompt, flush):
+    def _domatch(self, prompt: list[re.Pattern[str]], flush: bool) -> tuple[int, re.Match[str]]:
         """
         Waits until one of the given regular expressions matches the received
         data, and sets self.response to the data before the match. A match of
@@ -1478,7 +1621,9 @@ class Protocol:
         self._dbg(4, 'Response (flush=%s): %s' % (repr(flush), repr(self.response)))
         return n, match
 
-    def _search(self, prompt, searched):
+    def _search(
+        self, prompt: list[re.Pattern[str]], searched: int
+    ) -> tuple[int, re.Match[str] | None, int, int]:
         """
         Searches the buffer for the first of the given regular expressions
         that matches. A regular expression that ends with $ or \\Z is searched
@@ -1524,7 +1669,7 @@ class Protocol:
                     return n, match, start, tail_offset + _unstrip(cuts, match.end(), after=True)
         return -1, None, 0, 0
 
-    def _fill_buffer(self, timeout):
+    def _fill_buffer(self, timeout: float | None) -> bool | None:
         """
         Should be overwritten. Waits for data from the remote host, and passes
         the received text to _receive_cb() and to the buffer.
@@ -1538,14 +1683,22 @@ class Protocol:
         """
         raise NotImplementedError()
 
-    def _waitfor(self, prompt):
+    def _waitfor(
+        self, prompt: str | re.Pattern[str] | Iterable[str | re.Pattern[str]]
+    ) -> tuple[int, re.Match[str]]:
+        """
+        Like waitfor(), but does not retry if the driver is replaced while
+        waiting.
+        """
         prompt = to_regexs(prompt)
         self._dbg(2, "Waiting for a prompt (non-consuming).")
         self._dbg(3, "Matching prompt pattern: " + repr([p.pattern for p in prompt]))
         result = self._domatch(prompt, flush=False)
         return result
 
-    def waitfor(self, prompt):
+    def waitfor(
+        self, prompt: str | re.Pattern[str] | Iterable[str | re.Pattern[str]]
+    ) -> tuple[int, re.Match[str]]:
         """
         Monitors the data received from the remote host and waits until
         the response matches the given prompt. Once a match has been found,
@@ -1587,14 +1740,22 @@ class Protocol:
                 continue  # retry
             return result
 
-    def _expect(self, prompt):
+    def _expect(
+        self, prompt: str | re.Pattern[str] | Iterable[str | re.Pattern[str]]
+    ) -> tuple[int, re.Match[str]]:
+        """
+        Like expect(), but neither retries if the driver is replaced while
+        waiting nor checks the response for errors.
+        """
         prompt = to_regexs(prompt)
         self._dbg(2, "Expecting a prompt (consuming).")
         self._dbg(3, "Matching prompt pattern: " + repr([p.pattern for p in prompt]))
         result = self._domatch(prompt, flush=True)
         return result
 
-    def expect(self, prompt):
+    def expect(
+        self, prompt: str | re.Pattern[str] | Iterable[str | re.Pattern[str]]
+    ) -> tuple[int, re.Match[str]]:
         """
         Like waitfor(), but also removes the response and the matched string
         from the buffer containing the incoming data. In other words, the
@@ -1626,7 +1787,7 @@ class Protocol:
             self._check_response_for_errors()
             return result
 
-    def expect_prompt(self, consume=True):
+    def expect_prompt(self, consume: bool = True) -> tuple[int, re.Match[str]]:
         """
         Monitors the data received from the remote host and waits for a prompt
         in the response.
@@ -1657,7 +1818,11 @@ class Protocol:
             result = self.waitfor(self.get_prompt())
         return result
 
-    def _check_response_for_errors(self):
+    def _check_response_for_errors(self) -> None:
+        """
+        Raises an error if a line of the response matches one of the error
+        patterns; see _raise_on_response_with_errors().
+        """
         error_prompts = self.get_error_prompt()
         if not error_prompts:
             return
@@ -1670,7 +1835,12 @@ class Protocol:
                 self._dbg(3, "Error prompt %s matches line %s: %s" % args)
                 self._raise_on_response_with_errors(line)
 
-    def add_monitor(self, pattern, callback, limit=80):
+    def add_monitor(
+        self,
+        pattern: str | re.Pattern[str] | Iterable[str | re.Pattern[str]],
+        callback: Callable[[Self, int, re.Match[str]], object],
+        limit: int = 80,
+    ) -> None:
         """
         Calls the given function whenever the given pattern matches the
         incoming data.
@@ -1694,7 +1864,7 @@ class Protocol:
         """
         self._buffer.add_monitor(pattern, partial(callback, self), limit)
 
-    def cancel_expect(self):
+    def cancel_expect(self) -> None:
         """
         Cancel the current call to :meth:`expect()` or :meth:`waitfor()` as
         soon as control returns to the protocol adapter. This method may be
@@ -1704,21 +1874,29 @@ class Protocol:
         self._dbg(4, "Cancelling any expect() or waitfor() calls.")
         self._expect_canceled = True
 
-    def _raise_on_canceled_expect(self):
+    def _raise_on_canceled_expect(self) -> NoReturn:
+        """
+        Clears the request to cancel, and raises DriverReplacedException if
+        the driver was replaced, or else ExpectCancelledException.
+        """
         self._expect_canceled = False
         if self._driver_replaced:
             self._driver_replaced = False
             raise DriverReplacedException()
         raise ExpectCancelledException()
 
-    def _raise_on_response_with_errors(self, line):
+    def _raise_on_response_with_errors(self, line: str) -> None:
+        """
+        Raises InvalidCommandException with the given line of the response,
+        which matched an error pattern, cut to 200 characters.
+        """
         # Only the error line: the full response (self.response) may contain secrets.
         line = line.strip()
         if len(line) > 200:
             line = line[:200] + '...'
         raise InvalidCommandException('Error in the response from the device: ' + line)
 
-    def _raise_on_login_error(self):
+    def _raise_on_login_error(self) -> None:
         """
         Raises LoginFailure if one of the login error patterns matches the
         data that the host sent after the last call of send().
@@ -1731,21 +1909,36 @@ class Protocol:
             if regex.search(text):
                 raise LoginFailure('Login failed')
 
-    def _raise_on_response_timeout(self):
+    def _raise_on_response_timeout(self) -> NoReturn:
+        """
+        Raises TimeoutException with the last 200 characters of the buffer.
+        """
         buffer = str(self._buffer)[-200:]
         if buffer:
             buffer = '...' + buffer
         msg = 'Timeout while waiting for a response/prompt. Buffer: %s'
         raise TimeoutException(msg % repr(buffer))
 
-    def _raise_on_response_eof(self):
+    def _raise_on_response_eof(self) -> NoReturn:
+        """
+        Raises ConnectionClosedException with the last 200 characters of the
+        buffer.
+        """
         buffer = str(self._buffer)[-200:]
         if buffer:
             buffer = '...' + buffer
         msg = 'EOF while waiting for a response/prompt. Buffer: %s'
         raise ConnectionClosedException(msg % repr(buffer))
 
-    def _call_key_handlers(self, key_handlers, data):
+    def _call_key_handlers(
+        self, key_handlers: Mapping[str, Callable[[Self], object]] | None, data: str
+    ) -> bool:
+        """
+        Calls the key handler for the given typed character, if there is one,
+        with this connection.
+
+        :return: Whether a key handler was called.
+        """
         if key_handlers is not None:
             for key, func in list(key_handlers.items()):
                 if data == key:
@@ -1753,14 +1946,26 @@ class Protocol:
                     return True
         return False
 
-    def _set_terminal_size(self, rows, cols):
+    def _set_terminal_size(self, rows: int, cols: int) -> None:
         """
         Should be overwritten. That's the place where the terminal size is set
         in the interactive shell.
         """
         raise NotImplementedError()
 
-    def _open_posix_shell(self, channel, key_handlers, handle_window_size):
+    def _open_posix_shell(
+        self,
+        channel: 'FileDescriptorLike',
+        key_handlers: Mapping[str, Callable[[Self], object]] | None,
+        handle_window_size: bool,
+    ) -> None:
+        """
+        Runs the interactive session on a POSIX terminal: switches the
+        terminal to raw mode, passes the typed characters to the key handlers
+        or sends them, and receives data from the channel, until the host
+        closes the connection or the input ends. Restores the terminal
+        settings afterwards.
+        """
         # Typed characters may take several bytes.
         decoder = codecs.getincrementaldecoder(sys.stdin.encoding or 'utf-8')(errors='replace')
         # We need to make sure to use an unbuffered stdin, else multi-byte
@@ -1771,7 +1976,7 @@ class Protocol:
             # Update the terminal size whenever the size changes.
             if handle_window_size:
 
-                def handle_sigwinch(signum, frame):
+                def handle_sigwinch(signum: int | None, frame: FrameType | None) -> None:
                     rows, cols = get_terminal_size()
                     self._dbg(2, "Trying to update terminal size: %dx%d" % (rows, cols))
                     self._set_terminal_size(rows, cols)
@@ -1815,8 +2020,19 @@ class Protocol:
                 if handle_window_size:
                     signal.signal(signal.SIGWINCH, old_handler or signal.SIG_DFL)
 
-    def _open_windows_shell(self, channel, key_handlers, handle_window_size):
-        def receive():
+    def _open_windows_shell(
+        self,
+        channel: 'FileDescriptorLike',
+        key_handlers: Mapping[str, Callable[[Self], object]] | None,
+        handle_window_size: bool,
+    ) -> None:
+        """
+        Runs the interactive session on Windows: receives data in a thread,
+        and passes the typed characters to the key handlers or sends them,
+        until the input ends. The channel and handle_window_size are not used.
+        """
+
+        def receive() -> None:
             # NOTE: Windows stdin is always cooked, remote may send double-echos.
             #  With remote PTY/Shell connections we might see our echos from
             #  our cooked stdin and also from the remote channel. Needs to be
@@ -1844,20 +2060,38 @@ class Protocol:
         except EOFError:
             self._dbg(1, 'User hit ^Z or F6')
 
-    def _open_shell(self, channel, key_handlers, handle_window_size):
+    def _open_shell(
+        self,
+        channel: 'FileDescriptorLike',
+        key_handlers: Mapping[str, Callable[[Self], object]] | None,
+        handle_window_size: bool,
+    ) -> None:
+        """
+        Runs the interactive session on the local terminal, with
+        _open_posix_shell() if termios is available, else with
+        _open_windows_shell().
+        """
         if _have_termios:
             return self._open_posix_shell(channel, key_handlers, handle_window_size)
         else:
             return self._open_windows_shell(channel, key_handlers, handle_window_size)
 
-    def _interact(self, key_handlers=None, handle_window_size=True):
+    def _interact(
+        self,
+        key_handlers: Mapping[str, Callable[[Self], object]] | None = None,
+        handle_window_size: bool = True,
+    ) -> None:
         """
         Should be overwritten. That's the place where the interactive shell is
         opened.
         """
         raise NotImplementedError()
 
-    def interact(self, key_handlers=None, handle_window_size=True):
+    def interact(
+        self,
+        key_handlers: Mapping[str, Callable[[Self], object]] | None = None,
+        handle_window_size: bool = True,
+    ) -> None:
         """
         Opens a simple interactive shell. Returns when the remote host sends EOF.
 
@@ -1873,7 +2107,8 @@ class Protocol:
            handle_window_size is not supported on Windows platforms.
 
         :type  key_handlers: dict(str: callable)
-        :param key_handlers: A dictionary mapping chars to a functions.
+        :param key_handlers: A dictionary mapping chars to functions, which
+            are called with this connection instead of sending the char.
         :type  handle_window_size: bool
         :param handle_window_size: Whether the connected host is notified
             when the terminal size changes.
@@ -1881,7 +2116,7 @@ class Protocol:
         self._dbg(1, "Switching to interactive session.")
         self._interact(key_handlers=key_handlers, handle_window_size=handle_window_size)
 
-    def _capture_device_context(self):
+    def _capture_device_context(self) -> dict[str, Any]:
         """Captures all context-specific state into a plain dict snapshot."""
         return {
             # Authentication
@@ -1904,7 +2139,7 @@ class Protocol:
             'manual_login_error_re': self._manual_login_error_re,
         }
 
-    def switch_device_context(self, *, reset_auth=True):
+    def switch_device_context(self, *, reset_auth: bool = True) -> None:
         """
         Saves the current OS guesser, driver, and prompt state onto an internal
         stack and resets them for a new device context. Calling the method
@@ -1964,7 +2199,7 @@ class Protocol:
         self._manual_password_re = None
         self._manual_login_error_re = None
 
-    def _restore_device_context(self, snapshot):
+    def _restore_device_context(self, snapshot: dict[str, Any]) -> None:
         """Restores all context-specific state from a snapshot dict."""
         # Authentication
         self._app_authenticated = snapshot['app_authenticated']
@@ -1986,7 +2221,7 @@ class Protocol:
         self._manual_password_re = snapshot['manual_password_re']
         self._manual_login_error_re = snapshot['manual_login_error_re']
 
-    def restore_device_context(self):
+    def restore_device_context(self) -> None:
         """
         Pops and fully restores the most recently saved device context from the
         internal stack, including the OS guesser state, the driver, all prompt
@@ -1999,7 +2234,7 @@ class Protocol:
             raise ProtocolException('No saved device context to restore.')
         self._restore_device_context(self._device_context_stack.pop())
 
-    def _logout(self):
+    def _logout(self) -> None:
         """
         Logout from the remote host using the driver-specific command.
         """
@@ -2010,14 +2245,14 @@ class Protocol:
         except Exception:
             pass
 
-    def _close(self, force=False):
+    def _close(self, force: bool = False) -> None:
         """
         Should be overwritten. That's the place where the connection should be
         closed and protocol-specific references/resources cleared.
         """
         raise NotImplementedError()
 
-    def close(self, force=False):
+    def close(self, force: bool = False) -> None:
         """
         Closes the connection with the remote host. The instance may be
         reconnected afterwards by calling connect() again.
