@@ -26,10 +26,22 @@ Manages user accounts.
 
 import multiprocessing
 from collections import defaultdict, deque
+from collections.abc import Callable, Hashable, Iterable
+from types import TracebackType
+from typing import TYPE_CHECKING, Self, cast
 
+from .key import PrivateKey
+from .logger import Log
 from .util.cast import to_list
 from .util.event import Event
 from .util.impl import Context
+
+if TYPE_CHECKING:
+    # _ConnectionBase is the common base class of the pipe connections on
+    # POSIX (Connection) and on Windows (PipeConnection).
+    from multiprocessing.connection import _ConnectionBase
+
+    from .host import Host
 
 
 class Account:
@@ -37,7 +49,14 @@ class Account:
     This class represents a user account.
     """
 
-    def __init__(self, name, password='', password2=None, key=None, needs_lock=True):
+    def __init__(
+        self,
+        name: str,
+        password: str | None = '',
+        password2: str | None = None,
+        key: PrivateKey | None = None,
+        needs_lock: bool = True,
+    ) -> None:
         """
         Constructor.
 
@@ -62,8 +81,8 @@ class Account:
 
         :type  name: str
         :param name: A username.
-        :type  password: str
-        :param password: The authentication password.
+        :type  password: str|None
+        :param password: The authentication password, or None if it is unknown.
         :type  password2: str
         :param password2: The authorization password, if required.
         :type  key: Exscript.PrivateKey
@@ -82,25 +101,30 @@ class Account:
         self.lock = multiprocessing.Lock()
         self.needs_lock = needs_lock
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{type(self).__name__}({self.name!r})'  # never the passwords
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         if self.needs_lock:
             self.acquire()
         return self
 
-    def __exit__(self, thetype, value, traceback):
+    def __exit__(
+        self,
+        thetype: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         if self.needs_lock:
             self.release()
 
-    def context(self):
+    def context(self) -> Context:
         """
         When you need a 'with' context for an already-acquired account.
         """
         return Context(self)
 
-    def acquire(self, signal=True):
+    def acquire(self, signal: bool = True) -> None:
         """
         Locks the account.
         Method has no effect if the constructor argument `needs_lock`
@@ -118,7 +142,7 @@ class Account:
                 self.acquired_event(self)
             self.synclock.notify_all()
 
-    def release(self, signal=True):
+    def release(self, signal: bool = True) -> None:
         """
         Unlocks the account.
         Method has no effect if the constructor argument `needs_lock`
@@ -135,7 +159,7 @@ class Account:
                 self.released_event(self)
             self.synclock.notify_all()
 
-    def set_name(self, name):
+    def set_name(self, name: str) -> None:
         """
         Changes the name of the account.
 
@@ -145,7 +169,7 @@ class Account:
         self.name = name
         self.changed_event.emit(self)
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         Returns the name of the account.
 
@@ -154,45 +178,47 @@ class Account:
         """
         return self.name
 
-    def set_password(self, password):
+    def set_password(self, password: str | None) -> None:
         """
         Changes the password of the account.
 
-        :type  password: string
-        :param password: The account password.
+        :type  password: string|None
+        :param password: The account password, or None if it is unknown.
         """
         self.password = password
         self.changed_event.emit(self)
 
-    def get_password(self):
+    def get_password(self) -> str | None:
         """
         Returns the password of the account.
 
-        :rtype:  string
-        :return: The account password.
+        :rtype:  string|None
+        :return: The account password, or None if it is unknown.
         """
         return self.password
 
-    def set_authorization_password(self, password):
+    def set_authorization_password(self, password: str | None) -> None:
         """
         Changes the authorization password of the account.
 
-        :type  password: string
-        :param password: The new authorization password.
+        :type  password: string|None
+        :param password: The new authorization password, or None to use the
+            authentication password.
         """
         self.authorization_password = password
         self.changed_event.emit(self)
 
-    def get_authorization_password(self):
+    def get_authorization_password(self) -> str | None:
         """
-        Returns the authorization password of the account.
+        Returns the authorization password of the account, or the
+        authentication password if no authorization password is set.
 
-        :rtype:  string
+        :rtype:  string|None
         :return: The account password.
         """
         return self.authorization_password or self.password
 
-    def get_key(self):
+    def get_key(self) -> PrivateKey | None:
         """
         Returns the key of the account, if any.
 
@@ -208,7 +234,7 @@ class AccountProxy:
     process.
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: '_ConnectionBase') -> None:
         """
         Constructor.
 
@@ -216,19 +242,20 @@ class AccountProxy:
         :param parent: A pipe to the associated account manager.
         """
         self.parent = parent
-        self.account_hash = None
-        self.host = None
-        self.user = None
-        self.password = None
-        self.authorization_password = None
-        self.key = None
+        self.account_hash: int | None = None
+        self.host: Host | None = None
+        self.user: str | None = None
+        self.password: str | None = None
+        self.authorization_password: str | None = None
+        self.key: PrivateKey | None = None
 
     @staticmethod
-    def for_host(parent, host):
+    def for_host(parent: '_ConnectionBase', host: 'Host') -> 'AccountProxy | None':
         """
         Returns a new AccountProxy that has an account acquired. The
         account is chosen based on what the connected AccountManager
-        selects for the given host.
+        selects for the given host. Returns None if the account manager
+        returns no account.
         """
         account = AccountProxy(parent)
         account.host = host
@@ -237,11 +264,11 @@ class AccountProxy:
         return None
 
     @staticmethod
-    def for_account_hash(parent, account_hash):
+    def for_account_hash(parent: '_ConnectionBase', account_hash: int) -> 'AccountProxy | None':
         """
         Returns a new AccountProxy that acquires the account with the
         given hash, if such an account is known to the account manager.
-        It is an error if the account manager does not have such an
+        Returns None if the account manager does not have such an
         account.
         """
         account = AccountProxy(parent)
@@ -251,41 +278,51 @@ class AccountProxy:
         return None
 
     @staticmethod
-    def for_random_account(parent):
+    def for_random_account(parent: '_ConnectionBase') -> 'AccountProxy | None':
         """
         Returns a new AccountProxy that has an account acquired. The
-        account is chosen by the connected AccountManager.
+        account is chosen by the connected AccountManager. Returns None
+        if the account manager returns no account.
         """
         account = AccountProxy(parent)
         if account.acquire():
             return account
         return None
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """
-        Returns the hash of the currently acquired account.
+        Returns the hash of the currently acquired account. Until an
+        account was acquired, the hash is None, and hash() raises a
+        TypeError.
         """
-        return self.account_hash
+        # account_hash is None until an account is acquired; the cast keeps
+        # the int return type that hash() requires.
+        return cast(int, self.account_hash)
 
-    def __enter__(self):
+    def __enter__(self) -> bool:
         """
         Like :class:`acquire()`.
         """
         return self.acquire()
 
-    def __exit__(self, thetype, value, traceback):
+    def __exit__(
+        self,
+        thetype: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         """
         Like :class:`release()`.
         """
         return self.release()
 
-    def context(self):
+    def context(self) -> Context:
         """
         When you need a 'with' context for an already-acquired account.
         """
         return Context(self)
 
-    def acquire(self):
+    def acquire(self) -> bool:
         """
         Locks the account. Returns True on success, False if the account
         is thread-local and must not be locked.
@@ -308,7 +345,7 @@ class AccountProxy:
         )
         return True
 
-    def release(self):
+    def release(self) -> None:
         """
         Unlocks the account.
         """
@@ -321,34 +358,35 @@ class AccountProxy:
         if response != 'ok':
             raise ValueError('unexpected response: ' + repr(response))
 
-    def get_name(self):
+    def get_name(self) -> str | None:
         """
         Returns the name of the account.
 
-        :rtype:  string
-        :return: The account name.
+        :rtype:  string|None
+        :return: The account name, or None if no account was acquired.
         """
         return self.user
 
-    def get_password(self):
+    def get_password(self) -> str | None:
         """
         Returns the password of the account.
 
-        :rtype:  string
-        :return: The account password.
+        :rtype:  string|None
+        :return: The account password, or None if it is unknown.
         """
         return self.password
 
-    def get_authorization_password(self):
+    def get_authorization_password(self) -> str | None:
         """
-        Returns the authorization password of the account.
+        Returns the authorization password of the account, or the
+        authentication password if no authorization password is set.
 
-        :rtype:  string
+        :rtype:  string|None
         :return: The account password.
         """
         return self.authorization_password or self.password
 
-    def get_key(self):
+    def get_key(self) -> PrivateKey | None:
         """
         Returns the key of the account, if any.
 
@@ -364,30 +402,53 @@ class LoggerProxy:
     process.
     """
 
-    def __init__(self, parent, logger_id):
+    def __init__(self, parent: '_ConnectionBase', logger_id: int) -> None:
         """
         Constructor.
 
         :type  parent: multiprocessing.Connection
         :param parent: A pipe to the associated pipe handler.
+        :param logger_id: The id() of the Logger in the other process.
         """
         self.parent = parent
         self.logger_id = logger_id
 
-    def add_log(self, job_id, name, attempt):
+    def add_log(self, job_id: int, name: str, attempt: int) -> Log | None:
+        """
+        Asks the logger in the other process to create a log for a new
+        attempt of the given job.
+
+        :return: A copy of the new log, or None if the logger no longer
+            exists.
+        """
         self.parent.send(('log-add', (self.logger_id, job_id, name, attempt)))
         response = self.parent.recv()
         if isinstance(response, Exception):
             raise response
-        return response
+        # The pipe returns unpickled objects without a static type.
+        return cast(Log | None, response)
 
-    def log(self, job_id, message):
+    def log(self, job_id: int, message: str) -> None:
+        """
+        Sends the message to the log of the given job in the other process.
+        """
         self.parent.send(('log-message', (self.logger_id, job_id, message)))
 
-    def log_aborted(self, job_id, exc_info):
+    def log_aborted(
+        self, job_id: int, exc_info: tuple[type[BaseException], BaseException, str]
+    ) -> None:
+        """
+        Tells the logger in the other process that the given job failed.
+
+        :param exc_info: The exception, as returned by
+            :func:`Exscript.util.impl.serializeable_sys_exc_info()`.
+        """
         self.parent.send(('log-aborted', (self.logger_id, job_id, exc_info)))
 
-    def log_succeeded(self, job_id):
+    def log_succeeded(self, job_id: int) -> None:
+        """
+        Tells the logger in the other process that the given job succeeded.
+        """
         self.parent.send(('log-succeeded', (self.logger_id, job_id)))
 
 
@@ -396,22 +457,26 @@ class AccountPool:
     This class manages a collection of available accounts.
     """
 
-    def __init__(self, accounts=None):
+    def __init__(self, accounts: Account | Iterable[Account] | None = None) -> None:
         """
         Constructor.
 
         :type  accounts: Account|list[Account]
         :param accounts: Passed to add_account()
         """
-        self.accounts = set()
-        self.unlocked_accounts = deque()
-        self.owner2account = defaultdict(list)
-        self.account2owner = dict()
+        self.accounts: set[Account] = set()
+        self.unlocked_accounts: deque[Account] = deque()
+        self.owner2account: defaultdict[Hashable, list[Account]] = defaultdict(list)
+        self.account2owner: dict[Account, Hashable] = dict()
         self.unlock_cond = multiprocessing.Condition(multiprocessing.RLock())
         if accounts:
             self.add_account(accounts)
 
-    def _on_account_acquired(self, account):
+    def _on_account_acquired(self, account: Account) -> Account:
+        """
+        Called when the given account was acquired outside of the pool;
+        marks it as locked.
+        """
         with self.unlock_cond:
             if account not in self.accounts:
                 msg = 'attempt to acquire unknown account %s' % account
@@ -422,7 +487,11 @@ class AccountPool:
             self.unlock_cond.notify_all()
         return account
 
-    def _on_account_released(self, account):
+    def _on_account_released(self, account: Account) -> Account:
+        """
+        Called when the given account was released; marks it as unlocked
+        and forgets its owner.
+        """
         with self.unlock_cond:
             if account not in self.accounts:
                 msg = 'attempt to acquire unknown account %s' % account
@@ -437,7 +506,7 @@ class AccountPool:
             self.unlock_cond.notify_all()
         return account
 
-    def get_account_from_hash(self, account_hash):
+    def get_account_from_hash(self, account_hash: int) -> Account | None:
         """
         Returns the account with the given hash, or None if no such
         account is included in the account pool.
@@ -447,7 +516,7 @@ class AccountPool:
                 return account
         return None
 
-    def has_account(self, account):
+    def has_account(self, account: Account) -> bool:
         """
         Returns True if the given account exists in the pool, returns False
         otherwise.
@@ -457,7 +526,7 @@ class AccountPool:
         """
         return account in self.accounts
 
-    def add_account(self, accounts):
+    def add_account(self, accounts: Account | Iterable[Account]) -> None:
         """
         Adds one or more account instances to the pool.
 
@@ -472,8 +541,11 @@ class AccountPool:
                 self.unlocked_accounts.append(account)
             self.unlock_cond.notify_all()
 
-    def _remove_account(self, accounts):
+    def _remove_account(self, accounts: Account | Iterable[Account]) -> None:
         """
+        Removes one or more unlocked accounts from the pool and stops
+        listening to their events.
+
         :type  accounts: Account|list[Account]
         :param accounts: The accounts to be removed.
         """
@@ -488,7 +560,7 @@ class AccountPool:
             self.accounts.remove(account)
             self.unlocked_accounts.remove(account)
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Removes all accounts.
         """
@@ -498,9 +570,10 @@ class AccountPool:
             self._remove_account(self.accounts.copy())
             self.unlock_cond.notify_all()
 
-    def get_account_from_name(self, name):
+    def get_account_from_name(self, name: str) -> Account | None:
         """
-        Returns the account with the given name.
+        Returns the account with the given name, or None if no such
+        account is included in the account pool.
 
         :type  name: string
         :param name: The name of the account.
@@ -510,13 +583,15 @@ class AccountPool:
                 return account
         return None
 
-    def n_accounts(self):
+    def n_accounts(self) -> int:
         """
         Returns the number of accounts that are currently in the pool.
         """
         return len(self.accounts)
 
-    def acquire_account(self, account=None, owner=None):
+    def acquire_account(
+        self, account: Account | None = None, owner: Hashable | None = None
+    ) -> Account:
         """
         Waits until an account becomes available, then locks and returns it.
         If an account is not passed, the next available account is returned.
@@ -550,7 +625,7 @@ class AccountPool:
             self.unlock_cond.notify_all()
             return account
 
-    def release_accounts(self, owner):
+    def release_accounts(self, owner: Hashable) -> None:
         """
         Releases all accounts that were acquired by the given owner.
 
@@ -572,22 +647,25 @@ class AccountManager:
     worker threads.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Constructor.
         """
-        self.default_pool = None
-        self.pools = None
+        # reset() sets both attributes; the casts are for the type checker.
+        self.default_pool: AccountPool = cast(AccountPool, None)
+        self.pools: list[tuple[Callable[[Host], bool], AccountPool]] = cast(
+            'list[tuple[Callable[[Host], bool], AccountPool]]', None
+        )
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Removes all account pools.
         """
         self.default_pool = AccountPool()
         self.pools = []
 
-    def add_pool(self, pool, match=None):
+    def add_pool(self, pool: AccountPool, match: 'Callable[[Host], bool] | None' = None) -> None:
         """
         Adds a new account pool. If the given match argument is
         None, the pool is the default pool. Otherwise, the match argument is
@@ -650,22 +728,22 @@ class AccountManager:
         else:
             self.pools.append((match, pool))
 
-    def add_account(self, account):
+    def add_account(self, account: Account | Iterable[Account]) -> None:
         """
         Adds the given account to the default account pool that Exscript uses
         to log into all hosts that have no specific :class:`Account` attached.
 
-        :type  account: Account
-        :param account: The account that is added.
+        :type  account: Account|list[Account]
+        :param account: The account or accounts that are added.
         """
         self.default_pool.add_account(account)
 
-    def get_account_from_hash(self, account_hash):
+    def get_account_from_hash(self, account_hash: int) -> Account | None:
         """
         Returns the account with the given hash, if it is contained in any
         of the pools. Returns None otherwise.
 
-        :type  account_hash: str
+        :type  account_hash: int
         :param account_hash: The hash of an account object.
         """
         for _, pool in self.pools:
@@ -674,13 +752,15 @@ class AccountManager:
                 return account
         return self.default_pool.get_account_from_hash(account_hash)
 
-    def acquire_account(self, account=None, owner=None):
+    def acquire_account(
+        self, account: Account | None = None, owner: Hashable | None = None
+    ) -> Account:
         """
         Acquires the given account. If no account is given, one is chosen
         from the default pool.
 
         :type  account: Account
-        :param account: The account that is added.
+        :param account: The account to be acquired, or None.
         :type  owner: object
         :param owner: An optional descriptor for the owner.
         :rtype:  :class:`Account`
@@ -698,7 +778,7 @@ class AccountManager:
 
         return self.default_pool.acquire_account(account, owner)
 
-    def acquire_account_for(self, host, owner=None):
+    def acquire_account_for(self, host: 'Host', owner: Hashable | None = None) -> Account:
         """
         Acquires an account for the given host and returns it.
         The host is passed to each of the match functions that were
@@ -720,7 +800,7 @@ class AccountManager:
         # Else, choose an account from the default account pool.
         return self.default_pool.acquire_account(owner=owner)
 
-    def release_accounts(self, owner):
+    def release_accounts(self, owner: Hashable) -> None:
         """
         Releases all accounts that were acquired by the given owner.
 

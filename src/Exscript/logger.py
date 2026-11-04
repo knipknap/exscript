@@ -31,10 +31,18 @@ import threading
 import time
 import weakref
 from collections import defaultdict
+from collections.abc import Callable
 from io import StringIO
 from itertools import chain
+from types import TracebackType
+from typing import TYPE_CHECKING, cast
 
 from .util.impl import format_exception
+
+if TYPE_CHECKING:
+    # _ConnectionBase is the common base class of the pipe connections on
+    # POSIX (Connection) and on Windows (PipeConnection).
+    from multiprocessing.connection import _ConnectionBase
 
 # -----------------------------------------------------------------------------
 # Python Logging
@@ -43,11 +51,18 @@ LOGGING_FORMAT = "%(levelname)s: %(name)s (%(threadName)s) %(message)s"
 LOGGING_LEVEL = logging.DEBUG
 
 
-def getConsoleLogger(name, *, level=LOGGING_LEVEL, fmt=LOGGING_FORMAT, utc=True):
+def getConsoleLogger(
+    name: str, *, level: int | str = LOGGING_LEVEL, fmt: str = LOGGING_FORMAT, utc: bool = True
+) -> logging.Logger:
     """Get the console logger with the given name.
 
     This function is not related to the host logging mechanics of Exscript.
     Instead it configures the logging for the particular Python logger instance.
+    If the logger has a console handler already, it is returned unchanged.
+
+    :param level: The level of the console handler.
+    :param fmt: The format of the console handler.
+    :param utc: Whether the timestamps are in UTC instead of local time.
     """
     logger = logging.getLogger(name)
 
@@ -69,19 +84,42 @@ def getConsoleLogger(name, *, level=LOGGING_LEVEL, fmt=LOGGING_FORMAT, utc=True)
     return logger
 
 
-def setupLogging(*, package=False, parser=False, protocol=False, init=getConsoleLogger):
+def setupLogging(
+    *,
+    package: bool = False,
+    parser: bool = False,
+    protocol: bool = False,
+    init: Callable[[str], logging.Logger] = getConsoleLogger,
+) -> None:
     """Setup the package logging.
 
     By default the setup adds a console/terminal handler to make the logs visible.
     The relevant loggers get filtered according to the boolean flags.
+
+    :param package: Whether to show the logs of the Exscript package.
+    :param parser: Whether to show the logs of the template parser and lexer.
+    :param protocol: Whether to show the logs of the protocols, the servers,
+        ncclient and paramiko.
+    :param init: A function that returns the configured logger with the given
+        name; the filters are added to the handlers of that logger.
     """
 
     class _LogFilter:
-        def __init__(self, name, enabled):
+        """
+        Passes the records of the named logger and its children if enabled.
+        """
+
+        def __init__(self, name: str, enabled: bool) -> None:
+            """
+            Constructor.
+            """
             self.name = name
             self.enabled = enabled
 
-        def filter(self, record):
+        def filter(self, record: logging.LogRecord) -> bool:
+            """
+            Returns whether the given record passes the filter.
+            """
             if record.name == self.name:
                 return self.enabled
             if record.name.startswith(self.name + "."):
@@ -122,25 +160,46 @@ logger_registry: 'weakref.WeakValueDictionary[int, Logger]' = (
 
 
 class Log:
-    def __init__(self, name):
+    """
+    Records the output of one attempt of a job in memory, and whether and
+    how the attempt ended.
+    """
+
+    def __init__(self, name: str) -> None:
+        """
+        Creates an empty log with the given name.
+        """
         self.name = name
         self.data = StringIO('')
-        self.exc_info = None
+        self.exc_info: tuple[type[BaseException], BaseException, TracebackType | str] | None = None
         self.did_end = False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.data.getvalue()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(str(self))
 
-    def get_name(self):
+    def get_name(self) -> str:
+        """
+        Returns the name of the log.
+        """
         return self.name
 
-    def write(self, *data):
+    def write(self, *data: str) -> None:
+        """
+        Appends the given strings to the log, separated by spaces.
+        """
         self.data.write(' '.join(data))
 
-    def get_error(self, include_tb=True):
+    def get_error(self, include_tb: bool = True) -> str | None:
+        """
+        Returns the error that ended the log, or None if there was none.
+
+        :param include_tb: Whether to return the formatted exception with
+            the traceback. Otherwise the exception message is returned, or
+            the name of the exception class if the message is empty.
+        """
         if self.exc_info is None:
             return None
         if include_tb:
@@ -149,30 +208,41 @@ class Log:
             return str(self.exc_info[1])
         return self.exc_info[0].__name__
 
-    def started(self):
+    def started(self) -> None:
         """
         Called by a logger to inform us that logging may now begin.
         """
         self.did_end = False
 
-    def aborted(self, exc_info):
+    def aborted(
+        self, exc_info: tuple[type[BaseException], BaseException, TracebackType | str]
+    ) -> None:
         """
         Called by a logger to log an exception.
+
+        :param exc_info: The exception, as returned by sys.exc_info(), or
+            with the traceback formatted as a string.
         """
         self.exc_info = exc_info
         self.did_end = True
         self.write(format_exception(*self.exc_info))
 
-    def succeeded(self):
+    def succeeded(self) -> None:
         """
         Called by a logger to inform us that logging is complete.
         """
         self.did_end = True
 
-    def has_error(self):
+    def has_error(self) -> bool:
+        """
+        Returns True if the log ended with an error, False otherwise.
+        """
         return self.exc_info is not None
 
-    def has_ended(self):
+    def has_ended(self) -> bool:
+        """
+        Returns True if the log ended, with or without an error.
+        """
         return self.did_end
 
 
@@ -182,7 +252,16 @@ class Logfile(Log):
     log containing the error message with a traceback.
     """
 
-    def __init__(self, name, filename, mode='a', delete=False):
+    def __init__(self, name: str, filename: str, mode: str = 'a', delete: bool = False) -> None:
+        """
+        Creates a log that writes to the given file, and the error with the
+        traceback to the same file name with the suffix '.error'. The
+        directory of the file is created if it does not exist.
+
+        :param mode: The mode in which the files are opened for each write.
+        :param delete: Whether to delete the file when the log succeeds
+            without an error.
+        """
         Log.__init__(self, name)
         self.filename = filename
         self.errorname = filename + '.error'
@@ -197,7 +276,7 @@ class Logfile(Log):
                 if e.errno != errno.EEXIST:
                     raise
 
-    def __str__(self):
+    def __str__(self) -> str:
         data = ''
         if os.path.isfile(self.filename):
             with open(self.filename, encoding="utf-8") as thefile:
@@ -207,7 +286,12 @@ class Logfile(Log):
                 data += thefile.read()
         return data
 
-    def _write_file(self, filename, *data):
+    def _write_file(self, filename: str, *data: str) -> None:
+        """
+        Writes the given strings to the given file, separated by spaces.
+        If writing fails, the error is raised, and later writes are
+        skipped.
+        """
         if not self.do_log:
             return
         try:
@@ -218,22 +302,41 @@ class Logfile(Log):
             self.do_log = False
             raise
 
-    def write(self, *data):
+    def write(self, *data: str) -> None:
+        """
+        Writes the given strings to the log file, separated by spaces.
+        """
         return self._write_file(self.filename, *data)
 
-    def _write_error(self, *data):
+    def _write_error(self, *data: str) -> None:
+        """
+        Writes the given strings to the error file, separated by spaces.
+        """
         return self._write_file(self.errorname, *data)
 
-    def started(self):
+    def started(self) -> None:
+        """
+        Creates the log file.
+        """
         self.write('')  # Creates the file.
 
-    def aborted(self, exc_info):
+    def aborted(
+        self, exc_info: tuple[type[BaseException], BaseException, TracebackType | str]
+    ) -> None:
+        """
+        Writes the error message to the log file, and the error with the
+        traceback to the error file.
+        """
         self.exc_info = exc_info
         self.did_end = True
         self.write('ERROR:', str(exc_info[1]), '\n')
         self._write_error(format_exception(*self.exc_info))
 
-    def succeeded(self):
+    def succeeded(self) -> None:
+        """
+        Marks the log as ended. If the log was created with delete=True and
+        has no error, deletes the log file instead.
+        """
         if self.delete and not self.has_error():
             os.remove(self.filename)
             return
@@ -246,48 +349,70 @@ class Logger:
     job. Logs are kept in memory, and not written to the disk.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Creates a new logger instance. Use the :class:`Exscript.util.log.log_to`
         decorator to send messages to the logger.
         """
         logger_registry[id(self)] = self
         self._lock = threading.Lock()
-        self.logs = defaultdict(list)
+        self.logs: defaultdict[int, list[Log]] = defaultdict(list)
         self.started = 0
         self.success = 0
         self.failed = 0
 
-    def _reset(self):
+    def _reset(self) -> None:
+        """
+        Forgets all logs.
+        """
         self.logs = defaultdict(list)
 
-    def get_succeeded_actions(self):
+    def get_succeeded_actions(self) -> int:
         """
         Returns the number of jobs that were completed successfully.
         """
         return self.success
 
-    def get_aborted_actions(self):
+    def get_aborted_actions(self) -> int:
         """
         Returns the number of jobs that were aborted.
         """
         return self.failed
 
-    def get_logs(self):
+    def get_logs(self) -> list[Log]:
+        """
+        Returns the logs of all attempts of all jobs.
+        """
         return list(chain.from_iterable(iter(self.logs.values())))
 
-    def get_succeeded_logs(self):
+    def get_succeeded_logs(self) -> list[Log]:
+        """
+        Returns the logs that ended without an error.
+        """
         func = lambda x: x.has_ended() and not x.has_error()
         return list(filter(func, self.get_logs()))
 
-    def get_aborted_logs(self):
+    def get_aborted_logs(self) -> list[Log]:
+        """
+        Returns the logs that ended with an error.
+        """
         func = lambda x: x.has_ended() and x.has_error()
         return list(filter(func, self.get_logs()))
 
-    def _get_log(self, job_id):
+    def _get_log(self, job_id: int) -> Log:
+        """
+        Returns the log of the last attempt of the given job.
+        """
         return self.logs[job_id][-1]
 
-    def add_log(self, job_id, name, attempt):
+    def add_log(self, job_id: int, name: str, attempt: int) -> Log:
+        """
+        Creates the log for a new attempt of the given job, and returns it.
+
+        :param job_id: The id() of the job.
+        :param name: The name of the log.
+        :param attempt: The number of the attempt, starting at 1.
+        """
         log = Log(name)
         log.started()
         self.logs[job_id].append(log)
@@ -295,19 +420,31 @@ class Logger:
             self.started += 1
         return log
 
-    def log(self, job_id, message):
+    def log(self, job_id: int, message: str) -> None:
+        """
+        Appends the message to the log of the last attempt of the given job.
+        """
         # This method is called whenever a sub thread sends a log message
         # via a pipe. (See LoggerProxy and Queue.PipeHandler)
         log = self._get_log(job_id)
         log.write(message)
 
-    def log_aborted(self, job_id, exc_info):
+    def log_aborted(
+        self, job_id: int, exc_info: tuple[type[BaseException], BaseException, TracebackType | str]
+    ) -> None:
+        """
+        Records that the last attempt of the given job failed with the
+        given exception.
+        """
         log = self._get_log(job_id)
         log.aborted(exc_info)
         with self._lock:
             self.failed += 1
 
-    def log_succeeded(self, job_id):
+    def log_succeeded(self, job_id: int) -> None:
+        """
+        Records that the last attempt of the given job succeeded.
+        """
         log = self._get_log(job_id)
         log.succeeded()
         with self._lock:
@@ -320,34 +457,57 @@ class LoggerProxy:
     process.
     """
 
-    def __init__(self, parent, logger_id):
+    def __init__(self, parent: '_ConnectionBase', logger_id: int) -> None:
         """
         Constructor.
 
         :type parent: multiprocessing.Connection
         :param parent: A pipe to the associated pipe handler.
+        :param logger_id: The id() of the Logger in the other process.
         """
         self.parent = parent
         self.logger_id = logger_id
         self._lock = threading.Lock()
 
-    def add_log(self, job_id, name, attempt):
+    def add_log(self, job_id: int, name: str, attempt: int) -> Log | None:
+        """
+        Asks the logger in the other process to create a log for a new
+        attempt of the given job.
+
+        :return: A copy of the new log, or None if the logger no longer
+            exists.
+        """
         with self._lock:
             self.parent.send(('log-add', (self.logger_id, job_id, name, attempt)))
             response = self.parent.recv()
         if isinstance(response, Exception):
             raise response
-        return response
+        # The pipe returns unpickled objects without a static type.
+        return cast(Log | None, response)
 
-    def log(self, job_id, message):
+    def log(self, job_id: int, message: str) -> None:
+        """
+        Sends the message to the log of the given job in the other process.
+        """
         with self._lock:
             self.parent.send(('log-message', (self.logger_id, job_id, message)))
 
-    def log_aborted(self, job_id, exc_info):
+    def log_aborted(
+        self, job_id: int, exc_info: tuple[type[BaseException], BaseException, str]
+    ) -> None:
+        """
+        Tells the logger in the other process that the given job failed.
+
+        :param exc_info: The exception, as returned by
+            :func:`Exscript.util.impl.serializeable_sys_exc_info()`.
+        """
         with self._lock:
             self.parent.send(('log-aborted', (self.logger_id, job_id, exc_info)))
 
-    def log_succeeded(self, job_id):
+    def log_succeeded(self, job_id: int) -> None:
+        """
+        Tells the logger in the other process that the given job succeeded.
+        """
         with self._lock:
             self.parent.send(('log-succeeded', (self.logger_id, job_id)))
 
@@ -357,7 +517,9 @@ class FileLogger(Logger):
     A Logger that stores logs into files.
     """
 
-    def __init__(self, logdir, mode='a', delete=False, clearmem=True):
+    def __init__(
+        self, logdir: str, mode: str = 'a', delete: bool = False, clearmem: bool = True
+    ) -> None:
         """
         The logdir argument specifies the location where the logs
         are stored. The mode specifies whether to append the existing logs
@@ -375,7 +537,16 @@ class FileLogger(Logger):
         if not os.path.exists(self.logdir):
             os.mkdir(self.logdir)
 
-    def add_log(self, job_id, name, attempt):
+    def add_log(self, job_id: int, name: str, attempt: int) -> Logfile:
+        """
+        Creates the log file for a new attempt of the given job, and returns
+        the log. The file of a retry gets the suffix '_retryN', where N is
+        the number of the retry.
+
+        :param job_id: The id() of the job.
+        :param name: The name of the log, also used for the file name.
+        :param attempt: The number of the attempt, starting at 1.
+        """
         if attempt > 1:
             name += '_retry%d' % (attempt - 1)
         filename = os.path.join(self.logdir, name + '.log')
@@ -384,12 +555,22 @@ class FileLogger(Logger):
         self.logs[job_id].append(log)
         return log
 
-    def log_aborted(self, job_id, exc_info):
+    def log_aborted(
+        self, job_id: int, exc_info: tuple[type[BaseException], BaseException, TracebackType | str]
+    ) -> None:
+        """
+        Like :meth:`Logger.log_aborted`, but forgets the logs of the job if
+        clearmem is True.
+        """
         Logger.log_aborted(self, job_id, exc_info)
         if self.clearmem:
             self.logs.pop(job_id)
 
-    def log_succeeded(self, job_id):
+    def log_succeeded(self, job_id: int) -> None:
+        """
+        Like :meth:`Logger.log_succeeded`, but forgets the logs of the job if
+        clearmem is True.
+        """
         Logger.log_succeeded(self, job_id)
         if self.clearmem:
             self.logs.pop(job_id)

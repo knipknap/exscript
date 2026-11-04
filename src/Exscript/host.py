@@ -24,6 +24,9 @@
 Representing a device to connect with.
 """
 
+from collections.abc import Mapping
+from typing import Any, cast
+
 from .account import Account
 from .util.cast import to_list
 from .util.ipv4 import clean_ip, is_ip
@@ -37,7 +40,7 @@ class Host:
 
     __slots__ = ('protocol', 'vars', 'account', 'name', 'address', 'tcp_port', 'options')
 
-    def __init__(self, uri, default_protocol='ssh'):
+    def __init__(self, uri: str, default_protocol: str = 'ssh') -> None:
         """
         Constructor. The given uri is passed to Host.set_uri().
         The default_protocol argument defines the protocol that is used
@@ -49,20 +52,23 @@ class Host:
         :param default_protocol: The protocol name.
         """
         self.protocol = default_protocol
-        self.vars = None  # To save memory, do not init with a dict.
-        self.account = None
-        self.name = None
-        self.address = None
-        self.tcp_port = None
-        self.options = None
+        # Variables and options hold values of any type: variables are lists
+        # of strings in templates, and each option has its own type.
+        self.vars: dict[str, Any] | None = None  # To save memory, do not init with a dict.
+        self.account: Account | None = None
+        # set_uri() sets the name and the address; the casts are for the type checker.
+        self.name: str = cast(str, None)
+        self.address: str = cast(str, None)
+        self.tcp_port: int | None = None
+        self.options: dict[str, Any] | None = None
         self.set_uri(uri)
 
-    def __copy__(self):
+    def __copy__(self) -> 'Host':
         host = Host(self.get_uri())
         host.set_name(self.get_name())
         return host
 
-    def set_uri(self, uri):
+    def set_uri(self, uri: str) -> None:
         """
         Defines the protocol, hostname/address, TCP port number, username,
         and password from the given URL. The hostname may be URL formatted,
@@ -83,24 +89,27 @@ class Host:
         :param uri: An URL formatted hostname.
         """
         try:
-            uri = Url.from_string(uri, self.protocol)
+            url = Url.from_string(uri, self.protocol)
         except ValueError:
             raise ValueError('Hostname parse error: ' + repr(uri))
-        hostname = uri.hostname or ''
-        name = uri.path and hostname + uri.path or hostname
-        self.set_protocol(uri.protocol)
-        self.set_tcp_port(uri.port)
+        # The casts are for the type checker: from_string() always sets the
+        # protocol and the variables, and it sets the user name if it sets a
+        # password.
+        hostname = url.hostname or ''
+        name = url.path and hostname + url.path or hostname
+        self.set_protocol(cast(str, url.protocol))
+        self.set_tcp_port(url.port)
         self.set_name(name)
         self.set_address(name)
 
-        if uri.username is not None or uri.password1 is not None or uri.password2:
-            account = Account(uri.username, uri.password1, uri.password2)
+        if url.username is not None or url.password1 is not None or url.password2:
+            account = Account(cast(str, url.username), url.password1, url.password2)
             self.set_account(account)
 
-        for key, val in list(uri.vars.items()):
+        for key, val in list(cast(dict[str, list[Any]], url.vars).items()):
             self.set(key, val)
 
-    def get_uri(self):
+    def get_uri(self) -> str:
         """
         Returns a URI formatted representation of the host, including all
         of its attributes except for the name. Uses the
@@ -126,7 +135,7 @@ class Host:
 
         return str(url)
 
-    def get_dict(self):
+    def get_dict(self) -> dict[str, str | int | None]:
         """
         Returns a dict containing the host's attributes. The following
         keys are contained:
@@ -146,7 +155,7 @@ class Host:
             'port': self.get_tcp_port(),
         }
 
-    def set_name(self, name):
+    def set_name(self, name: str) -> None:
         """
         Set the hostname of the remote host without
         changing username, password, protocol, and TCP port number.
@@ -156,16 +165,16 @@ class Host:
         """
         self.name = name
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         Returns the name.
 
         :rtype:  string
-        :return: The hostname excluding the name.
+        :return: The name of the host.
         """
         return self.name
 
-    def set_address(self, address):
+    def set_address(self, address: str) -> None:
         """
         Set the address of the remote host that is contacted, without
         changing hostname, username, password, protocol, and TCP port
@@ -180,7 +189,7 @@ class Host:
         else:
             self.address = address
 
-    def get_address(self):
+    def get_address(self) -> str:
         """
         Returns the address that is used to open the connection.
 
@@ -189,7 +198,7 @@ class Host:
         """
         return self.address
 
-    def set_protocol(self, protocol):
+    def set_protocol(self, protocol: str) -> None:
         """
         Defines the protocol. The following protocols are currently
         supported:
@@ -197,6 +206,7 @@ class Host:
             - telnet: Telnet
             - ssh: SSH version 2
             - ssh2: SSH version 2
+            - netconf: NETCONF over SSH
             - dummy: A virtual device that accepts any command, but that
               does not respond anything useful.
             - pseudo: A virtual device that loads a file with the given
@@ -211,7 +221,7 @@ class Host:
         """
         self.protocol = protocol
 
-    def get_protocol(self):
+    def get_protocol(self) -> str:
         """
         Returns the name of the protocol.
 
@@ -220,7 +230,7 @@ class Host:
         """
         return self.protocol
 
-    def set_option(self, name, value):
+    def set_option(self, name: str, value: Any) -> None:
         """
         Defines a (possibly protocol-specific) option for the host.
         Possible options include:
@@ -271,7 +281,7 @@ class Host:
             self.options = {}
         self.options[name] = value
 
-    def get_option(self, name, default=None):
+    def get_option(self, name: str, default: Any = None) -> Any:
         """
         Returns the value of the given option if it is defined, returns
         the given default value otherwise.
@@ -285,7 +295,7 @@ class Host:
             return default
         return self.options.get(name, default)
 
-    def get_options(self):
+    def get_options(self) -> dict[str, Any]:
         """
         Return a dictionary containing all defined options.
 
@@ -296,46 +306,46 @@ class Host:
             return {}
         return self.options
 
-    def set_tcp_port(self, tcp_port):
+    def set_tcp_port(self, tcp_port: int | None) -> None:
         """
         Defines the TCP port number.
 
-        :type  tcp_port: int
-        :param tcp_port: The TCP port number.
+        :type  tcp_port: int|None
+        :param tcp_port: The TCP port number, or None.
         """
         if tcp_port is None:
             self.tcp_port = None
             return
         self.tcp_port = int(tcp_port)
 
-    def get_tcp_port(self):
+    def get_tcp_port(self) -> int | None:
         """
         Returns the TCP port number.
 
-        :rtype:  string
-        :return: The TCP port number.
+        :rtype:  int|None
+        :return: The TCP port number, or None if it is not known.
         """
         return self.tcp_port
 
-    def set_account(self, account):
+    def set_account(self, account: Account | None) -> None:
         """
         Defines the account that is used to log in.
 
         :type  account: :class:`Exscript.Account`
-        :param account: The account.
+        :param account: The account, or None.
         """
         self.account = account
 
-    def get_account(self):
+    def get_account(self) -> Account | None:
         """
         Returns the account that is used to log in.
 
-        :rtype:  Account
-        :return: The account.
+        :rtype:  Account|None
+        :return: The account, or None if no account is attached.
         """
         return self.account
 
-    def set(self, name, value):
+    def set(self, name: str, value: Any) -> None:
         """
         Stores the given variable/value in the object for later retrieval.
 
@@ -348,7 +358,7 @@ class Host:
             self.vars = {}
         self.vars[name] = value
 
-    def set_all(self, variables):
+    def set_all(self, variables: Mapping[str, Any]) -> None:
         """
         Like set(), but replaces all variables by using the given
         dictionary. In other words, passing an empty dictionary
@@ -359,7 +369,7 @@ class Host:
         """
         self.vars = dict(variables)
 
-    def append(self, name, value):
+    def append(self, name: str, value: Any) -> None:
         """
         Appends the given value to the list variable with the given name.
 
@@ -375,7 +385,7 @@ class Host:
         else:
             self.vars[name] = [value]
 
-    def set_default(self, name, value):
+    def set_default(self, name: str, value: Any) -> None:
         """
         Like set(), but only sets the value if the variable is not already
         defined.
@@ -390,7 +400,7 @@ class Host:
         if name not in self.vars:
             self.vars[name] = value
 
-    def has_key(self, name):
+    def has_key(self, name: str) -> bool:
         """
         Returns True if the variable with the given name is defined, False
         otherwise.
@@ -404,7 +414,7 @@ class Host:
             return False
         return name in self.vars
 
-    def get(self, name, default=None):
+    def get(self, name: str, default: Any = None) -> Any:
         """
         Returns the value of the given variable, or the given default
         value if the variable is not defined.
@@ -420,7 +430,7 @@ class Host:
             return default
         return self.vars.get(name, default)
 
-    def get_all(self):
+    def get_all(self) -> dict[str, Any]:
         """
         Returns a dictionary containing all variables.
 

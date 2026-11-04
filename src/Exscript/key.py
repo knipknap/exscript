@@ -36,7 +36,7 @@ class PrivateKey:
 
     keytypes: set[str] = set()
 
-    def __init__(self, keytype='rsa'):
+    def __init__(self, keytype: str = 'rsa') -> None:
         """
         Constructor. Supported key types are provided by their respective
         protocol adapters and can be retrieved from the PrivateKey.keytypes
@@ -48,19 +48,21 @@ class PrivateKey:
         if keytype not in self.keytypes:
             raise TypeError('unsupported key type: ' + repr(keytype))
         self.keytype = keytype
-        self.filename = None
-        self.password = None
+        self.filename: str | None = None
+        self.password: str | None = None
 
     @staticmethod
-    def from_file(filename, password='', keytype=None):
+    def from_file(
+        filename: str, password: str | None = '', keytype: str | None = None
+    ) -> 'PrivateKey':
         """
         Returns a new PrivateKey instance with the given attributes.
         If keytype is None, we attempt to automatically detect the type.
 
         :type  filename: string
         :param filename: The key file name.
-        :type  password: string
-        :param password: The key password.
+        :type  password: string|None
+        :param password: The key password, or None if the key is not encrypted.
         :type  keytype: string
         :param keytype: The key type.
         :rtype:  PrivateKey
@@ -86,16 +88,16 @@ class PrivateKey:
         key.password = password
         return key
 
-    def get_type(self):
+    def get_type(self) -> str:
         """
-        Returns the type of the key, e.g. RSA or DSA.
+        Returns the type of the key, e.g. 'rsa' or 'ed25519'.
 
         :rtype:  string
         :return: The key type
         """
         return self.keytype
 
-    def set_filename(self, filename):
+    def set_filename(self, filename: str) -> None:
         """
         Sets the name of the key file to use.
 
@@ -104,29 +106,29 @@ class PrivateKey:
         """
         self.filename = filename
 
-    def get_filename(self):
+    def get_filename(self) -> str | None:
         """
         Returns the name of the key file.
 
-        :rtype:  string
-        :return: The key password.
+        :rtype:  string|None
+        :return: The key filename, or None if none was set.
         """
         return self.filename
 
-    def set_password(self, password):
+    def set_password(self, password: str | None) -> None:
         """
         Defines the password used for decrypting the key.
 
-        :type  password: string
-        :param password: The key password.
+        :type  password: string|None
+        :param password: The key password, or None if the key is not encrypted.
         """
         self.password = password
 
-    def get_password(self):
+    def get_password(self) -> str | None:
         """
         Returns the password for the key.
 
-        :rtype:  string
-        :return: The key password.
+        :rtype:  string|None
+        :return: The key password, or None if none was set.
         """
         return self.password
