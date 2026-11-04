@@ -20,13 +20,22 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The text of a template, outside of code blocks.
+"""
+
 import ast
 import re
+from typing import TYPE_CHECKING, Any, cast
 
+from ..parselib import Lexer
 from .code import Code
 from .execute import Execute
 from .rpc import RPCBody
 from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 escaped_grammar = [
     # Unicode range: 0x00000000 to 0x0010FFFF
@@ -56,7 +65,24 @@ for thetype, regex in grammar:
 
 
 class Template(Scope):
-    def __init__(self, lexer, parser, parent, *args, **kwargs):
+    """
+    The text of a template outside of code blocks. Each line of text is a
+    command (an Execute token) that is sent to the remote host. Code blocks
+    in curly brackets and <rpc> elements become child tokens as well.
+    """
+
+    def __init__(
+        self, lexer: Lexer, parser: 'Parser', parent: Scope, *args: Any, **kwargs: Any
+    ) -> None:
+        """
+        Constructor. Parses the text up to the end of the input or, inside a
+        code block, up to and including the next opening curly bracket.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The parent scope.
+        :param kwargs: Passed to Scope.
+        """
         Scope.__init__(self, self.__class__.__name__, lexer, parser, parent, **kwargs)
         lexer.set_grammar(grammar_c)
         buffer = ''
@@ -115,7 +141,17 @@ class Template(Scope):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def eval_escape(self, ttype, token):
+    def eval_escape(self, ttype: str, token: str) -> str:
+        """
+        Returns the text that the given escape sequence stands for. Unicode,
+        hexadecimal and octal sequences and control characters are evaluated
+        unless the parser disables escaping. An escaped dollar sign stays
+        escaped for the Execute token; any other escaped character is
+        returned without the backslash.
+
+        :param ttype: The token type of the escape sequence.
+        :param token: The escape sequence.
+        """
         # Supporting various types of escape sequences. The easiest way is to
         # evaluate them as strings with the builtin ast module.
         if not self.parser.no_escaping and ttype in (
@@ -128,7 +164,7 @@ class Template(Scope):
         ):
             if token == '\\e':  # Invalid sequence in Python.
                 return '\x1b'
-            return ast.literal_eval('"' + token + '"')
+            return cast(str, ast.literal_eval('"' + token + '"'))
         # Simple escape sequence with one character.
         if len(token) == 2:
             char = token[1]
@@ -137,5 +173,11 @@ class Template(Scope):
         # Simply unescape anything else.
         return token[1:]
 
-    def execute(self):
+    # Any: the value of the last child (see Scope.value()).
+    def execute(self) -> Any:
+        """
+        Evaluates the template, with the template itself as the context.
+
+        :return: The value of the last child, or 1 if there are no children.
+        """
         return self.value(self)

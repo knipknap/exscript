@@ -20,14 +20,37 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The if statement of the template language.
+"""
+
+from typing import TYPE_CHECKING, Any
+
 import Exscript.interpreter.code
 
-from ..parselib import Token
+from ..parselib import Lexer, Token
 from .expression import Expression
+from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 
 class IfCondition(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    The if statement, with an optional else block. An ``else if`` is
+    stored as a nested IfCondition in the else block.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the statement up to and including its end
+        keyword.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the statement.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
         # Expect an expression.
@@ -37,8 +60,9 @@ class IfCondition(Token):
 
         # Body of the if block.
         self.if_block = Exscript.interpreter.code.Code(lexer, parser, parent)
-        self.elif_blocks = []
-        self.else_block = None
+        # Any: never filled; an "else if" is stored in else_block.
+        self.elif_blocks: list[Any] = []
+        self.else_block: IfCondition | Exscript.interpreter.code.Code | None = None
 
         # If there is no "else" statement, just return.
         lexer.skip(['whitespace', 'newline'])
@@ -62,14 +86,26 @@ class IfCondition(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def value(self, context):
+    def value(self, context: Scope) -> int:
+        """
+        Evaluates the if block if the first item of the condition is true,
+        and the else block otherwise.
+
+        :param context: The scope in which the template runs.
+        :return: 1.
+        """
         if self.expression.value(context)[0]:
             self.if_block.value(context)
         elif self.else_block is not None:
             self.else_block.value(context)
         return 1
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the statement, its condition and its blocks to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, 'start')
         self.expression.dump(indent + 1)
         self.if_block.dump(indent + 1)

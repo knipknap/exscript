@@ -20,10 +20,19 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+Strings of the template language, and the substitution of variables.
+"""
+
 import ast
 import re
+from typing import TYPE_CHECKING, Any, cast
 
-from ..parselib import Token
+from ..parselib import Lexer, Token
+from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 varname_re = re.compile(r'(__[a-zA-Z][\w_]*__|[a-zA-Z][\w_]*)')
 varstring_re = re.compile(r'(\\?)\$([\w_]*)')
@@ -49,7 +58,27 @@ for thetype, regex in grammar:
 
 
 class String(Token):
-    def __init__(self, lexer, parser, parent, purpose='string'):
+    """
+    A string in double quotes. Escape sequences are evaluated when the
+    template is compiled; variables in the string ($name) are replaced by
+    their values when it is evaluated. Regex and Execute derive from it.
+    """
+
+    def __init__(
+        self, lexer: Lexer, parser: 'Parser', parent: Scope, purpose: str = 'string'
+    ) -> None:
+        """
+        Constructor. Parses the string from the current token, which is the
+        opening delimiter, to the closing delimiter. Raises a CompileError at
+        a line break, and an ExecuteError if the string contains a variable
+        that is not defined.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the string.
+        :param purpose: The kind of string ('string' or 'regex'), for the
+            token types and the error messages.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
         # Create a grammar depending on the delimiting character.
@@ -97,7 +126,18 @@ class String(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def eval_escape(self, ttype, token):
+    def eval_escape(self, ttype: str, token: str) -> str:
+        """
+        Returns the text that the given escape sequence stands for. Unicode,
+        hexadecimal and octal sequences and control characters are evaluated
+        unless the parser disables escaping; CR, LF and TAB are always
+        evaluated. An escaped dollar sign stays escaped for the substitution
+        of variables; any other escaped character is returned without the
+        backslash.
+
+        :param ttype: The token type of the escape sequence.
+        :param token: The escape sequence.
+        """
         # Supporting various types of escape sequences. The easiest way is to
         # evaluate them as strings with the builtin ast module.
         if not self.parser.no_escaping and ttype in (
@@ -109,9 +149,9 @@ class String(Token):
         ):
             if token == '\\e':  # Invalid sequence in Python.
                 return '\x1b'
-            return ast.literal_eval('"' + token + '"')
+            return cast(str, ast.literal_eval('"' + token + '"'))
         if ttype == 'escaped_common_controls':
-            return ast.literal_eval('"' + token + '"')
+            return cast(str, ast.literal_eval('"' + token + '"'))
         # Simple escape sequence with one character.
         if len(token) == 2:
             char = token[1]
@@ -120,7 +160,15 @@ class String(Token):
         # Simply unescape anything else.
         return token[1:]
 
-    def _variable_error(self, field, field_start, msg):
+    def _variable_error(self, field: str, field_start: int, msg: str) -> None:
+        """
+        Moves the marks of the token to the given variable reference, and
+        raises an ExecuteError with the given message.
+
+        :param field: The variable reference, such as $name.
+        :param field_start: The position of the reference in the string.
+        :param msg: The error message.
+        """
         # Narrow down the marks on the variable that caused the error.
         self.mark_start(self.start + len(self.delimiter) + field_start)
         self.mark_end(distance=len(field))
@@ -128,7 +176,14 @@ class String(Token):
 
     # Tokens that include variables in a string may use this callback to
     # substitute the variable against its value.
-    def variable_sub_cb(self, match):
+    def variable_sub_cb(self, match: re.Match[str]) -> str:
+        """
+        Returns the value of the variable that the given match of
+        varstring_re refers to, for re.sub(); a list is joined with newlines.
+        An escaped reference yields the reference without the backslash, and
+        a lone dollar sign stays as is. Raises an ExecuteError if the name is
+        not a valid variable name, or if the variable is not defined.
+        """
         field_start = match.start(0)
         field = match.group(0)
         escape = match.group(1)
@@ -160,19 +215,32 @@ class String(Token):
 
     # Tokens that include variables in a string may use this callback to
     # make sure that the variable is already declared.
-    def variable_test_cb(self, match):
+    def variable_test_cb(self, match: re.Match[str]) -> str:
+        """
+        Checks the variable that the given match refers to, as
+        variable_sub_cb() does, and returns the match unchanged, for
+        re.sub().
+        """
         self.variable_sub_cb(match)
         return match.group(0)
 
     # Tokens that include variables in a string may use this callback to mask
     # the sigil ($, \$) with underscores while keeping the variable name intact.
-    def variable_sigil_sub_cb(self, match):
+    def variable_sigil_sub_cb(self, match: re.Match[str]) -> str:
+        """
+        Returns the given match of varstring_re with the sigil replaced by
+        underscores of the same length, for re.sub().
+        """
         # Replace only the sigil ($, \$) with underscores; keep the variable name.
         return '_' * (len(match.group(0)) - len(match.group(2))) + match.group(2)
 
     # Tokens that need to make any string invisible to the lexer, like comments,
     # while keeping its length, may use this callback.
-    def invisible_sub_cb(self, match, char=' '):
+    def invisible_sub_cb(self, match: re.Match[str], char: str = ' ') -> str:
+        """
+        Returns the given match with all characters but the line breaks
+        replaced by the given character, for re.sub().
+        """
         lines = match.group(0).splitlines(keepends=True)
         for i, line in enumerate(lines):
             length = len(line)
@@ -185,8 +253,20 @@ class String(Token):
                 lines[i] = char * length
         return ''.join(lines)
 
-    def value(self, context):
+    # Any: the subclasses Regex and Execute return a compiled pattern and 1.
+    def value(self, context: Scope) -> Any:
+        """
+        Returns the string, with the variables replaced by their values, as a
+        list with one item.
+
+        :param context: The scope in which the template runs.
+        """
         return [varstring_re.sub(self.variable_sub_cb, self.string)]
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the string to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, repr(self.string))

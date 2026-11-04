@@ -20,10 +20,16 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+Code blocks of a template: the statements in curly brackets.
+"""
+
 import re
+from typing import TYPE_CHECKING
 
 import Exscript.interpreter.template
 
+from ..parselib import Lexer
 from .append import Append
 from .assign import Assign
 from .enter import Enter
@@ -36,10 +42,11 @@ from .scope import Scope
 from .string import varname_re
 from .trying import Try
 
-# IDEA: Add support for 'None' in the template engine?
-#  Right now a regex group that does not capture anything might inject a none
-#  value into a variable. We would need to test this (e.g. in addition) and then
-#  check if there is some kind of None handling/comparison. If not, we should add it.
+if TYPE_CHECKING:
+    from .parser import Parser
+
+# IDEA: Add support for 'None' in the template engine? A regex group that does
+#  not participate in a match stores None in a variable.
 
 varname = varname_re.pattern
 keywords = [
@@ -94,7 +101,20 @@ for thetype, regex in grammar:
 
 
 class Code(Scope):
-    def __init__(self, lexer, parser, parent):
+    """
+    A code block: the statements in curly brackets, or the body of an if,
+    loop or try statement up to its else or end keyword. In a body, the text
+    between a closing and the next opening curly bracket is a Template.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the statements of the block.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The parent scope.
+        """
         Scope.__init__(self, self.__class__.__name__, lexer, parser, parent)
         lexer.set_grammar(grammar_c)
         lexer.next_if('open_curly_bracket')

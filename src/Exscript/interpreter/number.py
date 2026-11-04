@@ -20,14 +20,38 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+Number literals of the template language.
+"""
+
+from .scope import Scope
 
 
 class Number:
-    def __init__(self, number):
+    """
+    A number in a template, and the keywords true (1) and false (0).
+    """
+
+    def __init__(self, number: str | int) -> None:
+        """
+        Constructor.
+
+        :param number: The number, or its decimal digits.
+        """
         self.number = int(number)
 
-    def value(self, context):
+    def value(self, context: Scope) -> list[int]:
+        """
+        Returns the number as a list with one item.
+
+        :param context: The scope in which the template runs.
+        """
         return [self.number]
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the number to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + 'Number', self.number)

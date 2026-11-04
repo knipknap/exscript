@@ -20,6 +20,12 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+A small library for recursive descent parsers: a lexer that splits the
+input into tokens with regular expressions, and a base class for the
+tokens of the parse tree. The template interpreter is built on it.
+"""
+
 from .lexer import Lexer
 from .token import Token
 

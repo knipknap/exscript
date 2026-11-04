@@ -20,12 +20,21 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The commands of a template, which are sent to the remote host.
+"""
+
 import re
 import textwrap
+from typing import TYPE_CHECKING, cast
 
-from ..parselib import Token
+from ..parselib import Lexer, Token
 from ..util.xml import validate_xml
+from .scope import Scope
 from .string import String, varstring_re
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 grammar = {
     'leading_blank_lines': r'^(?:[ \t]*[\r\n])+',
@@ -38,7 +47,31 @@ strip_re = re.compile('|'.join(grammar.values()))
 
 
 class Execute(String):
-    def __init__(self, lexer, parser, parent, command, escape_offset=0):
+    """
+    A command that is sent to the remote host. Variables in the command
+    ($name) are replaced by their values when the command is sent, and the
+    response of the host is stored in the __response__ variable.
+    """
+
+    def __init__(
+        self, lexer: Lexer, parser: 'Parser', parent: Scope, command: str, escape_offset: int = 0
+    ) -> None:
+        """
+        Constructor. Checks that the variables in the command are defined,
+        and declares the __response__ variable. In an <rpc> element, it also
+        checks the XML syntax of the command: an error raises a
+        CompileError, or emits a CompileWarning if the command contains
+        variables.
+
+        :param lexer: The lexer that reads the template, positioned behind
+            the command.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the command.
+        :param command: The command as read from the template.
+        :param escape_offset: The number of characters by which the
+            evaluation of escape sequences shortened the command, for the
+            position of the command in error messages.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.delimiter = ''  # Command strings are not delimited in Execute tokens.
         self.string = command  # Original command will be evaluated at runtime.
@@ -73,8 +106,9 @@ class Execute(String):
 
             # The start mark points to the first non-whitespace character of the
             # RPC body. We will need the original start position of the command.
+            # (The pattern also matches an empty string, so it always matches.)
             original_start = self.start - len(
-                '<rpc>' + leading_whitespace_re.search(self.string).group(0)
+                '<rpc>' + cast(re.Match[str], leading_whitespace_re.search(self.string)).group(0)
             )
 
             # Prepare full RPC command to eliminate most false-positives.
@@ -97,12 +131,14 @@ class Execute(String):
             except XMLSyntaxError as exc:
                 # XMLSyntaxError position (line, offset) needs to be converted
                 # to an absolute character offset. Then adjust the start/end marks.
+                # lxml always sets lineno and offset, which SyntaxError types as
+                # int | None.
                 lines = rpc_command.splitlines(keepends=True)
-                exc_start = len(''.join(lines[: exc.lineno - 1]))
-                exc_start += exc.offset
+                exc_start = len(''.join(lines[: cast(int, exc.lineno) - 1]))
+                exc_start += cast(int, exc.offset)
                 # We assume the end positions are either both set or not!
-                exc_end = len(''.join(lines[: (exc.end_lineno or exc.lineno) - 1]))
-                exc_end += exc.end_offset or exc.offset + 1
+                exc_end = len(''.join(lines[: (exc.end_lineno or cast(int, exc.lineno)) - 1]))
+                exc_end += exc.end_offset or cast(int, exc.offset) + 1
                 self.mark_start(original_start + exc_start)
                 self.mark_end(distance=(exc_end - exc_start))
                 if has_vars:
@@ -119,7 +155,18 @@ class Execute(String):
 
         self.parent.define(__response__=[''])
 
-    def value(self, context):
+    def value(self, context: Scope) -> int:
+        """
+        Sends the command, without line comments, surrounding blank lines
+        and common indentation, and with the variables replaced by their
+        values. Waits for the prompt unless the parser was created with
+        no_prompt. Stores the response in the __response__ variable, one
+        line per item. Raises an ExecuteError if the __connection__ variable
+        is not defined.
+
+        :param context: The scope in which the template runs.
+        :return: 1.
+        """
         connvar = "__connection__"
         if not self.parent.is_defined(connvar):
             error = 'Undefined variable %s' % repr(connvar)
@@ -144,5 +191,10 @@ class Execute(String):
         self.parent.define(__response__=response)
         return 1
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the command to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, repr(self.string))

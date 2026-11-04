@@ -20,12 +20,36 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from ..parselib import Token
+"""
+Variable assignments in the template language.
+"""
+
+from typing import TYPE_CHECKING, Any
+
+from ..parselib import Lexer, Token
 from .expression import Expression
+from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 
 class Assign(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    The statement ``<variable> = <expression>``, which assigns the value of
+    the expression to the variable.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the statement and declares the variable. Raises
+        a CompileError if the name starts and ends with two underscores, as
+        the names of internal variables do.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the statement.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
         # Extract the variable name.
@@ -56,12 +80,24 @@ class Assign(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the statement and its expression to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, self.varname, 'start')
         self.expression.dump(indent + 1)
         print((' ' * indent) + self.name, self.varname, 'end')
 
-    def value(self, context):
+    # Any: the value of the expression (see Expression.value()).
+    def value(self, context: Scope) -> Any:
+        """
+        Assigns the value of the expression to the variable.
+
+        :param context: The scope in which the template runs.
+        :return: The value of the expression.
+        """
         result = self.expression.value(context)
         self.parent.define(**{self.varname: result})
         return result

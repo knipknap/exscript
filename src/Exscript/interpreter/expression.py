@@ -20,21 +20,53 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+Expressions of the template language.
+"""
+
+from typing import TYPE_CHECKING, Any, cast
+
 import Exscript.interpreter.term
 
-from ..parselib import Token
+from ..parselib import Lexer, Token
+from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 
 class ExpressionNode(Token):
-    def __init__(self, lexer, parser, parent, parent_node=None):
+    """
+    A node of an expression: a term, optionally followed by an operator and
+    the rest of the expression, which is the right-hand node. An expression
+    that starts with "not" has no term.
+    """
+
+    def __init__(
+        self,
+        lexer: Lexer,
+        parser: 'Parser',
+        parent: Scope,
+        parent_node: 'ExpressionNode | None' = None,
+    ) -> None:
+        """
+        Constructor. Parses a term and, if an operator follows, the operator
+        and the rest of the expression.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the expression.
+        :param parent_node: The node whose right-hand node this node is, or
+            None.
+        """
         # Skip whitespace before initializing the token to make sure that self.start
         # points to the beginning of the expression (which makes for prettier error
         # messages).
         lexer.skip(['whitespace', 'newline'])
 
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
-        self.lft = None
-        self.rgt = None
+        self.lft: Exscript.interpreter.term.Term | ExpressionNode | None = None
+        self.rgt: Exscript.interpreter.term.Term | ExpressionNode | None = None
         self.op = None
         self.op_type = None
         self.parent_node = parent_node
@@ -74,7 +106,12 @@ class ExpressionNode(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def priority(self):
+    def priority(self) -> int:
+        """
+        Returns the priority of the operator of the node, from 1 for "and"
+        and "or" to 7 for "%", or 8 if the node has no operator. Raises an
+        Exception for an unknown operator.
+        """
         if self.op is None:
             return 8
         elif self.op_type == 'arithmetic_operator' and self.op == '%':
@@ -96,25 +133,39 @@ class ExpressionNode(Token):
         else:
             raise Exception('Invalid operator: ' + repr(self.op))
 
-    def value(self, context):
+    # Any: the value of a term, or a list with the result of the operator.
+    def value(self, context: Scope) -> Any:
+        """
+        Evaluates the node. A list operand stands for its first item, or ''
+        if it is empty. Arithmetic operators raise an ExecuteError if an
+        operand is not a number.
+
+        :param context: The scope in which the template runs.
+        :return: The value of the term if the node has no operator, or a
+            list with the result of the operator.
+        """
+        # The operator decides which operands are set: lft is set unless the
+        # operator is "not", and rgt is set if there is an operator.
         # Special behavior where we only have one term.
         if self.op is None:
-            return self.lft.value(context)
+            return cast(Token, self.lft).value(context)
         elif self.op == 'not':
-            return [not self.rgt.value(context)[0]]
+            return [not cast(Token, self.rgt).value(context)[0]]
 
         # There are only two types of values: Regular expressions and lists.
         # We also have to make sure that empty lists do not cause an error.
-        lft_lst = self.lft.value(context)
+        # The first item of a list can be a string, a number or anything else
+        # that a function returned, hence Any.
+        lft_lst = cast(Token, self.lft).value(context)
         if type(lft_lst) == type([]):
             if len(lft_lst) > 0:
-                lft = lft_lst[0]
+                lft: Any = lft_lst[0]
             else:
                 lft = ''
-        rgt_lst = self.rgt.value(context)
+        rgt_lst = cast(Token, self.rgt).value(context)
         if type(rgt_lst) == type([]):
             if len(rgt_lst) > 0:
-                rgt = rgt_lst[0]
+                rgt: Any = rgt_lst[0]
             else:
                 rgt = ''
 
@@ -178,7 +229,12 @@ class ExpressionNode(Token):
         elif self.op == '-':
             return [int(lft) - int(rgt)]
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the node, its operator and its operands to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, self.op, 'start')
         if self.lft is not None:
             self.lft.dump(indent + 1)
@@ -189,7 +245,20 @@ class ExpressionNode(Token):
 
 
 class Expression(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    An expression: a tree of ExpressionNode objects, ordered by the priority
+    of the operators.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the expression and reorders its nodes by the
+        priority of the operators.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the expression.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
         # Parse the expression.
@@ -201,7 +270,20 @@ class Expression(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def prioritize(self, start, prio=1):
+    # start is an ExpressionNode, a Term or None. It is Any because the code
+    # walks Terms like nodes (a Term has lft, rgt and op set to None, and the
+    # priority 6) and relies on Terms never reaching the reparenting part,
+    # which needs attributes that only nodes have.
+    def prioritize(self, start: Any, prio: int = 1) -> None:
+        """
+        Reorders the tree from the given node on, so that operators with a
+        higher priority are evaluated first: the first node with the given
+        priority becomes the parent of the preceding nodes with a higher
+        priority. Continues recursively with the priorities up to 5.
+
+        :param start: The node at which the reordering starts.
+        :param prio: The priority of the operators to move up.
+        """
         # print("Prioritizing from", start.op, "with prio", prio, (start.lft,)
         # start.rgt)
         if prio == 6:
@@ -252,10 +334,23 @@ class Expression(Token):
         self.prioritize(current.lft, prio + 1)
         self.prioritize(current.rgt, prio)
 
-    def value(self, context):
+    # Any: see ExpressionNode.value().
+    def value(self, context: Scope) -> Any:
+        """
+        Evaluates the expression.
+
+        :param context: The scope in which the template runs.
+        :return: The value of a single term, or a list with the result of
+            the operators.
+        """
         return self.root.value(context)
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the expression tree to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, 'start')
         self.root.dump(indent + 1)
         print((' ' * indent) + self.name, 'end')

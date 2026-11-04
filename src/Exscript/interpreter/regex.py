@@ -20,9 +20,19 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import re
+"""
+Regular expressions in the template language.
+"""
 
+import re
+from typing import TYPE_CHECKING
+
+from ..parselib import Lexer
+from .scope import Scope
 from .string import String
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 modifier_grammar = (
     ('modifier', r'[a-zA-Z]'),
@@ -35,7 +45,22 @@ for thetype, regex in modifier_grammar:
 
 
 class Regex(String):
-    def __init__(self, lexer, parser, parent):
+    """
+    A regular expression between slashes, such as ``/^interface (.*)$/i``.
+    The only modifier is i, which ignores case. Variables in the expression
+    are replaced by their values when it is evaluated.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the expression and its modifiers, and compiles it
+        to count its capture groups. Raises a CompileError for an unknown
+        modifier or an invalid expression.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the expression.
+        """
         # String parser collects the regex.
         String.__init__(self, lexer, parser, parent, purpose='regex')
         self.groups = 0
@@ -66,7 +91,15 @@ class Regex(String):
         else:
             self.groups = regex.groups
 
-    def eval_escape(self, ttype, token):
+    def eval_escape(self, ttype: str, token: str) -> str:
+        """
+        Returns the given escape sequence unchanged, for the compiler of
+        regular expressions, except for an escaped delimiter, which is
+        returned without the backslash.
+
+        :param ttype: The token type of the escape sequence.
+        :param token: The escape sequence.
+        """
         # Simple escape sequence with one character.
         if len(token) == 2:
             char = token[1]
@@ -75,9 +108,20 @@ class Regex(String):
         # Anything else will be handled by Python's regex compiler.
         return token
 
-    def value(self, context):
+    def value(self, context: Scope) -> re.Pattern[str]:
+        """
+        Returns the compiled expression, with the variables replaced by their
+        values.
+
+        :param context: The scope in which the template runs.
+        """
         pattern = String.value(self, context)[0]
         return re.compile(pattern, self.flags)
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the expression to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, repr(self.string))

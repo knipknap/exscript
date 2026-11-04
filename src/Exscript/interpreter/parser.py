@@ -20,47 +20,93 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The parser of the template language.
+"""
+
 import copy
 from collections.abc import Callable, Iterable
+from typing import Any, cast
 
 from ..parselib import Lexer
 from .program import Program
 
 
 class Parser:
-    def __init__(self, **kwargs):
-        self.no_escaping = kwargs.get('no_escaping', False)
-        self.no_prompt = kwargs.get('no_prompt', False)
-        self.strip_command = kwargs.get('strip_command', True)
-        self.secure_only = kwargs.get('secure', False)
-        self.debug = kwargs.get('debug', 0)
-        self.variables = {}
+    """
+    Compiles templates. The variables that are defined on the parser are
+    available in every template that it compiles.
+    """
 
-    def define(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
+        """
+        Constructor.
+
+        :param kwargs: The options ``no_escaping`` (evaluate no escape
+            sequences, except for CR, LF and TAB in strings), ``no_prompt``
+            (do not wait for a prompt after each command), ``strip_command``
+            (strip the echo of the command from the response, default True),
+            ``secure`` (forbid the functions that are not marked as secure)
+            and ``debug`` (with 5 or more, dump the compiled template).
+        """
+        self.no_escaping: bool = kwargs.get('no_escaping', False)
+        self.no_prompt: bool = kwargs.get('no_prompt', False)
+        self.strip_command: bool = kwargs.get('strip_command', True)
+        self.secure_only: bool = kwargs.get('secure', False)
+        self.debug: int = kwargs.get('debug', 0)
+        self.variables: dict[str, Any] = {}
+
+    def define(self, **kwargs: Any) -> None:
+        """
+        Defines the given variables. A value that is a string or not
+        iterable is wrapped in a list, unless it is callable.
+        """
         for key, value in list(kwargs.items()):
             if (
                 not isinstance(value, str)
                 and isinstance(value, Iterable)
-                or isinstance(value, Callable)
+                # mypy takes Callable for a special form, not for the ABC it is.
+                or isinstance(value, cast(type, Callable))
             ):
                 self.variables[key] = value
             else:
                 self.variables[key] = [value]
 
-    def define_object(self, **kwargs):
+    def define_object(self, **kwargs: Any) -> None:
+        """
+        Defines the given variables, with the values as given.
+        """
         self.variables.update(kwargs)
 
-    def _create_lexer(self):
+    def _create_lexer(self) -> Lexer:
+        """
+        Returns a new lexer that creates a Program with a deep copy of the
+        variables.
+        """
         variables = copy.deepcopy(self.variables)
         return Lexer(Program, self, variables, debug=self.debug)
 
-    def parse(self, string, filename=None):
-        lexer = self._create_lexer()
-        return lexer.parse(string, filename)
+    def parse(self, string: str, filename: str | None = None) -> Program:
+        """
+        Compiles the given template.
 
-    def parse_file(self, filename):
+        :param string: The template.
+        :param filename: The file name that error messages show.
+        :return: The compiled template.
+        """
         lexer = self._create_lexer()
-        return lexer.parse_file(filename)
+        # The lexer returns what the parser class (Program) creates.
+        return cast(Program, lexer.parse(string, filename))
+
+    def parse_file(self, filename: str) -> Program:
+        """
+        Compiles the template in the given UTF-8 file.
+
+        :param filename: The name of the file.
+        :return: The compiled template.
+        """
+        lexer = self._create_lexer()
+        return cast(Program, lexer.parse_file(filename))
 
 
 if __name__ == "__main__":

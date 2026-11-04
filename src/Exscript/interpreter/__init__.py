@@ -20,6 +20,11 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The interpreter of Exscript templates. Parser compiles a template; the
+compiled template runs on a connection.
+"""
+
 from .parser import Parser
 
 __all__ = [

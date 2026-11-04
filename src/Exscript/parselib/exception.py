@@ -20,11 +20,15 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+Exceptions and warnings of the lexer.
+"""
 
 
 class LexerException(Exception):
     """
-    Fallback exception that is called when the error type is not known.
+    Fallback exception that is raised when the error type is not known. It
+    is the base class of CompileError and ExecuteError.
     """
 
     pass
@@ -49,8 +53,9 @@ class CompileError(LexerException):
 
 class CompileWarning(LexerWarning):
     """
-    Raised during the compilation procedure if the template contained
-    a syntax error, that does not prevent compilation but should be noted.
+    Emitted as a warning during the compilation procedure if the template
+    contained a syntax error, that does not prevent compilation but should
+    be noted.
     """
 
     pass

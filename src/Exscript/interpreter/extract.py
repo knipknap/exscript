@@ -20,16 +20,44 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from ..parselib import Token
+"""
+The extract statement of the template language.
+"""
+
+from typing import TYPE_CHECKING
+
+from ..parselib import Lexer, Token
 from .regex import Regex
+from .scope import Scope
 from .term import Term
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 
 class Extract(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    The statement ``extract /<regex>/ as|into <variables> [from <term>]``.
+    It matches each line of the response of the last command (or of the
+    given list) against the regular expression, and stores the capture
+    groups of the matching lines in the variables: "as" replaces their
+    values, "into" appends to them.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the statement and defines the variables as empty
+        lists. Raises a CompileError on syntax errors, if the parser has
+        no_prompt set (then there is no response), or if the number of
+        variables differs from the number of capture groups.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the statement.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.varnames = []
-        self.variables = {}
+        self.variables: dict[str, list[str | None]] = {}
         self.append = False
         self.source = None
 
@@ -102,7 +130,15 @@ class Extract(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def extract(self, context):
+    def extract(self, context: Scope) -> None:
+        """
+        Matches each line of the source against the regular expression, and
+        collects the capture groups of the matching lines in the variables
+        attribute, one list per variable. A group that did not participate
+        in a match adds None.
+
+        :param context: The scope in which the template runs.
+        """
         # Re-initialize the variable content, because this method
         # might be called multiple times.
         for varname in self.varnames:
@@ -128,15 +164,21 @@ class Extract(Token):
                 try:
                     value = match.group(i)
                 except IndexError:
-                    # This happens if the user provided a regex with less
-                    # groups in it than the number of variables. This should have
-                    # been caught already during parsing (comparing group count).
+                    # A variable in the regular expression can change its number
+                    # of groups at runtime.
                     msg = 'Extraction to variable #%s has no corresponding' % i
                     msg += ' regex capture group (index out of range).'
                     self.lexer.runtime_error(msg, self)
                 self.variables[varname].append(value)
 
-    def value(self, context):
+    def value(self, context: Scope) -> int:
+        """
+        Extracts the capture groups and stores them in the variables: "as"
+        replaces their values, "into" appends to them.
+
+        :param context: The scope in which the template runs.
+        :return: 1.
+        """
         self.extract(context)
         if not self.append:
             self.parent.define(**self.variables)
@@ -146,7 +188,12 @@ class Extract(Token):
                 self.parent.define(**{key: existing + self.variables[key]})
         return 1
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the statement to stdout.
+
+        :param indent: The indentation of this token.
+        """
         mode = self.append and 'into' or 'as'
         source = self.source is not None and self.source or '__response__'
         print(

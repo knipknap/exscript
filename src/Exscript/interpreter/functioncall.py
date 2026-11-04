@@ -20,14 +20,39 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+Function calls in the template language.
+"""
+
+from typing import TYPE_CHECKING, Any, cast
+
 import Exscript.interpreter.expression
 
-from ..parselib import Token
+from ..parselib import Lexer, Token
 from .exception import PermissionError
+from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 
 class FunctionCall(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    A call of a function, such as ``string.replace(x, "a", "b")``. The
+    function is a variable of the scope; it is called with the scope and
+    the values of the arguments.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the call. Raises a CompileError if the function
+        is not defined, and a PermissionError if the parser is in secure
+        mode and the function is not marked as secure.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the call.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.funcname = None
         self.arguments = []
@@ -62,22 +87,37 @@ class FunctionCall(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the call and its arguments to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, self.funcname, 'start')
         for argument in self.arguments:
             argument.dump(indent + 1)
         print((' ' * indent) + self.name, self.funcname, 'end')
 
-    def value(self, context):
+    # Any: the result of the function.
+    def value(self, context: Scope) -> Any:
+        """
+        Calls the function with the scope and the values of the arguments.
+        Raises an ExecuteError if the function is not defined, or if it
+        raises an exception.
+
+        :param context: The scope in which the template runs.
+        :return: The result of the function.
+        """
         argument_values = [arg.value(context) for arg in self.arguments]
         function = self.parent.get(self.funcname)
+        # The constructor sets funcname.
         if function is None:
-            self.mark_end(distance=len(self.funcname))
+            self.mark_end(distance=len(cast(str, self.funcname)))
             self.lexer.runtime_error('Undefined function %s' % repr(self.funcname), self)
         try:
             result = function(self.parent, *argument_values)
         except Exception as e:
-            self.mark_end(distance=len(self.funcname))
+            self.mark_end(distance=len(cast(str, self.funcname)))
             self.lexer.runtime_error(
                 '%s while executing function %s: %s' % (type(e).__name__, repr(self.funcname), e),
                 self,

@@ -20,15 +20,43 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The loop statement of the template language.
+"""
+
+from typing import TYPE_CHECKING, cast
+
 import Exscript.interpreter.code
 
-from ..parselib import Token
+from ..parselib import Lexer, Token
 from .expression import Expression
+from .scope import Scope
 from .term import Term
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 
 class Loop(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    The loop statement in three forms: ``loop <lists> as <variables>``
+    iterates over lists in parallel, ``loop from <expr> to <expr> [as
+    <variable>]`` over a range of numbers (in the variable "counter" by
+    default), and ``loop while|until <expression>`` while a condition
+    holds. The first two forms may also have a while or until condition.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the statement up to and including its end
+        keyword, and defines the loop variables as empty lists. Raises a
+        CompileError if the number of lists differs from the number of
+        variables.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the statement.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.during = None
         self.until = None
@@ -114,7 +142,16 @@ class Loop(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def value(self, context):
+    def value(self, context: Scope) -> int:
+        """
+        Runs the loop. A range loop counts from the first number up to, but
+        not including, the second. A while or until condition is checked
+        before each iteration. Raises an ExecuteError if the lists have
+        different lengths.
+
+        :param context: The scope in which the template runs.
+        :return: 1.
+        """
         if len(self.list_variables) == 0 and not self.thefrom:
             # If this is a "while" loop, iterate as long as the condition is
             # True.
@@ -132,7 +169,8 @@ class Loop(Token):
         # Retrieve the lists from the list terms.
         if self.thefrom:
             start = self.thefrom.value(context)[0]
-            stop = self.theto.value(context)[0]
+            # The constructor sets theto together with thefrom.
+            stop = cast(Expression, self.theto).value(context)[0]
             lists = [list(range(start, stop))]
         else:
             lists = [var.value(context) for var in self.list_variables]
@@ -157,7 +195,12 @@ class Loop(Token):
             self.block.value(context)
         return 1
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the statement, its conditions and its block to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, end=' ')
         print(self.list_variables, 'as', ', '.join(self.iter_varnames), 'start')
         if self.during is not None:

@@ -20,21 +20,54 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from ..parselib import Token
+"""
+The enter statement of the template language.
+"""
+
+from typing import TYPE_CHECKING
+
+from ..parselib import Lexer, Token
 from .execute import Execute
+from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 
 class Enter(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    The statement ``enter``, which sends an empty command to the remote
+    host.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the statement.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the statement.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         lexer.expect(self, 'keyword', 'enter')
         self.execute = Execute(lexer, parser, parent, '')
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def value(self, context):
+    def value(self, context: Scope) -> int:
+        """
+        Sends the empty command.
+
+        :param context: The scope in which the template runs.
+        :return: 1.
+        """
         return self.execute.value(context)
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the statement and its command to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name)
         self.execute.dump(indent + 1)

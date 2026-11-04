@@ -20,12 +20,35 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from ..parselib import Token
+"""
+The append statement of the template language.
+"""
+
+from typing import TYPE_CHECKING
+
+from ..parselib import Lexer, Token
 from .expression import Expression
+from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 
 class Append(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    The statement ``append <expression> to <variable>``, which appends the
+    value of the expression to the list in the variable.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the statement and defines the variable as an
+        empty list.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the statement.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
         # First expect an expression.
@@ -53,12 +76,23 @@ class Append(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def value(self, context):
+    def value(self, context: Scope) -> int:
+        """
+        Appends the value of the expression to the variable.
+
+        :param context: The scope in which the template runs.
+        :return: 1.
+        """
         existing = self.parent.get(self.varname)
         args = {self.varname: existing + self.expr.value(context)}
         self.parent.define(**args)
         return 1
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the statement and its expression to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, "to", self.varname)
         self.expr.dump(indent + 1)

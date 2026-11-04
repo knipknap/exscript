@@ -20,23 +20,56 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from ..parselib import Token
+"""
+Variables in expressions of the template language.
+"""
+
+from typing import TYPE_CHECKING, Any
+
+from ..parselib import Lexer, Token
+from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 
 class Variable(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    A reference to a variable in an expression.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the name of the variable.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the expression.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.varname = lexer.token()[1]
         lexer.expect(self, 'varname')
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def value(self, context):
+    # Any: see Scope.get().
+    def value(self, context: Scope) -> Any:
+        """
+        Returns the value of the variable. Raises an ExecuteError if the
+        variable is not defined.
+
+        :param context: The scope in which the template runs.
+        """
         val = self.parent.get(self.varname)
         if val is None:
             msg = 'Undefined variable %s' % repr(self.varname)
             self.lexer.runtime_error(msg, self)
         return val
 
-    def dump(self, indent=0):
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the name of the variable to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name, self.varname)

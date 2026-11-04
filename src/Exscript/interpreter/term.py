@@ -20,18 +20,42 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from ..parselib import Token
+"""
+The terms of expressions in the template language.
+"""
+
+from typing import TYPE_CHECKING, Any, cast
+
+from ..parselib import Lexer, Token
 from .functioncall import FunctionCall
 from .number import Number
 from .regex import Regex
+from .scope import Scope
 from .string import String
 from .variable import Variable
 
+if TYPE_CHECKING:
+    from .parser import Parser
+
 
 class Term(Token):
-    def __init__(self, lexer, parser, parent):
+    """
+    An operand of an expression: a variable, a function call, a string, a
+    regular expression, or a number (also as hexadecimal or octal number,
+    or as the keywords true and false).
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the term. Raises a NameError if a variable is
+        not defined.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The scope that contains the expression.
+        """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
-        self.term = None
+        self.term: Variable | FunctionCall | String | Number | None = None
         self.lft = None
         self.rgt = None
         self.op = None
@@ -68,12 +92,28 @@ class Term(Token):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def priority(self):
+    def priority(self) -> int:
+        """
+        Returns 6, the priority that Expression.prioritize() assumes for a
+        term.
+        """
         return 6
 
-    def value(self, context):
-        return self.term.value(context)
+    # Any: the value of a variable or the result of a function.
+    def value(self, context: Scope) -> Any:
+        """
+        Returns the value of the term.
 
-    def dump(self, indent=0):
+        :param context: The scope in which the template runs.
+        """
+        # The constructor sets the term or raises an error.
+        return cast('Variable | FunctionCall | String | Number', self.term).value(context)
+
+    def dump(self, indent: int = 0) -> None:
+        """
+        Prints the term to stdout.
+
+        :param indent: The indentation of this token.
+        """
         print((' ' * indent) + self.name)
-        self.term.dump(indent + 1)
+        cast('Variable | FunctionCall | String | Number', self.term).dump(indent + 1)

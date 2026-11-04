@@ -20,10 +20,19 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import re
+"""
+NETCONF RPCs in a template: the <rpc> elements.
+"""
 
+import re
+from typing import TYPE_CHECKING, Any
+
+from ..parselib import Lexer
 from .execute import Execute
 from .scope import Scope
+
+if TYPE_CHECKING:
+    from .parser import Parser
 
 grammar = (
     ('line_comment', r'(?:^|(?<=[\r\n]))[ \t]*#[^\r\n]*(?:[\r\n]|$)'),
@@ -40,7 +49,21 @@ for thetype, regex in grammar:
 
 
 class RPCBody(Scope):
-    def __init__(self, lexer, parser, parent):
+    """
+    An <rpc> element of a template. Its body, without the rpc tags, becomes
+    a command (an Execute token) that is sent to the remote host. The XML
+    syntax of the body is checked when the template is compiled.
+    """
+
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
+        """
+        Constructor. Parses the element from the opening to the closing rpc
+        tag.
+
+        :param lexer: The lexer that reads the template.
+        :param parser: The parser of the template.
+        :param parent: The parent scope.
+        """
         Scope.__init__(self, self.__class__.__name__, lexer, parser, parent)
         lexer.set_grammar(grammar_c)
         lexer.expect(self, 'open_rpc_tag')
@@ -68,5 +91,11 @@ class RPCBody(Scope):
         # End of statement.
         self.mark_end(rstrip=True)
 
-    def execute(self):
+    # Any: the value of the last child (see Scope.value()).
+    def execute(self) -> Any:
+        """
+        Evaluates the element, with the element itself as the context.
+
+        :return: The value of the last child, or 1 if there are no children.
+        """
         return self.value(self)
