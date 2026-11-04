@@ -28,16 +28,26 @@ import math
 import re
 import socket
 import struct
+from collections.abc import Iterable
+from typing import cast
 
 
-def _least_bit(number):
+def _least_bit(number: int) -> int:
+    """
+    Returns the position of the lowest bit that is set in the given 32-bit
+    number, or 32 if no bit is set.
+    """
     for i in range(0, 32):
         if number & (0x00000001 << i) != 0:
             return i
     return 32
 
 
-def _highest_bit(number):
+def _highest_bit(number: int) -> float:
+    """
+    Rounds the given 32-bit number up to the next power of two and returns
+    the square root of the result; returns 0 for 0.
+    """
     if number == 0:
         return 0
     number -= 1
@@ -50,7 +60,7 @@ def _highest_bit(number):
     return math.sqrt(number)
 
 
-def is_ip(string):
+def is_ip(string: str) -> bool:
     """
     Returns True if the given string is an IPv4 address, False otherwise.
 
@@ -68,7 +78,7 @@ def is_ip(string):
     return True
 
 
-def normalize_ip(ip):
+def normalize_ip(ip: str) -> str:
     """
     Transform the address into a fixed-length form, such as::
 
@@ -85,7 +95,7 @@ def normalize_ip(ip):
     return '.'.join(str(int(l)).rjust(3, '0') for l in theip)
 
 
-def clean_ip(ip):
+def clean_ip(ip: str) -> str:
     """
     Cleans the ip address up, useful for removing leading zeros, e.g.::
 
@@ -99,25 +109,25 @@ def clean_ip(ip):
     return '.'.join(str(int(i)) for i in ip.split('.'))
 
 
-def ip2int(ip):
+def ip2int(ip: str) -> int:
     """
     Converts the given IP address to a 4 byte integer value.
 
     :type  ip: string
     :param ip: An IP address.
-    :rtype:  long
+    :rtype:  int
     :return: The IP, converted to a number.
     """
     if ip == '255.255.255.255':
         return 0xFFFFFFFF
-    return struct.unpack('!L', socket.inet_aton(ip))[0]
+    return cast(int, struct.unpack('!L', socket.inet_aton(ip))[0])
 
 
-def int2ip(number):
+def int2ip(number: int) -> str:
     """
     Converts the given integer value to an IP address.
 
-    :type  number: long
+    :type  number: int
     :param number: An IP as a number.
     :rtype:  string
     :return: The IP address.
@@ -126,19 +136,19 @@ def int2ip(number):
     return socket.inet_ntoa(struct.pack('!L', number))
 
 
-def pfxlen2mask_int(pfxlen):
+def pfxlen2mask_int(pfxlen: int) -> int:
     """
     Converts the given prefix length to an IP mask value.
 
     :type  pfxlen: int
     :param pfxlen: A prefix length.
-    :rtype:  long
-    :return: The mask, as a long value.
+    :rtype:  int
+    :return: The mask, as an integer.
     """
     return 0xFFFFFFFF << (32 - int(pfxlen))
 
 
-def pfxlen2mask(pfxlen):
+def pfxlen2mask(pfxlen: int) -> str:
     """
     Converts the given prefix length to an IP mask.
 
@@ -150,31 +160,32 @@ def pfxlen2mask(pfxlen):
     return int2ip(pfxlen2mask_int(pfxlen))
 
 
-def mask2pfxlen(mask):
+def mask2pfxlen(mask: str) -> int:
     """
     Converts the given IP mask to a prefix length.
 
     :type  mask: string
     :param mask: An IP mask.
-    :rtype:  long
-    :return: The mask, as a long value.
+    :rtype:  int
+    :return: The prefix length.
     """
     return 32 - _least_bit(ip2int(mask))
 
 
-def parse_prefix(prefix, default_length=24):
+def parse_prefix(prefix: str, default_length: int = 24) -> tuple[str, int]:
     """
     Splits the given IP prefix into a network address and a prefix length.
     If the prefix does not have a length (i.e., it is a simple IP address),
     it is presumed to have the given default length.
 
     :type  prefix: string
-    :param prefix: An IP mask.
-    :type  default_length: long
+    :param prefix: An IP prefix.
+    :type  default_length: int
     :param default_length: The default ip prefix length.
     :rtype:  string, int
     :return: A tuple containing the IP address and prefix length.
     """
+    pfxlen: str | int
     if '/' in prefix:
         network, pfxlen = prefix.split('/')
     else:
@@ -183,14 +194,14 @@ def parse_prefix(prefix, default_length=24):
     return network, int(pfxlen)
 
 
-def network(prefix, default_length=24):
+def network(prefix: str, default_length: int = 24) -> str:
     """
     Given a prefix, this function returns the corresponding network
     address.
 
     :type  prefix: string
     :param prefix: An IP prefix.
-    :type  default_length: long
+    :type  default_length: int
     :param default_length: The default ip prefix length.
     :rtype:  string
     :return: The IP network address.
@@ -200,14 +211,14 @@ def network(prefix, default_length=24):
     return int2ip(ip & pfxlen2mask_int(pfxlen))
 
 
-def broadcast(prefix, default_length=24):
+def broadcast(prefix: str, default_length: int = 24) -> str:
     """
     Given a prefix, this function returns the corresponding broadcast
     address.
 
     :type  prefix: string
     :param prefix: An IP prefix.
-    :type  default_length: long
+    :type  default_length: int
     :param default_length: The default ip prefix length.
     :rtype:  string
     :return: The IP broadcast address.
@@ -217,7 +228,7 @@ def broadcast(prefix, default_length=24):
     return int2ip(ip | ~pfxlen2mask_int(pfxlen))
 
 
-def remote_ip(local_ip):
+def remote_ip(local_ip: str) -> str:
     """
     Given an IP address, this function calculates the remaining available
     IP address under the assumption that it is a /30 network.
@@ -229,12 +240,12 @@ def remote_ip(local_ip):
     :rtype:  string
     :return: The other IP address of the link address pair.
     """
-    local_ip = ip2int(local_ip)
-    network = local_ip & pfxlen2mask_int(30)
-    return int2ip(network + 3 - (local_ip - network))
+    ip_int = ip2int(local_ip)
+    network = ip_int & pfxlen2mask_int(30)
+    return int2ip(network + 3 - (ip_int - network))
 
 
-def matches_prefix(ip, prefix):
+def matches_prefix(ip: str, prefix: str) -> bool:
     """
     Returns True if the given IP address is part of the given
     network, returns False otherwise.
@@ -253,7 +264,7 @@ def matches_prefix(ip, prefix):
     return ip_int & mask_int == network_int & mask_int
 
 
-def is_private(ip):
+def is_private(ip: str) -> bool:
     """
     Returns True if the given IP address is private,
     returns False otherwise.
@@ -272,7 +283,7 @@ def is_private(ip):
     return False
 
 
-def sort(iterable):
+def sort(iterable: Iterable[str]) -> list[str]:
     """
     Given an IP address list, this function sorts the list.
 

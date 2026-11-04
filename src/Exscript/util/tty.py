@@ -27,7 +27,7 @@ TTY utilities.
 import shutil
 
 
-def get_terminal_size(default_rows=25, default_cols=80):
+def get_terminal_size(default_rows: int = 25, default_cols: int = 80) -> tuple[int, int]:
     """
     Returns the number of lines and columns of the terminal: from the LINES
     and COLUMNS environment variables if they are set, else from the terminal

@@ -27,10 +27,13 @@ Development tools.
 import sys
 import traceback
 import warnings
+from collections.abc import Callable
 from functools import wraps
+from types import TracebackType
+from typing import Any, Self
 
 
-def add_label(obj, name, **kwargs):
+def add_label[T](obj: T, name: str, **kwargs: Any) -> T:
     """
     Labels an object such that it can later be checked with
     :class:`get_label()`.
@@ -49,7 +52,7 @@ def add_label(obj, name, **kwargs):
     return obj
 
 
-def get_label(obj, name):
+def get_label(obj: object, name: str) -> dict[str, Any] | None:
     """
     Checks whether an object has the given label attached (see
     :class:`add_label()`) and returns the associated options.
@@ -61,13 +64,13 @@ def get_label(obj, name):
     :rtype:  dict or None
     :return: The optional values if the label is attached, None otherwise.
     """
-    labels = obj.__dict__.get('_labels')
+    labels: dict[str, dict[str, Any]] | None = obj.__dict__.get('_labels')
     if labels is None:
         return None
     return labels.get(name)
 
 
-def copy_labels(src, dst):
+def copy_labels(src: object, dst: object) -> None:
     """
     Copies all labels of one object to another object.
 
@@ -82,16 +85,19 @@ def copy_labels(src, dst):
     dst.__dict__['_labels'] = labels.copy()
 
 
-def serializeable_exc_info(thetype, ex, tb):
+def serializeable_exc_info(
+    thetype: type[BaseException] | None, ex: BaseException | None, tb: TracebackType | None
+) -> tuple[type[BaseException] | None, BaseException | None, str]:
     """
-    Since traceback objects can not be pickled, this function manipulates
-    exception info tuples before they are passed accross process
-    boundaries.
+    Returns the given exception info with the traceback formatted as a
+    string, so that it can be pickled, unlike a traceback object.
+
+    :return: The exception info, with the traceback formatted as a string.
     """
     return thetype, ex, ''.join(traceback.format_exception(thetype, ex, tb))
 
 
-def serializeable_sys_exc_info():
+def serializeable_sys_exc_info() -> tuple[type[BaseException] | None, BaseException | None, str]:
     """
     Convenience wrapper around serializeable_exc_info, equivalent to
     serializeable_exc_info(sys.exc_info()).
@@ -99,38 +105,37 @@ def serializeable_sys_exc_info():
     return serializeable_exc_info(*sys.exc_info())
 
 
-def format_exception(thetype, ex, tb):
+def format_exception(
+    thetype: type[BaseException] | None, ex: BaseException | None, tb: TracebackType | str | None
+) -> str:
     """
-    This function is a drop-in replacement for Python's
-    traceback.format_exception().
+    Formats the given exception info like Python's
+    traceback.format_exception(), but also accepts a traceback that is
+    formatted as a string, as serializeable_exc_info() returns it.
 
-    Since traceback objects can not be pickled, Exscript is forced to
-    manipulate them before they are passed accross process boundaries.
-    This leads to the fact the Python's traceback.format_exception()
-    no longer works for those objects.
-
-    This function works with any traceback object, regardless of whether
-    or not Exscript manipulated it.
+    :return: The formatted exception; unlike Python's function, a string.
     """
     if isinstance(tb, str):
         return tb
     return ''.join(traceback.format_exception(thetype, ex, tb))
 
 
-def deprecation(msg):
+def deprecation(msg: str) -> None:
     """
-    Prints a deprecation warning.
+    Issues a DeprecationWarning with the given message. Call it in the
+    deprecated function: the warning points to the code that called that
+    function.
     """
     warnings.warn(msg, category=DeprecationWarning, stacklevel=3)
 
 
-def deprecated(func):
+def deprecated[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """
-    A decorator for marking functions as deprecated. Results in
-    a printed warning message when the function is used.
+    A decorator for marking functions as deprecated: each call of the
+    function issues a DeprecationWarning that points to the calling code.
     """
 
-    def decorated(*args, **kwargs):
+    def decorated(*args: P.args, **kwargs: P.kwargs) -> R:
         deprecation('Call to deprecated function %s.' % func.__name__)
         return func(*args, **kwargs)
 
@@ -140,13 +145,13 @@ def deprecated(func):
     return decorated
 
 
-def synchronized(func):
+def synchronized[R](func: Callable[..., R]) -> Callable[..., R]:
     """
     Decorator for synchronizing method access.
     """
 
     @wraps(func)
-    def wrapped(self, *args, **kwargs):
+    def wrapped(self: Any, *args: Any, **kwargs: Any) -> R:
         try:
             rlock = self._sync_lock
         except AttributeError:
@@ -159,13 +164,13 @@ def synchronized(func):
     return wrapped
 
 
-def debug(func):
+def debug[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """
     Decorator that prints a message whenever a function is entered or left.
     """
 
     @wraps(func)
-    def wrapped(*args, **kwargs):
+    def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         arg = repr(args) + ' ' + repr(kwargs)
         sys.stdout.write('Entering ' + func.__name__ + arg + '\n')
         try:
@@ -182,32 +187,67 @@ def debug(func):
 
 
 class Decorator:
-    def __init__(self, obj):
+    """
+    Wraps an object: the attributes of the wrapped object can be read and
+    written through the wrapper, except for the attributes of the wrapper
+    itself.
+    """
+
+    def __init__(self, obj: object) -> None:
+        """
+        Constructor.
+
+        :param obj: The wrapped object.
+        """
         self.__dict__['obj'] = obj
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: object) -> None:
         if name in list(self.__dict__.keys()):
             self.__dict__[name] = value
         else:
             setattr(self.obj, name, value)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         if name in list(self.__dict__.keys()):
             return self.__dict__[name]
         return getattr(self.obj, name)
 
 
 class _Context(Decorator):
-    def __enter__(self):
+    """
+    Wraps an object for a with statement that does nothing when it ends.
+    """
+
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, thetype, value, traceback):
+    def __exit__(
+        self,
+        thetype: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         pass
 
 
 class Context(_Context):
-    def __exit__(self, thetype, value, traceback):
+    """
+    Wraps an object for a with statement that calls release() of the object
+    when it ends, e.g. to release an account.
+    """
+
+    # Any: the result of release() of the wrapped object.
+    def __exit__(
+        self,
+        thetype: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> Any:
         return self.release()
 
-    def context(self):
+    def context(self) -> _Context:
+        """
+        Returns a context for the wrapped object that does not call
+        release() when it ends.
+        """
         return _Context(self)

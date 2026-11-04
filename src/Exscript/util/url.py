@@ -25,12 +25,17 @@ Working with URLs (as used in URL formatted hostnames).
 """
 
 import re
+from typing import Any, cast
 from urllib.parse import quote, urlencode, urlparse, urlsplit
 
 from .collections import OrderedDefaultDict
 
 
-def _make_hexmap():
+def _make_hexmap() -> dict[str, str]:
+    """
+    Returns a dictionary that maps each two-digit hexadecimal number, in
+    lower and in upper case, to the character with that code.
+    """
     hexmap = dict()
     for i in range(256):
         hexmap['%02x' % i] = chr(i)
@@ -54,8 +59,12 @@ _WELL_KNOWN_PORTS = {
 }
 
 
-def _unquote(string):
-    """_unquote('abc%20def') -> 'abc def'."""
+def _unquote(string: str) -> str:
+    """
+    Replaces each %xx escape in the given string by the character with that
+    code, e.g. _unquote('abc%20def') -> 'abc def'. A % that is not followed
+    by two hexadecimal digits is kept.
+    """
     result = string.split('%')
     for i, item in enumerate(result[1:]):
         i += 1
@@ -68,15 +77,12 @@ def _unquote(string):
     return ''.join(result)
 
 
-def _urlparse_qs(url):
+def _urlparse_qs(url: str) -> OrderedDefaultDict[str, list[str]]:
     """
-    Parse a URL query string and return the components as a dictionary.
-
-    Based on the cgi.parse_qs method.This is a utility function provided
-    with urlparse so that users need not use cgi module for
-    parsing the url query string.
-
-    Arguments:
+    Parses the query string of the given URL and returns the variables as
+    an ordered dictionary that maps each name to the list of its values.
+    The pairs are separated by & or ;, a + stands for a space, and pairs
+    without a value are skipped.
 
     :type url: str
     :param url: URL with query string to be parsed
@@ -88,7 +94,7 @@ def _urlparse_qs(url):
     pairs = [s2 for s1 in querystring.split('&') for s2 in s1.split(';')]
 
     # Split the name/value pairs.
-    result = OrderedDefaultDict(list)
+    result: OrderedDefaultDict[str, list[str]] = OrderedDefaultDict(list)
     for name_value in pairs:
         pair = name_value.split('=', 1)
         if len(pair) != 2:
@@ -107,17 +113,20 @@ class Url:
     Represents a URL.
     """
 
-    def __init__(self):
-        self.protocol = None
-        self.username = None
-        self.password1 = None
-        self.password2 = None
-        self.hostname = None
-        self.port = None
-        self.path = None
-        self.vars = None
+    def __init__(self) -> None:
+        """
+        Constructor. All attributes are None; see :class:`from_string()`.
+        """
+        self.protocol: str | None = None
+        self.username: str | None = None
+        self.password1: str | None = None
+        self.password2: str | None = None
+        self.hostname: str | None = None
+        self.port: int | None = None
+        self.path: str | None = None
+        self.vars: dict[str, list[Any]] | None = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Like :class:`to_string()`.
 
@@ -137,7 +146,7 @@ class Url:
             if self.password2 is not None:
                 url += ':' + quote(self.password2, '')
             url += '@'
-        url += self.hostname
+        url += cast(str, self.hostname)  # a hostname is required; None raises TypeError
         if self.port:
             url += ':' + str(self.port)
         if self.path:
@@ -151,7 +160,7 @@ class Url:
             url += '?' + urlencode(pairs)
         return url
 
-    def to_string(self):
+    def to_string(self) -> str:
         """
         Returns the URL, including all attributes, as a string.
 
@@ -161,7 +170,7 @@ class Url:
         return str(self)
 
     @staticmethod
-    def from_string(url, default_protocol='ssh'):
+    def from_string(url: str, default_protocol: str = 'ssh') -> 'Url':
         """
         Parses the given URL and returns an URL object. There are some
         differences to Python's built-in URL parser:
@@ -210,7 +219,7 @@ class Url:
         netloc = parsed[1]
 
         # Parse username and password.
-        auth = ''
+        auth: str | list[str] = ''
         if '@' in netloc:
             auth, netloc = netloc.split('@')
             auth = auth.split(':')

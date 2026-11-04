@@ -24,10 +24,12 @@
 Wrapper around the ipv4 and ipv6 modules to handle both, ipv4 and ipv6.
 """
 
+from typing import Any, cast
+
 from Exscript.util import ipv4, ipv6
 
 
-def is_ip(string):
+def is_ip(string: str) -> bool:
     """
     Returns True if the given string is an IPv4 or IPv6 address, False
     otherwise.
@@ -40,7 +42,13 @@ def is_ip(string):
     return ipv4.is_ip(string) or ipv6.is_ip(string)
 
 
-def _call_func(funcname, ip, *args):
+def _call_func(funcname: str, ip: str, *args: Any) -> Any:
+    """
+    Calls the function with the given name from the ipv4 or the ipv6 module,
+    depending on the version of the given IP address, and returns its result.
+    Raises ValueError if the address is neither an IPv4 nor an IPv6 address.
+    """
+    # Any: the result is that of the function with the given name.
     if ipv4.is_ip(ip):
         return ipv4.__dict__[funcname](ip, *args)
     elif ipv6.is_ip(ip):
@@ -48,7 +56,7 @@ def _call_func(funcname, ip, *args):
     raise ValueError('neither ipv4 nor ipv6: ' + repr(ip))
 
 
-def normalize_ip(ip):
+def normalize_ip(ip: str) -> str:
     """
     Transform the address into a fixed-length form, such as:
 
@@ -60,10 +68,10 @@ def normalize_ip(ip):
     :rtype:  string
     :return: The normalized IP.
     """
-    return _call_func('normalize_ip', ip)
+    return cast(str, _call_func('normalize_ip', ip))
 
 
-def clean_ip(ip):
+def clean_ip(ip: str) -> str:
     """
     Cleans the ip address up, useful for removing leading zeros, e.g.::
 
@@ -75,4 +83,4 @@ def clean_ip(ip):
     :rtype:  string
     :return: The cleaned up IP.
     """
-    return _call_func('clean_ip', ip)
+    return cast(str, _call_func('clean_ip', ip))

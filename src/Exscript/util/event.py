@@ -24,7 +24,9 @@
 A simple signal/event mechanism.
 """
 
+from collections.abc import Callable
 from threading import Lock
+from typing import Any, cast
 
 from . import weakmethod
 
@@ -42,26 +44,28 @@ class Event:
         # Or just: myevent('test', foo = 'bar')
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Constructor.
         """
-        # To save memory, we do NOT init the subscriber attributes with
-        # lists. Unfortunately this makes a lot of the code in this class
-        # more messy than it should be, but events are used so widely in
-        # Exscript that this change makes a huge difference to the memory
-        # footprint.
-        self.lock = None
-        self.weak_subscribers = None
-        self.hard_subscribers = None
+        # To save memory, the lock and the subscriber lists are created only
+        # when needed: events are used so widely in Exscript that this makes
+        # a big difference to the memory footprint.
+        self.lock: Lock | None = None
+        self.weak_subscribers: (
+            list[tuple[weakmethod.WeakMethod, tuple[Any, ...], dict[str, Any]]] | None
+        ) = None
+        self.hard_subscribers: (
+            list[tuple[Callable[..., Any], tuple[Any, ...], dict[str, Any]]] | None
+        ) = None
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         """
         Like emit().
         """
         return self.emit(*args, **kwargs)
 
-    def connect(self, callback, *args, **kwargs):
+    def connect(self, callback: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
         """
         Connects the event with the given callback.
         When the signal is emitted, the callback is invoked.
@@ -71,7 +75,7 @@ class Event:
             need to make sure to call :class:`disconnect()` if you want the handler
             to be garbage collected.
 
-        :type  callback: object
+        :type  callback: callable
         :param callback: The callback function.
         :type  args: tuple
         :param args: Optional arguments passed to the callback.
@@ -84,7 +88,9 @@ class Event:
             self.hard_subscribers = []
         self.hard_subscribers.append((callback, args, kwargs))
 
-    def listen(self, callback, *args, **kwargs):
+    def listen(
+        self, callback: Callable[..., Any], *args: Any, **kwargs: Any
+    ) -> weakmethod.WeakMethod:
         """
         Like :class:`connect()`, but uses a weak reference instead of a
         normal reference.
@@ -96,7 +102,7 @@ class Event:
             your handler is a local function, it may be garbage collected. To
             prevent this, use :class:`connect()` instead.
 
-        :type  callback: object
+        :type  callback: callable
         :param callback: The callback function.
         :type  args: tuple
         :param args: Optional arguments passed to the callback.
@@ -116,7 +122,7 @@ class Event:
             self.weak_subscribers.append((ref, args, kwargs))
         return ref
 
-    def n_subscribers(self):
+    def n_subscribers(self) -> int:
         """
         Returns the number of connected subscribers.
 
@@ -127,10 +133,18 @@ class Event:
         weak = self.weak_subscribers and len(self.weak_subscribers) or 0
         return hard + weak
 
-    def _hard_callbacks(self):
-        return [s[0] for s in self.hard_subscribers]
+    def _hard_callbacks(self) -> list[Callable[..., Any]]:
+        """
+        Returns the callbacks that are connected with a hard reference.
+        Only called if there are hard subscribers.
+        """
+        return [s[0] for s in cast('list[Any]', self.hard_subscribers)]
 
-    def _weakly_connected_index(self, callback):
+    def _weakly_connected_index(self, callback: Callable[..., Any]) -> int | None:
+        """
+        Returns the index of the given callback in the list of weak
+        subscribers, or None if it is not connected with a weak reference.
+        """
         if self.weak_subscribers is None:
             return None
         weak = [s[0].get_function() for s in self.weak_subscribers]
@@ -139,11 +153,11 @@ class Event:
         except ValueError:
             return None
 
-    def is_connected(self, callback):
+    def is_connected(self, callback: Callable[..., Any]) -> bool:
         """
         Returns True if the event is connected to the given function.
 
-        :type  callback: object
+        :type  callback: callable
         :param callback: The callback function.
         :rtype:  bool
         :return: Whether the signal is connected to the given function.
@@ -155,7 +169,7 @@ class Event:
             return False
         return callback in self._hard_callbacks()
 
-    def emit(self, *args, **kwargs):
+    def emit(self, *args: Any, **kwargs: Any) -> Any:
         """
         Emits the signal, passing the given arguments to the callbacks.
         If one of the callbacks returns a value other than None, no further
@@ -181,15 +195,9 @@ class Event:
             for callback, user_args, user_kwargs in self.weak_subscribers:
                 kwargs.update(user_kwargs)
 
-                # Even though WeakMethod notifies us when the underlying
-                # function is destroyed, and we remove the item from the
-                # the list of subscribers, there is no guarantee that
-                # this notification has already happened because the garbage
-                # collector may run while this loop is executed.
-                # Disabling the garbage collector temporarily also does
-                # not work, because other threads may be trying to do
-                # the same, causing yet another race condition.
-                # So the only solution is to skip such functions.
+                # The garbage collector may destroy the function during this
+                # loop, before WeakMethod's notification removes it; disabling
+                # the collector would race with other threads. So skip it.
                 function = callback.get_function()
                 if function is None:
                     continue
@@ -197,31 +205,31 @@ class Event:
                 if result is not None:
                     return result
 
-    def _try_disconnect(self, ref):
+    def _try_disconnect(self, ref: weakmethod.WeakMethod) -> None:
         """
         Called by the weak reference when its target dies.
         In other words, we can assert that self.weak_subscribers is not
         None at this time.
         """
-        with self.lock:
-            weak = [s[0] for s in self.weak_subscribers]
+        with cast(Lock, self.lock):
+            weak = [s[0] for s in cast('list[Any]', self.weak_subscribers)]
             try:
                 index = weak.index(ref)
             except ValueError:
                 # subscriber was already removed by a call to disconnect()
                 pass
             else:
-                self.weak_subscribers.pop(index)
+                cast('list[Any]', self.weak_subscribers).pop(index)
 
-    def disconnect(self, callback):
+    def disconnect(self, callback: Callable[..., Any]) -> None:
         """
         Disconnects the signal from the given function.
 
-        :type  callback: object
+        :type  callback: callable
         :param callback: The callback function.
         """
         if self.weak_subscribers is not None:
-            with self.lock:
+            with cast(Lock, self.lock):  # listen() creates the lock first
                 index = self._weakly_connected_index(callback)
                 if index is not None:
                     self.weak_subscribers.pop(index)[0]
@@ -233,7 +241,7 @@ class Event:
             else:
                 self.hard_subscribers.pop(index)
 
-    def disconnect_all(self):
+    def disconnect_all(self) -> None:
         """
         Disconnects all connected functions from all signals.
         """

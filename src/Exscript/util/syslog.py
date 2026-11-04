@@ -34,13 +34,13 @@ LOG_USER = 1 << 3
 
 
 def netlog(
-    message,
-    source=None,
-    host='localhost',
-    port=514,
-    priority=LOG_DEBUG,
-    facility=LOG_USER,
-):
+    message: str,
+    source: str | None = None,
+    host: str = 'localhost',
+    port: int = 514,
+    priority: int = LOG_DEBUG,
+    facility: int = LOG_USER,
+) -> None:
     """
     Sends a message to a syslog server over UDP, like the logger -n command.
     Python's built in syslog module does not support networking, so
@@ -54,7 +54,7 @@ def netlog(
     :type  message: str
     :param message: The message.
     :type  source: str
-    :param source: The source address.
+    :param source: The message source, e.g. "scriptname[pid]".
     :type  host: str
     :param host: The IP address or hostname of the receiving server.
     :type  port: int

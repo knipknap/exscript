@@ -27,8 +27,13 @@ lxml is imported on first use, not with Exscript: it enables the GIL of
 free-threaded Python.
 """
 
+from typing import TYPE_CHECKING
 
-def _parse(string, huge_tree=False):
+if TYPE_CHECKING:
+    from lxml.etree import _Element
+
+
+def _parse(string: str, huge_tree: bool = False) -> '_Element':
     """
     Parses an XML string and returns the root element, safe from XXE
     attacks: the parser never resolves entities or loads DTDs or other
@@ -50,12 +55,17 @@ class XMLValidationError(Exception):
     Provides the XML string that failed in its `xmlstring` attribute.
     """
 
-    def __init__(self, *args: object, xmlstring=None) -> None:
+    def __init__(self, *args: object, xmlstring: str | None = None) -> None:
+        """
+        Constructor. The positional arguments are passed to Exception.
+
+        :param xmlstring: The XML string that failed the validation.
+        """
         super().__init__(*args)
         self.xmlstring = xmlstring
 
 
-def validate_xml(string, *, silent=False):
+def validate_xml(string: str, *, silent: bool = False) -> bool:
     """
     Try to parse the given string as XML to verify its syntax.
 

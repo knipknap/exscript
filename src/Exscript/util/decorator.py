@@ -24,11 +24,20 @@
 Decorators for callbacks passed to Queue.run().
 """
 
+from collections.abc import Callable, Mapping
+from typing import TYPE_CHECKING, Any
+
 from ..protocols.exception import LoginFailure
-from .impl import add_label, copy_labels, get_label  # noqa: F401
+from .impl import add_label as add_label  # re-exported for compatibility
+from .impl import copy_labels
+from .impl import get_label as get_label  # re-exported for compatibility
+
+if TYPE_CHECKING:
+    from ..host import Host
+    from ..protocols import Protocol
 
 
-def bind(function, *args, **kwargs):
+def bind[R](function: Callable[..., R], *args: Any, **kwargs: Any) -> Callable[..., R]:
     """
     Wraps the given function such that when it is called, the given arguments
     are passed in addition to the connection argument.
@@ -43,7 +52,7 @@ def bind(function, *args, **kwargs):
     :return: The wrapped function.
     """
 
-    def decorated(*inner_args, **inner_kwargs):
+    def decorated(*inner_args: Any, **inner_kwargs: Any) -> R:
         kwargs.update(inner_kwargs)
         return function(*(inner_args + args), **kwargs)
 
@@ -51,7 +60,7 @@ def bind(function, *args, **kwargs):
     return decorated
 
 
-def os_function_mapper(map):
+def os_function_mapper[R](map: Mapping[str, Callable[..., R]]) -> Callable[..., R]:
     """
     When called with an open connection, this function uses the
     conn.guess_os() function to guess the operating system
@@ -72,19 +81,15 @@ def os_function_mapper(map):
 
     An exception is raised if a matching function is not found in the map.
 
-    :type  conn: Exscript.protocols.Protocol
-    :param conn: The open connection.
     :type  map: dict
     :param map: A dictionary mapping operating system name to a function.
-    :type  args: list
-    :param args: Passed on to the called function.
-    :type  kwargs: dict
-    :param kwargs: Passed on to the called function.
-    :rtype:  object
-    :return: The return value of the called function.
+    :rtype:  function
+    :return: A function that takes the arguments (job, host, conn, ...),
+        passes them to the function for the operating system of the
+        connection, and returns its result.
     """
 
-    def decorated(job, host, conn, *args, **kwargs):
+    def decorated(job: object, host: 'Host', conn: 'Protocol', *args: Any, **kwargs: Any) -> R:
         os = conn.guess_os()
         func = map.get(os)
         if func is None:
@@ -94,7 +99,9 @@ def os_function_mapper(map):
     return decorated
 
 
-def _decorate(flush=True, attempts=1, only_authenticate=False):
+def _decorate[R](
+    flush: bool = True, attempts: int = 1, only_authenticate: bool = False
+) -> Callable[[Callable[..., R]], Callable[..., R]]:
     """
     Wraps the given function such that conn.login() or conn.authenticate() is
     executed.
@@ -108,11 +115,11 @@ def _decorate(flush=True, attempts=1, only_authenticate=False):
     :type only_authenticate: bool
     :param only_authenticate: login or only authenticate (don't authorize)?
     :rtype:  function
-    :return: The wrapped function.
+    :return: A decorator that wraps the function.
     """
 
-    def decorator(function):
-        def decorated(job, host, conn, *args, **kwargs):
+    def decorator(function: Callable[..., R]) -> Callable[..., R]:
+        def decorated(job: object, host: 'Host', conn: 'Protocol', *args: Any, **kwargs: Any) -> R:
             failed = 0
             while True:
                 try:
@@ -134,7 +141,9 @@ def _decorate(flush=True, attempts=1, only_authenticate=False):
     return decorator
 
 
-def autologin(flush=True, attempts=1):
+def autologin[R](
+    flush: bool = True, attempts: int = 1
+) -> Callable[[Callable[..., R]], Callable[..., R]]:
     """
     Wraps the given function such that conn.login() is executed
     before calling it. Example::
@@ -149,12 +158,14 @@ def autologin(flush=True, attempts=1):
     :type  attempts: int
     :param attempts: The number of login attempts if login fails.
     :rtype:  function
-    :return: The wrapped function.
+    :return: A decorator that wraps the function.
     """
     return _decorate(flush, attempts)
 
 
-def autoauthenticate(flush=True, attempts=1):
+def autoauthenticate[R](
+    flush: bool = True, attempts: int = 1
+) -> Callable[[Callable[..., R]], Callable[..., R]]:
     """
     Wraps the given function such that conn.authenticate() is executed
     before calling it. Example::
@@ -169,6 +180,6 @@ def autoauthenticate(flush=True, attempts=1):
     :type  attempts: int
     :param attempts: The number of login attempts if login fails.
     :rtype:  function
-    :return: The wrapped function.
+    :return: A decorator that wraps the function.
     """
     return _decorate(flush, attempts, only_authenticate=True)

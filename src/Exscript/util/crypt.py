@@ -2083,7 +2083,11 @@ _DICTIONARY = [
 ]
 
 
-def _checksummed_long(key):
+def _checksummed_long(key: int) -> int:
+    """
+    Appends the two-bit checksum of the given 64-bit key to it, as the
+    six-word format (RFC 2289) requires, and returns the result.
+    """
     thesum, k = 0, key
     for i in range(0, 32):
         thesum = thesum + (k % 4)
@@ -2091,17 +2095,23 @@ def _checksummed_long(key):
     return (key << 2) | (thesum % 4)
 
 
-def _sixword_from_long(key):
+def _sixword_from_long(key: int) -> str:
+    """
+    Converts the given 64-bit key and its checksum to six words from the
+    dictionary, as described in RFC 2289.
+    """
     key = _checksummed_long(key)
-    words = []
+    words: list[str] = []
     for i in range(0, 6):
         words = [_DICTIONARY[key % 2048]] + words
         key = key >> 11
     return ' '.join(words)
 
 
-def _long_from_raw(thehash):
-    """Fold to a long, a digest supplied as a string."""
+def _long_from_raw(thehash: bytes) -> int:
+    """
+    Converts the given digest to an integer, most significant byte first.
+    """
     hashnum = 0
     for h in thehash:
         hashnum <<= 8
@@ -2109,11 +2119,19 @@ def _long_from_raw(thehash):
     return hashnum
 
 
-def _sixword_from_raw(key):
+def _sixword_from_raw(key: bytes) -> str:
+    """
+    Converts the given 8-byte key to six words from the dictionary.
+    """
     return _sixword_from_long(_long_from_raw(key))
 
 
-def _fold_md4_or_md5(digest):
+def _fold_md4_or_md5(digest: bytes) -> bytes:
+    """
+    Folds the given 16-byte MD4 or MD5 digest to 8 bytes by XORing its two
+    halves, and returns the result. Raises ValueError if the digest is
+    shorter than 16 bytes.
+    """
     if len(digest) < 16:
         raise ValueError('digest is too short')
     result = b''
@@ -2125,11 +2143,12 @@ def _fold_md4_or_md5(digest):
     return result
 
 
-def otp(password, seed, sequence):
+def otp(password: str, seed: str, sequence: int) -> str:
     """
     Calculates a one-time password hash using the given password, seed, and
     sequence number and returns it.
     Uses the MD4/sixword algorithm as supported by TACACS+ servers.
+    Raises ValueError if an argument is out of range.
 
     :type  password: str
     :param password: A password.
@@ -2151,11 +2170,11 @@ def otp(password, seed, sequence):
         raise ValueError('sequence')
 
     # Pycryptodome only supports byte strings.
-    seed = seed.encode('utf-8')
-    password = password.encode('utf-8')
+    seed_bytes = seed.encode('utf-8')
+    password_bytes = password.encode('utf-8')
 
     # Discard the first <sequence> keys
-    thehash = MD4.new(seed + password).digest()
+    thehash = MD4.new(seed_bytes + password_bytes).digest()
     thehash = _fold_md4_or_md5(thehash)
     for i in range(0, sequence):
         thehash = _fold_md4_or_md5(MD4.new(thehash).digest())

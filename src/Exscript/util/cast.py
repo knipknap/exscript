@@ -25,29 +25,37 @@ Handy shortcuts for converting types.
 """
 
 import re
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, cast
 
 import Exscript
 
+if TYPE_CHECKING:
+    from ..host import Host
 
-def to_list(item):
+
+# Returns Any: an iterable item is returned as it is, so the type of the
+# result depends on the type of the item.
+def to_list(item: object) -> Any:
     """
     If the given item is iterable, this function returns the given item.
     If the item is not iterable, this function returns a list with only the
-    item in it.
+    item in it. A string counts as not iterable.
 
     :type  item: object
     :param item: Any object.
-    :rtype:  list
-    :return: A list with the item in it.
+    :rtype:  list|Iterable
+    :return: The item, or a list with the item in it.
     """
     if hasattr(item, '__iter__') and not isinstance(item, str):
         return item
     return [item]
 
 
-def to_host(host, default_protocol='ssh', default_domain=''):
+def to_host(host: 'str | Host', default_protocol: str = 'ssh', default_domain: str = '') -> 'Host':
     """
     Given a string or a Host object, this function returns a Host object.
+    Raises TypeError if the host is None.
 
     :type  host: string|Host
     :param host: A hostname (may be URL formatted) or a Host object.
@@ -61,13 +69,17 @@ def to_host(host, default_protocol='ssh', default_domain=''):
     if host is None:
         raise TypeError('None can not be cast to Host')
     if hasattr(host, 'get_address'):
-        return host
+        return cast('Host', host)  # any object with get_address() counts as a Host
     if default_domain and '.' not in host:
         host += '.' + default_domain
     return Exscript.Host(host, default_protocol=default_protocol)
 
 
-def to_hosts(hosts, default_protocol='ssh', default_domain=''):
+def to_hosts(
+    hosts: 'str | Host | Iterable[str | Host]',
+    default_protocol: str = 'ssh',
+    default_domain: str = '',
+) -> 'list[Host]':
     """
     Given a string or a Host object, or a list of strings or Host objects,
     this function returns a list of Host objects.
@@ -84,33 +96,36 @@ def to_hosts(hosts, default_protocol='ssh', default_domain=''):
     return [to_host(h, default_protocol, default_domain) for h in to_list(hosts)]
 
 
-def to_regex(regex, flags=0):
+def to_regex(regex: str | re.Pattern[str], flags: int = 0) -> re.Pattern[str]:
     """
-    Given a string, this function returns a new re.RegexObject.
-    Given a re.RegexObject, this function just returns the same object.
+    Given a string, this function returns a new re.Pattern.
+    Given a re.Pattern, this function just returns the same object.
+    Raises TypeError if the regex is None.
 
-    :type  regex: string|re.RegexObject
-    :param regex: A regex or a re.RegexObject
+    :type  regex: string|re.Pattern
+    :param regex: A regex or a re.Pattern
     :type  flags: int
     :param flags: See Python's re.compile().
-    :rtype:  re.RegexObject
+    :rtype:  re.Pattern
     :return: The Python regex object.
     """
     if regex is None:
         raise TypeError('None can not be cast to re.RegexObject')
     if hasattr(regex, 'match'):
-        return regex
+        return cast('re.Pattern[str]', regex)  # any object with match() counts as compiled
     return re.compile(regex, flags)
 
 
-def to_regexs(regexs):
+def to_regexs(
+    regexs: str | re.Pattern[str] | Iterable[str | re.Pattern[str]],
+) -> list[re.Pattern[str]]:
     """
-    Given a string or a re.RegexObject, or a list of strings or
-    re.RegexObjects, this function returns a list of re.RegexObjects.
+    Given a string or a re.Pattern, or a list of strings or
+    re.Patterns, this function returns a list of re.Patterns.
 
-    :type  regexs: str|re.RegexObject|list(str|re.RegexObject)
-    :param regexs: One or more regexs or re.RegexObjects.
-    :rtype:  list(re.RegexObject)
-    :return: A list of re.RegexObjects.
+    :type  regexs: str|re.Pattern|list(str|re.Pattern)
+    :param regexs: One or more regexs or re.Patterns.
+    :rtype:  list(re.Pattern)
+    :return: A list of re.Patterns.
     """
     return [to_regex(r) for r in to_list(regexs)]

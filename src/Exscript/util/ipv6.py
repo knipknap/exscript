@@ -25,7 +25,7 @@ IPv6 address calculation and conversion.
 """
 
 
-def is_ip(string):
+def is_ip(string: str) -> bool:
     """
     Returns True if the given string is an IPv6 address, False otherwise.
 
@@ -41,7 +41,7 @@ def is_ip(string):
     return True
 
 
-def normalize_ip(ip):
+def normalize_ip(ip: str) -> str:
     """
     Transform the address into a standard, fixed-length form, such as:
 
@@ -81,7 +81,7 @@ def normalize_ip(ip):
     return ':'.join(result).lower()
 
 
-def clean_ip(ip):
+def clean_ip(ip: str) -> str:
     """
     Cleans the ip address up, useful for removing leading zeros, e.g.::
 
@@ -132,19 +132,20 @@ def clean_ip(ip):
     return ':'.join(result)
 
 
-def parse_prefix(prefix, default_length=128):
+def parse_prefix(prefix: str, default_length: int = 128) -> tuple[str, int]:
     """
     Splits the given IP prefix into a network address and a prefix length.
     If the prefix does not have a length (i.e., it is a simple IP address),
     it is presumed to have the given default length.
 
     :type  prefix: string
-    :param prefix: An IP mask.
-    :type  default_length: long
+    :param prefix: An IP prefix.
+    :type  default_length: int
     :param default_length: The default ip prefix length.
     :rtype:  string, int
     :return: A tuple containing the IP address and prefix length.
     """
+    pfxlen: str | int
     if '/' in prefix:
         network, pfxlen = prefix.split('/')
     else:

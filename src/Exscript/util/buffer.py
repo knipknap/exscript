@@ -25,8 +25,11 @@ A buffer object.
 """
 
 import functools
+import re
 import threading
+from collections.abc import Callable, Iterable
 from io import StringIO
+from typing import Any
 
 from .cast import to_regexs
 
@@ -35,9 +38,14 @@ from .cast import to_regexs
 _CONTEXT = 256
 
 
-def _locked(method):
+def _locked[R](method: Callable[..., R]) -> Callable[..., R]:
+    """
+    Wraps the given method of MonitoredBuffer such that it holds the lock
+    of the buffer while it runs.
+    """
+
     @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self: 'MonitoredBuffer', *args: Any, **kwargs: Any) -> R:
         with self._lock:
             return method(self, *args, **kwargs)
 
@@ -52,32 +60,35 @@ class MonitoredBuffer:
     in ncclient's thread while the caller searches.
     """
 
-    def __init__(self, io=None):
+    def __init__(self, io: StringIO | None = None) -> None:
         """
         Constructor.
         The data is stored in the given file-like object. If no object is
         given, or the io argument is None, a new StringIO is used.
 
-        :type  io: file-like object
-        :param io: A file-like object that is used for storing the data.
+        :type  io: io.StringIO
+        :param io: A file-like object that is used for storing the data; it
+            must have getvalue(), like StringIO.
         """
         if io is None:
             self.io = StringIO('')
         else:
             self.io = io
-        self.monitors = []
+        # Each monitor is a mutable list: the regular expressions, the
+        # callback, the end of the last match, and the limit.
+        self.monitors: list[list[Any]] = []
         self._lock = threading.RLock()
         self.clear()
 
     @_locked
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns the content of the buffer.
         """
         return self.io.getvalue()
 
     @_locked
-    def size(self):
+    def size(self) -> int:
         """
         Returns the size of the buffer.
 
@@ -87,7 +98,7 @@ class MonitoredBuffer:
         return self.io.tell()
 
     @_locked
-    def head(self, bytes):
+    def head(self, bytes: int) -> str:
         """
         Returns the number of given bytes from the head of the buffer.
         The buffer remains unchanged.
@@ -102,7 +113,7 @@ class MonitoredBuffer:
         return head
 
     @_locked
-    def tail(self, bytes):
+    def tail(self, bytes: int) -> str:
         """
         Returns the number of given bytes from the tail of the buffer.
         The buffer remains unchanged.
@@ -114,7 +125,7 @@ class MonitoredBuffer:
         return self.io.read()
 
     @_locked
-    def pop(self, bytes):
+    def pop(self, bytes: int) -> str:
         """
         Like :class:`head()`, but also removes the head from the buffer.
 
@@ -132,7 +143,7 @@ class MonitoredBuffer:
         return head
 
     @_locked
-    def append(self, data):
+    def append(self, data: str) -> None:
         """
         Appends the given data to the buffer, and triggers all connected
         monitors, if any of them match the buffer content.
@@ -162,7 +173,7 @@ class MonitoredBuffer:
                     callback(i, match)
 
     @_locked
-    def clear(self):
+    def clear(self) -> None:
         """
         Removes all data from the buffer.
         """
@@ -172,7 +183,12 @@ class MonitoredBuffer:
             item[2] = 0
 
     @_locked
-    def add_monitor(self, pattern, callback, limit=80):
+    def add_monitor(
+        self,
+        pattern: str | re.Pattern[str] | Iterable[str | re.Pattern[str]],
+        callback: Callable[[int, re.Match[str]], object],
+        limit: int = 80,
+    ) -> None:
         """
         Calls the given function whenever the given pattern matches the
         buffer.
@@ -181,7 +197,7 @@ class MonitoredBuffer:
         the match object of the regular expression. The positions in the
         match object refer to the searched end of the buffer.
 
-        :type  pattern: str|re.RegexObject|list(str|re.RegexObject)
+        :type  pattern: str|re.Pattern|list(str|re.Pattern)
         :param pattern: One or more regular expressions.
         :type  callback: callable
         :param callback: The function that is called.
