@@ -131,6 +131,14 @@ marked with **BREAKING**; a migration guide will accompany the release.
   keyboard-interactive took 5 SSH connections, now 3.
 - **All Addresses for SSH:** SSH and NETCONF connections try all addresses of the
   host, e.g. IPv4 if IPv6 fails, as Telnet does; before, they tried only the first.
+- **SSH Algorithms and Authentication Methods:** The new options
+  `disabled_algorithms` and `preferred_authentications` (also `Host` options; CLI:
+  `--ssh-disabled-algs` and `--ssh-preferred-auth`) turn off SSH algorithms that a
+  device offers but does not handle correctly (passed to paramiko's `Transport`), and
+  choose the authentication methods and their order, like OpenSSH's
+  `PreferredAuthentications`. The default order is `publickey`,
+  `keyboard-interactive`, `password`; methods that the server does not offer are
+  skipped.
 - **BREAKING - Terminal Size:** SSH and Telnet sessions get a terminal of 511 columns
   and 1000 lines; the new options `term_width` and `term_height` (also `Host`
   options) choose another size. Before, Exscript used the size of the terminal that
