@@ -1,5 +1,6 @@
 import time
 import unittest
+from functools import partial
 from multiprocessing import Value
 from threading import Thread
 
@@ -66,6 +67,27 @@ class PipelineTest(unittest.TestCase):
 
     def testAppend(self):
         self.testContains()
+
+    def testAppendRejectsAQueuedName(self):
+        # An item with the name of a queued item is rejected, and leaves the
+        # pipeline unchanged.
+        item1, item2 = object(), object()
+        self.pipeline.append(item1, 'foo')
+        appends = (
+            self.pipeline.append,
+            self.pipeline.appendleft,
+            partial(self.pipeline.appendleft, force=True),
+        )
+        for append in appends:
+            with self.subTest(append=append):
+                with self.assertRaisesRegex(AttributeError, "'foo'"):
+                    append(item2, 'foo')
+                self.assertNotIn(item2, self.pipeline)
+                self.assertEqual(len(self.pipeline), 1)
+                self.assertIs(self.pipeline.get_from_name('foo'), item1)
+        self.assertIs(next(self.pipeline), item1)
+        self.pipeline.task_done(item1)
+        self.assertIsNone(self.pipeline.try_next())
 
     def testAppendleft(self):
         item1 = object()

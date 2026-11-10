@@ -73,19 +73,19 @@ class Pipeline:
     def _register_item(self, name: str | None, item: Hashable) -> str:
         """
         Registers the given item under a new id, and under the given name
-        unless it is None. Raises an AttributeError if an item with the name
-        is registered already.
+        unless it is None. Raises an AttributeError, and registers nothing,
+        if an item with the name is registered already.
 
         :return: The id of the item.
         """
+        if name in self.name2id:
+            msg = 'an item named %s is already queued' % repr(name)
+            raise AttributeError(msg)
         uuid = uuid4().hex
         self.id2item[uuid] = item
         self.item2id[item] = uuid
         if name is None:
             return uuid
-        if name in self.name2id:
-            msg = 'an item named %s is already queued' % repr(name)
-            raise AttributeError(msg)
         self.name2id[name] = uuid
         self.id2name[uuid] = name
         return uuid
@@ -139,11 +139,13 @@ class Pipeline:
         Adds the given item to the end of the pipeline.
 
         :param name: A unique name for the item, see get_from_name().
+        :raises AttributeError: If an item with the name is queued already;
+            the pipeline is unchanged then.
         :return: The id of the item.
         """
         with self.condition:
-            self.queue.append(item)
             uuid = self._register_item(name, item)
+            self.queue.append(item)
             self.condition.notify_all()
             return uuid
 
@@ -155,14 +157,16 @@ class Pipeline:
 
         :param name: A unique name for the item, see get_from_name().
         :param force: Whether the item is forced.
+        :raises AttributeError: If an item with the name is queued already;
+            the pipeline is unchanged then.
         :return: The id of the item.
         """
         with self.condition:
+            uuid = self._register_item(name, item)
             if force:
                 self.force.append(item)
             else:
                 self.queue.appendleft(item)
-            uuid = self._register_item(name, item)
             self.condition.notify_all()
             return uuid
 

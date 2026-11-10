@@ -374,6 +374,20 @@ class QueueTest(unittest.TestCase):
         self.queue.join()
         self.assertEqual(order, ['dummy1', 'enqueued'])
 
+    def testPriorityRunRejectsAQueuedHost(self):
+        names = []
+
+        def record(job, host, conn):
+            names.append(host.get_name())
+
+        self.queue.workqueue.pause()
+        self.queue.run_or_ignore('dummy://dummy1', record)
+        with self.assertRaisesRegex(AttributeError, "'dummy1'"):
+            self.queue.priority_run('dummy://dummy1', record)
+        self.queue.workqueue.unpause()
+        self.queue.join()
+        self.assertEqual(names, ['dummy1'])
+
     def testForceRun(self):
         data = Value('i', 0)
         hosts = ['dummy://dummy1', 'dummy://dummy2']

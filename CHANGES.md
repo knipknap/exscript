@@ -628,6 +628,11 @@ The names below refer to functions callable from templates, not protocol methods
   `WorkQueue.priority_enqueue_or_raise()` adds a new job at the front, and with
   `force_start=True` starts it at once. Before, both added it at the end, and
   `force_start` applied only to a job that was queued already.
+- **Rejected Duplicates Are Not Queued:** `Pipeline.append()` and `appendleft()` still
+  raise an `AttributeError` for an item with the name of a queued item, but leave the
+  pipeline unchanged. Before, the item stayed queued: e.g. `Queue.priority_run()` on a
+  host that `run_or_ignore()` had queued raised the error, and yet ran the host a second
+  time, in a job with the id `None`.
 
 ## Demos
 
