@@ -34,12 +34,24 @@ _aix_re = re.compile(r'\bAIX\b')
 
 
 class AIXDriver(Driver):
-    def __init__(self):
+    """
+    The ``aix`` driver for AIX. Its user name prompt is "Authorized Login:",
+    and its password prompt "<user>'s Password:".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name and password prompts.
+        """
         Driver.__init__(self, 'aix')
         self.user_re = _user_re
         self.password_re = _password_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 70 if the data ends with the user name prompt
+        "Authorized Login: ", else 75 if it contains the word "AIX", else 0.
+        """
         if _user_re[0].search(string):
             return 70
         if _aix_re.search(string):

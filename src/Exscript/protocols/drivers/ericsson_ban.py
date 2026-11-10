@@ -21,7 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-A driver for devices running Ericsson's Broadband Access Nodes (BAN) OS
+A driver for devices running Ericsson's Broadband Access Nodes (BAN) OS.
 """
 
 import re
@@ -41,7 +41,19 @@ _login_fail_re = [re.compile(r'Login failed')]
 
 
 class EricssonBanDriver(Driver):
-    def __init__(self):
+    """
+    The ``ericsson_ban`` driver for devices running Ericsson's Broadband
+    Access Nodes (BAN) OS. Its prompt is a name with an optional part in
+    parentheses, followed by "%" or "#"; the question "(y/n)[n]" counts as a
+    prompt, too.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "user:", the
+        password prompt "pass:", the command prompt, the error message
+        "(error)" and the login error "Login failed".
+        """
         Driver.__init__(self, 'ericsson_ban')
 
         self.user_re = _user_re
@@ -54,7 +66,11 @@ class EricssonBanDriver(Driver):
     #     conn.send('enable\r\n')
     #     conn.app_authorize(account, flush, bailout)
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 90 if the data contains
+        "BLM<number> - Broadband Loop Multiplexer" in any case, else 0.
+        """
         if _ban_re.search(string):
             return 90
         return 0

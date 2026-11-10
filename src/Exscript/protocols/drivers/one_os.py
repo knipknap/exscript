@@ -25,8 +25,14 @@ A driver for OneOS (OneAccess).
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ...account import Account, AccountProxy
+    from ...util.impl import _Context
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'(?:\r\n|[\r\n])Username: ?$')]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: ?$')]
@@ -35,18 +41,36 @@ _prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\-\w+\.]+(?:\([^\)]+\))?[>#] ?$')]
 
 
 class OneOSDriver(Driver):
-    def __init__(self):
+    """
+    The ``one_os`` driver for OneOS (OneAccess). Its prompt is a name with an
+    optional mode in parentheses, followed by ">" or "#", e.g. "hostname#".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "Username:",
+        the password prompt and the command prompt.
+        """
         Driver.__init__(self, 'one_os')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 40 if the data ends with an empty line and a prompt like
+        "hostname>", else 0.
+        """
         if _first_prompt_re.search(string):
             return 40
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "term len 0" and sets the terminal width
+        with "stty columns 255" for OneOS 5; it ignores the errors of the
+        latter.
+        """
         conn.execute('term len 0')
         # TERMINAL WIDTH ONEOS5
         try:
@@ -54,6 +78,15 @@ class OneOSDriver(Driver):
         except Exception:  # noqa: BLE001, S110
             pass
 
-    def auto_authorize(self, conn, account, flush, bailout):
+    def auto_authorize(
+        self,
+        conn: 'Protocol',
+        account: 'Account | AccountProxy | _Context | None',
+        flush: bool,
+        bailout: bool,
+    ) -> None:
+        """
+        Sends "enable", then authorizes with conn.app_authorize().
+        """
         conn.send('enable\r')
         conn.app_authorize(account, flush, bailout)

@@ -25,8 +25,12 @@ A driver for Ciena SAOS carrier Ethernet devices.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'[^:]* login: ?$', re.I)]
 _password_re = [re.compile(r'Password: ?$')]
@@ -41,17 +45,34 @@ _error_re = [
 
 
 class CienaSAOSDriver(Driver):
-    def __init__(self):
+    """
+    The ``cienasaos`` driver for Ciena SAOS carrier Ethernet devices. Its
+    prompt is a name followed by ">" or "#", e.g. "hostname>".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt, e.g.
+        "hostname login:", the password prompt, the command prompt and the
+        error messages, such as "SHELL PARSER FAILURE".
+        """
         Driver.__init__(self, 'cienasaos')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.error_re = _error_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 90 if the data contains
+        "SAOS is True Carrier Ethernet TM software", else 0.
+        """
         if 'SAOS is True Carrier Ethernet TM software' in string:
             return 90
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "system shell session set more off".
+        """
         conn.execute('system shell session set more off')

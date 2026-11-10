@@ -28,5 +28,14 @@ from .driver import Driver
 
 
 class GenericDriver(Driver):
-    def __init__(self):
+    """
+    The ``generic`` driver, which uses the patterns of the base class
+    unchanged. It is used when the OS guesser does not recognize the device;
+    ``unknown`` is another name for it.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Keeps the patterns of the base class.
+        """
         Driver.__init__(self, 'generic')

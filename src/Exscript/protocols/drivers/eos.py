@@ -25,8 +25,14 @@ A driver for Arista EOS.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ...account import Account, AccountProxy
+    from ...util.impl import _Context
+    from ..protocol import Protocol
 
 # Match following prompt pattern variations:
 # Important: Upon first login, EOS does not return \r\n before prompt.
@@ -71,7 +77,20 @@ _login_fail_re = [
 
 
 class EOSDriver(Driver):
-    def __init__(self):
+    """
+    The ``eos`` driver for Arista EOS. Its prompt is a name with up to three
+    parts in parentheses, followed by ">" or "#", e.g. "hostname(s1)#" or
+    "hostname(vrf:blah)(config)#". The OS guesser does not recognize EOS.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompts "Username:"
+        and "login:", the password prompt, the command prompt, also without
+        the line break that EOS omits before the first prompt, the error
+        messages, such as "% Invalid input", and the login errors, such as
+        "Bad secret".
+        """
         Driver.__init__(self, 'eos')
         self.user_re = _user_re
         self.password_re = _password_re
@@ -79,10 +98,23 @@ class EOSDriver(Driver):
         self.error_re = _error_re
         self.login_error_re = _login_fail_re
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Executes "terminal dont-ask" and turns off the pager with
+        "terminal length 0".
+        """
         conn.execute('terminal dont-ask')
         conn.execute('terminal length 0')
 
-    def auto_authorize(self, conn, account, flush, bailout):
+    def auto_authorize(
+        self,
+        conn: 'Protocol',
+        account: 'Account | AccountProxy | _Context | None',
+        flush: bool,
+        bailout: bool,
+    ) -> None:
+        """
+        Sends "enable", then authorizes with conn.app_authorize().
+        """
         conn.send('enable\r')
         conn.app_authorize(account, flush, bailout)

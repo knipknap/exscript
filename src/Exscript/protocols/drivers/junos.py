@@ -25,8 +25,12 @@ A driver for devices running JunOS (by Juniper).
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ..protocol import Protocol
 
 # JunOS prompt examples:
 #   sab@DD-EA3>
@@ -68,7 +72,19 @@ _netconf_caps_re = [re.compile(r"juniper\.net", re.I)]
 
 
 class JunOSDriver(Driver):
-    def __init__(self):
+    """
+    The ``junos`` driver for devices running JunOS (by Juniper). Its prompt
+    is "user@host" followed by ">", "%" or "#" and a space, e.g.
+    "user@router> ", maybe after lines like "{master}" or "[edit]".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "login:", the
+        password prompt, the command prompt, the error messages, which start
+        with "unknown", "invalid", "error" or "syntax error", and the NETCONF
+        capabilities.
+        """
         Driver.__init__(self, 'junos')
         self.user_re = _user_re
         self.password_re = _password_re
@@ -76,14 +92,24 @@ class JunOSDriver(Driver):
         self.error_re = _error_re
         self.netconf_capabilities_re = _netconf_caps_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 80 if the data contains the word "JUNOS" in any case, else 35
+        if it contains a BSD terminal name like "(ttyp0)", which JunOS prints
+        before "login:", else 0.
+        """
         if _junos_re.search(string):
             return 80
         if _bsd_tty_re.search(string):
             return 35
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "set cli screen-length 0", sets the screen
+        width with "set cli screen-width 0" and the terminal type with
+        "set cli terminal ansi".
+        """
         conn.execute('set cli screen-length 0')
         conn.execute('set cli screen-width 0')
         conn.execute('set cli terminal ansi')

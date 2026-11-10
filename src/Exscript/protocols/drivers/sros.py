@@ -25,26 +25,48 @@ A driver for Alcatel SROS.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ..protocol import Protocol
 
 _prompt_re = [re.compile(r'(?:\r\n|[\r\n])[*]?(?:A|B):[\-\w\.>]+[#\$] ?$')]
 
 
 class SROSDriver(Driver):
-    def __init__(self):
+    """
+    The ``sros`` driver for Alcatel SROS. Its prompt starts with "A:" or
+    "B:", maybe after "*", and ends with "#" or "$", e.g. "A:hostname# ".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the pattern of the command prompt.
+        """
         Driver.__init__(self, 'sros')
         self.prompt_re = _prompt_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 95 if the data ends with an SROS prompt, else 0.
+        """
         if _prompt_re[0].search(string):
             return 95
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "environment no more", and executes
+        "environment reduced-prompt 2" and "environment no saved-ind-prompt".
+        """
         conn.execute('environment no more')
         conn.execute('environment reduced-prompt 2')
         conn.execute('environment no saved-ind-prompt')
 
-    def logout(self, conn):
+    def logout(self, conn: 'Protocol') -> None:
+        """
+        Ends the session with "logout".
+        """
         conn.send('logout\r')

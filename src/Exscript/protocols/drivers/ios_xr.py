@@ -25,8 +25,12 @@ A driver for Cisco IOS XR.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'(?:\r\n|[\r\n])Username: $')]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
@@ -37,19 +41,37 @@ _netconf_caps_re = [re.compile(r"Cisco-IOS-XR", re.I)]
 
 
 class IOSXRDriver(Driver):
-    def __init__(self):
+    """
+    The ``ios_xr`` driver for Cisco IOS XR. It recognizes prompts like
+    "RP/0/RP0/CPU0:hostname#" and NETCONF capabilities that contain
+    "Cisco-IOS-XR".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "Username:",
+        the password prompt, the command prompt and the NETCONF capabilities.
+        """
         Driver.__init__(self, 'ios_xr')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.netconf_capabilities_re = _netconf_caps_re
 
-    def check_response_for_os(self, string):
+    def check_response_for_os(self, string: str) -> int:
+        """
+        Returns 95 if the data ends with an IOS XR prompt, else 0.
+        """
         if _prompt_re[0].search(string):
             return 95
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the timestamps with "terminal exec prompt no-timestamp",
+        turns off the pager with "terminal len 0" and sets the terminal width
+        with "terminal width 0".
+        """
         conn.execute('terminal exec prompt no-timestamp')
         conn.execute('terminal len 0')
         conn.execute('terminal width 0')

@@ -27,8 +27,12 @@ Created using a Fortigate device and FortiOS 5.0.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'(?:\r\n|[\r\n])Username: $')]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
@@ -55,14 +59,30 @@ _error_re = [
 
 
 class FortiOSDriver(Driver):
-    def __init__(self):
+    """
+    The ``fortios`` driver for FortiOS devices. Its prompt is a name, an
+    optional part in parentheses and "#" or "$", separated by spaces, e.g.
+    "Forti-Name # ".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "Username:",
+        the password prompt, the command prompt and the error messages, such
+        as "Command fail".
+        """
         Driver.__init__(self, 'fortios')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.error_re = _error_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 50 if the data is one line with the FortiOS prompt or a
+        password prompt like "user@host's password:", else 0. By default, a
+        FortiGate shows only the prompt.
+        """
         # By default Fortigate shows only prompt
         if len(string.splitlines()) == 1:
             for head_re in _fortios_re:
@@ -70,7 +90,11 @@ class FortiOSDriver(Driver):
                     return 50
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "set output standard" in "config global" and
+        "config system console", which it leaves with "end".
+        """
         conn.execute('config global')
         conn.execute('config system console')
         conn.execute('set output standard')  # no paging

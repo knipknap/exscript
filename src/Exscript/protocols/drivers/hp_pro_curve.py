@@ -25,8 +25,12 @@ A driver for HP ProCurve switches.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'(?:\r\n|[\r\n])Username: ?$')]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: ?$')]
@@ -44,7 +48,18 @@ _clean_res_re = [
 
 
 class HPProCurveDriver(Driver):
-    def __init__(self):
+    """
+    The ``hp_pro_curve`` driver for HP ProCurve switches. Its prompt is a
+    name followed by ">" or "#"; the escape sequences around it are removed
+    before the prompt is matched.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "Username:",
+        the password prompt, the command prompt, the error messages, such as
+        "Invalid input:", and the login errors, such as "Invalid password".
+        """
         Driver.__init__(self, 'hp_pro_curve')
         self.user_re = _user_re
         self.password_re = _password_re
@@ -52,14 +67,30 @@ class HPProCurveDriver(Driver):
         self.error_re = _error_re
         self.login_error_re = _login_fail_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 95 if the data contains "ProCurve", else 50 if it contains
+        "Hewlett-Packard", else 0.
+        """
         if 'ProCurve' in string:
             return 95
         if 'Hewlett-Packard' in string:
             return 50
         return 0
 
-    def clean_response_for_re_match(self, response):
+    def clean_response_for_re_match(self, response: str) -> tuple[str, str]:
+        """
+        Removes the escape sequences from the end of the received data before
+        the prompt patterns are matched. If one of the first ten characters is
+        an escape character, the data before it is dropped. Then "ESC E"
+        becomes a line break, and the control sequences that start with
+        "ESC [" or the character U+009B, e.g. cursor movements, are removed.
+
+        :param response: The end of the received data.
+        :return: The cleaned data up to the first escape character that is
+            left, and the rest from that character on, e.g. an incomplete
+            escape sequence.
+        """
         start = response[:10].find('\x1b')
         if start != -1:
             response = response[start:]
@@ -70,5 +101,8 @@ class HPProCurveDriver(Driver):
             return response[:i], response[i:]
         return response, ''
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Sends an empty command line and waits for the prompt.
+        """
         conn.execute('\r\n')

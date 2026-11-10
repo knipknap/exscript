@@ -27,8 +27,12 @@ Created using a C5110 device.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'(?:\r\n|[\r\n])Username: $')]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
@@ -40,16 +44,33 @@ _hwc_re = re.compile(r'Enterasys Wireless Convergence OS', re.I)
 
 
 class EnterasysWCDriver(Driver):
-    def __init__(self):
+    """
+    The ``enterasys_wc`` driver for Enterasys/Extreme (HiPath) Wireless
+    Controller devices. Its prompt ends with "# ", e.g. "HWC-Name# ".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "Username:",
+        the password prompt and the command prompt, which may contain parts
+        that start with ":".
+        """
         Driver.__init__(self, 'enterasys_wc')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 85 if the data contains "Enterasys Wireless Convergence OS" in
+        any case, else 0.
+        """
         if _hwc_re.search(string):
             return 85
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Does nothing, like the base class.
+        """
         pass

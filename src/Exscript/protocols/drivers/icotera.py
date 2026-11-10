@@ -21,7 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-A driver for Icotera CPE
+A driver for Icotera CPE.
 """
 
 import re
@@ -30,9 +30,16 @@ from .driver import Driver
 
 
 class IcoteraDriver(Driver):
-    def __init__(self):
+    """
+    The ``icotera`` driver for Icotera CPE. It takes any line that ends with
+    ">" for a prompt.
+    """
+
+    def __init__(self) -> None:
         """
-        Constructor of the IcoteraDriver.
+        Constructor of the IcoteraDriver. Sets the patterns of the user name
+        prompt "Username:", the password prompts, the command prompt and the
+        error message "ERROR".
         """
         Driver.__init__(self, 'icotera')
         self.user_re = [re.compile(r'user ?name: ?$', re.I)]
@@ -40,7 +47,10 @@ class IcoteraDriver(Driver):
         self.prompt_re = [re.compile(r'.*?>\s*$')]
         self.error_re = [re.compile(r'ERROR')]
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 80 if the data contains "ICOTERA", else 0.
+        """
         if 'ICOTERA' in string:
             return 80
         return 0

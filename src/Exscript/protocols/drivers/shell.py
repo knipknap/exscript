@@ -42,19 +42,37 @@ _shell_prompt_re = re.compile(
 
 
 class ShellDriver(Driver):
-    def __init__(self):
+    """
+    The ``shell`` driver, a generic driver for Unix shells. It uses the
+    generic command prompt pattern.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompts "user:" and
+        "login:" and of the password prompt.
+        """
         Driver.__init__(self, 'shell')
         self.user_re = _user_re
         self.password_re = _password_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 70 if the data contains the word "Linux" in any case, else 20
+        if it ends with "user: " or "login: ", but not with "Last login: ",
+        else 0.
+        """
         if _linux_re.search(string):
             return 70
         if _login_prompt_re.search(string):
             return 20
         return 0
 
-    def check_response_for_os(self, string):
+    def check_response_for_os(self, string: str) -> int:
+        """
+        Returns 30 if the data ends with a shell prompt like "router1:~$ " or
+        "admin@router1:/etc# ", maybe after escape sequences, else 0.
+        """
         if _shell_prompt_re.search(string):
             return 30
         return 0

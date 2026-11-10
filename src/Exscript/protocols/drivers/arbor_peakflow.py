@@ -40,13 +40,27 @@ _os_re = re.compile(r'\b(arbo[rs]|peakflow)\b', re.I)
 
 
 class ArborPeakflowDriver(Driver):
-    def __init__(self):
+    """
+    The ``arbor_peakflow`` driver for Peakflow SP by Arbor Networks. It
+    recognizes prompts like "admin@host:/#", the "DIAG>" prompt of the shell
+    up to version 8.0, and the question "Exit anyway?" on exit.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name, password and command
+        prompts.
+        """
         Driver.__init__(self, 'arbor_peakflow')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 97 if the data contains the word "Arbor", "ArbOS" or
+        "Peakflow" in any case, else 0.
+        """
         if _os_re.search(string):
             return 97
         return 0

@@ -25,8 +25,14 @@ A driver for Redback Smart Edge OS.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ...account import Account, AccountProxy
+    from ...util.impl import _Context
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'(?:\r\n|[\r\n])login: ')]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
@@ -37,23 +43,50 @@ _model_re = re.compile(r'(?:\r\n|[\r\n])[^\r\n]+-se800(?:\r\n|[\r\n])')
 
 
 class SmartEdgeOSDriver(Driver):
-    def __init__(self):
+    """
+    The ``smart_edge_os`` driver for Redback Smart Edge OS. Its prompt starts
+    with a name in brackets and ends with ">" or "#", e.g.
+    "[local]hostname#".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "login:", the
+        password prompt and the command prompt.
+        """
         Driver.__init__(self, 'smart_edge_os')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 60 if the data contains a line that ends with "-se800", else
+        20 if it contains the user name prompt "login: ", else 0.
+        """
         if _model_re.search(string):
             return 60
         if self.user_re[0].search(string):
             return 20
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "terminal length 0" and sets the terminal
+        width with "terminal width 65536".
+        """
         conn.execute('terminal length 0')
         conn.execute('terminal width 65536')
 
-    def auto_authorize(self, conn, account, flush, bailout):
+    def auto_authorize(
+        self,
+        conn: 'Protocol',
+        account: 'Account | AccountProxy | _Context | None',
+        flush: bool,
+        bailout: bool,
+    ) -> None:
+        """
+        Sends "enable", then authorizes with conn.app_authorize().
+        """
         conn.send('enable\r')
         conn.app_authorize(account, flush, bailout)

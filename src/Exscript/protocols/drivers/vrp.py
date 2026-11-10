@@ -25,8 +25,12 @@ A driver for devices running VRP (by Huawei).
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'user ?name: ', re.I)]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
@@ -38,13 +42,27 @@ _huawei_re = [
 
 
 class VRPDriver(Driver):
-    def __init__(self):
+    """
+    The ``vrp`` driver for devices running VRP (by Huawei). Its prompt is a
+    name in angle or square brackets, e.g. "<hostname>" or "[hostname]".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "Username:",
+        the password prompt and the command prompt.
+        """
         Driver.__init__(self, 'vrp')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 80 if the data contains the word "Huawei" in any case, else 70
+        if it contains "The current login time is", else 60 if it ends with
+        a VRP prompt, else 0.
+        """
         if _huawei_re[0].search(string):
             return 80
         elif _huawei_re[1].search(string):
@@ -53,8 +71,14 @@ class VRPDriver(Driver):
             return 60
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "screen-length 0 temporary".
+        """
         conn.execute('screen-length 0 temporary')
 
-    def logout(self, conn):
+    def logout(self, conn: 'Protocol') -> None:
+        """
+        Ends the session with "quit".
+        """
         conn.send('quit\r')

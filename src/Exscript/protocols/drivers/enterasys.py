@@ -35,13 +35,27 @@ _enterasys_re = re.compile(r'\benterasys\b', re.I)
 
 
 class EnterasysDriver(Driver):
-    def __init__(self):
+    """
+    The ``enterasys`` driver for Enterasys devices. Its prompt is a name with
+    an optional mode in parentheses, followed by ">", "->" or "#", e.g.
+    "switch(su)->".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "Username:",
+        the password prompt and the command prompt.
+        """
         Driver.__init__(self, 'enterasys')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 80 if the data contains the word "Enterasys" in any case,
+        else 0.
+        """
         if _enterasys_re.search(string):
             return 80
         return 0

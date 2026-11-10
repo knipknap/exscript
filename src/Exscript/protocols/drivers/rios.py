@@ -25,8 +25,14 @@ A driver for Riverbed RIOS.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ...account import Account, AccountProxy
+    from ...util.impl import _Context
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'user ?name: ?$', re.I)]
 _password_re = [re.compile(r'(?:(?:\r\n|[\r\n])Password: ?|last resort password:)$')]
@@ -39,16 +45,40 @@ _error_re = [
 
 
 class RIOSDriver(Driver):
-    def __init__(self):
+    """
+    The ``rios`` driver for Riverbed RIOS. Its prompt is a name with an
+    optional mode in parentheses, followed by ">" or "#" with spaces before
+    and after it, e.g. "hostname > ". The OS guesser does not recognize RIOS.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "Username:",
+        the password prompts, the command prompt and the error messages, such
+        as "%Error" and "% Unrecognized".
+        """
         Driver.__init__(self, 'rios')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.error_re = _error_re
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "term len 0" and executes "enable".
+        """
         conn.execute('term len 0')
         conn.execute('enable')
 
-    def auto_authorize(self, conn, account, flush, bailout):
+    def auto_authorize(
+        self,
+        conn: 'Protocol',
+        account: 'Account | AccountProxy | _Context | None',
+        flush: bool,
+        bailout: bool,
+    ) -> None:
+        """
+        Does nothing, i.e. skips the authorization; init_terminal() executes
+        "enable".
+        """
         pass

@@ -25,20 +25,37 @@ A driver for Cisco Aironet Wireless Controllers.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'User:\s$', re.I)]
 _prompt_re = [re.compile(r'(?:\r\n|[\r\n])(?:\([^\)]+\))\s>$')]
 
 
 class AironetDriver(Driver):
-    def __init__(self):
+    """
+    The ``aironet`` driver for Cisco Aironet Wireless Controllers. Its prompt
+    is a name in parentheses followed by " >", e.g. "(Cisco Controller) >".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "User:" and of
+        the command prompt.
+        """
         Driver.__init__(self, 'aironet')
         self.user_re = _user_re
         self.prompt_re = _prompt_re
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 90 if the data contains "(Cisco Controller)" or "(WiSM-slot",
+        else 87 if it contains ") >", else 0.
+        """
         if '(Cisco Controller)' in string:
             return 90
         elif '(WiSM-slot' in string:
@@ -47,5 +64,8 @@ class AironetDriver(Driver):
             return 87
         return 0
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "config paging disable".
+        """
         conn.execute('config paging disable')

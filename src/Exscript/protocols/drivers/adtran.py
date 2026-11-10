@@ -27,18 +27,47 @@ The DSLAMs only report "OpenSSH" in their SSH remote protocol id and have
 no SSH banner so no possibility for check_*_for_os().
 """
 
+from typing import TYPE_CHECKING
+
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ...account import Account, AccountProxy
+    from ...util.impl import _Context
+    from ..protocol import Protocol
 
 
 class AdtranDriver(Driver):
-    def __init__(self):
+    """
+    The ``adtran`` driver for the Adtran DSLAMs. It uses the generic
+    patterns, and the OS guesser does not recognize it.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Keeps the generic patterns.
+        """
         Driver.__init__(self, 'adtran')
 
-    def init_terminal(self, conn):
+    def init_terminal(self, conn: 'Protocol') -> None:
+        """
+        Turns off the pager with "terminal length 0" and sets the terminal
+        width with "terminal column 0".
+        """
         conn.execute('terminal length 0')
         conn.execute('terminal column 0')
 
-    def auto_authorize(self, conn, account, flush, bailout):
+    def auto_authorize(
+        self,
+        conn: 'Protocol',
+        account: 'Account | AccountProxy | _Context | None',
+        flush: bool,
+        bailout: bool,
+    ) -> None:
+        """
+        Calls init_terminal(), sends "enable", then authorizes with
+        conn.app_authorize().
+        """
         self.init_terminal(conn)
         conn.send('enable\r\n')
         conn.app_authorize(account, flush, bailout)
