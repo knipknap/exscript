@@ -85,10 +85,11 @@ class Execute(String):
         self.no_prompt = parser.no_prompt
         self.strip_command = parser.strip_command
 
-        # The lexer has parsed the command and consumed the trailing command delimiter
-        # (newline, open curly bracket, RPC tag). We want the debugger point to the
-        # beginning of the command. The offset is expected to be the length of the
-        # additionally consumed command delimiter before entering this Execute token.
+        # The lexer has parsed the command and consumed the trailing command delimiter:
+        # a newline or the closing RPC tag, and nothing before a code block, an RPC or
+        # the end of the input. We want the debugger point to the beginning of the
+        # command. The offset is expected to be the length of the additionally consumed
+        # command delimiter before entering this Execute token.
         # The escape sequences of the left-stripped command, which are longer in the
         # template than in the command, are also taken into account.
         stripped = len(command) - len(command.lstrip())

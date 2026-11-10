@@ -458,11 +458,11 @@ development versions; "before" refers to them.
   operand of `matches`, e.g. in `/a/ matches /a/`, `/a/ . "b"`, `"a" is /a/` or
   `not /a/`, raises an `ExecuteError` that shows its position. Before, it raised an
   `UnboundLocalError` or a `TypeError` of Python.
-- **Error Positions After Escape Sequences:** An error about a variable in a command,
+- **Error Positions in Commands and Strings:** An error about a variable in a command,
   a string or a regular expression points to the variable also behind escape
-  sequences, e.g. to `$nothing` in `show \x41 $nothing`. Before, it pointed too far to
-  the left, by the number of characters by which the escape sequences are longer than
-  their text.
+  sequences, e.g. to `$nothing` in `show \x41 $nothing`, and in a command right before
+  a code block or an `<rpc>` element, e.g. in `show $nothing{x = 1}`. Before, it
+  pointed too far to the left, in the latter case often to an earlier line.
 - **BREAKING - Functions in Strings:** A command or a string that refers to a
   function like to a variable, e.g. `"$f"` with a function `f` that the caller
   passes, raises an `ExecuteError`, as the interpreter intends. Before, it contained

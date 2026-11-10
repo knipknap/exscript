@@ -104,6 +104,19 @@ class CommandTest(TemplateTestCase):
                 message = "Undefined variable 'nothing' in undefined:%d" % lineno
                 self.assertError(cm.exception, [line], ' ' * column + '^' * 8, message)
 
+    def testUndefinedVariableBeforeACodeBlockOrAnRpc(self):
+        for text, lineno, line, column in (
+            ('ls\nshow $nothing{x = 1}', 2, 'show $nothing{x = 1}', 5),
+            ('ls\n  show \\x41 $nothing  {x = 1}', 2, '  show \\x41 $nothing  {x = 1}', 12),
+            ('ls\nshow $nothing<rpc><a/></rpc>', 2, 'show $nothing<rpc><a/></rpc>', 5),
+            ('{if 1}show $nothing{end}', 1, '{if 1}show $nothing{end}', 11),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaises(ExecuteError) as cm:
+                    self.evaluate(text)
+                message = "Undefined variable 'nothing' in undefined:%d" % lineno
+                self.assertError(cm.exception, [line], ' ' * column + '^' * 8, message)
+
     def testInvalidVariableName(self):
         with self.assertRaises(ExecuteError) as cm:
             self.evaluate('show $1x\n')
@@ -178,6 +191,11 @@ class CommandTest(TemplateTestCase):
             program.execute()
         message = "Undefined variable '__connection__' in None:1"
         self.assertError(cm.exception, ['ls'], '^^', message)
+        program = Parser().parse('{x = 1}\nshow version{y = 2}')
+        with self.assertRaises(ExecuteError) as cm:
+            program.execute()
+        message = "Undefined variable '__connection__' in None:2"
+        self.assertError(cm.exception, ['show version{y = 2}'], '^' * 12, message)
 
 
 class EnterTest(TemplateTestCase):

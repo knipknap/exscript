@@ -101,17 +101,22 @@ class Template(Scope):
                 break
             elif lexer.current_is('open_curly_bracket'):
                 if buffer.strip() != '':
+                    # The code block ends the command, but is not part of it, so
+                    # the delimiter that Execute expects is empty, as at the end.
+                    lexer.forward(0)
                     self.add(Execute(lexer, parser, self, buffer, escapes))
                     buffer = ''
                     escapes = []
                 if isinstance(parent, Code):
                     # Need to consume the bracket if the Code token is not called
                     # due to nesting in IfCondition, Loop and Try tokens.
-                    next(lexer)
+                    lexer.next_if('open_curly_bracket')
                     break
                 self.add(Code(lexer, parser, self))
             elif lexer.current_is('open_rpc_tag'):
                 if buffer.strip() != '':
+                    # As for a code block.
+                    lexer.forward(0)
                     self.add(Execute(lexer, parser, self, buffer, escapes))
                     buffer = ''
                     escapes = []
