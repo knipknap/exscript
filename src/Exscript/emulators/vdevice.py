@@ -24,6 +24,9 @@
 Defines the behavior of a virtual device, as needed by :class:`Exscript.servers`.
 """
 
+import re
+from collections.abc import Callable
+
 from . import CommandSet
 
 
@@ -38,19 +41,29 @@ class VirtualDevice:
 
     PROMPT_STAGE_USERNAME, PROMPT_STAGE_PASSWORD, PROMPT_STAGE_CUSTOM = list(range(1, 4))
 
-    def __init__(self, hostname, echo=True, login_type=LOGIN_TYPE_BOTH, strict=True, banner=None):
+    def __init__(
+        self,
+        hostname: str,
+        echo: bool = True,
+        login_type: int = LOGIN_TYPE_BOTH,
+        strict: bool = True,
+        banner: str | None = None,
+    ) -> None:
         """
+        Constructor.
+
         :type  hostname: str
         :param hostname: The hostname, used for the prompt.
-        :param echo: bool
+        :type  echo: bool
         :keyword echo: whether to echo the command in a response.
-        :param login_type: int
+        :type  login_type: int
         :keyword login_type: integer constant, one of LOGIN_TYPE_PASSWORDONLY,
             LOGIN_TYPE_USERONLY, LOGIN_TYPE_BOTH, LOGIN_TYPE_NONE.
-        :param strict: bool
+        :type  strict: bool
         :keyword strict: Whether to raise when a given command has no handler.
-        :param banner: str
+        :type  banner: str|None
         :keyword banner: A string to show as soon as the connection is opened.
+            Defaults to a welcome message with the hostname.
         """
         self.hostname = str(hostname)
         self.banner = str(banner or 'Welcome to %s!\n' % hostname)
@@ -63,10 +76,19 @@ class VirtualDevice:
         self.password_prompt = 'Password: '
         self.init()
 
-    def _get_prompt(self):
+    def _get_prompt(self) -> str:
+        """
+        Returns the prompt of the current login stage (user, password or
+        command prompt), and moves on to the next stage. The input after the
+        password prompt is not echoed, and the command prompt marks the
+        device as logged in.
+
+        :raises RuntimeError: Raised when the prompt stage is invalid.
+        """
         if self.prompt_stage == self.PROMPT_STAGE_USERNAME:
             if self.login_type == self.LOGIN_TYPE_USERONLY:
-                self.prompt_stage = self.PROMPT_STAGE_CUSTOM
+                # The first assignment in the source; init() sets the first stage.
+                self.prompt_stage: int = self.PROMPT_STAGE_CUSTOM
             else:
                 self.prompt_stage = self.PROMPT_STAGE_PASSWORD
             return self.user_prompt
@@ -80,13 +102,20 @@ class VirtualDevice:
         else:
             raise RuntimeError('invalid prompt stage')
 
-    def _create_autoprompt_handler(self, handler):
+    def _create_autoprompt_handler(
+        self, handler: str | Callable[[str], str]
+    ) -> Callable[[str], str]:
+        """
+        Returns a response handler that appends a newline and the prompt
+        (see _get_prompt()) to the given response, or to the response of
+        the given response handler.
+        """
         if callable(handler):
             return lambda x: handler(x) + '\n' + self._get_prompt()
         else:
             return lambda x: handler + '\n' + self._get_prompt()
 
-    def get_prompt(self):
+    def get_prompt(self) -> str:
         """
         Returns the prompt of the device.
 
@@ -95,7 +124,7 @@ class VirtualDevice:
         """
         return self.prompt
 
-    def set_prompt(self, prompt):
+    def set_prompt(self, prompt: str) -> None:
         """
         Change the prompt of the device.
 
@@ -104,7 +133,12 @@ class VirtualDevice:
         """
         self.prompt = prompt
 
-    def add_command(self, command, handler, prompt=True):
+    def add_command(
+        self,
+        command: str | re.Pattern[str],
+        handler: str | Callable[[str], str],
+        prompt: bool = True,
+    ) -> None:
         """
         Registers a command.
 
@@ -127,7 +161,7 @@ class VirtualDevice:
         deco = self._create_autoprompt_handler if prompt else None
         self.commands.add(command, handler, deco)
 
-    def add_commands_from_file(self, filename, prompt=True):
+    def add_commands_from_file(self, filename: str, prompt: bool = True) -> None:
         """
         Wrapper around add_command that reads the response handlers from the
         file with the given name. The file is a Python script containing
@@ -142,7 +176,7 @@ class VirtualDevice:
         deco = self._create_autoprompt_handler if prompt else None
         self.commands.add_from_file(filename, deco)
 
-    def init(self):
+    def init(self) -> str:
         """
         Init or reset the virtual device.
 
@@ -161,7 +195,7 @@ class VirtualDevice:
 
         return self.banner + self._get_prompt()
 
-    def do(self, command):
+    def do(self, command: str) -> str:
         """
         "Executes" the given command on the virtual device, and returns
         the response.

@@ -21,10 +21,11 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-Cisco IOS emulator used for internal testing.
+A Cisco IOS emulator for testing.
 """
 
 import re
+from typing import cast
 
 from .vdevice import VirtualDevice
 
@@ -43,8 +44,13 @@ at '%s' port '/dev/vty0' from '12.34.56.78'
 '''
 
 
-def show_diag(data):
-    slot = re.search(r'(\d+)', data).groups()[0]
+def show_diag(data: str) -> str:
+    """
+    Returns the response to "show diag": the diagnostics of a line card in
+    the slot whose number is the first number in the given command.
+    """
+    # The command matched r'show diag \d+', so it contains a number.
+    slot = cast(re.Match[str], re.search(r'(\d+)', data)).groups()[0]
     return (
         """
 SLOT %s  (RP/LC 0 ): 16 Port ISE Packet Over SONET OC-3c/STM-1 Single Mode/IR LC connector
@@ -173,14 +179,23 @@ FastEthernet0/2 is administratively down, line protocol is down
 
 
 class IOSEmulator(VirtualDevice):
+    """
+    A virtual device that emulates a Cisco IOS router: its banner, its login
+    prompts, its prompt, and the responses to a few show commands.
+    """
+
     def __init__(
         self,
-        hostname,
-        echo=True,
-        login_type=VirtualDevice.LOGIN_TYPE_BOTH,
-        strict=True,
-        banner=None,
-    ):
+        hostname: str,
+        echo: bool = True,
+        login_type: int = VirtualDevice.LOGIN_TYPE_BOTH,
+        strict: bool = True,
+        banner: str | None = None,
+    ) -> None:
+        """
+        Constructor. Takes the same arguments as VirtualDevice; the banner
+        defaults to an IOS login banner that shows the hostname.
+        """
         thebanner = iosbanner % (hostname, hostname, hostname)
         VirtualDevice.__init__(
             self,

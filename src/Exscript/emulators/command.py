@@ -25,29 +25,40 @@ Defines the behavior of commands by mapping commands to functions.
 """
 
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from typing import Any
 
 
 class CommandSet:
     """
-    A set of commands to be used by the Dummy adapter.
+    A set of commands to be used by a VirtualDevice.
     """
 
-    def __init__(self, strict=True):
+    def __init__(self, strict: bool = True) -> None:
         """
         Constructor.
+
+        :param strict: Whether eval() raises an error for a command that
+            matches no registered command.
         """
         self.strict = strict
-        self.response_list = []
+        self.response_list: list[tuple[re.Pattern[str], str | Callable[[str], str]]] = []
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: dict[int, Any]) -> 'CommandSet':
         cmdset = CommandSet(self.strict)
         for regex, response in self.response_list:
             regex = re.compile(regex.pattern, regex.flags)
             cmdset.response_list.append((regex, response))
         return cmdset
 
-    def add(self, command, handler, handler_decorator=None):
+    def add(
+        self,
+        command: str | re.Pattern[str],
+        handler: str | Callable[[str], str],
+        handler_decorator: (
+            Callable[[str | Callable[[str], str]], str | Callable[[str], str]] | None
+        ) = None,
+    ) -> None:
         """
         Register a command and response handler pair.
 
@@ -73,7 +84,13 @@ class CommandSet:
             handler = handler_decorator(handler)
         self.response_list.append((command, handler))
 
-    def add_from_file(self, filename, handler_decorator=None):
+    def add_from_file(
+        self,
+        filename: str,
+        handler_decorator: (
+            Callable[[str | Callable[[str], str]], str | Callable[[str], str]] | None
+        ) = None,
+    ) -> None:
         """
         Wrapper around add() that reads the response handlers from the
         file with the given name. The file is a Python script containing
@@ -88,7 +105,7 @@ class CommandSet:
         :raises ValueError: Raised when the file does not define a variable
             named "commands" or if "commands" is not iterable.
         """
-        args = {}
+        args: dict[str, Any] = {}
         with open(filename, encoding="utf-8") as fin:
             source = fin.read()
         code = compile(source, filename, mode="exec")
@@ -102,7 +119,7 @@ class CommandSet:
         for command, response in commands:
             self.add(command, response, handler_decorator)
 
-    def eval(self, command):
+    def eval(self, command: str) -> str | None:
         """
         Evaluate the given string against all registered commands and
         return the defined response.
