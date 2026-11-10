@@ -10,6 +10,7 @@ import paramiko
 
 from Exscript import Account, PrivateKey
 from Exscript.protocols import SSH2, Netconf
+from Exscript.protocols.exception import LoginFailure
 from Exscript.protocols.ssh2 import _prefer_key_type
 from Exscript.servers import SSHd, sshd
 
@@ -264,6 +265,104 @@ class KeyboardInteractiveTest(unittest.TestCase):
         self.assertEqual(interface.answers, [['', 'S3cret']])
         self.assertEqual(stdout.getvalue(), 'Verification code: \nPassword: \n')
 
+    def testWithoutPassword(self):
+        conn = SSH2()
+        with self.assertRaises(paramiko.AuthenticationException):
+            conn._paramiko_auth_interactive('admin', None)
+
+
+class _KeyThenPassword(paramiko.ServerInterface):
+    """Requires the client key and then the password, like OpenSSH's AuthenticationMethods publickey,password."""
+
+    client_key: paramiko.PKey
+    next_types = 'password'  # the types allowed after the key
+
+    def __init__(self):
+        self.key_accepted = False
+
+    def get_allowed_auths(self, username):
+        return self.next_types if self.key_accepted else 'publickey'
+
+    def check_auth_publickey(self, username, key):
+        if key != self.client_key:
+            return paramiko.AUTH_FAILED
+        self.key_accepted = True
+        return paramiko.AUTH_PARTIALLY_SUCCESSFUL
+
+    def check_auth_password(self, username, password):
+        if self.key_accepted and password == 'S3cret':
+            return paramiko.AUTH_SUCCESSFUL
+        return paramiko.AUTH_FAILED
+
+
+class PartialAuthenticationTest(unittest.TestCase):
+    """A server may require several authentication methods, e.g. a key and a password."""
+
+    client_key = paramiko.ECDSAKey.generate()
+
+    def connect(self, next_types='password', **kwargs):
+        attributes = {'client_key': self.client_key, 'next_types': next_types}
+        interface = type('KeyThenPassword', (_KeyThenPassword,), attributes)
+        self.server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=interface)
+        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, **kwargs)
+        self.addCleanup(conn.close, force=True)
+        conn.connect(HOST, self.server.port)
+        return conn
+
+    def login(self, password='S3cret', next_types='password', **kwargs):
+        conn = self.connect(next_types, **kwargs)
+        home = tempfile.TemporaryDirectory()  # no key files
+        self.addCleanup(home.cleanup)
+        with (
+            mock.patch.dict(os.environ, {'HOME': home.name, 'USERPROFILE': home.name}),
+            mock.patch('paramiko.Agent') as agent,
+        ):
+            agent.return_value.get_keys.return_value = [self.client_key]
+            conn._paramiko_auth('admin', password)
+        return conn
+
+    def testAgentKeyThenPassword(self):
+        conn = self.login()
+        self.assertTrue(conn._transport.is_authenticated())
+        self.assertEqual(len(self.server._transports), 1)
+
+    def testNoReconnectAfterPartialSuccess(self):
+        # ios reconnects after failed requests, but a reconnect would lose the key.
+        conn = self.login(driver='ios')
+        self.assertTrue(conn._transport.is_authenticated())
+        self.assertEqual(len(self.server._transports), 2)  # one reconnect, after auth_none()
+
+    def testWrongPassword(self):
+        with self.assertRaisesRegex(LoginFailure, r'_paramiko_auth_password\(\) failed'):
+            self.login(password='wrong')
+
+    def testUnsupportedNextMethod(self):
+        with self.assertRaisesRegex(LoginFailure, 'After a partial authentication.*hostbased'):
+            self.login(next_types='hostbased')
+
+    def testMethodThatDoesNotAuthenticate(self):
+        # E.g. an override in a subclass that returns without an exception.
+        def _no_auth(username, password):
+            return []
+
+        conn = self.connect()
+        with (
+            mock.patch.object(conn, '_get_auth_methods', return_value=[_no_auth]),
+            self.assertRaisesRegex(LoginFailure, r'_no_auth\(\) returned without authenticating'),
+        ):
+            conn._paramiko_auth('admin', 'S3cret')
+
+    def testKeyOfTheAccount(self):
+        # The key of an account is tried without the password of the account.
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        filename = os.path.join(tmpdir.name, 'id_ecdsa')
+        self.client_key.write_private_key_file(filename)
+        account = Account('admin', 'S3cret', key=PrivateKey.from_file(filename), needs_lock=False)
+        conn = self.connect()
+        with self.assertRaisesRegex(LoginFailure, 'requires one of: password'):
+            conn.protocol_authenticate(account)
+
 
 class ConnectTest(unittest.TestCase):
     def testTriesAllAddresses(self):
@@ -325,6 +424,7 @@ def suite():
             loader.loadTestsFromTestCase(ReconnectTest),
             loader.loadTestsFromTestCase(FingerprintTest),
             loader.loadTestsFromTestCase(KeyboardInteractiveTest),
+            loader.loadTestsFromTestCase(PartialAuthenticationTest),
             loader.loadTestsFromTestCase(ConnectTest),
             loader.loadTestsFromTestCase(TerminalSizeTest),
         ]

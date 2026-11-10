@@ -149,6 +149,14 @@ marked with **BREAKING**; a migration guide will accompany the release.
   The password is also no longer sent to a keyboard-interactive prompt that does not
   look like a password prompt when a server refuses the password method (paramiko's
   fallback).
+- **SSH Logins With Several Methods:** Servers that require more than one
+  authentication method, e.g. OpenSSH's `AuthenticationMethods publickey,password`,
+  are supported: after a partial success, the login continues with the methods that
+  the server allows next, without reconnecting. Before, it stopped after the first
+  method and then failed to open the shell. The key of an account
+  (`Account(..., key=...)`) is tried without the password of the account, so such a
+  login fails with a `LoginFailure` that names the required methods. Thanks to
+  u1735067 (pull request #203), whose rewrite of the authentication included this.
 - **BREAKING - Terminal Size:** SSH and Telnet sessions get a terminal of 511 columns
   and 1000 lines; the new options `term_width` and `term_height` (also `Host`
   options) choose another size. Before, Exscript used the size of the terminal that

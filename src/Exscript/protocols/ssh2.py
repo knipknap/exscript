@@ -228,22 +228,20 @@ class SSH2(Protocol):
         t.set_keepalive(self.KEEPALIVE_INTERVAL)
         return t
 
-    def _paramiko_auth_none(self, username: str, password: str | None = None) -> None:
-        """
-        Authenticates with the "none" method; the password is not used.
-        """
-        cast(paramiko.Transport, self._transport).auth_none(username)
-
-    def _paramiko_auth_interactive(self, username: str, password: str | None = None) -> None:
+    def _paramiko_auth_interactive(self, username: str, password: str | None = None) -> list[str]:
         """
         Authenticates with the keyboard-interactive method: answers S/Key and
         OTP challenges with a one-time password computed from the password,
         password prompts with the password, and other prompts, such as for a
         verification code, with an empty string. Passes the prompts, but not
-        the answers, to the received data. Does nothing without a password.
+        the answers, to the received data.
+
+        :raises AuthenticationException: Without a password.
+        :return: After a partial success, the authentication types that the
+            server allows next; else an empty list.
         """
         if password is None:
-            return
+            raise AuthenticationException('keyboard-interactive requires a password')
 
         def handler(
             title: str, instructions: str, prompt_list: list[tuple[str, bool]]
@@ -268,25 +266,31 @@ class SSH2(Protocol):
                     response.append('')
             return response
 
-        cast(paramiko.Transport, self._transport).auth_interactive(username, handler)
+        return cast(paramiko.Transport, self._transport).auth_interactive(username, handler)
 
-    def _paramiko_auth_password(self, username: str, password: str | None) -> None:
+    def _paramiko_auth_password(self, username: str, password: str | None) -> list[str]:
         """
         Authenticates with the password method; None is sent as an empty
         password. Passes a password prompt to the received data.
+
+        :return: After a partial success, the authentication types that the
+            server allows next; else an empty list.
         """
         self._receive_cb('Password: \n')  # Expose a prompt (hide the PW).
         # Without fallback, paramiko would answer any single keyboard-interactive
         # prompt with the password if the server refused the password method.
         transport = cast(paramiko.Transport, self._transport)
-        transport.auth_password(username, password or '', fallback=False)
+        return transport.auth_password(username, password or '', fallback=False)
 
-    def _paramiko_auth_agent(self, username: str, password: str | None = None) -> None:
+    def _paramiko_auth_agent(self, username: str, password: str | None = None) -> list[str]:
         """
-        Authenticates with the keys of the SSH agent, trying one after the
-        other until the server accepts one. Raises the error of the last key,
-        or AuthenticationException if the agent has no keys. The password is
-        not used.
+        Authenticates with the keys of the SSH agent, one after the other
+        until the server accepts one; the password is not used. Raises the
+        error of the last key, or AuthenticationException if the agent has no
+        keys.
+
+        :return: After a partial success, the authentication types that the
+            server allows next; else an empty list.
         """
         keys = paramiko.Agent().get_keys()
         if not keys:
@@ -299,15 +303,14 @@ class SSH2(Protocol):
         for key in keys:
             try:
                 self._dbg(2, 'Trying SSH agent key %s' % key.fingerprint)
-                cast(paramiko.Transport, self._transport).auth_publickey(username, key)
-                return
+                return cast(paramiko.Transport, self._transport).auth_publickey(username, key)
             except SSHException as e:
                 saved_exception = e
         raise saved_exception
 
     def _paramiko_auth_key(
         self, username: str, keys: Iterable[tuple[type[paramiko.PKey], str]], password: str | None
-    ) -> None:
+    ) -> list[str]:
         """
         Authenticates with the given private key files, trying one after the
         other until the server accepts one. Raises the error of the last key
@@ -316,6 +319,8 @@ class SSH2(Protocol):
         :param keys: The key class and the file name of each key.
         :param password: The password of the key files; None is used as an
             empty password.
+        :return: After a partial success, the authentication types that the
+            server allows next; else an empty list.
         """
         if password is None:
             password = ''
@@ -328,15 +333,14 @@ class SSH2(Protocol):
             try:
                 key = pkey_class.from_private_key_file(filename, password)
                 self._dbg(2, 'Trying key %s in %s' % (key.fingerprint, filename))
-                cast(paramiko.Transport, self._transport).auth_publickey(username, key)
-                return
+                return cast(paramiko.Transport, self._transport).auth_publickey(username, key)
             except SSHException as e:
                 saved_exception = e
             except OSError as e:
                 saved_exception = e
         raise saved_exception
 
-    def _paramiko_auth_autokey(self, username: str, password: str | None) -> None:
+    def _paramiko_auth_autokey(self, username: str, password: str | None) -> list[str]:
         """
         Like _paramiko_auth_key(), with the RSA, ECDSA and Ed25519 key files
         in ~/.ssh (Unix) and ~/ssh (Windows) that exist.
@@ -353,11 +357,11 @@ class SSH2(Protocol):
             file = os.path.expanduser(file)
             if os.path.isfile(file):
                 keyfiles.append((cls, file))
-        self._paramiko_auth_key(username, keyfiles, password)
+        return self._paramiko_auth_key(username, keyfiles, password)
 
     def _get_auth_methods(
         self, allowed_types: list[str]
-    ) -> list[Callable[[str, str | None], None]]:
+    ) -> list[Callable[[str, str | None], list[str]]]:
         """
         Returns the methods for the authentication types to try, in order: the
         preferred_authentications that the server allows, or all allowed
@@ -395,13 +399,12 @@ class SSH2(Protocol):
 
     def _paramiko_auth(self, username: str, password: str | None) -> None:
         """
-        Authenticates the user. First tries the "none" method, and returns if
-        the server accepts it; else the server tells the authentication types
-        that it allows. The authentication banner of the server is passed to
-        the received data. Then tries the methods of _get_auth_methods() until
-        one succeeds. Before a method, reconnects if the transport is no
-        longer active, or if the driver sets reconnect_between_auth_methods
-        and a request reached the server since the last connect.
+        Authenticates the user with the "none" method, or else with the
+        methods of _get_auth_methods() until one succeeds, and after a partial
+        success with the other methods that the server allows next. Before a
+        method, reconnects if the transport is closed, or if the driver sets
+        reconnect_between_auth_methods and a request reached the server since
+        the last connect, but never after a partial success.
 
         :raises LoginFailure: If no method succeeds; lists the error of each.
         """
@@ -427,13 +430,19 @@ class SSH2(Protocol):
         # Finally try all supported login methods.
         errors = []
         attempted = True  # auth_none() above was an attempt
-        for method in auth_methods:
+        partial: list[str] = []  # The names of the methods that succeeded partially.
+        while auth_methods:
+            method = auth_methods.pop(0)
+            # The stubs lack Transport.active.
+            active = cast(Any, self._transport).active
+            if partial and not active:
+                errors.append('Connection closed after a partial authentication')
+                break
             # Some devices (e.g. Cisco WS-C3750 with IOS) do not accept further
             # login attempts after failing one. So in this hack, we re-connect
             # after each attempt that reached the server, auth_none() included.
             reconnect = self.get_driver().reconnect_between_auth_methods and attempted
-            # The stubs lack Transport.active.
-            if reconnect or not cast(Any, self._transport).active:
+            if not partial and (reconnect or not active):
                 if reconnect:
                     self._dbg(1, 'Forced reconnect by driver.')
                 else:
@@ -449,8 +458,7 @@ class SSH2(Protocol):
             # without keys, the public key methods send none.
             handler = cast(paramiko.Transport, self._transport).auth_handler
             try:
-                method(username, password)
-                return
+                allowed = method(username, password)
             except BadHostKeyException as e:
                 msg = 'Bad host key with %s(): %s' % (method.__name__, str(e))
                 self._dbg(1, msg)
@@ -463,6 +471,25 @@ class SSH2(Protocol):
                 msg = 'SSHException with %s(): %s' % (method.__name__, str(e))
                 self._dbg(1, msg)
                 errors.append(msg)
+            else:
+                if cast(paramiko.Transport, self._transport).is_authenticated():
+                    return
+                if not allowed:
+                    errors.append('%s() returned without authenticating' % method.__name__)
+                else:
+                    # The server accepted the method, but requires another one.
+                    msg = 'Partial authentication with %s(), allowed next: %s'
+                    self._dbg(1, msg % (method.__name__, allowed))
+                    partial.append(method.__name__)
+                    try:
+                        next_methods = self._get_auth_methods(allowed)
+                    except BadAuthenticationType as e:
+                        errors.append('After a partial authentication: %s' % e)
+                        break
+                    auth_methods = [m for m in next_methods if m.__name__ not in partial]
+                    if not auth_methods:
+                        msg = 'No method to try after a partial authentication; allowed: %s'
+                        errors.append(msg % allowed)
             attempted = (
                 attempted or cast(paramiko.Transport, self._transport).auth_handler is not handler
             )
@@ -508,6 +535,9 @@ class SSH2(Protocol):
         """
         Authenticates with the user name and the key file of the given key,
         decrypted with the password of the key, and opens the shell channel.
+
+        :raises LoginFailure: If the server requires another authentication
+            method after the key, such as a password.
         """
         # Allow multiple key files.
         key_file: str | list[str] | None = key.get_filename()
@@ -520,7 +550,10 @@ class SSH2(Protocol):
         keys = []
         for file in key_file:
             keys.append((keymap[key.get_type()], file))
-        self._paramiko_auth_key(user, keys, key.get_password())
+        allowed = self._paramiko_auth_key(user, keys, key.get_password())
+        if allowed:
+            msg = 'Login failed: after the key, the server requires one of: %s'
+            raise LoginFailure(msg % ', '.join(allowed))
 
         # Open the channel.
         self._paramiko_channel()
