@@ -636,6 +636,12 @@ The names below refer to functions callable from templates, not protocol methods
 - **Jobs Have Their Id When They Start:** `WorkQueue.enqueue()` and `priority_enqueue()`
   give the job its id before the main loop can start it. Before, a job that started at
   once could run with the id `None`, and its `Task` then never counted it as completed.
+- **Tasks Count Jobs That End at Once:** `Queue.run()`, its variants and
+  `Queue.enqueue()` add the id of each job to the task before the job can start. Before,
+  the task never counted a job that ended before its id was added, so
+  `Task.is_completed()` stayed `False`, and `run()` returned `None` instead of the task
+  if the jobs ended before it returned. `run()` and its variants return `None` only if
+  they enqueued no job, as all hosts were queued already.
 
 ## Demos
 

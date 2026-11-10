@@ -12,15 +12,39 @@ import time
 from functools import partial
 from multiprocessing import Value
 from tempfile import mkdtemp
+from unittest import mock
 
 from Exscript import Account, AccountPool, FileLogger, Queue
 from Exscript.interpreter.exception import FailException
 from Exscript.protocols import Dummy, Protocol
 from Exscript.util.decorator import bind
 from Exscript.util.log import log_to
+from Exscript.workqueue import Task
 
 logger = logging.getLogger('TestSuite.QueueTest')
 logger.addHandler(logging.NullHandler())
+
+
+def holds_lock(queue):
+    """
+    Returns whether the current thread holds the lock of the pipeline of the
+    given queue, which keeps the main loop from taking a job.
+    """
+    try:
+        queue.workqueue.collection.condition.notify(0)  # raises unless the lock is held
+    except RuntimeError:
+        return False
+    return True
+
+
+def end_now(queue, job_id):
+    """
+    Waits until the job with the given id has ended, as if the main loop had
+    taken it at once: unless the current thread holds the lock of the
+    pipeline, which keeps the main loop from taking it.
+    """
+    if not holds_lock(queue):
+        queue.workqueue.wait_for(job_id)
 
 
 def count_calls(job, data, **kwargs):
@@ -387,6 +411,43 @@ class QueueTest(unittest.TestCase):
         self.queue.workqueue.unpause()
         self.queue.join()
         self.assertEqual(names, ['dummy1'])
+
+    def testTaskCountsJobsThatEndedAtOnce(self):
+        # Each job ends before its task learns its id, if it can start then.
+        add_job_id = Task.add_job_id
+
+        def end_and_add(task, job_id):
+            end_now(self.queue, job_id)
+            add_job_id(task, job_id)
+
+        with mock.patch.object(Task, 'add_job_id', end_and_add):
+            tasks = {
+                'run': self.queue.run(['dummy://dummy1', 'dummy://dummy2'], do_nothing),
+                'enqueue': self.queue.enqueue(lambda job: None),
+            }
+        for method, task in tasks.items():
+            with self.subTest(method=method):
+                task.wait()
+                self.assertTrue(task.is_completed())
+
+    def testRunReturnsTheTaskOfJobsThatEndedAtOnce(self):
+        # Each job ends right after its task learned its id, if it can start
+        # then.
+        add_job_id = Task.add_job_id
+
+        def add_and_end(task, job_id):
+            add_job_id(task, job_id)
+            end_now(self.queue, job_id)
+
+        with mock.patch.object(Task, 'add_job_id', add_and_end):
+            task = self.queue.run('dummy://dummy1', do_nothing)
+        self.assertIsNotNone(task)
+
+        # Only a run that enqueues no job returns None.
+        self.queue.workqueue.pause()
+        self.assertIsNotNone(self.queue.run_or_ignore('dummy://dummy2', do_nothing))
+        self.assertIsNone(self.queue.run_or_ignore('dummy://dummy2', do_nothing))
+        self.queue.workqueue.unpause()
 
     def testForceRun(self):
         data = Value('i', 0)

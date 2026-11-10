@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from .account import Account, AccountPool
     from .host import Host
     from .protocols import Protocol
+    from .workqueue import Pipeline
     from .workqueue.job import Job, Thread
 
 _logger = logging.getLogger(__name__)
@@ -607,6 +608,23 @@ class Queue:
         self._dbg(3, 'Queue was reset.')
         self._del_status_bar()
 
+    def _enqueue(
+        self, task: Task, queue_function: Callable[..., str | None], *args: Any, **kwargs: Any
+    ) -> None:
+        """
+        Enqueues a job by calling the given function of the work queue with
+        the given arguments, and adds the id of the job to the given task,
+        unless the function ignored the job. Holds the lock of the pipeline
+        meanwhile, so the job cannot start before the task knows its id.
+        """
+
+        def enqueue(pipeline: 'Pipeline') -> None:
+            job_id = queue_function(*args, **kwargs)
+            if job_id is not None:
+                task.add_job_id(job_id)
+
+        self.workqueue.collection.with_lock(enqueue)
+
     def _run(
         self,
         hosts: 'str | Host | Iterable[str | Host]',
@@ -630,14 +648,12 @@ class Queue:
         for host in hosts:
             name = host.get_name()
             data = {'host': host}
-            job_id = queue_function(callback, name, *args, data=data)
-            if job_id is not None:
-                task.add_job_id(job_id)
+            self._enqueue(task, queue_function, callback, name, *args, data=data)
 
             if self.host_driver is not None:
                 host.set_option('driver', self.host_driver)
 
-        if task.is_completed():
+        if not task.job_ids:
             self._dbg(2, 'No jobs enqueued.')
             return None
 
@@ -774,8 +790,6 @@ class Queue:
         """
         self.total += 1
         task = Task(self.workqueue)
-        job_id = self.workqueue.enqueue(function, name, attempts)
-        if job_id is not None:
-            task.add_job_id(job_id)
+        self._enqueue(task, self.workqueue.enqueue, function, name, attempts)
         self._dbg(2, 'Function enqueued.')
         return task
