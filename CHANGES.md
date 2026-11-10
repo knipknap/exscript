@@ -485,6 +485,12 @@ The names below refer to functions callable from templates, not protocol methods
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.
+- **`Exscript.util.mail` Without a User Name:** If `getpass.getuser()` finds no name
+  for the current user, the template variable `user` is empty, so
+  `from_template_string()` and `from_template()` work if the template has a `From:`
+  line. `Mail()` without a sender, and a template without a `From:` line, raise a
+  `ValueError`. Before, all of them failed with the `OSError` of `getuser()`, or with
+  a `KeyError` before Python 3.13.
 - **Pseudo Protocol on Windows:** `pseudo://` URLs accept absolute Windows paths such
   as `pseudo://C:\devices\router.py`; the drive letter was taken for a port number.
 - **`Exscript.util.tty.get_terminal_size()`:** Uses `shutil.get_terminal_size()`: the

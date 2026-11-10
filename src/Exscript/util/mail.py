@@ -102,14 +102,25 @@ class _TemplateParser:
         return _string_re.sub(self._variable_sub_cb, output)
 
 
+def _get_user() -> str:
+    """
+    Returns the name of the current user, or an empty string if it is
+    unknown.
+    """
+    try:
+        return getuser()
+    except (KeyError, OSError):  # no user name: OSError since Python 3.13
+        return ''
+
+
 def _render_template(string: str, **vars: Any) -> str:
     """
     Returns the given mail template with the placeholders replaced by the
     given variables. The variables ``date`` (the current date, as
-    YYYY-MM-DD) and ``user`` (the name of the current user) are defined by
-    default.
+    YYYY-MM-DD) and ``user`` (the name of the current user, or an empty
+    string if it is unknown) are defined by default.
     """
-    default = {'date': time.strftime('%Y-%m-%d'), 'user': getuser()}
+    default = {'date': time.strftime('%Y-%m-%d'), 'user': _get_user()}
     default.update(vars)
     parser = _TemplateParser()
     return parser.parse(string, **default)
@@ -132,6 +143,20 @@ def _get_var_from_header_line(line: str) -> tuple[str, str]:
     # cast is for the type checker.
     match = cast(re.Match[str], re.match(r'^(\w+): (.+)$', line))
     return match.group(1).strip().lower(), match.group(2).strip()
+
+
+def _get_sender_from_template(string: str) -> str | None:
+    """
+    Returns the value of the first From header field of the given mail
+    template, or None if it has none.
+    """
+    for line in string.split('\n'):
+        if not _is_header_line(line):
+            break
+        key, value = _get_var_from_header_line(line)
+        if key == 'from':
+            return value
+    return None
 
 
 def _cleanup_mail_addresses(recipients: str | list[str]) -> list[str]:
@@ -168,7 +193,8 @@ class Mail:
         """
         Creates a new email with the given values.
         If the given sender is None or empty, the sender is the name of
-        the current user (see getpass.getuser()) at the local host.
+        the current user (see getpass.getuser()) at the local host; if the
+        name of the current user is unknown, a ValueError is raised.
 
         :type  sender: string|None
         :param sender: The email address of the sender.
@@ -193,8 +219,11 @@ class Mail:
         self.subject: str = cast(str, None)
         self.body: str = cast(str, None)
         if not sender:
+            user = _get_user()
+            if not user:
+                raise ValueError('a sender is required: the name of the current user is unknown')
             domain = socket.getfqdn('localhost')
-            sender = getuser() + '@' + domain
+            sender = user + '@' + domain
         self.set_sender(sender)
         self.set_to(to)
         self.set_cc(cc)
@@ -446,12 +475,14 @@ def from_template_string(string: str, **kwargs: Any) -> Mail:
     Placeholders of the form ``{name}`` are replaced by the value of the
     variable with that name; the items of a list are put on separate lines.
     The variables ``date`` (the current date) and ``user`` (the name of the
-    current user) are defined by default. A line that ends with a space is
-    joined with the next line. The header fields From, To, Cc, Bcc and
-    Subject at the start of the template set the fields of the mail; the
-    rest of the template is the body. Raises an Exception if a placeholder
-    names an undefined variable, or if the template has another header
-    field.
+    current user, or an empty string if it is unknown) are defined by
+    default. A line that ends with a space is joined with the next line. The
+    header fields From, To, Cc, Bcc and Subject at the start of the template
+    set the fields of the mail; the rest of the template is the body.
+    Without a From header field, the sender is the default of :class:`Mail`,
+    so a ValueError is raised if the name of the current user is unknown.
+    Raises an Exception if a placeholder names an undefined variable, or if
+    the template has another header field.
 
     :type  string: str
     :param string: The SMTP formatted template.
@@ -461,7 +492,8 @@ def from_template_string(string: str, **kwargs: Any) -> Mail:
     :return: The resulting mail.
     """
     tmpl = _render_template(string, **kwargs)
-    mail = Mail()
+    # Mail() needs the name of the current user only if the template names no sender.
+    mail = Mail(_get_sender_from_template(tmpl))
     mail.set_from_template_string(tmpl)
     return mail
 

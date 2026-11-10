@@ -45,6 +45,14 @@ class MailTest(unittest.TestCase):
         user = getuser()
         self.assertTrue(mail.get_sender().startswith(user + '@'))
 
+    def testConstructorWithoutUserName(self):
+        # getuser() raises OSError since Python 3.13, KeyError before, if it finds no name.
+        for error in OSError('No username set in the environment'), KeyError('uid not found'):
+            with mock.patch('Exscript.util.mail.getuser', side_effect=error):
+                with self.assertRaisesRegex(ValueError, 'the name of the current user is unknown'):
+                    Mail()
+                self.assertEqual(Mail(sender='me@example.com').get_sender(), 'me@example.com')
+
     def testSetFromTemplateString(self):
         self.mail.set_from_template_string(template)
         tmpl = self.mail.get_smtp_mail().strip()
@@ -163,6 +171,18 @@ class mailTest(unittest.TestCase):
 
         mail = from_template_string(template, **vars)
         self.checkResult(mail)
+
+    def testFromTemplateStringWithoutUserName(self):
+        # The variable user is empty, and the template must name the sender.
+        from Exscript.util.mail import from_template_string
+
+        for error in OSError('No username set in the environment'), KeyError('uid not found'):
+            with mock.patch('Exscript.util.mail.getuser', side_effect=error):
+                mail = from_template_string('From: me@example.com\n\nSent by "{user}"')
+                self.assertEqual(mail.get_sender(), 'me@example.com')
+                self.assertEqual(mail.get_body(), 'Sent by ""')
+                with self.assertRaisesRegex(ValueError, 'a sender is required'):
+                    from_template_string(template, **vars)
 
     def testFromTemplate(self):
         from Exscript.util.mail import from_template
