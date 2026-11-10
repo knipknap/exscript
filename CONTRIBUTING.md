@@ -36,6 +36,14 @@ The tests need no devices and no network: they run against local test servers an
 recorded sessions. To run them with another Python version, use e.g.
 `uv run --python 3.15 pytest`.
 
+CI also measures three kinds of coverage, each with a minimum that only goes up:
+
+- tests: `uv run pytest --cov=Exscript` (lines and branches; the minimum is
+  `COV_FAIL_UNDER` in `.github/workflows/ci.yml`),
+- docstrings: interrogate in pre-commit (`fail-under` in `pyproject.toml`),
+- types: `uv run python tools/type_coverage.py --check`, the share of expressions whose
+  type mypy knows (`MIN_PERCENT` in the tool).
+
 ## Changes
 
 - A fix comes with a test that fails without it.
@@ -46,7 +54,7 @@ recorded sessions. To run them with another Python version, use e.g.
   them, and pre-commit fails if the share of documented functions drops.
 - Annotate new code with types. mypy checks every module strictly, except those that are
   still in the list of `[[tool.mypy.overrides]]` in `pyproject.toml`; remove a module from
-  that list when you annotate it.
+  that list when you annotate it. Use `Any` only where a type is open on purpose.
 - The public API and the template language stay compatible. Please open an issue before you
   work on a change that breaks them.
 

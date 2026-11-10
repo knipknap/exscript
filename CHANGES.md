@@ -20,8 +20,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
   versions before 3.12 are no longer supported.
 - **Type Annotations:** Exscript is annotated and ships the `py.typed` marker (PEP 561),
   so type checkers such as mypy and pyright check the code that uses it. All modules
-  pass `mypy --strict`, except the queue (`Exscript.queue`, `Exscript.workqueue`) and
-  `Exscript.util.sigint`, which are annotated only in part.
+  pass `mypy --strict`, except `Exscript.util.sigint`, which is annotated only in part.
+  mypy knows the type of 95.7 % of the expressions; the rest is `Any` on purpose
+  (callbacks, options that are passed on, template variables) or comes from ncclient,
+  which is not annotated. CI checks that this share does not drop.
 - **Dependencies:** `future` and `configparser`, backports for Python 2, are no longer
   needed. paramiko 3.4 to 5.x is supported (before: 1.17 to 4.x). New: ncclient and
   lxml 5.0 or later, for NETCONF.
