@@ -134,6 +134,12 @@ class SignalTest(unittest.TestCase):
         for prompt in 'router#', 'RP/0/RSP0/CPU0:xr-pe1#', 'A:sros-pe1#', 'admin@junos-mx> ':
             self.assertNotEqual(guess(response='\r\nshow\r\n' + prompt), 'shell', prompt)
 
+    def testNxosBanner(self):
+        # Newer NX-OS versions, e.g. nx-osv9000, print the short name.
+        self.assertEqual(guess(head='Cisco NX-OS Software\r\n'), 'nxos')
+        banner = 'Cisco Nexus Operating System (NX-OS) Software\r\n'
+        self.assertEqual(guess(head=banner), 'nxos')
+
     def testIsamPrompt(self):
         self.assertEqual(guess(response='\r\ninfo\r\ntyp:isadmin>#'), 'isam')
         for prompt in 'router#', 'switch>', 'hostname >', 'S>* 10.0.0.0/8 is directly connected':

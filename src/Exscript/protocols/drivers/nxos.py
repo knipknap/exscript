@@ -68,9 +68,12 @@ class NXOSDriver(Driver):
     def check_head_for_os(self, string: str) -> int:
         """
         Returns 95 if the data contains
-        "Cisco Nexus Operating System (NX-OS) Software", else 0.
+        "Cisco Nexus Operating System (NX-OS) Software" or, as newer
+        versions print, "Cisco NX-OS Software", else 0.
         """
         if 'Cisco Nexus Operating System (NX-OS) Software' in string:
+            return 95
+        if 'Cisco NX-OS Software' in string:
             return 95
         return 0
 

@@ -289,6 +289,8 @@ marked with **BREAKING**; a migration guide will accompany the release.
   root gets, e.g. `root@router:~ # ` (csh) or `root@router:/var/tmp # `; before, a
   login as root waited until the timeout. Thanks to yoleri (pull request #211), whose
   banner is now part of the test corpus.
+- **NX-OS Banners:** The `nxos` driver also recognizes the banner "Cisco NX-OS
+  Software" of newer versions, e.g. nx-osv9000 (upstream issue #200).
 - **Login Errors of `ericsson_ban`:** A login over the `ericsson_ban` driver no longer
   fails with `AttributeError: 'str' object has no attribute 'search'`; its login
   error pattern was a string instead of a compiled pattern. A test checks the
