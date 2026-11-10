@@ -1,4 +1,5 @@
 import copy
+import pickle
 import unittest
 
 from Exscript.util.collections import OrderedDefaultDict
@@ -39,6 +40,32 @@ class OrderedDefaultDictTest(unittest.TestCase):
             self.assertIs(duplicate['core'], groups['core'])  # a shallow copy
             duplicate['edge'].append('r2')
             self.assertNotIn('edge', groups)
+
+    def testCopyAndPickle(self):
+        # The copies keep the default factory and the order.
+        for factory in list, None:
+            groups = OrderedDefaultDict(factory, [('edge', ['r2']), ('core', ['r1'])])
+            copies = [copy.copy(groups), copy.deepcopy(groups)]
+            for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+                copies.append(pickle.loads(pickle.dumps(groups, protocol)))  # noqa: S301 (own data)
+            for duplicate in copies:
+                self.assertIsInstance(duplicate, OrderedDefaultDict)
+                self.assertIs(duplicate.default_factory, factory)
+                self.assertEqual(list(duplicate.items()), [('edge', ['r2']), ('core', ['r1'])])
+
+    def testDeepCopy(self):
+        # Each value is copied once, also a value that refers to the dictionary.
+        shared = ['r1']
+        groups = OrderedDefaultDict(list, core=shared, backup=shared)
+        groups['all'] = groups
+        duplicate = copy.deepcopy(groups)
+        self.assertEqual(list(duplicate), ['core', 'backup', 'all'])
+        self.assertIs(duplicate['backup'], duplicate['core'])
+        self.assertIs(duplicate['all'], duplicate)
+        duplicate['core'].append('r2')
+        duplicate['edge'].append('r3')
+        self.assertEqual(shared, ['r1'])
+        self.assertNotIn('edge', groups)
 
     def testRepr(self):
         groups = OrderedDefaultDict(list, core=['r1'])

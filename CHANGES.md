@@ -502,6 +502,10 @@ The names below refer to functions callable from templates, not protocol methods
   `LINES` and `COLUMNS` environment variables, then the terminal of the standard
   output, then the defaults. It no longer asks standard input, standard error and the
   controlling terminal, and no longer runs `stty size`, which leaked a pipe.
+- **`Exscript.util.collections.OrderedDefaultDict`:** Can be deep-copied and pickled,
+  and the copies keep the default factory and the order of the keys. Before,
+  `copy.deepcopy()` failed with `TypeError: cannot pickle 'odict_items' object`, and
+  `pickle.dumps()` with a `PicklingError`.
 - **BREAKING - Removed Modules:** `Exscript.util.daemonize`, `Exscript.util.pidutil`
   and `Exscript.util.sigintcatcher` are removed, and
   `daemonize()` failed on Python 3 with `ValueError: can't have unbuffered text I/O`.

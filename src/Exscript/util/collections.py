@@ -43,7 +43,7 @@ class OrderedDefaultDict[K, V](OrderedDict[K, V]):
             args: tuple[Callable[[], V], ...] = tuple()
         else:
             args = (self.default_factory,)
-        return type(self), args, None, None, self.items()
+        return type(self), args, None, None, iter(self.items())
 
     def copy(self) -> Self:
         """
@@ -55,7 +55,11 @@ class OrderedDefaultDict[K, V](OrderedDict[K, V]):
         return type(self)(self.default_factory, self)
 
     def __deepcopy__(self, memo: dict[int, Any]) -> Self:
-        return type(self)(self.default_factory, copy.deepcopy(self.items()))
+        result = type(self)(self.default_factory)
+        memo[id(self)] = result  # for values that refer to this dictionary
+        for key, value in self.items():
+            result[copy.deepcopy(key, memo)] = copy.deepcopy(value, memo)
+        return result
 
     def __repr__(self) -> str:
         return 'OrderedDefaultDict(%s, %s)' % (self.default_factory, OrderedDict.__repr__(self))
