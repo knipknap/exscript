@@ -238,3 +238,7 @@ their users should know:
 - ``set_timeout()`` after the login also changes how long ``Netconf``
   waits for the reply to an RPC; before, the timeout of the login
   applied.
+- If the server closes a NETCONF session, ``execute()`` raises
+  :class:`~Exscript.protocols.exception.ConnectionClosedException`
+  instead of a plain ``ProtocolException``. It is a ``ProtocolException``
+  and an ``EOFError``.

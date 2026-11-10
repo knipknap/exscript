@@ -28,7 +28,6 @@ from Exscript.protocols import drivers, netconf
 from Exscript.protocols.exception import (
     ConnectionClosedException,
     LoginFailure,
-    ProtocolException,
     RPCError,
     TimeoutException,
 )
@@ -477,8 +476,11 @@ class SessionTest(unittest.TestCase):
 
     def testServerClosesTheSession(self):
         conn = self.login(lambda rpc: CLOSE, timeout=0.3)
-        self.assertRaises(ProtocolException, conn.execute, '<get/>')
+        thread = conn._ncc_session
+        self.assertRaises(ConnectionClosedException, conn.execute, '<get/>')
         self.assertRaises(ConnectionClosedException, conn.expect_prompt)
+        thread.join(5)  # then ncclient marks the session as closed
+        self.assertRaises(ConnectionClosedException, conn.execute, '<get/>')
         conn.close()  # the logout fails silently
         self.assertFalse(conn.connected)
 

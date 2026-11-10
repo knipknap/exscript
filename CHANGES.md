@@ -298,6 +298,10 @@ development versions; "before" refers to them.
 - **`set_timeout()` After the Login:** RPCs, also the `<close-session/>` of `close()`,
   wait for their reply as long as the current timeout says. Before, they kept the
   timeout of the login, so `set_timeout()` after `login()` did not change it.
+- **Closed Sessions:** If the server closes the session, also during an RPC, `execute()`
+  raises `ConnectionClosedException`, like SSH and Telnet. Before, it raised a plain
+  `ProtocolException` ("ncclient related error ..."); the new exception is a
+  `ProtocolException`, too.
 
 ### Protocol Drivers
 

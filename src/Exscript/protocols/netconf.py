@@ -543,11 +543,14 @@ class Netconf(SSH2):
         :raises XMLValidationError: If the RPC body is not valid XML, or not
             one XML element.
         :raises TimeoutException: If no reply arrives in time.
+        :raises ConnectionClosedException: If the server closed the session,
+            also before the RPC.
         :raises ProtocolException: On other errors of ncclient.
         """
         from lxml.etree import XMLSyntaxError
         from ncclient import NCClientError
         from ncclient.operations.errors import TimeoutExpiredError
+        from ncclient.transport.errors import SessionCloseError
 
         self._ncc_response = None
         self._validate_rpc_body(data)
@@ -567,6 +570,9 @@ class Netconf(SSH2):
         except TimeoutExpiredError:
             self._raise_on_response_timeout()
         except NCClientError as e:
+            # ncclient reads the end of the session, or refuses to send after it.
+            if isinstance(e, SessionCloseError) or not self._ncc_session.connected:
+                self._raise_on_response_eof()
             msg = 'ncclient related error (%s)' % str(e)
             raise ProtocolException(msg)
         except Exception:
