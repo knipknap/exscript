@@ -63,6 +63,125 @@ _logger.addHandler(logging.NullHandler())
 _chunk_header_re = re.compile(rb'\n#(\d+)\n')
 _end_of_chunks_re = re.compile(rb'\n##\n')
 
+# The framing of NETCONF messages (RFC 6242): 1.0 ends each message with
+# ]]>]]> (section 4.3); 1.1 sends chunks, each with a header of its size,
+# and ends the message with \n##\n (section 4.2).
+_EOM = b']]>]]>'
+_frame_re = re.compile(rb'\n#([1-9][0-9]{0,9})\n|\n##\n')
+_MAX_FRAME_HEADER = len(b'\n#4294967295\n')
+_MAX_CHUNK_SIZE = 4294967295
+
+
+class _Framer:
+    """
+    Splits the data of a NETCONF session into its messages, framed as RFC
+    6242 describes, and passes each message to ncclient as text, decoded as
+    UTF-8 when it is complete; bytes that are no UTF-8 become U+FFFD.
+    ncclient's IO thread calls parse() with the data of each read, as with
+    its own parsers.
+
+    Workaround for ncclient 0.7.1 (the latest release): its DefaultXMLParser
+    decodes the data before the message is complete, from the position of
+    the last search for ]]>]]> (NETCONF 1.0) and chunk by chunk (NETCONF
+    1.1). A character whose bytes arrive in two reads, or that a device
+    splits across two chunks, raises a UnicodeDecodeError in the IO thread,
+    which ends the session. Remove this class when ncclient frames the
+    messages on bytes, and let _init_ncclient() keep the parser of ncclient
+    again (session.parser = device_handler.get_xml_parser(session)).
+    """
+
+    def __init__(self, session: Any) -> None:
+        """
+        Constructor.
+
+        :param session: ncclient's SSHSession, which gets the messages.
+        """
+        from ncclient.transport.session import NetconfBase
+
+        self._session = session
+        self._base_11 = NetconfBase.BASE_11
+        self._data = bytearray()
+        self._chunks: list[bytes] = []  # of the NETCONF 1.1 message being received
+        self._searched = 0  # NETCONF 1.0: the data before this has no ]]>]]>
+
+    def parse(self, data: bytes) -> None:
+        """
+        Takes the data of a read, and passes the messages that are complete
+        to ncclient, in their order.
+
+        :raises NetconfFramingError: (of ncclient) If the data breaks the
+            chunked framing of NETCONF 1.1.
+        """
+        self._data += data
+        while (message := self._next_message()) is not None:
+            text = message.decode('utf-8', errors='replace').strip()
+            if text:
+                self._session._dispatch_message(text)
+
+    def _next_message(self) -> bytes | None:
+        """
+        Removes the next complete message from the data and returns it
+        without its framing, or None if no message is complete. Uses the
+        framing of NETCONF 1.1 once ncclient selects it after the <hello>
+        messages.
+        """
+        if self._session._base == self._base_11:
+            return self._next_chunked_message()
+        end = self._data.find(_EOM, self._searched)
+        if end < 0:
+            self._searched = max(0, len(self._data) - len(_EOM) + 1)
+            return None
+        message = bytes(self._data[:end])
+        del self._data[: end + len(_EOM)]
+        self._searched = 0
+        return message
+
+    def _next_chunked_message(self) -> bytes | None:
+        """
+        Like _next_message(), for the chunked framing of NETCONF 1.1. Skips
+        whitespace between messages, e.g. behind the ]]>]]> of the <hello>
+        of a server.
+        """
+        data = self._data
+        pos = 0
+        if not self._chunks:
+            while pos + 1 < len(data) and data[pos] in b' \t\r\n' and data[pos + 1] != ord('#'):
+                pos += 1
+        try:
+            while True:
+                match = _frame_re.match(data, pos)
+                if match is None:
+                    rest = bytes(data[pos : pos + _MAX_FRAME_HEADER])
+                    if len(rest) == _MAX_FRAME_HEADER or b'\n' in rest[1:]:
+                        self._framing_error(rest)
+                    return None  # the header is not complete
+                if match.group(1) is None:  # \n##\n ends the message
+                    if not self._chunks:
+                        self._framing_error(match.group())
+                    pos = match.end()
+                    message = b''.join(self._chunks)
+                    self._chunks = []
+                    return message
+                size = int(match.group(1))
+                if size > _MAX_CHUNK_SIZE:
+                    self._framing_error(match.group())
+                if match.end() + size > len(data):
+                    return None  # the chunk is not complete
+                self._chunks.append(bytes(data[match.end() : match.end() + size]))
+                pos = match.end() + size
+        finally:
+            del data[:pos]
+
+    def _framing_error(self, data: bytes) -> NoReturn:
+        """
+        Raises ncclient's NetconfFramingError for the given data, which is
+        not a chunk header where one must be.
+        """
+        from ncclient.transport.errors import NetconfFramingError
+
+        raise NetconfFramingError('invalid NETCONF 1.1 chunk header: %r' % data)
+
+
 # Exscript sends its <hello> and RPCs pretty-printed, so that they are readable
 # in logs. ncclient serializes them with the to_xml() of two of its modules, in
 # the thread that sends; _install_to_xml() replaces it with a function that
@@ -281,13 +400,12 @@ class Netconf(SSH2):
 
     def _init_ncclient(self) -> None:
         """
-        Starts the NETCONF session with ncclient on the authenticated
-        transport and the open channel: exchanges the `<hello>` messages,
-        starts the IO thread of ncclient and creates its manager. recv() and
-        send() of the channel are wrapped, so the data of the session also
-        reaches the buffer, the logs and the events. Then updates the driver
-        from the server capabilities and consumes the server `<hello>` from
-        the buffer. Does nothing if the manager exists already.
+        Starts the NETCONF session with ncclient on the open channel, unless
+        the manager exists already: exchanges the `<hello>` messages, starts
+        ncclient's IO thread and manager, and passes the data of the session
+        to the logs and the events, and its messages to the buffer. Then
+        updates the driver from the server capabilities and consumes the
+        server `<hello>` from the buffer.
         """
         # Bypasses ncclient's default SSH connection flow by injecting the
         # already-authenticated paramiko transport and the open NETCONF channel
@@ -297,6 +415,7 @@ class Netconf(SSH2):
             return
         from ncclient.manager import Manager
         from ncclient.operations.rpc import RaiseMode
+        from ncclient.transport.session import SessionListener
         from ncclient.transport.ssh import SSHSession
 
         _install_to_xml()
@@ -312,6 +431,15 @@ class Netconf(SSH2):
         session._channel_name = cast('Channel', self._channel).get_name()
         session._connected = True
         session._closing.clear()
+        session.parser = _Framer(session)  # see _Framer: a workaround for ncclient
+
+        # Every message that ncclient receives also reaches the buffer. An
+        # ncclient listener must be a SessionListener; its methods are replaced
+        # here, so this module imports ncclient only when a session starts.
+        listener = SessionListener()
+        listener.callback = lambda root, raw: self._receive_message(raw)
+        listener.errback = lambda error: None  # the end of the channel ends expect()
+        session.add_listener(listener)
 
         self._wrap_channel(cast('Channel', self._channel))
 
@@ -319,9 +447,6 @@ class Netconf(SSH2):
         self._buffer.clear()  # keeps the first self.response clean
         with _pretty():
             session._post_connect(self.get_timeout())
-
-        # Selects the driver/device-specific XML parser for all subsequent RPCs.
-        session.parser = device_handler.get_xml_parser(session)
 
         # Finally the manager is in charge of the channel.
         self._ncc_session = session
@@ -341,15 +466,16 @@ class Netconf(SSH2):
     def _wrap_channel(self, channel: 'Channel') -> None:
         """
         Wraps recv() and send() of the given channel, which ncclient's IO
-        thread calls, so the data of the session also reaches the buffer, the
-        logs and the events. The data is decoded as UTF-8 with an incremental
-        decoder per direction, so a character that spans two reads or writes
-        is decoded, too; bytes that are no UTF-8 become U+FFFD.
+        thread calls, so the data of the session also reaches the logs, the
+        standard output and the events, as it is sent and received, with its
+        framing. The data is decoded as UTF-8 with an incremental decoder per
+        direction, so a character that spans two reads or writes is decoded,
+        too; bytes that are no UTF-8 become U+FFFD.
         """
         # Controls the behavior of the replication wrappers. The replication is
         # needed as ncclient owns the channel within its IO thread. So we need
-        # to somehow fetch this raw data for display, logging and raw response
-        # buffering/matching.
+        # to somehow fetch this raw data for display and logging. The end of the
+        # received data also ends the replication of the messages to the buffer.
         self._replicate = True
         recv_decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
         send_decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
@@ -365,7 +491,6 @@ class Netconf(SSH2):
             string_data = recv_decoder.decode(data, final=not data)
             if string_data:  # empty at the end, or for a part of a character
                 self._receive_cb(string_data)
-                self._buffer.append(string_data)
             if not data:
                 self._dbg(1, 'channel.recv() returned EOF')
                 self._replicate = False
@@ -397,6 +522,16 @@ class Netconf(SSH2):
             return count
 
         cast(Any, channel).send = send_wrapper  # Any: replaces a method
+
+    def _receive_message(self, message: str) -> None:
+        """
+        Appends a message that ncclient's IO thread received, without its
+        framing, to the buffer, followed by the ]]>]]> that the prompt
+        matches; so the response has no framing, and a prompt never matches
+        within a message. Does nothing after the end of the received data.
+        """
+        if self._replicate:
+            self._buffer.append(message + ']]>]]>')
 
     def login(
         self,
@@ -490,8 +625,9 @@ class Netconf(SSH2):
         Each chunk is introduced by a header `LF HASH chunk-size LF` where the
         size is the exact byte count of the following chunk (RFC 6242 §4.2),
         in the UTF-8 encoding of the response.
-        The end-of-chunks marker `LF HASH HASH LF` gets stripped finally. Useful
-        to also reassemble chunks in received data from events.
+        The end-of-chunks marker `LF HASH HASH LF` gets stripped finally. The
+        response and the buffer of the adapter have no framing; this is
+        useful for the received data of the logs and data_received_event.
 
         Raises ValueError on unexpected trailing bytes after the last chunk.
 
@@ -524,16 +660,6 @@ class Netconf(SSH2):
             msg = 'Unexpected trailing bytes after chunk reassembly: %s'
             raise ValueError(msg % repr(data[:50].decode('utf-8', 'replace') + '...'))
         return b''.join(parts).decode('utf-8')
-
-    def _domatch(self, prompt: list[re.Pattern[str]], flush: bool) -> tuple[int, re.Match[str]]:
-        """
-        Like Protocol._domatch(), but reassembles a chunked response (NETCONF
-        1.1) into plain content.
-        """
-        n, match = super()._domatch(prompt, flush)
-        # super()._domatch() sets the response.
-        self.response = self.reassemble_chunks(cast(str, self.response))
-        return n, match
 
     def _fill_buffer(self, timeout: float | None) -> bool | None:
         """

@@ -308,6 +308,16 @@ development versions; "before" refers to them.
   raises `ConnectionClosedException`, like SSH and Telnet. Before, it raised a plain
   `ProtocolException` ("ncclient related error ..."); the new exception is a
   `ProtocolException`, too.
+- **Messages Instead of Received Data:** Exscript splits the session into its messages
+  itself, as RFC 6242 frames them, and decodes each message as UTF-8 when it is
+  complete. `response` and the patterns of `expect()` and `waitfor()` see these
+  messages, each followed by `]]>]]>`, also with NETCONF 1.1. Before, they saw the data
+  as received: with NETCONF 1.1, a chunk header could split the text that a pattern
+  looks for, e.g. `</notification>`, and text like `\n##\n` behind a tag ended a
+  message early; and a character whose bytes arrived in two reads, or that a device
+  split across two chunks, ended the session with a `UnicodeDecodeError` in ncclient
+  0.7.1. The logs, the standard output and `data_received_event` still show the data
+  as received.
 - **UTF-8:** `Netconf` always uses UTF-8, which RFC 6241 requires for NETCONF messages,
   whatever `encoding` is passed, and `reassemble_chunks()` counts the chunk sizes in
   bytes, as RFC 6242 does. Bytes that are no UTF-8, also in the SSH banner, become

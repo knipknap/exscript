@@ -63,6 +63,23 @@ Filters work as with any NETCONF client::
 
 ``close()`` sends ``<close-session/>`` and closes the connection.
 
+Messages and notifications
+--------------------------
+
+``response`` and the patterns of ``expect()`` and ``waitfor()`` see the
+messages of the session, decoded and without the framing of :rfc:`6242`;
+each message is followed by ``]]>]]>``, also with NETCONF 1.1. To wait for
+a notification after ``<create-subscription/>``::
+
+    conn.execute('<create-subscription '
+                 'xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0"/>')
+    conn.expect('</notification>')
+    print(conn.response)
+
+The logs, the standard output and ``data_received_event`` show the data
+as it was received, with the chunk headers of NETCONF 1.1;
+``Netconf.reassemble_chunks()`` removes them.
+
 Errors
 ------
 

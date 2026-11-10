@@ -5,11 +5,13 @@ a small NETCONF server, and the replay of a recorded netopeer2 session.
 
 import inspect
 import io
+import itertools
 import os
 import re
 import subprocess
 import sys
 import threading
+import time
 import unittest
 from unittest import mock
 
@@ -21,7 +23,8 @@ from hypothesis import strategies as st
 from lxml import etree
 from ncclient.manager import make_device_handler
 from ncclient.operations.rpc import RPC, RPCReply
-from ncclient.transport.session import HelloHandler
+from ncclient.transport.errors import NetconfFramingError
+from ncclient.transport.session import HelloHandler, NetconfBase
 from ncclient.transport.ssh import SSHSession
 from ncclient.xml_ import NCElement, new_ele
 
@@ -95,6 +98,99 @@ class ReassembleChunksTest(unittest.TestCase):
         chunks.append(text[pos:])
         framed = ''.join('\n#%d\n%s' % (len(c.encode()), c) for c in chunks if c) + '\n##\n'
         self.assertEqual(Netconf.reassemble_chunks(framed), text)
+
+
+class FakeSession:
+    """Records the messages that the framer dispatches, like ncclient's session."""
+
+    def __init__(self, base=NetconfBase.BASE_10):
+        self._base = base
+        self.messages = []
+
+    def _dispatch_message(self, raw):
+        self.messages.append(raw)
+
+
+class FramerTest(unittest.TestCase):
+    """The framing of NETCONF messages (RFC 6242) on bytes; see netconf._Framer."""
+
+    def feed(self, data, read_sizes=(1,), base=NetconfBase.BASE_10):
+        """Feeds the data to a framer in reads of the given sizes, in turn."""
+        session = FakeSession(base)
+        framer = netconf._Framer(session)
+        pos = 0
+        for size in itertools.cycle(read_sizes):
+            if pos >= len(data):
+                break
+            framer.parse(data[pos : pos + size])
+            pos += size
+        return session.messages
+
+    def testFraming10(self):
+        # Characters and the ]]>]]> span reads; whitespace around a message is no part of it.
+        data = '<a>Zürich €</a>]]>]]>\n<b/>\n]]>]]>'.encode()
+        self.assertEqual(self.feed(data), ['<a>Zürich €</a>', '<b/>'])
+        self.assertEqual(self.feed(data, [len(data)]), ['<a>Zürich €</a>', '<b/>'])
+
+    def testIncompleteMessage(self):
+        self.assertEqual(self.feed(b'<a/>]]>]]'), [])
+        self.assertEqual(self.feed(b'\n#4\n<a/>\n#', base=NetconfBase.BASE_11), [])
+
+    def testNoUTF8(self):
+        self.assertEqual(self.feed(b'<a>\xff</a>]]>]]>'), ['<a>\ufffd</a>'])
+
+    def testFraming11(self):
+        # A device splits the ü across two chunks; each byte arrives in its own read.
+        message = '<a>Zürich</a>'.encode()
+        data = encode_message(message, True, [5, 0]) + encode_message(b'<b/>', True)
+        self.assertEqual(data[:10], b'\n#5\n<a>Z\xc3\n')
+        self.assertEqual(self.feed(data, base=NetconfBase.BASE_11), ['<a>Zürich</a>', '<b/>'])
+
+    def testEndOfChunksInAChunk(self):
+        # Text like the end of the chunks within a chunk is text.
+        message = b'<a>\n##\n</a>'
+        data = encode_message(message, True, [7, 0])
+        self.assertEqual(data[:11], b'\n#7\n<a>\n##\n')
+        for sizes in (1,), (11,), (len(data),):
+            messages = self.feed(data, sizes, base=NetconfBase.BASE_11)
+            self.assertEqual(messages, ['<a>\n##\n</a>'], sizes)
+
+    def testWhitespaceBetweenMessages(self):
+        # E.g. a newline behind the ]]>]]> of the <hello> of a server.
+        data = b'\r\n \n' + encode_message(b'<a/>', True)
+        self.assertEqual(self.feed(data, base=NetconfBase.BASE_11), ['<a/>'])
+
+    def testSwitchToFraming11(self):
+        # ncclient selects NETCONF 1.1 after the <hello> messages.
+        session = FakeSession()
+        framer = netconf._Framer(session)
+        framer.parse(b'<hello/>]]>]]>')
+        session._base = NetconfBase.BASE_11
+        framer.parse(encode_message(b'<rpc-reply/>', True))
+        self.assertEqual(session.messages, ['<hello/>', '<rpc-reply/>'])
+
+    def testFramingErrors(self):
+        for data in (
+            b'\n#x\n<a/>\n##\n',  # no size
+            b'\n#0\n\n##\n',  # chunks are not empty
+            b'\n##\n',  # a message has chunks
+            b'\n#4294967296\n',  # too large
+            b'<a/>]]>]]>' + b' ' * 20,  # 1.0 framing
+        ):
+            with self.subTest(data=data), self.assertRaises(NetconfFramingError):
+                self.feed(data, [len(data)], base=NetconfBase.BASE_11)
+
+    @settings(max_examples=200, deadline=None)
+    @given(
+        st.lists(st.text(max_size=40), min_size=1, max_size=4),
+        st.lists(st.integers(1, 12), max_size=6),
+        st.lists(st.integers(1, 30), min_size=1, max_size=6),
+    )
+    def testAnyMessages(self, texts, chunk_sizes, read_sizes):
+        # Any text, also like a chunk header, in chunks of any size in bytes, read in any pieces.
+        messages = [f'<m>{text}</m>' for text in texts]
+        data = b''.join(encode_message(m.encode(), True, chunk_sizes) for m in messages)
+        self.assertEqual(self.feed(data, read_sizes, base=NetconfBase.BASE_11), messages)
 
 
 class NcclientContractTest(unittest.TestCase):
@@ -192,8 +288,8 @@ class NetconfTest(unittest.TestCase):
             pass
         text = '<a>Zürich € \ufffd</a> \ufffd'
         self.assertEqual(''.join(received), text)
-        self.assertEqual(str(self.conn._buffer), text)
         self.assertEqual(self.conn.stdout.getvalue(), text)
+        self.assertEqual(str(self.conn._buffer), '')  # it gets the messages from ncclient
 
     def testCharactersSplitAcrossWrites(self):
         sent = []
@@ -241,6 +337,9 @@ class NetconfServer:
     :param ignore_close_session: Whether close-session gets no reply and
         leaves the session open, like on a server that hangs.
     :param banner: The authentication banner (bytes), if any.
+    :param pause_after: Bytes behind which the server pauses for 0.2
+        seconds when it writes them the first time, like a device that
+        stalls in a reply.
     """
 
     def __init__(
@@ -255,6 +354,7 @@ class NetconfServer:
         channels=True,
         ignore_close_session=False,
         banner=None,
+        pause_after=None,
     ):
         self.reply = reply or (lambda rpc: '<ok/>')
         self.capabilities = capabilities
@@ -262,6 +362,7 @@ class NetconfServer:
         self.piece_size = piece_size
         self.ignore_close_session = ignore_close_session
         self.banner = banner
+        self.pause_after = pause_after
         self.client_hello = None
         self.hello_received = threading.Event()
         self.rpcs = []
@@ -312,6 +413,12 @@ class NetconfServer:
         self._write(encode_message(message, self.chunked, sizes))
 
     def _write(self, data):
+        if self.pause_after and self.pause_after in data:
+            end = data.index(self.pause_after) + len(self.pause_after)
+            self.pause_after = None
+            self._write(data[:end])
+            time.sleep(0.2)  # a stalling device, not a wait for something
+            data = data[end:]
         size = self.piece_size or len(data)
         for pos in range(0, len(data), size):
             self.channel.sendall(data[pos : pos + size])
@@ -431,17 +538,44 @@ class SessionTest(unittest.TestCase):
         self.assertEqual(element.findtext(f'.//{{{NS}}}location'), 'rack 7')
 
     def testUTF8(self):
-        # NETCONF is UTF-8 (RFC 6241), whatever the encoding argument says. The reply arrives
-        # in one read: ncclient's parser fails if a character spans two.
+        # NETCONF is UTF-8 (RFC 6241), whatever the encoding argument says. The server writes
+        # three bytes at a time, and with NETCONF 1.1 each byte in its own chunk, so characters
+        # span reads and chunks.
         content = '<data><location>Zürich – 3 €</location></data>'
         for capabilities in (BASE,), (BASE, BASE_11):
             with self.subTest(capabilities=capabilities):
-                conn = self.login(lambda rpc: content, capabilities=capabilities)
+                conn = self.login(
+                    lambda rpc: content, capabilities=capabilities, chunk_size=1, piece_size=3
+                )
                 conn.execute('<get><filter><location>Zürich</location></filter></get>')
                 self.assertIn('<location>Zürich</location>'.encode(), self.server.rpcs[0])
                 self.assertTrue(conn.response.endswith(content + '</rpc-reply>'), conn.response)
                 self.assertIn('<location>Zürich</location>', conn.stdout.getvalue())  # sent
-                self.assertIn(content, conn.stdout.getvalue())
+                if capabilities == (BASE,):  # the output shows the chunks as received
+                    self.assertIn(content, conn.stdout.getvalue())
+
+    def subscribe(self, **kwargs):
+        conn = self.login(capabilities=(BASE, BASE_11), **kwargs)
+        conn.execute(
+            '<create-subscription xmlns="urn:ietf:params:xml:ns:netconf:notification:1.0"/>'
+        )
+        return conn
+
+    def testPatternsSpanChunks(self):
+        # The patterns of expect() match the messages, not the chunks of NETCONF 1.1.
+        conn = self.subscribe(chunk_size=4)
+        self.server.send(NOTIFICATION)
+        conn.expect('</notification>')
+        self.assertIn('<event>link down</event>', conn.response)
+
+    def testEndOfChunksInAChunk(self):
+        # Text like the end of the chunks of NETCONF 1.1 behind a tag does not end a message,
+        # also if the device stalls behind it.
+        conn = self.subscribe(pause_after=b'<note/>\n##\n')
+        notification = NOTIFICATION.replace('</event>', '</event><note/>\n##\n<x/>')
+        self.server.send(notification)
+        conn.expect_prompt()
+        self.assertEqual(conn.response, notification)
 
     def testBannerThatIsNoUTF8(self):
         # SSH banners are UTF-8, too (RFC 4252), but other bytes must not fail the login.
