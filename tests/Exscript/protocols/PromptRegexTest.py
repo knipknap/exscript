@@ -27,6 +27,26 @@ def span(regex, text):
     return match.span() if match else None
 
 
+# Reference patterns for the Junos and MRV prompts. JUNOS_BEFORE and MRV_BEFORE match
+# runs of line breaks with backtracking, which takes exponential time on many line breaks.
+_JUNOS_TAGS = (
+    r'(?:\{master(?::\d+)?\}|\{backup(?::\d+)?\}|\{primary:node\d+\}|\{secondary:node\d+\})'
+)
+_JUNOS_PREFIX = r'(?:(?:\r\n|[\r\n])+' + _JUNOS_TAGS + r'?(?:\[edit[^\]\r\n]*\])?)?'
+JUNOS_2X = re.compile(_JUNOS_PREFIX + r'(?:\r\n|[\r\n])+[\w\-\.]+@[\-\w+\.:]+[%>#] $')
+JUNOS_BEFORE = re.compile(
+    _JUNOS_PREFIX + r'(?:\r\n|[\r\n])+[\w\-\.]+@[\-\w+\.:]++(?:[~/][\w\-\./]*+ ?)?[%>#] $'
+)
+MRV_BEFORE = re.compile(r'(?:\r\n|[\r\n])+[^$\r\n]+\$ ?$')
+
+
+def random_texts(alphabet, count, seed):
+    """Returns random texts that start with a line break, of up to 16 items of the alphabet."""
+    rng = random.Random(seed)
+    for _ in range(count):
+        yield '\r\n' + ''.join(rng.choice(alphabet) for _ in range(rng.randint(0, 16)))
+
+
 class PromptRegexTest(unittest.TestCase):
     """The prompt regexes of the drivers."""
 
@@ -69,7 +89,7 @@ class PromptRegexTest(unittest.TestCase):
             '{primary:node0}[edit interfaces]\r\npheller@fw1# ',
             'root@router% ',
             'root@router:RE:0% ',
-            'root@testhost:~ # ',  # csh, the shell of root (upstream pull request #211)
+            'root@testhost:~ # ',  # csh, the shell of root
             'root@router:/var/tmp # ',
             'root@router:~# ',
         ]
@@ -83,15 +103,41 @@ class PromptRegexTest(unittest.TestCase):
         ):
             self.assertIsNone(regex.search('output\r\n' + text), text)
 
-        # Everything that the pattern of 2.x matched still matches, at the same position.
-        old = re.compile(regex.pattern.replace(r'++(?:[~/][\w\-\./]*+ ?)?', '+'))
-        self.assertNotEqual(old.pattern, regex.pattern)
+        # The pattern matches everything that JUNOS_2X matches, at the same position.
         alphabet = list('ab_1.-@:~/ #>%{}[]') + ['\r\n']
-        rng = random.Random(20261110)
-        for _ in range(20000):
-            text = '\r\n' + ''.join(rng.choice(alphabet) for _ in range(rng.randint(0, 16)))
-            if old.search(text):
-                self.assertEqual(span(old, text), span(regex, text), repr(text))
+        for text in random_texts(alphabet, 20000, 20261110):
+            if JUNOS_2X.search(text):
+                self.assertEqual(span(JUNOS_2X, text), span(regex, text), repr(text))
+
+    def testRunsOfLineBreaksAsBefore(self):
+        # The patterns match each run of line breaks as a whole, and the same texts at the
+        # same positions as JUNOS_BEFORE and MRV_BEFORE, which backtrack on the runs.
+        tokens = [
+            '\r\n',
+            '\r',
+            '\n',
+            ' ',
+            '$',
+            '#',
+            '>',
+            '%',
+            'a',
+            'b1',
+            '.',
+            '-',
+            '@',
+            ':',
+            '~',
+            '/',
+        ]
+        tags = ['{master}', '{backup:1}', '{primary:node0}', '[edit]', '[edit interfaces]']
+        for name, before, alphabet in (
+            ('junos', JUNOS_BEFORE, tokens + tags),
+            ('mrv', MRV_BEFORE, tokens),
+        ):
+            regex = driver_map[name].prompt_re[0]
+            for text in random_texts(alphabet, 30000, 20261111):
+                self.assertEqual(span(before, text), span(regex, text), f'{name}: {text!r}')
 
     def testAllRegexesNeedLinearTime(self):
         # Lines that are no prompt but contain long runs of the characters that
@@ -110,6 +156,8 @@ class PromptRegexTest(unittest.TestCase):
             '\x1b[0m' * 30 + 'a' * 60 + '!',
         ]
         texts = ['\r\n' + line for line in lines] + [' ' * 120 + '!', 'x\r\n' * 1000]
+        # Runs of line breaks as long as the window in which prompts are searched.
+        texts += ['\r\n' * 512 + '!', '\n' * 1024 + '!', '\r\n' * 400 + '{master}\r\n!']
         for name, driver in driver_map.items():
             for attr, value in vars(driver).items():
                 if not isinstance(value, list):

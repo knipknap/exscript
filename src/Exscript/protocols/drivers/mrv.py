@@ -35,7 +35,8 @@ if TYPE_CHECKING:
 _user_re = [re.compile(r'(?:\r\n|[\r\n])Authorized Login: $')]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: $')]
 _mrv_re = re.compile(r'\bMRV\b')
-_prompt_re = [re.compile(r'(?:\r\n|[\r\n])+[^$\r\n]+\$ ?$')]
+# The run of line breaks is matched as a whole and only from its start; see junos.py.
+_prompt_re = [re.compile(r'(?<![\r\n])[\r\n]++[^$\r\n]+\$ ?$')]
 
 
 class MRVDriver(Driver):

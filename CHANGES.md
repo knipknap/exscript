@@ -334,6 +334,12 @@ development versions; "before" refers to them.
   constructor ignored such a name silently and guessed the driver, so a typo, e.g. in
   an inventory, went unnoticed. To migrate, correct the name; `drivers.driver_map`
   lists the names.
+- **Junos and MRV Prompts in Linear Time:** The prompt patterns of the `junos` and `mrv`
+  drivers backtracked exponentially on line breaks that no prompt follows: 22 empty
+  lines took 41 seconds to check with `junos`, and every further line doubled the time,
+  so a device that sent a block of empty lines could stall the session. They now match
+  each run of line breaks once, in linear time, and match the same texts at the same
+  positions, verified against the old patterns.
 - **Generic Prompt Pattern in Linear Time:** The prompt pattern of the generic driver,
   which other drivers inherit, backtracked catastrophically on long lines that are no
   prompt: a line with a run of 100 word characters took 1.3 seconds to check, 200

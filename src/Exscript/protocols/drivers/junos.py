@@ -64,9 +64,13 @@ _mb = r'(?:\{master(?::\d+)?\}|\{backup(?::\d+)?\})'
 _ps = r'(?:\{primary:node\d+\}|\{secondary:node\d+\})'
 _re_re = r'(?:' + _mb + r'|' + _ps + r')'
 _edit = r'(?:\[edit[^\]\r\n]*\])'
-_prefix = r'(?:(?:\r\n|[\r\n])+' + _re_re + r'?' + _edit + r'?)'
-_prompt = r'(?:\r\n|[\r\n])+[\w\-\.]+@[\-\w+\.:]++(?:[~/][\w\-\./]*+ ?)?[%>#] $'
-_prompt_re = [re.compile(_prefix + r'?' + _prompt)]
+# A run of line breaks, matched as a whole and only from its start. A pattern
+# that can split a run in several ways, such as (?:\r\n|[\r\n])+, backtracks
+# exponentially on many line breaks that no prompt follows.
+_breaks = r'(?<![\r\n])[\r\n]++'
+_tags = r'(?:' + _re_re + _edit + r'?|' + _edit + r')'
+_prompt = r'[\w\-\.]+@[\-\w+\.:]++(?:[~/][\w\-\./]*+ ?)?[%>#] $'
+_prompt_re = [re.compile(_breaks + r'(?:' + _tags + r'[\r\n]++)?' + _prompt)]
 _error_re = [re.compile(r'^(unknown|invalid|error|syntax error)', re.I)]
 _junos_re = re.compile(r'\bjunos\b', re.I)
 # Junos prints its BSD terminal name, e.g. "router1 (ttyp0)", before "login:".
