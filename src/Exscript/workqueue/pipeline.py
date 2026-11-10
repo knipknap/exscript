@@ -346,8 +346,8 @@ class Pipeline:
             except IndexError:
                 next = None
 
-        # Re-insert sleeping items.
-        self.queue.extendleft(sleeping)
+        # Re-insert sleeping items, in their order.
+        self.queue.extendleft(reversed(sleeping))
         return next
 
     def try_next(self) -> Any:

@@ -196,6 +196,23 @@ class PipelineTest(unittest.TestCase):
     def testWake(self):
         self.testSleep()
 
+    def testSleepingItemsKeepTheirOrder(self):
+        # next() and try_next() skip the sleeping items at the start of the
+        # queue, and leave them in their order.
+        for get in (next, Pipeline.try_next):
+            with self.subTest(get=get):
+                pipeline = Pipeline(max_working=3)
+                item1, item2, item3 = object(), object(), object()
+                for item in (item1, item2, item3):
+                    pipeline.append(item)
+                pipeline.sleep(item1)
+                pipeline.sleep(item2)
+                self.assertIs(get(pipeline), item3)
+                pipeline.wake(item1)
+                pipeline.wake(item2)
+                self.assertIs(next(pipeline), item1)
+                self.assertIs(next(pipeline), item2)
+
     def testWaitForId(self):
         item1 = object()
         item2 = object()
