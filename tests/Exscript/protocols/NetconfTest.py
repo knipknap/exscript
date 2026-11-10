@@ -437,6 +437,16 @@ class SessionTest(unittest.TestCase):
         self.assertEqual((cause.start, cause.end), (12, 13))  # the positions in the body
         self.assertEqual(self.server.rpcs, [])
 
+    def testRPCBodyIsOneElement(self):
+        conn = self.login()
+        for body in '<get-config/><get/>', 'hello', '<get/>hello', '':
+            with self.subTest(body=body):
+                with self.assertRaisesRegex(XMLValidationError, 'must be one XML element') as cm:
+                    conn.execute(body)
+                self.assertEqual(cm.exception.xmlstring, body + '\r')
+        conn.execute('\n  <get/>\n')  # whitespace is no content
+        self.assertEqual([operation(rpc) for rpc in self.server.rpcs], ['get'])
+
     def testTimeout(self):
         conn = self.login(lambda rpc: None if operation(rpc) == 'get' else '<ok/>', timeout=0.3)
         self.assertRaises(TimeoutException, conn.execute, '<get/>')

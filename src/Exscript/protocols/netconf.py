@@ -540,10 +540,12 @@ class Netconf(SSH2):
         recv() and send() wrappers of the channel pass the data to the buffer
         and the events.
 
-        :raises XMLValidationError: If the RPC body is not valid XML.
+        :raises XMLValidationError: If the RPC body is not valid XML, or not
+            one XML element.
         :raises TimeoutException: If no reply arrives in time.
         :raises ProtocolException: On other errors of ncclient.
         """
+        from lxml.etree import XMLSyntaxError
         from ncclient import NCClientError
         from ncclient.operations.errors import TimeoutExpiredError
 
@@ -551,6 +553,13 @@ class Netconf(SSH2):
         self._validate_rpc_body(data)
         try:
             element = _parse(data)
+        except XMLSyntaxError as exc:  # valid within <rpc>, so e.g. two elements or text
+            raise XMLValidationError(
+                'XML validation of the RPC command has failed: the RPC body must be one '
+                f'XML element. The error was caused by:\n{type(exc).__name__}: {exc}',
+                xmlstring=data,
+            )
+        try:
             with _pretty():
                 self._ncc_response = self._ncc_manager.dispatch(element)
             # wrappers handle the self.data_sent_event

@@ -36,7 +36,7 @@ Sending RPCs
 ``execute()`` sends the content of an ``<rpc>`` element and waits for the
 reply; Exscript adds the ``<rpc>`` element with its ``message-id``. It
 raises :class:`~Exscript.util.xml.XMLValidationError` before sending if
-the content is not well-formed XML::
+the content is not well-formed XML, or not one XML element::
 
     conn.execute('<get-config><source><running/></source></get-config>')
     print(conn.get_response())  # the <rpc-reply> as text

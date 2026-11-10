@@ -228,3 +228,7 @@ their users should know:
   ``connection.execline()`` for a command that the device rejects, stops
   the template with that exception instead of an ``ExecuteError``, as in
   2.x, and ``try`` ignores it.
+- ``Netconf.execute()`` raises
+  :class:`~Exscript.util.xml.XMLValidationError` instead of lxml's
+  ``XMLSyntaxError`` if the RPC body is not one XML element, e.g.
+  ``<get-config/><get/>``.
