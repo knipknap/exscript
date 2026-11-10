@@ -14,7 +14,7 @@ from multiprocessing import Value
 from tempfile import mkdtemp
 from unittest import mock
 
-from Exscript import Account, AccountPool, FileLogger, Queue
+from Exscript import Account, AccountPool, FileLogger, Host, Queue
 from Exscript.interpreter.exception import FailException
 from Exscript.protocols import Dummy, Protocol
 from Exscript.util.decorator import bind
@@ -448,6 +448,36 @@ class QueueTest(unittest.TestCase):
         self.assertIsNotNone(self.queue.run_or_ignore('dummy://dummy2', do_nothing))
         self.assertIsNone(self.queue.run_or_ignore('dummy://dummy2', do_nothing))
         self.queue.workqueue.unpause()
+
+    def testJobsConnectWithTheHostDriver(self):
+        # Each job ends before the driver is set on its host, if it can start
+        # then.
+        self.createQueue(verbose=-1, host_driver='ios')
+        drivers = []
+        job_ids = []
+        enqueue = self.queue.workqueue.enqueue
+        set_option = Host.set_option
+
+        def enqueue_and_record(*args, **kwargs):
+            job_ids.append(enqueue(*args, **kwargs))
+            return job_ids[-1]
+
+        def end_and_set_option(host, name, value):
+            if name == 'driver':
+                for job_id in job_ids:
+                    end_now(self.queue, job_id)
+            set_option(host, name, value)
+
+        def record_driver(job, host, conn):
+            drivers.append(conn.get_driver().name)
+
+        with (
+            mock.patch.object(self.queue.workqueue, 'enqueue', enqueue_and_record),
+            mock.patch.object(Host, 'set_option', end_and_set_option),
+        ):
+            self.queue.run(['dummy://dummy1', 'dummy://dummy2'], record_driver)
+        self.queue.join()
+        self.assertEqual(drivers, ['ios', 'ios'])
 
     def testForceRun(self):
         data = Value('i', 0)

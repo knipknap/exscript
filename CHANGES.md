@@ -642,6 +642,9 @@ The names below refer to functions callable from templates, not protocol methods
   `Task.is_completed()` stayed `False`, and `run()` returned `None` instead of the task
   if the jobs ended before it returned. `run()` and its variants return `None` only if
   they enqueued no job, as all hosts were queued already.
+- **Jobs Connect With `host_driver`:** The `host_driver` of `Queue` is set on each host
+  before its job is enqueued. Before, it was set after, so a job that started at once
+  could connect without it, with the driver that Exscript guessed.
 
 ## Demos
 

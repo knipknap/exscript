@@ -646,12 +646,11 @@ class Queue:
         callback = _prepare_connection(callback, self.account_manager)
         task = Task(self.workqueue)
         for host in hosts:
+            if self.host_driver is not None:
+                host.set_option('driver', self.host_driver)
             name = host.get_name()
             data = {'host': host}
             self._enqueue(task, queue_function, callback, name, *args, data=data)
-
-            if self.host_driver is not None:
-                host.set_option('driver', self.host_driver)
 
         if not task.job_ids:
             self._dbg(2, 'No jobs enqueued.')
