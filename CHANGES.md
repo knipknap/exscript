@@ -386,6 +386,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   expressions gave 11, 5 and 0, and `20 / 4 / 5` failed with a `ZeroDivisionError`.
   As documented, `and` and `or` have the same priority, so `1 or 0 and 0` is 0. `%`,
   which the documentation did not list, has the priority of `*` and `/`.
+- **BREAKING - `and` and `or` Evaluate the Right Operand Only If Needed:** As
+  documented, `and` does not evaluate its right operand if the left one is false, and
+  `or` not if the left one is true; e.g. `{x = 0 and list.get(list.new(), 1)}` sets `x`
+  to 0. Before, both operands were always evaluated, so the right one could raise an
+  error or call a function, e.g. one that sends a command.
 
 ### Standard Library
 

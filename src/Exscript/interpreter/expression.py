@@ -128,8 +128,9 @@ class ExpressionNode(Token):
     def value(self, context: Scope) -> Any:
         """
         Evaluates the node. A list operand stands for its first item, or ''
-        if it is empty. Arithmetic operators raise an ExecuteError if an
-        operand is not a number.
+        if it is empty. "and" and "or" evaluate the right operand only if
+        the left one does not decide the result. Arithmetic operators raise
+        an ExecuteError if an operand is not a number.
 
         :param context: The scope in which the template runs.
         :return: The value of the term if the node has no operator, or a
@@ -153,6 +154,9 @@ class ExpressionNode(Token):
                 lft: Any = lft_lst[0]
             else:
                 lft = ''
+        # The left operand of "and" and "or" may decide the result alone.
+        if (self.op == 'and' and not lft) or (self.op == 'or' and lft):
+            return [lft]
         rgt_lst = cast(Token, self.rgt).value(context)
         if type(rgt_lst) == type([]):
             if len(rgt_lst) > 0:

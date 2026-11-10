@@ -119,6 +119,11 @@ Operators
     right to left. ``and`` and ``or`` have the same priority, so
     ``1 or 0 and 0`` is 0.
 
+``and``, ``or``
+    Evaluate the right operand only if the left one does not decide the
+    result, as documented. 2.x always evaluated both, e.g. called the
+    functions in both.
+
 Command line tool
 -----------------
 

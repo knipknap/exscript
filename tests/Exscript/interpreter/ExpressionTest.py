@@ -94,6 +94,22 @@ class ExpressionTest(TemplateTestCase):
         text = '{a = 1 and 0}{b = 0 or 1}{c = not 0}{d = not 1}{e = 1 and 1 and 0}'
         self.assertValues(text, a=[0], b=[1], c=[True], d=[False], e=[0])
 
+    def testAndOrEvaluateTheRightOperandOnlyIfNeeded(self):
+        calls = []
+
+        def record(scope, value):
+            calls.append(value[0])
+            return value
+
+        text = (
+            '{a = 0 and record(1)}{b = "x" or record(2)}{c = 1 and record(3)}'
+            '{d = "" or record(4)}{e = 0 and list.get(list.new(), 1)}'
+        )
+        variables = self.evaluate(text, record=record)
+        actual = [variables[name] for name in 'abcde']
+        self.assertEqual(actual, [[0], ['x'], [3], [4], [0]])
+        self.assertEqual(calls, [3, 4])
+
     def testMultiplicationBeforeAddition(self):
         text = '{a = 2 + 3 * 4}{b = 2 * 3 + 4}{c = 20 - 12 / 4}{d = 20 / 4 - 1}{e = 1 + 7 % 3}'
         self.assertValues(text, a=[14], b=[10], c=[17], d=[4], e=[2])
