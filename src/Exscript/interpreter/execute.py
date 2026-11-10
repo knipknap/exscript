@@ -44,6 +44,7 @@ grammar = {
 }
 leading_whitespace_re = re.compile(r'^[ \t\r\n]*')
 line_comment_re = re.compile(grammar['line_comment'])
+blank_lines_re = re.compile(grammar['leading_blank_lines'] + '|' + grammar['trailing_blank_lines'])
 strip_re = re.compile('|'.join(grammar.values()))
 
 
@@ -84,6 +85,10 @@ class Execute(String):
         self.string = command  # Original command will be evaluated at runtime.
         self.no_prompt = parser.no_prompt
         self.strip_command = parser.strip_command
+        # Only the body of an RPC contains line comments. The Template skips
+        # those of the other commands, so a hash in them, e.g. behind an
+        # escaped line break, is part of the command.
+        self.in_rpc = type(parent).__name__ == 'RPCBody'
 
         # The lexer has parsed the command and consumed the trailing command delimiter:
         # a newline or the closing RPC tag, and nothing before a code block, an RPC or
@@ -104,7 +109,8 @@ class Execute(String):
         # NOTE: The substitution test might also fire in line comments with variables.
         #  This is prevented by making the line comments "invisible" while preserving
         #  the overall command length/structure for proper error tracking.
-        command = line_comment_re.sub(self.invisible_sub_cb, command)
+        if self.in_rpc:
+            command = line_comment_re.sub(self.invisible_sub_cb, command)
         varstring_re.sub(self.variable_test_cb, command)
 
         # Validate XML for RPCBody tokens. We need to use the original command
@@ -112,7 +118,7 @@ class Execute(String):
         # Additionally we need to replace all remaining variable chars with "_"
         # to create an XML tree as valid as possible. The XML body will be
         # tested once more at runtime by the protocol adapter (evaluated vars).
-        if type(parent).__name__ == 'RPCBody':
+        if self.in_rpc:
             from lxml.etree import XMLSyntaxError  # only templates with RPCs need lxml
 
             # The start mark points to the first non-whitespace character of the
@@ -168,12 +174,12 @@ class Execute(String):
 
     def value(self, context: Scope) -> int:
         """
-        Sends the command, without line comments, surrounding blank lines
-        and common indentation, and with the variables replaced by their
-        values. Waits for the prompt unless the parser was created with
-        no_prompt. Stores the response in the __response__ variable, one
-        line per item. Raises an ExecuteError if the __connection__ variable
-        is not defined.
+        Sends the command, without surrounding blank lines, common
+        indentation and, in an <rpc> element, line comments, and with the
+        variables replaced by their values. Waits for the prompt unless the
+        parser was created with no_prompt. Stores the response in the
+        __response__ variable, one line per item. Raises an ExecuteError if
+        the __connection__ variable is not defined.
 
         :param context: The scope in which the template runs.
         :return: 1.
@@ -186,7 +192,7 @@ class Execute(String):
 
         # Prepare the command for execution by stripping unwanted substrings.
         # The dedent of common indentations is useful for multiline commands.
-        command = strip_re.sub('', self.string)
+        command = (strip_re if self.in_rpc else blank_lines_re).sub('', self.string)
         command = textwrap.dedent(command)
 
         # Substitute variables in the command for values.

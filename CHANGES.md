@@ -448,6 +448,12 @@ development versions; "before" refers to them.
 - **BREAKING - Lines With Only Whitespace:** A line with only whitespace is ignored,
   also if the whitespace is not a space or a tab, e.g. a no-break space. Before, such
   whitespace was sent at the start of the command in the next line.
+- **BREAKING - Escaped Characters Start No Comment:** An escaped hash, or a hash
+  behind an escaped character, is part of the command: `\# x` sends `# x`,
+  `show \}# x` sends `show }# x`, and `show a\n# b` sends `# b` in its second line.
+  Before, the hash started a comment there, so `\# x` sent an empty line, and
+  `show \}# x` took the next line into the command. A hash behind an `<rpc>` element
+  is part of the command as well; before, it sent an empty line.
 - **Errors at Runtime:** A division by zero (`1 / 0`, `1 % 0`), an operand of `/`,
   `ge`, `gt`, `le` or `lt` that is not a number (`"a" / 2`), an operand of an
   arithmetic operator without a value, such as a group that `extract` did not match,

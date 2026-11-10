@@ -49,7 +49,9 @@ escaped_grammar = [
 
 grammar = escaped_grammar + [
     ('escaped_data', r'\\.'),
-    ('line_comment', r'(?:^|(?<=[\r\n}]))[ \t]*#[^\r\n]*(?:[\r\n]|$)'),
+    # A hash starts a comment at the start of a line and behind a code block,
+    # but not behind an escaped closing curly bracket.
+    ('line_comment', r'(?:^|(?<=[\r\n])|(?<=})(?<!\\}))[ \t]*#[^\r\n]*(?:[\r\n]|$)'),
     ('open_curly_bracket', '{'),
     ('close_curly_bracket', '}'),
     ('open_rpc_tag', r'<rpc>'),

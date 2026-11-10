@@ -38,6 +38,27 @@ class CommandTest(TemplateTestCase):
         self.evaluate(text)
         self.assertSent('ls', 'show version # not a comment')
 
+    def testEscapedCharactersStartNoComment(self):
+        # A hash behind an escaped character is part of the command, also
+        # behind an escaped closing curly bracket or line break.
+        text = (
+            'show \\}# x\n'
+            'ls\n'
+            '\\# not a comment\n'
+            '  \\# $n\n'
+            'show a\\n# b\n'
+            '{x = 1}  # a comment \\\n'
+            'ls\n'
+        )
+        self.evaluate(text, n='1')
+        sent = ('show }# x', 'ls', '# not a comment', '# 1', 'show a\n# b', 'ls')
+        self.assertSent(*sent)
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate('ls\n\\# $nothing\n')
+        message = "Undefined variable 'nothing' in undefined:2"
+        self.assertError(cm.exception, ['\\# $nothing'], '   ' + '^' * 8, message)
+        self.assertSent(*sent)
+
     def testLastLineWithoutLineBreak(self):
         variables = self.evaluate('ls\nshow version')
         self.assertSent('ls', 'show version')
