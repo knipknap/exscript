@@ -149,6 +149,7 @@ class ReplayServer:
         self._closing = threading.Event()
         self._sockets = []
         self._transports = []
+        self._session_threads = []
         self._host_key = paramiko.ECDSAKey.generate() if recording.protocol != 'telnet' else None
         self._listener = socket.create_server(('127.0.0.1', 0))
         self._listener.settimeout(0.1)
@@ -174,6 +175,8 @@ class ReplayServer:
             except OSError:
                 pass
             sock.close()
+        for thread in self._session_threads:
+            thread.join(5)
 
     def _accept(self):
         while not self._closing.is_set():
@@ -206,7 +209,9 @@ class ReplayServer:
 
     def start_session(self, session):
         self.sessions.append(session)
-        threading.Thread(target=session.run, daemon=True).start()
+        thread = threading.Thread(target=session.run, daemon=True)
+        self._session_threads.append(thread)
+        thread.start()
 
 
 class _SSHServer(paramiko.ServerInterface):

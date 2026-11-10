@@ -1,6 +1,10 @@
 import io
+import logging
 import os
+import select
+import shutil
 import socket
+import stat
 import tempfile
 import threading
 import unittest
@@ -9,8 +13,9 @@ from unittest import mock
 import paramiko
 
 from Exscript import Account, PrivateKey
+from Exscript.emulators import VirtualDevice
 from Exscript.protocols import SSH2, Netconf
-from Exscript.protocols.exception import LoginFailure
+from Exscript.protocols.exception import ConnectionClosedException, LoginFailure
 from Exscript.protocols.ssh2 import _prefer_key_type
 from Exscript.servers import SSHd, sshd
 
@@ -71,9 +76,11 @@ class KeyServer:
             for host_key in self.keys:
                 transport.add_server_key(host_key)
             self._transports.append(transport)
+            server = self.interface()
+            server.transport = transport  # e.g. to drop the connection
             # With an event, the key exchange runs in the transport's thread, and the
             # transport stays open until the client or close() closes it.
-            transport.start_server(event=threading.Event(), server=self.interface())
+            transport.start_server(event=threading.Event(), server=server)
 
     def close(self):
         self._closing.set()
@@ -164,6 +171,44 @@ class HostKeyTest(unittest.TestCase):
         self.server.keys = (paramiko.ECDSAKey.generate(), self.server_key)
         self.writeKnownHosts((self.name, self.server_key))
         self.connect()
+
+    def testStandardPortUsesThePlainName(self):
+        # OpenSSH writes hosts on port 22 without brackets and port.
+        connect = socket.create_connection
+
+        def redirect(address, *args, **kwargs):
+            return connect((address[0], self.server.port), *args, **kwargs)
+
+        with mock.patch('socket.create_connection', redirect):
+            conn = SSH2(timeout=1, connect_rate_limit=0, known_hosts=self.known_hosts)
+            self.addCleanup(conn.close, force=True)
+            conn.host_key_policy = 'auto-add'
+            conn.connect(HOST, 22)
+            conn.close(force=True)
+            with open(self.known_hosts, encoding='utf-8') as fp:
+                self.assertEqual(fp.read().split()[0], HOST)
+            conn.host_key_policy = 'reject'
+            conn.connect(HOST, 22)  # known now
+
+    def testAutoAddToAnExistingFile(self):
+        line = f'192.0.2.1 {self.other_key.get_name()} {self.other_key.get_base64()}\n'
+        for content in '', line:
+            with open(self.known_hosts, 'w', encoding='utf-8') as fp:
+                fp.write(content)
+            conn = self.connect(host_key_policy='auto-add')
+            conn.close(force=True)
+            with open(self.known_hosts, encoding='utf-8') as fp:
+                lines = fp.read().splitlines()
+            expected = f'{self.name} ssh-rsa {self.server_key.get_base64()}'
+            self.assertEqual(lines, content.splitlines() + [expected])
+
+    def testAutoAddCreatesThePrivateDirectory(self):
+        directory = os.path.join(os.path.dirname(self.known_hosts), 'new', '.ssh')
+        self.known_hosts = os.path.join(directory, 'known_hosts')
+        self.connect(host_key_policy='auto-add')
+        self.assertEqual(len(paramiko.HostKeys(self.known_hosts).lookup(self.name)), 1)
+        if os.name == 'posix':
+            self.assertEqual(stat.S_IMODE(os.stat(directory).st_mode), 0o700)
 
     def testPreferKeyType(self):
         options = mock.Mock(key_types=('ssh-ed25519', 'rsa-sha2-512', 'rsa-sha2-256'))
@@ -415,6 +460,336 @@ class TerminalSizeTest(unittest.TestCase):
         self.assertEqual(self.requestedSize(term_width=80, term_height=25), [(80, 25)])
 
 
+PASSWORD = 'S3cr3t-P@ss'
+
+
+class _Auth(paramiko.ServerInterface):
+    """
+    Accepts the authentication methods that the class attributes allow, and
+    records the requests. Use a subclass per test (see AuthenticationTest.serve).
+    """
+
+    allowed = 'password'
+    password = PASSWORD
+    keys = ()  # the accepted public keys
+    rounds = ()  # keyboard-interactive: the prompts of each round, (text, echo)
+    answers = [PASSWORD]  # the expected keyboard-interactive answers
+    none = False  # whether the "none" method succeeds
+    banner = None
+    channels = True
+    drop_after_failure = False  # closes the connection after a failed keyboard-interactive
+    requests: list[tuple] = []
+
+    def get_allowed_auths(self, username):
+        return self.allowed
+
+    def get_banner(self):
+        return (self.banner, 'en-US') if self.banner else (None, None)
+
+    def check_auth_none(self, username):
+        self.requests.append(('none', username))
+        return paramiko.AUTH_SUCCESSFUL if self.none else paramiko.AUTH_FAILED
+
+    def check_auth_password(self, username, password):
+        self.requests.append(('password', username, password))
+        return paramiko.AUTH_SUCCESSFUL if password == self.password else paramiko.AUTH_FAILED
+
+    def check_auth_publickey(self, username, key):
+        if ('publickey', username, key.get_base64()) not in self.requests:
+            self.requests.append(('publickey', username, key.get_base64()))
+        return paramiko.AUTH_SUCCESSFUL if key in self.keys else paramiko.AUTH_FAILED
+
+    def check_auth_interactive(self, username, submethods):
+        self.requests.append(('keyboard-interactive', username))
+        self._rounds = list(self.rounds)
+        return self._query()
+
+    def _query(self):
+        return paramiko.InteractiveQuery('', '', *self._rounds.pop(0))
+
+    def check_auth_interactive_response(self, responses):
+        self.requests.append(('answers', list(responses)))
+        if self._rounds:
+            return self._query()
+        if list(responses) == self.answers:
+            return paramiko.AUTH_SUCCESSFUL
+        if self.drop_after_failure:
+            self.transport.close()
+        return paramiko.AUTH_FAILED
+
+    def check_channel_request(self, kind, chanid):
+        if self.channels:
+            return paramiko.OPEN_SUCCEEDED
+        return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
+
+    def check_channel_pty_request(
+        self, channel, term, width, height, pixelwidth, pixelheight, modes
+    ):
+        return True
+
+    def check_channel_shell_request(self, channel):
+        return True
+
+
+class AuthenticationTest(unittest.TestCase):
+    """
+    The SSH authentication methods. The tests use no SSH agent and no key
+    files of the user that runs them.
+    """
+
+    def setUp(self):
+        home = tempfile.TemporaryDirectory()
+        self.addCleanup(home.cleanup)
+        self.home = home.name
+        for patcher in (
+            mock.patch.dict(os.environ, {'HOME': self.home, 'USERPROFILE': self.home}),
+            mock.patch('paramiko.Agent'),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        paramiko.Agent.return_value.get_keys.return_value = []
+
+    def serve(self, **attributes):
+        """Starts a server with the given _Auth attributes; returns its list of requests."""
+        self.interface = type('Auth', (_Auth,), {'requests': [], **attributes})
+        self.server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=self.interface)
+        return self.interface.requests
+
+    def client(self, **kwargs):
+        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, **kwargs)
+        self.addCleanup(conn.close, force=True)
+        conn.connect(HOST, self.server.port)
+        return conn
+
+    def login(self, account=None, **kwargs):
+        conn = self.client(**kwargs)
+        conn.protocol_authenticate(account or Account('admin', PASSWORD, needs_lock=False))
+        return conn
+
+    def testPassword(self):
+        requests = self.serve()
+        conn = self.login()
+        self.assertTrue(conn.is_protocol_authenticated())
+        self.assertEqual(requests, [('none', 'admin'), ('password', 'admin', PASSWORD)])
+
+    def testWrongPassword(self):
+        requests = self.serve(
+            allowed='keyboard-interactive,password',
+            rounds=[[('Password: ', False)]],
+            password='other',
+            answers=['other'],
+        )
+        with self.assertRaises(LoginFailure) as cm:
+            self.login()
+        message = str(cm.exception)
+        self.assertIn('_paramiko_auth_interactive() failed', message)
+        self.assertIn('_paramiko_auth_password() failed', message)
+        self.assertNotIn(PASSWORD, message)
+        self.assertEqual(
+            [r[0] for r in requests], ['none', 'keyboard-interactive', 'answers', 'password']
+        )
+
+    def testPasswordIsNotLogged(self):
+        self.serve(
+            allowed='keyboard-interactive,password',
+            rounds=[[('Password: ', False)]],
+            answers=['other'],
+        )
+        logfile = os.path.join(self.home, 'session.log')
+        with self.assertLogs(level=logging.DEBUG) as logs:
+            conn = self.login(debug=5, logfile=logfile)
+        conn.close(force=True)
+        self.assertTrue(
+            any('Authenticating with _paramiko_auth_password' in line for line in logs.output)
+        )
+        self.assertEqual([line for line in logs.output if PASSWORD in line], [])
+        with open(logfile, encoding='utf-8') as fp:
+            self.assertNotIn(PASSWORD, fp.read())
+
+    def testKeyboardInteractiveWithAnEmptyRound(self):
+        # Some servers send a round without prompts first.
+        rounds = [[], [('Password: ', False)]]
+        requests = self.serve(allowed='keyboard-interactive', rounds=rounds)
+        self.login()
+        self.assertEqual(requests[-2:], [('answers', []), ('answers', [PASSWORD])])
+
+    def testKeyboardInteractiveSKey(self):
+        # An S/Key challenge gets the one-time password, not the password.
+        rounds = [[('otp-md4 9999 abc123 ext\nResponse: ', True)]]
+        answers = ['ACTA AMMO CAR WEB BIN YAP']  # otp('password', 'abc123', 9999)
+        requests = self.serve(allowed='keyboard-interactive', rounds=rounds, answers=answers)
+        conn = self.client()
+        challenges = []
+        conn.otp_requested_event.connect(lambda *args: challenges.append(args))
+        conn.protocol_authenticate(Account('admin', 'password', needs_lock=False))
+        self.assertEqual(requests[-1], ('answers', answers))
+        [(account, seq, seed)] = challenges
+        self.assertEqual((account.get_name(), seq, seed), ('admin', 9999, 'abc123'))
+
+    def testKeyFile(self):
+        public = paramiko.RSAKey(filename=keyfile)
+        requests = self.serve(allowed='publickey', keys=(public,))
+        key = PrivateKey.from_file(keyfile, password=None)
+        conn = self.login(Account('admin', key=key, needs_lock=False))
+        self.assertTrue(conn.is_protocol_authenticated())
+        self.assertEqual(requests, [('publickey', 'admin', public.get_base64())])
+
+    def testEncryptedKeyFile(self):
+        public = paramiko.RSAKey(filename=keyfile)
+        filename = os.path.join(self.home, 'id_rsa')
+        public.write_private_key_file(filename, password='phrase')  # noqa: S106
+        requests = self.serve(allowed='publickey', keys=(public,))
+        key = PrivateKey.from_file(filename, password='phrase')  # noqa: S106
+        self.login(Account('admin', PASSWORD, key=key, needs_lock=False))
+        self.assertEqual(requests, [('publickey', 'admin', public.get_base64())])
+
+    def testRejectedKey(self):
+        # Key logins do not fall back to the password.
+        requests = self.serve(allowed='publickey,password')
+        account = Account('admin', PASSWORD, key=PrivateKey.from_file(keyfile), needs_lock=False)
+        with self.assertRaises((paramiko.SSHException, LoginFailure)) as cm:
+            self.login(account)
+        self.assertNotIn(PASSWORD, str(cm.exception))
+        public = paramiko.RSAKey(filename=keyfile)
+        self.assertEqual(requests, [('publickey', 'admin', public.get_base64())])
+
+        # A key without a file is no key.
+        account = Account('admin', PASSWORD, key=PrivateKey(), needs_lock=False)
+        with self.assertRaises((paramiko.SSHException, LoginFailure)):
+            self.login(account)
+        self.assertEqual(len(requests), 1)
+
+    def testAgentKeys(self):
+        accepted, other = paramiko.RSAKey(filename=keyfile), paramiko.RSAKey.generate(1024)
+        paramiko.Agent.return_value.get_keys.return_value = [other, accepted]
+        requests = self.serve(allowed='publickey,password', keys=(accepted,))
+        self.login()
+        self.assertEqual([r[0] for r in requests], ['none', 'publickey', 'publickey'])
+
+    def testRejectedAgentKeysFallBackToPassword(self):
+        rejected = paramiko.RSAKey(filename=keyfile)
+        paramiko.Agent.return_value.get_keys.return_value = [rejected]
+        requests = self.serve(allowed='publickey,password')
+        self.assertTrue(self.login().is_protocol_authenticated())
+        self.assertEqual(
+            requests,
+            [
+                ('none', 'admin'),
+                ('publickey', 'admin', rejected.get_base64()),
+                ('password', 'admin', PASSWORD),
+            ],
+        )
+
+    def testAgentErrorFallsBackToPassword(self):
+        paramiko.Agent.side_effect = paramiko.SSHException('lost ssh-agent')
+        requests = self.serve(allowed='publickey,password')
+        self.login()
+        self.assertEqual(requests, [('none', 'admin'), ('password', 'admin', PASSWORD)])
+
+    def testKeyFilesOfTheUser(self):
+        os.mkdir(os.path.join(self.home, '.ssh'))
+        shutil.copy(keyfile, os.path.join(self.home, '.ssh', 'id_rsa'))
+        public = paramiko.RSAKey(filename=keyfile)
+        requests = self.serve(allowed='publickey,password', keys=(public,))
+        self.login()
+        self.assertEqual(requests, [('none', 'admin'), ('publickey', 'admin', public.get_base64())])
+
+    def testNoneMethod(self):
+        # Some devices accept any user and ask for the password in the shell.
+        requests = self.serve(none=True)
+        self.assertTrue(self.login().is_protocol_authenticated())
+        self.assertEqual(requests, [('none', 'admin')])
+
+    def testBanner(self):
+        self.serve(banner='Authorized users only!\r\n')
+        conn = self.login()
+        self.assertEqual(conn.get_banner(), 'Authorized users only!\r\n')
+        self.assertIn('Authorized users only!', conn.stdout.getvalue())
+        conn.expect('users only!')
+
+    def testPreferredMethodsNotAllowed(self):
+        requests = self.serve(allowed='password')
+        with self.assertRaisesRegex(paramiko.BadAuthenticationType, 'invalid preferred auth'):
+            self.login(preferred_authentications=['publickey'])
+        self.assertEqual(requests, [('none', 'admin')])
+
+    def testUnsupportedMethodsAreSkipped(self):
+        requests = self.serve(allowed='gssapi-with-mic,password')
+        self.login(preferred_authentications=['gssapi-with-mic', 'password'])
+        self.assertEqual(requests, [('none', 'admin'), ('password', 'admin', PASSWORD)])
+
+    def testServerOrderWithoutPreferences(self):
+        requests = self.serve(
+            allowed='keyboard-interactive,password', rounds=[[('Password: ', False)]]
+        )
+        conn = self.client()
+        conn.preferred_authentications = []
+        conn.protocol_authenticate(Account('admin', PASSWORD, needs_lock=False))
+        self.assertEqual([r[0] for r in requests], ['none', 'keyboard-interactive', 'answers'])
+
+    def testReconnectWhenTheServerDropsTheConnection(self):
+        requests = self.serve(
+            allowed='keyboard-interactive,password',
+            rounds=[[('Password: ', False)]],
+            answers=['other'],
+            drop_after_failure=True,
+        )
+        conn = self.login()
+        self.assertTrue(conn.is_protocol_authenticated())
+        self.assertEqual(len(self.server._transports), 2)
+        self.assertEqual(requests[-1], ('password', 'admin', PASSWORD))
+
+    def testNoShell(self):
+        # E.g. an account for file transfers only.
+        self.serve(channels=False)
+        with self.assertRaisesRegex(LoginFailure, 'Failed to open a channel with pty/shell'):
+            self.login()
+
+
+class SessionTest(unittest.TestCase):
+    """Sending to and closing a session that the host ended or that has pending output."""
+
+    def setUp(self):
+        self.device = VirtualDevice(HOST, login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False)
+        self.device.add_command('ls', 'file1 file2')
+        self.daemon = SSHd(HOST, 0, self.device, key=key)
+        self.daemon.timeout = 0.05
+        self.daemon.start()
+        self.addCleanup(self.daemon.join)
+        self.addCleanup(self.daemon.exit)
+
+    def login(self, **kwargs):
+        conn = SSH2(
+            timeout=1,
+            connect_rate_limit=0,
+            verify_fingerprint=False,
+            preferred_authentications=['password'],
+            **kwargs,
+        )
+        self.addCleanup(conn.close, force=True)
+        conn.connect(HOST, self.daemon.port)
+        conn.protocol_authenticate(Account('user', PASSWORD, needs_lock=False))
+        conn.expect_prompt()
+        return conn
+
+    def testSendAfterTheHostClosed(self):
+        conn = self.login(debug=1)
+        self.daemon.exit()
+        self.daemon.join()
+        self.assertRaises(ConnectionClosedException, conn.expect_prompt)
+        with self.assertLogs('Exscript.protocols.ssh2', logging.DEBUG) as logs:
+            self.assertRaises(OSError, conn.send, 'ls\r')
+        self.assertIn('Error while writing to connection', logs.output[-1])
+
+    def testGracefulCloseReceivesThePendingOutput(self):
+        stdout = io.StringIO()
+        conn = self.login(stdout=stdout)
+        conn.send('ls\r')
+        select.select([conn._channel], [], [], 5)  # the output arrived, but was not read
+        conn.close()
+        self.assertIn('file1 file2', stdout.getvalue())
+
+
 def suite():
     loader = unittest.TestLoader()
     return unittest.TestSuite(
@@ -427,6 +802,8 @@ def suite():
             loader.loadTestsFromTestCase(PartialAuthenticationTest),
             loader.loadTestsFromTestCase(ConnectTest),
             loader.loadTestsFromTestCase(TerminalSizeTest),
+            loader.loadTestsFromTestCase(AuthenticationTest),
+            loader.loadTestsFromTestCase(SessionTest),
         ]
     )
 

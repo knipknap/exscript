@@ -1,6 +1,7 @@
 import logging
 import socket
 import unittest
+from unittest import mock
 
 from hypothesis import given
 from hypothesis import strategies as st
@@ -167,3 +168,34 @@ class telnetlibTest(unittest.TestCase):
             port = listener.getsockname()[1]
         with self.assertRaisesRegex(OSError, f'=> telnet://127.0.0.1:{port}'):
             Telnet('127.0.0.1', port, connect_timeout=5)
+
+    def testOpenErrorNamesTheUrl(self):
+        error = ConnectionRefusedError(111, 'Connection refused')
+        with (
+            mock.patch('socket.create_connection', side_effect=error),
+            self.assertRaisesRegex(OSError, 'Connection refused => telnet://router1:23') as cm,
+        ):
+            Telnet('router1', connect_timeout=5)
+        self.assertIs(cm.exception.__cause__, error)
+
+    def testCloseTwice(self):
+        local, remote = socket.socketpair()
+        self.addCleanup(remote.close)
+        tn = Telnet()
+        tn.sock = local
+        tn.close()
+        tn.close()
+        self.assertTrue(tn.eof)
+        self.assertIsNone(tn.sock)
+        self.assertEqual(local.fileno(), -1)
+        self.assertFalse(tn.receive(1))
+
+    def testNawsWithoutSize(self):
+        # The size is sent once it is known.
+        tn = Telnet(termsize=None)
+        tn.sock = FakeSock([iac(DO, NAWS)])
+        while tn.receive(None):
+            pass
+        self.assertEqual(tn.sock.sent, [iac(WILL, NAWS)])
+        tn.set_window_size(24, 80)
+        self.assertEqual(tn.sock.sent[-1], iac(SB, NAWS, 0, 80, 0, 24) + iac(SE))

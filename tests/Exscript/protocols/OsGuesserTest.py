@@ -103,6 +103,21 @@ class OsGuesserTest(unittest.TestCase):
         )
         self.assertEqual(osg.get('os'), "junos")
 
+    def testCheckNetconfCapabilitiesAsText(self):
+        osg = OsGuesser()
+        osg.check_netconf_capabilities(None)
+        osg.check_netconf_capabilities([])
+        self.assertEqual(osg.get('os'), 'unknown')
+        osg.check_netconf_capabilities(
+            'urn:ietf:params:netconf:base:1.0\nhttp://xml.juniper.net/netconf/junos/1.0'
+        )
+        self.assertEqual(osg.get('os'), 'junos')
+
+    def testSetWithoutValue(self):
+        self.sa.set('os', 'ios', 50)
+        self.sa.set('os', None, 100)  # ignored
+        self.assertEqual(self.sa.get('os', 50), 'ios')
+
 
 def guess(head='', response='', protocol_info=''):
     """Returns the guess after the given data, fed one character per read (the worst case)."""

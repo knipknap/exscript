@@ -1,7 +1,12 @@
+import io
+import logging
 import socket
 import threading
 import unittest
+from unittest import mock
 
+from Exscript import Account
+from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Telnet
 from Exscript.protocols.telnetlib import DO, IAC, NAWS, SB, SE, WILL
 from Exscript.servers import Telnetd
@@ -59,10 +64,58 @@ class TerminalSizeTest(unittest.TestCase):
         )
 
 
+class SessionTest(unittest.TestCase):
+    """Closing a session, and errors of the connection."""
+
+    def setUp(self):
+        self.device = VirtualDevice('r1', login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False)
+        self.daemon = Telnetd('127.0.0.1', 0, self.device)
+        self.daemon.timeout = 0.05
+        self.device.add_command('exit', self.daemon.exit_command)
+        self.daemon.start()
+        self.addCleanup(self.daemon.join)
+        self.addCleanup(self.daemon.exit)
+
+    def login(self, **kwargs):
+        conn = Telnet(timeout=1, connect_rate_limit=0, **kwargs)
+        self.addCleanup(conn.close, force=True)
+        conn.connect('127.0.0.1', self.daemon.port)
+        conn.protocol_authenticate(Account('user', 'password', needs_lock=False))
+        conn.expect_prompt()
+        return conn
+
+    def testGracefulCloseReceivesTheRest(self):
+        stdout = io.StringIO()
+        conn = self.login(stdout=stdout)
+        conn.close()  # sends exit; the host answers and closes the connection
+        self.assertRegex(stdout.getvalue(), r'r1> exit\s+r1> $')
+        self.assertFalse(conn.connected)
+
+    def testErrorWhileClosing(self):
+        # E.g. the host resets the connection after the logout.
+        conn = self.login()
+        with mock.patch.object(conn._tn, 'receive', side_effect=ConnectionResetError):
+            conn.close()
+        self.assertFalse(conn.connected)
+
+    def testErrorWhileSending(self):
+        conn = self.login(debug=1)
+        with (
+            mock.patch.object(conn._tn, 'write', side_effect=BrokenPipeError),
+            self.assertLogs('Exscript.protocols.telnet', logging.DEBUG) as logs,
+        ):
+            self.assertRaises(BrokenPipeError, conn.send, 'ls\r')
+        self.assertIn('Error while writing to connection', logs.output[-1])
+
+
 def suite():
     loader = unittest.TestLoader()
     return unittest.TestSuite(
-        [loader.loadTestsFromTestCase(TelnetTest), loader.loadTestsFromTestCase(TerminalSizeTest)]
+        [
+            loader.loadTestsFromTestCase(TelnetTest),
+            loader.loadTestsFromTestCase(TerminalSizeTest),
+            loader.loadTestsFromTestCase(SessionTest),
+        ]
     )
 
 
