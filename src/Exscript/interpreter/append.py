@@ -27,7 +27,7 @@ The append statement of the template language.
 from typing import TYPE_CHECKING
 
 from ..parselib import Lexer, Token
-from .expression import Expression
+from .expression import Expression, as_list
 from .scope import Scope
 
 if TYPE_CHECKING:
@@ -83,8 +83,8 @@ class Append(Token):
         :param context: The scope in which the template runs.
         :return: 1.
         """
-        existing = self.parent.get(self.varname)
-        args = {self.varname: existing + self.expr.value(context)}
+        existing = as_list(self.parent.get(self.varname), self, self.varname)
+        args = {self.varname: existing + self.expr.values(context)}
         self.parent.define(**args)
         return 1
 

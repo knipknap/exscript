@@ -1,6 +1,6 @@
 import unittest
 
-from Exscript.parselib.exception import CompileError
+from Exscript.parselib.exception import CompileError, ExecuteError
 
 from .helpers import TemplateTestCase
 
@@ -76,6 +76,16 @@ class AppendTest(TemplateTestCase):
     def testAppendToAVariableOfTheCaller(self):
         variables = self.evaluate('{append "b" to x}', x=['a'])
         self.assertEqual(variables['x'], ['a', 'b'])
+
+    def testValuesThatAreNotLists(self):
+        variables = self.evaluate(
+            '{append t to x}{append yes() to x}', t=('b', 'c'), x=('a',), yes=lambda scope: True
+        )
+        self.assertEqual(variables['x'], ['a', 'b', 'c', True])
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate('{append 1 to f}', f=lambda scope: [1])
+        message = "'f' is a function, not a variable name in undefined:1"
+        self.assertError(cm.exception, ['{append 1 to f}'], ' ' + '^' * 13, message)
 
     def testAppendInALoop(self):
         variables = self.evaluate('{loop from 0 to 3 as i}{append i * 2 to doubles}{end}')

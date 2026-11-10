@@ -131,6 +131,11 @@ Operators
     result, as documented. 2.x always evaluated both, e.g. called the
     functions in both.
 
+Values of the caller
+    A string that a function of the caller returns, or a dict that the
+    caller passes, is one item: ``in``, ``loop`` and ``extract`` no longer
+    use its characters or keys. Return and pass lists instead.
+
 Command line tool
 -----------------
 

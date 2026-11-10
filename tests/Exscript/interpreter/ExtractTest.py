@@ -61,6 +61,12 @@ class ExtractTest(TemplateTestCase):
         )
         self.assertEqual((variables['a'], variables['b']), (['4'], ['7', '3']))
 
+    def testValuesThatAreNotLists(self):
+        # A string is one item, and the variable of the caller may be a tuple.
+        text = '{extract /(\\d)/ as a from two()}{extract /(.)/ into t from word()}'
+        variables = self.evaluate(text, two=lambda scope: 2, word=lambda scope: 'ab', t=('x',))
+        self.assertEqual((variables['a'], variables['t']), (['2'], ['x', 'a']))
+
     def testNoMatch(self):
         variables = self.evaluate('ls{extract /(nomatch)/ as found}\n')
         self.assertEqual(variables['found'], [])

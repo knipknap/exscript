@@ -40,6 +40,11 @@ class FailTest(TemplateTestCase):
             self.evaluate('{fail list.new()}')
         self.assertEqual(str(cm.exception), '')
 
+    def testValuesThatAreNotLists(self):
+        with self.assertRaises(FailException) as cm:
+            self.evaluate('{fail word() if yes()}', word=lambda scope: 'ab', yes=lambda scope: True)
+        self.assertEqual(str(cm.exception), 'ab')
+
     def testInABlock(self):
         with self.assertRaises(FailException) as cm:
             self.evaluate('{loop from 0 to 5 as i}\nls $i\n{fail "stop at " . i if i is 2}{end}')

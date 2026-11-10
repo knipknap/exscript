@@ -132,6 +132,29 @@ class RegexTest(TemplateTestCase):
         message = "Undefined variable 'nothing' in undefined:1"
         self.assertError(cm.exception, [text], ' ' * 20 + '^' * 8, message)
 
+    def testRegularExpressionAsTheValueOfAStatement(self):
+        for text, column in (
+            ('{if /a/}ls{end}', 4),
+            ('{fail "x" if /a/}', 13),
+            ('{fail /a/}', 6),
+            ('{loop while /a/}{end}', 12),
+            ('{loop until /a/}{end}', 12),
+            ('{loop from /a/ to 3}{end}', 11),
+            ('{loop from 1 to /a/}{end}', 16),
+            ('{loop /a/ as x}{end}', 6),
+            ('{extract /(a)/ as x from /a/}', 25),
+            ('{append /a/ to x}', 8),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaises(ExecuteError) as cm:
+                    self.evaluate(text)
+                message = (
+                    "A regular expression is only allowed as the right operand of 'matches'"
+                    ' in undefined:1'
+                )
+                self.assertError(cm.exception, [text], ' ' * column + '^^^', message)
+        self.assertSent()
+
     def testInvalidModifier(self):
         with self.assertRaises(CompileError) as cm:
             self.evaluate('{x = /abc/x}')

@@ -83,7 +83,7 @@ class Fail(Token):
         :return: 1 if the condition is false.
         """
         if self.expression is None or self.expression.is_true(context):
-            msg = self.msg.value(context)
+            msg = self.msg.values(context)
             raise FailException(msg[0] if len(msg) > 0 else '')
         return 1
 

@@ -27,6 +27,7 @@ The extract statement of the template language.
 from typing import TYPE_CHECKING
 
 from ..parselib import Lexer, Token
+from .expression import as_list
 from .regex import Regex
 from .scope import Scope
 from .term import Term
@@ -154,7 +155,7 @@ class Extract(Token):
         if self.source is None:
             buffer = self.parent.get('__response__')
         else:
-            buffer = self.source.value(context)
+            buffer = as_list(self.source.value(context), self.source)
         # print("Buffer contains", buffer)
 
         # Walk through all lines, matching each one against the regular
@@ -192,7 +193,7 @@ class Extract(Token):
             self.parent.define(**self.variables)
         else:
             for key in self.variables:
-                existing = self.parent.get(key)
+                existing = as_list(self.parent.get(key), self, key)
                 self.parent.define(**{key: existing + self.variables[key]})
         return 1
 

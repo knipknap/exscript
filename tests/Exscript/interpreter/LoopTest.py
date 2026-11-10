@@ -92,6 +92,22 @@ class LoopTest(TemplateTestCase):
         )
         self.assertEqual(self.evaluate(text)['n'], [202])
 
+    def testValuesThatAreNotLists(self):
+        text = (
+            '{loop t as i}{append i to l}{end}'
+            '{loop yes() as i}{append i to l}{end}'
+            '{loop from 1 to two() as i}{append i to l}{end}'
+            '{loop while yes() and n lt 2}{n = n + 1}{end}'
+        )
+        variables = self.evaluate(
+            text, t=('a', 'b'), yes=lambda scope: True, two=lambda scope: 2, n=0
+        )
+        self.assertEqual((variables['l'], variables['n']), (['a', 'b', True, 1], [2]))
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate('{loop f as i}{end}', f=lambda scope: [1])
+        message = "'f' is a function, not a variable name in undefined:1"
+        self.assertError(cm.exception, ['{loop f as i}{end}'], '      ^', message)
+
     def testLoopWhile(self):
         variables = self.evaluate('{n = 0}{loop while n lt 3}{n = n + 1}\nls $n\n{end}')
         self.assertSent('ls 1', 'ls 2', 'ls 3')

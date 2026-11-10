@@ -128,6 +128,37 @@ class ExpressionTest(TemplateTestCase):
                 )
                 self.assertError(cm.exception, [text], marker, message)
 
+    def testOperandsThatAreNotLists(self):
+        # Functions return True without a result, the caller may pass a tuple,
+        # and the connection is an object; a string is one item.
+        text = (
+            '{a = yes() and "x"}{b = t . "c"}{c = "b" in t}{d = not t}'
+            '{e = __connection__ is __connection__}{f = not __connection__}'
+            '{g = two() * 3}{h = "a" in word()}{i = word() matches /b/}'
+        )
+        variables = self.evaluate(
+            text,
+            yes=lambda scope: True,
+            t=('a', 'b'),
+            two=lambda scope: 2,
+            word=lambda scope: 'ab',
+        )
+        actual = [variables[name] for name in 'abcdefghi']
+        expected = [['x'], ['ac'], [True], [False], [True], [False], [6], [False], [1]]
+        self.assertEqual(actual, expected)
+
+    def testFunctionAsAnOperand(self):
+        for text, marker in (
+            ('{x = f . "a"}', '     ^'),
+            ('{x = "a" is f}', ' ' * 12 + '^'),
+            ('{x = not f}', ' ' * 9 + '^'),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaises(ExecuteError) as cm:
+                    self.evaluate(text, f=lambda scope: ['b'])
+                message = "'f' is a function, not a variable name in undefined:1"
+                self.assertError(cm.exception, [text], marker, message)
+
     def testLogicalOperators(self):
         text = '{a = 1 and 0}{b = 0 or 1}{c = not 0}{d = not 1}{e = 1 and 1 and 0}'
         self.assertValues(text, a=[0], b=[1], c=[True], d=[False], e=[0])

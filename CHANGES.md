@@ -456,10 +456,21 @@ development versions; "before" refers to them.
   matches numbers as text, as `matches` does, e.g. in `{extract /(\d)/ as d from 42}`
   (before: `TypeError`); and the bounds of `loop from ... to ...` may be strings of
   digits, like the operands of arithmetic operators.
-- **Regular Expressions as Operands:** A regular expression that is not the right
-  operand of `matches`, e.g. in `/a/ matches /a/`, `/a/ . "b"`, `"a" is /a/` or
-  `not /a/`, raises an `ExecuteError` that shows its position. Before, it raised an
-  `UnboundLocalError` or a `TypeError` of Python.
+- **BREAKING - Values That Are Not Lists:** Operators and statements use a value
+  that is not a list like a list: a tuple as a list, and any other value, e.g. the
+  `True` that a function returns without a result, a string or a dict from the
+  caller, or the connection, as a list with this one item; a function raises an
+  `ExecuteError`, as in a string. Before, such values raised an `UnboundLocalError`
+  or a `TypeError`, except that `in`, `fail`, `loop` and `extract` used the
+  characters of a string, and `in` and `extract` the keys of a dict, e.g.
+  `"err" in out()` was a substring test if the function `out` returned a string.
+- **Regular Expressions as Operands and Values:** A regular expression that is not
+  the right operand of `matches`, e.g. in `/a/ matches /a/`, `/a/ . "b"`,
+  `"a" is /a/` or `not /a/`, raises an `ExecuteError` that shows its position, also
+  as the condition of `if`, `fail` or `loop`, as a bound or the list of `loop`, as
+  the source of `extract`, as the value of `append` and as the message of `fail`.
+  Before, it raised an `UnboundLocalError` or a `TypeError` of Python. Assignments
+  and functions still take regular expressions.
 - **Error Positions in Commands and Strings:** An error about a variable in a command,
   a string or a regular expression points to the variable also behind escape
   sequences, e.g. to `$nothing` in `show \x41 $nothing`, and in a command right before

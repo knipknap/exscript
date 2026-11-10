@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, cast
 import Exscript.interpreter.code
 
 from ..parselib import Lexer, Token
-from .expression import Expression
+from .expression import Expression, as_list
 from .scope import Scope
 from .term import Term
 
@@ -171,14 +171,14 @@ class Loop(Token):
             bounds = []
             # The constructor sets theto together with thefrom.
             for bound in self.thefrom, cast(Expression, self.theto):
-                values = bound.value(context)
+                values = bound.values(context)
                 try:
                     bounds.append(int(values[0] if len(values) > 0 else ''))
                 except (TypeError, ValueError):
                     self.lexer.runtime_error('Loop bound is not a number', bound.root)
             lists = [list(range(*bounds))]
         else:
-            lists = [var.value(context) for var in self.list_variables]
+            lists = [as_list(var.value(context), var) for var in self.list_variables]
         varnames = self.iter_varnames
 
         # Make sure that all lists have the same length.

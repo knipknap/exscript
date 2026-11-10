@@ -1,6 +1,6 @@
 import unittest
 
-from Exscript.parselib.exception import CompileError
+from Exscript.parselib.exception import CompileError, ExecuteError
 
 from .helpers import TemplateTestCase
 
@@ -44,6 +44,15 @@ class IfConditionTest(TemplateTestCase):
         text = '{e = list.new()}{if e}\nshow one\n{else if not e}\nshow two\n{end}'
         self.evaluate(text)
         self.assertSent('show two')
+
+    def testConditionsThatAreNotLists(self):
+        text = '{if yes()}\nshow one\n{end}{if __connection__}\nshow two\n{end}{if t}\nls\n{end}'
+        self.evaluate(text, yes=lambda scope: True, t=('a',))
+        self.assertSent('show one', 'show two', 'ls')
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate('{if f}ls{end}', f=lambda scope: [1])
+        message = "'f' is a function, not a variable name in undefined:1"
+        self.assertError(cm.exception, ['{if f}ls{end}'], '    ^', message)
 
     def testOnOneLine(self):
         self.evaluate('{if 1}ls{end}\n{if 0}show version{else}show other{end}\n')
