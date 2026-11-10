@@ -176,8 +176,6 @@ python_files = ["*Test.py"]
 addopts = ["-ra", "--strict-config", "--strict-markers"]
 filterwarnings = [
     "error",
-    # The process mode of the queue forks a process that has threads (Python 3.12 and 3.13).
-    "ignore:This process .* is multi-threaded, use of fork\\(\\) may lead to deadlocks:DeprecationWarning",
     # lxml enables the GIL of free-threaded Python; CI runs these tests with PYTHON_GIL=0.
     "ignore:The global interpreter lock \\(GIL\\) has been enabled:RuntimeWarning",
 ]
