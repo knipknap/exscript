@@ -83,6 +83,7 @@ Contents
    security
    platforms
    trouble
+   faq
    migration
    api
    changelog
