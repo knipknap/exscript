@@ -18,3 +18,4 @@ coverage.xml
 docs/_build
 docs/_autosummary
 docs/_generated
+.hypothesis
