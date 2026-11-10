@@ -165,6 +165,9 @@ ignore-nested-functions = true
 ignore-setters = true
 exclude = ["docs", "tests", "tools", "demos", "scripts"]
 
+[tool.coverage.run]
+branch = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["*Test.py"]
