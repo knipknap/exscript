@@ -146,6 +146,9 @@ exclude = ["docs", "tests", "tools", "demos"]
 branch = true
 patch = ["subprocess"]  # e.g. python -m Exscript in the tests of the command
 
+[tool.coverage.report]
+exclude_also = ['if __name__ == .__main__.:']
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["*Test.py"]
