@@ -462,16 +462,13 @@ class WindowsShellTest(unittest.TestCase):
 
 
 def start_daemon(test, daemon_cls, device, **kwargs):
-    """Starts a test server for the device; it stops when the test ends."""
-    with socket.socket() as sock:
-        sock.bind((HOST, 0))
-        port = sock.getsockname()[1]
-    daemon = daemon_cls(HOST, port, device, **kwargs)
-    daemon.start()
-    time.sleep(0.2)
+    """Starts a test server for the device on a free port; it stops when the test ends."""
+    daemon = daemon_cls(HOST, 0, device, **kwargs)
+    daemon.timeout = 0.05  # stops quickly when the test ends
+    daemon.start()  # listens before it returns
     test.addCleanup(daemon.join)  # cleanups run LIFO: exit() first
     test.addCleanup(daemon.exit)
-    return daemon, port
+    return daemon, daemon.port
 
 
 class ServerExpectTest(unittest.TestCase):
@@ -523,18 +520,27 @@ class InteractTest(unittest.TestCase):
         received = []
         conn.data_received_event.connect(received.append)
 
+        import tty  # POSIX only
+
         master, slave = os.openpty()  # interact() closes the slave
         self.addCleanup(os.close, master)
+        raw = threading.Event()
+        setcbreak = tty.setcbreak
+
+        def set_raw_mode(fd, *args):
+            setcbreak(fd, *args)
+            raw.set()
 
         def type_keys():
-            time.sleep(0.3)
-            os.write(master, 'say grüße\r'.encode())
-            time.sleep(0.3)
-            os.write(master, b'exit\r')
+            raw.wait(5)  # the switch to raw mode discards the keys typed before
+            os.write(master, 'say grüße\rexit\r'.encode())
 
         typist = threading.Thread(target=type_keys)
         typist.start()
-        with mock.patch('sys.stdin', mock.Mock(encoding='utf-8', fileno=lambda: slave)):
+        with (
+            mock.patch('sys.stdin', mock.Mock(encoding='utf-8', fileno=lambda: slave)),
+            mock.patch('tty.setcbreak', set_raw_mode),
+        ):
             conn.interact(handle_window_size=False)
         typist.join()
         self.assertIn('grüße!', ''.join(received))
