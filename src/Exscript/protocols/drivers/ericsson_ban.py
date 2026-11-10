@@ -37,7 +37,7 @@ _error_re = [re.compile(r'\(error\)')]
 
 _ban_re = re.compile(r"BLM\d+ - Broadband Loop Multiplexer", re.I)
 
-_login_fail_re = [r'Login failed']
+_login_fail_re = [re.compile(r'Login failed')]
 
 
 class EricssonBanDriver(Driver):

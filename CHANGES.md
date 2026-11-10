@@ -277,6 +277,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
   local shell) before the connection is closed gracefully, otherwise the logout command
   may fail.
 
+- **Login Errors of `ericsson_ban`:** A login over the `ericsson_ban` driver no longer
+  fails with `AttributeError: 'str' object has no attribute 'search'`; its login
+  error pattern was a string instead of a compiled pattern. A test checks the
+  patterns of all drivers.
 - **`disable_driver()`:** `Exscript.protocols.drivers.disable_driver()` works; it
   raised a `TypeError` after it had removed the driver only from `driver_map`, so the
   OS guesser still chose it.

@@ -6,6 +6,7 @@ from Exscript import Account
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy, drivers
 from Exscript.protocols.drivers import isam
+from Exscript.protocols.exception import LoginFailure
 from Exscript.protocols.osguesser import OsGuesser
 
 
@@ -209,6 +210,26 @@ class DriverRegistryTest(unittest.TestCase):
         self.assertNotIn('acme', [driver.name for driver in drivers.drivers])
         self.assertEqual(self.login().guess_os(), 'unknown')
         self.assertRaises(TypeError, Dummy().set_driver, 'acme')
+
+    def testPatternsAreCompiled(self):
+        # The protocol calls search() on each pattern; a string would fail
+        # with an AttributeError during the login.
+        attributes = 'user_re', 'password_re', 'prompt_re', 'error_re', 'login_error_re'
+        for name, driver in drivers.driver_map.items():
+            for attribute in attributes:
+                for pattern in getattr(driver, attribute):
+                    self.assertIsInstance(pattern, re.Pattern, f'{name}.{attribute}')
+
+    def testLoginFailureOverEricssonBan(self):
+        device = VirtualDevice('ban1', login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False)
+        device.set_prompt('Login failed\n')
+        conn = Dummy(device=device, driver='ericsson_ban', timeout=1)
+        conn.connect('ban1')
+        self.addCleanup(conn.close, True)
+        conn.send('admin\r')
+        self.assertRaises(
+            LoginFailure, conn.app_authenticate, Account('admin', 'x', needs_lock=False)
+        )
 
 
 def suite():
