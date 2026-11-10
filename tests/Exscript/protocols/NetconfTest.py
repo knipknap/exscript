@@ -16,6 +16,8 @@ from unittest import mock
 import ncclient.operations.rpc
 import ncclient.transport.session
 import paramiko
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from lxml import etree
 from ncclient.manager import make_device_handler
 from ncclient.operations.rpc import RPC, RPCReply
@@ -79,6 +81,20 @@ class ReassembleChunksTest(unittest.TestCase):
         # The sizes count the bytes of the UTF-8 encoding (RFC 6242, section 4.2).
         framed = '\n#6\n<a>Zü\n#15\nrich 20 €</a>\n##\n'
         self.assertEqual(Netconf.reassemble_chunks(framed), '<a>Zürich 20 €</a>')
+
+    @settings(max_examples=200, deadline=None)
+    @given(st.text(min_size=1, max_size=200), st.lists(st.integers(1, 40), max_size=12))
+    def testAnyText(self, text, sizes):
+        # Chunks of any size, also with text that looks like a chunk header. A
+        # character that a device splits across two chunks needs the framing to
+        # be parsed before the decoding, so the chunks end at characters here.
+        chunks, pos = [], 0
+        for size in sizes:
+            chunks.append(text[pos : pos + size])
+            pos += size
+        chunks.append(text[pos:])
+        framed = ''.join('\n#%d\n%s' % (len(c.encode()), c) for c in chunks if c) + '\n##\n'
+        self.assertEqual(Netconf.reassemble_chunks(framed), text)
 
 
 class NcclientContractTest(unittest.TestCase):
