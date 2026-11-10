@@ -245,13 +245,19 @@ class WorkQueueTest(unittest.TestCase):
         self.assertTrue(self.wq.is_paused())
 
     def testGetRunningJobs(self):
+        # The job records what it sees, and the test checks it afterwards.
+        self.addCleanup(self.wq.destroy)
+        running = []
+
         def function(job):
-            self.assertEqual(self.wq.get_running_jobs(), [job])
+            running.append(self.wq.get_running_jobs())
 
         self.assertEqual(self.wq.get_running_jobs(), [])
-        self.wq.enqueue(function)
-        self.wq.shutdown(True)
+        job_id = self.wq.enqueue(function)
+        self.wq.wait_for(job_id)
         self.assertEqual(self.wq.get_running_jobs(), [])
+        # While the job ran, it was the only running job.
+        self.assertEqual([[job.id for job in jobs] for jobs in running], [[job_id]])
 
     def testGetLength(self):
         pass  # See testEnqueue()
