@@ -28,6 +28,8 @@ import codecs
 import logging
 import socket
 import struct
+from collections.abc import Callable
+from typing import Any, cast
 
 __all__ = ['Telnet']
 
@@ -56,27 +58,30 @@ _IAC = bytes([IAC])
 _READ_SIZE = 65536
 
 
-def _command(*codes):
+def _command(*codes: int) -> bytes:
+    """
+    Returns a Telnet command: IAC followed by the given codes.
+    """
     return bytes([IAC, *codes])
 
 
 class Telnet:
     """
-    A Telnet connection that answers option negotiation and delivers the
-    received text to a callback and to expect().
+    A Telnet connection that answers the option negotiation and passes the
+    received text to a callback.
     """
 
     def __init__(
         self,
-        host=None,
-        port=0,
-        encoding='latin-1',
+        host: str | None = None,
+        port: int = 0,
+        encoding: str = 'latin-1',
         *,
-        connect_timeout=None,
-        termsize=None,
-        termtype='dumb',
-        receive_callback=None,
-    ):
+        connect_timeout: float | None = None,
+        termsize: tuple[int, int] | None = None,
+        termtype: str = 'dumb',
+        receive_callback: Callable[[str], object] | None = None,
+    ) -> None:
         """
         Constructor. Connects to the host if one is given.
 
@@ -98,7 +103,9 @@ class Telnet:
         self.debuglevel = 0
         self.host = host
         self.port = port
-        self.sock = None
+        # Set by open(). The methods that send or receive need a connection;
+        # they cast the socket for the type checker.
+        self.sock: socket.socket | None = None
         self.encoding = encoding
         self.connect_timeout = connect_timeout
         self.window_size = termsize
@@ -108,11 +115,11 @@ class Telnet:
         self.eof = False
         self.rawq = b''  # received bytes that end with an incomplete command
         self._decoder = codecs.getincrementaldecoder(encoding)()
-        self._sb = None  # the data of the subnegotiation in progress
+        self._sb: bytearray | None = None  # the data of the subnegotiation in progress
         if host:
             self.open(host, port)
 
-    def open(self, host, port=0):
+    def open(self, host: str, port: int = 0) -> None:
         """
         Connects to the host, trying all of its addresses (IPv4 and IPv6).
 
@@ -129,12 +136,12 @@ class Telnet:
         except OSError as exc:
             raise OSError(f'{exc} => telnet://{host}:{self.port}') from exc
 
-    def msg(self, msg, *args):
+    def msg(self, msg: str, *args: Any) -> None:
         """Logs a debug message if the debug level is above 0."""
         if self.debuglevel > 0:
             _logger.debug(msg, *args)
 
-    def set_debuglevel(self, debuglevel):
+    def set_debuglevel(self, debuglevel: int) -> None:
         """
         Sets the debug level; above 0, the received data and the option
         negotiation are logged.
@@ -144,14 +151,14 @@ class Telnet:
         """
         self.debuglevel = debuglevel
 
-    def close(self):
+    def close(self) -> None:
         """Closes the connection."""
         sock, self.sock = self.sock, None
         self.eof = True
         if sock:
             sock.close()
 
-    def write(self, buffer):
+    def write(self, buffer: str | bytes) -> None:
         """
         Sends the given text or bytes, doubling the IAC bytes. The data is not
         logged, because it may contain a password.
@@ -161,9 +168,9 @@ class Telnet:
         """
         if isinstance(buffer, str):
             buffer = buffer.encode(self.encoding)
-        self.sock.sendall(buffer.replace(_IAC, _IAC + _IAC))
+        cast(socket.socket, self.sock).sendall(buffer.replace(_IAC, _IAC + _IAC))
 
-    def set_window_size(self, rows, cols):
+    def set_window_size(self, rows: int, cols: int) -> None:
         """
         Sets the window size, and sends it if the server asked for it (NAWS).
 
@@ -176,37 +183,50 @@ class Telnet:
         if not self.can_naws:
             return
         size = struct.pack('!HH', min(cols, 0xFFFF), min(rows, 0xFFFF))
-        self.sock.sendall(_command(SB, NAWS) + size.replace(_IAC, _IAC + _IAC) + _command(SE))
+        cast(socket.socket, self.sock).sendall(
+            _command(SB, NAWS) + size.replace(_IAC, _IAC + _IAC) + _command(SE)
+        )
 
-    def _negotiate(self, command, option):
+    def _negotiate(self, command: int, option: int) -> None:
+        """
+        Answers an option negotiation command (DO, DONT, WILL or WONT) of the
+        server: agrees to send the terminal type and the window size, asks
+        for the echo, and refuses all other options.
+        """
         self.msg('IAC %s %d', _NEGOTIATION[command], option)
         if command == DO and option in (TTYPE, NAWS):
-            self.sock.sendall(_command(WILL, option))
+            cast(socket.socket, self.sock).sendall(_command(WILL, option))
             if option == NAWS:
                 self.can_naws = True
                 if self.window_size:
                     self.set_window_size(*self.window_size)
         elif command in (DO, DONT):
-            self.sock.sendall(_command(WONT, option))
+            cast(socket.socket, self.sock).sendall(_command(WONT, option))
         elif option == ECHO:
             # Exscript always asks for the echo, also when the server refuses it.
-            self.sock.sendall(_command(DO, option))
+            cast(socket.socket, self.sock).sendall(_command(DO, option))
         else:
-            self.sock.sendall(_command(DONT, option))
+            cast(socket.socket, self.sock).sendall(_command(DONT, option))
 
-    def _subnegotiate(self, data):
+    def _subnegotiate(self, data: bytes) -> None:
+        """
+        Answers the given subnegotiation of the server: sends the terminal
+        type if the server asks for it.
+        """
         self.msg('IAC SB %r', data)
         if data == bytes([TTYPE, TTYPE_SEND]):
             self.msg('Indicating support for terminal type %s.', self.termtype)
             ttype = self.termtype.encode('latin-1')
-            self.sock.sendall(_command(SB, TTYPE, TTYPE_IS) + ttype + _command(SE))
+            cast(socket.socket, self.sock).sendall(
+                _command(SB, TTYPE, TTYPE_IS) + ttype + _command(SE)
+            )
 
-    def process_rawq(self):
+    def process_rawq(self) -> None:
         """
-        Moves the received data from the raw queue to the cooked queue,
-        removes the Telnet commands and answers the option negotiation.
-        Keeps an incomplete command in the raw queue until more data arrives,
-        so it never blocks.
+        Processes the data in the raw queue: removes the Telnet commands,
+        answers the option negotiation, and passes the decoded text to the
+        callback. Keeps an incomplete command in the raw queue until more data
+        arrives, so it never blocks.
         """
         data, self.rawq = self.rawq, b''
         cooked = bytearray()
@@ -258,17 +278,17 @@ class Telnet:
         if text and self.data_callback is not None:
             self.data_callback(text)
 
-    def fill_rawq(self):
+    def fill_rawq(self) -> None:
         """
         Reads once from the socket into the raw queue. Blocks if no data is
         available, and sets eof when the connection was closed.
         """
-        data = self.sock.recv(_READ_SIZE)
+        data = cast(socket.socket, self.sock).recv(_READ_SIZE)
         self.msg('Recv: %r', data)
         self.eof = not data
         self.rawq += data
 
-    def receive(self, timeout):
+    def receive(self, timeout: float | None) -> bool | None:
         """
         Waits for data, reads it once and passes the received text to the
         callback.
@@ -282,7 +302,7 @@ class Telnet:
         """
         if self.eof:
             return False
-        self.sock.settimeout(timeout)
+        cast(socket.socket, self.sock).settimeout(timeout)
         try:
             self.fill_rawq()
         except (TimeoutError, BlockingIOError):  # BlockingIOError: timeout 0

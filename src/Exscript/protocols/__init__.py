@@ -20,6 +20,13 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The protocol adapters, and functions that create them by the name of the
+protocol or from a URL.
+"""
+
+from typing import TYPE_CHECKING, Any, cast
+
 from .. import Account
 from ..util.cast import to_host
 from ..util.url import Url
@@ -29,7 +36,10 @@ from .protocol import Protocol
 from .ssh2 import SSH2
 from .telnet import Telnet
 
-protocol_map = {
+if TYPE_CHECKING:
+    from ..host import Host
+
+protocol_map: dict[str, type[Protocol]] = {
     'dummy': Dummy,
     'pseudo': Dummy,
     'telnet': Telnet,
@@ -39,13 +49,13 @@ protocol_map = {
 }
 
 
-def get_protocol_from_name(name):
+def get_protocol_from_name(name: str) -> type[Protocol]:
     """
     Returns the protocol class for the protocol with the given name.
 
     :type  name: str
     :param name: The name of the protocol.
-    :rtype:  Protocol
+    :rtype:  type[Protocol]
     :return: The protocol class.
     """
     cls = protocol_map.get(name)
@@ -54,7 +64,7 @@ def get_protocol_from_name(name):
     return cls
 
 
-def create_protocol(name, **kwargs):
+def create_protocol(name: str, **kwargs: Any) -> Protocol:
     """
     Returns an instance of the protocol with the given name.
 
@@ -69,7 +79,7 @@ def create_protocol(name, **kwargs):
     return cls(**kwargs)
 
 
-def prepare(host, default_protocol='ssh', **kwargs):
+def prepare(host: 'str | Host', default_protocol: str = 'ssh', **kwargs: Any) -> Protocol:
     """
     Creates an instance of the protocol by either parsing the given
     URL-formatted hostname using :class:`Exscript.util.url`, or according to
@@ -89,11 +99,12 @@ def prepare(host, default_protocol='ssh', **kwargs):
     conn = create_protocol(protocol, **kwargs)
     if protocol == 'pseudo':
         filename = host.get_address()
-        conn.device.add_commands_from_file(filename)
+        # protocol_map maps 'pseudo' to Dummy.
+        cast(Dummy, conn).device.add_commands_from_file(filename)
     return conn
 
 
-def connect(host, default_protocol='ssh', **kwargs):
+def connect(host: 'str | Host', default_protocol: str = 'ssh', **kwargs: Any) -> Protocol:
     """
     Like :class:`prepare()`, but also connects to the host by calling
     :class:`Protocol.connect()`. If the URL or host contain any login info, this
