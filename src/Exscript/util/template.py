@@ -31,21 +31,59 @@ the template is compiled. Functions that the caller passes as variables are
 allowed. Pass ``secure=False`` to allow all functions.
 """
 
+from typing import TYPE_CHECKING, Any, cast
+
 from Exscript import stdlib
 from Exscript.interpreter import Parser
 from Exscript.stdlib.util import secure_function
 
+if TYPE_CHECKING:
+    from Exscript.interpreter.program import Program
+    from Exscript.protocols import Protocol
+
 debug = 0
 
 
-def _trusted(value):
+def _trusted(value: object) -> object:
+    """
+    Returns the given value of a template variable. A function that is not
+    marked as secure is returned wrapped by secure_function(), so that a
+    template that is compiled in secure mode may call it.
+    """
     # Functions passed by the caller are allowed in secure mode.
     if callable(value) and not hasattr(value, '_is_secure'):
         return secure_function(value)
     return value
 
 
-def _compile(conn, filename, template, parser_kwargs, **kwargs):
+# Any: the variables of a template are lists whose items depend on the
+# template, functions, or the connection; the parser options have
+# different types.
+def _compile(
+    conn: 'Protocol | None',
+    filename: str | None,
+    template: str,
+    parser_kwargs: dict[str, Any],
+    **kwargs: Any,
+) -> 'Program':
+    """
+    Compiles the given template with a new parser. The parser defines the
+    built-in variables (``__filename__``, ``__username__``,
+    ``__hostname__``, ``__response__`` and ``__connection__``), the
+    functions of the standard library, and the given variables, which may
+    override the built-in ones; the functions among them may be called in
+    secure mode.
+
+    :param conn: The connection on which the template runs, or None if the
+        template is only compiled.
+    :param filename: The name of the template file, or None.
+    :param template: The template.
+    :param parser_kwargs: The options of the parser; ``debug`` is added
+        with the value of the debug variable of this module if it is
+        missing.
+    :param kwargs: Variables to define in the template.
+    :return: The compiled template.
+    """
     undefined = 'undefined'
     if conn:
         hostname = conn.get_host()
@@ -74,16 +112,29 @@ def _compile(conn, filename, template, parser_kwargs, **kwargs):
     # Allow for overriding built-in variables.
     parser.define(**{name: _trusted(value) for name, value in kwargs.items()})
 
-    # Compile the template.
-    return parser.parse(template, parser.variables.get('__filename__')[0])
+    # Compile the template. __filename__ is a list, as defined above or by
+    # define(); the cast is for the type checker.
+    return parser.parse(template, cast(list[str], parser.variables.get('__filename__'))[0])
 
 
-def _run(conn, filename, template, parser_kwargs, **kwargs):
+def _run(
+    conn: 'Protocol',
+    filename: str | None,
+    template: str,
+    parser_kwargs: dict[str, Any],
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """
+    Compiles the given template and runs it on the given connection, see
+    _compile().
+
+    :return: The variables that are defined after execution of the template.
+    """
     compiled = _compile(conn, filename, template, parser_kwargs, **kwargs)
     return compiled.execute()
 
 
-def test(string, secure=True, **kwargs):
+def test(string: str, secure: bool = True, **kwargs: Any) -> None:
     """
     Compiles the given template, and raises an exception if that
     failed. Does nothing otherwise.
@@ -100,10 +151,10 @@ def test(string, secure=True, **kwargs):
     _compile(None, None, string, parser_args, **kwargs)
 
 
-def test_file(filename, secure=True, **kwargs):
+def test_file(filename: str, secure: bool = True, **kwargs: Any) -> None:
     """
-    Convenience wrapper around test() that reads the template from a file
-    instead.
+    Convenience wrapper around test() that reads the template from a UTF-8
+    file instead.
 
     :type  filename: string
     :param filename: The name of the template file.
@@ -117,7 +168,15 @@ def test_file(filename, secure=True, **kwargs):
         _compile(None, filename, fp.read(), parser_args, **kwargs)
 
 
-def eval(conn, string, strip_command=True, no_escaping=False, *, secure=True, **kwargs):
+def eval(
+    conn: 'Protocol',
+    string: str,
+    strip_command: bool = True,
+    no_escaping: bool = False,
+    *,
+    secure: bool = True,
+    **kwargs: Any,
+) -> dict[str, Any]:
     r"""
     Compiles the given template and executes it on the given connection.
     Raises an exception if the compilation fails.
@@ -163,10 +222,18 @@ def eval(conn, string, strip_command=True, no_escaping=False, *, secure=True, **
     return _run(conn, None, string, parser_args, **kwargs)
 
 
-def eval_file(conn, filename, strip_command=True, no_escaping=False, *, secure=True, **kwargs):
+def eval_file(
+    conn: 'Protocol',
+    filename: str,
+    strip_command: bool = True,
+    no_escaping: bool = False,
+    *,
+    secure: bool = True,
+    **kwargs: Any,
+) -> dict[str, Any]:
     """
-    Convenience wrapper around eval() that reads the template from a file
-    instead.
+    Convenience wrapper around eval() that reads the template from a UTF-8
+    file instead.
 
     :type  conn: Exscript.protocols.Protocol
     :param conn: The connection on which to run the template.
@@ -182,13 +249,17 @@ def eval_file(conn, filename, strip_command=True, no_escaping=False, *, secure=T
     :param secure: Whether to forbid the insecure functions.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
+    :rtype:  dict
+    :return: The variables that are defined after execution of the script.
     """
     parser_args = {'strip_command': strip_command, 'no_escaping': no_escaping, 'secure': secure}
     with open(filename, encoding='utf-8') as fp:
         return _run(conn, filename, fp.read(), parser_args, **kwargs)
 
 
-def paste(conn, string, no_escaping=False, *, secure=True, **kwargs):
+def paste(
+    conn: 'Protocol', string: str, no_escaping: bool = False, *, secure: bool = True, **kwargs: Any
+) -> dict[str, Any]:
     """
     Compiles the given template and executes it on the given
     connection. This function differs from eval() such that it does not
@@ -220,10 +291,17 @@ def paste(conn, string, no_escaping=False, *, secure=True, **kwargs):
     return _run(conn, None, string, parser_args, **kwargs)
 
 
-def paste_file(conn, filename, no_escaping=False, *, secure=True, **kwargs):
+def paste_file(
+    conn: 'Protocol',
+    filename: str,
+    no_escaping: bool = False,
+    *,
+    secure: bool = True,
+    **kwargs: Any,
+) -> dict[str, Any]:
     """
-    Convenience wrapper around paste() that reads the template from a file
-    instead.
+    Convenience wrapper around paste() that reads the template from a UTF-8
+    file instead.
 
     :type  conn: Exscript.protocols.Protocol
     :param conn: The connection on which to run the template.
@@ -237,6 +315,8 @@ def paste_file(conn, filename, no_escaping=False, *, secure=True, **kwargs):
     :param secure: Whether to forbid the insecure functions.
     :type  kwargs: dict
     :param kwargs: Variables to define in the template.
+    :rtype:  dict
+    :return: The variables that are defined after execution of the script.
     """
     parser_args = {'no_prompt': True, 'no_escaping': no_escaping, 'secure': secure}
     with open(filename, encoding='utf-8') as fp:

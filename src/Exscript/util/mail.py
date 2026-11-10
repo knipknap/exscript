@@ -37,6 +37,7 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from getpass import getuser
+from typing import Any, cast
 
 from Exscript.util.event import Event
 
@@ -49,16 +50,29 @@ _string_re = re.compile(r'(\\?){([\w_]+)}', re.I)
 
 class _TemplateParser:
     """
-    This exists for backward compatibility; Python 2.3 does not come
-    with a similar way for string substitution yet.
+    Replaces the placeholders of the form ``{name}`` in a mail template by
+    the values of the variables with the same name.
     """
 
-    def __init__(self):
-        self.tmpl_vars = None
+    def __init__(self) -> None:
+        """
+        Constructor.
+        """
+        # The values of the variables may have any type; they are converted
+        # to strings. parse() sets the variables before they are used; the
+        # cast is for the type checker.
+        self.tmpl_vars: dict[str, Any] = cast(dict[str, Any], None)
 
     # Tokens that include variables in a string may use this callback to
     # substitute the variable against its value.
-    def _variable_sub_cb(self, match):
+    def _variable_sub_cb(self, match: re.Match[str]) -> str:
+        """
+        Returns the value of the variable that the given placeholder names,
+        as a string; the items of a list are put on separate lines.
+        A placeholder that is escaped with a backslash is replaced by
+        ``$name``. Raises an Exception if the name is not a valid variable
+        name, or if the variable is not defined.
+        """
         escape = match.group(1)
         varname = match.group(2)
         if escape == '\\':
@@ -72,7 +86,12 @@ class _TemplateParser:
             value = '\n'.join([str(v) for v in value])
         return str(value)
 
-    def parse(self, template, **kwargs):
+    def parse(self, template: str, **kwargs: Any) -> str:
+        """
+        Returns the given template with the placeholders replaced by the
+        values of the given variables. A line that ends with a space is
+        joined with the next line.
+        """
         self.tmpl_vars = kwargs
         output = ''
         for line in template.split('\n'):
@@ -83,23 +102,44 @@ class _TemplateParser:
         return _string_re.sub(self._variable_sub_cb, output)
 
 
-def _render_template(string, **vars):
+def _render_template(string: str, **vars: Any) -> str:
+    """
+    Returns the given mail template with the placeholders replaced by the
+    given variables. The variables ``date`` (the current date, as
+    YYYY-MM-DD) and ``user`` (the name of the current user) are defined by
+    default.
+    """
     default = {'date': time.strftime('%Y-%m-%d'), 'user': getuser()}
     default.update(vars)
     parser = _TemplateParser()
     return parser.parse(string, **default)
 
 
-def _is_header_line(line):
+def _is_header_line(line: str) -> bool:
+    """
+    Returns True if the given line of a mail template is a header line,
+    such as ``Subject: Hello``.
+    """
     return re.match(r'^\w+: .+$', line) is not None
 
 
-def _get_var_from_header_line(line):
-    match = re.match(r'^(\w+): (.+)$', line)
+def _get_var_from_header_line(line: str) -> tuple[str, str]:
+    """
+    Returns the field name, in lower case, and the value of the given
+    header line.
+    """
+    # The caller checks the line with _is_header_line(), so it matches; the
+    # cast is for the type checker.
+    match = cast(re.Match[str], re.match(r'^(\w+): (.+)$', line))
     return match.group(1).strip().lower(), match.group(2).strip()
 
 
-def _cleanup_mail_addresses(recipients):
+def _cleanup_mail_addresses(recipients: str | list[str]) -> list[str]:
+    """
+    Returns the given email addresses in lower case, sorted and without
+    duplicates. The addresses are given as a list, or as a string in which
+    they are separated by commas, semicolons or line breaks.
+    """
     if isinstance(recipients, list):
         recipients = ','.join(recipients)
     rcpt = re.split(r'\s*[,;\r\n]\s*', recipients.lower())
@@ -116,13 +156,21 @@ class Mail:
     Represents an email.
     """
 
-    def __init__(self, sender=None, to='', cc='', bcc='', subject='', body=''):
+    def __init__(
+        self,
+        sender: str | None = None,
+        to: str | list[str] = '',
+        cc: str | list[str] = '',
+        bcc: str | list[str] = '',
+        subject: str = '',
+        body: str = '',
+    ) -> None:
         """
         Creates a new email with the given values.
-        If the given sender is None, one will be automatically chosen
-        using getpass.getuser().
+        If the given sender is None or empty, the sender is the name of
+        the current user (see getpass.getuser()) at the local host.
 
-        :type  sender: string
+        :type  sender: string|None
         :param sender: The email address of the sender.
         :type  to: string|list(string)
         :param to: A list of email addresses, passed to set_to().
@@ -136,13 +184,14 @@ class Mail:
         :param body: The email body, passed to set_body().
         """
         self.changed_event = Event()
-        self.files = []
-        self.sender = None
-        self.cc = None
-        self.bcc = None
-        self.to = None
-        self.subject = None
-        self.body = None
+        self.files: list[str] = []
+        # The setters below set the fields; the casts are for the type checker.
+        self.sender: str = cast(str, None)
+        self.cc: list[str] = cast(list[str], None)
+        self.bcc: list[str] = cast(list[str], None)
+        self.to: list[str] = cast(list[str], None)
+        self.subject: str = cast(str, None)
+        self.body: str = cast(str, None)
         if not sender:
             domain = socket.getfqdn('localhost')
             sender = getuser() + '@' + domain
@@ -153,10 +202,11 @@ class Mail:
         self.set_subject(subject)
         self.set_body(body)
 
-    def set_from_template_string(self, string):
+    def set_from_template_string(self, string: str) -> None:
         """
         Reads the given template (SMTP formatted) and sets all fields
-        accordingly.
+        accordingly. Raises an Exception if the template has a header
+        field other than From, To, Cc, Bcc and Subject.
 
         :type  string: string
         :param string: The template.
@@ -186,7 +236,7 @@ class Mail:
                 raise Exception('Invalid header field "%s"' % key)
         self.set_body(body.strip())
 
-    def set_sender(self, sender):
+    def set_sender(self, sender: str) -> None:
         """
         Defines the value of the "From:" field.
 
@@ -196,7 +246,7 @@ class Mail:
         self.sender = sender
         self.changed_event()
 
-    def get_sender(self):
+    def get_sender(self) -> str:
         """
         Returns the value of the "From:" field.
 
@@ -205,7 +255,7 @@ class Mail:
         """
         return self.sender
 
-    def set_to(self, to):
+    def set_to(self, to: str | list[str]) -> None:
         """
         Replaces the current list of recipients in the 'to' field by
         the given value. The value may be one of the following:
@@ -219,7 +269,7 @@ class Mail:
         self.to = _cleanup_mail_addresses(to)
         self.changed_event()
 
-    def add_to(self, to):
+    def add_to(self, to: str | list[str]) -> None:
         """
         Adds the given list of recipients to the 'to' field.
         Accepts the same argument types as set_to().
@@ -230,7 +280,7 @@ class Mail:
         self.to += _cleanup_mail_addresses(to)
         self.changed_event()
 
-    def get_to(self):
+    def get_to(self) -> list[str]:
         """
         Returns the value of the "to" field.
 
@@ -239,7 +289,7 @@ class Mail:
         """
         return self.to
 
-    def set_cc(self, cc):
+    def set_cc(self, cc: str | list[str]) -> None:
         """
         Like set_to(), but for the 'cc' field.
 
@@ -249,7 +299,7 @@ class Mail:
         self.cc = _cleanup_mail_addresses(cc)
         self.changed_event()
 
-    def add_cc(self, cc):
+    def add_cc(self, cc: str | list[str]) -> None:
         """
         Like add_to(), but for the 'cc' field.
 
@@ -259,7 +309,7 @@ class Mail:
         self.cc += _cleanup_mail_addresses(cc)
         self.changed_event()
 
-    def get_cc(self):
+    def get_cc(self) -> list[str]:
         """
         Returns the value of the "cc" field.
 
@@ -268,7 +318,7 @@ class Mail:
         """
         return self.cc
 
-    def set_bcc(self, bcc):
+    def set_bcc(self, bcc: str | list[str]) -> None:
         """
         Like set_to(), but for the 'bcc' field.
 
@@ -278,7 +328,7 @@ class Mail:
         self.bcc = _cleanup_mail_addresses(bcc)
         self.changed_event()
 
-    def add_bcc(self, bcc):
+    def add_bcc(self, bcc: str | list[str]) -> None:
         """
         Like add_to(), but for the 'bcc' field.
 
@@ -288,7 +338,7 @@ class Mail:
         self.bcc += _cleanup_mail_addresses(bcc)
         self.changed_event()
 
-    def get_bcc(self):
+    def get_bcc(self) -> list[str]:
         """
         Returns the value of the "bcc" field.
 
@@ -297,7 +347,7 @@ class Mail:
         """
         return self.bcc
 
-    def get_recipients(self):
+    def get_recipients(self) -> list[str]:
         """
         Returns a list of all recipients (to, cc, and bcc).
 
@@ -306,7 +356,7 @@ class Mail:
         """
         return self.get_to() + self.get_cc() + self.get_bcc()
 
-    def set_subject(self, subject):
+    def set_subject(self, subject: str) -> None:
         """
         Defines the subject line.
 
@@ -316,7 +366,7 @@ class Mail:
         self.subject = subject
         self.changed_event()
 
-    def get_subject(self):
+    def get_subject(self) -> str:
         """
         Returns the subject line.
 
@@ -325,7 +375,7 @@ class Mail:
         """
         return self.subject
 
-    def set_body(self, body):
+    def set_body(self, body: str) -> None:
         """
         Defines the body of the mail.
 
@@ -335,7 +385,7 @@ class Mail:
         self.body = body
         self.changed_event()
 
-    def get_body(self):
+    def get_body(self) -> str:
         """
         Returns the body of the mail.
 
@@ -344,9 +394,9 @@ class Mail:
         """
         return self.body
 
-    def get_smtp_header(self):
+    def get_smtp_header(self) -> str:
         """
-        Returns the SMTP formatted header of the line.
+        Returns the SMTP formatted header of the mail.
 
         :rtype:  string
         :return: The SMTP header.
@@ -358,7 +408,7 @@ class Mail:
         header += "Subject: %s\r\n" % self.get_subject()
         return header
 
-    def get_smtp_mail(self):
+    def get_smtp_mail(self) -> str:
         """
         Returns the SMTP formatted email, as it may be passed to sendmail.
 
@@ -369,7 +419,7 @@ class Mail:
         body = self.get_body().replace('\n', '\r\n')
         return header + '\r\n' + body + '\r\n'
 
-    def add_attachment(self, filename):
+    def add_attachment(self, filename: str) -> None:
         """
         Adds the file with the given name as an attachment.
 
@@ -378,7 +428,7 @@ class Mail:
         """
         self.files.append(filename)
 
-    def get_attachments(self):
+    def get_attachments(self) -> list[str]:
         """
         Returns a list of attached files.
 
@@ -388,14 +438,24 @@ class Mail:
         return self.files
 
 
-def from_template_string(string, **kwargs):
+def from_template_string(string: str, **kwargs: Any) -> Mail:
     """
     Reads the given SMTP formatted template, and creates a new Mail object
     using the information.
 
+    Placeholders of the form ``{name}`` are replaced by the value of the
+    variable with that name; the items of a list are put on separate lines.
+    The variables ``date`` (the current date) and ``user`` (the name of the
+    current user) are defined by default. A line that ends with a space is
+    joined with the next line. The header fields From, To, Cc, Bcc and
+    Subject at the start of the template set the fields of the mail; the
+    rest of the template is the body. Raises an Exception if a placeholder
+    names an undefined variable, or if the template has another header
+    field.
+
     :type  string: str
     :param string: The SMTP formatted template.
-    :type  kwargs: str
+    :type  kwargs: dict
     :param kwargs: Variables to replace in the template.
     :rtype:  Mail
     :return: The resulting mail.
@@ -406,14 +466,14 @@ def from_template_string(string, **kwargs):
     return mail
 
 
-def from_template(filename, **kwargs):
+def from_template(filename: str | os.PathLike[str], **kwargs: Any) -> Mail:
     """
-    Like from_template_string(), but reads the template from the file with
-    the given name instead.
+    Like from_template_string(), but reads the template from the UTF-8 file
+    with the given name instead.
 
-    :type  filename: string
+    :type  filename: str|os.PathLike
     :param filename: The name of the template file.
-    :type  kwargs: str
+    :type  kwargs: dict
     :param kwargs: Variables to replace in the template.
     :rtype:  Mail
     :return: The resulting mail.
@@ -422,15 +482,20 @@ def from_template(filename, **kwargs):
         return from_template_string(fp.read(), **kwargs)
 
 
-def _get_mime_object(filename):
-    # Guess the content type based on the file's extension.  Encoding
-    # is ignored, although we should check for simple things like
-    # gzip'd or compressed files.
+def _get_mime_object(filename: str) -> MIMEBase:
+    """
+    Returns a MIME part with the content of the given file, attached under
+    its base name. The content type is guessed from the file name
+    (application/octet-stream for unknown and compressed files); text files
+    are read as UTF-8.
+    """
+    # Guess the content type based on the file's extension.
     ctype, encoding = mimetypes.guess_type(filename)
     if ctype is None or encoding is not None:
         ctype = 'application/octet-stream'
 
     maintype, subtype = ctype.split('/', 1)
+    msg: MIMEBase  # MIMEText, MIMEImage and MIMEAudio are MIMEBase, too
     if maintype == 'text':
         with open(filename, encoding='utf-8') as fp:
             msg = MIMEText(fp.read(), _subtype=subtype)
@@ -451,9 +516,11 @@ def _get_mime_object(filename):
     return msg
 
 
-def send(mail, server='localhost'):
+def send(mail: Mail, server: str = 'localhost') -> None:
     """
-    Sends the given mail.
+    Sends the given mail through the SMTP server with the given address.
+    The body is sent as UTF-8 text, and each attachment as a MIME part.
+    Raises smtplib.SMTPException or OSError if sending fails.
 
     :type  mail: Mail
     :param mail: The mail object.
@@ -470,7 +537,9 @@ def send(mail, server='localhost'):
     message['Cc'] = ', '.join(mail.get_cc())
     message.preamble = 'Your mail client is not MIME aware.'
 
-    body = MIMEText(mail.get_body().encode("utf-8"), "plain", "utf-8")
+    # MIMEText also takes the body as bytes, which its stub does not declare;
+    # the cast is for the type checker.
+    body = MIMEText(cast(Any, mail.get_body().encode("utf-8")), "plain", "utf-8")
     body.add_header('Content-Disposition', 'inline')
     message.attach(body)
 

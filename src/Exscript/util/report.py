@@ -24,12 +24,20 @@
 Formatting logs into human readable reports.
 """
 
+from typing import cast
 
-def _underline(text, line='-'):
+from .. import Logger
+
+
+def _underline(text: str, line: str = '-') -> list[str]:
+    """
+    Returns the given text, and below it the given character repeated to
+    the length of the text, as a list of two lines.
+    """
     return [text, line * len(text)]
 
 
-def status(logger):
+def status(logger: Logger) -> str:
     """
     Creates a one-line summary on the actions that were logged by the given
     Logger.
@@ -57,10 +65,11 @@ def status(logger):
         return msg % (total, aborted, succeeded)
 
 
-def summarize(logger):
+def summarize(logger: Logger) -> str:
     """
     Creates a short summary on the actions that were logged by the given
-    Logger.
+    Logger: one line for each log, with the name of the log and ``ok``, or
+    the error message (the name of the exception if it has no message).
 
     :type  logger: Logger
     :param logger: The logger that recorded what happened in the queue.
@@ -75,14 +84,26 @@ def summarize(logger):
     return '\n'.join(summary)
 
 
-def format(logger, show_successful=True, show_errors=True, show_traceback=True):
+def format(
+    logger: Logger,
+    show_successful: bool = True,
+    show_errors: bool = True,
+    show_traceback: bool = True,
+) -> str:
     """
-    Prints a report of the actions that were logged by the given Logger.
+    Formats a report of the actions that were logged by the given Logger.
     The report contains a list of successful actions, as well as the full
     error message on failed actions.
 
     :type  logger: Logger
     :param logger: The logger that recorded what happened in the queue.
+    :type  show_successful: bool
+    :param show_successful: Whether to list the successful actions.
+    :type  show_errors: bool
+    :param show_errors: Whether to list the failed actions.
+    :type  show_traceback: bool
+    :param show_traceback: Whether to show the traceback of each failed
+        action, or only the error message.
     :rtype:  string
     :return: A string summarizing the status of every performed task.
     """
@@ -92,12 +113,14 @@ def format(logger, show_successful=True, show_errors=True, show_traceback=True):
     errors = logger.get_aborted_actions()
     if show_errors and errors:
         output += _underline('Failed actions:')
+        # The logs ended with an error, so get_error() returns a string; the
+        # casts are for the type checker.
         for log in logger.get_aborted_logs():
             if show_traceback:
                 output.append(log.get_name() + ':')
-                output.append(log.get_error())
+                output.append(cast(str, log.get_error()))
             else:
-                output.append(log.get_name() + ': ' + log.get_error(False))
+                output.append(log.get_name() + ': ' + cast(str, log.get_error(False)))
         output.append('')
 
     # Print successful actions.

@@ -24,17 +24,27 @@
 Quickstart methods for the Exscript queue.
 """
 
-from .. import Queue
+from collections.abc import Callable, Iterable
+from typing import Any, cast
+
+from .. import Account, Host, Queue
 from .decorator import autoauthenticate, autologin
 from .interact import read_login
 
 
-def run(users, hosts, func, **kwargs):
+def run(
+    users: Account | Iterable[Account],
+    hosts: str | Host | Iterable[str | Host],
+    func: Callable[..., Any],
+    **kwargs: Any,
+) -> None:
     """
     Convenience function that creates an Exscript.Queue instance, adds
     the given accounts, and calls Queue.run() with the given
     hosts and function as an argument.
 
+    The queue opens a connection to each host and calls the function as
+    ``func(job, host, conn)``; the connection is not logged in yet.
     If you also want to pass arguments to the given function, you may use
     util.decorator.bind() like this::
 
@@ -48,52 +58,65 @@ def run(users, hosts, func, **kwargs):
 
     :type  users: Account|list[Account]
     :param users: The account(s) to use for logging in.
-    :type  hosts: Host|list[Host]
-    :param hosts: A list of Host objects.
+    :type  hosts: str|Host|list(str|Host)
+    :param hosts: A hostname or Host object, or a list of them.
     :type  func: function
     :param func: The callback function.
     :type  kwargs: dict
-    :param kwargs: Passed to the Exscript.Queue constructor.
+    :param kwargs: Passed to the Exscript.Queue constructor, except for
+        ``attempts``, the number of attempts for each host (default 1),
+        which is passed to Queue.run().
     """
     attempts = kwargs.get("attempts", 1)
     if "attempts" in kwargs:
         del kwargs["attempts"]
-    queue = Queue(**kwargs)
+    # The queue is not annotated (it will be reworked); the cast is for the
+    # type checker.
+    queue = cast(Any, Queue)(**kwargs)
     queue.add_account(users)
     queue.run(hosts, func, attempts)
     queue.destroy()
 
 
-def quickrun(hosts, func, **kwargs):
+def quickrun(
+    hosts: str | Host | Iterable[str | Host], func: Callable[..., Any], **kwargs: Any
+) -> None:
     """
     A wrapper around run() that creates the account by asking the user
     for entering his login information.
 
-    :type  hosts: Host|list[Host]
-    :param hosts: A list of Host objects.
+    :type  hosts: str|Host|list(str|Host)
+    :param hosts: A hostname or Host object, or a list of them.
     :type  func: function
     :param func: The callback function.
     :type  kwargs: dict
-    :param kwargs: Passed to the Exscript.Queue constructor.
+    :param kwargs: Passed to run().
     """
     run(read_login(), hosts, func, **kwargs)
 
 
-def start(users, hosts, func, only_authenticate=False, **kwargs):
+def start(
+    users: Account | Iterable[Account],
+    hosts: str | Host | Iterable[str | Host],
+    func: Callable[..., Any],
+    only_authenticate: bool = False,
+    **kwargs: Any,
+) -> None:
     """
     Like run(), but automatically logs into the host before passing
     the host to the callback function.
 
     :type  users: Account|list[Account]
     :param users: The account(s) to use for logging in.
-    :type  hosts: Host|list[Host]
-    :param hosts: A list of Host objects.
+    :type  hosts: str|Host|list(str|Host)
+    :param hosts: A hostname or Host object, or a list of them.
     :type  func: function
     :param func: The callback function.
     :type  only_authenticate: bool
-    :param only_authenticate: don't authorize, just authenticate?
+    :param only_authenticate: Whether to only authenticate, without
+        authorizing (see :func:`Exscript.util.decorator.autoauthenticate`).
     :type  kwargs: dict
-    :param kwargs: Passed to the Exscript.Queue constructor.
+    :param kwargs: Passed to run().
     """
     if only_authenticate:
         run(users, hosts, autoauthenticate()(func), **kwargs)
@@ -101,19 +124,25 @@ def start(users, hosts, func, only_authenticate=False, **kwargs):
         run(users, hosts, autologin()(func), **kwargs)
 
 
-def quickstart(hosts, func, only_authenticate=False, **kwargs):
+def quickstart(
+    hosts: str | Host | Iterable[str | Host],
+    func: Callable[..., Any],
+    only_authenticate: bool = False,
+    **kwargs: Any,
+) -> None:
     """
     Like quickrun(), but automatically logs into the host before passing
     the connection to the callback function.
 
-    :type  hosts: Host|list[Host]
-    :param hosts: A list of Host objects.
+    :type  hosts: str|Host|list(str|Host)
+    :param hosts: A hostname or Host object, or a list of them.
     :type  func: function
     :param func: The callback function.
     :type  only_authenticate: bool
-    :param only_authenticate: don't authorize, just authenticate?
+    :param only_authenticate: Whether to only authenticate, without
+        authorizing (see :func:`Exscript.util.decorator.autoauthenticate`).
     :type  kwargs: dict
-    :param kwargs: Passed to the Exscript.Queue constructor.
+    :param kwargs: Passed to run().
     """
     if only_authenticate:
         quickrun(hosts, autoauthenticate()(func), **kwargs)
