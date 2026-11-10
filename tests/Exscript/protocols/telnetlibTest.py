@@ -168,10 +168,13 @@ class telnetlibTest(unittest.TestCase):
                 tn = Telnet(address, listener.getsockname()[1], connect_timeout=5)
                 tn.close()
                 self.assertTrue(tn.eof)
-        with socket.create_server(('127.0.0.1', 0)) as listener:
-            port = listener.getsockname()[1]
-        with self.assertRaisesRegex(OSError, f'=> telnet://127.0.0.1:{port}'):
-            Telnet('127.0.0.1', port, connect_timeout=5)
+        # Bound but not listening: refused everywhere, also by WSL's consomme networking, which accepts
+        # connections to closed ports and closes them right away.
+        with socket.socket() as bound:
+            bound.bind(('127.0.0.1', 0))
+            port = bound.getsockname()[1]
+            with self.assertRaisesRegex(OSError, f'=> telnet://127.0.0.1:{port}'):
+                Telnet('127.0.0.1', port, connect_timeout=5)
 
     def testOpenErrorNamesTheUrl(self):
         error = ConnectionRefusedError(111, 'Connection refused')
