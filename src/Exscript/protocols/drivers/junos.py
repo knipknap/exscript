@@ -53,6 +53,10 @@ if TYPE_CHECKING:
 #   {primary:node0}
 #   pheller@fw1>
 #
+# The shell of root: csh on older versions, the RE number on newer ones:
+#   root@router:~ #
+#   root@router:RE:0%
+#
 
 _user_re = [re.compile(r'(?:\r\n|[\r\n])(?:[\-\w+]+ )?login: $')]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])(Local )?[Pp]assword: ?$')]
@@ -61,7 +65,7 @@ _ps = r'(?:\{primary:node\d+\}|\{secondary:node\d+\})'
 _re_re = r'(?:' + _mb + r'|' + _ps + r')'
 _edit = r'(?:\[edit[^\]\r\n]*\])'
 _prefix = r'(?:(?:\r\n|[\r\n])+' + _re_re + r'?' + _edit + r'?)'
-_prompt = r'(?:\r\n|[\r\n])+[\w\-\.]+@[\-\w+\.:]+[%>#] $'
+_prompt = r'(?:\r\n|[\r\n])+[\w\-\.]+@[\-\w+\.:]++(?:[~/][\w\-\./]*+ ?)?[%>#] $'
 _prompt_re = [re.compile(_prefix + r'?' + _prompt)]
 _error_re = [re.compile(r'^(unknown|invalid|error|syntax error)', re.I)]
 _junos_re = re.compile(r'\bjunos\b', re.I)

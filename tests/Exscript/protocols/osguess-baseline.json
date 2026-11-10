@@ -2579,6 +2579,66 @@
    80
   ]
  },
+ "junos.4|-|64": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.4|-|65536": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.4|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos.4|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "ios",
+   80
+  ],
+  "final": [
+   "ios",
+   80
+  ]
+ },
+ "junos.4|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
+ "junos.4|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "junos",
+   80
+  ],
+  "final": [
+   "junos",
+   80
+  ]
+ },
  "junos_erx|-|64": {
   "after_auth": [
    "junos_erx",

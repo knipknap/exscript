@@ -60,6 +60,39 @@ class PromptRegexTest(unittest.TestCase):
         for text in 'a b c#', 'ab.cd@host#', 'a@host#', 'a:b:c:d#', 'line without prompt':
             self.assertIsNone(_prompt_re[0].search('output\r\n' + text), text)
 
+    def testJunosPrompts(self):
+        regex = driver_map['junos'].prompt_re[0]
+        prompts = [
+            'sab@DD-EA3> ',
+            'pheller@sw3# ',
+            '{master:3}\r\npheller@sw3> ',
+            '{primary:node0}[edit interfaces]\r\npheller@fw1# ',
+            'root@router% ',
+            'root@router:RE:0% ',
+            'root@testhost:~ # ',  # csh, the shell of root (upstream pull request #211)
+            'root@router:/var/tmp # ',
+            'root@router:~# ',
+        ]
+        for prompt in prompts:
+            self.assertTrue(regex.search('output\r\n' + prompt), prompt)
+        for text in (
+            'sab@DD-EA3>',
+            'show route | match 10.0.0.1 ',
+            'a@b c # ',
+            'line without prompt',
+        ):
+            self.assertIsNone(regex.search('output\r\n' + text), text)
+
+        # Everything that the pattern of 2.x matched still matches, at the same position.
+        old = re.compile(regex.pattern.replace(r'++(?:[~/][\w\-\./]*+ ?)?', '+'))
+        self.assertNotEqual(old.pattern, regex.pattern)
+        alphabet = list('ab_1.-@:~/ #>%{}[]') + ['\r\n']
+        rng = random.Random(20261110)
+        for _ in range(20000):
+            text = '\r\n' + ''.join(rng.choice(alphabet) for _ in range(rng.randint(0, 16)))
+            if old.search(text):
+                self.assertEqual(span(old, text), span(regex, text), repr(text))
+
     def testAllRegexesNeedLinearTime(self):
         # Lines that are no prompt but contain long runs of the characters that
         # prompts consist of. A regex with catastrophic backtracking needs
