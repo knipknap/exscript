@@ -56,9 +56,6 @@ class Term(Token):
         """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.term: Variable | FunctionCall | String | Number | None = None
-        self.lft = None
-        self.rgt = None
-        self.op = None
 
         # Expect a term.
         ttype, token = lexer.token()
@@ -91,13 +88,6 @@ class Term(Token):
             lexer.syntax_error('Expected term but got %s %s' % (ttype, repr(token)), self)
         # End of statement.
         self.mark_end(rstrip=True)
-
-    def priority(self) -> int:
-        """
-        Returns 6, the priority that Expression.prioritize() assumes for a
-        term.
-        """
-        return 6
 
     # Any: the value of a variable or the result of a function.
     def value(self, context: Scope) -> Any:

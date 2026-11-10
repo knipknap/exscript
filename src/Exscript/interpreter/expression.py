@@ -37,18 +37,14 @@ if TYPE_CHECKING:
 
 class ExpressionNode(Token):
     """
-    A node of an expression: a term, optionally followed by an operator and
-    the rest of the expression, which is the right-hand node. An expression
-    that starts with "not" has no term.
+    A node of an expression. The constructor parses a chain of nodes: a
+    term, optionally followed by an operator and the rest of the expression
+    as the right-hand node; a node that starts with "not" has no term.
+    Expression.prioritize() turns the chain into a tree, in which the
+    left-hand and right-hand nodes are the operands of the operator.
     """
 
-    def __init__(
-        self,
-        lexer: Lexer,
-        parser: 'Parser',
-        parent: Scope,
-        parent_node: 'ExpressionNode | None' = None,
-    ) -> None:
+    def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
         """
         Constructor. Parses a term and, if an operator follows, the operator
         and the rest of the expression.
@@ -56,8 +52,6 @@ class ExpressionNode(Token):
         :param lexer: The lexer that reads the template.
         :param parser: The parser of the template.
         :param parent: The scope that contains the expression.
-        :param parent_node: The node whose right-hand node this node is, or
-            None.
         """
         # Skip whitespace before initializing the token to make sure that self.start
         # points to the beginning of the expression (which makes for prettier error
@@ -69,7 +63,6 @@ class ExpressionNode(Token):
         self.rgt: Exscript.interpreter.term.Term | ExpressionNode | None = None
         self.op = None
         self.op_type = None
-        self.parent_node = parent_node
 
         # The "not" operator requires special treatment because it is
         # positioned left of the term.
@@ -102,21 +95,19 @@ class ExpressionNode(Token):
             lexer.syntax_error(msg, self)
 
         # Expect the second term.
-        self.rgt = ExpressionNode(lexer, parser, parent, self)
+        self.rgt = ExpressionNode(lexer, parser, parent)
         # End of statement.
         self.mark_end(rstrip=True)
 
     def priority(self) -> int:
         """
         Returns the priority of the operator of the node, from 1 for "and"
-        and "or" to 7 for "%", or 8 if the node has no operator. Raises an
-        Exception for an unknown operator.
+        and "or" to 6 for "*", "/" and "%", or 8 if the node has no operator.
+        Raises an Exception for an unknown operator.
         """
         if self.op is None:
             return 8
-        elif self.op_type == 'arithmetic_operator' and self.op == '%':
-            return 7
-        elif self.op_type == 'arithmetic_operator' and self.op == '*':
+        elif self.op_type == 'arithmetic_operator' and self.op in ('*', '%'):
             return 6
         elif self.op_type == 'regex_delimiter':
             return 6
@@ -252,7 +243,7 @@ class Expression(Token):
 
     def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
         """
-        Constructor. Parses the expression and reorders its nodes by the
+        Constructor. Parses the expression and orders its nodes by the
         priority of the operators.
 
         :param lexer: The lexer that reads the template.
@@ -261,78 +252,55 @@ class Expression(Token):
         """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
 
-        # Parse the expression.
-        self.root = ExpressionNode(lexer, parser, parent)
-
-        # Reorder the tree according to the operator priorities.
-        self.prioritize(self.root)
+        # Parse the expression, and order the nodes by the operator priorities.
+        self.root = self.prioritize(ExpressionNode(lexer, parser, parent))
 
         # End of statement.
         self.mark_end(rstrip=True)
 
-    # start is an ExpressionNode, a Term or None. It is Any because the code
-    # walks Terms like nodes (a Term has lft, rgt and op set to None, and the
-    # priority 6) and relies on Terms never reaching the reparenting part,
-    # which needs attributes that only nodes have.
-    def prioritize(self, start: Any, prio: int = 1) -> None:
+    def prioritize(
+        self, start: ExpressionNode
+    ) -> 'Exscript.interpreter.term.Term | ExpressionNode':
         """
-        Reorders the tree from the given node on, so that operators with a
-        higher priority are evaluated first: the first node with the given
-        priority becomes the parent of the preceding nodes with a higher
-        priority. Continues recursively with the priorities up to 5.
+        Turns the chain of nodes that the parser created into a tree, in
+        which the operators with a higher priority take their operands
+        first, and operators with the same priority from left to right. A
+        "not" takes the expression up to the next operator whose priority is
+        not higher than its own. The marks of each node span its operands.
 
-        :param start: The node at which the reordering starts.
-        :param prio: The priority of the operators to move up.
+        :param start: The first node of the chain.
+        :return: The root of the tree.
         """
-        # print("Prioritizing from", start.op, "with prio", prio, (start.lft,)
-        # start.rgt)
-        if prio == 6:
-            return
+        operands: list[Exscript.interpreter.term.Term | ExpressionNode] = []
+        operators: list[ExpressionNode] = []
 
-        # Search the tree for the first node that has at least the
-        # given prio.
-        root = start
-        while root is not None and root.priority() <= prio:
-            root = root.rgt
+        def reduce() -> None:
+            # Gives the last operator its operands, and makes it an operand.
+            node = operators.pop()
+            node.rgt = operands.pop()
+            if node.op != 'not':
+                node.lft = operands.pop()
+                node.mark_start(node.lft.start)
+            node.mark_end(node.rgt.end)
+            operands.append(node)
 
-        # If no such node exists, search for weaker priorities.
-        if root is None:
-            self.prioritize(start, prio + 1)
-            return
-
-        # Check if there is any child node that has a better priority.
-        previous = root
-        current = root.rgt
-        while current is not None and current.priority() != prio:
-            previous = current
-            current = current.rgt
-
-        # If none was found, continue with sorting weaker priorities.
-        if current is None:
-            self.prioritize(start, prio + 1)
-            return
-
-        # So we found a node that has a better prio than it's parent.
-        # Reparent the expressions.
-        # print("Prio of", root.op, 'is higher than', current.op)
-        previous.rgt = current.lft
-        current.lft = root
-
-        # Change the pointer of the parent of the root node.
-        # If this was the root of the entire tree we need to change that as
-        # well.
-        if root.parent_node is None:
-            self.root = current
-        elif root.parent_node.lft == root:
-            root.parent_node.lft = current
-        elif root.parent_node.rgt == root:
-            root.parent_node.rgt = current
-
-        root.parent_node = current
-
-        # Go ahead prioritizing the children.
-        self.prioritize(current.lft, prio + 1)
-        self.prioritize(current.rgt, prio)
+        node: ExpressionNode | None = start
+        while node is not None:
+            # In the chain, the right-hand node of a node is the next node.
+            following = cast('ExpressionNode | None', node.rgt)
+            if node.op is None:
+                operands.append(node)
+            else:
+                if node.op != 'not':
+                    # The parser gives the nodes with a binary operator a term.
+                    operands.append(cast(Exscript.interpreter.term.Term, node.lft))
+                    while operators and operators[-1].priority() >= node.priority():
+                        reduce()
+                operators.append(node)
+            node = following
+        while operators:
+            reduce()
+        return operands[0]
 
     # Any: see ExpressionNode.value().
     def value(self, context: Scope) -> Any:

@@ -380,6 +380,12 @@ marked with **BREAKING**; a migration guide will accompany the release.
   with `x='hi'`, `show $x\n{x = "new"}` sent `show None`, `{append "b" to x}` with
   `x=['a']` gave `['b']`, and `extract ... into x` did not append to the list of the
   caller.
+- **BREAKING - Operators of the Same Priority:** Operators of the same priority are
+  evaluated from left to right: `10 - 2 - 3` is 5, `100 / 10 * 2` is 20, and
+  `0 and 1 or 1` is 1. Before, they were evaluated from right to left, so these
+  expressions gave 11, 5 and 0, and `20 / 4 / 5` failed with a `ZeroDivisionError`.
+  As documented, `and` and `or` have the same priority, so `1 or 0 and 0` is 0. `%`,
+  which the documentation did not list, has the priority of `*` and `/`.
 
 ### Standard Library
 

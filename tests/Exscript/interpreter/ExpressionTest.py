@@ -115,6 +115,24 @@ class ExpressionTest(TemplateTestCase):
         text = '{a = 1 is 1 and 2 is 3}{b = 1 is 2 or 2 is 2}'
         self.assertValues(text, a=[False], b=[True])
 
+    def testOperatorsOfTheSamePriorityFromLeftToRight(self):
+        text = (
+            '{a = 10 - 2 - 3}{b = 1 - 2 + 3}{c = 100 / 10 * 2}{d = 20 / 4 / 5}'
+            '{e = 7 % 3 * 2}{f = 2 * 7 % 4}{g = 2 is 2 is 1}'
+            '{h = 0 and 1 or 1}{i = 1 or 0 and 0}{j = not 0 and 0 or 1}'
+            '{k = 1 + 2 * 3 - 4 / 2 . "x" is "5x"}'
+        )
+        self.assertValues(
+            text, a=[5], b=[2], c=[20], d=[1], e=[2], f=[2], g=[True], h=[1], i=[0], j=[1], k=[True]
+        )
+
+    def testErrorInAnOperandWithOperators(self):
+        text = '{x = "a" matches "b" . "c" and 1}'
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate(text)
+        message = 'Right hand operator is not a regular expression in undefined:1'
+        self.assertError(cm.exception, [text], ' ' * 17 + '^' * 9, message)
+
     def testExpressionOnSeveralLines(self):
         text = '{a = 1 is 1\n  and 2\n  is 2\n}'
         self.assertValues(text, a=[True])

@@ -105,7 +105,10 @@ value of this particular expression is *true*.
 
 In Exscript, expressions are used in many places, such as
 if-conditions or variable assignments. The following operators may be
-used in an expression.
+used in an expression. Operators with a lower priority number are
+evaluated first, and operators of the same priority from left to right.
+For example, ``2 + 3 * 4`` is 14, ``10 - 2 - 3`` is 5, and
+``1 or 0 and 0`` is 0.
 
 Priority 1 Operators
 ~~~~~~~~~~~~~~~~~~~~
@@ -113,6 +116,9 @@ Priority 1 Operators
 #. ``*`` multiplies the operators (numerically).
 
 #. ``/`` divides the operators (numerically).
+
+#. ``%`` returns the remainder of the division of the operators
+   (numerically).
 
 Priority 2 Operators
 ~~~~~~~~~~~~~~~~~~~~

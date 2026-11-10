@@ -113,6 +113,12 @@ Variables of the caller
     variables when the template was compiled, e.g. ``append`` and
     ``extract ... into`` started with an empty list.
 
+Operators
+    Operators of the same priority are evaluated from left to right, e.g.
+    ``10 - 2 - 3`` is 5 and ``0 and 1 or 1`` is 1. 2.x evaluated them from
+    right to left. ``and`` and ``or`` have the same priority, so
+    ``1 or 0 and 0`` is 0.
+
 Command line tool
 -----------------
 
