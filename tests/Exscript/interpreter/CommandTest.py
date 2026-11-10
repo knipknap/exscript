@@ -22,6 +22,11 @@ class CommandTest(TemplateTestCase):
         self.evaluate('\n  show version\n\t\n    ls\n\n')
         self.assertSent('show version', 'ls')
 
+    def testLinesWithOnlyWhitespace(self):
+        # textwrap.dedent() removes only spaces and tabs from the commands.
+        self.evaluate('\u00a0\nls\n \u3000\nshow version\n')
+        self.assertSent('ls', 'show version')
+
     def testCommentsAreNotSent(self):
         text = (
             '# a comment\n'

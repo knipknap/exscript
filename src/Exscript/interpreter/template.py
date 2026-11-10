@@ -136,8 +136,9 @@ class Template(Scope):
             elif lexer.next_if('newline'):
                 if buffer.strip() != '':
                     self.add(Execute(lexer, parser, self, buffer, escape_offset))
-                    buffer = ''
-                    escape_offset = 0
+                # A line with only whitespace is dropped.
+                buffer = ''
+                escape_offset = 0
             else:
                 ttype, token = lexer.token()
                 self.mark_start()

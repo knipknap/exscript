@@ -391,6 +391,9 @@ marked with **BREAKING**; a migration guide will accompany the release.
   `or` not if the left one is true; e.g. `{x = 0 and list.get(list.new(), 1)}` sets `x`
   to 0. Before, both operands were always evaluated, so the right one could raise an
   error or call a function, e.g. one that sends a command.
+- **BREAKING - Lines With Only Whitespace:** A line with only whitespace is ignored,
+  also if the whitespace is not a space or a tab, e.g. a no-break space. Before, such
+  whitespace was sent at the start of the command in the next line.
 
 ### Standard Library
 
