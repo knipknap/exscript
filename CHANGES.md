@@ -274,6 +274,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   constants are integers instead of bytes, and the options of the constructor are
   keyword-only. Use `Exscript.protocols.Telnet`. If you need a drop-in replacement for
   the telnetlib module that Python 3.13 removed, use the package `standard-telnetlib`.
+- **Closing While Receiving:** If `close()` of `Exscript.protocols.telnetlib.Telnet`
+  runs in another thread while `receive()` waits for data, the connection stays
+  closed, and `receive()` returns `False`. Before, data that arrived in the meantime
+  cleared the end-of-file flag, and the next `receive()` failed with
+  `AttributeError: 'NoneType' object has no attribute 'settimeout'`.
 
 ### Protocol Drivers
 

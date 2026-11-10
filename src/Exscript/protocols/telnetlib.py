@@ -281,11 +281,13 @@ class Telnet:
     def fill_rawq(self) -> None:
         """
         Reads once from the socket into the raw queue. Blocks if no data is
-        available, and sets eof when the connection was closed.
+        available, and sets eof when the connection was closed. Never clears
+        eof, which close() may set in another thread while it waits.
         """
         data = cast(socket.socket, self.sock).recv(_READ_SIZE)
         self.msg('Recv: %r', data)
-        self.eof = not data
+        if not data:
+            self.eof = True
         self.rawq += data
 
     def receive(self, timeout: float | None) -> bool | None:
@@ -300,9 +302,10 @@ class Telnet:
         :return: True if data was received, None if the time ran out, False
             if the connection was closed.
         """
-        if self.eof:
+        # close() in another thread may have removed the socket, but not set eof yet.
+        if self.eof or self.sock is None:
             return False
-        cast(socket.socket, self.sock).settimeout(timeout)
+        self.sock.settimeout(timeout)
         try:
             self.fill_rawq()
         except (TimeoutError, BlockingIOError):  # BlockingIOError: timeout 0

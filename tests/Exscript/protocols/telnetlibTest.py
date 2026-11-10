@@ -18,6 +18,7 @@ class FakeSock:
     def __init__(self, chunks):
         self.chunks = list(chunks)
         self.sent = []
+        self.closed = False
 
     def recv(self, size):
         return self.chunks.pop(0) if self.chunks else b''
@@ -27,6 +28,9 @@ class FakeSock:
 
     def settimeout(self, timeout):
         pass
+
+    def close(self):
+        self.closed = True
 
 
 def process(chunks, encoding='latin-1'):
@@ -189,6 +193,30 @@ class telnetlibTest(unittest.TestCase):
         self.assertIsNone(tn.sock)
         self.assertEqual(local.fileno(), -1)
         self.assertFalse(tn.receive(1))
+
+    def testCloseWhileReceiving(self):
+        # Another thread closes the connection while recv() waits, and recv() still returns data.
+        tn = Telnet()
+        tn.sock = sock = FakeSock([b'late', b'more'])
+        recv = sock.recv
+
+        def recv_and_close(size):
+            tn.close()
+            return recv(size)
+
+        sock.recv = recv_and_close
+        received = []
+        tn.data_callback = received.append
+        self.assertFalse(tn.receive(None))
+        self.assertTrue(tn.eof)
+        self.assertTrue(sock.closed)
+        self.assertFalse(tn.receive(None))  # the socket is None
+        self.assertEqual(received, ['late'])
+
+        # In close() in another thread, after it removed the socket, before it set eof.
+        tn.eof = False
+        self.assertFalse(tn.receive(None))
+        self.assertEqual(received, ['late'])
 
     def testNawsWithoutSize(self):
         # The size is sent once it is known.
