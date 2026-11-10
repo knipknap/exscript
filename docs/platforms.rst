@@ -49,3 +49,11 @@ uses lxml, which does not declare support for free threading yet: when
 the first NETCONF session starts, Python enables the global interpreter
 lock and warns, unless it runs with ``PYTHON_GIL=0``. Exscript loads lxml
 only for NETCONF, so other protocols keep running without it.
+
+Threads and connections
+-----------------------
+
+Use each connection from one thread at a time, as the queue does: it
+gives each host its own connection. A connection that another thread
+closes while it waits for data may raise an exception instead of
+reporting the closed connection.
