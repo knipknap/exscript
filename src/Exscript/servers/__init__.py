@@ -24,12 +24,10 @@
 Very simple servers, useful for emulating a device for testing.
 """
 
-from .httpd import HTTPd
 from .sshd import SSHd
 from .telnetd import Telnetd
 
 __all__ = [
-    'HTTPd',
     'SSHd',
     'Telnetd',
 ]

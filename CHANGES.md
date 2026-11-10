@@ -416,8 +416,12 @@ The names below refer to functions callable from templates, not protocol methods
 
 - **BREAKING - Threaded Servers:** The `Server` base class and its `SSHd`/`Telnetd`
   implementations now run as daemon threads rather than processes. Process-specific
-  APIs are no longer available; use `exit()` and `join()` for shutdown. `HTTPd` is
-  unaffected by this change.
+  APIs are no longer available; use `exit()` and `join()` for shutdown.
+- **BREAKING - `HTTPd` Removed:** `Exscript.servers.HTTPd` and
+  `Exscript.servers.httpd.RequestHandler` are removed. Their HTTP digest
+  authentication never worked on Python 3: every login with a valid password failed
+  with a `TypeError`. Use `http.server` from the
+  standard library or a web framework instead.
 - **Client Handling:** `SSHd` and `Telnetd` keep listening after a client disconnects,
   allowing sequential connections. They share the supplied emulator device; concurrent
   clients are not supported.

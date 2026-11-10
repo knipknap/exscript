@@ -176,6 +176,9 @@ Emulators and test servers
 - The test servers ``SSHd`` and ``Telnetd`` run as threads; stop them with
   ``exit()`` and ``join()``. Their ``buf`` attribute and the ``encoding``
   argument of ``Telnetd`` are removed.
+- ``Exscript.servers.HTTPd`` and its ``RequestHandler`` are removed; their
+  digest authentication never worked on Python 3. Use ``http.server`` from
+  the standard library or a web framework.
 
 From the 2.9 development versions
 ---------------------------------

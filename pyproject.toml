@@ -111,7 +111,6 @@ ignore = [
 "src/Exscript/protocols/protocol.py" = ["S101", "S110"]
 "src/Exscript/protocols/ssh2.py" = ["S110"]
 "src/Exscript/protocols/telnet.py" = ["S101", "S110"]
-"src/Exscript/servers/httpd.py" = ["S105", "S324"]
 "src/Exscript/stdlib/mysys.py" = ["S603"]
 "src/Exscript/util/crypt.py" = ["S303"]
 "src/Exscript/util/file.py" = ["S107"]
@@ -132,7 +131,6 @@ ignore_missing_imports = true  # ncclient and others ship no type hints
 # it passes the strict checks; the list only shrinks.
 module = [
     "Exscript.queue",
-    "Exscript.servers.httpd",
     "Exscript.util.sigint",
     "Exscript.workqueue.job",
     "Exscript.workqueue.mainloop",
