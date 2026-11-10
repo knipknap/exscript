@@ -25,7 +25,7 @@ Quickstart methods for the Exscript queue.
 """
 
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any
 
 from .. import Account, Host, Queue
 from .decorator import autoauthenticate, autologin
@@ -70,9 +70,7 @@ def run(
     attempts = kwargs.get("attempts", 1)
     if "attempts" in kwargs:
         del kwargs["attempts"]
-    # The queue is not annotated (it will be reworked); the cast is for the
-    # type checker.
-    queue = cast(Any, Queue)(**kwargs)
+    queue = Queue(**kwargs)
     queue.add_account(users)
     queue.run(hosts, func, attempts)
     queue.destroy()
