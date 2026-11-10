@@ -133,7 +133,8 @@ class String(Token):
         unless the parser disables escaping; CR, LF and TAB are always
         evaluated. An escaped dollar sign stays escaped for the substitution
         of variables; any other escaped character is returned without the
-        backslash.
+        backslash. Raises a CompileError at the current position of the
+        lexer for a Unicode sequence above U+10FFFF.
 
         :param ttype: The token type of the escape sequence.
         :param token: The escape sequence.
@@ -149,6 +150,11 @@ class String(Token):
         ):
             if token == '\\e':  # Invalid sequence in Python.
                 return '\x1b'
+            if ttype == 'escaped_unicode_32bit' and int(token[2:], 16) > 0x10FFFF:
+                self.mark_start()
+                self.mark_end(distance=len(token))
+                msg = 'Invalid escape sequence %s: above U+10FFFF' % repr(token)
+                self.lexer.syntax_error(msg, self)
             return cast(str, ast.literal_eval('"' + token + '"'))
         if ttype == 'escaped_common_controls':
             return cast(str, ast.literal_eval('"' + token + '"'))

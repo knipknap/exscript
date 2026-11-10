@@ -2,7 +2,7 @@ import re
 import unittest
 import warnings
 
-from hypothesis import assume, given, settings
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from Exscript.interpreter.exception import PermissionError
@@ -64,6 +64,7 @@ FRAGMENTS = [
     '\\x41',
     '\\u00e9',
     '\\U0010FFFF',
+    '\\U00110000',
     'if ',
     'else',
     'end',
@@ -98,9 +99,6 @@ FRAGMENTS = [
     '\u00e9',
 ]
 
-# Escape sequences above U+10FFFF raise SyntaxError instead of CompileError (reported).
-INVALID_ESCAPE = re.compile(r'\\U([0-9a-fA-F]{8})')
-
 # Text that the template language does not interpret: no code blocks, no
 # escape sequences, no variables, no comments and no <rpc> elements.
 plain_text = st.text(
@@ -126,7 +124,6 @@ class ParserPropertyTest(unittest.TestCase):
         """
         Compiles the text, and checks that an error shows a position in it.
         """
-        assume(not any(int(code, 16) > 0x10FFFF for code in INVALID_ESCAPE.findall(text)))
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter('error', CompileWarning)

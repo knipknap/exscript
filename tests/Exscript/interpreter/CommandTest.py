@@ -101,6 +101,15 @@ class CommandTest(TemplateTestCase):
         self.evaluate(text, no_escaping=True)
         self.assertSent('show x41 101 u00e9 U0001F600 t e')
 
+    def testUnicodeEscapeSequenceAboveTheRange(self):
+        with self.assertRaises(CompileError) as cm:
+            self.evaluate('ls\nshow \\UFFFFFFFF\n')
+        message = "Invalid escape sequence '\\\\UFFFFFFFF': above U+10FFFF in undefined:2"
+        self.assertError(cm.exception, ['show \\UFFFFFFFF'], '     ' + '^' * 10, message)
+        self.assertSent()
+        self.evaluate('show \\UFFFFFFFF\n', no_escaping=True)
+        self.assertSent('show UFFFFFFFF')
+
     def testEscapedSpecialCharacters(self):
         self.evaluate('show \\{a\\} \\\\ \\$x \\# \\"\n')
         self.assertSent('show {a} \\ $x # "')

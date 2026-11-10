@@ -365,6 +365,9 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **BREAKING - Last Line Without a Line Break:** A template also sends its last line
   if the line does not end with a line break, e.g. `show version` in
   `template.eval(conn, 'ls\nshow version')`. Before, such a line was ignored.
+- **Unicode Escape Sequences Above U+10FFFF:** A sequence such as `\UFFFFFFFF` in a
+  command or a string raises a `CompileError` that shows its position. Before, it
+  raised a `SyntaxError` of Python.
 
 ### Standard Library
 

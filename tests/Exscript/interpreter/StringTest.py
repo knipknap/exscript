@@ -25,6 +25,13 @@ class StringTest(TemplateTestCase):
         text = '\\x41\\101\\u00e9\\e|\\t|\\n|\\r'
         self.assertString(text, 'x41101u00e9e|\t|\n|\r', no_escaping=True)
 
+    def testUnicodeEscapeSequenceAboveTheRange(self):
+        with self.assertRaises(CompileError) as cm:
+            self.evaluate('{x = "a\\U00110000"}')
+        message = "Invalid escape sequence '\\\\U00110000': above U+10FFFF in undefined:1"
+        self.assertError(cm.exception, ['{x = "a\\U00110000"}'], ' ' * 7 + '^' * 10, message)
+        self.assertString('\\U00110000', 'U00110000', no_escaping=True)
+
     def testVariables(self):
         variables = self.evaluate(
             '{a = "1"}{b = list.new("x", "y")}{n = 2 * 3}{e = list.new()}'
