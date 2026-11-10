@@ -103,6 +103,10 @@ Last line
     A template also sends its last line if the line does not end with a
     line break. 2.x ignored such a line.
 
+``extract``
+    Requires a regular expression between slashes. 2.x also accepted a
+    string in double quotes, e.g. ``{extract "(a)" as y}``.
+
 Command line tool
 -----------------
 

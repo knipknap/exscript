@@ -70,6 +70,12 @@ class Extract(Token):
         lexer.expect(self, 'keyword', 'extract')
         lexer.expect(self, 'whitespace')
         _regex_start = lexer.current_char  # Helps with later Regex errors.
+        if not lexer.current_is('regex_delimiter'):
+            ttype, token = lexer.token()
+            self.mark_start()
+            self.mark_end(distance=len(token))
+            msg = 'Expected regular expression but got %s %s' % (ttype, repr(token))
+            lexer.syntax_error(msg, self)
         self.regex = Regex(lexer, parser, parent)
 
         # Expect "as" keyword.

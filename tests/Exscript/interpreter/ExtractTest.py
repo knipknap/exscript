@@ -114,6 +114,13 @@ class ExtractTest(TemplateTestCase):
                 ' ' * 14 + '^',
                 "Expected one of whitespace, newline but got close_curly_bracket '}'",
             ),
+            ('{extract x as y}', ' ' * 9 + '^', "Expected regular expression but got varname 'x'"),
+            ('{extract 1 as y}', ' ' * 9 + '^', "Expected regular expression but got number '1'"),
+            (
+                '{extract "(a)" as y from "a"}',
+                ' ' * 9 + '^',
+                "Expected regular expression but got string_delimiter '\"'",
+            ),
         ):
             with self.subTest(text=text):
                 with self.assertRaises(CompileError) as cm:

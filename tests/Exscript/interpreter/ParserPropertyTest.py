@@ -15,8 +15,6 @@ from .helpers import RecordingDevice, connect
 COMPILE_ERRORS = (LexerException, NameError, PermissionError, CompileWarning)
 
 # Pieces of templates, to reach more paths of the parser than random text.
-# The regular expressions of extract statements are always given: without one,
-# the parser fails with re.error (reported).
 FRAGMENTS = [
     '{',
     '}',
@@ -74,6 +72,7 @@ FRAGMENTS = [
     ' as ',
     'into ',
     'extract /',
+    'extract ',
     'append ',
     'fail ',
     'try',

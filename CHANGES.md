@@ -368,6 +368,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **Unicode Escape Sequences Above U+10FFFF:** A sequence such as `\UFFFFFFFF` in a
   command or a string raises a `CompileError` that shows its position. Before, it
   raised a `SyntaxError` of Python.
+- **BREAKING - `extract` Requires a Regular Expression:** `extract` raises a
+  `CompileError` if no regular expression between slashes follows, e.g. in
+  `{extract "(a)" as y from "a"}` or `{extract x as y}`. Before, the character after
+  `extract` was taken as the delimiter of the regular expression, so a string in
+  double quotes worked, and other terms caused confusing errors such as `re.error`.
 
 ### Standard Library
 
