@@ -8,8 +8,8 @@ Python 3.14.
 
 Most of Exscript works the same on every platform: for example, it reads
 and writes text files such as templates, host lists and logs as UTF-8
-everywhere, and gives sessions the same terminal size. These are the
-differences.
+everywhere, gives sessions the same terminal size, and its command line
+tool stops all connections at once on Ctrl+C. These are the differences.
 
 Windows
 -------
@@ -19,10 +19,6 @@ Windows
   completion and control keys therefore do not reach the device, and a
   typed line may appear twice, because both the console and the device
   echo it.
-- On Linux and macOS, the command line tool runs the connections in a
-  child process, so that Ctrl+C stops all of them at once. Windows has no
-  ``fork()``, so there Ctrl+C may take effect only after the running
-  connections end.
 - The template function ``sys.exec`` passes the command line to Windows
   without a shell. Commands that are built into the shell need ``cmd /c``,
   for example ``sys.exec("cmd /c dir")``.

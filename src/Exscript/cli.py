@@ -35,10 +35,13 @@ import getpass
 import importlib.util
 import os
 import re
+import signal
 import sys
 import time
 from collections.abc import Sequence
 from pathlib import Path
+from types import FrameType
+from typing import NoReturn
 
 import Exscript.protocols.drivers
 from Exscript import Account, Host, PrivateKey, Queue
@@ -56,7 +59,6 @@ from Exscript.util.file import (
 )
 from Exscript.util.interact import get_login
 from Exscript.util.log import log_to_file
-from Exscript.util.sigint import SigIntWatcher
 from Exscript.workqueue.job import Thread
 
 bracket_expression = r"\{([^\]]*)\}"
@@ -137,6 +139,33 @@ def expand_host_variables(host: Host) -> None:
                     continue
                 value[n] = expand_bracket(key, value[n])
         host.set(key, value)
+
+
+def _exit_on_sigint(signum: int, frame: FrameType | None) -> NoReturn:
+    """
+    The handler of SIGINT (Ctrl+C) while the template runs: writes
+    "Interrupted." to stderr, and ends the process at once with exit status
+    130. A KeyboardInterrupt would end it only after the threads of the
+    running connections, which cannot be interrupted.
+    """
+    try:
+        sys.stdout.flush()
+        sys.stderr.write('Interrupted.\n')
+        sys.stderr.flush()
+    finally:
+        os._exit(130)
+
+
+def _join(queue: Queue) -> None:
+    """
+    Waits until the given queue has completed all jobs, like queue.join(),
+    but in short slices, so that the main thread handles Ctrl+C meanwhile:
+    on Windows, Ctrl+C does not interrupt a blocking wait for a lock before
+    Python 3.14.
+    """
+    while not queue.is_completed():
+        time.sleep(0.2)
+    queue.join()
 
 
 def run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
@@ -410,15 +439,22 @@ def run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
         decorator = log_to_file(args.logdir, mode, args.delete_logs)
         function = decorator(function)
 
-    # Wait until the specified time.
-    if args.sleep:
-        print(f"Waiting for {args.sleep:g} seconds...", end="", flush=True)
-        time.sleep(args.sleep)
-        print("time expired, starting script.")
+    # Ctrl+C ends the process at once from here on, see _exit_on_sigint().
+    # Not before: while getpass() reads a password, the terminal does not
+    # echo, and only a KeyboardInterrupt lets getpass() turn the echo on again.
+    sigint_handler = signal.signal(signal.SIGINT, _exit_on_sigint)
+    try:
+        # Wait until the specified time.
+        if args.sleep:
+            print(f"Waiting for {args.sleep:g} seconds...", end="", flush=True)
+            time.sleep(args.sleep)
+            print("time expired, starting script.")
 
-    # Run the template.
-    queue.run(hosts, function, attempts=args.retry + 1)
-    queue.join()
+        # Run the template.
+        queue.run(hosts, function, attempts=args.retry + 1)
+        _join(queue)
+    finally:
+        signal.signal(signal.SIGINT, sigint_handler)
     failed = queue.failed
     queue.destroy(force=True)
     return failed
@@ -876,7 +912,9 @@ NUM is a number between 0 (min) and 5 (max). Default is 0.
 
 def main(argv: list[str] | None = None) -> int:
     """
-    Runs the command line tool ``exscript`` with the given arguments.
+    Runs the command line tool ``exscript`` with the given arguments. Once
+    the template runs, Ctrl+C ends the process at once with exit status 130,
+    also while connections are running.
 
     :type  argv: list[str] | None
     :param argv: The arguments without the name of the program; by default
@@ -886,7 +924,6 @@ def main(argv: list[str] | None = None) -> int:
         else 1. Invalid arguments and ``--help`` end the process through
         SystemExit, as usual with argparse.
     """
-    SigIntWatcher()
     parser = create_parser()
     failed = run(parser, parser.parse_args(argv))
     if failed != 0:

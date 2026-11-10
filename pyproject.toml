@@ -128,24 +128,6 @@ strict = true
 ignore_missing_imports = true  # ncclient and others ship no type hints
 
 [[tool.mypy.overrides]]
-# Modules that are not annotated yet (P8). Remove a module from this list when
-# it passes the strict checks; the list only shrinks.
-module = [
-    "Exscript.util.sigint",
-]
-disallow_any_generics = false
-disallow_subclassing_any = false
-disallow_untyped_calls = false
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-check_untyped_defs = false
-disallow_untyped_decorators = false
-warn_return_any = false
-implicit_reexport = true
-strict_equality = false
-extra_checks = false
-
-[[tool.mypy.overrides]]
 # BaseInstrumentor comes from a module that mypy skips (it starts with "# type: ignore").
 module = "Exscript.contrib.otel"
 disallow_subclassing_any = false

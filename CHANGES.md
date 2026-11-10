@@ -20,10 +20,9 @@ marked with **BREAKING**; a migration guide will accompany the release.
   versions before 3.12 are no longer supported.
 - **Type Annotations:** Exscript is annotated and ships the `py.typed` marker (PEP 561),
   so type checkers such as mypy and pyright check the code that uses it. All modules
-  pass `mypy --strict`, except `Exscript.util.sigint`, which is annotated only in part.
-  mypy knows the type of 95.7 % of the expressions; the rest is `Any` on purpose
-  (callbacks, options that are passed on, template variables) or comes from ncclient,
-  which is not annotated. CI checks that this share does not drop.
+  pass `mypy --strict`. mypy knows the type of 95.7 % of the expressions; the rest is
+  `Any` on purpose (callbacks, options that are passed on, template variables) or comes
+  from ncclient, which is not annotated. CI checks that this share does not drop.
 - **Dependencies:** `future` and `configparser`, backports for Python 2, are no longer
   needed. paramiko 3.4 to 5.x is supported (before: 1.17 to 4.x). New: ncclient and
   lxml 5.0 or later, for NETCONF.
@@ -31,7 +30,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   console entry points of the package: `Exscript.cli.main()` and `otp_main()`.
   `python -m Exscript` runs `exscript`, too. On Windows, the commands are `.exe`
   launchers that work from any shell. Before, they were Python scripts without a file
-  extension, which cmd.exe and PowerShell do not run.
+  extension, which cmd.exe and PowerShell do not run. Ctrl+C stops all connections of
+  `exscript` at once on every platform: it writes `Interrupted.` and exits with status
+  130. Before, on Linux and macOS, it ran the connections in a child process, which it
+  killed on Ctrl+C before it exited with status 1; on Windows, Ctrl+C took effect only
+  after the running connections ended.
 - **NETCONF Protocol:** The new adapter `Exscript.protocols.Netconf` (scheme
   `netconf://`, port 830) sends RPCs over SSH with ncclient, and returns the replies as
   text or as lxml elements; an `<rpc-error>` raises `RPCError`. The IOS XR and Junos
@@ -605,10 +608,12 @@ The names below refer to functions callable from templates, not protocol methods
   and the copies keep the default factory and the order of the keys. Before,
   `copy.deepcopy()` failed with `TypeError: cannot pickle 'odict_items' object`, and
   `pickle.dumps()` with a `PicklingError`.
-- **BREAKING - Removed Modules:** `Exscript.util.daemonize`, `Exscript.util.pidutil`
-  and `Exscript.util.sigintcatcher` are removed, and
-  `daemonize()` failed on Python 3 with `ValueError: can't have unbuffered text I/O`.
-  Run long-lived scripts under a service manager such as systemd instead.
+- **BREAKING - Removed Modules:** `Exscript.util.daemonize`, `Exscript.util.pidutil`,
+  `Exscript.util.sigint` and `Exscript.util.sigintcatcher` are removed; `daemonize()`
+  failed on Python 3 with `ValueError: can't have unbuffered text I/O`. Run long-lived scripts under a service manager such as systemd
+  instead. To stop the connections of a queue at once on Ctrl+C, as `SigIntWatcher` of
+  `Exscript.util.sigint` did with a child process, end the process with `os._exit()` in
+  a handler of `signal.SIGINT`.
 
 ## Multi-Threading
 

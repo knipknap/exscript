@@ -200,9 +200,12 @@ Other renamed or removed names:
   ``check_received_data()`` and ``check_protocol_info()``.
 - ``Exscript.util.template.test_secure()`` is ``test(secure=True)``.
 - ``Exscript.util.interact.InputHistory.file`` is ``filename``.
-- ``Exscript.util.daemonize``, ``Exscript.util.pidutil`` and
-  ``Exscript.util.sigintcatcher`` are removed. Run long-lived scripts
-  under a service manager such as systemd.
+- ``Exscript.util.daemonize``, ``Exscript.util.pidutil``,
+  ``Exscript.util.sigint`` and ``Exscript.util.sigintcatcher`` are
+  removed. Run long-lived scripts under a service manager such as systemd.
+  To stop the connections of a queue at once on Ctrl+C, as
+  ``SigIntWatcher`` did, end the process with ``os._exit()`` in a handler
+  of ``signal.SIGINT``.
 - ``WorkQueue`` has no ``debug`` argument, and ``set_debug()`` takes
   ``level``. Pass the other arguments by keyword.
 - ``Queue(mode='multiprocessing')`` raises a ``ValueError``: jobs run in

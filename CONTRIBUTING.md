@@ -52,9 +52,8 @@ CI also measures three kinds of coverage, each with a minimum that only goes up:
 - Document new functions, classes and modules with docstrings in the style of the existing
   code (`:param:`, `:type:`, `:return:`, `:rtype:`). The API reference is generated from
   them, and pre-commit fails if the share of documented functions drops.
-- Annotate new code with types. mypy checks every module strictly, except those that are
-  still in the list of `[[tool.mypy.overrides]]` in `pyproject.toml`; remove a module from
-  that list when you annotate it. Use `Any` only where a type is open on purpose.
+- Annotate new code with types; mypy checks every module strictly. Use `Any` only where a
+  type is open on purpose.
 - The public API and the template language stay compatible. Please open an issue before you
   work on a change that breaks them.
 
