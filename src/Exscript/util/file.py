@@ -31,12 +31,15 @@ import importlib.machinery
 import importlib.util
 import os
 import re
+from typing import Any, cast
 
-from .. import Account
+from .. import Account, Host
 from .cast import to_host
 
 
-def get_accounts_from_file(filename, encoding='utf-8', password_encoding='utf-8'):
+def get_accounts_from_file(
+    filename: str | os.PathLike[str], encoding: str = 'utf-8', password_encoding: str = 'utf-8'
+) -> list[Account]:
     """
     Reads a list of user/password combinations from the given file
     and returns a list of Account instances. The file content
@@ -55,7 +58,9 @@ def get_accounts_from_file(filename, encoding='utf-8', password_encoding='utf-8'
 
         python3 -c 'import base64; print(base64.b64encode("thepassword".encode()).decode())'
 
-    :type  filename: string
+    Raises an Exception if a password can not be decoded.
+
+    :type  filename: str|os.PathLike
     :param filename: The name of the file containing the list of accounts.
     :type  encoding: str
     :param encoding: The encoding of the file.
@@ -64,10 +69,13 @@ def get_accounts_from_file(filename, encoding='utf-8', password_encoding='utf-8'
     :rtype:  list[Account]
     :return: The newly created account instances.
     """
-    accounts = []
+    accounts: list[Account] = []
     parser = configparser.RawConfigParser()
-    parser.optionxform = str
+    # str keeps the case of the user names. The stub declares optionxform as
+    # a method, which may not be replaced; the cast is for the type checker.
+    cast(Any, parser).optionxform = str
     parser.read(filename, encoding)
+    password: str | bytes  # read as a string, then decoded to bytes
     for user, password in parser.items('account-pool'):
         try:
             password = base64.decodebytes(password.encode('ascii'))
@@ -79,12 +87,19 @@ def get_accounts_from_file(filename, encoding='utf-8', password_encoding='utf-8'
 
 
 def get_hosts_from_file(
-    filename, default_protocol='ssh', default_domain='', remove_duplicates=False, encoding='utf-8'
-):
+    filename: str | os.PathLike[str],
+    default_protocol: str = 'ssh',
+    default_domain: str = '',
+    remove_duplicates: bool = False,
+    encoding: str = 'utf-8',
+) -> list[Host]:
     """
     Reads a list of hostnames from the file with the given name.
+    The file contains one hostname per line, which may be URL formatted
+    (see :meth:`Exscript.host.Host.set_uri`). Empty lines and everything after
+    a ``#`` are ignored. Raises OSError if the file does not exist.
 
-    :type  filename: string
+    :type  filename: str|os.PathLike
     :param filename: A full filename.
     :type  default_protocol: str
     :param default_protocol: Passed to the Host constructor.
@@ -102,8 +117,8 @@ def get_hosts_from_file(
         raise OSError('No such file: %s' % filename)
 
     # Read the hostnames.
-    have = set()
-    hosts = []
+    have: set[str] = set()
+    hosts: list[Host] = []
     with open(filename, encoding=encoding) as file_handle:
         for line in file_handle:
             hostname = line.split('#')[0].strip()
@@ -117,7 +132,12 @@ def get_hosts_from_file(
     return hosts
 
 
-def get_hosts_from_csv(filename, default_protocol='ssh', default_domain='', encoding='utf-8'):
+def get_hosts_from_csv(
+    filename: str | os.PathLike[str],
+    default_protocol: str = 'ssh',
+    default_domain: str = '',
+    encoding: str = 'utf-8',
+) -> list[Host]:
     """
     Reads a list of hostnames and variables from the tab-separated .csv file
     with the given name. The first line of the file must contain the column
@@ -141,7 +161,7 @@ def get_hosts_from_csv(filename, default_protocol='ssh', default_domain='', enco
         10.0.0.1	myhost	value
         10.0.0.2	otherhost	othervalue
 
-    :type  filename: string
+    :type  filename: str|os.PathLike
     :param filename: A full filename.
     :type  default_protocol: str
     :param default_protocol: Passed to the Host constructor.
@@ -174,7 +194,7 @@ def get_hosts_from_csv(filename, default_protocol='ssh', default_domain='', enco
         # definitions.
         last_uri = ''
         line_re = re.compile(r'[\r\n]*$')
-        hosts = []
+        hosts: list[Host] = []
         for line in file_handle:
             if line.strip() == '':
                 continue
@@ -204,7 +224,9 @@ def get_hosts_from_csv(filename, default_protocol='ssh', default_domain='', enco
     return hosts
 
 
-def load_lib(filename):
+# Any: the values are the objects in the __lib__ variable of the loaded file,
+# which are not checked.
+def load_lib(filename: str) -> dict[str, Any]:
     """
     Loads a Python file containing functions, and returns the
     content of the __lib__ variable. The __lib__ variable must contain
@@ -212,7 +234,7 @@ def load_lib(filename):
 
     Returns a dictionary mapping the namespaced function names to
     callables. The namespace is the basename of the file, without file
-    extension.
+    extension. Raises OSError if the file does not exist.
 
     :type  filename: string
     :param filename: A full filename.
@@ -227,7 +249,8 @@ def load_lib(filename):
     # load_module() was removed in Python 3.15; an explicit loader also accepts other suffixes.
     loader = importlib.machinery.SourceFileLoader(name, filename)
     spec = importlib.util.spec_from_file_location(name, filename, loader=loader)
-    module = importlib.util.module_from_spec(spec)
+    # With a loader given, spec_from_file_location() does not return None.
+    module = importlib.util.module_from_spec(cast(importlib.machinery.ModuleSpec, spec))
     loader.exec_module(module)
 
     return dict((name + '.' + k, v) for (k, v) in list(module.__lib__.items()))

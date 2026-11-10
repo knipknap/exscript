@@ -28,6 +28,7 @@ import configparser
 import getpass
 import os
 import sys
+from collections.abc import Callable, Iterable
 
 from .. import Account
 from .cast import to_list
@@ -41,21 +42,21 @@ class InputHistory:
     allow for such functionality.
     """
 
-    def __init__(self, filename='~/.exscript_history', section=os.path.basename(sys.argv[0])):
+    def __init__(
+        self, filename: str = '~/.exscript_history', section: str = os.path.basename(sys.argv[0])
+    ) -> None:
         """
-        Constructor. The filename argument allows for listing on or
-        more config files, and is passed to Python's RawConfigParser; please
-        consult the documentation of RawConfigParser.read() if you require
-        more information.
+        Constructor. The filename argument is the name of the config
+        file; a leading ``~`` is expanded to the home directory.
         The optional section argument allows to specify
         a section under which the input is stored in the config file.
         The section defaults to the name of the running script.
 
-        Silently creates a tempfile if the given file can not be opened,
-        such that the object behavior does not change, but the history
-        is not remembered across instances.
+        If the file can not be read, the history starts empty. Saving
+        the input with set() raises OSError if the file can not be
+        written.
 
-        :type  filename: str|list(str)
+        :type  filename: str
         :param filename: The config file.
         :type  section: str
         :param section: The section in the configfile.
@@ -68,7 +69,7 @@ class InputHistory:
         if not self.parser.has_section(self.section):
             self.parser.add_section(self.section)
 
-    def get(self, key, default=None):
+    def get[T](self, key: str, default: T | None = None) -> str | T | None:
         """
         Returns the input with the given key from the section that was
         passed to the constructor. If either the section or the key
@@ -88,7 +89,7 @@ class InputHistory:
         except (configparser.NoSectionError, configparser.NoOptionError):
             return default
 
-    def set(self, key, value):
+    def set(self, key: str, value: str | None) -> str | None:
         """
         Saves the input with the given key in the section that was
         passed to the constructor. If either the section or the key
@@ -112,10 +113,18 @@ class InputHistory:
         return value
 
 
-def prompt(key, message, default=None, doverh=True, strip=True, check=None, history=None):
+def prompt(
+    key: str,
+    message: str,
+    default: str | None = None,
+    doverh: bool = True,
+    strip: bool = True,
+    check: Callable[[str], str | Iterable[str] | None] | None = None,
+    history: InputHistory | None = None,
+) -> str:
     """
-    Prompt the user for input. This function is similar to Python's built
-    in raw_input, with the following differences:
+    Prompts the user for input. This function is similar to Python's built
+    in input(), with the following differences:
 
         - You may specify a default value that is returned if the user
           presses "enter" without entering anything.
@@ -129,8 +138,9 @@ def prompt(key, message, default=None, doverh=True, strip=True, check=None, hist
     The key argument specifies under which name the input is saved in the
     config file.
 
-    The given default value is only used if a default was not found in the
-    history.
+    If no default value is given, or if doverh is False, the value from the
+    history is offered as the default; the given default value is only used
+    if the history has no value.
 
     The strip argument specifies that the returned value should be stripped
     of whitespace (default).
@@ -142,19 +152,19 @@ def prompt(key, message, default=None, doverh=True, strip=True, check=None, hist
         def validate(input):
             if len(input) < 4:
                 return 'Please enter at least 4 characters!'
-        value = prompt('test', 'Enter a value', 'My Default', check = validate)
+        value = prompt('test', 'Enter a value', 'My Default', doverh=False, check=validate)
         print('You entered:', value)
 
     This leads to the following output::
 
-        Please enter a value [My Default]: abc
+        Enter a value [My Default]: abc
         Please enter at least 4 characters!
-        Please enter a value [My Default]: Foobar
+        Enter a value [My Default]: Foobar
         You entered: Foobar
 
     The next time the same code is started, the input 'Foobar' is remembered::
 
-        Please enter a value [Foobar]:        (enters nothing)
+        Enter a value [Foobar]:        (enters nothing)
         You entered: Foobar
 
     :type  key: str
@@ -162,15 +172,18 @@ def prompt(key, message, default=None, doverh=True, strip=True, check=None, hist
     :type  message: str
     :param message: The user prompt.
     :type  default: str|None
-    :param default: The offered default if none was found in the history.
+    :param default: The offered default value, see above.
     :type  doverh: bool
     :param doverh: Whether to prefer default value over history value.
     :type  strip: bool
     :param strip: Whether to remove whitespace from the input.
     :type  check: callable
-    :param check: A function that is called for validating the input.
+    :param check: A function that is called for validating the input. It
+        returns None if the input is valid, and an error message or a list
+        of error messages otherwise.
     :type  history: :class:`InputHistory` or None
     :param history: The history used for recording default values, or None.
+    :return: The input, or the default value if the user entered nothing.
     """
     if history is None:
         history = InputHistory()
@@ -194,7 +207,9 @@ def prompt(key, message, default=None, doverh=True, strip=True, check=None, hist
     return value
 
 
-def get_filename(key, message, default=None, history=None):
+def get_filename(
+    key: str, message: str, default: str | None = None, history: InputHistory | None = None
+) -> str:
     """
     Like :meth:`prompt`, but only accepts the name of an existing file
     as an input.
@@ -204,19 +219,21 @@ def get_filename(key, message, default=None, history=None):
     :type  message: str
     :param message: The user prompt.
     :type  default: str|None
-    :param default: The offered default if none was found in the history.
+    :param default: The offered default value, see :meth:`prompt`.
     :type  history: :class:`InputHistory` or None
     :param history: The history used for recording default values, or None.
+    :return: The name of the file.
     """
 
-    def _validate(string):
+    def _validate(string: str) -> str | None:
         if not os.path.isfile(string):
             return 'File not found. Please enter a filename.'
+        return None
 
     return prompt(key, message, default, check=_validate, history=history)
 
 
-def get_user(prompt=None):
+def get_user(prompt: str | None = None) -> str:
     """
     Prompts the user for his login name, defaulting to the USER environment
     variable. Returns a string containing the username.
@@ -243,7 +260,7 @@ def get_user(prompt=None):
     return user
 
 
-def get_login():
+def get_login() -> tuple[str, str]:
     """
     Prompts the user for the login name using get_user(), and also asks for
     the password.
@@ -258,7 +275,7 @@ def get_login():
     return user, password
 
 
-def read_login():
+def read_login() -> Account:
     """
     Like get_login(), but returns an Account object.
 

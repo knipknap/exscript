@@ -24,35 +24,57 @@
 Logging utilities.
 """
 
-from .. import FileLogger
+from collections.abc import Callable
+from typing import Any
+
+from .. import FileLogger, Logger
 from .impl import add_label
 
 _loggers: list[FileLogger] = []
 
 
-def log_to(logger):
+def log_to[F: Callable[..., Any]](logger: Logger) -> Callable[[F], F]:
     """
     Wraps a function that has a connection passed such that everything that
     happens on the connection is logged using the given logger.
 
+    The returned decorator labels the function and returns it unchanged;
+    when the :class:`Exscript.Queue` runs the function for a host, it logs
+    the conversation with the host to a new log of the logger.
+
     :type  logger: Logger
     :param logger: The logger that handles the logging.
+    :return: A decorator for the function that the queue runs.
     """
     logger_id = id(logger)
 
-    def decorator(function):
+    def decorator(function: F) -> F:
         func = add_label(function, 'log_to', logger_id=logger_id)
         return func
 
     return decorator
 
 
-def log_to_file(logdir, mode='a', delete=False, clearmem=True):
+def log_to_file[F: Callable[..., Any]](
+    logdir: str, mode: str = 'a', delete: bool = False, clearmem: bool = True
+) -> Callable[[F], F]:
     """
     Like :func:`log_to`, but automatically creates a new FileLogger
     instead of having one passed.
     Note that the logger stays alive (in memory) forever. If you need
     to control the lifetime of a logger, use :func:`log_to` instead.
+
+    :type  logdir: str
+    :param logdir: The directory of the log files, see
+        :class:`Exscript.FileLogger`.
+    :type  mode: str
+    :param mode: The mode in which the log files are opened for writing,
+        e.g. 'a' to append to existing logs.
+    :type  delete: bool
+    :param delete: Whether to delete the log of a job that succeeds.
+    :type  clearmem: bool
+    :param clearmem: Whether to forget the logs of finished jobs in memory.
+    :return: A decorator for the function that the queue runs.
     """
     logger = FileLogger(logdir, mode, delete, clearmem)
     _loggers.append(logger)
