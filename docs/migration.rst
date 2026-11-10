@@ -99,6 +99,10 @@ Templates
 ``connection.close()``
     Logs out first; ``connection.close(true)`` closes at once.
 
+Last line
+    A template also sends its last line if the line does not end with a
+    line break. 2.x ignored such a line.
+
 Command line tool
 -----------------
 

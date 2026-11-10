@@ -162,10 +162,10 @@ class ParserPropertyTest(unittest.TestCase):
         self.assertCompiles(text)
 
     @settings(max_examples=100, deadline=None)
-    @given(plain_lines)
-    def testPlainTextIsSentAsCommands(self, lines):
+    @given(plain_lines, st.sampled_from(['', '\n']))
+    def testPlainTextIsSentAsCommands(self, lines, end):
         del self.device.received[:]
-        template.paste(self.conn, '\n'.join(lines) + '\n')
+        template.paste(self.conn, '\n'.join(lines) + end)
         expected = [line.lstrip(' \t') + '\r' for line in lines if line.strip()]
         self.assertEqual(self.device.received, expected)
 

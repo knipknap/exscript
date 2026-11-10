@@ -33,6 +33,20 @@ class CommandTest(TemplateTestCase):
         self.evaluate(text)
         self.assertSent('ls', 'show version # not a comment')
 
+    def testLastLineWithoutLineBreak(self):
+        variables = self.evaluate('ls\nshow version')
+        self.assertSent('ls', 'show version')
+        self.assertEqual(variables['__response__'], ['Version 1.0', 'Uptime 5 days'])
+        template.paste(self.conn, '{x = 1}ls')
+        self.assertSent('ls', 'show version', 'ls')
+
+    def testUndefinedVariableInTheLastLine(self):
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate('ls\nshow $nothing')
+        message = "Undefined variable 'nothing' in undefined:2"
+        self.assertError(cm.exception, ['show $nothing'], '     ^^^^^^^^', message)
+        self.assertSent()
+
     def testCommandBeforeACodeBlock(self):
         variables = self.evaluate('show version{extract /^Version (\\S+)/ as version}\n')
         self.assertSent('show version')

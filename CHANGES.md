@@ -362,6 +362,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
 
 ## Template Engine
 
+- **BREAKING - Last Line Without a Line Break:** A template also sends its last line
+  if the line does not end with a line break, e.g. `show version` in
+  `template.eval(conn, 'ls\nshow version')`. Before, such a line was ignored.
+
 ### Standard Library
 
 The names below refer to functions callable from templates, not protocol methods.

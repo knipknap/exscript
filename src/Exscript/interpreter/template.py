@@ -90,6 +90,12 @@ class Template(Scope):
         while True:
             lexer.skip(['line_comment'])
             if self.exit_requested or lexer.current_is('EOF'):
+                # The end of the input ends the last line like a newline.
+                if lexer.current_is('EOF') and buffer.strip() != '':
+                    # Execute expects the lexer to have consumed the delimiter
+                    # behind the command; at the end of the input, it is empty.
+                    lexer.forward(0)
+                    self.add(Execute(lexer, parser, self, buffer, escape_offset))
                 break
             elif lexer.current_is('open_curly_bracket'):
                 if buffer.strip() != '':
