@@ -24,7 +24,13 @@
 Represents a batch of enqueued actions.
 """
 
+from typing import TYPE_CHECKING
+
 from Exscript.util.event import Event
+
+if TYPE_CHECKING:
+    from .job import Thread
+    from .workqueue import WorkQueue
 
 
 class Task:
@@ -32,22 +38,33 @@ class Task:
     Represents a batch of running actions.
     """
 
-    def __init__(self, workqueue):
+    def __init__(self, workqueue: 'WorkQueue') -> None:
+        """
+        Constructor. The task listens to the events of the given work queue
+        to count its completed jobs; its done_event is emitted when all are
+        completed.
+
+        :param workqueue: The work queue that runs the jobs of the task.
+        """
         self.done_event = Event()
         self.workqueue = workqueue
-        self.job_ids = set()
+        self.job_ids: set[str] = set()
         self.completed = 0
         self.workqueue.job_succeeded_event.listen(self._on_job_done)
         self.workqueue.job_aborted_event.listen(self._on_job_done)
 
-    def _on_job_done(self, job):
+    def _on_job_done(self, job: 'Thread') -> None:
+        """
+        Counts the given job as completed if it belongs to the task, and
+        emits done_event when all jobs of the task are completed.
+        """
         if job.id not in self.job_ids:
             return
         self.completed += 1
         if self.is_completed():
             self.done_event()
 
-    def is_completed(self):
+    def is_completed(self) -> bool:
         """
         Returns True if all actions in the task are completed, returns
         False otherwise.
@@ -57,7 +74,7 @@ class Task:
         """
         return self.completed == len(self.job_ids)
 
-    def wait(self):
+    def wait(self) -> None:
         """
         Waits until all actions in the task have completed.
         Does not use any polling.
@@ -65,11 +82,11 @@ class Task:
         for theid in self.job_ids:
             self.workqueue.wait_for(theid)
 
-    def add_job_id(self, theid):
+    def add_job_id(self, theid: str) -> None:
         """
         Adds a job to the task.
 
-        :type  theid: int
+        :type  theid: str
         :param theid: The id of the job.
         """
         self.job_ids.add(theid)

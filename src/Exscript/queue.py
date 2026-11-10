@@ -28,7 +28,10 @@ import gc
 import logging
 import sys
 import threading
+from collections.abc import Callable, Hashable, Iterable
 from functools import partial
+from types import TracebackType
+from typing import TYPE_CHECKING, Any
 
 from .account import AccountManager
 from .logger import logger_registry
@@ -39,6 +42,12 @@ from .util.impl import format_exception, serializeable_sys_exc_info
 from .util.tty import get_terminal_size
 from .workqueue import Task, WorkQueue
 
+if TYPE_CHECKING:
+    from .account import Account, AccountPool
+    from .host import Host
+    from .protocols import Protocol
+    from .workqueue.job import Job, Thread
+
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
 
@@ -46,14 +55,22 @@ _logger.addHandler(logging.NullHandler())
 class _Discard:
     """Discards what is written to it, like os.devnull, but has no file to close."""
 
-    def write(self, data):
+    def write(self, data: str) -> int:
+        """
+        Discards the given data, and returns its length.
+        """
         return len(data)
 
-    def flush(self):
+    def flush(self) -> None:
+        """
+        Does nothing.
+        """
         pass
 
 
-def _account_factory(accm, owner, host, account):
+def _account_factory(
+    accm: AccountManager, owner: Hashable, host: 'Host', account: 'Account | None'
+) -> 'Account':
     """
     Returns the account to log into the host with, acquired: the given
     account, else the account of the host, else the one that the account
@@ -67,7 +84,9 @@ def _account_factory(accm, owner, host, account):
     return accm.acquire_account(account, owner)
 
 
-def _prepare_connection(func, account_manager):
+def _prepare_connection(
+    func: 'Callable[[Thread, Host, Protocol], object]', account_manager: AccountManager
+) -> 'Callable[[Thread], object]':
     """
     A decorator that unpacks the host and connection from the job argument
     and passes them as separate arguments to the wrapped function. The
@@ -75,7 +94,7 @@ def _prepare_connection(func, account_manager):
     that the job still holds are released when the function returns.
     """
 
-    def _wrapped(job, *args, **kwargs):
+    def _wrapped(job: 'Thread', *args: Any, **kwargs: Any) -> object:
         try:
             return _run_job(func, account_manager, job, *args, **kwargs)
         finally:
@@ -84,11 +103,19 @@ def _prepare_connection(func, account_manager):
     return _wrapped
 
 
-def _run_job(func, account_manager, job, *args, **kwargs):
+def _run_job(
+    func: 'Callable[[Thread, Host, Protocol], object]',
+    account_manager: AccountManager,
+    job: 'Thread',
+    *args: Any,
+    **kwargs: Any,
+) -> object:
     """
     Connects to the host of the given job and calls the given function with
     the job, the host and the connection, and the given arguments. Logs the
     session if the function was decorated with log_to().
+
+    :return: The result of the function.
     """
     job_id = id(job)
     host = job.data['host']
@@ -131,15 +158,23 @@ def _run_job(func, account_manager, job, *args, **kwargs):
     return result
 
 
-def _is_recoverable_error(cls):
+def _is_recoverable_error(cls: type[BaseException]) -> bool:
+    """
+    Returns True if the given exception class is CompileError or
+    FailException of the template language. The queue writes the
+    tracebacks of these only at verbosity 2 or higher.
+    """
     # By name, so that this module does not import the template language.
     return cls.__name__ in ('CompileError', 'FailException')
 
 
-def _call_logger(funcname, logger_id, *args):
+# Any: the result of the method, whose name is given at runtime.
+def _call_logger(funcname: str, logger_id: int, *args: Any) -> Any:
     """
     Calls the method with the given name of the logger with the given id,
     if the logger still exists, with the given arguments.
+
+    :return: The result of the method, or None.
     """
     logger = logger_registry.get(logger_id)
     if not logger:
@@ -154,15 +189,18 @@ class Queue:
 
     def __init__(
         self,
-        domain='',
-        verbose=1,
-        mode='threading',
-        max_threads=1,
-        host_driver=None,
-        exc_cb=None,
-        stdout=sys.stdout,
-        stderr=sys.stderr,
-    ):
+        domain: str = '',
+        verbose: int = 1,
+        mode: str = 'threading',
+        max_threads: int = 1,
+        host_driver: str | None = None,
+        exc_cb: (
+            Callable[[str, tuple[type[BaseException], BaseException, TracebackType | str]], object]
+            | None
+        ) = None,
+        stdout: Any = sys.stdout,  # any object with write() and flush(), like Protocol.stdout
+        stderr: Any = sys.stderr,  # any object with write() and flush()
+    ) -> None:
         """
         Constructor. All arguments should be passed as keyword arguments.
         Depending on the verbosity level, the following types
@@ -201,9 +239,11 @@ class Queue:
         :type  exc_cb: func(jobname, exc_info)
         :param exc_cb: callback function to call on exceptions
         :type  stdout: file
-        :param stdout: The output channel, defaults to sys.stdout.
+        :param stdout: The output channel, defaults to sys.stdout. Any
+            object with write() and flush() works.
         :type  stderr: file
-        :param stderr: The error channel, defaults to sys.stderr.
+        :param stderr: The error channel, defaults to sys.stderr. Any
+            object with write() and flush() works.
         """
         self._logger = _logger
         self.workqueue = WorkQueue(mode=mode)
@@ -231,7 +271,11 @@ class Queue:
         self.workqueue.job_succeeded_event.listen(self._on_job_succeeded)
         self.workqueue.job_aborted_event.listen(self._on_job_aborted)
 
-    def _update_verbosity(self):
+    def _update_verbosity(self) -> None:
+        """
+        Maps the output channels to stdout, stderr or nothing, by the
+        verbosity and the maximum number of threads; see the constructor.
+        """
         if self.verbose < 0:
             self.channel_map['status_bar'] = self.devnull
             self.channel_map['connection'] = self.devnull
@@ -263,18 +307,24 @@ class Queue:
             self.channel_map['errors'] = self.stderr
             self.channel_map['tracebacks'] = self.stderr
 
-    def _write(self, channel, msg):
+    def _write(self, channel: str, msg: str) -> None:
+        """
+        Writes the given message to the given output channel, and flushes it.
+        """
         with self.lock:
             self.channel_map[channel].write(msg)
             self.channel_map[channel].flush()
 
-    def _del_status_bar(self):
+    def _del_status_bar(self) -> None:
+        """
+        Erases the status bar, if any, with backspaces.
+        """
         if self.status_bar_length == 0:
             return
         self._write('status_bar', '\b \b' * self.status_bar_length)
         self.status_bar_length = 0
 
-    def get_progress(self):
+    def get_progress(self) -> float:
         """
         Returns the progress in percent.
 
@@ -285,7 +335,11 @@ class Queue:
             return 0.0
         return 100.0 / self.total * self.completed
 
-    def _print_status_bar(self, exclude=None):
+    def _print_status_bar(self, exclude: str | None = None) -> None:
+        """
+        Writes the status bar: the names of the running jobs, except the
+        given one, and the progress. Writes nothing if no job is running.
+        """
         if self.total == 0:
             return
         percent = 100.0 / self.total * self.completed
@@ -310,26 +364,49 @@ class Queue:
         self._write('status_bar', text)
         self.status_bar_length = len(text)
 
-    def _print(self, channel, msg):
+    def _print(self, channel: str, msg: str) -> None:
+        """
+        Writes the given message and a newline to the given output channel,
+        and redraws the status bar after it.
+        """
         self._del_status_bar()
         self._write(channel, msg + '\n')
         self._print_status_bar()
 
-    def _dbg(self, level, msg, exc_info=None):
+    def _dbg(self, level: int, msg: str, exc_info: bool | BaseException | None = None) -> None:
+        """
+        Logs the given message if the verbosity is at least the given level.
+        """
         if level > self.verbose:
             return
         self._logger.info(msg, exc_info=exc_info)
 
-    def _on_job_init(self, job):
+    def _on_job_init(self, job: 'Job') -> None:
+        """
+        Adds the output channel of the connection to the data of the given
+        job, before its first attempt.
+        """
         if job.data is None:
             job.data = {}
         job.data['stdout'] = self.channel_map['connection']
 
-    def _on_job_started(self, job):
+    def _on_job_started(self, job: 'Thread') -> None:
+        """
+        Redraws the status bar when an attempt of a job starts.
+        """
         self._del_status_bar()
         self._print_status_bar()
 
-    def _on_job_error(self, job, exc_info):
+    def _on_job_error(
+        self,
+        job: 'Thread',
+        exc_info: tuple[type[BaseException], BaseException, TracebackType | str],
+    ) -> None:
+        """
+        Handles a failed attempt of the given job: calls the exception
+        callback, and writes the error and its traceback to the output
+        channels.
+        """
         msg = job.name + ' error: ' + str(exc_info[1])
         trace = ''.join(format_exception(*exc_info))
         if self.exc_cb:
@@ -340,20 +417,28 @@ class Queue:
         else:
             self._print('fatal_errors', trace)
 
-    def _on_job_succeeded(self, job):
+    def _on_job_succeeded(self, job: 'Thread') -> None:
+        """
+        Counts the given job as completed, and reports its success on the
+        status bar channel.
+        """
         self.completed += 1
         self._del_status_bar()
         self._write('status_bar', job.name + ' succeeded.' + '\n')
         self._print_status_bar(exclude=job.name)
 
-    def _on_job_aborted(self, job):
+    def _on_job_aborted(self, job: 'Thread') -> None:
+        """
+        Counts the given job as completed and failed, after its last
+        attempt failed, and reports it on the errors channel.
+        """
         self.completed += 1
         self.failed += 1
         self._del_status_bar()
         self._write('errors', job.name + ' finally failed.' + '\n')
         self._print_status_bar(exclude=job.name)
 
-    def set_max_threads(self, n_connections):
+    def set_max_threads(self, n_connections: int) -> None:
         """
         Sets the maximum number of concurrent connections.
 
@@ -363,7 +448,7 @@ class Queue:
         self.workqueue.set_max_threads(n_connections)
         self._update_verbosity()
 
-    def get_max_threads(self):
+    def get_max_threads(self) -> int:
         """
         Returns the maximum number of concurrent threads.
 
@@ -372,7 +457,9 @@ class Queue:
         """
         return self.workqueue.get_max_threads()
 
-    def add_account_pool(self, pool, match=None):
+    def add_account_pool(
+        self, pool: 'AccountPool', match: 'Callable[[Host], bool] | None' = None
+    ) -> None:
         """
         Adds a new account pool. If the given match argument is
         None, the pool is the default pool. Otherwise, the match argument is
@@ -432,17 +519,17 @@ class Queue:
         """
         self.account_manager.add_pool(pool, match)
 
-    def add_account(self, account):
+    def add_account(self, account: 'Account | Iterable[Account]') -> None:
         """
         Adds the given account to the default account pool that Exscript uses
         to log into all hosts that have no specific :class:`Account` attached.
 
-        :type  account: Account
-        :param account: The account that is added.
+        :type  account: Account|list[Account]
+        :param account: The account or accounts that are added.
         """
         self.account_manager.add_account(account)
 
-    def is_completed(self):
+    def is_completed(self) -> bool:
         """
         Returns True if the task is completed, False otherwise.
         In other words, this method returns True if the queue is empty.
@@ -452,7 +539,7 @@ class Queue:
         """
         return self.workqueue.get_length() == 0
 
-    def join(self):
+    def join(self) -> None:
         """
         Waits until all jobs are completed.
         """
@@ -463,7 +550,7 @@ class Queue:
         self._print_status_bar()
         gc.collect()
 
-    def shutdown(self, force=False):
+    def shutdown(self, force: bool = False) -> None:
         """
         Stop executing any further jobs. If the force argument is True,
         the function does not wait until any queued jobs are completed but
@@ -473,7 +560,7 @@ class Queue:
         after using this method.
 
         :type  force: bool
-        :param force: Whether to wait until all jobs were processed.
+        :param force: Whether to stop without waiting until all jobs were processed.
         """
         if not force:
             self.join()
@@ -483,14 +570,14 @@ class Queue:
         self._dbg(3, 'Queue has shut down.')
         self._del_status_bar()
 
-    def destroy(self, force=False):
+    def destroy(self, force: bool = False) -> None:
         """
         Like shutdown(), but also removes all accounts, hosts, etc., and
         does not restart the queue. In other words, the queue can no longer
         be used after calling this method.
 
         :type  force: bool
-        :param force: Whether to wait until all jobs were processed.
+        :param force: Whether to stop without waiting until all jobs were processed.
         """
         try:
             if not force:
@@ -506,7 +593,7 @@ class Queue:
             self._dbg(3, 'Queue was destroyed.')
             self._del_status_bar()
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Remove all accounts, hosts, etc.
         """
@@ -520,7 +607,22 @@ class Queue:
         self._dbg(3, 'Queue was reset.')
         self._del_status_bar()
 
-    def _run(self, hosts, callback, queue_function, *args):
+    def _run(
+        self,
+        hosts: 'str | Host | Iterable[str | Host]',
+        callback: Callable[..., object],
+        queue_function: Callable[..., str | None],
+        *args: Any,
+    ) -> Task | None:
+        """
+        Enqueues a job for each of the given hosts with the given function
+        of the work queue, which gets the job function, the name of the host,
+        the given arguments and the job data.
+
+        :param callback: The function that the jobs call with the job, the
+            host and the connection.
+        :return: The task of the jobs, or None if no job was enqueued.
+        """
         hosts = to_hosts(hosts, default_domain=self.domain)
         self.total += len(hosts)
         callback = _prepare_connection(callback, self.account_manager)
@@ -542,28 +644,39 @@ class Queue:
         self._dbg(2, 'All jobs enqueued.')
         return task
 
-    def run(self, hosts, function, attempts=1):
+    def run(
+        self,
+        hosts: 'str | Host | Iterable[str | Host]',
+        function: 'Callable[[Thread, Host, Protocol], object]',
+        attempts: int = 1,
+    ) -> Task | None:
         """
         Add the given function to a queue, and call it once for each host
         according to the threading options.
         Use :func:`Exscript.util.decorator.bind` if you also want to pass
         additional arguments to the callback function.
 
-        Returns an object that represents the queued task, and that may be
-        passed to is_completed() to check the status.
+        Returns the task of the jobs, whose is_completed() and wait()
+        methods check its status, or None if no job was enqueued.
 
         :type  hosts: string|list(string)|Host|list(Host)
         :param hosts: A hostname or Host object, or a list of them.
         :type  function: function
-        :param function: The function to execute.
+        :param function: The function to execute. It gets the job, the host
+            and the connection, which is not logged in yet.
         :type  attempts: int
         :param attempts: The number of attempts on failure.
-        :rtype:  object
-        :return: An object representing the task.
+        :rtype:  Task|None
+        :return: An object representing the task, or None.
         """
         return self._run(hosts, function, self.workqueue.enqueue, attempts)
 
-    def run_or_ignore(self, hosts, function, attempts=1):
+    def run_or_ignore(
+        self,
+        hosts: 'str | Host | Iterable[str | Host]',
+        function: 'Callable[[Thread, Host, Protocol], object]',
+        attempts: int = 1,
+    ) -> Task | None:
         """
         Like run(), but only appends hosts that are not already in the
         queue.
@@ -574,12 +687,17 @@ class Queue:
         :param function: The function to execute.
         :type  attempts: int
         :param attempts: The number of attempts on failure.
-        :rtype:  object
+        :rtype:  Task|None
         :return: A task object, or None if all hosts were duplicates.
         """
         return self._run(hosts, function, self.workqueue.enqueue_or_ignore, attempts)
 
-    def priority_run(self, hosts, function, attempts=1):
+    def priority_run(
+        self,
+        hosts: 'str | Host | Iterable[str | Host]',
+        function: 'Callable[[Thread, Host, Protocol], object]',
+        attempts: int = 1,
+    ) -> Task | None:
         """
         Like run(), but adds the task to the front of the queue.
 
@@ -589,12 +707,17 @@ class Queue:
         :param function: The function to execute.
         :type  attempts: int
         :param attempts: The number of attempts on failure.
-        :rtype:  object
-        :return: An object representing the task.
+        :rtype:  Task|None
+        :return: An object representing the task, or None.
         """
         return self._run(hosts, function, self.workqueue.priority_enqueue, False, attempts)
 
-    def priority_run_or_raise(self, hosts, function, attempts=1):
+    def priority_run_or_raise(
+        self,
+        hosts: 'str | Host | Iterable[str | Host]',
+        function: 'Callable[[Thread, Host, Protocol], object]',
+        attempts: int = 1,
+    ) -> Task | None:
         """
         Like priority_run(), but if a host is already in the queue, the
         existing host is moved to the top of the queue instead of enqueuing
@@ -606,12 +729,17 @@ class Queue:
         :param function: The function to execute.
         :type  attempts: int
         :param attempts: The number of attempts on failure.
-        :rtype:  object
+        :rtype:  Task|None
         :return: A task object, or None if all hosts were duplicates.
         """
         return self._run(hosts, function, self.workqueue.priority_enqueue_or_raise, False, attempts)
 
-    def force_run(self, hosts, function, attempts=1):
+    def force_run(
+        self,
+        hosts: 'str | Host | Iterable[str | Host]',
+        function: 'Callable[[Thread, Host, Protocol], object]',
+        attempts: int = 1,
+    ) -> Task | None:
         """
         Like priority_run(), but starts the task immediately even if that
         max_threads is exceeded.
@@ -622,24 +750,26 @@ class Queue:
         :param function: The function to execute.
         :type  attempts: int
         :param attempts: The number of attempts on failure.
-        :rtype:  object
-        :return: An object representing the task.
+        :rtype:  Task|None
+        :return: An object representing the task, or None.
         """
         return self._run(hosts, function, self.workqueue.priority_enqueue, True, attempts)
 
-    def enqueue(self, function, name=None, attempts=1):
+    def enqueue(
+        self, function: 'Callable[[Thread], object]', name: str | None = None, attempts: int = 1
+    ) -> Task:
         """
         Places the given function in the queue and calls it as soon
         as a thread is available. To pass additional arguments to the
         callback, use Python's functools.partial().
 
         :type  function: function
-        :param function: The function to execute.
+        :param function: The function to execute. It gets the job.
         :type  name: string
         :param name: A name for the task.
         :type  attempts: int
         :param attempts: The number of attempts on failure.
-        :rtype:  object
+        :rtype:  Task
         :return: An object representing the task.
         """
         self.total += 1

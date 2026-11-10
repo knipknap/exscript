@@ -20,18 +20,45 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The main loop of the work queue, which starts the jobs.
+"""
+
 import logging
 import threading
+from collections.abc import Callable
+from types import TracebackType
+from typing import TYPE_CHECKING, Any
 
 from ..util.event import Event
 from .job import Job
+
+if TYPE_CHECKING:
+    from .job import Thread
+    from .pipeline import Pipeline
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
 
 
 class MainLoop(threading.Thread):
-    def __init__(self, collection, job_cls):
+    """
+    The thread that takes the jobs from the pipeline and starts them, and
+    restarts each failed job until it has used up its attempts.
+
+    job_init_event gets the Job before its first attempt. job_started_event,
+    job_succeeded_event and job_aborted_event (after the last failed attempt)
+    get the Thread of the attempt; job_error_event gets the Thread and the
+    exception information. queue_empty_event gets no arguments.
+    """
+
+    def __init__(self, collection: 'Pipeline', job_cls: 'type[Thread]') -> None:
+        """
+        Constructor.
+
+        :param collection: The pipeline of the jobs.
+        :param job_cls: The class of the threads that run the jobs.
+        """
         threading.Thread.__init__(self)
         self._logger = _logger
         self.job_init_event = Event()
@@ -45,18 +72,39 @@ class MainLoop(threading.Thread):
         self.debug = 0
         self.daemon = True
 
-    def _dbg(self, level, msg, exc_info=None):
+    def _dbg(self, level: int, msg: str, exc_info: bool | BaseException | None = None) -> None:
+        """
+        Logs the given message if the debug level is at least the given level.
+        """
         if level > self.debug:
             return
         self._logger.debug(msg, exc_info=exc_info)
 
-    def enqueue(self, function, name, times, data):
+    # Any: the data of the job, see job.Thread.__init__().
+    def enqueue(
+        self, function: 'Callable[[Thread], object]', name: str | None, times: int, data: Any
+    ) -> str:
+        """
+        Appends a new job to the pipeline.
+
+        :return: The id of the job.
+        """
         job = Job(function, name, times, data)
         job.id = self.collection.append(job)
         return job.id
 
-    def enqueue_or_ignore(self, function, name, times, data):
-        def conditional_append(queue):
+    # Any: the data of the job, see job.Thread.__init__().
+    def enqueue_or_ignore(
+        self, function: 'Callable[[Thread], object]', name: str | None, times: int, data: Any
+    ) -> str | None:
+        """
+        Like enqueue(), but does nothing if a job with the given name is in
+        the pipeline already.
+
+        :return: The id of the new job, or None.
+        """
+
+        def conditional_append(queue: 'Pipeline') -> str | None:
             if queue.get_from_name(name) is not None:
                 return None
             job = Job(function, name, times, data)
@@ -65,13 +113,45 @@ class MainLoop(threading.Thread):
 
         return self.collection.with_lock(conditional_append)
 
-    def priority_enqueue(self, function, name, force_start, times, data):
+    # Any: the data of the job, see job.Thread.__init__().
+    def priority_enqueue(
+        self,
+        function: 'Callable[[Thread], object]',
+        name: str | None,
+        force_start: bool,
+        times: int,
+        data: Any,
+    ) -> str:
+        """
+        Adds a new job to the start of the pipeline.
+
+        :param force_start: Whether to start the job even if the maximum
+            number of jobs is in progress already.
+        :return: The id of the job.
+        """
         job = Job(function, name, times, data)
         job.id = self.collection.appendleft(job, name, force=force_start)
         return job.id
 
-    def priority_enqueue_or_raise(self, function, name, force_start, times, data):
-        def conditional_append(queue):
+    # Any: the data of the job, see job.Thread.__init__().
+    def priority_enqueue_or_raise(
+        self,
+        function: 'Callable[[Thread], object]',
+        name: str | None,
+        force_start: bool,
+        times: int,
+        data: Any,
+    ) -> str | None:
+        """
+        Like enqueue_or_ignore(), but if a job with the given name is in the
+        pipeline already, moves that job to the start of the pipeline, see
+        Pipeline.prioritize().
+
+        :param force_start: Whether to force the existing job.
+        :return: The id of the new job, or None.
+        """
+
+        def conditional_append(queue: 'Pipeline') -> str | None:
             job = queue.get_from_name(name)
             if job is None:
                 job = Job(function, name, times, data)
@@ -82,13 +162,33 @@ class MainLoop(threading.Thread):
 
         return self.collection.with_lock(conditional_append)
 
-    def wait_for(self, job_id):
+    def wait_for(self, job_id: str) -> None:
+        """
+        Waits until the job with the given id is removed from the pipeline.
+        """
         self.collection.wait_for_id(job_id)
 
-    def get_queue_length(self):
+    def get_queue_length(self) -> int:
+        """
+        Returns the number of jobs in the pipeline, including those in
+        progress.
+        """
         return len(self.collection)
 
-    def _on_job_completed(self, job, exc_info):
+    def _on_job_completed(
+        self,
+        job: Job,
+        exc_info: (
+            tuple[type[BaseException] | None, BaseException | None, str | TracebackType | None]
+            | None
+        ),
+    ) -> None:
+        """
+        Handles the end of an attempt of the given job, with the exception
+        information of the attempt, or None. Emits the events, then restarts
+        the job if it failed and has attempts left, else removes it from the
+        pipeline. The watcher thread of the job calls this.
+        """
         # This function is called in a sub-thread, so we need to be
         # careful that we are not in a lock while sending an event.
         self._dbg(4, 'Job "%s" called completed()' % job.name)
@@ -119,7 +219,11 @@ class MainLoop(threading.Thread):
             else:
                 self.collection.task_done(job)
 
-    def run(self):
+    def run(self) -> None:
+        """
+        Takes the jobs from the pipeline and starts them, until the pipeline
+        is stopped.
+        """
         while True:
             # Get the next job from the queue. This blocks until a task
             # is available or until self.collection.stop() is called.

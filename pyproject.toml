@@ -132,13 +132,7 @@ ignore_missing_imports = true  # ncclient and others ship no type hints
 # Modules that are not annotated yet (P8). Remove a module from this list when
 # it passes the strict checks; the list only shrinks.
 module = [
-    "Exscript.queue",
     "Exscript.util.sigint",
-    "Exscript.workqueue.job",
-    "Exscript.workqueue.mainloop",
-    "Exscript.workqueue.pipeline",
-    "Exscript.workqueue.task",
-    "Exscript.workqueue.workqueue",
 ]
 disallow_any_generics = false
 disallow_subclassing_any = false
