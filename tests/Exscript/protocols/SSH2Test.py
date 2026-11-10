@@ -1,3 +1,4 @@
+import io
 import os
 import socket
 import tempfile
@@ -232,6 +233,38 @@ class FingerprintTest(unittest.TestCase):
         self.assertIn(agent_key.fingerprint, output[0])
 
 
+class _TwoPrompts(paramiko.ServerInterface):
+    """Asks for a verification code and the password, and records the answers."""
+
+    answers: list[list[str]] = []
+
+    def get_allowed_auths(self, username):
+        return 'keyboard-interactive'
+
+    def check_auth_interactive(self, username, submethods):
+        prompts = ('Verification code: ', False), ('Password: ', False)
+        return paramiko.InteractiveQuery('', '', *prompts)
+
+    def check_auth_interactive_response(self, responses):
+        self.answers.append(list(responses))
+        return paramiko.AUTH_SUCCESSFUL if len(responses) == 2 else paramiko.AUTH_FAILED
+
+
+class KeyboardInteractiveTest(unittest.TestCase):
+    """Every prompt gets an answer: password prompts the password, others an empty string."""
+
+    def testUnknownPrompt(self):
+        interface = type('TwoPrompts', (_TwoPrompts,), {'answers': []})
+        server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=interface)
+        stdout = io.StringIO()
+        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, stdout=stdout)
+        self.addCleanup(conn.close, force=True)
+        conn.connect(HOST, server.port)
+        conn._paramiko_auth('admin', 'S3cret')
+        self.assertEqual(interface.answers, [['', 'S3cret']])
+        self.assertEqual(stdout.getvalue(), 'Verification code: \nPassword: \n')
+
+
 class ConnectTest(unittest.TestCase):
     def testTriesAllAddresses(self):
         server = KeyServer(self, paramiko.RSAKey(filename=keyfile))
@@ -291,6 +324,7 @@ def suite():
             loader.loadTestsFromTestCase(HostKeyTest),
             loader.loadTestsFromTestCase(ReconnectTest),
             loader.loadTestsFromTestCase(FingerprintTest),
+            loader.loadTestsFromTestCase(KeyboardInteractiveTest),
             loader.loadTestsFromTestCase(ConnectTest),
             loader.loadTestsFromTestCase(TerminalSizeTest),
         ]

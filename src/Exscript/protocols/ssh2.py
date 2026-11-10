@@ -238,9 +238,9 @@ class SSH2(Protocol):
         """
         Authenticates with the keyboard-interactive method: answers S/Key and
         OTP challenges with a one-time password computed from the password,
-        and password prompts with the password. Passes the answered prompts,
-        but not the answers, to the received data. Does nothing without a
-        password.
+        password prompts with the password, and other prompts, such as for a
+        verification code, with an empty string. Passes the prompts, but not
+        the answers, to the received data. Does nothing without a password.
         """
         if password is None:
             return
@@ -248,29 +248,24 @@ class SSH2(Protocol):
         def handler(
             title: str, instructions: str, prompt_list: list[tuple[str, bool]]
         ) -> list[str]:
-            if not prompt_list:
-                return []
             response = []
             for prompt, visible in prompt_list:
+                self._receive_cb(prompt + '\n')  # Expose the prompt (hide the answer).
                 match = _skey_re.search(prompt)
                 if match is not None:
-                    self._receive_cb(prompt + '\n')  # Expose the prompt (hide the PW).
                     self._dbg(2, "S/Key prompt received.")
                     seq = int(match.group(1))
                     seed = match.group(2)
                     self.otp_requested_event(Account(username, password), seq, seed)
                     self._dbg(3, "Seq: %s, Seed: %s" % (seq, seed))
-                    skey_password = otp(password, seed, seq)
-                    response.append(skey_password)
-                    continue
-
-                for regex in self.get_password_prompt():
-                    match = regex.search(prompt)
-                    if match is not None:
-                        self._receive_cb(prompt + '\n')  # Expose the prompt (hide the PW).
-                        self._dbg(2, "Password prompt received.")
-                        response.append(password)
-                        break
+                    response.append(otp(password, seed, seq))
+                elif any(regex.search(prompt) for regex in self.get_password_prompt()):
+                    self._dbg(2, "Password prompt received.")
+                    response.append(password)
+                else:
+                    # Servers such as OpenSSH close the connection unless every prompt is answered.
+                    self._dbg(2, "Unknown prompt %r, answered with an empty string." % prompt)
+                    response.append('')
             return response
 
         cast(paramiko.Transport, self._transport).auth_interactive(username, handler)
@@ -281,7 +276,10 @@ class SSH2(Protocol):
         password. Passes a password prompt to the received data.
         """
         self._receive_cb('Password: \n')  # Expose a prompt (hide the PW).
-        cast(paramiko.Transport, self._transport).auth_password(username, password or '')
+        # Without fallback, paramiko would answer any single keyboard-interactive
+        # prompt with the password if the server refused the password method.
+        transport = cast(paramiko.Transport, self._transport)
+        transport.auth_password(username, password or '', fallback=False)
 
     def _paramiko_auth_agent(self, username: str, password: str | None = None) -> None:
         """
