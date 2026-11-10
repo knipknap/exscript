@@ -163,7 +163,8 @@ class Template(Scope):
         unless the parser disables escaping. An escaped dollar sign stays
         escaped for the Execute token; any other escaped character is
         returned without the backslash. Raises a CompileError at the current
-        position of the lexer for a Unicode sequence above U+10FFFF.
+        position of the lexer for a Unicode sequence above U+10FFFF or an
+        octal sequence above \\377.
 
         :param ttype: The token type of the escape sequence.
         :param token: The escape sequence.
@@ -184,6 +185,12 @@ class Template(Scope):
                 self.mark_start()
                 self.mark_end(distance=len(token))
                 msg = 'Invalid escape sequence %s: above U+10FFFF' % repr(token)
+                self.lexer.syntax_error(msg, self)
+            # Python warns about these, and will reject them.
+            if ttype == 'escaped_octal' and int(token[1:], 8) > 0o377:
+                self.mark_start()
+                self.mark_end(distance=len(token))
+                msg = 'Invalid escape sequence %s: octal value above 377' % repr(token)
                 self.lexer.syntax_error(msg, self)
             return cast(str, ast.literal_eval('"' + token + '"'))
         # Simple escape sequence with one character.

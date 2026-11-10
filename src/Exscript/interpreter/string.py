@@ -142,7 +142,8 @@ class String(Token):
         evaluated. An escaped dollar sign stays escaped for the substitution
         of variables; any other escaped character is returned without the
         backslash. Raises a CompileError at the current position of the
-        lexer for a Unicode sequence above U+10FFFF.
+        lexer for a Unicode sequence above U+10FFFF or an octal sequence
+        above \\377.
 
         :param ttype: The token type of the escape sequence.
         :param token: The escape sequence.
@@ -162,6 +163,12 @@ class String(Token):
                 self.mark_start()
                 self.mark_end(distance=len(token))
                 msg = 'Invalid escape sequence %s: above U+10FFFF' % repr(token)
+                self.lexer.syntax_error(msg, self)
+            # Python warns about these, and will reject them.
+            if ttype == 'escaped_octal' and int(token[1:], 8) > 0o377:
+                self.mark_start()
+                self.mark_end(distance=len(token))
+                msg = 'Invalid escape sequence %s: octal value above 377' % repr(token)
                 self.lexer.syntax_error(msg, self)
             return cast(str, ast.literal_eval('"' + token + '"'))
         if ttype == 'escaped_common_controls':

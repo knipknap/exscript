@@ -32,6 +32,14 @@ class StringTest(TemplateTestCase):
         self.assertError(cm.exception, ['{x = "a\\U00110000"}'], ' ' * 7 + '^' * 10, message)
         self.assertString('\\U00110000', 'U00110000', no_escaping=True)
 
+    def testOctalEscapeSequenceAboveTheRange(self):
+        with self.assertRaises(CompileError) as cm:
+            self.evaluate('{x = "a\\400"}')
+        message = "Invalid escape sequence '\\\\400': octal value above 377 in undefined:1"
+        self.assertError(cm.exception, ['{x = "a\\400"}'], ' ' * 7 + '^' * 4, message)
+        self.assertString('\\377', '\xff')
+        self.assertString('\\777', '777', no_escaping=True)
+
     def testVariables(self):
         variables = self.evaluate(
             '{a = "1"}{b = list.new("x", "y")}{n = 2 * 3}{e = list.new()}'

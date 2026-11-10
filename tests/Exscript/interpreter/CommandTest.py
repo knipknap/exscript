@@ -148,6 +148,15 @@ class CommandTest(TemplateTestCase):
         self.evaluate('show \\UFFFFFFFF\n', no_escaping=True)
         self.assertSent('show UFFFFFFFF')
 
+    def testOctalEscapeSequenceAboveTheRange(self):
+        with self.assertRaises(CompileError) as cm:
+            self.evaluate('ls\nshow \\777\n')
+        message = "Invalid escape sequence '\\\\777': octal value above 377 in undefined:2"
+        self.assertError(cm.exception, ['show \\777'], '     ' + '^' * 4, message)
+        self.assertSent()
+        self.evaluate('show \\400\n', no_escaping=True)
+        self.assertSent('show 400')
+
     def testEscapedSpecialCharacters(self):
         self.evaluate('show \\{a\\} \\\\ \\$x \\# \\"\n')
         self.assertSent('show {a} \\ $x # "')
