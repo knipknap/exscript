@@ -140,7 +140,8 @@ def prompt(
 
     If no default value is given, or if doverh is False, the value from the
     history is offered as the default; the given default value is only used
-    if the history has no value.
+    if the history has no value. If there is neither, or if the value is
+    empty, no default is offered, and an empty input returns an empty string.
 
     The strip argument specifies that the returned value should be stripped
     of whitespace (default).
@@ -188,9 +189,9 @@ def prompt(
     if history is None:
         history = InputHistory()
     if not doverh or default is None:
-        default = history.get(key, str(default))
+        default = history.get(key, default)
     while True:
-        if default is None:
+        if not default:
             value = input('%s: ' % message)
         else:
             value = input('%s [%s]: ' % (message, default)) or default

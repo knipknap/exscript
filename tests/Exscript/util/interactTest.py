@@ -105,6 +105,21 @@ class interactTest(unittest.TestCase):
         self.assertEqual(value, '22')
         self.assertEqual(prompts, ['Port [22]: '])
 
+    def testPromptWithoutDefault(self):
+        # Without a default, or with an empty one, also from the history, none is offered.
+        prompt = Exscript.util.interact.prompt
+        prompts = self.typing('', '', '', '', 'admin', '')
+        self.assertEqual(prompt('host', 'Host', history=self.history), '')
+        self.assertEqual(self.history.get('host'), '')
+        self.assertEqual(prompt('host', 'Host', history=self.history), '')
+        self.assertEqual(prompt('port', 'Port', doverh=False, history=self.history), '')
+        self.assertEqual(prompt('path', 'Path', '', history=self.history), '')
+        self.assertEqual(prompt('user', 'User', history=self.history), 'admin')
+        self.assertEqual(prompt('user', 'User', history=self.history), 'admin')
+        self.assertEqual(
+            prompts, ['Host: ', 'Host: ', 'Port: ', 'Path: ', 'User: ', 'User [admin]: ']
+        )
+
     def testPromptCheck(self):
         def check(value):
             if len(value) < 4:
@@ -139,12 +154,13 @@ class interactTest(unittest.TestCase):
             pass
         history = InputHistory(os.path.join(self.tmpdir, 'history'))
         missing = os.path.join(self.tmpdir, 'missing.txt')
-        self.typing(missing, '  ' + existing + '  ')
+        prompts = self.typing(missing, '  ' + existing + '  ')
         with unittest.mock.patch('builtins.print') as output:
             filename = Exscript.util.interact.get_filename('hosts', 'Host file', history=history)
         self.assertEqual(filename, existing)
         output.assert_called_once_with('File not found. Please enter a filename.')
         self.assertEqual(history.get('hosts'), existing)
+        self.assertEqual(prompts, ['Host file: '] * 2)
 
     def testGetUser(self):
         get_user = Exscript.util.interact.get_user

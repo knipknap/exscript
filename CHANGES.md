@@ -470,6 +470,12 @@ The names below refer to functions callable from templates, not protocol methods
   exist and asks again, as documented. It passed its check and history one
   position too early to `prompt()`, so it never checked the name, and failed with
   a `TypeError` when a history was given.
+- **`Exscript.util.interact.prompt()` Without a Default:** Without a default value
+  and a value in the history, or with an empty one, `prompt()` and `get_filename()`
+  offer no default, as in `Host: `, and an empty input to `prompt()` returns an empty
+  string. Before, they showed an empty value as `Host []: `, and without one offered the
+  string `'None'`, as in `Host [None]: `, which `prompt()` returned and stored for an
+  empty input.
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.
