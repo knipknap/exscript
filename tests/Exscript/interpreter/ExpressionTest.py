@@ -1,0 +1,206 @@
+import unittest
+
+from Exscript.parselib.exception import CompileError, ExecuteError
+
+from .helpers import TemplateTestCase
+
+
+class ExpressionTest(TemplateTestCase):
+    """
+    Terms, operators and the priorities of operators in expressions.
+    """
+
+    def assertValues(self, text, **expected):
+        variables = self.evaluate(text)
+        actual = {name: variables[name] for name in expected}
+        self.assertEqual(actual, expected)
+
+    def testNumbers(self):
+        text = '{a = 42}{b = 0x1f}{c = 017}{d = 0o17}{e = true}{f = false}'
+        self.assertValues(text, a=[42], b=[31], c=[15], d=[15], e=[1], f=[0])
+
+    def testStringsAndVariables(self):
+        self.assertValues('{a = "text"}{b = a}', a=['text'], b=['text'])
+
+    def testListVariable(self):
+        self.assertValues('{a = list.new("x", "y")}{b = a}', b=['x', 'y'])
+
+    def testUndefinedVariable(self):
+        with self.assertRaises(NameError) as cm:
+            self.evaluate('ls\n{x = nothing}')
+        message = "Undefined variable 'nothing' in undefined:2"
+        self.assertError(cm.exception, ['{x = nothing}'], '     ^^^^^^^', message)
+        self.assertSent()
+
+    def testExpectedTerm(self):
+        with self.assertRaises(CompileError) as cm:
+            self.evaluate('{x = )}')
+        message = "Expected term but got close_bracket ')' in undefined:1"
+        self.assertError(cm.exception, ['{x = )}'], '     ^', message)
+
+    def testArithmetic(self):
+        text = '{a = 7 + 3}{b = 7 - 3}{c = 7 * 3}{d = 7 / 3}{e = 7 % 3}'
+        self.assertValues(text, a=[10], b=[4], c=[21], d=[2], e=[1])
+
+    def testArithmeticWithDigitStrings(self):
+        self.assertValues('{a = "5" + "6"}{b = "5" * 2}', a=[11], b=[10])
+
+    def testConcatenation(self):
+        self.assertValues('{a = "a" . "b"}{b = "a" . 1}{c = 1 . 2}', a=['ab'], b=['a1'], c=['12'])
+
+    def testOperandIsNotANumber(self):
+        for text, marker in (
+            ('{x = "a" * 2}', '     ^^^'),
+            ('{x = 1 + "b"}', '         ^^^'),
+            ('{x = "a" - 1}', '     ^^^'),
+            ('{x = 5 % "b"}', '         ^^^'),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaises(ExecuteError) as cm:
+                    self.evaluate(text)
+                op = text.split()[3]
+                message = 'Operand for %s is not a number in undefined:1' % op
+                self.assertError(cm.exception, [text], marker, message)
+
+    def testEquality(self):
+        text = '{a = 1 is 1}{b = "a" is "b"}{c = 1 is not 2}{d = "a" is not "a"}'
+        self.assertValues(text, a=[True], b=[False], c=[True], d=[False])
+
+    def testNumericComparison(self):
+        text = '{a = 3 ge 3}{b = 3 gt 3}{c = 2 le 3}{d = 4 lt 3}{e = "10" gt "9"}'
+        self.assertValues(text, a=[True], b=[False], c=[True], d=[False], e=[True])
+
+    def testIn(self):
+        text = (
+            '{l = list.new("a", "b")}'
+            '{a = "a" in l}{b = "c" in l}{c = "c" not in l}{d = "a" not in l}'
+        )
+        self.assertValues(text, a=[True], b=[False], c=[True], d=[False])
+
+    def testMatches(self):
+        text = (
+            '{a = "abc" matches /b/}{b = "abc" matches /^b/}{c = "ABC" matches /b/i}'
+            '{l = list.new("ab", "cd")}{d = l matches /^c/}{e = l matches /^x/}'
+        )
+        self.assertValues(text, a=[1], b=[0], c=[1], d=[1], e=[0])
+
+    def testMatchesRequiresARegularExpression(self):
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate('{x = "abc" matches "b"}')
+        message = 'Right hand operator is not a regular expression in undefined:1'
+        self.assertError(cm.exception, ['{x = "abc" matches "b"}'], ' ' * 19 + '^^^', message)
+
+    def testLogicalOperators(self):
+        text = '{a = 1 and 0}{b = 0 or 1}{c = not 0}{d = not 1}{e = 1 and 1 and 0}'
+        self.assertValues(text, a=[0], b=[1], c=[True], d=[False], e=[0])
+
+    def testMultiplicationBeforeAddition(self):
+        text = '{a = 2 + 3 * 4}{b = 2 * 3 + 4}{c = 20 - 12 / 4}{d = 20 / 4 - 1}{e = 1 + 7 % 3}'
+        self.assertValues(text, a=[14], b=[10], c=[17], d=[4], e=[2])
+
+    def testAdditionBeforeConcatenation(self):
+        self.assertValues('{a = 1 + 2 . 3}{b = "a" . 1 + 2}', a=['33'], b=['a3'])
+
+    def testConcatenationBeforeComparison(self):
+        text = '{a = "a" . "b" is "ab"}{b = 2 * 3 is 6}{c = 1 + 1 is not 3}'
+        self.assertValues(text, a=[True], b=[True], c=[True])
+
+    def testComparisonBeforeNot(self):
+        self.assertValues('{a = not 1 is 2}{b = not "a" in "a"}', a=[True], b=[False])
+
+    def testNotBeforeAndOr(self):
+        self.assertValues('{a = not 0 and 0}{b = not 1 or 1}', a=[0], b=[1])
+
+    def testComparisonBeforeAndOr(self):
+        text = '{a = 1 is 1 and 2 is 3}{b = 1 is 2 or 2 is 2}'
+        self.assertValues(text, a=[False], b=[True])
+
+    def testExpressionOnSeveralLines(self):
+        text = '{a = 1 is 1\n  and 2\n  is 2\n}'
+        self.assertValues(text, a=[True])
+
+    def testListOperands(self):
+        text = (
+            '{l = list.new("a", "b")}{e = list.new()}'
+            '{a = l . "c"}{b = e . "c"}{c = e is ""}{d = "c" . e}'
+        )
+        self.assertValues(text, a=['ac'], b=['c'], c=[True], d=['c'])
+
+    def testRegularExpressionTerm(self):
+        variables = self.evaluate('{r = /a.c/i}')
+        self.assertEqual([pattern.pattern for pattern in variables['r']], ['a.c'])
+
+
+class FunctionCallTest(TemplateTestCase):
+    """
+    Calls of functions in expressions and as statements.
+    """
+
+    def testCall(self):
+        variables = self.evaluate(
+            '{a = string.toupper("a" . "b")}{b = list.length(list.new("x", 1))}'
+        )
+        self.assertEqual(variables['a'], ['AB'])
+        self.assertEqual(variables['b'], [2])
+
+    def testCallAsStatement(self):
+        self.evaluate('{connection.sendline("ls")}')
+        self.assertSent('ls')
+
+    def testFunctionOfTheCaller(self):
+        calls = []
+
+        def record(scope, *args):
+            calls.append((scope.get('__hostname__'), args))
+            return ['result']
+
+        variables = self.evaluate(
+            '{x = record("a", 1, list.new("b", "c"))}{record()}', record=record
+        )
+        self.assertEqual(variables['x'], ['result'])
+        self.assertEqual(calls, [(['r1'], (['a'], [1], ['b', 'c'])), (['r1'], ())])
+
+    def testUndefinedFunction(self):
+        with self.assertRaises(CompileError) as cm:
+            self.evaluate('ls\n{x = unknown.func(1)}')
+        message = "Undefined function 'unknown.func' in undefined:2"
+        self.assertError(cm.exception, ['{x = unknown.func(1)}'], '     ^^^^^^^^^^^^', message)
+        self.assertSent()
+
+    def testErrorInFunction(self):
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate('{x = list.get(list.new("a"), 3)}')
+        message = (
+            "ValueError while executing function 'list.get': no such item in the list"
+            ' in undefined:1'
+        )
+        self.assertError(
+            cm.exception, ['{x = list.get(list.new("a"), 3)}'], '     ^^^^^^^^', message
+        )
+
+    def testMissingComma(self):
+        with self.assertRaises(CompileError) as cm:
+            self.evaluate('{x = string.replace("abc", "b" "c")}')
+        message = "Expected comma or closing bracket but got string_delimiter '\"' in undefined:1"
+        lines = ['{x = string.replace("abc", "b" "c")}']
+        self.assertError(cm.exception, lines, ' ' * 31 + '^', message)
+
+    def testMissingClosingBracket(self):
+        with self.assertRaises(CompileError) as cm:
+            self.evaluate('{x = list.new("a"}')
+        message = "Expected comma or closing bracket but got close_curly_bracket '}' in undefined:1"
+        self.assertError(cm.exception, ['{x = list.new("a"}'], ' ' * 17 + '^', message)
+
+
+def suite():
+    loader = unittest.TestLoader()
+    return unittest.TestSuite(
+        [
+            loader.loadTestsFromTestCase(ExpressionTest),
+            loader.loadTestsFromTestCase(FunctionCallTest),
+        ]
+    )
+
+
+if __name__ == '__main__':
+    unittest.TextTestRunner(verbosity=2).run(suite())
