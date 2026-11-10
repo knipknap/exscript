@@ -31,14 +31,34 @@ Windows
 - The default known_hosts file is ``%USERPROFILE%\.ssh\known_hosts``
   (:doc:`security`).
 
-Threads and processes
----------------------
+Threads, processes and asyncio
+------------------------------
 
 The queue runs each job in a thread; Exscript 3.0 removed its process
 mode. To use several CPU cores, run the free-threaded build (below), or
 start several processes yourself, for example with a pool of
 :mod:`concurrent.futures` or the prefork pool of Celery, and create the
 queue or the connections in the child processes.
+
+Exscript also runs under `gevent <https://www.gevent.org>`_, which
+replaces threads with greenlets, so a process can hold many more
+connections. The application patches the standard library itself, before
+it imports anything else::
+
+    from gevent import monkey
+
+    monkey.patch_all()
+
+    from Exscript import Queue  # and the rest
+
+Exscript has no gevent dependency or setting; CI runs Telnet and SSH
+sessions through a queue under gevent. gevent does not support the
+free-threaded build.
+
+From :mod:`asyncio` code, run Exscript in a thread, so that it does not
+block the event loop::
+
+    result = await asyncio.to_thread(conn.execute, 'show version')
 
 Free-threaded Python
 --------------------

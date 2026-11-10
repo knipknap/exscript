@@ -65,6 +65,8 @@ test = [
 ]
 types = ["mypy>=2.4", "types-lxml>=2026.2", "types-paramiko>=5.1"]
 docs = ["sphinx>=9", "furo>=2025.12", "myst-parser>=5"]
+# Not a dependency of Exscript: CI checks that applications can run it under gevent.
+gevent = [{ include-group = "test" }, "gevent>=26"]
 dev = [{ include-group = "test" }, { include-group = "types" }]
 
 [tool.hatch.version]
