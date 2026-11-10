@@ -386,6 +386,9 @@ The names below refer to functions callable from templates, not protocol methods
   exist and asks again, as documented. It passed its check and history one
   position too early to `prompt()`, so it never checked the name, and failed with
   a `TypeError` when a history was given.
+- **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
+  connection, also if sending fails; before, it left the connection open. It connects
+  only after the mail and its attachments are ready.
 - **Pseudo Protocol on Windows:** `pseudo://` URLs accept absolute Windows paths such
   as `pseudo://C:\devices\router.py`; the drive letter was taken for a port number.
 - **`Exscript.util.tty.get_terminal_size()`:** Uses `shutil.get_terminal_size()`: the

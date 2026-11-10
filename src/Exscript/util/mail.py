@@ -529,7 +529,6 @@ def send(mail: Mail, server: str = 'localhost') -> None:
     """
     sender = mail.get_sender()
     rcpt = mail.get_recipients()
-    session = smtplib.SMTP(server)
     message = MIMEMultipart()
     message['Subject'] = mail.get_subject()
     message['From'] = mail.get_sender()
@@ -546,4 +545,5 @@ def send(mail: Mail, server: str = 'localhost') -> None:
     for filename in mail.get_attachments():
         message.attach(_get_mime_object(filename))
 
-    session.sendmail(sender, rcpt, message.as_string())
+    with smtplib.SMTP(server) as session:  # sends QUIT and closes the connection
+        session.sendmail(sender, rcpt, message.as_string())

@@ -1,7 +1,9 @@
+import email
 import os
 import tempfile
 import unittest
 from getpass import getuser
+from unittest import mock
 
 import Exscript.util.mail
 from Exscript.util.mail import Mail
@@ -174,7 +176,23 @@ class mailTest(unittest.TestCase):
         self.checkResult(mail)
 
     def testSend(self):
-        pass  # no easy way to test without spamming.
+        mail = Mail(sender='me@example.com', to='you@example.com', subject='Report', body='Grüße')
+        with mock.patch('smtplib.SMTP') as smtp:
+            Exscript.util.mail.send(mail, 'mail.example.com')
+        smtp.assert_called_once_with('mail.example.com')
+        sender, rcpt, text = smtp.return_value.__enter__.return_value.sendmail.call_args.args
+        self.assertEqual((sender, rcpt), ('me@example.com', ['you@example.com']))
+        message = email.message_from_string(text)
+        self.assertEqual(message['Subject'], 'Report')
+        self.assertEqual(message.get_payload()[0].get_payload(decode=True), 'Grüße'.encode())
+        smtp.return_value.__exit__.assert_called_once()  # QUIT, and the connection is closed
+
+    def testSendDoesNotConnectIfTheMailIsIncomplete(self):
+        mail = Mail(to='you@example.com')
+        mail.add_attachment(os.path.join(tempfile.gettempdir(), 'missing-attachment'))
+        with mock.patch('smtplib.SMTP') as smtp:
+            self.assertRaises(OSError, Exscript.util.mail.send, mail)
+        smtp.assert_not_called()
 
 
 def suite():
