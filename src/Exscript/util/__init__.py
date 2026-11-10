@@ -20,4 +20,10 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+Helpers for scripts and for the other packages: starting jobs on hosts, decorators for jobs, and utilities
+for files, IP addresses, URLs, regular expressions, mail, logs and syslog, events, templates, terminals and
+interactive input.
+"""
+
 __all__: list[str] = []

@@ -20,6 +20,11 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The thread pool that runs the jobs of :class:`Exscript.Queue`: a pipeline of waiting and running jobs, and
+the tasks that group them.
+"""
+
 from .pipeline import Pipeline
 from .task import Task
 from .workqueue import WorkQueue
