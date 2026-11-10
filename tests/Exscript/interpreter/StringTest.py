@@ -68,6 +68,12 @@ class StringTest(TemplateTestCase):
         message = "'1abc' is not a variable name in undefined:1"
         self.assertError(cm.exception, ['{x = "$1abc"}'], '      ^^^^^', message)
 
+    def testFunction(self):
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate('{x = "a $f"}', f=lambda scope: ['b'])
+        message = "'f' is a function, not a variable name in undefined:1"
+        self.assertError(cm.exception, ['{x = "a $f"}'], '        ^^', message)
+
     def testLineBreak(self):
         with self.assertRaises(CompileError) as cm:
             self.evaluate('{x = "a\nb"}')

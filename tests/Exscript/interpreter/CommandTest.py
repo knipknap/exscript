@@ -110,6 +110,13 @@ class CommandTest(TemplateTestCase):
         message = "'1x' is not a variable name in undefined:1"
         self.assertError(cm.exception, ['show $1x'], '     ^^^', message)
 
+    def testFunction(self):
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate('show $f\n', f=lambda scope: ['b'])
+        message = "'f' is a function, not a variable name in undefined:1"
+        self.assertError(cm.exception, ['show $f'], '     ^^', message)
+        self.assertSent()
+
     def testEscapeSequences(self):
         self.evaluate('show \\x41\\101\\u00e9\\U0001F600 \\t \\e \\a \\0 \\v \\f \\b\n')
         self.assertSent('show AA\u00e9\U0001f600 \t \x1b \x07 \x00 \x0b \x0c \x08')

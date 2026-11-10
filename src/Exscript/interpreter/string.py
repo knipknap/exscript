@@ -206,7 +206,8 @@ class String(Token):
         varstring_re refers to, for re.sub(); a list is joined with newlines.
         An escaped reference yields the reference without the backslash, and
         a lone dollar sign stays as is. Raises an ExecuteError if the name is
-        not a valid variable name, or if the variable is not defined.
+        not a valid variable name, or if the variable is not defined or is a
+        function.
         """
         field_start = match.start(0)
         field = match.group(0)
@@ -227,7 +228,7 @@ class String(Token):
         if value is None:
             msg = 'Undefined variable %s' % repr(varname)
             self._variable_error(field, field_start, msg)
-        elif hasattr(value, 'func_name'):
+        elif callable(value):
             msg = '%s is a function, not a variable name' % repr(varname)
             self._variable_error(field, field_start, msg)
         elif isinstance(value, list):

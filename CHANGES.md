@@ -414,6 +414,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
   sequences, e.g. to `$nothing` in `show \x41 $nothing`. Before, it pointed too far to
   the left, by the number of characters by which the escape sequences are longer than
   their text.
+- **BREAKING - Functions in Strings:** A command or a string that refers to a
+  function like to a variable, e.g. `"$f"` with a function `f` that the caller
+  passes, raises an `ExecuteError`, as the interpreter intends. Before, it contained
+  the text of the function object, such as `<function f at 0x7f...>`.
 
 ### Standard Library
 
