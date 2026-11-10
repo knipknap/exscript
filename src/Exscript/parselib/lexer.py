@@ -105,12 +105,14 @@ class Lexer:
         # sender object with marks to reuse the existing error handling code.
         sender = SimpleNamespace(start=self.current_char, end=self.current_char + 1)
         # Match 1..50 chars (eager) up to the last space, newline or EOF to
-        # prevent cutoffs in the middle of a word/line.
+        # prevent cutoffs in the middle of a word/line. Without a blank or the
+        # end of the input within 50 characters, show all 50.
         regex = re.compile(r'.{1,50}(?=[ \t\r\n]|$)', flags=re.S)
-        # The cast assumes a match. The pattern fails without a blank or the end
-        # of the input within 50 characters; the grammars of the interpreter fail
-        # only at a backslash before a line break or the end of the input.
-        context = cast(re.Match[str], regex.match(self.input, sender.start)).group(0)
+        match = regex.match(self.input, sender.start)
+        if match is None:
+            context = self.input[sender.start : sender.start + 50]
+        else:
+            context = match.group(0)
         error = 'Invalid syntax: %s' % repr(context)
         self.syntax_error(error, sender)
 

@@ -418,6 +418,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   function like to a variable, e.g. `"$f"` with a function `f` that the caller
   passes, raises an `ExecuteError`, as the interpreter intends. Before, it contained
   the text of the function object, such as `<function f at 0x7f...>`.
+- **Syntax Errors of Custom Grammars:** If no expression of the grammar of
+  `Exscript.parselib.Lexer` matches, and the next 50 characters contain no blank and
+  not the end of the input, the lexer raises a `CompileError` that shows these 50
+  characters. Before, it raised an `AttributeError`. The grammars of the template
+  language were not affected.
 
 ### Standard Library
 

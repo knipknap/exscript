@@ -125,6 +125,13 @@ class LexerTest(unittest.TestCase):
         context = re.search(r"Invalid syntax: '(.*)'", str(cm.exception)).group(1)
         self.assertEqual(context, '#' + ' '.join(['word'] * 10))
 
+    def testMatchWithoutABlank(self):
+        # Without a blank or the end of the input within 50 characters.
+        with self.assertRaises(CompileError) as cm:
+            Lexer(Tokens).parse('ab ' + '#' * 60)
+        message = "\nab %s\n   ^\nInvalid syntax: '%s' in None:1" % ('#' * 60, '#' * 50)
+        self.assertEqual(str(cm.exception), message)
+
     def testGetCurrentLineNumber(self):
         lexer = lexer_for('ab\ncd ef\n')
         self.assertEqual(lexer.get_current_line_number(), 1)
@@ -285,9 +292,9 @@ class LexerPropertyTest(unittest.TestCase):
             self.assertTrue(first != second or first == 'newline', tokens)
 
     # match() shows the input up to 50 characters behind an error, up to a
-    # blank or the end of the input; shorter inputs always have such an end.
+    # blank or the end of the input if there is one within them.
     @settings(max_examples=200, deadline=None)
-    @given(st.text(alphabet='ab1 \n#', max_size=40))
+    @given(st.text(alphabet='ab1 \n#', max_size=120))
     def testInvalidSyntaxShowsThePosition(self, text):
         if '#' not in text:
             Lexer(Tokens).parse(text)
