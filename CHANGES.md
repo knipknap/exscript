@@ -596,6 +596,19 @@ The names below refer to functions callable from templates, not protocol methods
 
 ## Multi-Threading
 
+- **BREAKING - Threads Only:** The queue runs its jobs in threads only.
+  `Queue(mode='multiprocessing')` and `WorkQueue(mode='multiprocessing')` raise a
+  `ValueError`. The mode needed the `fork` start method, which is the default only on
+  Linux up to Python 3.13, and a process with threads that forks can deadlock (upstream
+  issue #230). For several CPU cores, use the free-threaded build of Python, or start
+  processes yourself and create a queue in each.
+- **BREAKING - No Pipes and Proxies:** Jobs take their accounts from the account manager
+  and write to their loggers directly, without a pipe and a thread per job. Removed:
+  `Exscript.account.AccountProxy`, `Exscript.logger.LoggerProxy`, the duplicate
+  `Exscript.account.LoggerProxy`, `Exscript.workqueue.job.Process` and
+  `Queue._create_pipe()`. The queue, accounts and account pools use the locks of
+  `threading` instead of those of `multiprocessing`.
+
 ## Demos
 
 - Updated the demo scripts to match the latest Exscript version.

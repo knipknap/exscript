@@ -63,7 +63,7 @@ from .osguesser import OsGuesser
 if TYPE_CHECKING:
     from _typeshed import FileDescriptorLike
 
-    from ..account import Account, AccountProxy
+    from ..account import Account
     from ..key import PrivateKey
 
 try:
@@ -254,9 +254,7 @@ class Protocol:
         disabled_algorithms: dict[str, list[str]] | None = None,  # SSH2 only
         preferred_authentications: list[str] | None = None,  # SSH2 only
         verify_fingerprint: bool = True,  # SSH2 only
-        account_factory: (
-            Callable[['Account | AccountProxy | None'], 'Account | AccountProxy'] | None
-        ) = None,
+        account_factory: (Callable[['Account | None'], 'Account'] | None) = None,
         banner_timeout: float = 20,  # SSH2 only
         encoding: str = 'latin-1',
         *,
@@ -556,7 +554,7 @@ class Protocol:
         self._auto_driver = driver_map[self.guess_os()]
         self._driver_replaced = False
         self._expect_canceled = False
-        self._last_account: Account | AccountProxy | None = None
+        self._last_account: Account | None = None
         # The buffer position at the last send(); None before the first one.
         self._sent_at: int | None = None
 
@@ -1120,7 +1118,7 @@ class Protocol:
         self._update_auto_driver()
         return self._connected
 
-    def _get_account(self, account: 'Account | AccountProxy | _Context | None') -> _Context:
+    def _get_account(self, account: 'Account | _Context | None') -> _Context:
         """
         Returns a context for the given account, or for that of the last call
         if None is given, and keeps the account for the next call; the account
@@ -1147,8 +1145,8 @@ class Protocol:
 
     def login(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
-        app_account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
+        app_account: 'Account | _Context | None' = None,
         flush: bool = True,
     ) -> None:
         """
@@ -1186,8 +1184,8 @@ class Protocol:
 
     def authenticate(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
-        app_account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
+        app_account: 'Account | _Context | None' = None,
         flush: bool = True,
     ) -> None:
         """
@@ -1223,9 +1221,7 @@ class Protocol:
         """
         pass
 
-    def protocol_authenticate(
-        self, account: 'Account | AccountProxy | _Context | None' = None
-    ) -> None:
+    def protocol_authenticate(self, account: 'Account | _Context | None' = None) -> None:
         """
         Low-level API to perform protocol-level authentication on protocols
         that support it.
@@ -1367,7 +1363,7 @@ class Protocol:
 
     def app_authenticate(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
         flush: bool = True,
         bailout: bool = False,
     ) -> None:
@@ -1426,7 +1422,7 @@ class Protocol:
 
     def app_authorize(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
         flush: bool = True,
         bailout: bool = False,
     ) -> None:
@@ -1463,7 +1459,7 @@ class Protocol:
 
     def auto_app_authorize(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
         flush: bool = True,
         bailout: bool = False,
     ) -> None:

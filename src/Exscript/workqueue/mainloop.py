@@ -21,7 +21,6 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import logging
-import multiprocessing
 import threading
 
 from ..util.event import Event
@@ -29,9 +28,6 @@ from .job import Job
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
-
-# See http://bugs.python.org/issue1731717
-multiprocessing.process._cleanup = lambda: None  # type: ignore[attr-defined]
 
 
 class MainLoop(threading.Thread):

@@ -23,12 +23,27 @@
 import logging
 
 from ..util.event import Event
-from .job import Process, Thread
+from .job import Thread
 from .mainloop import MainLoop
 from .pipeline import Pipeline
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
+
+
+def _check_mode(mode):
+    """
+    Raises an exception unless the given mode is 'threading': a ValueError
+    for 'multiprocessing', else a TypeError.
+    """
+    if mode == 'multiprocessing':
+        raise ValueError(
+            "mode='multiprocessing' was removed in Exscript 3.0: jobs run in threads. "
+            'For several CPU cores, run several processes yourself, or use the '
+            'free-threaded build of Python.'
+        )
+    if mode != 'threading':
+        raise TypeError('invalid "mode" argument: ' + repr(mode))
 
 
 class WorkQueue:
@@ -43,17 +58,12 @@ class WorkQueue:
 
         :type  max_threads: int
         :param max_threads: The maximum number of concurrent threads.
+        :type  mode: str
+        :param mode: 'threading', the only mode; see _check_mode().
         """
         self._logger = _logger
-        if mode == 'threading':
-            self.job_cls = Thread
-        elif mode == 'multiprocessing':
-            self._logger.warning(
-                "Mode 'multiprocessing' is not recommended, see: https://github.com/knipknap/exscript/issues/230"
-            )
-            self.job_cls = Process
-        else:
-            raise TypeError('invalid "mode" argument: ' + repr(mode))
+        _check_mode(mode)
+        self.job_cls = Thread
         if collection is None:
             self.collection = Pipeline(max_threads)
         else:

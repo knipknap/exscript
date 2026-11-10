@@ -1,7 +1,7 @@
 import threading
 import unittest
 
-from Exscript.workqueue.job import Process
+from Exscript.workqueue.job import Thread
 from Exscript.workqueue.mainloop import MainLoop
 from Exscript.workqueue.pipeline import Pipeline
 
@@ -13,7 +13,7 @@ class MainLoopTest(unittest.TestCase):
     def testMainLoop(self):
         lock = threading.Lock()
         data = {'sum': 0, 'randsum': 0}
-        ml = MainLoop(Pipeline(), Process)
+        ml = MainLoop(Pipeline(), Thread)
         nop = lambda x: None
 
         for i in range(12345):

@@ -39,11 +39,6 @@ from typing import TYPE_CHECKING, cast
 
 from .util.impl import format_exception
 
-if TYPE_CHECKING:
-    # _ConnectionBase is the common base class of the pipe connections on
-    # POSIX (Connection) and on Windows (PipeConnection).
-    from multiprocessing.connection import _ConnectionBase
-
 # -----------------------------------------------------------------------------
 # Python Logging
 
@@ -424,8 +419,7 @@ class Logger:
         """
         Appends the message to the log of the last attempt of the given job.
         """
-        # This method is called whenever a sub thread sends a log message
-        # via a pipe. (See LoggerProxy and Queue.PipeHandler)
+        # The job threads of a queue call this for the data of their sessions.
         log = self._get_log(job_id)
         log.write(message)
 
@@ -449,67 +443,6 @@ class Logger:
         log.succeeded()
         with self._lock:
             self.success += 1
-
-
-class LoggerProxy:
-    """
-    An object that has a 1:1 relation to a Logger object in another
-    process.
-    """
-
-    def __init__(self, parent: '_ConnectionBase', logger_id: int) -> None:
-        """
-        Constructor.
-
-        :type parent: multiprocessing.Connection
-        :param parent: A pipe to the associated pipe handler.
-        :param logger_id: The id() of the Logger in the other process.
-        """
-        self.parent = parent
-        self.logger_id = logger_id
-        self._lock = threading.Lock()
-
-    def add_log(self, job_id: int, name: str, attempt: int) -> Log | None:
-        """
-        Asks the logger in the other process to create a log for a new
-        attempt of the given job.
-
-        :return: A copy of the new log, or None if the logger no longer
-            exists.
-        """
-        with self._lock:
-            self.parent.send(('log-add', (self.logger_id, job_id, name, attempt)))
-            response = self.parent.recv()
-        if isinstance(response, Exception):
-            raise response
-        # The pipe returns unpickled objects without a static type.
-        return cast(Log | None, response)
-
-    def log(self, job_id: int, message: str) -> None:
-        """
-        Sends the message to the log of the given job in the other process.
-        """
-        with self._lock:
-            self.parent.send(('log-message', (self.logger_id, job_id, message)))
-
-    def log_aborted(
-        self, job_id: int, exc_info: tuple[type[BaseException], BaseException, str]
-    ) -> None:
-        """
-        Tells the logger in the other process that the given job failed.
-
-        :param exc_info: The exception, as returned by
-            :func:`Exscript.util.impl.serializeable_sys_exc_info()`.
-        """
-        with self._lock:
-            self.parent.send(('log-aborted', (self.logger_id, job_id, exc_info)))
-
-    def log_succeeded(self, job_id: int) -> None:
-        """
-        Tells the logger in the other process that the given job succeeded.
-        """
-        with self._lock:
-            self.parent.send(('log-succeeded', (self.logger_id, job_id)))
 
 
 class FileLogger(Logger):

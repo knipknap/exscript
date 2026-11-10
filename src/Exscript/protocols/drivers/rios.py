@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 from .driver import Driver
 
 if TYPE_CHECKING:
-    from ...account import Account, AccountProxy
+    from ...account import Account
     from ...util.impl import _Context
     from ..protocol import Protocol
 
@@ -73,7 +73,7 @@ class RIOSDriver(Driver):
     def auto_authorize(
         self,
         conn: 'Protocol',
-        account: 'Account | AccountProxy | _Context | None',
+        account: 'Account | _Context | None',
         flush: bool,
         bailout: bool,
     ) -> None:

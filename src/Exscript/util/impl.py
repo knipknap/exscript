@@ -25,6 +25,7 @@ Development tools.
 """
 
 import sys
+import threading
 import traceback
 import warnings
 from collections.abc import Callable
@@ -155,9 +156,7 @@ def synchronized[R](func: Callable[..., R]) -> Callable[..., R]:
         try:
             rlock = self._sync_lock
         except AttributeError:
-            from multiprocessing import RLock
-
-            rlock = self.__dict__.setdefault('_sync_lock', RLock())
+            rlock = self.__dict__.setdefault('_sync_lock', threading.RLock())
         with rlock:
             return func(self, *args, **kwargs)
 

@@ -7,10 +7,10 @@ warnings.simplefilter('ignore', DeprecationWarning)
 
 import ctypes
 import shutil
+import threading
 import time
 from functools import partial
 from multiprocessing import Value
-from multiprocessing.managers import BaseManager
 from tempfile import mkdtemp
 
 from Exscript import Account, AccountPool, FileLogger, Queue
@@ -74,23 +74,22 @@ def raise_if_not_myprotocol(job, host, conn):
 
 
 class Log:
-    data = ''
+    """Collects what the threads of the queue write."""
+
+    def __init__(self):
+        self.data = ''
+        self.lock = threading.Lock()
 
     def write(self, data):
-        self.data += data
+        with self.lock:
+            self.data += data
 
     def flush(self):
         pass
 
     def read(self):
-        return self.data
-
-
-class LogManager(BaseManager):
-    pass
-
-
-LogManager.register('Log', Log)
+        with self.lock:
+            return self.data
 
 
 class QueueTest(unittest.TestCase):
@@ -100,8 +99,8 @@ class QueueTest(unittest.TestCase):
     def createQueue(self, logdir=None, **kwargs):
         if self.queue:
             self.queue.destroy()
-        self.out = self.manager.Log()
-        self.err = self.manager.Log()
+        self.out = Log()
+        self.err = Log()
         self.queue = Queue(mode=self.mode, stdout=self.out, stderr=self.err, **kwargs)
         self.accm = self.queue.account_manager
         if logdir is not None:
@@ -111,8 +110,6 @@ class QueueTest(unittest.TestCase):
         self.tempdir = mkdtemp()
         self.queue = None
         self.logger = None
-        self.manager = LogManager()
-        self.manager.start()
         self.createQueue(verbose=-1, logdir=self.tempdir)
 
     def tearDown(self):
@@ -121,7 +118,6 @@ class QueueTest(unittest.TestCase):
             self.queue.destroy()
         except:
             pass  # queue already destroyed
-        self.manager.shutdown()
 
     def assertVerbosity(self, channel, expected):
         data = channel.read()
@@ -137,10 +133,6 @@ class QueueTest(unittest.TestCase):
             msg = repr(expected) + ' not in ' + repr(data)
             self.assertTrue(expected in data, msg)
 
-    # IMPORTANT: If you see fails of this test, it might be related to the
-    # Logmanager as it uses Process, not Thread. Mixing both is not recommended
-    # and false-positive fails have been seen with stuck old processes. So check
-    # `ps -ef -u` on your system for any old test processes and kill them.
     def testConstructor(self):
         self.assertEqual(1, self.queue.get_max_threads())
 
@@ -191,24 +183,10 @@ class QueueTest(unittest.TestCase):
             self.assertVerbosity(self.out, stdout)
             self.assertVerbosity(self.err, stderr)
 
-    def testCreatePipe(self):
-        account = Account('user', 'test')
-        self.accm.add_account(account)
-        pipe = self.queue._create_pipe()
-        pipe.send(('acquire-account', None))
-        response = pipe.recv()
-        expected = (
-            account.__hash__(),
-            account.get_name(),
-            account.get_password(),
-            account.get_authorization_password(),
-            account.get_key(),
-        )
-        self.assertEqual(response, expected)
-        pipe.send(('release-account', account.__hash__()))
-        response = pipe.recv()
-        self.assertEqual(response, 'ok')
-        pipe.close()
+    def testProcessModeWasRemoved(self):
+        with self.assertRaisesRegex(ValueError, 'removed in Exscript 3.0'):
+            Queue(mode='multiprocessing')
+        self.assertRaises(TypeError, Queue, mode='greenlets')
 
     def testSetMaxThreads(self):
         self.assertEqual(1, self.queue.get_max_threads())
@@ -433,18 +411,9 @@ class QueueTest(unittest.TestCase):
                 content = fp.read()
 
 
-# Mode 'multiprocessing' is not recommended and officially not supported with
-# threads in parallel, see https://github.com/knipknap/exscript/issues/230
-#
-# class QueueTestMultiProcessing(QueueTest):
-#     mode = 'multiprocessing'
-
-
 def suite():
     loader = unittest.TestLoader()
-    suite1 = loader.loadTestsFromTestCase(QueueTest)
-    # suite2 = loader.loadTestsFromTestCase(QueueTestMultiProcessing)
-    return unittest.TestSuite((suite1,))
+    return loader.loadTestsFromTestCase(QueueTest)
 
 
 if __name__ == '__main__':

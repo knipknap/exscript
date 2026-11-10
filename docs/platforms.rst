@@ -31,14 +31,14 @@ Windows
 - The default known_hosts file is ``%USERPROFILE%\.ssh\known_hosts``
   (:doc:`security`).
 
-The queue's process mode
-------------------------
+Threads and processes
+---------------------
 
-``Queue(mode='multiprocessing')`` needs the ``fork`` start method of
-:mod:`multiprocessing`, which is the default only on Linux with Python
-3.12 and 3.13. On other platforms and versions, use the default thread
-mode, which is also what :func:`Exscript.util.start.start` uses. The
-process mode warns that it is not recommended.
+The queue runs each job in a thread; Exscript 3.0 removed its process
+mode. To use several CPU cores, run the free-threaded build (below), or
+start several processes yourself, for example with a pool of
+:mod:`concurrent.futures` or the prefork pool of Celery, and create the
+queue or the connections in the child processes.
 
 Free-threaded Python
 --------------------

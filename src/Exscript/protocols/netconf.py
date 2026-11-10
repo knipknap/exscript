@@ -50,7 +50,7 @@ if TYPE_CHECKING:
     from lxml.etree import _Element
     from paramiko import Channel, Transport
 
-    from ..account import Account, AccountProxy
+    from ..account import Account
     from ..util.impl import _Context
 
 # ncclient and lxml are imported when the first NETCONF session starts, not
@@ -535,8 +535,8 @@ class Netconf(SSH2):
 
     def login(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
-        app_account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
+        app_account: 'Account | _Context | None' = None,
         flush: bool = True,
     ) -> None:
         """
@@ -560,8 +560,8 @@ class Netconf(SSH2):
 
     def authenticate(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
-        app_account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
+        app_account: 'Account | _Context | None' = None,
         flush: bool = True,
     ) -> None:
         """
@@ -583,7 +583,7 @@ class Netconf(SSH2):
 
     def app_authenticate(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
         flush: bool = True,
         bailout: bool = False,
     ) -> None:
@@ -595,7 +595,7 @@ class Netconf(SSH2):
 
     def app_authorize(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
         flush: bool = True,
         bailout: bool = False,
     ) -> None:
@@ -607,7 +607,7 @@ class Netconf(SSH2):
 
     def auto_app_authorize(
         self,
-        account: 'Account | AccountProxy | _Context | None' = None,
+        account: 'Account | _Context | None' = None,
         flush: bool = True,
         bailout: bool = False,
     ) -> None:

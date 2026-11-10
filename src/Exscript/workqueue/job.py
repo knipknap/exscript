@@ -20,76 +20,57 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import multiprocessing
 import sys
 import threading
-from copy import copy
 from functools import partial
-from multiprocessing import Pipe
 
 from Exscript.util.impl import serializeable_sys_exc_info
 
 
 class _ChildWatcher(threading.Thread):
+    """
+    Starts the thread of a job, waits for it to end, and calls the callback
+    with the information about its exception, or with None.
+    """
+
     def __init__(self, child, callback):
         threading.Thread.__init__(self)
         self.child = child
         self.cb = callback
 
-    def __copy__(self):
-        watcher = _ChildWatcher(copy(self.child), self.cb)
-        return watcher
-
     def run(self):
-        to_child, to_self = Pipe()
         try:
-            self.child.start(to_self)
-            result = to_child.recv()
+            self.child.start()
             self.child.join()
+            result = self.child.exc_info
         except:
             result = sys.exc_info()
-        finally:
-            to_child.close()
-            to_self.close()
-        if result == '':
-            self.cb(None)
-        else:
-            self.cb(result)
+        self.cb(result)
 
 
-def _make_process_class(base, clsname):
-    class process_cls(base):
-        def __init__(self, id, function, name, data):
-            base.__init__(self, name=name)
-            self.id = id
-            self.pipe = None
-            self.function = function
-            self.failures = 0
-            self.data = data
+class Thread(threading.Thread):
+    """
+    Runs the function of a job, which gets this object: it has the id, the
+    name, the data and the failures of the job. After an exception of the
+    function, exc_info holds the information about it, else None.
+    """
 
-        def run(self):
-            """
-            Start the associated function.
-            """
-            try:
-                self.function(self)
-            except:
-                self.pipe.send(serializeable_sys_exc_info())
-            else:
-                self.pipe.send('')
-            finally:
-                self.pipe = None
+    def __init__(self, id, function, name, data):
+        threading.Thread.__init__(self, name=name)
+        self.id = id
+        self.function = function
+        self.failures = 0
+        self.data = data
+        self.exc_info = None
 
-        def start(self, pipe):
-            self.pipe = pipe
-            base.start(self)
-
-    process_cls.__name__ = clsname
-    return process_cls
-
-
-Thread = _make_process_class(threading.Thread, 'Thread')
-Process = _make_process_class(multiprocessing.Process, 'Process')
+    def run(self):
+        """
+        Runs the function of the job.
+        """
+        try:
+            self.function(self)
+        except:
+            self.exc_info = serializeable_sys_exc_info()
 
 
 class Job:

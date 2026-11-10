@@ -205,6 +205,10 @@ Other renamed or removed names:
   under a service manager such as systemd.
 - ``WorkQueue`` has no ``debug`` argument, and ``set_debug()`` takes
   ``level``. Pass the other arguments by keyword.
+- ``Queue(mode='multiprocessing')`` raises a ``ValueError``: jobs run in
+  threads only. For several CPU cores, see :doc:`platforms`.
+- ``Exscript.account.AccountProxy`` and ``Exscript.logger.LoggerProxy`` are
+  removed; jobs use the accounts and the loggers directly.
 - ``parselib.Lexer.expect()`` and ``current_is()`` take ``types``
   instead of ``type``.
 - The ``dump1()`` methods of the template interpreter are removed, and so

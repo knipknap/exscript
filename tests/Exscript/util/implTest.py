@@ -51,7 +51,7 @@ class implTest(unittest.TestCase):
             result = []
 
             def try_lock():
-                acquired = resource._sync_lock.acquire(block=False)
+                acquired = resource._sync_lock.acquire(False)
                 if acquired:
                     resource._sync_lock.release()
                 result.append(not acquired)

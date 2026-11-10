@@ -28,12 +28,10 @@ import gc
 import logging
 import sys
 import threading
-import weakref
 from functools import partial
-from multiprocessing import Pipe
 
-from .account import AccountManager, AccountProxy
-from .logger import LoggerProxy, logger_registry
+from .account import AccountManager
+from .logger import logger_registry
 from .protocols import prepare
 from .util.cast import to_hosts
 from .util.decorator import get_label
@@ -55,154 +53,98 @@ class _Discard:
         pass
 
 
-def _account_factory(accm, host, account):
+def _account_factory(accm, owner, host, account):
+    """
+    Returns the account to log into the host with, acquired: the given
+    account, else the account of the host, else the one that the account
+    manager chooses for the host. Accounts of the pools of the manager are
+    acquired for the given owner, so release_accounts() releases them.
+    """
     if account is None:
         account = host.get_account()
-
-    # Specific account requested?
-    if account:
-        acquired = AccountProxy.for_account_hash(accm, account.__hash__())
-    else:
-        acquired = AccountProxy.for_host(accm, host)
-
-    # Thread-local accounts don't need a remote proxy.
-    if acquired:
-        return acquired
-    account.acquire()
-    return account
+    if account is None:
+        return accm.acquire_account_for(host, owner)
+    return accm.acquire_account(account, owner)
 
 
-def _prepare_connection(func):
+def _prepare_connection(func, account_manager):
     """
     A decorator that unpacks the host and connection from the job argument
-    and passes them as separate arguments to the wrapped function.
+    and passes them as separate arguments to the wrapped function. The
+    connection takes its accounts from the given account manager; those
+    that the job still holds are released when the function returns.
     """
 
     def _wrapped(job, *args, **kwargs):
-        job_id = id(job)
-        to_parent = job.data['pipe']
-        host = job.data['host']
-
-        # Create a protocol adapter.
-        mkaccount = partial(_account_factory, to_parent, host)
-        pargs = {'account_factory': mkaccount, 'stdout': job.data['stdout']}
-        pargs.update(host.get_options())
-        conn = prepare(host, **pargs)
-
-        # Connect and run the function.
-        log_options = get_label(func, 'log_to')
-        if log_options is not None:
-            # Enable logging.
-            proxy = LoggerProxy(to_parent, log_options['logger_id'])
-            log_cb = partial(proxy.log, job_id)
-            proxy.add_log(job_id, job.name, job.failures + 1)
-            conn.data_received_event.listen(log_cb)
-            if not conn._receives_echo:
-                # The sent commands are either logged via the data_received_event
-                # when they are echoed back, or they are logged here explicitly.
-                conn.data_sent_event.listen(log_cb)
-            try:
-                conn.connect(host.get_address(), host.get_tcp_port())
-                result = func(job, host, conn, *args, **kwargs)
-                conn.close(force=True)
-            except:
-                proxy.log_aborted(job_id, serializeable_sys_exc_info())
-                raise
-            else:
-                proxy.log_succeeded(job_id)
-            finally:
-                conn.data_received_event.disconnect(log_cb)
-                if not conn._receives_echo:
-                    conn.data_sent_event.disconnect(log_cb)
-        else:
-            conn.connect(host.get_address(), host.get_tcp_port())
-            result = func(job, host, conn, *args, **kwargs)
-            conn.close(force=True)
-        return result
+        try:
+            return _run_job(func, account_manager, job, *args, **kwargs)
+        finally:
+            account_manager.release_accounts(job)
 
     return _wrapped
 
 
+def _run_job(func, account_manager, job, *args, **kwargs):
+    """
+    Connects to the host of the given job and calls the given function with
+    the job, the host and the connection, and the given arguments. Logs the
+    session if the function was decorated with log_to().
+    """
+    job_id = id(job)
+    host = job.data['host']
+
+    # Create a protocol adapter.
+    mkaccount = partial(_account_factory, account_manager, job, host)
+    pargs = {'account_factory': mkaccount, 'stdout': job.data['stdout']}
+    pargs.update(host.get_options())
+    conn = prepare(host, **pargs)
+
+    # Connect and run the function.
+    log_options = get_label(func, 'log_to')
+    if log_options is None:
+        conn.connect(host.get_address(), host.get_tcp_port())
+        result = func(job, host, conn, *args, **kwargs)
+        conn.close(force=True)
+        return result
+
+    logger_id = log_options['logger_id']
+    log_cb = partial(_call_logger, 'log', logger_id, job_id)
+    _call_logger('add_log', logger_id, job_id, job.name, job.failures + 1)
+    conn.data_received_event.listen(log_cb)
+    if not conn._receives_echo:
+        # The sent commands are either logged via the data_received_event
+        # when they are echoed back, or they are logged here explicitly.
+        conn.data_sent_event.listen(log_cb)
+    try:
+        conn.connect(host.get_address(), host.get_tcp_port())
+        result = func(job, host, conn, *args, **kwargs)
+        conn.close(force=True)
+    except:
+        _call_logger('log_aborted', logger_id, job_id, serializeable_sys_exc_info())
+        raise
+    else:
+        _call_logger('log_succeeded', logger_id, job_id)
+    finally:
+        conn.data_received_event.disconnect(log_cb)
+        if not conn._receives_echo:
+            conn.data_sent_event.disconnect(log_cb)
+    return result
+
+
 def _is_recoverable_error(cls):
-    # Hack: We can't use isinstance(), because the classes may
-    # have been created by another python process; apparently this
-    # will cause isinstance() to return False.
+    # By name, so that this module does not import the template language.
     return cls.__name__ in ('CompileError', 'FailException')
 
 
 def _call_logger(funcname, logger_id, *args):
+    """
+    Calls the method with the given name of the logger with the given id,
+    if the logger still exists, with the given arguments.
+    """
     logger = logger_registry.get(logger_id)
     if not logger:
         return
     return getattr(logger, funcname)(*args)
-
-
-class _PipeHandler(threading.Thread):
-    """
-    Each PipeHandler holds an open pipe to a subprocess, to allow the
-    sub-process to access the accounts and communicate status information.
-    """
-
-    def __init__(self, account_manager):
-        threading.Thread.__init__(self)
-        self.daemon = True
-        self.accm = account_manager
-        self.to_child, self.to_parent = Pipe()
-
-    def _send_account(self, account):
-        if account is None:
-            self.to_child.send(account)
-            return
-        response = (
-            account.__hash__(),
-            account.get_name(),
-            account.get_password(),
-            account.get_authorization_password(),
-            account.get_key(),
-        )
-        self.to_child.send(response)
-
-    def _handle_request(self, request):
-        try:
-            command, arg = request
-            if command == 'acquire-account-for-host':
-                account = self.accm.acquire_account_for(arg, self)
-                self._send_account(account)
-            elif command == 'acquire-account-from-hash':
-                account = self.accm.get_account_from_hash(arg)
-                if account is not None:
-                    account = self.accm.acquire_account(account, self)
-                self._send_account(account)
-            elif command == 'acquire-account':
-                account = self.accm.acquire_account(owner=self)
-                self._send_account(account)
-            elif command == 'release-account':
-                account = self.accm.get_account_from_hash(arg)
-                account.release()
-                self.to_child.send('ok')
-            elif command == 'log-add':
-                log = _call_logger('add_log', *arg)
-                self.to_child.send(log)
-            elif command == 'log-message':
-                _call_logger('log', *arg)
-            elif command == 'log-aborted':
-                _call_logger('log_aborted', *arg)
-            elif command == 'log-succeeded':
-                _call_logger('log_succeeded', *arg)
-            else:
-                raise Exception('invalid command on pipe: ' + repr(command))
-        except Exception as e:
-            self.to_child.send(e)
-            raise
-
-    def run(self):
-        while True:
-            try:
-                request = self.to_child.recv()
-            except (OSError, EOFError):
-                self.accm.release_accounts(self)
-                break
-            self._handle_request(request)
 
 
 class Queue:
@@ -250,7 +192,8 @@ class Queue:
         :type  verbose: int
         :param verbose: The verbosity level.
         :type  mode: str
-        :param mode: 'multiprocessing' or 'threading'
+        :param mode: 'threading', the only mode. 'multiprocessing' raises a
+            ValueError, any other mode a TypeError.
         :type  max_threads: int
         :param max_threads: The maximum number of concurrent threads.
         :type  host_driver: str
@@ -266,7 +209,6 @@ class Queue:
         self.workqueue = WorkQueue(mode=mode)
         self.workqueue.set_debug(verbose)
         self.account_manager = AccountManager()
-        self.pipe_handlers = weakref.WeakValueDictionary()
         self.domain = domain
         self.verbose = verbose
         self.stdout = stdout
@@ -326,32 +268,6 @@ class Queue:
             self.channel_map[channel].write(msg)
             self.channel_map[channel].flush()
 
-    def _create_pipe(self):
-        """
-        Creates a new pipe and returns the child end of the connection.
-        To request an account from the pipe, use::
-
-            pipe = queue._create_pipe()
-
-            # Let the account manager choose an account.
-            pipe.send(('acquire-account-for-host', host))
-            account = pipe.recv()
-            ...
-            pipe.send(('release-account', account.id()))
-
-            # Or acquire a specific account.
-            pipe.send(('acquire-account', account.id()))
-            account = pipe.recv()
-            ...
-            pipe.send(('release-account', account.id()))
-
-            pipe.close()
-        """
-        child = _PipeHandler(self.account_manager)
-        self.pipe_handlers[id(child)] = child
-        child.start()
-        return child.to_parent
-
     def _del_status_bar(self):
         if self.status_bar_length == 0:
             return
@@ -407,11 +323,7 @@ class Queue:
     def _on_job_init(self, job):
         if job.data is None:
             job.data = {}
-        job.data['pipe'] = self._create_pipe()
         job.data['stdout'] = self.channel_map['connection']
-
-    def _on_job_destroy(self, job):
-        job.data['pipe'].close()
 
     def _on_job_started(self, job):
         self._del_status_bar()
@@ -429,14 +341,12 @@ class Queue:
             self._print('fatal_errors', trace)
 
     def _on_job_succeeded(self, job):
-        self._on_job_destroy(job)
         self.completed += 1
         self._del_status_bar()
         self._write('status_bar', job.name + ' succeeded.' + '\n')
         self._print_status_bar(exclude=job.name)
 
     def _on_job_aborted(self, job):
-        self._on_job_destroy(job)
         self.completed += 1
         self.failed += 1
         self._del_status_bar()
@@ -548,8 +458,6 @@ class Queue:
         """
         self._dbg(2, 'Waiting for the queue to finish.')
         self.workqueue.wait_until_done()
-        for child in list(self.pipe_handlers.values()):
-            child.join()
         self._dbg(3, 'Queue has finished.')
         self._del_status_bar()
         self._print_status_bar()
@@ -615,7 +523,7 @@ class Queue:
     def _run(self, hosts, callback, queue_function, *args):
         hosts = to_hosts(hosts, default_domain=self.domain)
         self.total += len(hosts)
-        callback = _prepare_connection(callback)
+        callback = _prepare_connection(callback, self.account_manager)
         task = Task(self.workqueue)
         for host in hosts:
             name = host.get_name()
