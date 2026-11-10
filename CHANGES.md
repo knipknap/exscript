@@ -39,7 +39,9 @@ marked with **BREAKING**; a migration guide will accompany the release.
   `test(secure=True)`; `InputHistory.file`, now `filename`; the `debug` argument of
   `WorkQueue`, whose `set_debug()` argument is now `level`; the `type` argument of
   `parselib.Lexer.expect()` and `current_is()`, now `types`; and the `dump1()` methods
-  of the template interpreter.
+  of the template interpreter, `ExpressionNode.parent_node`, the `prio` argument of
+  `Expression.prioritize()`, and `lft`, `rgt`, `op` and `priority()` of `Term`, which
+  only the old ordering of operators used.
 - **OpenTelemetry Tracing (optional):** Install the `otel` extra (`Exscript[otel]`)
   and call `Exscript.contrib.otel.ExscriptInstrumentor().instrument()`. Every call of
   `connect()`, `login()`, `authenticate()`, `send()`, `execute()` and `close()` creates

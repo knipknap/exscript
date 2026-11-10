@@ -201,7 +201,11 @@ Other renamed or removed names:
   ``level``. Pass the other arguments by keyword.
 - ``parselib.Lexer.expect()`` and ``current_is()`` take ``types``
   instead of ``type``.
-- The ``dump1()`` methods of the template interpreter are removed.
+- The ``dump1()`` methods of the template interpreter are removed, and so
+  are the attributes that only its old ordering of operators used:
+  ``ExpressionNode.parent_node``, the ``prio`` argument of
+  ``Expression.prioritize()``, and ``lft``, ``rgt``, ``op`` and
+  ``priority()`` of ``Term``.
 - Adapters that subclass ``Protocol`` must pass its arguments by
   keyword; new ones were inserted.
 
