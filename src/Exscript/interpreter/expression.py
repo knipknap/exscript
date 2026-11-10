@@ -24,6 +24,7 @@
 Expressions of the template language.
 """
 
+import re
 from typing import TYPE_CHECKING, Any, cast
 
 import Exscript.interpreter.term
@@ -124,6 +125,16 @@ class ExpressionNode(Token):
         else:
             raise Exception('Invalid operator: ' + repr(self.op))
 
+    # Any: the value of an operand.
+    def _reject_regex(self, value: Any, operand: Token) -> None:
+        """
+        Raises an ExecuteError at the given operand if its given value is a
+        regular expression. Only "matches" accepts one, as its right operand.
+        """
+        if isinstance(value, re.Pattern):
+            msg = "A regular expression is only allowed as the right operand of 'matches'"
+            self.lexer.runtime_error(msg, operand)
+
     # Any: the value of a term, or a list with the result of the operator.
     def value(self, context: Scope) -> Any:
         """
@@ -131,7 +142,8 @@ class ExpressionNode(Token):
         if it is empty. "and" and "or" evaluate the right operand only if
         the left one does not decide the result. Arithmetic operators and
         ge, gt, le and lt raise an ExecuteError if an operand is not a
-        number, and / and % if the right operand is 0.
+        number, and / and % if the right operand is 0. A regular expression
+        raises an ExecuteError unless it is the right operand of "matches".
 
         :param context: The scope in which the template runs.
         :return: The value of the term if the node has no operator, or a
@@ -144,6 +156,7 @@ class ExpressionNode(Token):
             return cast(Token, self.lft).value(context)
         elif self.op == 'not':
             rgt_lst = cast(Token, self.rgt).value(context)
+            self._reject_regex(rgt_lst, cast(Token, self.rgt))
             return [not (rgt_lst[0] if len(rgt_lst) > 0 else '')]
 
         # There are only two types of values: Regular expressions and lists.
@@ -151,6 +164,7 @@ class ExpressionNode(Token):
         # The first item of a list can be a string, a number or anything else
         # that a function returned, hence Any.
         lft_lst = cast(Token, self.lft).value(context)
+        self._reject_regex(lft_lst, cast(Token, self.lft))
         if type(lft_lst) == type([]):
             if len(lft_lst) > 0:
                 lft: Any = lft_lst[0]
@@ -160,6 +174,8 @@ class ExpressionNode(Token):
         if (self.op == 'and' and not lft) or (self.op == 'or' and lft):
             return [lft]
         rgt_lst = cast(Token, self.rgt).value(context)
+        if self.op != 'matches':
+            self._reject_regex(rgt_lst, cast(Token, self.rgt))
         if type(rgt_lst) == type([]):
             if len(rgt_lst) > 0:
                 rgt: Any = rgt_lst[0]

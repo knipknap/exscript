@@ -111,6 +111,23 @@ class ExpressionTest(TemplateTestCase):
         message = 'Right hand operator is not a regular expression in undefined:1'
         self.assertError(cm.exception, ['{x = "abc" matches "b"}'], ' ' * 19 + '^^^', message)
 
+    def testRegularExpressionAsAnotherOperand(self):
+        for text, marker in (
+            ('{x = /a/ matches /a/}', '     ^^^'),
+            ('{x = /a/i . "b"}', '     ^^^^'),
+            ('{x = "a" is /a/}', ' ' * 12 + '^^^'),
+            ('{x = not /a/}', ' ' * 9 + '^^^'),
+            ('{x = 1 and /a/}', ' ' * 11 + '^^^'),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaises(ExecuteError) as cm:
+                    self.evaluate(text)
+                message = (
+                    "A regular expression is only allowed as the right operand of 'matches'"
+                    ' in undefined:1'
+                )
+                self.assertError(cm.exception, [text], marker, message)
+
     def testLogicalOperators(self):
         text = '{a = 1 and 0}{b = 0 or 1}{c = not 0}{d = not 1}{e = 1 and 1 and 0}'
         self.assertValues(text, a=[0], b=[1], c=[True], d=[False], e=[0])

@@ -405,6 +405,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
   matches numbers as text, as `matches` does, e.g. in `{extract /(\d)/ as d from 42}`
   (before: `TypeError`); and the bounds of `loop from ... to ...` may be strings of
   digits, like the operands of arithmetic operators.
+- **Regular Expressions as Operands:** A regular expression that is not the right
+  operand of `matches`, e.g. in `/a/ matches /a/`, `/a/ . "b"`, `"a" is /a/` or
+  `not /a/`, raises an `ExecuteError` that shows its position. Before, it raised an
+  `UnboundLocalError` or a `TypeError` of Python.
 
 ### Standard Library
 
