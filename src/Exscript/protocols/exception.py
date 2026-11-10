@@ -148,7 +148,8 @@ class RPCError(InvalidCommandException):
         Translates a list of ncclient `RPCError` objects (from RPCReply.errors)
         into Exscript :class:`RPCError` instances.
 
-        :return: The first error; its errlist holds all of them.
+        :return: The first error with the severity error, else the first one;
+            its errlist holds all of them, in their order.
         """
         all_errors = [
             cls(
@@ -163,6 +164,6 @@ class RPCError(InvalidCommandException):
             )
             for error in rpc_errors
         ]
-        primary = all_errors[0]
+        primary = next((e for e in all_errors if e.severity == 'error'), all_errors[0])
         primary.errlist = all_errors
         return primary

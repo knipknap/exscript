@@ -232,3 +232,6 @@ their users should know:
   :class:`~Exscript.util.xml.XMLValidationError` instead of lxml's
   ``XMLSyntaxError`` if the RPC body is not one XML element, e.g.
   ``<get-config/><get/>``.
+- If a reply has warnings before an error, the raised
+  :class:`~Exscript.protocols.exception.RPCError` is the first error, not
+  the first warning; its ``errlist`` still holds all of them.

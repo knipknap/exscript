@@ -414,14 +414,18 @@ class SessionTest(unittest.TestCase):
 
     def testWarningsAreNoErrors(self):
         # Without <ok/>, like servers send warnings (RFC 6241, section 4.4).
-        warning = (
-            '<rpc-error><error-type>application</error-type><error-tag>operation-failed</error-tag>'
-            '<error-severity>warning</error-severity><error-message>deprecated</error-message>'
-            '</rpc-error>'
-        )
-        conn = self.login(lambda rpc: warning)
+        conn = self.login(lambda rpc: WARNING)
         conn.execute('<commit/>')
         self.assertIn('deprecated', conn.response)
+
+    def testErrorAfterAWarning(self):
+        conn = self.login(lambda rpc: WARNING + LOCK_ERROR)
+        with self.assertRaises(RPCError) as cm:
+            conn.execute(LOCK)
+        error = cm.exception
+        self.assertEqual(str(error), 'error: configuration database locked')
+        self.assertEqual([e.severity for e in error.errlist], ['warning', 'error'])
+        self.assertIs(error.errlist[1], error)
 
     def testInvalidRPCIsNotSent(self):
         conn = self.login()
@@ -526,6 +530,21 @@ LOCK_ERROR = (
     '<error-severity>error</error-severity>'
     '<error-message>configuration database locked</error-message></rpc-error>'
 )
+WARNING = (
+    '<rpc-error><error-type>application</error-type><error-tag>operation-failed</error-tag>'
+    '<error-severity>warning</error-severity><error-message>deprecated</error-message>'
+    '</rpc-error>'
+)
+
+
+class RPCErrorTest(unittest.TestCase):
+    def testOnlyWarnings(self):
+        # The raised error is the first with the severity error, else the first one.
+        content = WARNING + WARNING.replace('deprecated', 'slow')
+        reply = RPCReply(f'<rpc-reply xmlns="{NS}" message-id="1">{content}</rpc-reply>')
+        error = RPCError._from_ncclient(reply.errors)
+        self.assertEqual(error.message, 'deprecated')
+        self.assertEqual([e.message for e in error.errlist], ['deprecated', 'slow'])
 
 
 class ReplayedSessionTest(unittest.TestCase):

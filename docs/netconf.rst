@@ -64,8 +64,9 @@ Errors
 
 If the reply contains an ``<rpc-error>`` with the severity ``error``,
 ``execute()`` raises :class:`~Exscript.protocols.exception.RPCError`.
-Its attributes hold the first error, and ``errlist`` holds all errors of
-the reply. Replies with only warnings do not raise::
+Its attributes hold the first error with the severity ``error``, and
+``errlist`` holds all errors of the reply, warnings too, in their order.
+Replies with only warnings do not raise::
 
     from Exscript.protocols.exception import RPCError
 

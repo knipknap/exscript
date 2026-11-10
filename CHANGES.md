@@ -292,6 +292,9 @@ development versions; "before" refers to them.
 - **RPC Body of One Element:** `execute()` and `send()` raise `XMLValidationError`
   before sending if the RPC body is not one XML element, e.g. `<get-config/><get/>` or
   text. Before, they raised lxml's `XMLSyntaxError`.
+- **`RPCError` After Warnings:** The raised `RPCError` is the first `<rpc-error>` of the
+  reply with the severity `error`; `errlist` holds all of them, warnings too, in their
+  order. Before, it was the first one, which could be a warning.
 
 ### Protocol Drivers
 
