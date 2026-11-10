@@ -20,9 +20,29 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The standard library of the template language: the functions that templates
+call, such as ``connection.sendline()``, ``list.length()`` or ``sys.exec()``.
+
+``functions`` maps the name that a template uses to the function. The
+interpreter calls the function with the scope of the call, followed by the
+values of the arguments. Template values are lists: a string argument, for
+example, arrives as a list with one string. A regular expression, such as
+``/[Ff]ailed/``, arrives compiled. Where the documentation of a function gives
+the type of an argument or of the result, such as string, it means the type
+of the items. The functions return a list, or True if they have no result.
+
+Functions that run local commands or access local files are not secure (see
+:func:`Exscript.stdlib.util.secure_function`): a template that is compiled
+in secure mode cannot call them.
+"""
+
+from collections.abc import Callable
+from typing import Any
+
 from . import connection, crypt, file, ipv4, list, mysys, string
 
-functions = {
+functions: dict[str, Callable[..., Any]] = {
     'connection.add_error': connection.add_error,
     'connection.add_prompt': connection.add_prompt,
     'connection.authenticate': connection.authenticate,

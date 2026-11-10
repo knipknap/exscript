@@ -20,12 +20,23 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The functions of the template language for local files, such as
+``file.read()`` or ``file.write()``. Except for ``file.exists()``, they are
+not secure: a template that is compiled in secure mode cannot call them
+(see :func:`Exscript.stdlib.util.secure_function`).
+"""
+
 import os
+from typing import TYPE_CHECKING
 
 from Exscript.stdlib.util import secure_function
 
+if TYPE_CHECKING:
+    from Exscript.interpreter.scope import Scope
 
-def chmod(scope, filename, mode):
+
+def chmod(scope: 'Scope', filename: list[str], mode: list[int]) -> bool:
     """
     Changes the permissions of the given file (or list of files)
     to the given mode. You probably want to use an octal representation
@@ -41,9 +52,9 @@ def chmod(scope, filename, mode):
     return True
 
 
-def clear(scope, filename):
+def clear(scope: 'Scope', filename: list[str]) -> bool:
     """
-    Clear the contents of the given file. The file is created if it does
+    Clears the contents of the given file. The file is created if it does
     not exist.
 
     :type  filename: string
@@ -55,28 +66,27 @@ def clear(scope, filename):
 
 
 @secure_function
-def exists(scope, filename):
+def exists(scope: 'Scope', filename: list[str]) -> list[bool]:
     """
-    Returns True if the file with the given name exists, False otherwise.
-    If a list of files is given, the function returns True only if ALL of
-    the files exist.
+    Returns, for each of the given files, True if the file exists and False
+    otherwise.
 
     :type  filename: string
-    :param filename: A filename.
+    :param filename: A filename, or a list of filenames.
     :rtype:  bool
-    :return: The operating system of the remote device.
+    :return: True or False for each file.
     """
     return [os.path.exists(f) for f in filename]
 
 
-def mkdir(scope, dirname, mode=None):
+def mkdir(scope: 'Scope', dirname: list[str], mode: list[int] | None = None) -> bool:
     """
     Creates the given directory (or directories). The optional access
     permissions are set to the given mode, and default to whatever
     is the umask on your system defined.
 
     :type  dirname: string
-    :param dirname: A filename, or a list of dirnames.
+    :param dirname: A directory name, or a list of directory names.
     :type  mode: int
     :param mode: The access permissions.
     """
@@ -88,7 +98,7 @@ def mkdir(scope, dirname, mode=None):
     return True
 
 
-def read(scope, filename):
+def read(scope: 'Scope', filename: list[str]) -> list[str]:
     """
     Reads the given file and returns the result.
     The result is also stored in the built-in __response__ variable.
@@ -96,7 +106,7 @@ def read(scope, filename):
     :type  filename: string
     :param filename: A filename.
     :rtype:  string
-    :return: The content of the file.
+    :return: The content of the file, one line per item.
     """
     with open(filename[0], encoding='utf-8') as fp:
         lines = fp.readlines()
@@ -104,7 +114,7 @@ def read(scope, filename):
     return lines
 
 
-def rm(scope, filename):
+def rm(scope: 'Scope', filename: list[str]) -> bool:
     """
     Deletes the given file (or files) from the file system.
 
@@ -116,13 +126,15 @@ def rm(scope, filename):
     return True
 
 
-def write(scope, filename, lines, mode=['a']):
+def write(scope: 'Scope', filename: list[str], lines: list[str], mode: list[str] = ['a']) -> bool:
     """
     Writes the given string into the given file.
     The following modes are supported:
 
       - 'a': Append to the file if it already exists.
       - 'w': Replace the file if it already exists.
+
+    Each line is written without trailing whitespace, followed by a newline.
 
     :type  filename: string
     :param filename: A filename.

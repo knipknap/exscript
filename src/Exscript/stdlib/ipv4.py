@@ -20,12 +20,24 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The functions of the template language for IPv4 addresses, such as
+``ipv4.in_network()`` or ``ipv4.mask2pfxlen()``.
+"""
+
+from typing import TYPE_CHECKING
+
 from Exscript.stdlib.util import secure_function
 from Exscript.util import ipv4
 
+if TYPE_CHECKING:
+    from Exscript.interpreter.scope import Scope
+
 
 @secure_function
-def in_network(scope, prefixes, destination, default_pfxlen=[24]):
+def in_network(
+    scope: 'Scope', prefixes: list[str], destination: list[str], default_pfxlen: list[int] = [24]
+) -> list[bool]:
     """
     Returns True if the given destination is in the network range that is
     defined by the given prefix (e.g. 10.0.0.1/22). If the given prefix
@@ -42,7 +54,7 @@ def in_network(scope, prefixes, destination, default_pfxlen=[24]):
     :param destination: An IP address.
     :type  default_pfxlen: int
     :param default_pfxlen: The default prefix length.
-    :rtype:  True
+    :rtype:  bool
     :return: Whether the given destination is in the given network.
     """
     needle = ipv4.ip2int(destination[0])
@@ -55,37 +67,37 @@ def in_network(scope, prefixes, destination, default_pfxlen=[24]):
 
 
 @secure_function
-def mask(scope, ips, mask):
+def mask(scope: 'Scope', ips: list[str], mask: list[str]) -> list[str]:
     """
     Applies the given IP mask (e.g. 255.255.255.0) to the given IP address
     (or list of IP addresses) and returns it.
 
     :type  ips: string
-    :param ips: A prefix, or a list of IP prefixes.
+    :param ips: An IP address, or a list of IP addresses.
     :type  mask: string
     :param mask: An IP mask.
     :rtype:  string
     :return: The network(s) that result(s) from applying the mask.
     """
-    mask = ipv4.ip2int(mask[0])
-    return [ipv4.int2ip(ipv4.ip2int(ip) & mask) for ip in ips]
+    mask_int = ipv4.ip2int(mask[0])
+    return [ipv4.int2ip(ipv4.ip2int(ip) & mask_int) for ip in ips]
 
 
 @secure_function
-def mask2pfxlen(scope, masks):
+def mask2pfxlen(scope: 'Scope', masks: list[str]) -> list[int]:
     """
     Converts the given IP mask(s) (e.g. 255.255.255.0) to prefix length(s).
 
     :type  masks: string
     :param masks: An IP mask, or a list of masks.
-    :rtype:  string
+    :rtype:  int
     :return: The prefix length(s) that result(s) from converting the mask.
     """
     return [ipv4.mask2pfxlen(mask) for mask in masks]
 
 
 @secure_function
-def pfxlen2mask(scope, pfxlen):
+def pfxlen2mask(scope: 'Scope', pfxlen: list[int]) -> list[str]:
     """
     Converts the given prefix length(s) (e.g. 30) to IP mask(s).
 
@@ -98,33 +110,33 @@ def pfxlen2mask(scope, pfxlen):
 
 
 @secure_function
-def network(scope, prefixes):
+def network(scope: 'Scope', prefixes: list[str]) -> list[str]:
     """
     Given a prefix, this function returns the corresponding network address.
 
     :type  prefixes: string
     :param prefixes: An IP prefix.
     :rtype:  string
-    :return: The network address(es) of the prefix length(s).
+    :return: The network address(es) of the prefix(es).
     """
     return [ipv4.network(pfx) for pfx in prefixes]
 
 
 @secure_function
-def broadcast(scope, prefixes):
+def broadcast(scope: 'Scope', prefixes: list[str]) -> list[str]:
     """
     Given a prefix, this function returns the corresponding broadcast address.
 
     :type  prefixes: string
     :param prefixes: An IP prefix.
     :rtype:  string
-    :return: The broadcast address(es) of the prefix length(s).
+    :return: The broadcast address(es) of the prefix(es).
     """
     return [ipv4.broadcast(pfx) for pfx in prefixes]
 
 
 @secure_function
-def pfxmask(scope, ips, pfxlen):
+def pfxmask(scope: 'Scope', ips: list[str], pfxlen: list[int]) -> list[str]:
     """
     Applies the given prefix length to the given ips, resulting in a
     (list of) IP network addresses.
@@ -134,14 +146,15 @@ def pfxmask(scope, ips, pfxlen):
     :type  pfxlen: int
     :param pfxlen: An IP prefix length.
     :rtype:  string
-    :return: The mask(s) that result(s) from converting the prefix length.
+    :return: The network address(es) that result(s) from applying the
+        prefix length.
     """
     mask = ipv4.pfxlen2mask_int(pfxlen[0])
     return [ipv4.int2ip(ipv4.ip2int(ip) & mask) for ip in ips]
 
 
 @secure_function
-def remote_ip(scope, local_ips):
+def remote_ip(scope: 'Scope', local_ips: list[str]) -> list[str]:
     """
     Given an IP address, this function calculates the remaining available
     IP address under the assumption that it is a /30 network.

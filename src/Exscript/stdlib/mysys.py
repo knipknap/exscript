@@ -20,30 +20,42 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The system functions of the template language, which templates call as
+``sys.env()``, ``sys.exec()``, ``sys.message()`` and ``sys.wait()``.
+``sys.env()`` and ``sys.exec()`` are not secure: a template that is compiled
+in secure mode cannot call them.
+"""
+
 import os
 import shlex
 import sys
 import time
 from subprocess import DEVNULL, PIPE, STDOUT, run
+from typing import TYPE_CHECKING
 
 from .util import secure_function
 
+if TYPE_CHECKING:
+    from ..interpreter.scope import Scope
 
-def env(scope, varname):
+
+def env(scope: 'Scope', varname: list[str]) -> list[str]:
     """
     Returns the value of the environment variable with the given
-    name.
+    name, or an empty string if it is not set.
 
-    :type varnames: string
-    :param varnames: A variable name.
+    :type varname: string
+    :param varname: A variable name.
     """
     return [os.environ.get(varname[0], '')]
 
 
-def execute(scope, command):
+def execute(scope: 'Scope', command: list[str]) -> bool:
     """
     Executes the given command locally, without a shell, and waits for it to
-    finish. Its output is stored in the __response__ variable.
+    finish. Its output, including the error output, is stored in the
+    __response__ variable, one line per item.
 
     :type  command: string
     :param command: A command line. On POSIX systems it is split like a shell
@@ -57,7 +69,7 @@ def execute(scope, command):
 
 
 @secure_function
-def message(scope, string):
+def message(scope: 'Scope', string: list[str]) -> bool:
     """
     Writes the given string to stdout.
 
@@ -69,7 +81,7 @@ def message(scope, string):
 
 
 @secure_function
-def wait(scope, seconds):
+def wait(scope: 'Scope', seconds: list[int | str]) -> bool:
     """
     Waits for the given number of seconds.
 

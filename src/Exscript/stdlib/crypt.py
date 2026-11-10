@@ -20,12 +20,22 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The cryptographic functions of the template language, such as
+``crypt.otp()``.
+"""
+
+from typing import TYPE_CHECKING
+
 from ..util import crypt
 from .util import secure_function
 
+if TYPE_CHECKING:
+    from ..interpreter.scope import Scope
+
 
 @secure_function
-def otp(scope, password, seed, seqs):
+def otp(scope: 'Scope', password: list[str], seed: list[str], seqs: list[int | str]) -> list[str]:
     """
     Calculates a one-time password hash using the given password, seed, and
     sequence number and returns it.

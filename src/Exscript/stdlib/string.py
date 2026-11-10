@@ -20,11 +20,21 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The functions of the template language for strings, such as
+``string.replace()`` or ``string.split()``.
+"""
+
+from typing import TYPE_CHECKING
+
 from .util import secure_function
+
+if TYPE_CHECKING:
+    from ..interpreter.scope import Scope
 
 
 @secure_function
-def replace(scope, strings, source, dest):
+def replace(scope: 'Scope', strings: list[str], source: list[str], dest: list[str]) -> list[str]:
     """
     Returns a copy of the given string (or list of strings) in which all
     occurrences of the given source are replaced by the given dest.
@@ -42,7 +52,7 @@ def replace(scope, strings, source, dest):
 
 
 @secure_function
-def split(scope, strings, separator):
+def split(scope: 'Scope', strings: list[str], separator: list[str]) -> list[str]:
     """
     Returns a list with the split values of the given string (or list of strings).
     The values are split at the separator.
@@ -52,7 +62,7 @@ def split(scope, strings, separator):
     :type  separator: string
     :param separator: The separator to split the string at.
     :rtype:  string
-    :return: The resulting string, or list of strings.
+    :return: The resulting list of strings.
     """
     result = []
     for s in strings:
@@ -61,7 +71,7 @@ def split(scope, strings, separator):
 
 
 @secure_function
-def strip(scope, strings, chars=[None]):
+def strip(scope: 'Scope', strings: list[str], chars: list[str | None] = [None]) -> list[str]:
     """
     Returns a copy of the given string (or list of strings) with leading and
     trailing whitespace or custom characters removed.
@@ -77,7 +87,7 @@ def strip(scope, strings, chars=[None]):
 
 
 @secure_function
-def tolower(scope, strings):
+def tolower(scope: 'Scope', strings: list[str]) -> list[str]:
     """
     Returns the given string in lower case.
 
@@ -90,7 +100,7 @@ def tolower(scope, strings):
 
 
 @secure_function
-def toupper(scope, strings):
+def toupper(scope: 'Scope', strings: list[str]) -> list[str]:
     """
     Returns the given string in upper case.
 

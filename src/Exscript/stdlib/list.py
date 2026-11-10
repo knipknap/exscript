@@ -20,14 +20,28 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The functions of the template language for lists, such as ``list.new()``
+or ``list.length()``.
+"""
+
+from typing import TYPE_CHECKING, Any
+
 from .util import secure_function
+
+if TYPE_CHECKING:
+    from ..interpreter.scope import Scope
+
+# The functions take and return lists of any values: a template list can
+# hold strings, numbers, and the values that functions return.
 
 
 @secure_function
-def new(scope, *args):
+def new(scope: 'Scope', *args: list[Any]) -> list[Any]:
     """
     Returns a new list with optional initial values.
 
+    :param args: The initial values; the first item of each is added.
     :rtype:  list
     :return: A new list with optional initial values.
     """
@@ -35,7 +49,7 @@ def new(scope, *args):
 
 
 @secure_function
-def length(scope, mylist):
+def length(scope: 'Scope', mylist: list[Any]) -> list[int]:
     """
     Returns the number of items in the list.
 
@@ -48,7 +62,7 @@ def length(scope, mylist):
 
 
 @secure_function
-def get(scope, source, index):
+def get(scope: 'Scope', source: list[Any], index: list[int | str]) -> list[Any]:
     """
     Returns a copy of the list item with the given index.
     It is an error if an item with the given index does not exist.
@@ -61,19 +75,19 @@ def get(scope, source, index):
     :return: The string at the given index.
     """
     try:
-        index = int(index[0])
+        position = int(index[0])
     except IndexError:
         raise ValueError('index variable is required')
     except ValueError:
         raise ValueError('index is not an integer')
     try:
-        return [source[index]]
+        return [source[position]]
     except IndexError:
         raise ValueError('no such item in the list')
 
 
 @secure_function
-def sort(scope, source):
+def sort(scope: 'Scope', source: list[Any]) -> list[Any]:
     """
     Returns a copy of the given list sorted in ascending order.
 
@@ -86,7 +100,7 @@ def sort(scope, source):
 
 
 @secure_function
-def reverse(scope, source):
+def reverse(scope: 'Scope', source: list[Any]) -> list[Any]:
     """
     Returns a copy of the given list with the items in reverse order.
 
@@ -99,7 +113,7 @@ def reverse(scope, source):
 
 
 @secure_function
-def unique(scope, source):
+def unique(scope: 'Scope', source: list[Any]) -> list[Any]:
     """
     Returns a copy of the given list in which all duplicates are removed
     such that one of each item remains in the list.

@@ -20,12 +20,24 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The functions of the template language that use the connection, such as
+``connection.exec()`` or ``connection.set_prompt()``.
+"""
+
+import re
+from typing import TYPE_CHECKING
+
 from ..account import Account
 from .util import secure_function
 
+if TYPE_CHECKING:
+    from ..interpreter.scope import Scope
+    from ..protocols import Protocol
+
 
 @secure_function
-def authenticate(scope):
+def authenticate(scope: 'Scope') -> bool:
     """
     Looks for any username/password prompts on the current connection
     and logs in using the login information that was passed to Exscript.
@@ -35,7 +47,9 @@ def authenticate(scope):
 
 
 @secure_function
-def authenticate_user(scope, user=[None], password=[None]):
+def authenticate_user(
+    scope: 'Scope', user: list[str | None] = [None], password: list[str | None] = [None]
+) -> bool:
     """
     Like authenticate(), but logs in using the given user and password.
     If a user and password are not given, the function uses the same
@@ -47,18 +61,18 @@ def authenticate_user(scope, user=[None], password=[None]):
     :type  password: string
     :param password: A password.
     """
-    conn = scope.get('__connection__')
-    user = user[0]
-    if user is None:
+    conn: Protocol = scope.get('__connection__')
+    username = user[0]
+    if username is None:
         conn.app_authenticate()
     else:
-        account = Account(user, password[0])
+        account = Account(username, password[0])
         conn.app_authenticate(account)
     return True
 
 
 @secure_function
-def authorize(scope, password=[None]):
+def authorize(scope: 'Scope', password: list[str | None] = [None]) -> bool:
     """
     Looks for a password prompt on the current connection
     and enters the given password.
@@ -69,45 +83,43 @@ def authorize(scope, password=[None]):
     :type  password: string
     :param password: A password.
     """
-    conn = scope.get('__connection__')
-    password = password[0]
-    if password is None:
+    conn: Protocol = scope.get('__connection__')
+    secret = password[0]
+    if secret is None:
         conn.app_authorize()
     else:
-        account = Account('', password)
+        account = Account('', secret)
         conn.app_authorize(account)
     return True
 
 
 @secure_function
-def auto_authorize(scope, password=[None]):
+def auto_authorize(scope: 'Scope', password: list[str | None] = [None]) -> bool:
     """
     Executes a command on the remote host that causes an authorization
     procedure to be started, then authorizes using the given password
     in the same way in which authorize() works.
-    Depending on the detected operating system of the remote host the
-    following commands are started:
-
-      - on IOS, the "enable" command is executed.
-      - nothing on other operating systems yet.
+    The command depends on the driver of the connection; on IOS, for
+    example, it is "enable". Drivers that have no such command only
+    authorize, like authorize().
 
     :type  password: string
     :param password: A password.
     """
-    conn = scope.get('__connection__')
-    password = password[0]
-    if password is None:
+    conn: Protocol = scope.get('__connection__')
+    secret = password[0]
+    if secret is None:
         conn.auto_app_authorize()
     else:
-        account = Account('', password)
+        account = Account('', secret)
         conn.auto_app_authorize(account)
     return True
 
 
 @secure_function
-def autoinit(scope):
+def autoinit(scope: 'Scope') -> bool:
     """
-    Make the remote host more script-friendly by automatically executing
+    Makes the remote host more script-friendly by automatically executing
     one or more commands on it.
     The commands executed depend on the currently used driver.
     For example, the driver for Cisco IOS would execute the
@@ -121,7 +133,7 @@ def autoinit(scope):
 
 
 @secure_function
-def close(scope, force=[False]):
+def close(scope: 'Scope', force: list[bool] = [False]) -> bool:
     """
     Closes the existing connection with the remote host gracefully, sending
     the driver-specific logout command first. This function is rarely used
@@ -131,14 +143,14 @@ def close(scope, force=[False]):
     :type  force: boolean
     :param force: Whether the connection is closed without logout.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     conn.close(force=force[0])
     scope.define(__response__=conn.get_response().split('\n'))
     return True
 
 
 @secure_function
-def exec_(scope, data):
+def exec_(scope: 'Scope', data: list[str]) -> bool:
     """
     Sends the given data to the remote host and waits until the host
     has responded with a prompt.
@@ -151,7 +163,7 @@ def exec_(scope, data):
     :type  data: string
     :param data: The data that is sent.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     response = []
     for line in data:
         conn.send(line)
@@ -162,14 +174,14 @@ def exec_(scope, data):
 
 
 @secure_function
-def execline(scope, data):
+def execline(scope: 'Scope', data: list[str]) -> bool:
     """
     Like exec(), but appends a newline to the data before sending it.
 
     :type  data: string
     :param data: The data that is sent.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     response = []
     for line in data:
         conn.send(line + '\r')
@@ -180,7 +192,7 @@ def execline(scope, data):
 
 
 @secure_function
-def get_protocol(scope):
+def get_protocol(scope: 'Scope') -> list[str]:
     """
     Returns the name of the connection protocol.
 
@@ -190,12 +202,12 @@ def get_protocol(scope):
     :rtype:  string
     :return: The connection protocol.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     return [conn.get_protocol()]
 
 
 @secure_function
-def guess_os(scope):
+def guess_os(scope: 'Scope') -> list[str]:
     """
     Guesses the operating system of the connected host.
 
@@ -206,12 +218,12 @@ def guess_os(scope):
     :rtype:  string
     :return: The operating system.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     return [conn.guess_os()]
 
 
 @secure_function
-def send(scope, data):
+def send(scope: 'Scope', data: list[str]) -> bool:
     """
     Like exec(), but does not wait for a response of the remote host after
     sending the data.
@@ -219,7 +231,7 @@ def send(scope, data):
     :type  data: string
     :param data: The data that is sent.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     for line in data:
         conn.send(line)
     scope.define(__response__=conn.get_response().split('\n'))
@@ -227,7 +239,7 @@ def send(scope, data):
 
 
 @secure_function
-def sendline(scope, data):
+def sendline(scope: 'Scope', data: list[str]) -> bool:
     """
     Like execline(), but does not wait for a response of the remote host after
     sending the data.
@@ -235,7 +247,7 @@ def sendline(scope, data):
     :type  data: string
     :param data: The data that is sent.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     for line in data:
         conn.send(line + '\r')
     scope.define(__response__=conn.get_response().split('\n'))
@@ -243,23 +255,23 @@ def sendline(scope, data):
 
 
 @secure_function
-def expect(scope, prompt):
+def expect(scope: 'Scope', prompt: re.Pattern[str] | list[str | re.Pattern[str]]) -> bool:
     """
     Waits until the response of the remote host contains the given pattern.
 
-    Does consume the prompt, can be run only once, then it fails with a timeouts.
+    Does consume the prompt, can be run only once, then it fails with a timeout.
 
     :type  prompt: regex
     :param prompt: The prompt pattern.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     conn.expect(prompt)
     scope.define(__response__=conn.get_response().split('\n'))
     return True
 
 
 @secure_function
-def wait_for(scope, prompt):
+def wait_for(scope: 'Scope', prompt: re.Pattern[str] | list[str | re.Pattern[str]]) -> bool:
     """
     Waits until the response of the remote host contains the given pattern.
 
@@ -268,14 +280,16 @@ def wait_for(scope, prompt):
     :type  prompt: regex
     :param prompt: The prompt pattern.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     conn.waitfor(prompt)
     scope.define(__response__=conn.get_response().split('\n'))
     return True
 
 
 @secure_function
-def set_prompt(scope, prompt=None):
+def set_prompt(
+    scope: 'Scope', prompt: re.Pattern[str] | list[str | re.Pattern[str]] | None = None
+) -> bool:
     """
     Defines the pattern that is recognized at any future time when Exscript
     needs to wait for a prompt.
@@ -285,18 +299,19 @@ def set_prompt(scope, prompt=None):
 
     Exscript waits for a prompt whenever it sends a command (unless the send()
     method was used). set_prompt() redefines as to what is recognized as a
-    prompt.
+    prompt. Without a pattern, the default pattern of the driver is used
+    again.
 
     :type  prompt: regex
     :param prompt: The prompt pattern.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     conn.set_prompt(prompt, extend=False)
     return True
 
 
 @secure_function
-def add_prompt(scope, prompt):
+def add_prompt(scope: 'Scope', prompt: re.Pattern[str] | list[str | re.Pattern[str]]) -> bool:
     """
     Extends the current list of patterns, that are recognized at any future time
     when Exscript needs to wait for a prompt, each time when called. Use
@@ -305,31 +320,34 @@ def add_prompt(scope, prompt):
     :type  prompt: regex
     :param prompt: The additional prompt pattern.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     conn.set_prompt(prompt, extend=True)
     return True
 
 
 @secure_function
-def set_error(scope, error_re=None):
+def set_error(
+    scope: 'Scope', error_re: re.Pattern[str] | list[str | re.Pattern[str]] | None = None
+) -> bool:
     """
     Defines a pattern that, whenever detected in the response of the remote
     host, causes an error to be raised.
 
     In other words, whenever Exscript waits for a prompt, it searches the
     response of the host for the given pattern and raises an error if the
-    pattern is found.
+    pattern is found. Without a pattern, the default pattern of the driver
+    is used again.
 
     :type  error_re: regex
     :param error_re: The error pattern.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     conn.set_error_prompt(error_re, extend=False)
     return True
 
 
 @secure_function
-def add_error(scope, error_re):
+def add_error(scope: 'Scope', error_re: re.Pattern[str] | list[str | re.Pattern[str]]) -> bool:
     """
     Extends the list of patterns, that, whenever detected in the response of the
     remote host, cause an error to be raised. Use set_error() instead to replace
@@ -338,13 +356,13 @@ def add_error(scope, error_re):
     :type  error_re: regex
     :param error_re: The additional error pattern.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     conn.set_error_prompt(error_re, extend=True)
     return True
 
 
 @secure_function
-def set_timeout(scope, timeout):
+def set_timeout(scope: 'Scope', timeout: list[int | str]) -> bool:
     """
     Defines the time after which Exscript fails if it does not receive a
     prompt from the remote host.
@@ -352,6 +370,6 @@ def set_timeout(scope, timeout):
     :type  timeout: int
     :param timeout: The timeout in seconds.
     """
-    conn = scope.get('__connection__')
+    conn: Protocol = scope.get('__connection__')
     conn.set_timeout(int(timeout[0]))
     return True
