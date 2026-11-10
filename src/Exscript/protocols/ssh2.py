@@ -30,6 +30,8 @@ import os
 import socket
 import threading
 from binascii import hexlify
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any, Self, cast
 
 import paramiko
 from paramiko.ssh_exception import (
@@ -51,8 +53,13 @@ _known_hosts_lock = threading.Lock()
 _READ_SIZE = 65536
 
 
-def _prefer_key_type(options, keytype):
-    """Makes the server present a key of the known type, like paramiko's SSHClient."""
+def _prefer_key_type(options: paramiko.SecurityOptions, keytype: str | None) -> None:
+    """
+    Makes the server present a key of the known type, like paramiko's
+    SSHClient: moves the type, or for 'ssh-rsa' the first offered of
+    rsa-sha2-512, rsa-sha2-256 and ssh-rsa, to the front of the host key
+    types that the client offers. Changes nothing if the type is not offered.
+    """
     types = list(options.key_types)
     if keytype == 'ssh-rsa':  # RSA keys are negotiated with SHA-2 signatures
         keytype = next((t for t in ('rsa-sha2-512', 'rsa-sha2-256', 'ssh-rsa') if t in types), None)
@@ -61,7 +68,11 @@ def _prefer_key_type(options, keytype):
 
 
 # Register supported key types.
-keymap = {'rsa': paramiko.RSAKey, 'ecdsa': paramiko.ECDSAKey, 'ed25519': paramiko.Ed25519Key}
+keymap: dict[str, type[paramiko.PKey]] = {
+    'rsa': paramiko.RSAKey,
+    'ecdsa': paramiko.ECDSAKey,
+    'ed25519': paramiko.Ed25519Key,
+}
 for key in keymap:
     PrivateKey.keytypes.add(key)
 
@@ -79,14 +90,19 @@ class SSH2(Protocol):
 
     KEEPALIVE_INTERVAL = 2.5 * 60  # Two and a half minutes
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
+        """
+        Constructor. Takes the keyword arguments of :class:`Protocol`. If
+        preferred_authentications is empty or not given, the methods
+        publickey, keyboard-interactive and password are tried, in this order.
+        """
         Protocol.__init__(self, **kwargs)
         # Module-Level
         self._logger = _logger
-        # Internals
-        self._sock = None
-        self._transport = None
-        self._channel = None
+        # Internals; cast where a connection is required
+        self._sock: socket.socket | None = None
+        self._transport: paramiko.Transport | None = None
+        self._channel: paramiko.Channel | None = None
 
         # Set default preferred auth types, that are supported.
         if not self.preferred_authentications:
@@ -99,16 +115,24 @@ class SSH2(Protocol):
         # Host keys accepted for unknown hosts, pinned for reconnects of this object.
         self._host_keys = paramiko.HostKeys()
 
-    def _host_key_name(self):
+    def _host_key_name(self) -> str:
+        """
+        Returns the name of the host in known_hosts files: the host, or
+        "[host]:port" for other ports than 22.
+        """
         # OpenSSH and paramiko store hosts on other ports than 22 as "[host]:port".
         if self.port in (None, 22):
-            return self.host
+            return cast(str, self.host)  # connect() checks that the host is set
         return f'[{self.host}]:{self.port}'
 
-    def _known_hosts_file(self):
+    def _known_hosts_file(self) -> str:
+        """
+        Returns the path of the known_hosts file: the known_hosts option, or
+        ~/.ssh/known_hosts, with ~ expanded.
+        """
         return os.path.expanduser(self.known_hosts or '~/.ssh/known_hosts')
 
-    def _load_known_hosts(self):
+    def _load_known_hosts(self) -> paramiko.HostKeys:
         """Returns the keys in the known_hosts file; a missing file has none."""
         keys = paramiko.HostKeys()
         try:
@@ -117,10 +141,17 @@ class SSH2(Protocol):
             pass
         return keys
 
-    def _check_host_key(self, key, name, known):
+    def _check_host_key(
+        self, key: paramiko.PKey, name: str, known: Mapping[str, paramiko.PKey] | None
+    ) -> None:
         """
         Raises BadHostKeyException if the key differs from the known keys of
-        the host. If the host has no known keys, applies the host_key_policy.
+        the host. If the host has no known keys, applies the host_key_policy;
+        a key that it accepts is kept for reconnects of this object.
+
+        :param key: The host key that the server presented.
+        :param name: The name of the host in known_hosts, see _host_key_name().
+        :param known: The known keys of the host by key type, if any.
         """
         if known:
             expected = known.get(key.get_name())
@@ -137,7 +168,12 @@ class SSH2(Protocol):
             self._logger.warning('Accepting %s (not in known_hosts)', msg)
         self._host_keys.add(name, key.get_name(), key)
 
-    def _append_known_host(self, name, key):
+    def _append_known_host(self, name: str, key: paramiko.PKey) -> None:
+        """
+        Appends the key of the host to the known_hosts file. Creates the file
+        and its directory if needed, and starts a new line if the file does
+        not end with one.
+        """
         filename = self._known_hosts_file()
         line = f'{name} {key.get_name()} {key.get_base64()}\n'
         # shortcut: the lock serializes threads only; use separate files for parallel processes.
@@ -150,14 +186,25 @@ class SSH2(Protocol):
                         line = '\n' + line
                 fp.write(line.encode())
 
-    def _paramiko_connect(self):
+    def _paramiko_connect(self) -> paramiko.Transport:
+        """
+        Connects to the host, trying all of its addresses, and starts the SSH
+        transport. If verify_fingerprint is set, checks the host key before
+        any credentials are sent; if the check fails, closes the transport
+        and raises the error.
+
+        :return: The transport.
+        """
         # Tries all addresses of the host, e.g. IPv4 after IPv6.
-        self._sock = socket.create_connection((self.host, self.port), self.connect_timeout or None)
+        self._sock = socket.create_connection(
+            (self.host, cast(int, self.port)),  # connect() checks that the port is set
+            self.connect_timeout or None,
+        )
 
         # Init the paramiko protocol.
         t = paramiko.Transport(self._sock, disabled_algorithms=self.disabled_algorithms)
         t.banner_timeout = self.banner_timeout
-        t.name = self.host
+        t.name = cast(str, self.host)  # connect() checks that the host is set
         if self.debug < 5:
             t.logger.disabled = True
         if self.debug > 5:
@@ -166,7 +213,7 @@ class SSH2(Protocol):
         # The known keys are loaded before the key exchange, so that the key is
         # checked before any credentials are sent.
         name = self._host_key_name()
-        known = None
+        known: Mapping[str, paramiko.PKey] | None = None
         if self.verify_fingerprint:
             known = self._load_known_hosts().lookup(name) or self._host_keys.lookup(name)
             if known:
@@ -182,14 +229,26 @@ class SSH2(Protocol):
         t.set_keepalive(self.KEEPALIVE_INTERVAL)
         return t
 
-    def _paramiko_auth_none(self, username, password=None):
-        self._transport.auth_none(username)
+    def _paramiko_auth_none(self, username: str, password: str | None = None) -> None:
+        """
+        Authenticates with the "none" method; the password is not used.
+        """
+        cast(paramiko.Transport, self._transport).auth_none(username)
 
-    def _paramiko_auth_interactive(self, username, password=None):
+    def _paramiko_auth_interactive(self, username: str, password: str | None = None) -> None:
+        """
+        Authenticates with the keyboard-interactive method: answers S/Key and
+        OTP challenges with a one-time password computed from the password,
+        and password prompts with the password. Passes the answered prompts,
+        but not the answers, to the received data. Does nothing without a
+        password.
+        """
         if password is None:
             return
 
-        def handler(title, instructions, prompt_list):
+        def handler(
+            title: str, instructions: str, prompt_list: list[tuple[str, bool]]
+        ) -> list[str]:
             if not prompt_list:
                 return []
             response = []
@@ -215,43 +274,66 @@ class SSH2(Protocol):
                         break
             return response
 
-        self._transport.auth_interactive(username, handler)
+        cast(paramiko.Transport, self._transport).auth_interactive(username, handler)
 
-    def _paramiko_auth_password(self, username, password):
+    def _paramiko_auth_password(self, username: str, password: str | None) -> None:
+        """
+        Authenticates with the password method; None is sent as an empty
+        password. Passes a password prompt to the received data.
+        """
         self._receive_cb('Password: \n')  # Expose a prompt (hide the PW).
-        self._transport.auth_password(username, password or '')
+        cast(paramiko.Transport, self._transport).auth_password(username, password or '')
 
-    def _paramiko_auth_agent(self, username, password=None):
+    def _paramiko_auth_agent(self, username: str, password: str | None = None) -> None:
+        """
+        Authenticates with the keys of the SSH agent, trying one after the
+        other until the server accepts one. Raises the error of the last key,
+        or AuthenticationException if the agent has no keys. The password is
+        not used.
+        """
         keys = paramiko.Agent().get_keys()
         if not keys:
             raise AuthenticationException('auth agent found no keys')
 
-        saved_exception = AuthenticationException('Failed to authenticate with given username')
+        saved_exception: SSHException = AuthenticationException(
+            'Failed to authenticate with given username'
+        )
 
         for key in keys:
             try:
-                fp = hexlify(key.get_fingerprint())
+                fp: object = hexlify(key.get_fingerprint())  # bytes; the log shows b'...'
                 self._dbg(2, 'Trying SSH agent key %s' % fp)
-                self._transport.auth_publickey(username, key)
+                cast(paramiko.Transport, self._transport).auth_publickey(username, key)
                 return
             except SSHException as e:
                 saved_exception = e
         raise saved_exception
 
-    def _paramiko_auth_key(self, username, keys, password):
+    def _paramiko_auth_key(
+        self, username: str, keys: Iterable[tuple[type[paramiko.PKey], str]], password: str | None
+    ) -> None:
+        """
+        Authenticates with the given private key files, trying one after the
+        other until the server accepts one. Raises the error of the last key
+        that failed, or AuthenticationException if there is no key.
+
+        :param keys: The key class and the file name of each key.
+        :param password: The password of the key files; None is used as an
+            empty password.
+        """
         if password is None:
             password = ''
 
-        saved_exception = AuthenticationException(
+        saved_exception: SSHException | OSError = AuthenticationException(
             'Failed to authenticate with given username and password/key'
         )
 
         for pkey_class, filename in keys:
             try:
                 key = pkey_class.from_private_key_file(filename, password)
-                fp = hexlify(key.get_fingerprint())
+                fp: object = hexlify(key.get_fingerprint())  # bytes; the log shows b'...'
                 self._dbg(2, 'Trying key %s in %s' % (fp, filename))
-                self._transport.auth_publickey(username, key)
+                cast(paramiko.Transport, self._transport).auth_publickey(username, key)
                 return
             except SSHException as e:
                 saved_exception = e
@@ -259,7 +341,11 @@ class SSH2(Protocol):
                 saved_exception = e
         raise saved_exception
 
-    def _paramiko_auth_autokey(self, username, password):
+    def _paramiko_auth_autokey(self, username: str, password: str | None) -> None:
+        """
+        Like _paramiko_auth_key(), with the RSA, ECDSA and Ed25519 key files
+        in ~/.ssh (Unix) and ~/ssh (Windows) that exist.
+        """
         keyfiles = []
         for cls, file in (
             (paramiko.RSAKey, '~/.ssh/id_rsa'),  # Unix
@@ -274,7 +360,19 @@ class SSH2(Protocol):
                 keyfiles.append((cls, file))
         self._paramiko_auth_key(username, keyfiles, password)
 
-    def _get_auth_methods(self, allowed_types):
+    def _get_auth_methods(
+        self, allowed_types: list[str]
+    ) -> list[Callable[[str, str | None], None]]:
+        """
+        Returns the methods for the authentication types to try, in order: the
+        preferred_authentications that the server allows, or all allowed
+        types if preferred_authentications is empty. Types without a method
+        in auth_types are skipped.
+
+        :param allowed_types: The authentication types that the server allows.
+        :raises BadAuthenticationType: If the server allows none of the
+            preferred_authentications.
+        """
         if self.preferred_authentications:
             self._dbg(3, 'Preferred auth. types: %s' % self.preferred_authentications)
             requested_types = []
@@ -300,12 +398,23 @@ class SSH2(Protocol):
                 auth_methods.append(getattr(self, type_name))
         return auth_methods
 
-    def _paramiko_auth(self, username, password):
+    def _paramiko_auth(self, username: str, password: str | None) -> None:
+        """
+        Authenticates the user. First tries the "none" method, and returns if
+        the server accepts it; else the server tells the authentication types
+        that it allows. The authentication banner of the server is passed to
+        the received data. Then tries the methods of _get_auth_methods() until
+        one succeeds. Before a method, reconnects if the transport is no
+        longer active, or if the driver sets reconnect_between_auth_methods
+        and a request reached the server since the last connect.
+
+        :raises LoginFailure: If no method succeeds; lists the error of each.
+        """
         # Try authentication using auth_none. This should (almost) always fail,
         # but provides us with info about allowed authentication types.
         try:
             self._dbg(2, 'Authenticating with client.auth_none().')
-            self._transport.auth_none(username)
+            cast(paramiko.Transport, self._transport).auth_none(username)
         except BadAuthenticationType as err:
             self._dbg(
                 2, 'Authentication with client.auth_none() failed, allowed: %s' % err.allowed_types
@@ -328,7 +437,8 @@ class SSH2(Protocol):
             # login attempts after failing one. So in this hack, we re-connect
             # after each attempt that reached the server, auth_none() included.
             reconnect = self.get_driver().reconnect_between_auth_methods and attempted
-            if reconnect or not self._transport.active:
+            # The stubs lack Transport.active.
+            if reconnect or not cast(Any, self._transport).active:
                 if reconnect:
                     self._dbg(1, 'Forced reconnect by driver.')
                 else:
@@ -342,7 +452,7 @@ class SSH2(Protocol):
             self._dbg(2, 'Authenticating with %s().' % method.__name__)
             # paramiko creates a new auth handler for each request that it sends;
             # without keys, the public key methods send none.
-            handler = self._transport.auth_handler
+            handler = cast(paramiko.Transport, self._transport).auth_handler
             try:
                 method(username, password)
                 return
@@ -358,12 +468,21 @@ class SSH2(Protocol):
                 msg = 'SSHException with %s(): %s' % (method.__name__, str(e))
                 self._dbg(1, msg)
                 errors.append(msg)
-            attempted = attempted or self._transport.auth_handler is not handler
+            attempted = (
+                attempted or cast(paramiko.Transport, self._transport).auth_handler is not handler
+            )
         raise LoginFailure('Login failed: ' + '; '.join(errors))
 
-    def _paramiko_channel(self):
+    def _paramiko_channel(self) -> None:
+        """
+        Opens a session channel with a pseudo-terminal of the terminal type
+        and size of this object, and starts a shell on it.
+
+        :raises LoginFailure: If the channel, the terminal or the shell
+            cannot be opened.
+        """
         try:
-            self._channel = self._transport.open_session()
+            self._channel = cast(paramiko.Transport, self._transport).open_session()
             self._channel.get_pty(self.termtype, self.term_width, self.term_height)
             self._channel.invoke_shell()
             self._channel.set_name("pty-shell-%s" % self._channel.get_id())
@@ -374,17 +493,29 @@ class SSH2(Protocol):
         # Decodes characters that span two reads, too.
         self._decoder = codecs.getincrementaldecoder(self.encoding)()
 
-    def _connect(self):
+    def _connect(self) -> bool:
+        """
+        Connects to the host, starts the SSH transport, which checks the host
+        key, and returns True.
+        """
         self._transport = self._paramiko_connect()
         return True
 
-    def _protocol_authenticate(self, user, password):
+    def _protocol_authenticate(self, user: str, password: str | None) -> None:
+        """
+        Authenticates with the user name and the password, and opens the
+        shell channel.
+        """
         self._paramiko_auth(user, password)
         self._paramiko_channel()
 
-    def _protocol_authenticate_by_key(self, user, key):
+    def _protocol_authenticate_by_key(self, user: str, key: PrivateKey) -> None:
+        """
+        Authenticates with the user name and the key file of the given key,
+        decrypted with the password of the key, and opens the shell channel.
+        """
         # Allow multiple key files.
-        key_file = key.get_filename()
+        key_file: str | list[str] | None = key.get_filename()
         if key_file is None:
             key_file = []
         elif isinstance(key_file, str):
@@ -399,7 +530,12 @@ class SSH2(Protocol):
         # Open the channel.
         self._paramiko_channel()
 
-    def get_banner(self):
+    def get_banner(self) -> str | None:
+        """
+        Returns the authentication banner that the server sent, decoded with
+        the encoding of this object. Returns None if the server sent no
+        banner or if the adapter is not connected.
+        """
         if not self._transport:
             return None
         banner = self._transport.get_banner()
@@ -407,7 +543,11 @@ class SSH2(Protocol):
             return banner.decode(self.encoding)
         return banner
 
-    def get_remote_version(self):
+    def get_remote_version(self) -> str | None:
+        """
+        Returns the version string that the server sent, such as
+        'SSH-2.0-OpenSSH_9.9', or None if the adapter is not connected.
+        """
         if not self._transport:
             return None
         version = self._transport.remote_version
@@ -415,35 +555,59 @@ class SSH2(Protocol):
             return version.decode(self.encoding)
         return version
 
-    def _send(self, data):
+    def _send(self, data: str) -> None:
+        """
+        Sends the given text, encoded with the encoding of this object.
+        """
         try:
-            self._channel.sendall(data.encode(self.encoding))
+            cast(paramiko.Channel, self._channel).sendall(data.encode(self.encoding))
             self._send_cb(data)
         except Exception:
             self._dbg(1, 'Error while writing to connection')
             raise
 
-    def _fill_buffer(self, timeout):
-        self._channel.settimeout(timeout)
+    def _fill_buffer(self, timeout: float | None) -> bool | None:
+        """
+        Waits for data from the host and reads it once. Decodes it
+        incrementally, so a character that spans two reads is decoded, too.
+        """
+        cast(paramiko.Channel, self._channel).settimeout(timeout)
         try:
-            data = self._channel.recv(_READ_SIZE)
+            data = cast(paramiko.Channel, self._channel).recv(_READ_SIZE)
         except TimeoutError:
             return None
         finally:
-            self._channel.settimeout(None)  # sendall() blocks without limit, as before
+            # sendall() blocks without limit
+            cast(paramiko.Channel, self._channel).settimeout(None)
         text = self._decoder.decode(data, final=not data)
         if text:
             self._receive_cb(text)
             self._buffer.append(text)
         return bool(data)
 
-    def _set_terminal_size(self, rows, cols):
-        self._channel.resize_pty(cols, rows)
+    def _set_terminal_size(self, rows: int, cols: int) -> None:
+        """
+        Changes the size of the pseudo-terminal.
+        """
+        cast(paramiko.Channel, self._channel).resize_pty(cols, rows)
 
-    def _interact(self, key_handlers=None, handle_window_size=True):
-        return self._open_shell(self._channel, key_handlers, handle_window_size)
+    def _interact(
+        self,
+        key_handlers: Mapping[str, Callable[[Self], object]] | None = None,
+        handle_window_size: bool = True,
+    ) -> None:
+        """
+        Opens the interactive shell on the channel.
+        """
+        return self._open_shell(
+            cast(paramiko.Channel, self._channel), key_handlers, handle_window_size
+        )
 
-    def _close(self, force=False):
+    def _close(self, force: bool = False) -> None:
+        """
+        Closes the channel, the transport and the socket. Unless forced,
+        first reads the data that is waiting on the channel, if any.
+        """
         if self._channel:
             if not force:
                 try:

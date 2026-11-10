@@ -135,8 +135,6 @@ module = [
     "Exscript.protocols.drivers.vxworks",
     "Exscript.protocols.drivers.zte",
     "Exscript.protocols.drivers.zyxel",
-    "Exscript.protocols.netconf",
-    "Exscript.protocols.ssh2",
     "Exscript.queue",
     "Exscript.servers.httpd",
     "Exscript.util.sigint",

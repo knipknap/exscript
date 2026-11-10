@@ -31,6 +31,8 @@ import inspect
 import logging
 import re
 import time
+from collections.abc import Callable, Iterator, Mapping
+from typing import TYPE_CHECKING, Any, NoReturn, Self, cast
 
 from paramiko.ssh_exception import SSHException
 
@@ -41,6 +43,13 @@ from .exception import (
     RPCError,
 )
 from .ssh2 import SSH2
+
+if TYPE_CHECKING:
+    from lxml.etree import _Element
+    from paramiko import Channel, Transport
+
+    from ..account import Account, AccountProxy
+    from ..util.impl import _Context
 
 # ncclient and lxml are imported when the first NETCONF session starts, not
 # with Exscript: lxml enables the GIL of free-threaded Python.
@@ -61,16 +70,21 @@ _pretty_print = contextvars.ContextVar('exscript_netconf_pretty_print', default=
 
 
 @functools.cache
-def _install_to_xml():
+def _install_to_xml() -> Callable[..., str]:
+    """
+    Replaces to_xml() in the two ncclient modules that serialize the
+    <hello> and the RPCs with a wrapper that pretty-prints within _pretty().
+    Runs once per process, and returns the wrapper.
+    """
     import ncclient.operations.rpc
     import ncclient.transport.session
     from ncclient.xml_ import to_xml
 
     @functools.wraps(to_xml)
-    def _to_xml(*args, **kwargs):
+    def _to_xml(*args: Any, **kwargs: Any) -> str:
         if _pretty_print.get():
             kwargs['pretty_print'] = True
-        return to_xml(*args, **kwargs)
+        return cast(str, to_xml(*args, **kwargs))  # ncclient is untyped
 
     ncclient.operations.rpc.to_xml = _to_xml
     ncclient.transport.session.to_xml = _to_xml
@@ -78,7 +92,11 @@ def _install_to_xml():
 
 
 @contextlib.contextmanager
-def _pretty():
+def _pretty() -> Iterator[None]:
+    """
+    Makes the to_xml() wrapper of _install_to_xml() pretty-print within this
+    context, in the current thread or task only.
+    """
     token = _pretty_print.set(True)
     try:
         yield
@@ -91,21 +109,24 @@ class Netconf(SSH2):
     The SSH Netconf protocol adapter, based on the SSH2 adapter and ncclient.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
+        """
+        Constructor. Takes the keyword arguments of :class:`Protocol`.
+        """
         SSH2.__init__(self, **kwargs)
         # Module-Level
         self._logger = _logger
-        # Internals
-        self._ncc_device_handler = None
-        self._ncc_session = None
-        self._ncc_manager = None
-        self._ncc_response = None
+        # Internals; the ncclient objects are Any, because ncclient is untyped
+        self._ncc_device_handler: Any = None
+        self._ncc_session: Any = None
+        self._ncc_manager: Any = None
+        self._ncc_response: Any = None
         self._huge_tree = False
         self._receives_echo = False  # Netconf does not echo the sent RPC.
         self._replicate = False
 
     @property
-    def huge_tree(self):
+    def huge_tree(self) -> bool:
         """Whether huge_tree XML parsing is enabled for RPC replies (default: False).
 
         Enabling this disables lxml's security limits for very large XML documents.
@@ -114,44 +135,63 @@ class Netconf(SSH2):
         return self._huge_tree
 
     @huge_tree.setter
-    def huge_tree(self, value):
+    def huge_tree(self, value: bool) -> None:
         self._huge_tree = value
         if self._ncc_manager is not None:
             self._ncc_manager.huge_tree = value
 
-    def autoinit(self):
+    def autoinit(self) -> None:
         """Netconf does not support terminal/shell initialization."""
         pass
 
-    def get_prompt(self):
+    def get_prompt(self) -> list[re.Pattern[str]]:
+        """
+        Returns the regular expressions that match the end of a NETCONF
+        message: the prompt set with set_prompt(), else the netconf_prompt_re
+        of the driver.
+        """
         if self._manual_prompt_re:
             return self._manual_prompt_re
         return self.get_driver().netconf_prompt_re
 
-    def get_error_prompt(self):
+    def get_error_prompt(self) -> list[re.Pattern[str]]:
+        """
+        Returns the regular expressions that are used to monitor the response
+        for errors: the pattern set with set_error_prompt(), else the
+        netconf_error_re of the driver, which matches an `<rpc-error>` tag.
+        """
         if self._manual_error_re:
             return self._manual_error_re
         return self.get_driver().netconf_error_re
 
-    def get_client_capabilities(self):
-        """Returns the client capabilities sent in the `<hello>` message."""
+    def get_client_capabilities(self) -> list[str] | None:
+        """
+        Returns the client capabilities sent in the `<hello>` message, or
+        None if no NETCONF session is open.
+        """
         if self._ncc_manager is None:
             return None
         return list(self._ncc_manager.client_capabilities)
 
-    def get_server_capabilities(self):
-        """Returns the server capabilities received in the `<hello>` message."""
+    def get_server_capabilities(self) -> list[str] | None:
+        """
+        Returns the server capabilities received in the `<hello>` message, or
+        None if no NETCONF session is open.
+        """
         if self._ncc_manager is None:
             return None
         return list(self._ncc_manager.server_capabilities)
 
-    def get_session_id(self):
-        """Returns the session ID received in the `<hello>` message."""
+    def get_session_id(self) -> str | None:
+        """
+        Returns the session ID received in the `<hello>` message, or None
+        if no NETCONF session is open.
+        """
         if self._ncc_manager is None:
             return None
         return str(self._ncc_manager.session_id)
 
-    def get_response_element(self):
+    def get_response_element(self) -> '_Element | None':
         """
         Returns the parsed XML element tree of the latest RPC reply. This might
         be also some transformed XML structure, depending on specific device
@@ -167,7 +207,7 @@ class Netconf(SSH2):
             is by design. Please use the get_server_capabilities() method to
             access a parsed list of hello capabilities instead.
 
-        :rtype: lxml.etree.Element | None
+        :rtype: lxml.etree._Element | None
         """
         from ncclient.operations.rpc import RPCReply
         from ncclient.xml_ import NCElement
@@ -182,8 +222,17 @@ class Netconf(SSH2):
 
     @staticmethod
     def cleanup_response(
-        response, *, strip_command=False, strip_chars='\x00\x07\x08', strip_ansi=True
-    ):
+        response: str | None,
+        *,
+        strip_command: bool = False,
+        strip_chars: str = '\x00\x07\x08',
+        strip_ansi: bool = True,
+    ) -> str:
+        """
+        Returns a clean copy of the given plaintext response, like
+        :meth:`Protocol.cleanup_response`, but strip_command is ignored: the
+        first line is never removed, because NETCONF does not echo the RPC.
+        """
         # Netconf does not echo any commands, so there is nothing to strip.
         return SSH2.cleanup_response(
             response,
@@ -192,7 +241,14 @@ class Netconf(SSH2):
             strip_ansi=strip_ansi,
         )
 
-    def _paramiko_channel(self):
+    def _paramiko_channel(self) -> None:
+        """
+        Opens a channel with the NETCONF subsystem. Tries the subsystem names
+        of the ncclient device handler for the netconf_device_params of the
+        driver, in order, and keeps the handler for the session.
+
+        :raises LoginFailure: If no subsystem can be opened.
+        """
         # This is a bit different from the SSH2 adapter. Here we need to init
         # the Netconf subsystem. We integrate ncclient's device params in the
         # drivers to support customization.
@@ -203,7 +259,7 @@ class Netconf(SSH2):
         subsystems = device_handler.get_ssh_subsystem_names()
         for subname in subsystems:
             try:
-                self._channel = self._transport.open_session()
+                self._channel = cast('Transport', self._transport).open_session()
                 self._channel.invoke_subsystem(subname)
                 self._channel.set_name("%s-subsystem-%s" % (subname, self._channel.get_id()))
             except SSHException as e:
@@ -218,7 +274,16 @@ class Netconf(SSH2):
         msg = 'Failed to open a channel with any subsystem: ' + ', '.join(subsystems)
         raise LoginFailure(msg)
 
-    def _init_ncclient(self):
+    def _init_ncclient(self) -> None:
+        """
+        Starts the NETCONF session with ncclient on the authenticated
+        transport and the open channel: exchanges the `<hello>` messages,
+        starts the IO thread of ncclient and creates its manager. recv() and
+        send() of the channel are wrapped, so the data of the session also
+        reaches the buffer, the logs and the events. Then updates the driver
+        from the server capabilities and consumes the server `<hello>` from
+        the buffer. Does nothing if the manager exists already.
+        """
         # Bypasses ncclient's default SSH connection flow by injecting the
         # already-authenticated paramiko transport and the open NETCONF channel
         # directly into a fresh SSHSession, then calling _post_connect() to
@@ -238,8 +303,8 @@ class Netconf(SSH2):
         session._host = self.host
         session._transport = self._transport
         session._channel = self._channel
-        session._channel_id = self._channel.get_id()
-        session._channel_name = self._channel.get_name()
+        session._channel_id = cast('Channel', self._channel).get_id()
+        session._channel_name = cast('Channel', self._channel).get_name()
         session._connected = True
         session._closing.clear()
 
@@ -250,10 +315,10 @@ class Netconf(SSH2):
         self._replicate = True
 
         # Setup the channel receive wrapper.
-        recv = self._channel.recv
+        recv = cast('Channel', self._channel).recv
 
         @functools.wraps(recv)
-        def recv_wrapper(*args, **kwargs):
+        def recv_wrapper(*args: Any, **kwargs: Any) -> bytes:
             data = recv(*args, **kwargs)
             if not self._replicate:
                 return data
@@ -266,15 +331,15 @@ class Netconf(SSH2):
                 self._replicate = False
             return data
 
-        self._channel.recv = recv_wrapper
+        cast(Any, self._channel).recv = recv_wrapper  # Any: replaces a method
 
         # Setup the channel send wrapper. This is needed as Netconf does not
         # echo the sent data back to the client known from CLI shells.
-        send = self._channel.send
+        send = cast('Channel', self._channel).send
         param = next(iter(inspect.signature(send).parameters))  # first param
 
         @functools.wraps(send)
-        def send_wrapper(*args, **kwargs):
+        def send_wrapper(*args: Any, **kwargs: Any) -> int:
             count = send(*args, **kwargs)
             if not self._replicate:
                 return count
@@ -290,7 +355,7 @@ class Netconf(SSH2):
                 self._replicate = False
             return count
 
-        self._channel.send = send_wrapper
+        cast(Any, self._channel).send = send_wrapper  # Any: replaces a method
 
         # Starts IO thread, sends client <hello>, consumes server <hello>.
         self._buffer.clear()  # keeps the first self.response clean
@@ -315,7 +380,24 @@ class Netconf(SSH2):
         self._update_auto_driver()
         self.expect_prompt()  # consumes the server <hello> from the buffer
 
-    def login(self, account=None, app_account=None, flush=True):
+    def login(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        app_account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+    ) -> None:
+        """
+        Logs into the host like :meth:`Protocol.login`, with the account and
+        account factory rules described there. NETCONF authenticates at the
+        protocol level only and then starts the NETCONF session; there is no
+        app-level login, so the driver's auto-authorization is skipped and
+        app_account and flush have no effect. The app-level authentication
+        and authorization are marked as done.
+
+        :param account: The account for protocol level authentication.
+        :param app_account: Not used by NETCONF.
+        :param flush: Not used by NETCONF.
+        """
         # Simplified procedure for Netconf to suppress driver auto-authorize.
         with self._get_account(account) as account:
             if app_account is None:
@@ -323,27 +405,67 @@ class Netconf(SSH2):
             self.authenticate(account, app_account, flush=False)
             self.app_authorize()  # just to set the flag
 
-    def authenticate(self, account=None, app_account=None, flush=True):
+    def authenticate(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        app_account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+    ) -> None:
+        """
+        Like :meth:`Protocol.authenticate`, and then starts the NETCONF
+        session on the authenticated connection: exchanges the `<hello>`
+        messages and consumes the server `<hello>` from the buffer.
+        app_account and flush have no effect, because NETCONF has no
+        app-level authentication.
+
+        :param account: The account for protocol level authentication.
+        :param app_account: Not used by NETCONF.
+        :param flush: Not used by NETCONF.
+        """
         super().authenticate(account, app_account, flush=flush)
         # Authentication is complete and the subsystem channel is open. The
         # server <hello> waits unread in the channel buffer. Hand the channel to
         # ncclient now — it will consume the <hello> and start its IO thread.
         self._init_ncclient()
 
-    def app_authenticate(self, account=None, flush=True, bailout=False):
-        """Netconf does not support app-authentication."""
+    def app_authenticate(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+        bailout: bool = False,
+    ) -> None:
+        """
+        Netconf does not support app-authentication. Only marks it as done,
+        so is_app_authenticated() returns True; the arguments are not used.
+        """
         self._app_authenticated = True
 
-    def app_authorize(self, account=None, flush=True, bailout=False):
-        """Netconf does not support app-authorization."""
+    def app_authorize(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+        bailout: bool = False,
+    ) -> None:
+        """
+        Netconf does not support app-authorization. Only marks it as done,
+        so is_app_authorized() returns True; the arguments are not used.
+        """
         self._app_authorized = True
 
-    def auto_app_authorize(self, account=None, flush=True, bailout=False):
-        """Netconf does not support app-authorization."""
+    def auto_app_authorize(
+        self,
+        account: 'Account | AccountProxy | _Context | None' = None,
+        flush: bool = True,
+        bailout: bool = False,
+    ) -> None:
+        """
+        Netconf does not support app-authorization. Like app_authorize(),
+        only marks it as done; the arguments are not used.
+        """
         self.app_authorize()  # just to set the flag
 
     @staticmethod
-    def reassemble_chunks(response):
+    def reassemble_chunks(response: str) -> str:
         """
         Reassembles a NETCONF 1.1 chunked response into plain content.
 
@@ -382,12 +504,22 @@ class Netconf(SSH2):
             raise ValueError(msg % repr(response[:50] + '...'))
         return assembled
 
-    def _domatch(self, prompt, flush):
+    def _domatch(self, prompt: list[re.Pattern[str]], flush: bool) -> tuple[int, re.Match[str]]:
+        """
+        Like Protocol._domatch(), but reassembles a chunked response (NETCONF
+        1.1) into plain content.
+        """
         n, match = super()._domatch(prompt, flush)
-        self.response = self.reassemble_chunks(self.response)
+        # super()._domatch() sets the response.
+        self.response = self.reassemble_chunks(cast(str, self.response))
         return n, match
 
-    def _fill_buffer(self, timeout):
+    def _fill_buffer(self, timeout: float | None) -> bool | None:
+        """
+        Waits until ncclient's IO thread has appended data to the buffer, for
+        up to the given time. Returns True if data arrived, None if the time
+        ran out, and False if the channel was closed.
+        """
         # ncclient's thread reads the channel and appends to the buffer (see the
         # recv wrapper in _init_ncclient()), so this only waits for new data.
         size = self._buffer.size()
@@ -400,7 +532,17 @@ class Netconf(SSH2):
             time.sleep(0.01)
         return True
 
-    def _send(self, data):
+    def _send(self, data: str) -> None:
+        """
+        Validates the given RPC body, sends it as an RPC with ncclient, and
+        waits for the reply, which is kept for get_response_element(). The
+        recv() and send() wrappers of the channel pass the data to the buffer
+        and the events.
+
+        :raises XMLValidationError: If the RPC body is not valid XML.
+        :raises TimeoutException: If no reply arrives in time.
+        :raises ProtocolException: On other errors of ncclient.
+        """
         from ncclient import NCClientError
         from ncclient.operations.errors import TimeoutExpiredError
 
@@ -421,7 +563,11 @@ class Netconf(SSH2):
             raise
         self._dbg(4, 'Received response type: %s' % type(self._ncc_response).__name__)
 
-    def _validate_rpc_body(self, data):
+    def _validate_rpc_body(self, data: str) -> None:
+        """
+        Checks that the given RPC body, wrapped in an `<rpc>` element, is
+        valid XML, and raises XMLValidationError if not.
+        """
         from lxml.etree import XMLSyntaxError
 
         _wrapper_start_tag = '<rpc>\n'
@@ -450,7 +596,12 @@ class Netconf(SSH2):
             )
             raise err
 
-    def _raise_on_response_with_errors(self, line):
+    def _raise_on_response_with_errors(self, line: str) -> None:
+        """
+        Raises RPCError if the latest RPC reply has an `<rpc-error>` with the
+        severity error. The matched line is not used: the error comes from
+        the reply that ncclient parsed.
+        """
         # For device handlers that apply XSLT (e.g. Junos) or any transformation,
         # dispatch() returns NCElement instead of RPCReply.
         response = self._ncc_response
@@ -459,19 +610,35 @@ class Netconf(SSH2):
             if error.severity == 'error':
                 raise RPCError._from_ncclient(rpc_reply.errors)
 
-    def _interact(self, key_handlers=None, handle_window_size=True):
+    def _interact(
+        self,
+        key_handlers: Mapping[str, Callable[[Self], object]] | None = None,
+        handle_window_size: bool = True,
+    ) -> NoReturn:
+        """
+        Raises NotImplementedError: NETCONF has no interactive shell.
+        """
         # Netconf does not support interactive shells. User should use
         # native `ssh HOST -p 830 -s netconf` for an interactive session.
         raise NotImplementedError()
 
-    def _logout(self):
+    def _logout(self) -> None:
+        """
+        Closes the NETCONF session with a `<close-session>` RPC; errors are
+        ignored.
+        """
         try:
             with _pretty():
                 self._ncc_manager.close_session()
         except Exception:
             pass
 
-    def _close(self, force=False):
+    def _close(self, force: bool = False) -> None:
+        """
+        Tells ncclient's IO thread that the session is closed on purpose, and
+        closes the channel, the transport and the socket like SSH2._close().
+        Then waits up to 0.3 seconds for the IO thread to end.
+        """
         # Clear the ncclient manager reference.
         if self._ncc_manager:
             self._ncc_manager = None
