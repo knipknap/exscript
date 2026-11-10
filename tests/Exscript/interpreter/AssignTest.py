@@ -24,6 +24,13 @@ class AssignTest(TemplateTestCase):
         self.evaluate('{if 1}{x = "eth0"}{end}\nshow interface $x\n')
         self.assertSent('show interface eth0')
 
+    def testVariableOfTheCallerBeforeTheAssignment(self):
+        variables = self.evaluate('show $x\n{x = "new"}\n', x='hi')
+        self.assertSent('show hi')
+        self.assertEqual(variables['x'], ['new'])
+        variables = self.evaluate('{if 0}{x = "new"}{end}', x='hi')
+        self.assertEqual(variables['x'], ['hi'])
+
     def testInternalVariables(self):
         with self.assertRaises(CompileError) as cm:
             self.evaluate('{__hostname__ = "r2"}')
@@ -65,6 +72,10 @@ class AppendTest(TemplateTestCase):
     def testAppendAList(self):
         variables = self.evaluate('{x = "a"}{append list.new("b", "c") to x}')
         self.assertEqual(variables['x'], ['a', 'b', 'c'])
+
+    def testAppendToAVariableOfTheCaller(self):
+        variables = self.evaluate('{append "b" to x}', x=['a'])
+        self.assertEqual(variables['x'], ['a', 'b'])
 
     def testAppendInALoop(self):
         variables = self.evaluate('{loop from 0 to 3 as i}{append i * 2 to doubles}{end}')

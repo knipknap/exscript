@@ -373,6 +373,13 @@ marked with **BREAKING**; a migration guide will accompany the release.
   `{extract "(a)" as y from "a"}` or `{extract x as y}`. Before, the character after
   `extract` was taken as the delimiter of the regular expression, so a string in
   double quotes worked, and other terms caused confusing errors such as `re.error`.
+- **BREAKING - Variables of the Caller Keep Their Values:** A variable that the caller
+  passes to a template keeps its value until a statement of the template changes it
+  when the template runs. Before, every assignment, `append`, `extract` and `loop`
+  statement reset its variables when the template was compiled, even if it never ran:
+  with `x='hi'`, `show $x\n{x = "new"}` sent `show None`, `{append "b" to x}` with
+  `x=['a']` gave `['b']`, and `extract ... into x` did not append to the list of the
+  caller.
 
 ### Standard Library
 

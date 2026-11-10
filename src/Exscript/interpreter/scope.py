@@ -100,6 +100,14 @@ class Scope(Token):
         """
         self.variables.update(kwargs)
 
+    def declare(self, **kwargs: Any) -> None:
+        """
+        Defines the given variables like define(), except the ones that are
+        defined already, which keep their values. Statements declare their
+        variables with it when the template is compiled.
+        """
+        self.define(**{key: value for key, value in kwargs.items() if not self.is_defined(key)})
+
     def is_defined(self, name: str) -> int:
         """
         Returns 1 if a variable with the given name is defined in this scope

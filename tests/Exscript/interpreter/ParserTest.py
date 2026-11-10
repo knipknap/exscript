@@ -165,6 +165,11 @@ class ScopeTest(unittest.TestCase):
         self.assertEqual(self.child.variables, {'b': 'x'})
         self.assertEqual(self.root.variables, {'a': [1]})
 
+    def testDeclare(self):
+        self.child.declare(a=['x'], b='y', **{'f.g': 'function'})
+        self.assertEqual(self.root.variables, {'a': [1], 'b': ['y'], 'f.g': 'function'})
+        self.assertEqual(self.child.variables, {})
+
     def testGet(self):
         self.child.define_object(b='x')
         self.assertEqual(self.child.get('a'), [1])

@@ -42,8 +42,8 @@ class Append(Token):
 
     def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
         """
-        Constructor. Parses the statement and defines the variable as an
-        empty list.
+        Constructor. Parses the statement and declares the variable as an
+        empty list, unless it is defined already.
 
         :param lexer: The lexer that reads the template.
         :param parser: The parser of the template.
@@ -71,7 +71,7 @@ class Append(Token):
         lexer.expect(self, 'whitespace')
         _, self.varname = lexer.token()
         lexer.expect(self, 'varname')
-        self.parent.define(**{self.varname: []})
+        self.parent.declare(**{self.varname: []})
 
         # End of statement.
         self.mark_end(rstrip=True)

@@ -26,6 +26,10 @@ class ExtractTest(TemplateTestCase):
         variables = self.evaluate(text)
         self.assertEqual(variables['files'], ['old', 'file1', 'file2', 'file1'])
 
+    def testIntoAVariableOfTheCaller(self):
+        variables = self.evaluate('{extract /(a)/ into x from "a"}', x=['b'])
+        self.assertEqual(variables['x'], ['b', 'a'])
+
     def testSeveralExtracts(self):
         text = (
             'dir {\n'

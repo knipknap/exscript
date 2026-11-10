@@ -42,9 +42,9 @@ class Assign(Token):
 
     def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
         """
-        Constructor. Parses the statement and declares the variable. Raises
-        a CompileError if the name starts and ends with two underscores, as
-        the names of internal variables do.
+        Constructor. Parses the statement and declares the variable, unless
+        it is defined already. Raises a CompileError if the name starts and
+        ends with two underscores, as the names of internal variables do.
 
         :param lexer: The lexer that reads the template.
         :param parser: The parser of the template.
@@ -75,7 +75,7 @@ class Assign(Token):
             lexer.syntax_error(msg, self)
 
         self.expression = Expression(lexer, parser, parent)
-        self.parent.define(**{self.varname: None})
+        self.parent.declare(**{self.varname: None})
 
         # End of statement.
         self.mark_end(rstrip=True)

@@ -49,9 +49,9 @@ class Loop(Token):
     def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
         """
         Constructor. Parses the statement up to and including its end
-        keyword, and defines the loop variables as empty lists. Raises a
-        CompileError if the number of lists differs from the number of
-        variables.
+        keyword, and declares the loop variables as empty lists, unless they
+        are defined already. Raises a CompileError if the number of lists
+        differs from the number of variables.
 
         :param lexer: The lexer that reads the template.
         :param parser: The parser of the template.
@@ -87,14 +87,14 @@ class Loop(Token):
             lexer.next_if('whitespace')
             _, iter_varname = lexer.token()
             lexer.expect(self, 'varname')
-            parent.define(**{iter_varname: []})
+            parent.declare(**{iter_varname: []})
             self.iter_varnames = [iter_varname]
             lexer.next_if('whitespace')
             while lexer.next_if('comma'):
                 lexer.skip(['whitespace', 'newline'])
                 _, iter_varname = lexer.token()
                 lexer.expect(self, 'varname')
-                parent.define(**{iter_varname: []})
+                parent.declare(**{iter_varname: []})
                 self.iter_varnames.append(iter_varname)
                 lexer.skip(['whitespace', 'newline'])
 
@@ -120,7 +120,7 @@ class Loop(Token):
                 lexer.next_if('whitespace')
             else:
                 iter_varname = 'counter'
-            parent.define(**{iter_varname: []})
+            parent.declare(**{iter_varname: []})
             self.iter_varnames = [iter_varname]
 
         # Check if this is a "while" loop.

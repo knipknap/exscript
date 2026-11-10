@@ -46,10 +46,11 @@ class Extract(Token):
 
     def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
         """
-        Constructor. Parses the statement and defines the variables as empty
-        lists. Raises a CompileError on syntax errors, if the parser has
-        no_prompt set (then there is no response), or if the number of
-        variables differs from the number of capture groups.
+        Constructor. Parses the statement and declares the variables as empty
+        lists, unless they are defined already. Raises a CompileError on
+        syntax errors, if the parser has no_prompt set (then there is no
+        response), or if the number of variables differs from the number of
+        capture groups.
 
         :param lexer: The lexer that reads the template.
         :param parser: The parser of the template.
@@ -118,7 +119,7 @@ class Extract(Token):
             if lexer.next_if('comma'):
                 continue
             break
-        self.parent.define(**self.variables)
+        self.parent.declare(**self.variables)
 
         if len(self.varnames) != self.regex.groups:
             count = (len(self.varnames), self.regex.groups)

@@ -107,6 +107,12 @@ Last line
     Requires a regular expression between slashes. 2.x also accepted a
     string in double quotes, e.g. ``{extract "(a)" as y}``.
 
+Variables of the caller
+    Keep their values until a statement of the template changes them. In
+    2.x, assignments, ``append``, ``extract`` and ``loop`` reset their
+    variables when the template was compiled, e.g. ``append`` and
+    ``extract ... into`` started with an empty list.
+
 Command line tool
 -----------------
 

@@ -59,6 +59,12 @@ class LoopTest(TemplateTestCase):
         self.evaluate('{loop from 3 to 3}\nls\n{end}\n{loop from 3 to 1}\nls\n{end}')
         self.assertSent()
 
+    def testVariablesOfTheCallerWithoutIterations(self):
+        text = '{loop from 0 to 0}{end}{loop list.new() as x}{end}{loop from 1 to 1 as y}{end}'
+        variables = self.evaluate(text, counter='c', x='hi', y=['a', 'b'])
+        self.assertEqual((variables['counter'], variables['x']), (['c'], ['hi']))
+        self.assertEqual(variables['y'], ['a', 'b'])
+
     def testLoopWhile(self):
         variables = self.evaluate('{n = 0}{loop while n lt 3}{n = n + 1}\nls $n\n{end}')
         self.assertSent('ls 1', 'ls 2', 'ls 3')
