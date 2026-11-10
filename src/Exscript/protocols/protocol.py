@@ -2236,14 +2236,15 @@ class Protocol:
 
     def _logout(self) -> None:
         """
-        Logout from the remote host using the driver-specific command.
+        Logs out from the remote host using the driver-specific command.
+        Errors are only logged.
         """
         driver = self.get_driver()
         self._dbg(4, 'Calling %s.logout().' % repr(driver))
         try:
             driver.logout(self)
-        except Exception:
-            pass
+        except Exception as e:  # e.g. the host closed the connection first
+            self._dbg(1, 'Error while logging out: %s' % repr(e))
 
     def _close(self, force: bool = False) -> None:
         """
@@ -2260,8 +2261,8 @@ class Protocol:
         With `force=False` the driver-specific logout() method is called before
         the connection is closed. Dummy and Netconf adapters have a special
         static logout sequence. The connection is closed even if the logout
-        fails, and the error of the logout is raised afterwards; errors while
-        closing are only logged, because the host may have closed first.
+        fails. Errors of the logout and while closing are only logged (debug
+        level 1), because many hosts close the connection after the logout.
 
         .. WARNING::
             Ensure the remote host has already left any previously used submode

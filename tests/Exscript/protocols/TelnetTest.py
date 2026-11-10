@@ -98,6 +98,19 @@ class SessionTest(unittest.TestCase):
             conn.close()
         self.assertFalse(conn.connected)
 
+    def testErrorWhileLoggingOut(self):
+        # E.g. the host closed the connection before the logout; the error is logged.
+        conn = self.login(debug=1)
+        with (
+            mock.patch.object(conn.get_driver(), 'logout', side_effect=BrokenPipeError),
+            self.assertLogs('Exscript.protocols.telnet', logging.DEBUG) as logs,
+        ):
+            conn.close()
+        self.assertFalse(conn.connected)
+        self.assertTrue(
+            any('Error while logging out: BrokenPipeError' in line for line in logs.output)
+        )
+
     def testErrorWhileSending(self):
         conn = self.login(debug=1)
         with (

@@ -178,9 +178,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
   1000 lines. `interact()` still uses the size of the local terminal. For the
   previous behavior without a terminal, pass `term_width=80, term_height=25`.
 - **Reliable `close()`:** `close()` closes the connection and resets the object even
-  if the logout fails, and raises the error of the logout afterwards. Errors while
-  closing, e.g. because the host closed the connection first, are only logged;
-  before, `close(force=True)` could raise an `EOFError`.
+  if the logout fails. Errors of the logout and while closing, e.g. because the host
+  closed the connection first, are only logged (debug level 1); before, errors of
+  the logout were ignored silently, and `close(force=True)` could raise an
+  `EOFError`.
 
 ### Interactive Shell
 
