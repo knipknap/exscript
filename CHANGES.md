@@ -633,6 +633,9 @@ The names below refer to functions callable from templates, not protocol methods
   pipeline unchanged. Before, the item stayed queued: e.g. `Queue.priority_run()` on a
   host that `run_or_ignore()` had queued raised the error, and yet ran the host a second
   time, in a job with the id `None`.
+- **Jobs Have Their Id When They Start:** `WorkQueue.enqueue()` and `priority_enqueue()`
+  give the job its id before the main loop can start it. Before, a job that started at
+  once could run with the id `None`, and its `Task` then never counted it as completed.
 
 ## Demos
 

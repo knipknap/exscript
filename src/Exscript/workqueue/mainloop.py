@@ -89,9 +89,14 @@ class MainLoop(threading.Thread):
 
         :return: The id of the job.
         """
-        job = Job(function, name, times, data)
-        job.id = self.collection.append(job)
-        return job.id
+
+        # Under the lock, so the job has its id before the main loop takes it.
+        def append(queue: 'Pipeline') -> str:
+            job = Job(function, name, times, data)
+            job.id = queue.append(job)
+            return job.id
+
+        return self.collection.with_lock(append)
 
     # Any: the data of the job, see job.Thread.__init__().
     def enqueue_or_ignore(
@@ -129,9 +134,14 @@ class MainLoop(threading.Thread):
             number of jobs is in progress already.
         :return: The id of the job.
         """
-        job = Job(function, name, times, data)
-        job.id = self.collection.appendleft(job, name, force=force_start)
-        return job.id
+
+        # Under the lock, so the job has its id before the main loop takes it.
+        def appendleft(queue: 'Pipeline') -> str:
+            job = Job(function, name, times, data)
+            job.id = queue.appendleft(job, name, force=force_start)
+            return job.id
+
+        return self.collection.with_lock(appendleft)
 
     # Any: the data of the job, see job.Thread.__init__().
     def priority_enqueue_or_raise(
