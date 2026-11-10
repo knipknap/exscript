@@ -173,6 +173,8 @@ class NetconfServer:
     :param piece_size: Writes the data to the channel in pieces of this many bytes.
     :param subsystem: Whether the netconf subsystem is available.
     :param channels: Whether the server opens session channels.
+    :param ignore_close_session: Whether close-session gets no reply and
+        leaves the session open, like on a server that hangs.
     """
 
     def __init__(
@@ -185,11 +187,13 @@ class NetconfServer:
         piece_size=None,
         subsystem=True,
         channels=True,
+        ignore_close_session=False,
     ):
         self.reply = reply or (lambda rpc: '<ok/>')
         self.capabilities = capabilities
         self.chunk_size = chunk_size
         self.piece_size = piece_size
+        self.ignore_close_session = ignore_close_session
         self.client_hello = None
         self.hello_received = threading.Event()
         self.rpcs = []
@@ -271,6 +275,8 @@ class NetconfServer:
             while (rpc := read(self.chunked)) is not None:
                 self.rpcs.append(rpc)
                 closing = operation(rpc) == 'close-session'
+                if closing and self.ignore_close_session:
+                    continue
                 content = '<ok/>' if closing else self.reply(rpc)
                 if content is CLOSE:
                     break
@@ -452,6 +458,15 @@ class SessionTest(unittest.TestCase):
         self.assertEqual([operation(rpc) for rpc in self.server.rpcs], ['close-session'])
         self.assertIn('close-session/>', ''.join(sent))  # pretty-printed
         self.assertFalse(conn.connected)
+
+    def testCloseEndsTheIOThread(self):
+        # ncclient closes the session itself after the reply to close-session.
+        for ignore_close_session, force in (False, False), (True, False), (False, True):
+            with self.subTest(ignore_close_session=ignore_close_session, force=force):
+                conn = self.login(timeout=0.3, ignore_close_session=ignore_close_session)
+                thread = conn._ncc_session
+                conn.close(force=force)
+                self.assertFalse(thread.is_alive())
 
     def testSubsystemRefused(self):
         for options in {'subsystem': False}, {'channels': False}:

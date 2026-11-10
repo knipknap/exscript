@@ -280,6 +280,16 @@ marked with **BREAKING**; a migration guide will accompany the release.
   cleared the end-of-file flag, and the next `receive()` failed with
   `AttributeError: 'NoneType' object has no attribute 'settimeout'`.
 
+### NETCONF
+
+The `Netconf` adapter is new in 3.0, so these fixes matter only to users of the 2.9
+development versions; "before" refers to them.
+
+- **`close()` Ends ncclient's Thread:** `close()` ends the thread in which ncclient reads
+  the session, also with `force=True` or if the server does not answer
+  `<close-session/>`. Before, the thread then kept running until the process ended, and
+  `close()` waited 0.3 seconds for it in vain.
+
 ### Protocol Drivers
 
 - **Generic Prompt Pattern in Linear Time:** The prompt pattern of the generic driver,

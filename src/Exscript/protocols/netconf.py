@@ -30,6 +30,7 @@ import functools
 import inspect
 import logging
 import re
+import threading
 import time
 from collections.abc import Callable, Iterator, Mapping
 from typing import TYPE_CHECKING, Any, NoReturn, Self, cast
@@ -635,16 +636,16 @@ class Netconf(SSH2):
 
     def _close(self, force: bool = False) -> None:
         """
-        Tells ncclient's IO thread that the session is closed on purpose, and
-        closes the channel, the transport and the socket like SSH2._close().
-        Then waits up to 0.3 seconds for the IO thread to end.
+        Tells ncclient's IO thread that the session is closed on purpose,
+        closes the transport, and waits up to a second for the IO thread to
+        end. Then closes the channel and the socket like SSH2._close().
         """
         # Clear the ncclient manager reference.
         if self._ncc_manager:
             self._ncc_manager = None
 
         # Signal ncclient's IO thread that this is an intentional close.
-        # Must happen before the channel is shut down so the thread treats the
+        # Must happen before the transport is closed so the thread treats the
         # subsequent empty recv() as expected (breaks cleanly, no SessionCloseError).
         ncc_session = self._ncc_session
         if self._ncc_session:
@@ -657,15 +658,20 @@ class Netconf(SSH2):
         # Disable the replication wrappers.
         self._replicate = False
 
-        # SSH2 closes the paramiko channel, transport, and socket.
-        # Closing the channel causes channel.recv() to return b'', which —
-        # combined with _closing being set — causes the IO thread to exit.
-        super()._close(force=force)
+        # Like ncclient's SSHSession.close(), close the transport first: paramiko
+        # then marks the channel closed and makes the pipe that the IO thread
+        # selects on readable, so the thread reads b'' and ends. Closing the
+        # channel first, as SSH2._close() does, closes that pipe, so the thread
+        # would never wake up again.
+        if self._transport:
+            self._transport.close()
 
-        # Wait for ncclient's IO thread to fully terminate.
-        # Must be after super() so the channel is already closed when we join.
-        if ncc_session:
-            try:
-                ncc_session.join(timeout=0.3)
-            except Exception:
-                pass
+        # Wait for ncclient's IO thread to end, unless this is that thread, e.g.
+        # in a monitor callback.
+        if ncc_session and ncc_session is not threading.current_thread():
+            ncc_session.join(timeout=1)
+            if ncc_session.is_alive():
+                self._dbg(1, "ncclient's IO thread did not end within a second.")
+
+        # SSH2 closes the paramiko channel, the transport, and the socket.
+        super()._close(force=force)
