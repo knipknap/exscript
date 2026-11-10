@@ -2173,6 +2173,8 @@ def otp(password: str, seed: str, sequence: int) -> str:
     seed_bytes = seed.encode('utf-8')
     password_bytes = password.encode('utf-8')
 
+    # S/Key (RFC 1760) defines the one-time password with MD4, and the device checks it,
+    # so no other hash can be used. The result is a one-time password, not a stored hash.
     # Discard the first <sequence> keys
     thehash = MD4.new(seed_bytes + password_bytes).digest()
     thehash = _fold_md4_or_md5(thehash)
