@@ -589,6 +589,9 @@ The names below refer to functions callable from templates, not protocol methods
   for the current user. If the name of the current user is unknown, it adds none, as
   without a default user name. Before, the CLI failed with the `OSError` of
   `getpass.getuser()`, or with a `KeyError` before Python 3.13.
+- **`exscript --version`:** Prints the version of Exscript, as in 2.6 and as the
+  tutorials say. The 2.9 development versions failed with
+  `exscript: error: unrecognized arguments: --version`.
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.

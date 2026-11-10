@@ -7,6 +7,8 @@ import tempfile
 import time
 import unittest
 
+import Exscript
+
 BASEDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 KEYFILE = os.path.join(BASEDIR, 'tests', 'Exscript', 'protocols', 'id_rsa')
 
@@ -74,6 +76,11 @@ class ScriptsTest(unittest.TestCase):
         self.assertTrue(output.startswith('usage: exscript '), output)
         for option in '--load-driver', '--insecure', '--ssh-host-key-policy':
             self.assertIn(option, output)
+
+    def testVersion(self):
+        code, output = self.run_exscript('--version')
+        self.assertEqual(code, 0, output)
+        self.assertEqual(output, Exscript.__version__ + '\n')
 
     def testRunTemplate(self):
         template = self.write_template('{sys.message("hello")}\n')

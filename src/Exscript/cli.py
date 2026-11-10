@@ -44,7 +44,7 @@ from types import FrameType
 from typing import NoReturn
 
 import Exscript.protocols.drivers
-from Exscript import Account, Host, PrivateKey, Queue
+from Exscript import Account, Host, PrivateKey, Queue, __version__
 from Exscript.logger import setupLogging
 from Exscript.protocols import Protocol, protocol_map
 from Exscript.util import template
@@ -520,6 +520,8 @@ def create_parser() -> argparse.ArgumentParser:
         prog="exscript", epilog="\N{COPYRIGHT SIGN} 2007-2023 by Samuel Abels."
     )
 
+    parser.add_argument("--version", action="version", version=__version__)
+
     parser.add_argument(
         "filename",
         default=None,
@@ -921,8 +923,8 @@ def main(argv: list[str] | None = None) -> int:
         those of the process.
     :rtype:  int
     :return: The exit status: 0 if the template succeeded on all hosts,
-        else 1. Invalid arguments and ``--help`` end the process through
-        SystemExit, as usual with argparse.
+        else 1. Invalid arguments, ``--help`` and ``--version`` end the
+        process through SystemExit, as usual with argparse.
     """
     parser = create_parser()
     failed = run(parser, parser.parse_args(argv))
