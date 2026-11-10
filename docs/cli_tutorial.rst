@@ -65,12 +65,21 @@ Reading login information
 Depending on how you would like to provide the login information, there
 are a few options. The first is by including it in the hostname::
 
-    exscript -c 2 test.exscript ssh://localhost
-    ssh://user:password@otherhost
+    exscript -c 2 test.exscript ssh://localhost ssh://user:password@otherhost
 
 In this case, Exscript still prompts the user for his login details,
 but the entered information is only used on hosts that do not have a
 user/password combination included in the hostname.
+
+A second password after the first one, as in
+``ssh://user:password:password2@otherhost``, is the authorization
+password, e.g. the enable password of a Cisco device: the password that
+``--authorization`` asks for. The host files of ``--hosts`` and
+``--csv-hosts`` accept the same addresses.
+
+.. warning::
+   Passwords in a command line can be read from the process list and the
+   shell history. Prefer the prompt or an account pool (see below).
 
 If you do not want for Exscript to prompt for login details, the
 ``-i`` switch tells Exscript to not ask for a user and password. You
@@ -84,7 +93,7 @@ If you do not wish to hard code the host names or login details into the
 command, you may also list the hosts in an external file and load it
 using the ``--hosts`` option as follows::
 
-    exscript -c 2 —hosts myhosts.txt test.exscript
+    exscript -c 2 --hosts myhosts.txt test.exscript
 
 Note that *hosts.txt* is a file containing a list of hostnames, e.g.::
 
@@ -124,7 +133,7 @@ user/password combination specified in their URL.
 
 ::
 
-    exscript -c 2 —hosts myhosts.txt —account-pool accounts.cfg test.exscript
+    exscript -c 2 --hosts myhosts.txt --account-pool accounts.cfg test.exscript
 
 Note that ``accounts.cfg`` is a config file with a defined syntax as
 seen in the API documentation for
@@ -139,7 +148,7 @@ Logging
 Exscript has built-in support for logging - just pass the ``--logdir``
 or ``-l`` option with a path to the directory in which logs are stored::
 
-    exscript -l /tmp/logs -c 2 —hosts myhosts.txt —account-pool accounts.cfg test.exscript
+    exscript -l /tmp/logs -c 2 --hosts myhosts.txt --account-pool accounts.cfg test.exscript
 
 Exscript creates one logfile per device. In the case that an error
 happened on the remote device, it creates an additional file that
