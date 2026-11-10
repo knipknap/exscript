@@ -76,14 +76,15 @@ class Fail(Token):
 
     def value(self, context: Scope) -> int:
         """
-        Raises a FailException with the first item of the message, if the
-        condition is true or not given.
+        Raises a FailException with the first item of the message, or '' if
+        the message is an empty list, if the condition is true or not given.
 
         :param context: The scope in which the template runs.
         :return: 1 if the condition is false.
         """
-        if self.expression is None or self.expression.value(context)[0]:
-            raise FailException(self.msg.value(context)[0])
+        if self.expression is None or self.expression.is_true(context):
+            msg = self.msg.value(context)
+            raise FailException(msg[0] if len(msg) > 0 else '')
         return 1
 
     def dump(self, indent: int = 0) -> None:

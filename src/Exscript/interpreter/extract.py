@@ -158,9 +158,10 @@ class Extract(Token):
         # print("Buffer contains", buffer)
 
         # Walk through all lines, matching each one against the regular
-        # expression.
+        # expression. Items that are not strings, such as numbers, are matched
+        # as text.
         for line in buffer:
-            match = self.regex.value(context).search(line)
+            match = self.regex.value(context).search(str(line))
             if match is None:
                 continue
 

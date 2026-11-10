@@ -40,6 +40,11 @@ class IfConditionTest(TemplateTestCase):
         self.evaluate('{if 0}\nshow one\n{else if 0}\nshow two\n{end}\nls\n')
         self.assertSent('ls')
 
+    def testEmptyListIsFalse(self):
+        text = '{e = list.new()}{if e}\nshow one\n{else if not e}\nshow two\n{end}'
+        self.evaluate(text)
+        self.assertSent('show two')
+
     def testOnOneLine(self):
         self.evaluate('{if 1}ls{end}\n{if 0}show version{else}show other{end}\n')
         self.assertSent('ls', 'show other')

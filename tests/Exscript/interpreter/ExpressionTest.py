@@ -54,6 +54,11 @@ class ExpressionTest(TemplateTestCase):
             ('{x = 1 + "b"}', '         ^^^'),
             ('{x = "a" - 1}', '     ^^^'),
             ('{x = 5 % "b"}', '         ^^^'),
+            ('{x = "a" / 2}', '     ^^^'),
+            ('{x = "a" ge 1}', '     ^^^'),
+            ('{x = 1 gt "b"}', ' ' * 10 + '^^^'),
+            ('{x = "a" le 1}', '     ^^^'),
+            ('{x = 1 lt "b"}', ' ' * 10 + '^^^'),
         ):
             with self.subTest(text=text):
                 with self.assertRaises(ExecuteError) as cm:
@@ -61,6 +66,22 @@ class ExpressionTest(TemplateTestCase):
                 op = text.split()[3]
                 message = 'Operand for %s is not a number in undefined:1' % op
                 self.assertError(cm.exception, [text], marker, message)
+
+    def testOperandWithoutValue(self):
+        # A group that did not match extracts None.
+        text = '{extract /(x)?(y)/ as a, b from "y"}{z = a + 1}'
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate(text)
+        message = 'Operand for + is not a number in undefined:1'
+        self.assertError(cm.exception, [text], ' ' * 41 + '^', message)
+
+    def testDivisionByZero(self):
+        for text in '{x = 1 / 0}', '{x = 7 % 0}':
+            with self.subTest(text=text):
+                with self.assertRaises(ExecuteError) as cm:
+                    self.evaluate(text)
+                message = 'Division by zero in undefined:1'
+                self.assertError(cm.exception, [text], ' ' * 9 + '^', message)
 
     def testEquality(self):
         text = '{a = 1 is 1}{b = "a" is "b"}{c = 1 is not 2}{d = "a" is not "a"}'
@@ -156,9 +177,9 @@ class ExpressionTest(TemplateTestCase):
     def testListOperands(self):
         text = (
             '{l = list.new("a", "b")}{e = list.new()}'
-            '{a = l . "c"}{b = e . "c"}{c = e is ""}{d = "c" . e}'
+            '{a = l . "c"}{b = e . "c"}{c = e is ""}{d = "c" . e}{f = not e}'
         )
-        self.assertValues(text, a=['ac'], b=['c'], c=[True], d=['c'])
+        self.assertValues(text, a=['ac'], b=['c'], c=[True], d=['c'], f=[True])
 
     def testRegularExpressionTerm(self):
         variables = self.evaluate('{r = /a.c/i}')

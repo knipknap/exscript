@@ -297,6 +297,9 @@ The following Exscript template executes the ``ls`` command only if
       ls
     {end}
 
+A condition that is an empty list is false, so ``{if not found}`` works
+as well.
+
 if ... else ... end
 ^^^^^^^^^^^^^^^^^^^
 

@@ -88,13 +88,13 @@ class IfCondition(Token):
 
     def value(self, context: Scope) -> int:
         """
-        Evaluates the if block if the first item of the condition is true,
-        and the else block otherwise.
+        Evaluates the if block if the condition is true, and the else block
+        otherwise.
 
         :param context: The scope in which the template runs.
         :return: 1.
         """
-        if self.expression.value(context)[0]:
+        if self.expression.is_true(context):
             self.if_block.value(context)
         elif self.else_block is not None:
             self.else_block.value(context)

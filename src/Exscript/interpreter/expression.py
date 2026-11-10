@@ -129,8 +129,9 @@ class ExpressionNode(Token):
         """
         Evaluates the node. A list operand stands for its first item, or ''
         if it is empty. "and" and "or" evaluate the right operand only if
-        the left one does not decide the result. Arithmetic operators raise
-        an ExecuteError if an operand is not a number.
+        the left one does not decide the result. Arithmetic operators and
+        ge, gt, le and lt raise an ExecuteError if an operand is not a
+        number, and / and % if the right operand is 0.
 
         :param context: The scope in which the template runs.
         :return: The value of the term if the node has no operator, or a
@@ -142,7 +143,8 @@ class ExpressionNode(Token):
         if self.op is None:
             return cast(Token, self.lft).value(context)
         elif self.op == 'not':
-            return [not cast(Token, self.rgt).value(context)[0]]
+            rgt_lst = cast(Token, self.rgt).value(context)
+            return [not (rgt_lst[0] if len(rgt_lst) > 0 else '')]
 
         # There are only two types of values: Regular expressions and lists.
         # We also have to make sure that empty lists do not cause an error.
@@ -164,16 +166,18 @@ class ExpressionNode(Token):
             else:
                 rgt = ''
 
-        if self.op_type == 'arithmetic_operator' and self.op != '.':
+        if self.op in ('*', '/', '%', '+', '-', 'ge', 'gt', 'le', 'lt'):
             error = 'Operand for %s is not a number' % (self.op)
             try:
                 lft = int(lft)
-            except ValueError:
+            except (TypeError, ValueError):
                 self.lexer.runtime_error(error, self.lft)
             try:
                 rgt = int(rgt)
-            except ValueError:
+            except (TypeError, ValueError):
                 self.lexer.runtime_error(error, self.rgt)
+            if self.op in ('/', '%') and rgt == 0:
+                self.lexer.runtime_error('Division by zero', self.rgt)
 
         # Two-term expressions.
         if self.op == 'is':
@@ -316,6 +320,16 @@ class Expression(Token):
             the operators.
         """
         return self.root.value(context)
+
+    def is_true(self, context: Scope) -> bool:
+        """
+        Evaluates the expression as a condition, which is true if the first
+        item of the value is true. An empty list is false.
+
+        :param context: The scope in which the template runs.
+        """
+        values = self.value(context)
+        return len(values) > 0 and bool(values[0])
 
     def dump(self, indent: int = 0) -> None:
         """

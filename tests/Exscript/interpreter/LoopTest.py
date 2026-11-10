@@ -65,6 +65,33 @@ class LoopTest(TemplateTestCase):
         self.assertEqual((variables['counter'], variables['x']), (['c'], ['hi']))
         self.assertEqual(variables['y'], ['a', 'b'])
 
+    def testLoopFromToWithDigitStrings(self):
+        variables = self.evaluate('{loop from "1" to n as i}{append i to l}{end}', n='3')
+        self.assertEqual(variables['l'], [1, 2])
+
+    def testBoundIsNotANumber(self):
+        for text, marker in (
+            ('{loop from "a" to 3}', ' ' * 11 + '^^^'),
+            ('{loop from 1 to e}', ' ' * 16 + '^'),
+            ('{loop from 1 to e . "x"}', ' ' * 16 + '^' * 7),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaises(ExecuteError) as cm:
+                    self.evaluate(text + '\nls\n{end}', e=[])
+                message = 'Loop bound is not a number in undefined:1'
+                self.assertError(cm.exception, [text], marker, message)
+        self.assertSent()
+
+    def testConditionsOnAnEmptyList(self):
+        text = (
+            '{e = list.new()}{n = 0}'
+            '{loop while e}{n = n + 1}{end}'
+            '{loop until e}{n = n + 1}{if n is 2}{append 1 to e}{end}{end}'
+            '{loop list.new("a", "b") as x while list.new()}{n = n + 10}{end}'
+            '{loop list.new("a", "b") as x until list.new()}{n = n + 100}{end}'
+        )
+        self.assertEqual(self.evaluate(text)['n'], [202])
+
     def testLoopWhile(self):
         variables = self.evaluate('{n = 0}{loop while n lt 3}{n = n + 1}\nls $n\n{end}')
         self.assertSent('ls 1', 'ls 2', 'ls 3')

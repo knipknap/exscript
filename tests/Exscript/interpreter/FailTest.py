@@ -33,6 +33,13 @@ class FailTest(TemplateTestCase):
             self.evaluate('{fail "$x on $__hostname__" if x is "bad"}', x='bad')
         self.assertEqual(str(cm.exception), 'bad on r1')
 
+    def testEmptyList(self):
+        self.evaluate('{e = list.new()}{fail "x" if e}\nls\n')
+        self.assertSent('ls')
+        with self.assertRaises(FailException) as cm:
+            self.evaluate('{fail list.new()}')
+        self.assertEqual(str(cm.exception), '')
+
     def testInABlock(self):
         with self.assertRaises(FailException) as cm:
             self.evaluate('{loop from 0 to 5 as i}\nls $i\n{fail "stop at " . i if i is 2}{end}')

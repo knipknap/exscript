@@ -394,6 +394,17 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **BREAKING - Lines With Only Whitespace:** A line with only whitespace is ignored,
   also if the whitespace is not a space or a tab, e.g. a no-break space. Before, such
   whitespace was sent at the start of the command in the next line.
+- **Errors at Runtime:** A division by zero (`1 / 0`, `1 % 0`), an operand of `/`,
+  `ge`, `gt`, `le` or `lt` that is not a number (`"a" / 2`), an operand of an
+  arithmetic operator without a value, such as a group that `extract` did not match,
+  and a bound of `loop from ... to ...` that is not a number raise an `ExecuteError`
+  that shows their position. Before, they raised a `ZeroDivisionError`, `ValueError`
+  or `TypeError` of Python. Other such exceptions are gone: an empty list is false as
+  the condition of `if`, `fail` and `loop`, and as the operand of `not`, and `fail`
+  with an empty list has an empty message (before: `IndexError`); `extract ... from`
+  matches numbers as text, as `matches` does, e.g. in `{extract /(\d)/ as d from 42}`
+  (before: `TypeError`); and the bounds of `loop from ... to ...` may be strings of
+  digits, like the operands of arithmetic operators.
 
 ### Standard Library
 

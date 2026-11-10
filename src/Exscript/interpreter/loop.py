@@ -146,8 +146,8 @@ class Loop(Token):
         """
         Runs the loop. A range loop counts from the first number up to, but
         not including, the second. A while or until condition is checked
-        before each iteration. Raises an ExecuteError if the lists have
-        different lengths.
+        before each iteration. Raises an ExecuteError if a bound of a range
+        loop is not a number, or if the lists have different lengths.
 
         :param context: The scope in which the template runs.
         :return: 1.
@@ -156,22 +156,27 @@ class Loop(Token):
             # If this is a "while" loop, iterate as long as the condition is
             # True.
             if self.during is not None:
-                while self.during.value(context)[0]:
+                while self.during.is_true(context):
                     self.block.value(context)
                 return 1
 
             # If this is an "until" loop, iterate until the condition is True.
             if self.until is not None:
-                while not self.until.value(context)[0]:
+                while not self.until.is_true(context):
                     self.block.value(context)
                 return 1
 
         # Retrieve the lists from the list terms.
         if self.thefrom:
-            start = self.thefrom.value(context)[0]
+            bounds = []
             # The constructor sets theto together with thefrom.
-            stop = cast(Expression, self.theto).value(context)[0]
-            lists = [list(range(start, stop))]
+            for bound in self.thefrom, cast(Expression, self.theto):
+                values = bound.value(context)
+                try:
+                    bounds.append(int(values[0] if len(values) > 0 else ''))
+                except (TypeError, ValueError):
+                    self.lexer.runtime_error('Loop bound is not a number', bound.root)
+            lists = [list(range(*bounds))]
         else:
             lists = [var.value(context) for var in self.list_variables]
         varnames = self.iter_varnames
@@ -188,9 +193,9 @@ class Loop(Token):
             for thelist in lists:
                 self.block.define(**{varnames[f]: [thelist[i]]})
                 f += 1
-            if self.until is not None and self.until.value(context)[0]:
+            if self.until is not None and self.until.is_true(context):
                 break
-            if self.during is not None and not self.during.value(context)[0]:
+            if self.during is not None and not self.during.is_true(context):
                 break
             self.block.value(context)
         return 1

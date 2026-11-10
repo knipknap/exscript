@@ -55,6 +55,12 @@ class ExtractTest(TemplateTestCase):
         variables = self.evaluate('{extract /^(\\w)/ as first from string.split("ab,cd", ",")}')
         self.assertEqual(variables['first'], ['a', 'c'])
 
+    def testExtractFromNumbers(self):
+        variables = self.evaluate(
+            '{extract /^(\\d)/ as a from 42}{extract /(\\d)$/ as b from l}', l=[17, 'x3']
+        )
+        self.assertEqual((variables['a'], variables['b']), (['4'], ['7', '3']))
+
     def testNoMatch(self):
         variables = self.evaluate('ls{extract /(nomatch)/ as found}\n')
         self.assertEqual(variables['found'], [])
