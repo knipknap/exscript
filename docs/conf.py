@@ -15,7 +15,7 @@ from pathlib import Path
 # The command line reference includes the output of "exscript --help". Sphinx
 # runs this file in the docs directory.
 _help = subprocess.run(
-    [sys.executable, "../scripts/exscript", "--help"],
+    [sys.executable, "-m", "Exscript", "--help"],
     capture_output=True,
     check=True,
     encoding="utf-8",

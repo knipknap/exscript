@@ -46,7 +46,7 @@ class SigIntWatcher:
     on Windows.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Creates a child process, which returns. The parent
         process waits for a KeyboardInterrupt and then kills

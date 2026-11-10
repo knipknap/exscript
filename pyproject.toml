@@ -49,6 +49,10 @@ otel = [
     "opentelemetry-instrumentation>=0.48b0",
 ]
 
+[project.scripts]
+exscript = "Exscript.cli:main"
+otp = "Exscript.cli:otp_main"
+
 [project.urls]
 Homepage = "https://github.com/knipknap/exscript"
 Documentation = "https://exscript.readthedocs.io"
@@ -75,14 +79,9 @@ source = "vcs"
 [tool.hatch.build.targets.wheel]
 packages = ["src/Exscript"]
 
-[tool.hatch.build.targets.wheel.shared-scripts]
-"scripts/exscript" = "exscript"
-"scripts/otp" = "otp"
-
 [tool.ruff]
 line-length = 100
 src = ["src", "tests"]
-extend-include = ["scripts/exscript", "scripts/otp"]
 extend-exclude = ["docs/_build"]
 
 [tool.ruff.format]
@@ -159,7 +158,7 @@ fail-under = 93
 ignore-magic = true
 ignore-nested-functions = true
 ignore-setters = true
-exclude = ["docs", "tests", "tools", "demos", "scripts"]
+exclude = ["docs", "tests", "tools", "demos"]
 
 [tool.coverage.run]
 branch = true

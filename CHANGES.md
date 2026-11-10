@@ -27,6 +27,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **Dependencies:** `future` and `configparser`, backports for Python 2, are no longer
   needed. paramiko 3.4 to 5.x is supported (before: 1.17 to 4.x). New: ncclient and
   lxml 5.0 or later, for NETCONF.
+- **Console Commands:** The commands `exscript` and `otp` keep their names, and are now
+  console entry points of the package: `Exscript.cli.main()` and `otp_main()`.
+  `python -m Exscript` runs `exscript`, too. On Windows, the commands are `.exe`
+  launchers that work from any shell. Before, they were Python scripts without a file
+  extension, which cmd.exe and PowerShell do not run.
 - **NETCONF Protocol:** The new adapter `Exscript.protocols.Netconf` (scheme
   `netconf://`, port 830) sends RPCs over SSH with ncclient, and returns the replies as
   text or as lxml elements; an `<rpc-error>` raises `RPCError`. The IOS XR and Junos

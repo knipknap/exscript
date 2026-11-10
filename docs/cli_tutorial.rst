@@ -13,7 +13,8 @@ tool.
 We'll assume that Exscript is already installed. You can confirm that
 your installation works by typing ``exscript --version`` into a
 terminal; if this prints the version number, your installation is
-complete.
+complete. ``python -m Exscript`` runs the tool, too, e.g. if the
+``exscript`` command is not on your ``PATH``.
 
 Getting started
 ---------------

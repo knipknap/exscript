@@ -5,13 +5,14 @@ import tempfile
 import unittest
 
 BASEDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-SCRIPT = os.path.join(BASEDIR, 'scripts', 'exscript')
 KEYFILE = os.path.join(BASEDIR, 'tests', 'Exscript', 'protocols', 'id_rsa')
 
-# Runs the script, but getpass.getuser() finds no user name, as for a user ID without a passwd
+# Runs the CLI, but getpass.getuser() finds no user name, as for a user ID without a passwd
 # entry: it raises OSError since Python 3.13, and KeyError before.
 WITHOUT_USER_NAME = '''
-import getpass, runpy, sys
+import getpass, sys
+
+from Exscript.cli import main
 
 
 def getuser():
@@ -19,8 +20,7 @@ def getuser():
 
 
 getpass.getuser = getuser
-del sys.argv[0]
-runpy.run_path(sys.argv[0], run_name='__main__')
+sys.exit(main())
 '''
 
 
@@ -31,10 +31,10 @@ class ScriptsTest(unittest.TestCase):
         self.tmpdir = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmpdir.cleanup)
 
-    def run_exscript(self, *args, python_args=()):
-        env = dict(os.environ, HOME=self.tmpdir.name, USERPROFILE=self.tmpdir.name)
-        proc = subprocess.run(  # noqa: S603 - runs this repository's script with fixed arguments
-            [sys.executable, *python_args, SCRIPT, *args],
+    def run_exscript(self, *args, python_args=('-m', 'Exscript')):
+        env = dict(os.environ, HOME=self.tmpdir.name, USERPROFILE=self.tmpdir.name, NO_COLOR='1')
+        proc = subprocess.run(  # noqa: S603 - runs Exscript with fixed arguments
+            [sys.executable, *python_args, *args],
             capture_output=True,
             encoding='utf-8',
             env=env,
@@ -51,6 +51,7 @@ class ScriptsTest(unittest.TestCase):
     def testHelp(self):
         code, output = self.run_exscript('--help')
         self.assertEqual(code, 0, output)
+        self.assertTrue(output.startswith('usage: exscript '), output)
         for option in '--load-driver', '--insecure', '--ssh-host-key-policy':
             self.assertIn(option, output)
 
