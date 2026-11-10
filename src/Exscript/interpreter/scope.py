@@ -33,6 +33,18 @@ if TYPE_CHECKING:
     from .parser import Parser
 
 
+def to_list(value: Any) -> list[Any]:
+    """
+    Returns the given value as the value of a variable: a list as it is, a
+    tuple as a list, and any other value as a list with this one item.
+    """
+    if type(value) is list:
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    return [value]
+
+
 class Scope(Token):
     """
     A token that holds variables and evaluates its children in order.
@@ -82,17 +94,17 @@ class Scope(Token):
 
     def define(self, **kwargs: Any) -> None:
         """
-        Defines the given variables in the root scope. A value that is not
-        a list is wrapped in a list, unless the name contains a dot (as the
-        names of functions do) or starts with an underscore.
+        Defines the given variables in the root scope, with the values as
+        to_list() returns them, unless the name contains a dot (as the names
+        of functions do) or starts with an underscore.
         """
         if self.parent is not None:
             return self.parent.define(**kwargs)
         for key in kwargs:
-            if key.find('.') >= 0 or key.startswith('_') or type(kwargs[key]) is type([]):
+            if key.find('.') >= 0 or key.startswith('_'):
                 self.variables[key] = kwargs[key]
             else:
-                self.variables[key] = [kwargs[key]]
+                self.variables[key] = to_list(kwargs[key])
 
     def define_object(self, **kwargs: Any) -> None:
         """

@@ -473,6 +473,10 @@ development versions; "before" refers to them.
   or a `TypeError`, except that `in`, `fail`, `loop` and `extract` used the
   characters of a string, and `in` and `extract` the keys of a dict, e.g.
   `"err" in out()` was a substring test if the function `out` returned a string.
+  Variables store a tuple as a list, e.g. a tuple that the caller passes or that a
+  function returns to an assignment, so `$t` in a command or a string gives its
+  items, one per line, and `{x = t}` copies them. Before, `$t` gave the text of the
+  tuple, such as `('a', 'b')`, and `x` became a list with the tuple as its one item.
 - **Regular Expressions as Operands and Values:** A regular expression that is not
   the right operand of `matches`, e.g. in `/a/ matches /a/`, `/a/ . "b"`,
   `"a" is /a/` or `not /a/`, raises an `ExecuteError` that shows its position, also

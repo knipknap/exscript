@@ -28,7 +28,7 @@ import copy
 from typing import TYPE_CHECKING, Any, cast
 
 from ..parselib import Lexer
-from .scope import Scope
+from .scope import Scope, to_list
 from .template import Template
 
 if TYPE_CHECKING:
@@ -60,17 +60,14 @@ class Program(Scope):
 
     def init(self, *args: Any, **kwargs: Any) -> None:
         """
-        Sets the initial values of the given variables. A value that is not
-        a list is wrapped in a list. Names that contain a dot or start with
-        an underscore are ignored.
+        Sets the initial values of the given variables, as to_list() returns
+        them. Names that contain a dot or start with an underscore are
+        ignored.
         """
         for key in kwargs:
             if key.find('.') >= 0 or key.startswith('_'):
                 continue
-            if type(kwargs[key]) == type([]):
-                self.init_variables[key] = kwargs[key]
-            else:
-                self.init_variables[key] = [kwargs[key]]
+            self.init_variables[key] = to_list(kwargs[key])
 
     def execute(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """

@@ -47,6 +47,12 @@ class StringTest(TemplateTestCase):
         )
         self.assertEqual(variables['x'], ['1-x\ny-6-r1-[]'])
 
+    def testTupleVariable(self):
+        # A tuple is a list, also one that a function returns.
+        text = '{x = "$t!"}{p = pair()}{y = "$p"}'
+        variables = self.evaluate(text, t=('a', 'b'), pair=lambda scope: ('c', 'd'))
+        self.assertEqual((variables['x'], variables['y']), (['a\nb!'], ['c\nd']))
+
     def testVariableNames(self):
         variables = self.evaluate('{a = "1"}{a_b = "2"}{x = "$a.b $a_b $a_b2"}', a_b2='3')
         self.assertEqual(variables['x'], ['1.b 2 3'])

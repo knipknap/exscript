@@ -31,6 +31,14 @@ class AssignTest(TemplateTestCase):
         variables = self.evaluate('{if 0}{x = "new"}{end}', x='hi')
         self.assertEqual(variables['x'], ['hi'])
 
+    def testAssignATuple(self):
+        # A tuple is a list, also one that a function returns.
+        variables = self.evaluate(
+            '{x = t}{y = pair()}', t=('a', 'b'), pair=lambda scope: ('c', 'd')
+        )
+        actual = (variables['t'], variables['x'], variables['y'])
+        self.assertEqual(actual, (['a', 'b'], ['a', 'b'], ['c', 'd']))
+
     def testInternalVariables(self):
         with self.assertRaises(CompileError) as cm:
             self.evaluate('{__hostname__ = "r2"}')

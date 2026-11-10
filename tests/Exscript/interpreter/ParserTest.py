@@ -44,7 +44,7 @@ class ParserTest(unittest.TestCase):
         parser = Parser()
         parser.define(a='x', b=1, c=['y', 'z'], d=('t',), e=function)
         self.assertEqual(
-            parser.variables, {'a': ['x'], 'b': [1], 'c': ['y', 'z'], 'd': ('t',), 'e': function}
+            parser.variables, {'a': ['x'], 'b': [1], 'c': ['y', 'z'], 'd': ['t'], 'e': function}
         )
         variables = parser.parse('{x = a . b . c . e()}').execute()
         self.assertEqual(variables['x'], ['x1yTrue'])
@@ -109,6 +109,8 @@ class ProgramTest(unittest.TestCase):
         self.assertNotIn('_h', variables)
         self.program.init(x=['c', 'd'])
         self.assertEqual(self.program.execute()['y'], ['c!'])
+        self.program.init(x=('e',))
+        self.assertEqual(self.program.execute()['y'], ['e!'])
 
     def testVariableThatIsUndefinedAtRuntime(self):
         with self.assertRaises(ExecuteError) as cm:
@@ -153,10 +155,17 @@ class ScopeTest(unittest.TestCase):
         Scope('Root', lexer, None, variables={'f.g': 'a', '_h': 1, 'i': []})
 
     def testDefine(self):
-        self.child.define(b='x', c=['y'], **{'f.g': 'function', '_h': 'private'})
+        self.child.define(b='x', c=['y'], d=('z', 'w'), **{'f.g': 'function', '_h': 'private'})
         self.assertEqual(
             self.root.variables,
-            {'a': [1], 'b': ['x'], 'c': ['y'], 'f.g': 'function', '_h': 'private'},
+            {
+                'a': [1],
+                'b': ['x'],
+                'c': ['y'],
+                'd': ['z', 'w'],
+                'f.g': 'function',
+                '_h': 'private',
+            },
         )
         self.assertEqual(self.child.variables, {})
 

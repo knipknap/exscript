@@ -26,6 +26,13 @@ class LoopTest(TemplateTestCase):
         self.evaluate('{loop string.split("a,b", ",") as x}\nshow $x\n{end}')
         self.assertSent('show a', 'show b')
 
+    def testLoopOverATupleInAnotherVariable(self):
+        text = (
+            '{x = t}{y = pair()}{loop x as i}{append i to l}{end}{loop y as i}{append i to l}{end}'
+        )
+        variables = self.evaluate(text, t=('a', 'b'), pair=lambda scope: ('c', 'd'))
+        self.assertEqual(variables['l'], ['a', 'b', 'c', 'd'])
+
     def testLoopOverSeveralLists(self):
         text = '{loop modes,\n      directories\n   as mode,\n      directory}\nls $mode $directory\n{end}'
         self.evaluate(text, modes=['drwx', '-rw'], directories=['a', 'b'])

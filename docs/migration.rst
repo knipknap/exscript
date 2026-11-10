@@ -134,7 +134,10 @@ Operators
 Values of the caller
     A string that a function of the caller returns, or a dict that the
     caller passes, is one item: ``in``, ``loop`` and ``extract`` no longer
-    use its characters or keys. Return and pass lists instead.
+    use its characters or keys. Return and pass lists instead. A tuple is
+    a list: ``$t`` gives its items, one per line, instead of the text of
+    the tuple, and ``{x = t}`` copies the items instead of storing the
+    tuple as one item.
 
 Command line tool
 -----------------

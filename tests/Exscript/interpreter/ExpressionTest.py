@@ -136,12 +136,12 @@ class ExpressionTest(TemplateTestCase):
                 self.assertError(cm.exception, [text], marker, message)
 
     def testOperandsThatAreNotLists(self):
-        # Functions return True without a result, the caller may pass a tuple,
-        # and the connection is an object; a string is one item.
+        # Functions return True without a result, or a tuple, the caller may
+        # pass a tuple, and the connection is an object; a string is one item.
         text = (
             '{a = yes() and "x"}{b = t . "c"}{c = "b" in t}{d = not t}'
             '{e = __connection__ is __connection__}{f = not __connection__}'
-            '{g = two() * 3}{h = "a" in word()}{i = word() matches /b/}'
+            '{g = two() * 3}{h = "a" in word()}{i = word() matches /b/}{j = "b" in pair()}'
         )
         variables = self.evaluate(
             text,
@@ -149,9 +149,10 @@ class ExpressionTest(TemplateTestCase):
             t=('a', 'b'),
             two=lambda scope: 2,
             word=lambda scope: 'ab',
+            pair=lambda scope: ('a', 'b'),
         )
-        actual = [variables[name] for name in 'abcdefghi']
-        expected = [['x'], ['ac'], [True], [False], [True], [False], [6], [False], [1]]
+        actual = [variables[name] for name in 'abcdefghij']
+        expected = [['x'], ['ac'], [True], [False], [True], [False], [6], [False], [1], [True]]
         self.assertEqual(actual, expected)
 
     def testFunctionAsAnOperand(self):

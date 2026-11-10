@@ -95,6 +95,11 @@ class CommandTest(TemplateTestCase):
         self.evaluate('show interface $name\nshow vlan $vlan\n', name='eth0', vlan=10)
         self.assertSent('show interface eth0', 'show vlan 10')
 
+    def testTupleVariable(self):
+        # A tuple is a list; the items of a list are joined with line breaks.
+        self.evaluate('show $t\nshow $u\n', t=('version',), u=('a', 'b'))
+        self.assertSent('show version', 'show a\nb')
+
     def testDollarSign(self):
         self.evaluate('{name = "eth0"}\nshow \\$name $ $\n')
         self.assertSent('show $name $ $')

@@ -30,6 +30,7 @@ from typing import Any, cast
 
 from ..parselib import Lexer
 from .program import Program
+from .scope import to_list
 
 
 class Parser:
@@ -58,19 +59,20 @@ class Parser:
 
     def define(self, **kwargs: Any) -> None:
         """
-        Defines the given variables. A value that is a string or not
-        iterable is wrapped in a list, unless it is callable.
+        Defines the given variables. A value that is callable, or iterable
+        but not a string or a tuple, is defined as it is; any other value as
+        to_list() of the scope module returns it, so a tuple becomes a list.
         """
         for key, value in list(kwargs.items()):
             if (
-                not isinstance(value, str)
+                not isinstance(value, (str, tuple))
                 and isinstance(value, Iterable)
                 # mypy takes Callable for a special form, not for the ABC it is.
                 or isinstance(value, cast(type, Callable))
             ):
                 self.variables[key] = value
             else:
-                self.variables[key] = [value]
+                self.variables[key] = to_list(value)
 
     def define_object(self, **kwargs: Any) -> None:
         """
