@@ -25,6 +25,7 @@ SSH version 2 support, based on paramiko.
 """
 
 import codecs
+import io
 import logging
 import os
 import socket
@@ -532,8 +533,9 @@ class SSH2(Protocol):
 
     def _protocol_authenticate_by_key(self, user: str, key: PrivateKey) -> None:
         """
-        Authenticates with the user name and the key file of the given key,
-        decrypted with the password of the key, and opens the shell channel.
+        Authenticates with the user name and the given key, decrypted with
+        the password of the key, and opens the shell channel. The key is the
+        one given with PrivateKey.from_string(), if any, else the key file.
 
         :raises LoginFailure: If the server rejects the key, if the key file
             cannot be read, or if the server requires another authentication
@@ -551,7 +553,15 @@ class SSH2(Protocol):
         for file in key_file:
             keys.append((keymap[key.get_type()], file))
         try:
-            allowed = self._paramiko_auth_key(user, keys, key.get_password())
+            data = key.get_data()
+            if data is None:
+                allowed = self._paramiko_auth_key(user, keys, key.get_password())
+            else:
+                pkey = keymap[key.get_type()].from_private_key(
+                    io.StringIO(data), key.get_password()
+                )
+                self._dbg(2, 'Trying key %s' % pkey.fingerprint)
+                allowed = cast(paramiko.Transport, self._transport).auth_publickey(user, pkey)
         except (SSHException, OSError) as e:
             msg = 'Login with the key failed: %s' % e
             self._dbg(1, msg)

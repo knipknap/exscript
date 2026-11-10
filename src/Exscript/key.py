@@ -24,6 +24,8 @@
 Represents a private key.
 """
 
+import io
+
 from paramiko import ECDSAKey, Ed25519Key, RSAKey
 from paramiko.ssh_exception import SSHException
 
@@ -49,6 +51,7 @@ class PrivateKey:
             raise TypeError('unsupported key type: ' + repr(keytype))
         self.keytype = keytype
         self.filename: str | None = None
+        self.data: str | None = None
         self.password: str | None = None
 
     @staticmethod
@@ -88,6 +91,38 @@ class PrivateKey:
         key.password = password
         return key
 
+    @staticmethod
+    def from_string(
+        data: str, password: str | None = '', keytype: str | None = None
+    ) -> 'PrivateKey':
+        """
+        Returns a new PrivateKey with the given key, in the format of a key
+        file, e.g. "-----BEGIN OPENSSH PRIVATE KEY-----...". Use it for a key
+        that is not stored in a file, e.g. one that comes from a secret
+        store. If keytype is None, the type is detected.
+
+        :param data: The key, in the format of a key file.
+        :param password: The key password, or None if the key is not encrypted.
+        :param keytype: The key type, e.g. 'rsa' or 'ed25519'.
+        :raises ValueError: If keytype is None and the key is not one of the
+            supported types, or cannot be decrypted with the password.
+        :return: The new key.
+        """
+        if keytype is None:
+            for name, cls in (('rsa', RSAKey), ('ecdsa', ECDSAKey), ('ed25519', Ed25519Key)):
+                try:
+                    cls.from_private_key(io.StringIO(data), password)
+                except SSHException:
+                    continue
+                keytype = name
+                break
+            else:
+                raise ValueError('not a recognized private key')  # never shows the key
+        key = PrivateKey(keytype)
+        key.data = data
+        key.password = password
+        return key
+
     def get_type(self) -> str:
         """
         Returns the type of the key, e.g. 'rsa' or 'ed25519'.
@@ -114,6 +149,15 @@ class PrivateKey:
         :return: The key filename, or None if none was set.
         """
         return self.filename
+
+    def get_data(self) -> str | None:
+        """
+        Returns the key, in the format of a key file, if it was given with
+        from_string().
+
+        :return: The key, or None if none was set.
+        """
+        return self.data
 
     def set_password(self, password: str | None) -> None:
         """

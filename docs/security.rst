@@ -89,7 +89,9 @@ contains only the line with the error, not the whole response.
 
 Where the passwords come from is up to you. In order of preference:
 
-- SSH keys: ``Account('admin', key=PrivateKey.from_file('/home/admin/.ssh/id_ed25519'))``.
+- SSH keys: ``Account('admin', key=PrivateKey.from_file('/home/admin/.ssh/id_ed25519'))``,
+  or :meth:`~Exscript.PrivateKey.from_string` for a key from a secret store,
+  which then never needs to be written to a file.
 - A secret store or the environment of a service, read at run time.
 - A prompt: :func:`Exscript.util.interact.read_login`.
 - An account pool file (:func:`Exscript.util.file.get_accounts_from_file`,

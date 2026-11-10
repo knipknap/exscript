@@ -654,6 +654,22 @@ class AuthenticationTest(unittest.TestCase):
         self.login(Account('admin', PASSWORD, key=key, needs_lock=False))
         self.assertEqual(requests, [('publickey', 'admin', public.get_base64())])
 
+    def testKeyFromString(self):
+        # E.g. a key from a secret store, which is never written to a file.
+        public = paramiko.RSAKey(filename=keyfile)
+        requests = self.serve(allowed='publickey', keys=(public,))
+        with open(keyfile, encoding='utf-8') as fp:
+            key = PrivateKey.from_string(fp.read())
+        conn = self.login(Account('admin', key=key, needs_lock=False))
+        self.assertTrue(conn.is_protocol_authenticated())
+        self.assertEqual(requests, [('publickey', 'admin', public.get_base64())])
+
+        other = io.StringIO()
+        paramiko.ECDSAKey.generate().write_private_key(other)
+        key = PrivateKey.from_string(other.getvalue())
+        with self.assertRaises(LoginFailure):
+            self.login(Account('admin', key=key, needs_lock=False))
+
     def testRejectedKey(self):
         # Key logins do not fall back to the password.
         requests = self.serve(allowed='publickey,password')
