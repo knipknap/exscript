@@ -206,8 +206,7 @@ class SSH2(Protocol):
         t.name = cast(str, self.host)  # connect() checks that the host is set
         if self.debug < 5:
             t.logger.disabled = True
-        if self.debug > 5:
-            t.set_hexdump(True)
+        # No packet dumps (paramiko's set_hexdump()): they show passwords in clear text.
 
         # The known keys are loaded before the key exchange, so that the key is
         # checked before any credentials are sent.

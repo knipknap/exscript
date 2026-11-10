@@ -606,6 +606,16 @@ class AuthenticationTest(unittest.TestCase):
         with open(logfile, encoding='utf-8') as fp:
             self.assertNotIn(PASSWORD, fp.read())
 
+    def testNoPacketDumps(self):
+        # paramiko's packet dumps show passwords in clear text, also above level 5.
+        self.serve(allowed='password')
+        for debug in 5, 6, 10:
+            with self.subTest(debug=debug), self.assertLogs(level=logging.DEBUG) as logs:
+                conn = self.login(debug=debug)
+                self.assertFalse(conn._transport.get_hexdump())
+                conn.close(force=True)
+            self.assertEqual([line for line in logs.output if PASSWORD in line], [])
+
     def testKeyboardInteractiveWithAnEmptyRound(self):
         # Some servers send a round without prompts first.
         rounds = [[], [('Password: ', False)]]

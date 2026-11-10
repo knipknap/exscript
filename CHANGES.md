@@ -80,6 +80,8 @@ marked with **BREAKING**; a migration guide will accompany the release.
   `host_key_policy='auto-add'` or `host_key_policy='warn'`.
 - **Passwords in Debug Logs:** Passwords and S/Key responses sent by the app-level
   login are logged as `<secret>`. Before, debug level 4 logged them in clear text.
+  Debug levels above 5 no longer turn on paramiko's packet dumps, which showed the
+  password of an SSH login in clear text.
 - **BREAKING - `InvalidCommandException` Message:** The message contains only the
   line that matched an error pattern, for example `Error in the response from the
   device: % Invalid input detected`. Before, it contained the full response, which
