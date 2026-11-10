@@ -143,11 +143,12 @@ class MainLoop(threading.Thread):
         data: Any,
     ) -> str | None:
         """
-        Like enqueue_or_ignore(), but if a job with the given name is in the
-        pipeline already, moves that job to the start of the pipeline, see
-        Pipeline.prioritize().
+        Like priority_enqueue(), but if a job with the given name is in the
+        pipeline already, moves that job to the start of the pipeline
+        instead, see Pipeline.prioritize().
 
-        :param force_start: Whether to force the existing job.
+        :param force_start: Whether to start the new or the existing job
+            even if the maximum number of jobs is in progress already.
         :return: The id of the new job, or None.
         """
 
@@ -155,7 +156,7 @@ class MainLoop(threading.Thread):
             job = queue.get_from_name(name)
             if job is None:
                 job = Job(function, name, times, data)
-                job.id = queue.append(job, name)
+                job.id = queue.appendleft(job, name, force=force_start)
                 return job.id
             queue.prioritize(job, force=force_start)
             return None

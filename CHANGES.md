@@ -623,6 +623,11 @@ The names below refer to functions callable from templates, not protocol methods
   `Exscript.workqueue.Pipeline` leave the sleeping items at the start of the queue in
   their order, so they come next in that order after `wake()`. Before, each call
   reversed it.
+- **`priority_run_or_raise()` Puts New Hosts First:** `Queue.priority_run_or_raise()`
+  adds a host that is not queued yet at the front of the queue, like `priority_run()`.
+  `WorkQueue.priority_enqueue_or_raise()` adds a new job at the front, and with
+  `force_start=True` starts it at once. Before, both added it at the end, and
+  `force_start` applied only to a job that was queued already.
 
 ## Demos
 

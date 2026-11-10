@@ -1,4 +1,5 @@
 import random
+import threading
 import time
 import unittest
 from multiprocessing import Lock, Value
@@ -114,6 +115,24 @@ class WorkQueueTest(unittest.TestCase):
         id = self.wq.priority_enqueue_or_raise(nop, 'foo')
         self.assertEqual(2, self.wq.get_length())
         self.assertEqual(id, None)
+
+    def testPriorityEnqueueOrRaiseAddsANewJobAtTheFront(self):
+        self.addCleanup(self.wq.destroy)
+        order = []
+        self.wq.pause()
+        self.wq.enqueue(lambda job: order.append('first'))
+        self.wq.priority_enqueue_or_raise(lambda job: order.append('second'), 'second')
+        self.wq.unpause()
+        self.wq.wait_until_done()
+        self.assertEqual(order, ['second', 'first'])
+
+    def testPriorityEnqueueOrRaiseForcesANewJob(self):
+        # With force_start, the new job starts although max_threads jobs run.
+        self.addCleanup(self.wq.destroy)
+        self.wq.set_max_threads(0)
+        started = threading.Event()
+        self.wq.priority_enqueue_or_raise(lambda job: started.set(), 'forced', force_start=True)
+        self.assertTrue(started.wait(10))
 
     def testPause(self):
         pass  # See testEnqueue()

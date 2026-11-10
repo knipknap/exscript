@@ -363,6 +363,17 @@ class QueueTest(unittest.TestCase):
         self.queue.destroy()
         self.assertEqual(data.value, 3)
 
+    def testPriorityRunOrRaiseRunsANewHostFirst(self):
+        order = []
+        self.queue.workqueue.pause()
+        self.queue.enqueue(lambda job: order.append('enqueued'))
+        self.queue.priority_run_or_raise(
+            'dummy://dummy1', lambda job, host, conn: order.append(host.get_name())
+        )
+        self.queue.workqueue.unpause()
+        self.queue.join()
+        self.assertEqual(order, ['dummy1', 'enqueued'])
+
     def testForceRun(self):
         data = Value('i', 0)
         hosts = ['dummy://dummy1', 'dummy://dummy2']
