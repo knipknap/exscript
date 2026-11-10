@@ -89,6 +89,12 @@ OS detection
     driver. Pass ``driver=`` if a device needs a specific driver. See
     :doc:`drivers`.
 
+Driver names
+    A driver name that does not exist raises a ``TypeError`` in the
+    constructor, e.g. ``SSH2(driver='iosxr')``, also through the ``driver``
+    option of a ``Host`` and ``--use-driver``. 2.x ignored it and guessed
+    the driver.
+
 Templates
 ---------
 

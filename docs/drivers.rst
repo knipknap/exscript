@@ -19,8 +19,8 @@ name of its driver. This is more reliable than a guess::
     conn.set_driver('ios_xr')  # the same, also after the login
 
 ``set_driver(None)`` turns the guessing back on. A name that does not
-exist makes ``set_driver()`` raise a ``TypeError``; the constructor
-ignores it and guesses.
+exist raises a ``TypeError``, in the constructor as in ``set_driver()``,
+so a typo, e.g. in an inventory, shows at once.
 
 For :class:`~Exscript.Host` objects, set the option ``driver``; the
 command line tool has ``--use-driver``::

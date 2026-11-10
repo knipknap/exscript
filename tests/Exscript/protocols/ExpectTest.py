@@ -252,6 +252,15 @@ class DriverSwitchTest(unittest.TestCase):
         self.assertRaises(TypeError, conn.set_driver, 42)
         self.assertIs(conn.get_driver(), driver)
 
+    def testDriverOfTheConstructor(self):
+        # An unknown name, e.g. a typo, raises instead of guessing the driver silently.
+        self.assertEqual(Dummy(driver='ios').get_driver().name, 'ios')
+        driver = drivers.Driver('custom')
+        self.assertIs(Dummy(driver=driver).get_driver(), driver)
+        with self.assertRaisesRegex(TypeError, "no such driver: 'iosxr'"):
+            Dummy(driver='iosxr')
+        self.assertRaises(TypeError, Dummy, driver=42)
+
 
 class LoginTest(unittest.TestCase):
     """App-level logins: S/Key, bailout, an account for the device, and a closed connection."""

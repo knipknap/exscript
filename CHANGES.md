@@ -317,6 +317,13 @@ development versions; "before" refers to them.
 
 ### Protocol Drivers
 
+- **BREAKING - Unknown Driver Names Raise:** The constructor of the protocol adapters,
+  e.g. `SSH2(driver='iosxr')`, raises a `TypeError` for the name of a driver that does
+  not exist, as `set_driver()` does. This also applies to the `driver` option of a
+  `Host` and to the `--use-driver` option of the command line tool. Before, the
+  constructor ignored such a name silently and guessed the driver, so a typo, e.g. in
+  an inventory, went unnoticed. To migrate, correct the name; `drivers.driver_map`
+  lists the names.
 - **Generic Prompt Pattern in Linear Time:** The prompt pattern of the generic driver,
   which other drivers inherit, backtracked catastrophically on long lines that are no
   prompt: a line with a run of 100 word characters took 1.3 seconds to check, 200

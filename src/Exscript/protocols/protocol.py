@@ -158,6 +158,22 @@ _connection_monitor_lock = threading.RLock()
 #  decoded correctly. Netconf always uses UTF-8, as RFC 6241 requires.
 
 
+def _lookup_driver(driver: Driver | str) -> Driver:
+    """
+    Returns the given driver, or the driver with the given name.
+
+    :raises TypeError: If no driver has the given name, or if the argument
+        is neither a Driver nor a string.
+    """
+    if isinstance(driver, str):
+        if driver not in driver_map:
+            raise TypeError('no such driver: ' + repr(driver))
+        return driver_map[driver]
+    if isinstance(driver, Driver):
+        return driver
+    raise TypeError('unsupported argument type: ' + type(driver).__name__)
+
+
 class Protocol:
     """
     This is the base class for all protocols; it defines the common portions
@@ -260,7 +276,8 @@ class Protocol:
             one-time-password to be entered.
 
         :type driver: Driver()|str|None
-        :keyword driver: The manually picked device driver.
+        :keyword driver: The manually picked device driver: a Driver, or the
+            name of one; see set_driver(). An unknown name raises a TypeError.
         :keyword stdout: Where to write the device response: any object with
             write() and flush(). Defaults to an in-memory buffer.
         :keyword stderr: The stream that the stderr property returns;
@@ -372,17 +389,8 @@ class Protocol:
         self.host_key_policy = host_key_policy
         self.known_hosts = known_hosts
 
-        # Set manual_driver:
         if driver is not None:
-            if isinstance(driver, str):
-                if driver in driver_map:
-                    self._manual_driver = driver_map[driver]
-                else:
-                    self._dbg(1, 'Invalid driver string given. Ignoring.')
-            elif isinstance(driver, Driver):
-                self._manual_driver = driver
-            else:
-                self._dbg(1, 'Invalid driver given. Ignoring.')
+            self._manual_driver = _lookup_driver(driver)
 
     def __copy__(self) -> Self:
         """
@@ -656,19 +664,12 @@ class Protocol:
 
         :type  driver: Driver()|str|None
         :param driver: The driver to be pinned (disables auto-detection).
+        :raises TypeError: If no driver has the given name, or if the
+            argument is neither a Driver nor a string.
         """
         old_driver = self.get_driver()
 
-        if driver is None:
-            self._manual_driver = None
-        elif isinstance(driver, str):
-            if driver not in driver_map:
-                raise TypeError('no such driver:' + repr(driver))
-            self._manual_driver = driver_map[driver]
-        elif isinstance(driver, Driver):
-            self._manual_driver = driver
-        else:
-            raise TypeError('unsupported argument type: ' + type(driver).__name__)
+        self._manual_driver = None if driver is None else _lookup_driver(driver)
 
         new_driver = self.get_driver()
         if old_driver != new_driver:
