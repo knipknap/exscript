@@ -743,6 +743,12 @@ class AuthenticationTest(unittest.TestCase):
         self.assertIn('Authorized users only!', conn.stdout.getvalue())
         conn.expect('users only!')
 
+    def testBannerThatIsNotValidInTheEncoding(self):
+        # A banner in latin-1 must not fail a login that uses UTF-8.
+        self.serve(banner='Grüße\r\n'.encode('latin-1'))
+        conn = self.login(encoding='utf-8')
+        self.assertEqual(conn.get_banner(), 'Gr\ufffd\ufffde\r\n')
+
     def testPreferredMethodsNotAllowed(self):
         requests = self.serve(allowed='password')
         with self.assertRaisesRegex(paramiko.BadAuthenticationType, 'invalid preferred auth'):

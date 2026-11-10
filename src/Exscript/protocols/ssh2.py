@@ -576,14 +576,15 @@ class SSH2(Protocol):
     def get_banner(self) -> str | None:
         """
         Returns the authentication banner that the server sent, decoded with
-        the encoding of this object. Returns None if the server sent no
-        banner or if the adapter is not connected.
+        the encoding of this object; bytes that are not valid in it become
+        U+FFFD. Returns None if the server sent no banner or if the adapter
+        is not connected.
         """
         if not self._transport:
             return None
         banner = self._transport.get_banner()
         if isinstance(banner, bytes):
-            return banner.decode(self.encoding)
+            return banner.decode(self.encoding, errors='replace')  # must not fail the login
         return banner
 
     def get_remote_version(self) -> str | None:
@@ -595,7 +596,7 @@ class SSH2(Protocol):
             return None
         version = self._transport.remote_version
         if isinstance(version, bytes):
-            return version.decode(self.encoding)
+            return version.decode(self.encoding, errors='replace')
         return version
 
     def _send(self, data: str) -> None:

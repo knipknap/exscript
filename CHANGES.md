@@ -148,6 +148,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **SSH Key Fingerprints in Debug Logs:** The keys that are tried for a login are
   logged with their SHA256 fingerprints, as `ssh-add -l` and `ssh-keygen -l` show
   them. Before, the MD5 fingerprint was logged as a Python bytes literal.
+- **SSH Banners in Another Encoding:** An authentication banner or a version string
+  that is not valid in the encoding of the connection no longer fails the login; the
+  invalid bytes become U+FFFD. Before, e.g. a latin-1 banner with `encoding='utf-8'`
+  raised a `UnicodeDecodeError`.
 - **Keyboard-Interactive Logins:** Every prompt gets an answer: password prompts the
   password, S/Key challenges the one-time password, other prompts, e.g. for a
   verification code, an empty string. Before, other prompts got no answer, and

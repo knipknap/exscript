@@ -196,20 +196,6 @@ class Netconf(SSH2):
             return None
         return str(self._ncc_manager.session_id)
 
-    def get_banner(self) -> str | None:
-        """
-        Returns the authentication banner that the server sent, decoded as
-        UTF-8 like the session (RFC 4252); bytes that are no UTF-8 become
-        U+FFFD. Returns None if the server sent no banner or if the adapter
-        is not connected.
-        """
-        if not self._transport:
-            return None
-        banner = self._transport.get_banner()
-        if isinstance(banner, bytes):
-            return banner.decode('utf-8', errors='replace')
-        return banner
-
     def get_response_element(self) -> '_Element | None':
         """
         Returns the parsed XML element tree of the latest RPC reply. This might
