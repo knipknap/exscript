@@ -29,7 +29,6 @@ import logging
 import os
 import socket
 import threading
-from binascii import hexlify
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any, Self, cast
 
@@ -301,8 +300,7 @@ class SSH2(Protocol):
 
         for key in keys:
             try:
-                fp: object = hexlify(key.get_fingerprint())  # bytes; the log shows b'...'
-                self._dbg(2, 'Trying SSH agent key %s' % fp)
+                self._dbg(2, 'Trying SSH agent key %s' % key.fingerprint)
                 cast(paramiko.Transport, self._transport).auth_publickey(username, key)
                 return
             except SSHException as e:
@@ -331,8 +329,7 @@ class SSH2(Protocol):
         for pkey_class, filename in keys:
             try:
                 key = pkey_class.from_private_key_file(filename, password)
-                fp: object = hexlify(key.get_fingerprint())  # bytes; the log shows b'...'
-                self._dbg(2, 'Trying key %s in %s' % (fp, filename))
+                self._dbg(2, 'Trying key %s in %s' % (key.fingerprint, filename))
                 cast(paramiko.Transport, self._transport).auth_publickey(username, key)
                 return
             except SSHException as e:

@@ -139,6 +139,9 @@ marked with **BREAKING**; a migration guide will accompany the release.
   `PreferredAuthentications`. The default order is `publickey`,
   `keyboard-interactive`, `password`; methods that the server does not offer are
   skipped.
+- **SSH Key Fingerprints in Debug Logs:** The keys that are tried for a login are
+  logged with their SHA256 fingerprints, as `ssh-add -l` and `ssh-keygen -l` show
+  them. Before, the MD5 fingerprint was logged as a Python bytes literal.
 - **BREAKING - Terminal Size:** SSH and Telnet sessions get a terminal of 511 columns
   and 1000 lines; the new options `term_width` and `term_height` (also `Host`
   options) choose another size. Before, Exscript used the size of the terminal that

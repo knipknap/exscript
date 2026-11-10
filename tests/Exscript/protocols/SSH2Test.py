@@ -210,6 +210,28 @@ class ReconnectTest(unittest.TestCase):
         self.assertEqual(self.handshakes('generic'), 1)
 
 
+class FingerprintTest(unittest.TestCase):
+    """The keys that are tried are logged with their fingerprints in the format of OpenSSH."""
+
+    def logs(self, method, *args):
+        conn = SSH2(debug=2)
+        conn._transport = mock.Mock()
+        with self.assertLogs('Exscript.protocols.ssh2', 'DEBUG') as logs:
+            method(conn, 'admin', *args)
+        return logs.output
+
+    def testKeyFile(self):
+        output = self.logs(SSH2._paramiko_auth_key, [(paramiko.RSAKey, keyfile)], None)
+        self.assertIn(paramiko.RSAKey(filename=keyfile).fingerprint, output[0])
+
+    def testAgentKey(self):
+        agent_key = paramiko.RSAKey(filename=keyfile)
+        with mock.patch('paramiko.Agent') as agent:
+            agent.return_value.get_keys.return_value = [agent_key]
+            output = self.logs(SSH2._paramiko_auth_agent)
+        self.assertIn(agent_key.fingerprint, output[0])
+
+
 class ConnectTest(unittest.TestCase):
     def testTriesAllAddresses(self):
         server = KeyServer(self, paramiko.RSAKey(filename=keyfile))
@@ -268,6 +290,7 @@ def suite():
             loader.loadTestsFromTestCase(SSH2Test),
             loader.loadTestsFromTestCase(HostKeyTest),
             loader.loadTestsFromTestCase(ReconnectTest),
+            loader.loadTestsFromTestCase(FingerprintTest),
             loader.loadTestsFromTestCase(ConnectTest),
             loader.loadTestsFromTestCase(TerminalSizeTest),
         ]
