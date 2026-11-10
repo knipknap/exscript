@@ -163,6 +163,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   (`Account(..., key=...)`) is tried without the password of the account, so such a
   login fails with a `LoginFailure` that names the required methods. Thanks to
   u1735067 (pull request #203), whose rewrite of the authentication included this.
+- **BREAKING - Key Logins Raise `LoginFailure`:** A key login that fails raises
+  `LoginFailure`, as a password login does, with the original error as its cause.
+  Before, it raised paramiko's `AuthenticationException` or `SSHException` when the
+  server rejected the key, and an `OSError` when the key file could not be read, so
+  `autologin(attempts=...)` did not retry key logins.
 - **BREAKING - Terminal Size:** SSH and Telnet sessions get a terminal of 511 columns
   and 1000 lines; the new options `term_width` and `term_height` (also `Host`
   options) choose another size. Before, Exscript used the size of the terminal that

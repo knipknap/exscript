@@ -535,7 +535,8 @@ class SSH2(Protocol):
         Authenticates with the user name and the key file of the given key,
         decrypted with the password of the key, and opens the shell channel.
 
-        :raises LoginFailure: If the server requires another authentication
+        :raises LoginFailure: If the server rejects the key, if the key file
+            cannot be read, or if the server requires another authentication
             method after the key, such as a password.
         """
         # Allow multiple key files.
@@ -549,7 +550,12 @@ class SSH2(Protocol):
         keys = []
         for file in key_file:
             keys.append((keymap[key.get_type()], file))
-        allowed = self._paramiko_auth_key(user, keys, key.get_password())
+        try:
+            allowed = self._paramiko_auth_key(user, keys, key.get_password())
+        except (SSHException, OSError) as e:
+            msg = 'Login with the key failed: %s' % e
+            self._dbg(1, msg)
+            raise LoginFailure(msg) from e
         if allowed:
             msg = 'Login failed: after the key, the server requires one of: %s'
             raise LoginFailure(msg % ', '.join(allowed))

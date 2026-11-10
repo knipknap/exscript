@@ -66,6 +66,13 @@ Error messages
     contains only the line with the error. The full response is still in
     ``conn.response``.
 
+Key logins
+    A failed SSH login with a key raises
+    :class:`~Exscript.protocols.exception.LoginFailure`, like a failed
+    password login. 2.x raised paramiko's ``AuthenticationException`` or
+    ``SSHException``, or an ``OSError`` for an unreadable key file; the
+    original error is now the ``__cause__``.
+
 Responses
     ``conn.get_response()`` returns the response without the echo of the
     command, control characters and terminal escape sequences, and with

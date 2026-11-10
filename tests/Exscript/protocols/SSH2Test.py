@@ -45,10 +45,11 @@ class SSH2Test(ProtocolTest):
         self.assertEqual(self.protocol.get_remote_version(), sshd.local_version)
 
     def testLogin(self):
-        self.assertRaises(IOError, ProtocolTest.testLogin, self)
+        # The account of ProtocolTest has a key file that does not exist.
+        self.assertRaises(LoginFailure, ProtocolTest.testLogin, self)
 
     def testAuthenticate(self):
-        self.assertRaises(IOError, ProtocolTest.testAuthenticate, self)
+        self.assertRaises(LoginFailure, ProtocolTest.testAuthenticate, self)
 
 
 class KeyServer:
@@ -657,17 +658,26 @@ class AuthenticationTest(unittest.TestCase):
         # Key logins do not fall back to the password.
         requests = self.serve(allowed='publickey,password')
         account = Account('admin', PASSWORD, key=PrivateKey.from_file(keyfile), needs_lock=False)
-        with self.assertRaises((paramiko.SSHException, LoginFailure)) as cm:
+        with self.assertRaises(LoginFailure) as cm:
             self.login(account)
+        self.assertIsInstance(cm.exception.__cause__, paramiko.AuthenticationException)
         self.assertNotIn(PASSWORD, str(cm.exception))
         public = paramiko.RSAKey(filename=keyfile)
         self.assertEqual(requests, [('publickey', 'admin', public.get_base64())])
 
         # A key without a file is no key.
         account = Account('admin', PASSWORD, key=PrivateKey(), needs_lock=False)
-        with self.assertRaises((paramiko.SSHException, LoginFailure)):
+        with self.assertRaises(LoginFailure):
             self.login(account)
         self.assertEqual(len(requests), 1)
+
+    def testUnreadableKeyFile(self):
+        self.serve(allowed='publickey')
+        key = PrivateKey.from_file(keyfile)
+        key.set_filename(os.path.join(self.home, 'missing'))
+        with self.assertRaises(LoginFailure) as cm:
+            self.login(Account('admin', key=key, needs_lock=False))
+        self.assertIsInstance(cm.exception.__cause__, FileNotFoundError)
 
     def testAgentKeys(self):
         accepted, other = paramiko.RSAKey(filename=keyfile), paramiko.RSAKey.generate(1024)
