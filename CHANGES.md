@@ -453,7 +453,7 @@ development versions; "before" refers to them.
   `show \}# x` sends `show }# x`, and `show a\n# b` sends `# b` in its second line.
   Before, the hash started a comment there, so `\# x` sent an empty line, and
   `show \}# x` took the next line into the command. A hash behind an `<rpc>` element
-  is part of the command as well; before, it sent an empty line.
+  starts a comment, as behind a code block; before, it sent an empty line.
 - **Errors at Runtime:** A division by zero (`1 / 0`, `1 % 0`), an operand of `/`,
   `ge`, `gt`, `le` or `lt` that is not a number (`"a" / 2`), an operand of an
   arithmetic operator without a value, such as a group that `extract` did not match,

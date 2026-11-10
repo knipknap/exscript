@@ -35,11 +35,10 @@ class RpcTest(TemplateTestCase):
         self.evaluate('<rpc>\n  # a comment\n  <get>\n  # another comment\n  </get>\n</rpc>\n')
         self.assertSent('<get>\n</get>')
 
-    def testHashBehindAnRpc(self):
-        # Only lines starting with a hash, and the text behind a code block,
-        # are comments.
-        self.evaluate('<rpc><get/></rpc>  # not a comment\nls\n')
-        self.assertSent('<get/>', '# not a comment', 'ls')
+    def testCommentBehindAnRpc(self):
+        # As behind a code block.
+        self.evaluate('<rpc><get/></rpc>  # a comment\nls\n<rpc><get/></rpc># a comment')
+        self.assertSent('<get/>', 'ls', '<get/>')
 
     def testVariables(self):
         text = '<rpc><get-config><source><$source/></source></get-config></rpc>\n'

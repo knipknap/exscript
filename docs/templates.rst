@@ -23,9 +23,10 @@ ignored. For example::
     3.   # ...and so is this one.
     4. {end}
 
-A hash behind a code block also starts a comment that ends with the line,
-e.g. in ``{x = 1}  # set x``. Escaped characters are text: ``\# text``
-sends the command ``# text``, and ``show \}# x`` sends ``show }# x``.
+A hash behind a code block or an ``<rpc>`` element also starts a comment
+that ends with the line, e.g. in ``{x = 1}  # set x``. Escaped characters
+are text: ``\# text`` sends the command ``# text``, and ``show \}# x``
+sends ``show }# x``.
 
 Using Variables
 ---------------
