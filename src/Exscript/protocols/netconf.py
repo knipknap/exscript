@@ -560,6 +560,7 @@ class Netconf(SSH2):
                 xmlstring=data,
             )
         try:
+            self._ncc_manager.timeout = self.get_timeout()  # set_timeout() may have changed it
             with _pretty():
                 self._ncc_response = self._ncc_manager.dispatch(element)
             # wrappers handle the self.data_sent_event
@@ -638,6 +639,7 @@ class Netconf(SSH2):
         ignored.
         """
         try:
+            self._ncc_manager.timeout = self.get_timeout()
             with _pretty():
                 self._ncc_manager.close_session()
         except Exception:

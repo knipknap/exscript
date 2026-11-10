@@ -295,6 +295,9 @@ development versions; "before" refers to them.
 - **`RPCError` After Warnings:** The raised `RPCError` is the first `<rpc-error>` of the
   reply with the severity `error`; `errlist` holds all of them, warnings too, in their
   order. Before, it was the first one, which could be a warning.
+- **`set_timeout()` After the Login:** RPCs, also the `<close-session/>` of `close()`,
+  wait for their reply as long as the current timeout says. Before, they kept the
+  timeout of the login, so `set_timeout()` after `login()` did not change it.
 
 ### Protocol Drivers
 

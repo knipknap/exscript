@@ -235,3 +235,6 @@ their users should know:
 - If a reply has warnings before an error, the raised
   :class:`~Exscript.protocols.exception.RPCError` is the first error, not
   the first warning; its ``errlist`` still holds all of them.
+- ``set_timeout()`` after the login also changes how long ``Netconf``
+  waits for the reply to an RPC; before, the timeout of the login
+  applied.

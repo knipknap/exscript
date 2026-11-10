@@ -11,6 +11,7 @@ import subprocess
 import sys
 import threading
 import unittest
+from unittest import mock
 
 import ncclient.operations.rpc
 import ncclient.transport.session
@@ -456,6 +457,23 @@ class SessionTest(unittest.TestCase):
         self.assertRaises(TimeoutException, conn.execute, '<get/>')
         self.assertIsNone(conn.get_response_element())
         self.assertRaises(TimeoutException, conn.expect, 'never')
+
+    def testSetTimeoutAfterLogin(self):
+        # Each RPC waits as long as the current timeout says, also close-session.
+        timeouts = []
+        request = RPC._request
+
+        def record(rpc, op):
+            timeouts.append(rpc.timeout)
+            return request(rpc, op)
+
+        conn = self.login()
+        with mock.patch.object(RPC, '_request', record):
+            conn.set_timeout(5)
+            conn.execute(GET_CONFIG)
+            conn.set_timeout(7)
+            conn.close()
+        self.assertEqual(timeouts, [5, 7])
 
     def testServerClosesTheSession(self):
         conn = self.login(lambda rpc: CLOSE, timeout=0.3)
