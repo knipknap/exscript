@@ -423,6 +423,13 @@ marked with **BREAKING**; a migration guide will accompany the release.
   not the end of the input, the lexer raises a `CompileError` that shows these 50
   characters. Before, it raised an `AttributeError`. The grammars of the template
   language were not affected.
+- **BREAKING - Errors of the Device in Functions:** If a function of a template raises
+  a `ProtocolException`, e.g. `connection.execline()` an `InvalidCommandException` for
+  a command that the device rejects, the exception stops the template unchanged, like
+  the error of a command, and `try` ignores it. Other exceptions of functions raise an
+  `ExecuteError` that shows the position of the call. Before, all of them raised an
+  `ExecuteError`, which `try` does not ignore; Exscript 2.6 raised all of them
+  unchanged.
 
 ### Standard Library
 

@@ -217,3 +217,7 @@ their users should know:
   new names; see the :doc:`changelog`.
 - ``Exscript.protocols.telnetlib`` lost the methods that the Telnet
   adapter does not use, e.g. ``read_until()`` and ``expect()``.
+- A function of a template that raises a ``ProtocolException``, e.g.
+  ``connection.execline()`` for a command that the device rejects, stops
+  the template with that exception instead of an ``ExecuteError``, as in
+  2.x, and ``try`` ignores it.

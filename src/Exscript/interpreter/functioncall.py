@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Any, cast
 import Exscript.interpreter.expression
 
 from ..parselib import Lexer, Token
+from ..protocols.exception import ProtocolException
 from .exception import PermissionError
 from .scope import Scope
 
@@ -103,7 +104,8 @@ class FunctionCall(Token):
         """
         Calls the function with the scope and the values of the arguments.
         Raises an ExecuteError if the function is not defined, or if it
-        raises an exception.
+        raises an exception. A ProtocolException, such as an error of the
+        remote host, is raised unchanged, as for a command.
 
         :param context: The scope in which the template runs.
         :return: The result of the function.
@@ -116,6 +118,9 @@ class FunctionCall(Token):
             self.lexer.runtime_error('Undefined function %s' % repr(self.funcname), self)
         try:
             result = function(self.parent, *argument_values)
+        except ProtocolException:
+            # Stops the template like the error of a command, unless "try" ignores it.
+            raise
         except Exception as e:
             self.mark_end(distance=len(cast(str, self.funcname)))
             self.lexer.runtime_error(

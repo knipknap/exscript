@@ -101,6 +101,10 @@ class TryTest(TemplateTestCase):
             self.evaluate('{try}{x = list.get(list.new(), 1)}{end}\nls\n')
         self.assertSent()
 
+    def testErrorOfAConnectionFunction(self):
+        self.evaluate('{try}{connection.execline("bad")}\nshow version\n{end}\nls\n')
+        self.assertSent('bad', 'ls')
+
     def testErrorsOutsideAreNotIgnored(self):
         with self.assertRaises(InvalidCommandException):
             self.evaluate('{try}\nls\n{end}\nbad\nshow version\n')

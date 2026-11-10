@@ -136,6 +136,12 @@ class connectionTest(TemplateTestCase):
             variables['__response__'], ['Version 1.0', 'Uptime 5 days', 'file1', 'file2']
         )
 
+    def testExeclineWithAnErrorOfTheDevice(self):
+        # Like a command, the function stops the template with the error.
+        with self.assertRaises(InvalidCommandException):
+            self.evaluate('{x = connection.execline("bad")}\nls\n')
+        self.assertSent('bad')
+
     def testExpect(self):
         variables = self.evaluate(
             '{connection.sendline("reload")}{connection.expect(/\\[confirm\\]/)}'

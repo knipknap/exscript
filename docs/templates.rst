@@ -485,6 +485,12 @@ example, the following will also work::
     {end}
     show ip int brief
 
+The functions of the ``connection`` module that send commands, such as
+``connection.execline()``, report errors in the same way, so a try block
+ignores their errors, too::
+
+    {try}{connection.execline("ls -l")}{end}
+
 Templates And Jinja2
 --------------------
 
