@@ -103,7 +103,7 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.appendleft(item3)
         self.assertEqual(self.pipeline.try_next(), item3)
 
-        self.pipeline.appendleft(item4, True)
+        self.pipeline.appendleft(item4, force=True)
         self.assertEqual(self.pipeline.try_next(), item4)
 
     def testPrioritize(self):

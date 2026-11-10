@@ -648,6 +648,10 @@ The names below refer to functions callable from templates, not protocol methods
 - **`WorkQueue.queue_empty_event`:** Is emitted when the queue becomes empty, when the
   last queued or running job has ended. Before, it was emitted only when the main loop
   stopped, on `shutdown()` or `destroy()` of an empty queue.
+- **Status Bar on Narrow Terminals:** If the names of the running jobs do not fit into
+  the status bar of `Queue`, it cuts them in the middle, at most down to `...`. Before,
+  on a terminal of about 30 columns or less, the cut overlapped and made the bar longer
+  instead of shorter.
 
 ## Demos
 

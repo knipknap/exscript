@@ -12,6 +12,7 @@ import time
 from functools import partial
 from multiprocessing import Value
 from tempfile import mkdtemp
+from types import SimpleNamespace
 from unittest import mock
 
 from Exscript import Account, AccountPool, FileLogger, Host, Queue
@@ -478,6 +479,27 @@ class QueueTest(unittest.TestCase):
             self.queue.run(['dummy://dummy1', 'dummy://dummy2'], record_driver)
         self.queue.join()
         self.assertEqual(drivers, ['ios', 'ios'])
+
+    def testStatusBarShortensTheNamesOfRunningJobs(self):
+        # The names are cut in the middle to fit the terminal, at most to '...'.
+        jobs = [SimpleNamespace(name='a' * 30), SimpleNamespace(name='b' * 30)]
+        expected = {
+            40: 'In progress: [aaaaa...bbbbb] 1/3 (33%)',
+            30: 'In progress: [...] 1/3 (33%)',
+            25: 'In progress: [...] 1/3 (33%)',  # cannot fit
+        }
+        for cols, bar in expected.items():
+            with self.subTest(cols=cols):
+                self.createQueue(verbose=1, max_threads=2)
+                self.queue.total = 3
+                self.queue.completed = 1
+                with (
+                    mock.patch.object(self.queue.workqueue, 'get_running_jobs', return_value=jobs),
+                    mock.patch('Exscript.queue.get_terminal_size', return_value=(24, cols)),
+                ):
+                    self.queue._print_status_bar()
+                self.assertEqual(self.out.read(), bar)
+                self.assertEqual(self.queue.status_bar_length, len(bar))
 
     def testForceRun(self):
         data = Value('i', 0)

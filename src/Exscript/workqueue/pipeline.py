@@ -101,7 +101,6 @@ class Pipeline:
             except KeyError:
                 return None
             return self.id2item[item_id]
-        return None
 
     def has_id(self, item_id: str) -> bool:
         """

@@ -357,9 +357,9 @@ class Queue:
             cont = '...'
             overflow += len(cont) + 1
             strlen = len(running)
-            partlen = strlen // 2 - overflow // 2
+            partlen = max(0, strlen // 2 - overflow // 2)
             head = running[:partlen]
-            tail = running[-partlen:]
+            tail = running[strlen - partlen :]
             running = head + cont + tail
             text = 'In progress: [%s] %s' % (running, progress)
         self._write('status_bar', text)
