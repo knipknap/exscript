@@ -93,6 +93,10 @@ class String(Token):
 
         # Begin parsing the string.
         self.string = ''
+        # The escape sequences that are longer than their text, as pairs of the
+        # position behind the text in the string and the number of additional
+        # characters, for the positions in error messages.
+        self.escapes: list[tuple[int, int]] = []
         lexer.expect(self, purpose + '_delimiter')
         while True:
             if lexer.current_is(purpose + '_data'):
@@ -109,7 +113,11 @@ class String(Token):
                     'escaped_data',
                 ]
             ):
-                self.string += self.eval_escape(*lexer.token())
+                ttype, token = lexer.token()
+                text = self.eval_escape(ttype, token)
+                self.string += text
+                if len(token) > len(text):
+                    self.escapes.append((len(self.string), len(token) - len(text)))
                 next(lexer)
             elif lexer.next_if(purpose + '_delimiter'):
                 break
@@ -166,6 +174,14 @@ class String(Token):
         # Simply unescape anything else.
         return token[1:]
 
+    def _template_offset(self, pos: int) -> int:
+        """
+        Returns the offset in the template of the given position of the
+        string, from the start of the string: the position plus the
+        additional characters of the escape sequences before it.
+        """
+        return pos + sum(extra for end, extra in self.escapes if end <= pos)
+
     def _variable_error(self, field: str, field_start: int, msg: str) -> None:
         """
         Moves the marks of the token to the given variable reference, and
@@ -176,8 +192,10 @@ class String(Token):
         :param msg: The error message.
         """
         # Narrow down the marks on the variable that caused the error.
-        self.mark_start(self.start + len(self.delimiter) + field_start)
-        self.mark_end(distance=len(field))
+        start = self.start + len(self.delimiter)
+        end = start + self._template_offset(field_start + len(field))
+        self.mark_start(start + self._template_offset(field_start))
+        self.mark_end(end)
         self.lexer.runtime_error(msg, self)
 
     # Tokens that include variables in a string may use this callback to

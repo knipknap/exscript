@@ -54,6 +54,14 @@ class StringTest(TemplateTestCase):
         self.assertError(cm.exception, ['{x = "a $nothing b"}'], '        ^^^^^^^^', message)
         self.assertSent()
 
+    def testUndefinedVariableAfterEscapeSequences(self):
+        for text, column in ('{x = "\\x41\\t$nothing"}', 12), ('{x = "\\x41$nothing\\t"}', 10):
+            with self.subTest(text=text):
+                with self.assertRaises(ExecuteError) as cm:
+                    self.evaluate(text)
+                message = "Undefined variable 'nothing' in undefined:1"
+                self.assertError(cm.exception, [text], ' ' * column + '^' * 8, message)
+
     def testInvalidVariableName(self):
         with self.assertRaises(ExecuteError) as cm:
             self.evaluate('{x = "$1abc"}')
@@ -102,6 +110,13 @@ class RegexTest(TemplateTestCase):
         self.assertMatches('"abc" matches /^a$p$/', 1, p='bc')
         self.assertMatches('"abc" matches /^a$p$/', 0, p='b')
         self.assertMatches('"a.c" matches /^a$p$/', 1, p='[.]c')
+
+    def testUndefinedVariableAfterAnEscapedSlash(self):
+        text = '{x = "a" matches /\\/$nothing/}'
+        with self.assertRaises(ExecuteError) as cm:
+            self.evaluate(text)
+        message = "Undefined variable 'nothing' in undefined:1"
+        self.assertError(cm.exception, [text], ' ' * 20 + '^' * 8, message)
 
     def testInvalidModifier(self):
         with self.assertRaises(CompileError) as cm:

@@ -86,7 +86,9 @@ class Template(Scope):
         Scope.__init__(self, self.__class__.__name__, lexer, parser, parent, **kwargs)
         lexer.set_grammar(grammar_c)
         buffer = ''
-        escape_offset = 0
+        # The escape sequences in the buffer that are longer than their text,
+        # see Execute.
+        escapes: list[tuple[int, int]] = []
         while True:
             lexer.skip(['line_comment'])
             if self.exit_requested or lexer.current_is('EOF'):
@@ -95,13 +97,13 @@ class Template(Scope):
                     # Execute expects the lexer to have consumed the delimiter
                     # behind the command; at the end of the input, it is empty.
                     lexer.forward(0)
-                    self.add(Execute(lexer, parser, self, buffer, escape_offset))
+                    self.add(Execute(lexer, parser, self, buffer, escapes))
                 break
             elif lexer.current_is('open_curly_bracket'):
                 if buffer.strip() != '':
-                    self.add(Execute(lexer, parser, self, buffer, escape_offset))
+                    self.add(Execute(lexer, parser, self, buffer, escapes))
                     buffer = ''
-                    escape_offset = 0
+                    escapes = []
                 if isinstance(parent, Code):
                     # Need to consume the bracket if the Code token is not called
                     # due to nesting in IfCondition, Loop and Try tokens.
@@ -110,9 +112,9 @@ class Template(Scope):
                 self.add(Code(lexer, parser, self))
             elif lexer.current_is('open_rpc_tag'):
                 if buffer.strip() != '':
-                    self.add(Execute(lexer, parser, self, buffer, escape_offset))
+                    self.add(Execute(lexer, parser, self, buffer, escapes))
                     buffer = ''
-                    escape_offset = 0
+                    escapes = []
                 self.add(RPCBody(lexer, parser, self))
             elif lexer.current_is(['raw_data_before_tag', 'raw_data']):
                 buffer += lexer.token()[1]
@@ -131,14 +133,15 @@ class Template(Scope):
                 ttype, token = lexer.token()
                 result = self.eval_escape(ttype, token)
                 buffer += result
-                escape_offset += len(token) - len(result)
+                if len(token) > len(result):
+                    escapes.append((len(buffer), len(token) - len(result)))
                 next(lexer)
             elif lexer.next_if('newline'):
                 if buffer.strip() != '':
-                    self.add(Execute(lexer, parser, self, buffer, escape_offset))
+                    self.add(Execute(lexer, parser, self, buffer, escapes))
                 # A line with only whitespace is dropped.
                 buffer = ''
-                escape_offset = 0
+                escapes = []
             else:
                 ttype, token = lexer.token()
                 self.mark_start()

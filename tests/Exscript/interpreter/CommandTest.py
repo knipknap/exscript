@@ -91,6 +91,19 @@ class CommandTest(TemplateTestCase):
         message = "Undefined variable 'nothing' in undefined:2"
         self.assertError(cm.exception, ['  show $x $nothing'], '          ^^^^^^^^', message)
 
+    def testUndefinedVariableAfterEscapeSequences(self):
+        for text, lineno, line, column in (
+            ('ls\nshow \\x41 $nothing\n', 2, 'show \\x41 $nothing', 10),
+            ('ls\nshow \\x41 $nothing', 2, 'show \\x41 $nothing', 10),
+            ('ls\n\\tshow \\x41 $nothing\n', 2, '\\tshow \\x41 $nothing', 12),
+            ('\\t\nshow \\x41\\x42 $nothing\n', 2, 'show \\x41\\x42 $nothing', 14),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaises(ExecuteError) as cm:
+                    self.evaluate(text)
+                message = "Undefined variable 'nothing' in undefined:%d" % lineno
+                self.assertError(cm.exception, [line], ' ' * column + '^' * 8, message)
+
     def testInvalidVariableName(self):
         with self.assertRaises(ExecuteError) as cm:
             self.evaluate('show $1x\n')

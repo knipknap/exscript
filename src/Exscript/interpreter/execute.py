@@ -26,6 +26,7 @@ The commands of a template, which are sent to the remote host.
 
 import re
 import textwrap
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, cast
 
 from ..parselib import Lexer, Token
@@ -54,7 +55,12 @@ class Execute(String):
     """
 
     def __init__(
-        self, lexer: Lexer, parser: 'Parser', parent: Scope, command: str, escape_offset: int = 0
+        self,
+        lexer: Lexer,
+        parser: 'Parser',
+        parent: Scope,
+        command: str,
+        escapes: Sequence[tuple[int, int]] = (),
     ) -> None:
         """
         Constructor. Checks that the variables in the command are defined,
@@ -68,9 +74,10 @@ class Execute(String):
         :param parser: The parser of the template.
         :param parent: The scope that contains the command.
         :param command: The command as read from the template.
-        :param escape_offset: The number of characters by which the
-            evaluation of escape sequences shortened the command, for the
-            position of the command in error messages.
+        :param escapes: The escape sequences in the command that are longer
+            than their text, as pairs of the position behind the text in the
+            command and the number of additional characters, for the
+            positions in error messages.
         """
         Token.__init__(self, self.__class__.__name__, lexer, parser, parent)
         self.delimiter = ''  # Command strings are not delimited in Execute tokens.
@@ -82,11 +89,14 @@ class Execute(String):
         # (newline, open curly bracket, RPC tag). We want the debugger point to the
         # beginning of the command. The offset is expected to be the length of the
         # additionally consumed command delimiter before entering this Execute token.
-        # Any offset caused by prior escape evaluation is also taken into account.
+        # The escape sequences of the left-stripped command, which are longer in the
+        # template than in the command, are also taken into account.
+        stripped = len(command) - len(command.lstrip())
         command = command.lstrip()
+        self.escapes = [(end - stripped, extra) for end, extra in escapes if end > stripped]
         delimiter_offset = lexer.current_char - lexer.last_char
-        self.mark_start(self.start - len(command) - delimiter_offset - escape_offset)
-        self.mark_end(distance=len(command.strip()) + escape_offset)
+        self.mark_start(self.start - delimiter_offset - self._template_offset(len(command)))
+        self.mark_end(distance=self._template_offset(len(command.rstrip())))
 
         # Make sure that any variables specified in the command are declared.
         # Once more we use the left-stripped command to align with the start mark.

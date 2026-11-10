@@ -409,6 +409,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   operand of `matches`, e.g. in `/a/ matches /a/`, `/a/ . "b"`, `"a" is /a/` or
   `not /a/`, raises an `ExecuteError` that shows its position. Before, it raised an
   `UnboundLocalError` or a `TypeError` of Python.
+- **Error Positions After Escape Sequences:** An error about a variable in a command,
+  a string or a regular expression points to the variable also behind escape
+  sequences, e.g. to `$nothing` in `show \x41 $nothing`. Before, it pointed too far to
+  the left, by the number of characters by which the escape sequences are longer than
+  their text.
 
 ### Standard Library
 
