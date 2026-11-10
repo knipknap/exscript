@@ -24,6 +24,7 @@
 SSH2 Netconf support, based on ncclient and paramiko.
 """
 
+import codecs
 import contextlib
 import contextvars
 import functools
@@ -59,8 +60,8 @@ _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
 
 # Matches a NETCONF 1.1 chunk header: LF HASH chunk-size LF (RFC 6242 §4.2).
-_chunk_header_re = re.compile(r'\n#(\d+)\n')
-_end_of_chunks_re = re.compile(r'\n##\n')
+_chunk_header_re = re.compile(rb'\n#(\d+)\n')
+_end_of_chunks_re = re.compile(rb'\n##\n')
 
 # Exscript sends its <hello> and RPCs pretty-printed, so that they are readable
 # in logs. ncclient serializes them with the to_xml() of two of its modules, in
@@ -108,6 +109,8 @@ def _pretty() -> Iterator[None]:
 class Netconf(SSH2):
     """
     The SSH Netconf protocol adapter, based on the SSH2 adapter and ncclient.
+    It always uses UTF-8, which RFC 6241 requires for all NETCONF messages,
+    whatever encoding is passed.
     """
 
     def __init__(self, **kwargs: Any) -> None:
@@ -115,6 +118,7 @@ class Netconf(SSH2):
         Constructor. Takes the keyword arguments of :class:`Protocol`.
         """
         SSH2.__init__(self, **kwargs)
+        self.encoding = 'utf-8'
         # Module-Level
         self._logger = _logger
         # Internals; the ncclient objects are Any, because ncclient is untyped
@@ -191,6 +195,20 @@ class Netconf(SSH2):
         if self._ncc_manager is None:
             return None
         return str(self._ncc_manager.session_id)
+
+    def get_banner(self) -> str | None:
+        """
+        Returns the authentication banner that the server sent, decoded as
+        UTF-8 like the session (RFC 4252); bytes that are no UTF-8 become
+        U+FFFD. Returns None if the server sent no banner or if the adapter
+        is not connected.
+        """
+        if not self._transport:
+            return None
+        banner = self._transport.get_banner()
+        if isinstance(banner, bytes):
+            return banner.decode('utf-8', errors='replace')
+        return banner
 
     def get_response_element(self) -> '_Element | None':
         """
@@ -309,54 +327,7 @@ class Netconf(SSH2):
         session._connected = True
         session._closing.clear()
 
-        # Controls the behavior of the replication wrappers. The replication is
-        # needed as ncclient owns the channel within its IO thread. So we need
-        # to somehow fetch this raw data for display, logging and raw response
-        # buffering/matching.
-        self._replicate = True
-
-        # Setup the channel receive wrapper.
-        recv = cast('Channel', self._channel).recv
-
-        @functools.wraps(recv)
-        def recv_wrapper(*args: Any, **kwargs: Any) -> bytes:
-            data = recv(*args, **kwargs)
-            if not self._replicate:
-                return data
-            if data:
-                string_data = data.decode(self.encoding)
-                self._receive_cb(string_data)
-                self._buffer.append(string_data)
-            else:
-                self._dbg(1, 'channel.recv() returned EOF')
-                self._replicate = False
-            return data
-
-        cast(Any, self._channel).recv = recv_wrapper  # Any: replaces a method
-
-        # Setup the channel send wrapper. This is needed as Netconf does not
-        # echo the sent data back to the client known from CLI shells.
-        send = cast('Channel', self._channel).send
-        param = next(iter(inspect.signature(send).parameters))  # first param
-
-        @functools.wraps(send)
-        def send_wrapper(*args: Any, **kwargs: Any) -> int:
-            count = send(*args, **kwargs)
-            if not self._replicate:
-                return count
-            data = kwargs[param] if param in kwargs else args[0]
-            if count is None:
-                string_data = data.decode(self.encoding)
-                self._send_cb(string_data)
-            elif count > 0:
-                string_data = data[:count].decode(self.encoding)
-                self._send_cb(string_data)
-            else:
-                self._dbg(1, 'channel.send() returned EOF')
-                self._replicate = False
-            return count
-
-        cast(Any, self._channel).send = send_wrapper  # Any: replaces a method
+        self._wrap_channel(cast('Channel', self._channel))
 
         # Starts IO thread, sends client <hello>, consumes server <hello>.
         self._buffer.clear()  # keeps the first self.response clean
@@ -380,6 +351,66 @@ class Netconf(SSH2):
         self._os_guesser.check_netconf_capabilities(self.get_server_capabilities())
         self._update_auto_driver()
         self.expect_prompt()  # consumes the server <hello> from the buffer
+
+    def _wrap_channel(self, channel: 'Channel') -> None:
+        """
+        Wraps recv() and send() of the given channel, which ncclient's IO
+        thread calls, so the data of the session also reaches the buffer, the
+        logs and the events. The data is decoded as UTF-8 with an incremental
+        decoder per direction, so a character that spans two reads or writes
+        is decoded, too; bytes that are no UTF-8 become U+FFFD.
+        """
+        # Controls the behavior of the replication wrappers. The replication is
+        # needed as ncclient owns the channel within its IO thread. So we need
+        # to somehow fetch this raw data for display, logging and raw response
+        # buffering/matching.
+        self._replicate = True
+        recv_decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
+        send_decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
+
+        # Setup the channel receive wrapper.
+        recv = channel.recv
+
+        @functools.wraps(recv)
+        def recv_wrapper(*args: Any, **kwargs: Any) -> bytes:
+            data = recv(*args, **kwargs)
+            if not self._replicate:
+                return data
+            string_data = recv_decoder.decode(data, final=not data)
+            if string_data:  # empty at the end, or for a part of a character
+                self._receive_cb(string_data)
+                self._buffer.append(string_data)
+            if not data:
+                self._dbg(1, 'channel.recv() returned EOF')
+                self._replicate = False
+            return data
+
+        cast(Any, channel).recv = recv_wrapper  # Any: replaces a method
+
+        # Setup the channel send wrapper. This is needed as Netconf does not
+        # echo the sent data back to the client known from CLI shells.
+        send = channel.send
+        param = next(iter(inspect.signature(send).parameters))  # first param
+
+        @functools.wraps(send)
+        def send_wrapper(*args: Any, **kwargs: Any) -> int:
+            count = send(*args, **kwargs)
+            if not self._replicate:
+                return count
+            data = kwargs[param] if param in kwargs else args[0]
+            string_data = ''
+            if count is None:
+                string_data = send_decoder.decode(data)
+            elif count > 0:
+                string_data = send_decoder.decode(data[:count])
+            else:
+                self._dbg(1, 'channel.send() returned EOF')
+                self._replicate = False
+            if string_data:  # empty for a part of a character
+                self._send_cb(string_data)
+            return count
+
+        cast(Any, channel).send = send_wrapper  # Any: replaces a method
 
     def login(
         self,
@@ -471,7 +502,8 @@ class Netconf(SSH2):
         Reassembles a NETCONF 1.1 chunked response into plain content.
 
         Each chunk is introduced by a header `LF HASH chunk-size LF` where the
-        size is the exact byte count of the following chunk (RFC 6242 §4.2).
+        size is the exact byte count of the following chunk (RFC 6242 §4.2),
+        in the UTF-8 encoding of the response.
         The end-of-chunks marker `LF HASH HASH LF` gets stripped finally. Useful
         to also reassemble chunks in received data from events.
 
@@ -481,29 +513,31 @@ class Netconf(SSH2):
         :rtype: str
         :return: The reassembled response.
         """
-        match = _chunk_header_re.match(response)
+        if not response.startswith('\n#'):  # spares encoding other responses
+            return response
+        data = response.encode('utf-8')
+        match = _chunk_header_re.match(data)
         if not match:
             return response
         parts = []
         while match:
             start = match.end()  # after the chunk header
-            end = start + int(match.group(1))  # exactly size chars of content
-            parts.append(response[start:end])
-            match = _chunk_header_re.match(response, end)
-        assembled = ''.join(parts)
-        response = response[end:]
-        if response:
+            end = start + int(match.group(1))  # exactly size bytes of content
+            parts.append(data[start:end])
+            match = _chunk_header_re.match(data, end)
+        data = data[end:]
+        if data:
             # Internally this would be already consumed as the prompt.
-            match = _end_of_chunks_re.match(response)
+            match = _end_of_chunks_re.match(data)
             if match:
-                response = response[match.end() :]  # consume the end-of-chunks marker
-        if response:
+                data = data[match.end() :]  # consume the end-of-chunks marker
+        if data:
             # This should only happen if we have internal issues with the prompt
             # or buffer handling before this reassembly is called. ncclient
             # should have caught buggy devices already at the transport layer.
             msg = 'Unexpected trailing bytes after chunk reassembly: %s'
-            raise ValueError(msg % repr(response[:50] + '...'))
-        return assembled
+            raise ValueError(msg % repr(data[:50].decode('utf-8', 'replace') + '...'))
+        return b''.join(parts).decode('utf-8')
 
     def _domatch(self, prompt: list[re.Pattern[str]], flush: bool) -> tuple[int, re.Match[str]]:
         """

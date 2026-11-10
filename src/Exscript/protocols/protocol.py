@@ -153,9 +153,9 @@ _connection_monitor: dict[str, float] = {}
 _connection_monitor_lock = threading.RLock()
 
 # NOTE: The default encoding is latin-1: it decodes any byte, and most devices
-#  send 7-bit ASCII, even in Netconf XML/RPC (usually UTF-8). For devices that
-#  send UTF-8, pass encoding='utf-8'; the adapters decode incrementally, so a
-#  character split across two reads is decoded correctly.
+#  send 7-bit ASCII. For devices that send UTF-8, pass encoding='utf-8'; the
+#  adapters decode incrementally, so a character split across two reads is
+#  decoded correctly. Netconf always uses UTF-8, as RFC 6241 requires.
 
 
 class Protocol:

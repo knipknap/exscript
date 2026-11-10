@@ -242,3 +242,8 @@ their users should know:
   :class:`~Exscript.protocols.exception.ConnectionClosedException`
   instead of a plain ``ProtocolException``. It is a ``ProtocolException``
   and an ``EOFError``.
+- ``Netconf`` always uses UTF-8, whatever ``encoding`` is passed. With
+  the default ``latin-1``, the 2.9 versions showed non-ASCII text as
+  mojibake, e.g. ``ZÃ¼rich``, in ``response`` and the logs. Bytes that
+  are no UTF-8, e.g. in a latin-1 SSH banner, become U+FFFD.
+  ``Netconf.reassemble_chunks()`` counts the chunk sizes in bytes.

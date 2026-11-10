@@ -30,6 +30,10 @@ there is no login prompt. ``get_server_capabilities()``,
 ``get_client_capabilities()`` and ``get_session_id()`` return what was
 exchanged.
 
+NETCONF messages are UTF-8 (:rfc:`6241`), and so are SSH banners
+(:rfc:`4252`), so ``Netconf`` always uses UTF-8; the ``encoding`` argument
+has no effect.
+
 Sending RPCs
 ------------
 

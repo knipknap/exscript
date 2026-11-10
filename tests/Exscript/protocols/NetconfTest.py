@@ -75,6 +75,11 @@ class ReassembleChunksTest(unittest.TestCase):
         framed = ''.join('\n#4096\n' + chunk for _ in range(1024)) + '\n##\n'
         self.assertEqual(Netconf.reassemble_chunks(framed), chunk * 1024)
 
+    def testMultibyteCharacters(self):
+        # The sizes count the bytes of the UTF-8 encoding (RFC 6242, section 4.2).
+        framed = '\n#6\n<a>Zü\n#15\nrich 20 €</a>\n##\n'
+        self.assertEqual(Netconf.reassemble_chunks(framed), '<a>Zürich 20 €</a>')
+
 
 class NcclientContractTest(unittest.TestCase):
     """The ncclient internals that the adapter uses; an update of ncclient must keep them."""
@@ -157,6 +162,50 @@ class NetconfTest(unittest.TestCase):
         self.conn.auto_app_authorize()
         self.assertTrue(self.conn.is_app_authorized())
 
+    def testUTF8(self):
+        self.assertEqual(self.conn.encoding, 'utf-8')
+        self.assertEqual(Netconf(encoding='latin-1').encoding, 'utf-8')
+
+    def testCharactersSplitAcrossReads(self):
+        received = []
+        self.conn.data_received_event.connect(received.append)
+        # ü and € span reads, \xff is no UTF-8, and the data ends within a character.
+        channel = FakeChannel([b'<a>Z\xc3', b'\xbcrich \xe2', b'\x82', b'\xac \xff</a> \xe2\x82'])
+        self.conn._wrap_channel(channel)
+        while channel.recv(4096):
+            pass
+        text = '<a>Zürich € \ufffd</a> \ufffd'
+        self.assertEqual(''.join(received), text)
+        self.assertEqual(str(self.conn._buffer), text)
+        self.assertEqual(self.conn.stdout.getvalue(), text)
+
+    def testCharactersSplitAcrossWrites(self):
+        sent = []
+        self.conn.data_sent_event.connect(sent.append)
+        channel = FakeChannel()
+        self.conn._wrap_channel(channel)
+        data = rest = '<a>Zürich €</a>'.encode()
+        while rest:  # like ncclient, which sends the rest after a short write
+            rest = rest[channel.send(rest) :]
+        self.assertEqual(channel.sent, data)
+        self.assertEqual(''.join(sent), '<a>Zürich €</a>')
+        self.assertEqual(self.conn.stdout.getvalue(), '<a>Zürich €</a>')
+
+
+class FakeChannel:
+    """Returns the given pieces from recv(), then b''; send() writes two bytes at most."""
+
+    def __init__(self, pieces=()):
+        self.pieces = list(pieces)
+        self.sent = b''
+
+    def recv(self, nbytes):
+        return self.pieces.pop(0) if self.pieces else b''
+
+    def send(self, s):
+        self.sent += s[:2]
+        return len(s[:2])
+
 
 class NetconfServer:
     """
@@ -175,6 +224,7 @@ class NetconfServer:
     :param channels: Whether the server opens session channels.
     :param ignore_close_session: Whether close-session gets no reply and
         leaves the session open, like on a server that hangs.
+    :param banner: The authentication banner (bytes), if any.
     """
 
     def __init__(
@@ -188,12 +238,14 @@ class NetconfServer:
         subsystem=True,
         channels=True,
         ignore_close_session=False,
+        banner=None,
     ):
         self.reply = reply or (lambda rpc: '<ok/>')
         self.capabilities = capabilities
         self.chunk_size = chunk_size
         self.piece_size = piece_size
         self.ignore_close_session = ignore_close_session
+        self.banner = banner
         self.client_hello = None
         self.hello_received = threading.Event()
         self.rpcs = []
@@ -208,6 +260,9 @@ class NetconfServer:
         fake = self
 
         class Interface(paramiko.ServerInterface):
+            def get_banner(self):
+                return fake.banner, 'en'
+
             def get_allowed_auths(self, username):
                 return 'password'
 
@@ -358,6 +413,24 @@ class SessionTest(unittest.TestCase):
         self.assertTrue(conn.response.endswith(content + '</rpc-reply>'), conn.response)
         element = conn.get_response_element()
         self.assertEqual(element.findtext(f'.//{{{NS}}}location'), 'rack 7')
+
+    def testUTF8(self):
+        # NETCONF is UTF-8 (RFC 6241), whatever the encoding argument says. The reply arrives
+        # in one read: ncclient's parser fails if a character spans two.
+        content = '<data><location>Zürich – 3 €</location></data>'
+        for capabilities in (BASE,), (BASE, BASE_11):
+            with self.subTest(capabilities=capabilities):
+                conn = self.login(lambda rpc: content, capabilities=capabilities)
+                conn.execute('<get><filter><location>Zürich</location></filter></get>')
+                self.assertIn('<location>Zürich</location>'.encode(), self.server.rpcs[0])
+                self.assertTrue(conn.response.endswith(content + '</rpc-reply>'), conn.response)
+                self.assertIn('<location>Zürich</location>', conn.stdout.getvalue())  # sent
+                self.assertIn(content, conn.stdout.getvalue())
+
+    def testBannerThatIsNoUTF8(self):
+        # SSH banners are UTF-8, too (RFC 4252), but other bytes must not fail the login.
+        conn = self.login(banner='Grüße\n'.encode('latin-1'))
+        self.assertEqual(conn.get_banner(), 'Gr\ufffd\ufffde\n')
 
     def testNotification(self):
         conn = self.login()

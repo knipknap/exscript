@@ -235,7 +235,7 @@ marked with **BREAKING**; a migration guide will accompany the release.
   1 KiB reads take 0.015 seconds instead of 9.4. The positions in the match object
   that the callback gets refer to the searched text, not to the whole buffer.
 - **NETCONF 1.1 Chunks:** `Netconf.reassemble_chunks()` takes linear time: a 16 MiB
-  reply in 4 KiB chunks takes 0.013 seconds instead of 5.2.
+  reply in 4 KiB chunks takes 0.02 seconds instead of 5.2.
 - **NETCONF Threads:** ncclient's thread appends the received data to the buffer that
   the caller searches. The buffer is locked now; before, a search could move the
   position at which the thread wrote. Exscript still sends its `<hello>` and RPCs
@@ -302,6 +302,12 @@ development versions; "before" refers to them.
   raises `ConnectionClosedException`, like SSH and Telnet. Before, it raised a plain
   `ProtocolException` ("ncclient related error ..."); the new exception is a
   `ProtocolException`, too.
+- **UTF-8:** `Netconf` always uses UTF-8, which RFC 6241 requires for NETCONF messages,
+  whatever `encoding` is passed, and `reassemble_chunks()` counts the chunk sizes in
+  bytes, as RFC 6242 does. Bytes that are no UTF-8, also in the SSH banner, become
+  U+FFFD. Before, non-ASCII text showed as mojibake in `response`, the standard output
+  and the logs with the default encoding latin-1, and with `encoding='utf-8'`,
+  NETCONF 1.1 replies with non-ASCII text failed to reassemble.
 
 ### Protocol Drivers
 
