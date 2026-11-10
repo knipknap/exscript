@@ -213,7 +213,7 @@ def get_filename(key, message, default=None, history=None):
         if not os.path.isfile(string):
             return 'File not found. Please enter a filename.'
 
-    return prompt(key, message, default, True, _validate, history)
+    return prompt(key, message, default, check=_validate, history=history)
 
 
 def get_user(prompt=None):

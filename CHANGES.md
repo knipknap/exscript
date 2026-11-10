@@ -350,6 +350,10 @@ The names below refer to functions callable from templates, not protocol methods
 - **`Exscript.util.syslog.netlog()`:** Works again; on Python 3 it always raised a
   `TypeError`. It also works over IPv6, and the module can be imported on Windows,
   which has no `syslog` module.
+- **`Exscript.util.interact.get_filename()`:** Rejects names of files that do not
+  exist and asks again, as documented. It passed its check and history one
+  position too early to `prompt()`, so it never checked the name, and failed with
+  a `TypeError` when a history was given.
 - **Pseudo Protocol on Windows:** `pseudo://` URLs accept absolute Windows paths such
   as `pseudo://C:\devices\router.py`; the drive letter was taken for a port number.
 - **`Exscript.util.tty.get_terminal_size()`:** Uses `shutil.get_terminal_size()`: the

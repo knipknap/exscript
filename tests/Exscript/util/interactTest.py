@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+import unittest.mock
 
 import Exscript.util.interact
 from Exscript.util.interact import InputHistory
@@ -54,8 +55,23 @@ class interactTest(unittest.TestCase):
         # Can't really be tested, as it is interactive.
 
     def testGetFilename(self):
-        pass
-        # Can't really be tested, as it is interactive.
+        # A name of a file that does not exist is rejected, and the prompt repeats.
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        existing = os.path.join(tmpdir.name, 'hosts.txt')
+        with open(existing, 'w', encoding='utf-8'):
+            pass
+        history = InputHistory(os.path.join(tmpdir.name, 'history'))
+        missing = os.path.join(tmpdir.name, 'missing.txt')
+        inputs = iter([missing, '  ' + existing + '  '])
+        with (
+            unittest.mock.patch('builtins.input', lambda prompt: next(inputs)),
+            unittest.mock.patch('builtins.print') as output,
+        ):
+            filename = Exscript.util.interact.get_filename('hosts', 'Host file', history=history)
+        self.assertEqual(filename, existing)
+        output.assert_called_once_with('File not found. Please enter a filename.')
+        self.assertEqual(history.get('hosts'), existing)
 
     def testGetUser(self):
         pass
