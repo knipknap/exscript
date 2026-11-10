@@ -292,7 +292,10 @@ def run():
         except ValueError as e:
             parser.error(str(e))
         if user is None:
-            user = getpass.getuser()
+            try:
+                user = getpass.getuser()
+            except (KeyError, OSError):  # no user name: OSError since Python 3.13
+                user = None
     else:
         key = None
 

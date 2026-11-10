@@ -487,6 +487,11 @@ The names below refer to functions callable from templates, not protocol methods
   `get_login()` and `read_login()` ask for the user name without offering a default.
   Before, they failed with an `OSError` on Python 3.13 and newer, where
   `getpass.getuser()` raises it instead of a `KeyError`.
+- **`exscript` CLI Without a User Name:** Without the login prompt, i.e. with
+  `--non-interactive` or `--account-pool`, `--ssh-key` adds an account with the key
+  for the current user. If the name of the current user is unknown, it adds none, as
+  without a default user name. Before, the CLI failed with the `OSError` of
+  `getpass.getuser()`, or with a `KeyError` before Python 3.13.
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.
