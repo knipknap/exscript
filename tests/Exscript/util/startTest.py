@@ -1,5 +1,6 @@
 import unittest
 from multiprocessing import Value
+from unittest import mock
 
 import Exscript
 import Exscript.util.start
@@ -10,6 +11,16 @@ def count_calls(job, host, conn, data, **kwargs):
     assert kwargs.get('testarg') == 1
     assert isinstance(conn, Exscript.protocols.Protocol)
     data.value += 1
+
+
+def fail_once(job, host, conn, data, **kwargs):
+    data.value += 1
+    if data.value == 1:
+        raise RuntimeError('first attempt failed')
+
+
+def record_login_state(job, host, conn, data, **kwargs):
+    data.value = conn.is_app_authorized() * 10 + conn.is_app_authenticated()
 
 
 class startTest(unittest.TestCase):
@@ -46,16 +57,49 @@ class startTest(unittest.TestCase):
 
         self.doTest(run)
 
+    def testRunAttempts(self):
+        from Exscript.util.decorator import bind
+        from Exscript.util.start import run
+
+        run(self.account, 'dummy://localhost', bind(fail_once, self.data), verbose=0)
+        self.assertEqual(self.data.value, 1)  # not retried
+
+        self.data.value = 0
+        run(self.account, 'dummy://localhost', bind(fail_once, self.data), attempts=2, verbose=0)
+        self.assertEqual(self.data.value, 2)
+
     def testQuickrun(self):
-        pass  # can't really be tested, as it is user interactive
+        from Exscript.util.start import quickrun
+
+        with mock.patch.object(Exscript.util.start, 'read_login', return_value=self.account):
+            self.doTest(lambda account, *args, **kwargs: quickrun(*args, **kwargs))
 
     def testStart(self):
+        from Exscript.util.decorator import bind
         from Exscript.util.start import start
 
         self.doTest(start)
 
+        start(self.account, 'dummy://localhost', bind(record_login_state, self.data), verbose=0)
+        self.assertEqual(self.data.value, 11)  # authenticated and authorized
+        start(
+            self.account,
+            'dummy://localhost',
+            bind(record_login_state, self.data),
+            only_authenticate=True,
+            verbose=0,
+        )
+        self.assertEqual(self.data.value, 1)  # authenticated only
+
     def testQuickstart(self):
-        pass  # can't really be tested, as it is user interactive
+        from Exscript.util.decorator import bind
+        from Exscript.util.start import quickstart
+
+        with mock.patch.object(Exscript.util.start, 'read_login', return_value=self.account):
+            self.doTest(lambda account, *args, **kwargs: quickstart(*args, **kwargs))
+            callback = bind(record_login_state, self.data)
+            quickstart('dummy://localhost', callback, only_authenticate=True, verbose=0)
+        self.assertEqual(self.data.value, 1)
 
 
 def suite():
