@@ -131,10 +131,6 @@ ignore_missing_imports = true  # ncclient and others ship no type hints
 # Modules that are not annotated yet (P8). Remove a module from this list when
 # it passes the strict checks; the list only shrinks.
 module = [
-    "Exscript.contrib.otel",
-    "Exscript.protocols.drivers.vxworks",
-    "Exscript.protocols.drivers.zte",
-    "Exscript.protocols.drivers.zyxel",
     "Exscript.queue",
     "Exscript.servers.httpd",
     "Exscript.util.sigint",
@@ -155,6 +151,11 @@ warn_return_any = false
 implicit_reexport = true
 strict_equality = false
 extra_checks = false
+
+[[tool.mypy.overrides]]
+# BaseInstrumentor comes from a module that mypy skips (it starts with "# type: ignore").
+module = "Exscript.contrib.otel"
+disallow_subclassing_any = false
 
 [tool.interrogate]
 # Docstring coverage (P8). Private functions count; other dunder methods than

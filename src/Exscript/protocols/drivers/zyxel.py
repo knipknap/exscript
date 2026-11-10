@@ -21,7 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-A driver for devices running Zyxel operating system.
+A driver for devices running the Zyxel operating system.
 """
 
 import re
@@ -37,11 +37,28 @@ _zyxel_re = re.compile(r"Copyright .* ZyXEL Communications Corp.", re.I)
 
 
 class ZyxelDriver(Driver):
-    def __init__(self):
+    """
+    The ``zyxel`` driver for devices running the Zyxel operating system. Its
+    prompt is a name, which may contain parentheses, with an optional mode in
+    parentheses, followed by ">", "#" or "$" and optionally by a space and the
+    escape sequence ESC 7, e.g. "hostname#"; the question "(y/n)[n]" counts
+    as a prompt, too, and so does the password prompt that "enable" shows.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the command prompts; the user name,
+        password and error patterns are the generic ones.
+        """
         Driver.__init__(self, 'zyxel')
         self.prompt_re = _prompt_re
 
-    def check_response_for_os(self, string):
+    def check_response_for_os(self, string: str) -> int:
+        """
+        Returns 90 if the data contains a line with "Copyright" and "ZyXEL
+        Communications Corp." in any case, e.g. "Copyright (c) 1994 - 2013
+        ZyXEL Communications Corp.", else 0.
+        """
         if _zyxel_re.search(string):
             return 90
         return 0

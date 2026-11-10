@@ -21,12 +21,18 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-A driver for devices running Vxworks, which can be found on huawei5600T
+A driver for devices running VxWorks, which can be found on the Huawei MA5600T.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ...account import Account, AccountProxy
+    from ...util.impl import _Context
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'user ?name:', re.I)]
 _password_re = [re.compile(r'(?:User )?Password:', re.I)]
@@ -44,23 +50,53 @@ _banner_re = re.compile(r"User last login information", re.I)
 
 
 class VxworksDriver(Driver):
-    def __init__(self):
+    """
+    The ``vxworks`` driver for devices running VxWorks, such as the Huawei
+    MA5600T. Its prompt is a name with an optional mode in parentheses,
+    followed by ">" or "#", e.g. "hostname>" or "hostname(config)#"; the
+    question "(y/n)[n]" counts as a prompt, too.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt "User name:",
+        the password prompts "User password:" and "Password:", the command
+        prompt and the error messages, such as "%Error", "Unknown command",
+        "Failure" and "Parameter error".
+        """
         Driver.__init__(self, 'vxworks')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.error_re = _error_re
 
-    def auto_authorize(self, conn, account, flush, bailout):
+    def auto_authorize(
+        self,
+        conn: 'Protocol',
+        account: 'Account | AccountProxy | _Context | None',
+        flush: bool,
+        bailout: bool,
+    ) -> None:
+        """
+        Sends "enable", then authorizes with conn.app_authorize().
+        """
         conn.send('enable\r\n')
         conn.app_authorize(account, flush, bailout)
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 90 if the data contains "Huawei Integrated Access Software" in
+        any case, else 0.
+        """
         if _huawei_re.search(string):
             return 90
         return 0
 
-    def check_response_for_os(self, string):
+    def check_response_for_os(self, string: str) -> int:
+        """
+        Returns 90 if the data contains "User last login information" in any
+        case, else 0.
+        """
         if _banner_re.search(string):
             return 90
         return 0

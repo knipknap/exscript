@@ -21,12 +21,18 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-A driver for devices running Zte operating system.
+A driver for devices running the ZTE operating system.
 """
 
 import re
+from typing import TYPE_CHECKING
 
 from .driver import Driver
+
+if TYPE_CHECKING:
+    from ...account import Account, AccountProxy
+    from ...util.impl import _Context
+    from ..protocol import Protocol
 
 _user_re = [re.compile(r'user ?name:', re.I), re.compile(r'login', re.I)]
 _password_re = [re.compile(r'(?:User )?Password:', re.I)]
@@ -44,18 +50,44 @@ _zte_re = re.compile(r"ZTE", re.I)
 
 
 class ZteDriver(Driver):
-    def __init__(self):
+    """
+    The ``zte`` driver for devices running the ZTE operating system. Its
+    prompt is a name, which may contain parentheses, with an optional mode in
+    parentheses, followed by ">", "#" or "$", e.g. "hostname#"; the question
+    "(y/n)[n]" counts as a prompt, too, and so does the password prompt that
+    "enable" shows.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt, "Username:"
+        or any text with "login", the password prompts "Password:" and "User
+        password:", the command prompts and the error messages, such as
+        "%Error", "Unrecognized command" and "Invalid input".
+        """
         Driver.__init__(self, 'zte')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.error_re = _error_re
 
-    def auto_authorize(self, conn, account, flush, bailout):
+    def auto_authorize(
+        self,
+        conn: 'Protocol',
+        account: 'Account | AccountProxy | _Context | None',
+        flush: bool,
+        bailout: bool,
+    ) -> None:
+        """
+        Sends "enable", then authorizes with conn.app_authorize().
+        """
         conn.send('enable\r\n')
         conn.app_authorize(account, flush, bailout)
 
-    def check_head_for_os(self, string):
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 90 if the data contains "ZTE" in any case, else 0.
+        """
         if _zte_re.search(string):
             return 90
         return 0

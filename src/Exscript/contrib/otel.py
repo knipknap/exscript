@@ -65,8 +65,8 @@ from typing import Any
 from opentelemetry.instrumentation.instrumentor import (  # type: ignore[attr-defined]
     BaseInstrumentor,  # mypy cannot resolve it in this namespace package
 )
-from opentelemetry.metrics import get_meter
-from opentelemetry.trace import Span, SpanKind, get_tracer
+from opentelemetry.metrics import Histogram, get_meter
+from opentelemetry.trace import Span, SpanKind, Tracer, get_tracer
 
 from Exscript.protocols import Protocol
 from Exscript.version import __version__
@@ -85,7 +85,7 @@ _active: contextvars.ContextVar[tuple[int, str] | None] = contextvars.ContextVar
 )
 
 
-def _protocol_classes():
+def _protocol_classes() -> list[type[Protocol]]:
     """Returns Protocol and its subclasses, which may override instrumented methods."""
     classes, todo = [], [Protocol]
     while todo:
@@ -95,12 +95,20 @@ def _protocol_classes():
     return classes
 
 
-def _truncate(value, limit):
+def _truncate(value: object, limit: int) -> str:
+    """
+    Returns the given value as a string, cut to the given number of
+    characters and "..." if it is longer.
+    """
     value = str(value)
     return value if len(value) <= limit else value[:limit] + '...'
 
 
-def _set_connection_attributes(span, conn):
+def _set_connection_attributes(span: Span, conn: Protocol) -> None:
+    """
+    Sets the address and the port of the given connection on the span, if
+    they are known, and the guessed OS, once it is known.
+    """
     if conn.host:
         span.set_attribute('server.address', str(conn.host))
     if conn.port:
@@ -110,12 +118,33 @@ def _set_connection_attributes(span, conn):
         span.set_attribute('exscript.os', os_name)
 
 
-def _make_wrapper(original, operation, tracer, histogram, options):
+def _make_wrapper(
+    original: Callable[..., Any],
+    operation: str,
+    tracer: Tracer,
+    histogram: Histogram,
+    options: dict[str, Any],
+) -> Callable[..., Any]:
+    """
+    Returns a wrapper of the given method of the protocol adapters, which
+    calls the method in a client span and records its duration in the
+    histogram, as the module documentation describes. The wrapper calls the
+    method without a span if the instrumentation is disabled for the
+    adapter, if the same operation is in progress on the adapter (an
+    override that calls super()), or if the arguments do not fit the method.
+
+    :param original: The method, as the class defines it.
+    :param operation: The name of the method, e.g. "execute".
+    :param tracer: The tracer that creates the spans.
+    :param histogram: The histogram of the durations.
+    :param options: The options of instrument(): capture_payload,
+        max_payload_length, request_hook and response_hook.
+    """
     signature = inspect.signature(original)
     capture, limit = options['capture_payload'], options['max_payload_length']
 
     @functools.wraps(original)
-    def wrapper(conn, *args, **kwargs):
+    def wrapper(conn: Protocol, *args: Any, **kwargs: Any) -> Any:
         key = (id(conn), operation)
         if getattr(conn, _DISABLED, False) or _active.get() == key:
             return original(conn, *args, **kwargs)  # e.g. an override that calls super()
@@ -166,9 +195,19 @@ class ExscriptInstrumentor(BaseInstrumentor):
     """Instruments all protocol adapters; see the module documentation."""
 
     def instrumentation_dependencies(self) -> Collection[str]:
+        """
+        Returns the packages that instrument() requires, unless its argument
+        skip_dep_check is true: exscript, in any version.
+        """
         return ('exscript',)
 
-    def _instrument(self, **kwargs):
+    def _instrument(self, **kwargs: Any) -> None:
+        """
+        Wraps the methods connect(), login(), authenticate(), send(),
+        execute() and close() of Protocol and its subclasses, where a class
+        defines them and they are not wrapped yet. instrument() calls it with
+        its keyword arguments, the options in the module documentation.
+        """
         tracer = get_tracer(__name__, __version__, kwargs.get('tracer_provider'))
         meter = get_meter(__name__, __version__, kwargs.get('meter_provider'))
         histogram = meter.create_histogram(
@@ -190,14 +229,19 @@ class ExscriptInstrumentor(BaseInstrumentor):
                     wrapper = _make_wrapper(method, operation, tracer, histogram, options)
                     setattr(cls, operation, wrapper)
 
-    def _uninstrument(self, **kwargs):
+    def _uninstrument(self, **kwargs: Any) -> None:
+        """
+        Restores the methods that _instrument() wrapped. uninstrument() calls
+        it with its keyword arguments, which it ignores.
+        """
         for cls in _protocol_classes():
             for operation in _OPERATIONS:
-                method = cls.__dict__.get(operation)
+                # Any: getattr() below does not narrow out the None of a missing name.
+                method: Any = cls.__dict__.get(operation)
                 if getattr(method, _APPLIED, False):
                     setattr(cls, operation, method.__wrapped__)
 
     @staticmethod
-    def uninstrument_protocol(protocol):
+    def uninstrument_protocol(protocol: Protocol) -> None:
         """Disables the instrumentation for the given protocol adapter."""
         setattr(protocol, _DISABLED, True)
