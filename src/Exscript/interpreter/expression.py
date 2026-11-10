@@ -124,6 +124,8 @@ class ExpressionNode(Token):
             self.mark_end(distance=len(self.op))
             msg = 'Expected operator but got %s %s' % (self.op_type, repr(self.op))
             lexer.syntax_error(msg, self)
+        # The words of "is not" and "not in" may be separated by any whitespace.
+        self.op = ' '.join(self.op.split())
 
         # Expect the second term.
         self.rgt = ExpressionNode(lexer, parser, parent)

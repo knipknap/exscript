@@ -442,6 +442,9 @@ development versions; "before" refers to them.
   `or` not if the left one is true; e.g. `{x = 0 and list.get(list.new(), 1)}` sets `x`
   to 0. Before, both operands were always evaluated, so the right one could raise an
   error or call a function, e.g. one that sends a command.
+- **`is not` and `not in` With Several Blanks:** `is  not` and `not  in` with more
+  than one blank or a line break between the words mean the same as `is not` and
+  `not in`. Before, they gave `None`, and as a condition a `TypeError` of Python.
 - **BREAKING - Lines With Only Whitespace:** A line with only whitespace is ignored,
   also if the whitespace is not a space or a tab, e.g. a no-break space. Before, such
   whitespace was sent at the start of the command in the next line.

@@ -98,6 +98,13 @@ class ExpressionTest(TemplateTestCase):
         )
         self.assertValues(text, a=[True], b=[False], c=[True], d=[False])
 
+    def testIsNotAndNotInWithSeveralBlanks(self):
+        text = (
+            '{l = list.new("a")}'
+            '{a = 1 is  not 2}{b = 1 is\n  not 1}{c = "c" not \t in l}{d = "a" not\nin l}'
+        )
+        self.assertValues(text, a=[True], b=[False], c=[True], d=[False])
+
     def testMatches(self):
         text = (
             '{a = "abc" matches /b/}{b = "abc" matches /^b/}{c = "ABC" matches /b/i}'
