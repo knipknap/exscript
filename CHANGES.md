@@ -84,6 +84,9 @@ marked with **BREAKING**; a migration guide will accompany the release.
   login are logged as `<secret>`. Before, debug level 4 logged them in clear text.
   Debug levels above 5 no longer turn on paramiko's packet dumps, which showed the
   password of an SSH login in clear text.
+  Listeners of `data_sent_event`, and the output and the logfile of a protocol whose
+  host does not echo, get `<secret>` instead of the password and the S/Key response,
+  too; before, `data_sent_event` passed them in clear text.
 - **BREAKING - `InvalidCommandException` Message:** The message contains only the
   line that matched an error pattern, for example `Error in the response from the
   device: % Invalid input detected`. Before, it contained the full response, which

@@ -1,4 +1,6 @@
+import os
 import re
+import tempfile
 import unittest
 
 from Exscript import Account
@@ -135,6 +137,25 @@ class SecretHygieneTest(unittest.TestCase):
         conn.close(force=True)
         self.assertIn('Sending: <secret>', '\n'.join(logs.output))
         self.assertEqual([line for line in logs.output if self.PASSWORD in line], [])
+
+    def testSentDataRedactsPassword(self):
+        # The listeners of data_sent_event, and the output and the logfile of a protocol
+        # whose host does not echo, see <secret> instead of the password.
+        for echo in True, False:
+            with self.subTest(echo=echo), tempfile.TemporaryDirectory() as tmpdir:
+                logfile = os.path.join(tmpdir, 'session.log')
+                conn = Dummy(device=VirtualDevice('r1', echo=False, strict=False), logfile=logfile)
+                conn._receives_echo = echo
+                sent = []
+                conn.data_sent_event.connect(sent.append)
+                conn.connect('r1')
+                conn.login(Account('admin', self.PASSWORD, needs_lock=False))
+                conn.close(force=True)
+                self.assertIn('admin\r', sent)
+                self.assertIn('<secret>', sent)
+                with open(logfile, encoding='utf-8') as fp:
+                    output = ''.join(sent) + conn.stdout.getvalue() + fp.read()
+                self.assertNotIn(self.PASSWORD, output)
 
     def testErrorMessageShowsOnlyTheErrorLine(self):
         device = VirtualDevice('r1', echo=False, strict=False)

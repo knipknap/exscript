@@ -597,8 +597,12 @@ class Protocol:
     def _send_cb(self, data: str) -> None:
         """
         Handles data that was sent to the host: writes it to stdout and to the
-        logfile if the host does not echo it, and emits data_sent_event.
+        logfile if the host does not echo it, and emits data_sent_event. Data
+        sent as a secret, such as the password of the login, appears there as
+        "<secret>".
         """
+        if self._sending_secret:
+            data = '<secret>'
         if not self._receives_echo:
             # The sent commands are either logged via the _receive_cb() when
             # they are echoed back, or they are logged here explicitly.
