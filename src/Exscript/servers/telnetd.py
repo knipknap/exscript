@@ -28,6 +28,7 @@ import logging
 import select
 import socket
 
+from ..emulators import VirtualDevice
 from .server import Server
 
 _logger = logging.getLogger(__name__)
@@ -47,11 +48,24 @@ class Telnetd(Server):
         daemon.join()  # Wait until it terminates.
     """
 
-    def __init__(self, host, port, device):
+    def __init__(self, host: str, port: int, device: VirtualDevice) -> None:
+        """
+        Constructor. Takes the arguments of :class:`Server` except the
+        encoding, which is UTF-8.
+        """
         Server.__init__(self, host, port, device)
         self._logger = _logger
 
-    def _recvline(self, conn, buf):
+    def _recvline(self, conn: socket.socket, buf: bytes) -> tuple[str | None, bytes]:
+        """
+        Reads from the client until the given buffer, extended by the data
+        read, contains a complete line. Line ends are normalized to newlines.
+
+        :param buf: The data that was read but not yet returned as a line.
+        :return: The first line, decoded and with a newline at the end, and
+            the rest of the data. The line is None if the client disconnected
+            or the server stops before a line is complete.
+        """
         while b'\n' not in buf:
             r, w, x = select.select([conn], [], [], self.timeout)
             if not self.running:
@@ -65,7 +79,12 @@ class Telnetd(Server):
         lines = buf.split(b'\n')
         return lines[0].decode(self.encoding) + '\n', b'\n'.join(lines[1:])
 
-    def _handle_connection(self, conn):
+    def _handle_connection(self, conn: socket.socket) -> None:
+        """
+        Sends the banner and the responses of the reset device to the client
+        until it disconnects or the server stops. Logs errors, and closes the
+        connection.
+        """
         try:
             # send the banner
             conn.send(self.device.init().encode('utf8'))

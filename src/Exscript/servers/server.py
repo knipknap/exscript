@@ -29,6 +29,9 @@ import select
 import socket
 import threading
 from multiprocessing import Pipe
+from typing import cast
+
+from ..emulators import VirtualDevice
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
@@ -51,7 +54,7 @@ class Server(threading.Thread):
         daemon.join()  # Wait until it terminates.
     """
 
-    def __init__(self, host, port, device, encoding='utf8'):
+    def __init__(self, host: str, port: int, device: VirtualDevice, encoding: str = 'utf8') -> None:
         """
         Constructor.
 
@@ -73,18 +76,28 @@ class Server(threading.Thread):
         self.timeout = 0.5
         self.dbg = 0
         self.running = False
-        self.socket = None
+        self.socket: socket.socket | None = None  # set by start()
         self.device = device  # Shared device does not support concurrent connections!
         self.encoding = encoding
         self.to_child, self.to_parent = Pipe()
-        self.processes = []
+        self.processes: list[threading.Thread] = []
 
-    def _dbg(self, level, msg, exc_info=None):
+    def _dbg(self, level: int, msg: str, exc_info: bool | BaseException | None = None) -> None:
+        """
+        Logs the given message if the debug level (the dbg attribute) is at
+        least the given level.
+        """
         if level > self.dbg:
             return
         self._logger.debug(msg, exc_info=exc_info)
 
-    def _poll_child_process(self):
+    def _poll_child_process(self) -> bool:
+        """
+        Reads a message from the pipe, if one is waiting. The message
+        "shutdown" from exit(), or an error while reading, stops the server.
+
+        :return: Whether another message was read while the server runs.
+        """
         if not self.to_parent.poll():
             return False
         try:
@@ -100,13 +113,27 @@ class Server(threading.Thread):
             return False
         return True
 
-    def _handle_connection(self, conn):
+    def _handle_connection(self, conn: socket.socket) -> None:
+        """
+        Talks to the client on the given accepted connection until it
+        disconnects or the server stops. Subclasses implement it.
+
+        :raises NotImplementedError: Always, in this base class.
+        """
         raise NotImplementedError()
 
-    def _get_server_type(self):
+    def _get_server_type(self) -> str:
+        """
+        Returns the class name in lower case, which names the threads and
+        appears in the debug messages.
+        """
         return type(self).__name__.lower()
 
-    def _run(self):
+    def _run(self) -> None:
+        """
+        Accepts connections until the server stops, and talks to each client
+        in a new thread. Then waits for these threads and closes the socket.
+        """
         self._dbg(1, 'Starting the %s server.' % self._get_server_type())
         self.running = True
 
@@ -116,11 +143,13 @@ class Server(threading.Thread):
                 # Purge finished handlers to void zombie accumulation.
                 self.processes = [p for p in self.processes if p.is_alive()]
 
-                r, w, x = select.select([self.socket], [], [], self.timeout)
+                # start() sets the socket before the thread runs; the casts
+                # are for the type checker.
+                r, w, x = select.select([cast(socket.socket, self.socket)], [], [], self.timeout)
                 if not r:
                     continue
 
-                conn, addr = self.socket.accept()
+                conn, addr = cast(socket.socket, self.socket).accept()
                 self._dbg(1, 'Accepted connection from: %s:%s' % (addr[0], addr[1]))
                 proc = threading.Thread(
                     target=self._handle_connection,
@@ -134,9 +163,9 @@ class Server(threading.Thread):
             for proc in self.processes:
                 proc.join()
             self.processes = []
-            self.socket.close()
+            cast(socket.socket, self.socket).close()
 
-    def start(self):
+    def start(self) -> None:
         """
         Starts listening, and then the thread that accepts the connections.
         Clients can connect as soon as this returns. With port 0, the
@@ -156,19 +185,20 @@ class Server(threading.Thread):
         self._dbg(1, 'Server bound to: %s:%s' % (self.host, self.port))
         threading.Thread.start(self)
 
-    def exit(self):
+    def exit(self) -> None:
         """
         Stop the daemon without waiting for the thread to terminate.
         """
         self._dbg(1, 'Shutdown the %s server.' % self._get_server_type())
         self.to_child.send('shutdown')
 
-    def exit_command(self, cmd):
+    def exit_command(self, cmd: str) -> str:
         """
         Like exit(), but may be used as a handler in add_command.
 
         :type  cmd: str
         :param cmd: The command that causes the server to exit.
+        :return: An empty string, the response to the command.
         """
         self.exit()
         return ''

@@ -33,6 +33,8 @@ import threading
 import paramiko
 from paramiko import ServerInterface
 
+from ..emulators import VirtualDevice
+from ..key import PrivateKey
 from ..version import __version__
 from .server import Server
 
@@ -43,6 +45,11 @@ local_version = 'SSH-2.0-Exscript-' + __version__
 
 
 class _ParamikoServer(ServerInterface):
+    """
+    The paramiko server interface of SSHd. It accepts session channels, any
+    password, any public key, and any shell and pseudo-terminal request.
+    """
+
     # Must match the public key of the test suite!
     data = (
         b'AAAAB3NzaC1yc2EAAAADAQABAAABAQChbnHaPrmxa5NpvtKXSMfMJEklUlinrnaNc'
@@ -54,31 +61,61 @@ class _ParamikoServer(ServerInterface):
     )
     good_pub_key = paramiko.RSAKey(data=base64.decodebytes(data))
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Constructor.
+        """
         self.event = threading.Event()
         self._logger = _logger
 
-    def check_channel_request(self, kind, chanid):
+    # The constants come from paramiko.common: the paramiko package has them
+    # too, but its type stubs do not.
+    def check_channel_request(self, kind: str, chanid: int) -> int:
+        """
+        Accepts session channels and rejects channels of other kinds.
+        """
         if kind == 'session':
-            return paramiko.OPEN_SUCCEEDED
-        return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
+            return paramiko.common.OPEN_SUCCEEDED
+        return paramiko.common.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
-    def check_auth_password(self, username, password):
-        return paramiko.AUTH_SUCCESSFUL  # TODO: paramiko.AUTH_FAILED
+    def check_auth_password(self, username: str, password: str) -> int:
+        """
+        Accepts any user name and password.
+        """
+        return paramiko.common.AUTH_SUCCESSFUL  # TODO: paramiko.AUTH_FAILED
 
-    def check_auth_publickey(self, username, key):
-        return paramiko.AUTH_SUCCESSFUL
+    def check_auth_publickey(self, username: str, key: paramiko.PKey) -> int:
+        """
+        Accepts any user name and public key.
+        """
+        return paramiko.common.AUTH_SUCCESSFUL
 
-    def get_allowed_auths(self, username):
+    def get_allowed_auths(self, username: str) -> str:
+        """
+        Returns the allowed authentication methods: password and public key.
+        """
         return 'password,publickey'
 
-    def check_channel_shell_request(self, channel):
+    def check_channel_shell_request(self, channel: paramiko.Channel) -> bool:
+        """
+        Accepts the shell request, and sets the event attribute.
+        """
         self.event.set()
         return True
 
     def check_channel_pty_request(
-        self, channel, term, width, height, pixelwidth, pixelheight, modes
-    ):
+        self,
+        channel: paramiko.Channel,
+        term: bytes,
+        width: int,
+        height: int,
+        pixelwidth: int,
+        pixelheight: int,
+        modes: bytes,
+    ) -> bool:
+        """
+        Accepts any pseudo-terminal request.
+        """
         return True
 
 
@@ -97,7 +134,16 @@ class SSHd(Server):
     :keyword key: An Exscript.PrivateKey object.
     """
 
-    def __init__(self, host, port, device, key=None):
+    def __init__(
+        self, host: str, port: int, device: VirtualDevice, key: PrivateKey | None = None
+    ) -> None:
+        """
+        Constructor. Takes the arguments of :class:`Server` except the
+        encoding, which is UTF-8.
+
+        :param key: The host key; the server reads the RSA key from its file.
+            Defaults to the key in ~/.ssh/id_rsa.
+        """
         Server.__init__(self, host, port, device)
         self._logger = _logger
         if key:
@@ -106,7 +152,16 @@ class SSHd(Server):
             keyfile = os.path.expanduser('~/.ssh/id_rsa')
         self.host_key = paramiko.RSAKey(filename=keyfile)
 
-    def _recvline(self, channel, buf):
+    def _recvline(self, channel: paramiko.Channel, buf: bytes) -> tuple[str | None, bytes]:
+        """
+        Reads from the channel until the given buffer, extended by the data
+        read, contains a complete line. Line ends are normalized to newlines.
+
+        :param buf: The data that was read but not yet returned as a line.
+        :return: The first line, decoded and with a newline at the end, and
+            the rest of the data. The line is None if the client disconnected
+            or the server stops before a line is complete.
+        """
         while b'\n' not in buf:
             if not self.running:
                 return None, buf
@@ -120,7 +175,13 @@ class SSHd(Server):
         lines = buf.split(b'\n')
         return lines[0].decode(self.encoding) + '\n', b'\n'.join(lines[1:])
 
-    def _handle_connection(self, conn):
+    def _handle_connection(self, conn: socket.socket) -> None:
+        """
+        Negotiates SSH, accepts any login and waits for a shell request, then
+        sends the banner and the responses of the reset device to the client
+        until it disconnects or the server stops. Logs errors, and closes the
+        connection.
+        """
         t = paramiko.Transport(conn)
         t.local_version = local_version
         t.name = '%s-server-%s:%s' % (self._get_server_type(), self.host, self.port)
