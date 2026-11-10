@@ -1,5 +1,9 @@
+import gc
 import re
+import socket
 import unittest
+import unittest.mock
+import warnings
 
 from Exscript import Account
 from Exscript.emulators import VirtualDevice
@@ -74,8 +78,58 @@ class ServerTest(unittest.TestCase):
         self.testConstructor()
 
 
+class ServerInternalsTest(unittest.TestCase):
+    """The parts of the base class that need no client."""
+
+    def setUp(self):
+        self.server = Server('127.0.0.1', 0, VirtualDevice('r1'))
+        self.addCleanup(self.server.to_parent.close)
+        self.addCleanup(self.server.to_child.close)
+
+    def testPollChildProcess(self):
+        self.server.running = True
+        self.assertFalse(self.server._poll_child_process())  # no message
+        self.server.to_child.send('ping')
+        self.assertTrue(self.server._poll_child_process())
+        self.assertTrue(self.server.running)
+        self.server.to_child.send('shutdown')
+        self.assertFalse(self.server._poll_child_process())
+        self.assertFalse(self.server.running)
+        self.server.to_child.send('ping')
+        self.assertFalse(self.server._poll_child_process())  # not running
+
+    def testPollChildProcessWithBrokenPipe(self):
+        self.server.running = True
+        self.server.to_child.send('ping')
+        with unittest.mock.patch.object(self.server.to_parent, 'recv', side_effect=OSError):
+            self.assertFalse(self.server._poll_child_process())
+        self.assertFalse(self.server.running)
+
+    def testHandleConnectionIsAbstract(self):
+        self.assertRaises(NotImplementedError, self.server._handle_connection, None)
+
+    def testStartOnAPortInUse(self):
+        with socket.create_server(('127.0.0.1', 0)) as listener:
+            server = Server('127.0.0.1', listener.getsockname()[1], self.server.device)
+            self.addCleanup(server.to_parent.close)
+            self.addCleanup(server.to_child.close)
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter('always', ResourceWarning)
+                self.assertRaises(OSError, server.start)
+                gc.collect()
+        self.assertEqual([str(w.message) for w in caught], [])  # the socket was closed
+        self.assertIsNone(server.socket)
+        self.assertFalse(server.is_alive())
+
+
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(ServerTest)
+    loader = unittest.TestLoader()
+    return unittest.TestSuite(
+        [
+            loader.loadTestsFromTestCase(ServerTest),
+            loader.loadTestsFromTestCase(ServerInternalsTest),
+        ]
+    )
 
 
 if __name__ == '__main__':
