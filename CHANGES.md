@@ -476,6 +476,12 @@ The names below refer to functions callable from templates, not protocol methods
   string. Before, they showed an empty value as `Host []: `, and without one offered the
   string `'None'`, as in `Host [None]: `, which `prompt()` returned and stored for an
   empty input.
+- **`Exscript.util.interact.get_user()` Without a User Name:** If the name of the
+  current user is unknown, e.g. in a container that runs as a user ID without a
+  passwd entry and without the `USER` and `LOGNAME` variables, `get_user()`,
+  `get_login()` and `read_login()` ask for the user name without offering a default.
+  Before, they failed with an `OSError` on Python 3.13 and newer, where
+  `getpass.getuser()` raises it instead of a `KeyError`.
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.

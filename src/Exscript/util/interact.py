@@ -236,8 +236,9 @@ def get_filename(
 
 def get_user(prompt: str | None = None) -> str:
     """
-    Prompts the user for his login name, defaulting to the USER environment
-    variable. Returns a string containing the username.
+    Prompts the user for his login name, defaulting to the name of the
+    current user (see getpass.getuser()); if that is unknown, there is no
+    default. Returns a string containing the username.
     May throw an exception if EOF is given by the user.
 
     :type  prompt: str|None
@@ -248,7 +249,7 @@ def get_user(prompt: str | None = None) -> str:
     # Read username and password.
     try:
         env_user = getpass.getuser()
-    except KeyError:
+    except (KeyError, OSError):  # no user name: OSError since Python 3.13
         env_user = ''
     if prompt is None:
         prompt = "Please enter your user name"

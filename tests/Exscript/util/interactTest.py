@@ -186,6 +186,20 @@ class interactTest(unittest.TestCase):
             self.assertEqual(Exscript.util.interact.get_user(), 'dave')
         self.assertEqual(prompts, ['Please enter your user name: '] * 2)
 
+    def testGetUserWithoutUserName(self):
+        # getuser() raises OSError since Python 3.13, KeyError before, if it finds no name.
+        errors = OSError('No username set in the environment'), KeyError('uid not found: 1000')
+        for error in errors:
+            prompts = self.typing('carol', 'dave', 'erin')
+            with (
+                unittest.mock.patch('getpass.getuser', side_effect=error),
+                unittest.mock.patch('getpass.getpass', return_value='S3cr3t'),
+            ):
+                self.assertEqual(Exscript.util.interact.get_user(), 'carol')
+                self.assertEqual(Exscript.util.interact.get_login(), ('dave', 'S3cr3t'))
+                self.assertEqual(Exscript.util.interact.read_login().get_name(), 'erin')
+            self.assertEqual(prompts, ['Please enter your user name: '] * 3)
+
     def testGetLogin(self):
         prompts = self.typing('')
         with (
