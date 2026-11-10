@@ -59,6 +59,12 @@ class WorkQueue:
     """
     This class implements the asynchronous workqueue and is the main API
     for using the workqueue module.
+
+    Its events are those of its main loop, see MainLoop. queue_empty_event
+    is emitted, without arguments, when the queue becomes empty: when the
+    last queued or running job has ended. It is emitted in a thread of the
+    work queue, after the job was removed, so wait_until_done() may return
+    before it.
     """
 
     def __init__(

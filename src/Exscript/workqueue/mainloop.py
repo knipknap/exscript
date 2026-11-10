@@ -49,7 +49,8 @@ class MainLoop(threading.Thread):
     job_init_event gets the Job before its first attempt. job_started_event,
     job_succeeded_event and job_aborted_event (after the last failed attempt)
     get the Thread of the attempt; job_error_event gets the Thread and the
-    exception information. queue_empty_event gets no arguments.
+    exception information. queue_empty_event gets no arguments; it is emitted
+    when the pipeline becomes empty, after the last job in it has ended.
     """
 
     def __init__(self, collection: 'Pipeline', job_cls: 'type[Thread]') -> None:
@@ -186,6 +187,17 @@ class MainLoop(threading.Thread):
         """
         return len(self.collection)
 
+    @staticmethod
+    def _remove(queue: 'Pipeline', job: Job) -> bool:
+        """
+        Removes the given job, which has ended, from the given pipeline.
+
+        :return: Whether the pipeline had the job and is empty now.
+        """
+        removed = job in queue
+        queue.task_done(job)
+        return removed and len(queue) == 0
+
     def _on_job_completed(
         self,
         job: Job,
@@ -195,10 +207,11 @@ class MainLoop(threading.Thread):
         ),
     ) -> None:
         """
-        Handles the end of an attempt of the given job, with the exception
-        information of the attempt, or None. Emits the events, then restarts
-        the job if it failed and has attempts left, else removes it from the
-        pipeline. The watcher thread of the job calls this.
+        Handles the end of an attempt of the given job, which failed with the
+        given exception information, or succeeded if it is None; the watcher
+        thread of the job calls it. Emits the events, then restarts the job if
+        it failed and has attempts left, else removes it from the pipeline,
+        and emits queue_empty_event if the pipeline is empty then.
         """
         # This function is called in a sub-thread, so we need to be
         # careful that we are not in a lock while sending an event.
@@ -227,8 +240,8 @@ class MainLoop(threading.Thread):
             if exc_info and job.failures < job.times:
                 self._dbg(3, 'Restarting job "%s"' % job.name)
                 job.start(self.job_cls, self._on_job_completed, self.job_started_event)
-            else:
-                self.collection.task_done(job)
+            elif self.collection.with_lock(self._remove, job):
+                self.queue_empty_event()
 
     def run(self) -> None:
         """
@@ -239,8 +252,6 @@ class MainLoop(threading.Thread):
             # Get the next job from the queue. This blocks until a task
             # is available or until self.collection.stop() is called.
             job = next(self.collection)
-            if len(self.collection) <= 0:
-                self.queue_empty_event()
             if job is None:
                 break  # self.collection.stop() was called.
 

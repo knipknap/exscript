@@ -181,6 +181,25 @@ class WorkQueueTest(unittest.TestCase):
             with self.subTest(enqueue=enqueue):
                 self.assertJobHasItsIdWhenItStarts(enqueue, add)
 
+    def testQueueEmptyEvent(self):
+        # Emitted when the last job has ended, not when the queue stops.
+        self.addCleanup(self.wq.destroy)
+        lengths = []
+        jobs = []
+        self.wq.queue_empty_event.connect(lambda: lengths.append(self.wq.get_length()))
+        self.wq.job_init_event.connect(jobs.append)
+        self.wq.pause()
+        for _ in range(3):
+            self.wq.enqueue(nop)
+        self.wq.set_max_threads(3)
+        self.wq.unpause()
+        self.wq.wait_until_done()
+        for job in jobs:
+            job.join()  # its thread removes the job and emits the event
+        self.assertEqual(lengths, [0])
+        self.wq.shutdown(True)
+        self.assertEqual(lengths, [0])
+
     def testPause(self):
         pass  # See testEnqueue()
 
