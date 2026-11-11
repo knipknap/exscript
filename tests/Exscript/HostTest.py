@@ -1,3 +1,5 @@
+import copy
+import re
 import unittest
 
 from util.urlTest import urls
@@ -65,6 +67,25 @@ class HostTest(unittest.TestCase):
             self.assertEqual(host.get_name(), name)
             self.assertEqual(host.get_address(), name)
 
+    def testInvalidUri(self):
+        for uri in 'ssh://router:abc', 'ssh://[::1':
+            with self.assertRaisesRegex(
+                ValueError, re.escape('Hostname parse error: ' + repr(uri))
+            ):
+                Host(uri)
+
+    def testCopy(self):
+        # The copy gets the URI, i.e. all but the options and the variables
+        # that are no strings, and the name.
+        host = Host('telnet://admin:secret@10.0.0.1:2323?vlan=10')
+        host.set_name('router1')
+        clone = copy.copy(host)
+        self.assertEqual(clone.get_name(), 'router1')
+        self.assertEqual(clone.get_uri(), host.get_uri())
+        self.assertEqual((clone.get_protocol(), clone.get_tcp_port()), ('telnet', 2323))
+        self.assertEqual(clone.get_account().get_password(), 'secret')
+        self.assertEqual(clone.get('vlan'), ['10'])
+
     def testGetAddress(self):
         self.assertEqual(self.host.get_address(), 'localhost')
         # Additional tests are in testSetAddress().
@@ -98,6 +119,8 @@ class HostTest(unittest.TestCase):
         self.host.set_option('verify_fingerprint', True)
         self.assertEqual(self.host.get_option('verify_fingerprint'), True)
         self.assertEqual(self.host.get_options(), {'verify_fingerprint': True})
+        self.host.set_option('timeout', 60)
+        self.assertEqual(self.host.get_options(), {'verify_fingerprint': True, 'timeout': 60})
 
     def testGetOption(self):
         pass  # Tested in testSetOption().
@@ -171,6 +194,13 @@ class HostTest(unittest.TestCase):
         self.assertEqual(self.host.get('test2'), None)
         self.assertEqual(self.host.get('test', 1), 3)
         self.assertEqual(self.host.get('test2', 1), 1)
+
+    def testWithoutVariables(self):
+        host = Host('router1')
+        self.assertFalse(host.has_key('vlan'))
+        self.assertEqual(host.get('vlan', 10), 10)
+        host.set_default('vlan', 20)
+        self.assertEqual(host.get('vlan', 10), 20)
 
 
 def suite():
