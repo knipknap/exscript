@@ -113,6 +113,30 @@ class OsGuesserTest(unittest.TestCase):
         )
         self.assertEqual(osg.get('os'), 'junos')
 
+    def testCheckNetconfCapabilitiesOfNxos(self):
+        # The device model of NX-OS 10.4(2)F, with the deviations of 9.x, and alone.
+        base = ['urn:ietf:params:netconf:base:1.0', 'urn:ietf:params:netconf:base:1.1']
+        device = 'http://cisco.com/ns/yang/cisco-nx-os-device'
+        for capability in (
+            device + '?revision=2023-12-13&module=Cisco-NX-OS-device',
+            device + '?revision=2018-07-17&module=Cisco-NX-OS-device'
+            '&deviations=Cisco-NX-OS-device-deviations',
+            device,
+        ):
+            osg = OsGuesser()
+            osg.check_netconf_capabilities([*base, capability])
+            self.assertEqual(osg.get('os'), 'nxos', capability)
+        # The models of IOS XE are no sign.
+        osg = OsGuesser()
+        osg.check_netconf_capabilities(
+            [
+                *base,
+                'http://cisco.com/ns/yang/Cisco-IOS-XE-native'
+                '?module=Cisco-IOS-XE-native&revision=2019-11-01',
+            ]
+        )
+        self.assertEqual(osg.get('os'), 'unknown')
+
     def testSetWithoutValue(self):
         self.sa.set('os', 'ios', 50)
         self.sa.set('os', None, 100)  # ignored

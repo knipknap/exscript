@@ -429,6 +429,12 @@ development versions; "before" refers to them.
   one mode in parentheses, e.g. `switch(maint-mode)(config)# ` in maintenance mode or
   `switch(boot)(config)# ` in the boot image. Before, a command that entered such a
   mode waited for the prompt until the timeout.
+- **NX-OS Over NETCONF:** A NETCONF session with NX-OS is guessed as `nxos` by the
+  capability of its device model, `http://cisco.com/ns/yang/cisco-nx-os-device`, as
+  sessions with IOS XR and Junos are guessed by theirs. Before, the guess was
+  `unknown`. The driver keeps ncclient's default device handler: the `nexus` handler
+  replaces the base capability of RFC 6241 in the hello of the client with the one of
+  the old XML agent, which a server may reject.
 - **NX-OS Invalid Commands:** The `nxos` driver recognizes the error message
   `% Invalid command at '^' marker.` of NX-OS, so `execute()` raises an
   `InvalidCommandException` for such a command. Before, it returned the response as

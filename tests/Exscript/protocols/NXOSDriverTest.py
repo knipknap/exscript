@@ -4,13 +4,32 @@ Tests of the nxos driver with an emulated NX-OS switch.
 
 import unittest
 
+from lxml import etree
+
 from Exscript import Account
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy
 from Exscript.protocols.drivers import driver_map
 from Exscript.protocols.exception import InvalidCommandException
+from Exscript.protocols.netconf import Netconf
 
 from .ExpectTest import connect
+from .NetconfTest import NS, NetconfServer
+
+# The capabilities in the hello of NX-OS 10.4(2)F, escaped for XML.
+NXOS_CAPABILITIES = (
+    'urn:ietf:params:netconf:base:1.0',
+    'urn:ietf:params:netconf:base:1.1',
+    'urn:ietf:params:netconf:capability:writable-running:1.0',
+    'urn:ietf:params:netconf:capability:rollback-on-error:1.0',
+    'urn:ietf:params:netconf:capability:candidate:1.0',
+    'urn:ietf:params:netconf:capability:validate:1.1',
+    'urn:ietf:params:netconf:capability:confirmed-commit:1.1',
+    'urn:ietf:params:netconf:capability:notification:1.0',
+    'urn:ietf:params:netconf:capability:interleave:1.0',
+    'urn:ietf:params:netconf:capability:with-defaults:1.0?basic-mode=report-all',
+    'http://cisco.com/ns/yang/cisco-nx-os-device?revision=2023-12-13&amp;module=Cisco-NX-OS-device',
+)
 
 
 def nxos_device(user_prompt='switch login: '):
@@ -129,10 +148,47 @@ class ErrorTest(unittest.TestCase):
                 self.assertEqual(self.conn.get_response(), output)
 
 
+class NetconfSessionTest(unittest.TestCase):
+    """NETCONF sessions with a server that sends the hello of NX-OS."""
+
+    def login(self, driver=None):
+        self.server = NetconfServer(self, capabilities=NXOS_CAPABILITIES)
+        conn = Netconf(
+            timeout=10,
+            connect_rate_limit=0,
+            verify_fingerprint=False,
+            preferred_authentications=['password'],
+            driver=driver,
+        )
+        self.addCleanup(conn.close, force=True)
+        conn.connect('127.0.0.1', self.server.port)
+        conn.login(Account('admin', 'secret', needs_lock=False))
+        return conn
+
+    def testGuess(self):
+        conn = self.login()
+        self.assertEqual(conn.guess_os(), 'nxos')
+        self.assertEqual(conn.get_driver().name, 'nxos')
+
+    def testHelloOfTheClient(self):
+        # The driver keeps ncclient's default handler; the nexus handler would replace
+        # the base capability of RFC 6241 with the one of the old XML agent.
+        self.login(driver='nxos')
+        self.assertTrue(self.server.hello_received.wait(5))
+        hello = etree.fromstring(self.server.client_hello)
+        capabilities = [element.text for element in hello.iter(f'{{{NS}}}capability')]
+        self.assertIn('urn:ietf:params:netconf:base:1.0', capabilities)
+        self.assertNotIn('urn:ietf:params:xml:ns:netconf:base:1.0', capabilities)
+
+
 def suite():
     loader = unittest.TestLoader()
     return unittest.TestSuite(
-        [loader.loadTestsFromTestCase(LoginTest), loader.loadTestsFromTestCase(ErrorTest)]
+        [
+            loader.loadTestsFromTestCase(LoginTest),
+            loader.loadTestsFromTestCase(ErrorTest),
+            loader.loadTestsFromTestCase(NetconfSessionTest),
+        ]
     )
 
 

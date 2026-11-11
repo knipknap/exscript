@@ -60,6 +60,9 @@ _error_re = [
     # config allowed." or "Error: AAA authorization failed ...".
     re.compile(r'^(?:ERROR|Error): '),
 ]
+# The capability of the device model, with or without parameters, e.g.
+# http://cisco.com/ns/yang/cisco-nx-os-device?revision=2023-12-13&module=...
+_netconf_caps_re = [re.compile(r'http://cisco\.com/ns/yang/cisco-nx-os-device(?![\w-])')]
 
 
 class NXOSDriver(Driver):
@@ -73,16 +76,22 @@ class NXOSDriver(Driver):
         """
         Constructor. Sets the patterns of the user name prompts
         "<hostname> login:" (also without the hostname) and "Username:", the
-        password prompts, the command prompt and the error messages, such as
-        "%Error", "Invalid input", the parser errors that end with
-        "at '^' marker.", "% Permission denied for the role", and lines that
-        start with "ERROR: " or "Error: ".
+        password prompts, the command prompt, the NETCONF capability of the
+        device model, and the error messages, such as "%Error",
+        "Invalid input", the parser errors that end with "at '^' marker.",
+        "% Permission denied for the role", and lines that start with
+        "ERROR: " or "Error: ".
         """
         Driver.__init__(self, 'nxos')
         self.user_re = _user_re
         self.password_re = _password_re
         self.prompt_re = _prompt_re
         self.error_re = _error_re
+        self.netconf_capabilities_re = _netconf_caps_re
+        # No netconf_device_params={'name': 'nexus'}: ncclient's nexus handler
+        # replaces the base capability "urn:ietf:params:netconf:base:1.0" in
+        # the hello of the client with "urn:ietf:params:xml:ns:netconf:base:1.0"
+        # of the old XML agent, which a server of RFC 6241 may reject.
 
     def check_head_for_os(self, string: str) -> int:
         """

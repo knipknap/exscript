@@ -116,12 +116,14 @@ for devices that you trust.
 Drivers
 -------
 
-Exscript recognizes IOS XR and Junos devices by the capabilities in their
-``<hello>`` (:doc:`drivers`). The driver provides the patterns that detect
+Exscript recognizes IOS XR, Junos and NX-OS devices by the capabilities in
+their ``<hello>`` (:doc:`drivers`). The driver provides the patterns that detect
 the end of a reply and errors in it, and the ncclient device handler: its
 ``netconf_device_params`` attribute is passed to ncclient's
 ``make_device_handler()``. The built-in drivers use ncclient's default
-handler. Because the device handler is chosen when the session starts,
+handler; for NX-OS, ncclient's ``nexus`` handler would replace the base
+capability of RFC 6241 in the ``<hello>`` of the client with the one of the
+old XML agent. Because the device handler is chosen when the session starts,
 before the capabilities are known, pass a driver that sets
 ``netconf_device_params`` with ``driver=``.
 
