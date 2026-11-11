@@ -617,6 +617,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+cli = [
+    { name = "rich" },
+]
 otel = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-instrumentation" },
@@ -630,6 +633,7 @@ dev = [
     { name = "opentelemetry-sdk" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "rich" },
     { name = "types-lxml" },
     { name = "types-paramiko" },
 ]
@@ -668,8 +672,9 @@ requires-dist = [
     { name = "opentelemetry-instrumentation", marker = "extra == 'otel'", specifier = ">=0.48b0" },
     { name = "paramiko", specifier = ">=3.4,<6" },
     { name = "pycryptodomex" },
+    { name = "rich", marker = "extra == 'cli'", specifier = ">=13" },
 ]
-provides-extras = ["otel"]
+provides-extras = ["cli", "otel"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -679,6 +684,7 @@ dev = [
     { name = "opentelemetry-sdk", specifier = ">=1.27" },
     { name = "pytest", specifier = ">=9.2" },
     { name = "pytest-cov", specifier = ">=7.1" },
+    { name = "rich", specifier = ">=15.0.0" },
     { name = "types-lxml", specifier = ">=2026.2" },
     { name = "types-paramiko", specifier = ">=5.1" },
 ]
@@ -1695,6 +1701,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ac/c3/e2a2b89f2d3e2179abd6d00ebd70bff6273f37fb3e0cc209f48b39d00cbf/requests-2.34.2.tar.gz", hash = "sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed", size = 142856, upload-time = "2026-05-14T19:25:27.735Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl", hash = "sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0", size = 73075, upload-time = "2026-05-14T19:25:26.443Z" },
+]
+
+[[package]]
+name = "rich"
+version = "15.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "markdown-it-py" },
+    { name = "pygments" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz", hash = "sha256:edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36", size = 230680, upload-time = "2026-04-12T08:24:00.75Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl", hash = "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb", size = 310654, upload-time = "2026-04-12T08:24:02.83Z" },
 ]
 
 [[package]]

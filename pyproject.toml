@@ -48,6 +48,9 @@ otel = [
     "opentelemetry-api>=1.27",
     "opentelemetry-instrumentation>=0.48b0",
 ]
+cli = [
+    "rich>=13",
+]
 
 [project.scripts]
 exscript = "Exscript.cli:main"
@@ -71,7 +74,11 @@ types = ["mypy>=2.4", "types-lxml>=2026.2", "types-paramiko>=5.1"]
 docs = ["sphinx>=9", "furo>=2025.12", "myst-parser>=5"]
 # Not a dependency of Exscript: CI checks that applications can run it under gevent.
 gevent = [{ include-group = "test" }, "gevent>=26"]
-dev = [{ include-group = "test" }, { include-group = "types" }]
+dev = [
+    { include-group = "test" },
+    { include-group = "types" },
+    "rich>=15.0.0",
+]
 
 [tool.hatch.version]
 source = "vcs"

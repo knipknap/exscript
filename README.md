@@ -31,6 +31,15 @@ Exscript is what you are looking for. Additionally any system that supports SSH 
 Exscript is supported by [Procedure 8](https://procedure8.com). Get in touch if you need
 anything!
 
+## Installation
+
+```shell
+pip install Exscript
+```
+
+The `cli` extra adds colors and a progress display to the command line tools
+(`pip install "Exscript[cli]"`), and the `otel` extra adds tracing with OpenTelemetry.
+
 ## Method 1: Using Exscript with Python
 
 ### Simple

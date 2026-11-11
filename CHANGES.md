@@ -35,6 +35,14 @@ marked with **BREAKING**; a migration guide will accompany the release.
   130. Before, on Linux and macOS, it ran the connections in a child process, which it
   killed on Ctrl+C before it exited with status 1; on Windows, Ctrl+C took effect only
   after the running connections ended.
+- **Colored Command Line Output (optional):** With the new `cli` extra
+  (`Exscript[cli]`), which installs rich, `exscript` and `otp` write their errors in
+  red, warnings and `Interrupted.` in yellow, and the one-time password in bold. With
+  more than one connection (`-c`) at the default verbosity, `exscript` shows a progress
+  bar with the numbers of done, all and failed hosts and the names of the running ones
+  instead of its text status bar, and a line for each host above it. Without rich,
+  when stdout or stderr is no terminal, and with `NO_COLOR`, the output stays plain
+  text as before. Only the commands use rich, not the library.
 - **NETCONF Protocol:** The new adapter `Exscript.protocols.Netconf` (scheme
   `netconf://`, port 830) sends RPCs over SSH with ncclient, and returns the replies as
   text or as lxml elements; an `<rpc-error>` raises `RPCError`. The IOS XR and Junos

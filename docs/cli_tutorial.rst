@@ -16,6 +16,11 @@ terminal; if this prints the version number, your installation is
 complete. ``python -m Exscript`` runs the tool, too, e.g. if the
 ``exscript`` command is not on your ``PATH``.
 
+With the ``cli`` extra, e.g. ``pip install "Exscript[cli]"``, the tool
+writes its errors and warnings in colors on a terminal, and shows the
+progress of the hosts that it runs in parallel. In pipes and files, and if
+the environment variable ``NO_COLOR`` is set, its output is plain text.
+
 Getting started
 ---------------
 

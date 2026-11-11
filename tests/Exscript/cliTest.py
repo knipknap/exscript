@@ -1,22 +1,45 @@
 import contextlib
 import io
 import os
+import re
 import runpy
 import signal
+import subprocess
+import sys
 import tempfile
+import textwrap
 import unittest
 from unittest import mock
 
 from Exscript import Account, Host, PrivateKey
-from Exscript.cli import _duration, _exit_on_sigint, _expand_bracket, main, otp_main
+from Exscript.cli import (
+    _create_output,
+    _duration,
+    _exit_on_sigint,
+    _expand_bracket,
+    _Output,
+    _RichOutput,
+    main,
+    otp_main,
+)
+from Exscript.interpreter.exception import FailException
 from Exscript.parselib.exception import CompileError
 from Exscript.protocols import Dummy, drivers
 from Exscript.util import template
 from Exscript.util.crypt import otp
+from Exscript.workqueue.job import Thread
+
+try:
+    from rich.console import Console
+except ImportError:  # the optional "cli" extra is not installed
+    Console = None
+
+requires_rich = unittest.skipIf(Console is None, 'requires the "cli" extra')
 
 KEYFILE = os.path.join(os.path.dirname(__file__), 'protocols', 'id_rsa')
 HELLO = '{sys.message("hello")}'
 POOL = '[account-pool]\nalice = c2VjcmV0\n'  # the password is "secret"
+RED, YELLOW, GREEN, BOLD, RESET = '\x1b[31m', '\x1b[33m', '\x1b[32m', '\x1b[1m', '\x1b[0m'
 
 LIB = '''
 def hello(scope, name):
@@ -35,6 +58,45 @@ class CliTestDriver(Driver):
     def __init__(self):
         Driver.__init__(self, 'cli_test')
 '''
+
+
+class Tty(io.StringIO):
+    """A file that claims to be a terminal."""
+
+    def isatty(self):
+        return True
+
+
+@contextlib.contextmanager
+def environ(**values):
+    """Sets the given environment variables, and removes the others that rich reads to
+    detect a terminal and its colors."""
+    with mock.patch.dict(os.environ, values):
+        names = {'NO_COLOR', 'FORCE_COLOR', 'TTY_COMPATIBLE', 'TTY_INTERACTIVE', 'TERM'}
+        for name in names - values.keys():
+            os.environ.pop(name, None)
+        yield
+
+
+def terminal():
+    """Returns a rich console that writes to a StringIO like to a terminal with 16 colors
+    and 100 columns, whatever the environment says."""
+    return Console(
+        file=io.StringIO(),
+        width=100,
+        force_terminal=True,
+        force_interactive=True,
+        color_system='standard',
+        no_color=False,
+        legacy_windows=False,
+    )
+
+
+def shown(output):
+    """Returns what a terminal shows of the given output: without the states of the
+    progress display that are erased, and without styles and other control sequences."""
+    output = re.sub(r'[^\n]*\r\x1b\[2K', '', output)
+    return re.sub(r'\x1b\[[0-9;?]*[A-Za-z]', '', output)
 
 
 class cliTest(unittest.TestCase):
@@ -81,6 +143,15 @@ class cliTest(unittest.TestCase):
         """Unregisters the driver with the given name if it is registered."""
         if name in drivers.driver_map:
             drivers.disable_driver(name)
+
+    def rich_output(self):
+        """Lets main() and otp_main() write with rich to terminals, and returns the output
+        and the files of its stdout and stderr."""
+        self.start(mock.patch.dict(os.environ, TERM='xterm'))  # not a dumb terminal
+        stdout, stderr = terminal(), terminal()
+        output = _RichOutput(stdout, stderr)
+        self.start(mock.patch('Exscript.cli._create_output', return_value=output))
+        return output, stdout.file, stderr.file
 
     def testTemplateFile(self):
         path = self.write('test.exscript', '{sys.message(__filename__)}\n')
@@ -588,3 +659,185 @@ class cliTest(unittest.TestCase):
         self.assertEqual(cm.exception.code, 2)
         self.assertIn('first argument must be a number', stderr.getvalue())
         getpass.assert_not_called()
+
+    def testOutputOnTerminalsOnly(self):
+        rich = _RichOutput if Console else _Output
+        cases = (
+            (Tty, Tty, {}, rich),
+            (io.StringIO, io.StringIO, {}, _Output),
+            (Tty, io.StringIO, {}, _Output),
+            (io.StringIO, Tty, {}, _Output),
+            (Tty, Tty, {'NO_COLOR': '1'}, _Output),
+            (Tty, Tty, {'TERM': 'dumb'}, _Output),
+            (io.StringIO, io.StringIO, {'FORCE_COLOR': '1'}, rich),  # any file is a terminal
+        )
+        for stdout, stderr, variables, cls in cases:
+            with (
+                self.subTest(stdout=stdout, stderr=stderr, environ=variables),
+                environ(**variables),
+                contextlib.redirect_stdout(stdout()),
+                contextlib.redirect_stderr(stderr()),
+            ):
+                self.assertIs(type(_create_output()), cls)
+
+    def testPlainOutputWithoutRich(self):
+        # rich takes any output for a terminal, but it is not installed.
+        path = self.write('hosts.txt', '')
+        with environ(FORCE_COLOR='1'), mock.patch.dict(sys.modules, {'rich.console': None}):
+            self.assertIs(type(_create_output()), _Output)
+            code, stdout, stderr = self.run_main(
+                '-n', '-i', '-c', '2', '--hosts', path, '-e', '{fail "boom"}', 'dummy://r1'
+            )
+        self.assertEqual(code, 1)
+        self.assertEqual(stdout, f'Warning: {path} is empty.\n')
+        self.assertEqual(stderr, 'error: 1 actions failed.\n')
+
+    def testPlainOutputWithoutTerminal(self):
+        path = self.write('hosts.txt', '')
+        with environ():
+            code, stdout, stderr = self.run_main(
+                '-n', '-i', '-c', '2', '--hosts', path, '-e', '{fail "boom"}', 'dummy://r1'
+            )
+        self.assertEqual(code, 1)
+        self.assertEqual(stdout, f'Warning: {path} is empty.\n')
+        self.assertEqual(stderr, 'error: 1 actions failed.\n')
+
+    def testLibraryDoesNotImportRich(self):
+        # Applications that use the library do not need rich; only the commands use it.
+        script = textwrap.dedent('''
+            import importlib, pkgutil, sys
+            import Exscript
+            for module in pkgutil.walk_packages(Exscript.__path__, 'Exscript.'):
+                if module.name not in ('Exscript.cli', 'Exscript.__main__'):
+                    importlib.import_module(module.name)
+            print(sorted(name for name in sys.modules if name.split('.')[0] == 'rich'))
+        ''')
+        proc = subprocess.run(  # noqa: S603 - runs Python with a fixed script
+            [sys.executable, '-c', script], capture_output=True, encoding='utf-8', timeout=60
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(proc.stdout, '[]\n')
+
+    @requires_rich
+    def testRichMessages(self):
+        output, stdout, stderr = self.rich_output()
+        hosts = self.write('hosts.txt', '')
+        pool = self.write('pool.cfg', '[account-pool]\n')
+        args = '--hosts', hosts, '--account-pool', pool, '-e', '{fail "boom"}', 'dummy://r1'
+        code, out, err = self.run_main('-n', '-i', *args)
+        self.assertEqual(code, 1)
+        self.assertEqual((out, err), ('', ''))
+        self.assertEqual(
+            stdout.getvalue(),
+            f'{YELLOW}Warning: {hosts} is empty.{RESET}\n'
+            f'{YELLOW}WARNING: No accounts found in account pool file ({pool})!{RESET}\n',
+        )
+        # One connection: no progress display, and the errors of the queue are red, too.
+        self.assertEqual(
+            stderr.getvalue(),
+            f'{RED}r1 error: boom{RESET}\n'
+            f'{RED}r1 finally failed.{RESET}\n'
+            f'{RED}error: 1 actions failed.{RESET}\n',
+        )
+
+    @requires_rich
+    def testRichDriverError(self):
+        output, stdout, stderr = self.rich_output()
+        path = self.write('broken.py', 'x = \n')
+        with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SyntaxError):
+            main(['-n', '-i', '--load-driver', path, '-e', HELLO, 'dummy://r1'])
+        self.assertEqual(stderr.getvalue(), f'{RED}Error in driver {path}{RESET}\n')
+
+    @requires_rich
+    def testRichProgress(self):
+        output, stdout, stderr = self.rich_output()
+        script = '{sys.message(__hostname__)}{fail "boom" if __hostname__ is "r2"}'
+        code, out, err = self.run_main(
+            '-n', '-i', '-c', '2', '-e', script, 'dummy://r1', 'dummy://r2'
+        )
+        self.assertEqual(code, 1)
+        self.assertEqual((out, err, stdout.getvalue()), ('', '', ''))
+        # Above the display, the output of the template and a line for each host; the
+        # connections run in parallel, so in any order.
+        lines = [line.rstrip() for line in shown(stderr.getvalue()).splitlines()]
+        expected = ['r1', 'r1 succeeded.', 'r2', 'r2 error: boom', 'r2 finally failed.']
+        self.assertCountEqual(lines[:-2], expected)
+        self.assertEqual(lines[-2:], ['━' * 40 + ' 2/2 hosts 1 failed', 'error: 1 actions failed.'])
+        self.assertIn(f'{GREEN}r1 succeeded.{RESET}\n', stderr.getvalue())
+        self.assertIn(f'{RED}r2 finally failed.{RESET}\n', stderr.getvalue())
+
+    @requires_rich
+    def testRichProgressShowsRunningJobs(self):
+        # The events of the queue as two jobs run: r1 succeeds, r2 fails twice.
+        output, stdout, stderr = self.rich_output()
+        queue = output.queue(domain='', host_driver=None, verbose=1, max_threads=2)
+        self.addCleanup(queue.destroy)
+        events = queue.workqueue
+        r1, r2 = Thread(None, None, 'r1', {}), Thread(None, None, 'r2', {})  # attempts of jobs
+        error = FailException, FailException('boom'), ''
+        queue.total = 2
+
+        def display():
+            """Returns the words of the display after the bar."""
+            return shown(stderr.getvalue()).rsplit('\n', 1)[-1].split()[1:]
+
+        with output.progress():
+            self.assertEqual(display(), ['0/2', 'hosts'])
+            events.job_started_event(r1)
+            events.job_started_event(r2)
+            self.assertEqual(display(), ['0/2', 'hosts', 'r1,', 'r2'])
+            events.job_succeeded_event(r1)
+            self.assertEqual(display(), ['1/2', 'hosts', 'r2'])
+            events.job_error_event(r2, error)
+            self.assertEqual(display(), ['1/2', 'hosts'])
+            events.job_started_event(r2)
+            self.assertEqual(display(), ['1/2', 'hosts', 'r2'])
+            events.job_error_event(r2, error)
+            events.job_aborted_event(r2)
+            self.assertEqual(display(), ['2/2', 'hosts', '1', 'failed'])
+        lines = [line.rstrip() for line in shown(stderr.getvalue()).splitlines()]
+        expected = ['r1 succeeded.', 'r2 error: boom', 'r2 error: boom', 'r2 finally failed.']
+        self.assertEqual(lines, [*expected, '━' * 40 + ' 2/2 hosts 1 failed'])
+        # The styles of the lines above stay out of the display, which replaces the status bar.
+        self.assertNotIn(f'{GREEN}hosts', stderr.getvalue())
+        self.assertNotIn(f'{RED}hosts', stderr.getvalue())
+        self.assertIs(queue.channel_map['status_bar'], queue.devnull)
+
+    @requires_rich
+    def testRichDebugOutputWithoutProgress(self):
+        # From verbosity 2 on, the queue logs debug messages, so it keeps its status bar.
+        output, stdout, stderr = self.rich_output()
+        args = '-n', '-i', '-c', '2', '-v', '2', '-e', '{fail "boom"}', 'dummy://r1'
+        code, out, err = self.run_main(*args)
+        self.assertEqual(code, 1)
+        self.assertNotIn('━', stderr.getvalue())
+        self.assertTrue(stderr.getvalue().startswith(f'{RED}r1 error: boom{RESET}\n'))
+        self.assertTrue(stderr.getvalue().endswith(f'{RED}error: 1 actions failed.{RESET}\n'))
+
+    @requires_rich
+    def testRichInterrupted(self):
+        # Without a progress display, e.g. with one connection.
+        output, stdout, stderr = self.rich_output()
+        with mock.patch('os._exit') as exit:
+            _exit_on_sigint(signal.SIGINT, None, output=output)
+        exit.assert_called_once_with(130)
+        self.assertEqual(stderr.getvalue(), f'{YELLOW}Interrupted.{RESET}\n')
+
+        # The display stops, shows the cursor again, and keeps its last state.
+        output, stdout, stderr = self.rich_output()
+        queue = output.queue(domain='', host_driver=None, verbose=1, max_threads=2)
+        self.addCleanup(queue.destroy)
+        with output.progress(), mock.patch('os._exit') as exit:
+            _exit_on_sigint(signal.SIGINT, None, output=output)
+        exit.assert_called_once_with(130)
+        self.assertTrue(stderr.getvalue().endswith(f'\x1b[?25h{YELLOW}Interrupted.{RESET}\n'))
+        self.assertEqual(
+            shown(stderr.getvalue()).split(), ['━' * 40, '0/0', 'hosts', 'Interrupted.']
+        )
+
+    @requires_rich
+    def testRichOtp(self):
+        output, stdout, stderr = self.rich_output()
+        with mock.patch('getpass.getpass', return_value='password'):
+            self.assertEqual(otp_main(['9999', 'abc123']), 0)
+        self.assertEqual(stdout.getvalue(), f'{BOLD}ACTA AMMO CAR WEB BIN YAP{RESET}\n')

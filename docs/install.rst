@@ -22,6 +22,11 @@ or, in a project managed with uv::
 To trace sessions with OpenTelemetry, install the ``otel`` extra, e.g.
 ``pip install "Exscript[otel]"``.
 
+For colored messages and a progress display in the command line tools
+``exscript`` and ``otp``, install the ``cli`` extra, which adds rich, e.g.
+``pip install "Exscript[cli]"``, or ``uv tool install "Exscript[cli]"`` for
+the commands alone. The library itself does not need it.
+
 Installing from GitHub
 ----------------------
 

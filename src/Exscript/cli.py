@@ -27,10 +27,17 @@ The package installs both as commands, and ``python -m Exscript`` runs
 ``exscript``, too. ``exscript`` runs a template on hosts; see the
 :doc:`/cli_tutorial` and ``exscript --help``. ``otp`` asks for a password,
 and prints the S/Key one-time password for a sequence number and a salt.
+
+With rich, which the extra ``cli`` installs (``pip install "Exscript[cli]"``),
+both write their messages in colors if stdout and stderr are terminals, and
+with more than one connection at the default verbosity, ``exscript`` shows a
+progress display instead of its text status bar. Otherwise, or if the
+environment variable NO_COLOR is set, the output is plain text.
 """
 
 import argparse
 import ast
+import contextlib
 import getpass
 import importlib.util
 import os
@@ -39,9 +46,10 @@ import signal
 import sys
 import time
 from collections.abc import Sequence
+from functools import partial
 from pathlib import Path
 from types import FrameType
-from typing import NoReturn
+from typing import TYPE_CHECKING, NoReturn
 
 import Exscript.protocols.drivers
 from Exscript import Account, Host, PrivateKey, Queue, __version__
@@ -60,6 +68,9 @@ from Exscript.util.file import (
 from Exscript.util.interact import get_login
 from Exscript.util.log import log_to_file
 from Exscript.workqueue.job import Thread
+
+if TYPE_CHECKING:
+    from rich.console import Console
 
 _bracket_expression = r"\{([^\]]*)\}"
 _define_expression = rf"^\S+=(?:\S+|{_bracket_expression})$"
@@ -145,17 +156,304 @@ def _expand_host_variables(host: Host) -> None:
         host.set(key, value)
 
 
-def _exit_on_sigint(signum: int, frame: FrameType | None) -> NoReturn:
+# The styles of the messages on a terminal, see _RichOutput.
+_ERROR = 'red'
+_WARNING = 'yellow'
+_SUCCESS = 'green'
+
+
+def _print(console: 'Console', text: str, style: str, end: str = '\n') -> None:
+    """
+    Prints the given text as it is in the given style on the given rich
+    console: without markup, highlighting, emoji codes and line wrapping.
+    """
+    from rich.text import Text
+
+    # Styles the text only; the style argument of print() also styles the
+    # progress display, which the console prints after the text.
+    console.print(Text(text, style=style), end=end, soft_wrap=True)
+
+
+class _Output:
+    """
+    The output of the commands as plain text: where rich is not installed or
+    cannot show colors, or NO_COLOR is set; see :func:`_create_output`.
+    """
+
+    def warning(self, text: str) -> None:
+        """
+        Writes the given warning to stdout.
+        """
+        print(text)
+
+    def error(self, text: str) -> None:
+        """
+        Writes the given error to stderr.
+        """
+        print(text, file=sys.stderr)
+
+    def interrupted(self) -> None:
+        """
+        Writes "Interrupted." to stderr, after Ctrl+C.
+        """
+        sys.stderr.write('Interrupted.\n')
+        sys.stderr.flush()
+
+    def password(self, text: str) -> None:
+        """
+        Writes the given one-time password to stdout.
+        """
+        print(text)
+
+    def queue(self, domain: str, host_driver: str | None, verbose: int, max_threads: int) -> Queue:
+        """
+        Returns a new queue with the given options, see :class:`Queue`.
+        """
+        return Queue(
+            domain=domain, host_driver=host_driver, verbose=verbose, max_threads=max_threads
+        )
+
+    def progress(self) -> contextlib.AbstractContextManager[object]:
+        """
+        Returns the context in which the queue of :meth:`queue` runs its jobs.
+        """
+        return contextlib.nullcontext()
+
+
+class _ErrorWriter:
+    """
+    The error channel of a queue on a rich console: prints what the queue
+    writes to it in the style of errors, above the progress display if it
+    is shown.
+    """
+
+    def __init__(self, console: 'Console') -> None:
+        """
+        Constructor.
+        """
+        self._console = console
+
+    def write(self, text: str) -> int:
+        """
+        Prints the given text, and returns its length.
+        """
+        _print(self._console, text, _ERROR, end='')
+        return len(text)
+
+    def flush(self) -> None:
+        """
+        Does nothing; write() prints the text at once.
+        """
+
+
+class _Progress:
+    """
+    A progress display of the jobs of a queue on a rich console, instead of
+    the status bar of the queue: the number of hosts that are done, of all
+    hosts and of those that failed, and the names of the running jobs.
+    Above it, it writes a line for each host that succeeded. It is shown
+    while the context of the object lasts.
+    """
+
+    def __init__(self, console: 'Console', queue: Queue) -> None:
+        """
+        Constructor.
+
+        :param console: The console of the display.
+        :param queue: The queue, whose events update the display.
+        """
+        from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn
+        from rich.table import Column
+
+        self._console = console
+        self._queue = queue
+        self._running: dict[Thread, None] = {}  # in the order in which the jobs started
+        names = Column(no_wrap=True, overflow='ellipsis', ratio=1)
+        self._display = Progress(
+            BarColumn(),
+            MofNCompleteColumn(),
+            TextColumn('hosts'),
+            TextColumn('{task.fields[failed]}', style=_ERROR),
+            TextColumn('{task.fields[running]}', markup=False, table_column=names),
+            console=console,
+            auto_refresh=False,
+            expand=True,
+        )
+        self._task = self._display.add_task('', total=0, failed='', running='')
+        queue.workqueue.job_started_event.listen(self._on_job_started)
+        queue.workqueue.job_error_event.listen(self._on_job_ended)
+        queue.workqueue.job_succeeded_event.listen(self._on_job_succeeded)
+        queue.workqueue.job_aborted_event.listen(self._on_job_ended)
+
+    def __enter__(self) -> None:
+        """
+        Shows the display.
+        """
+        with self._queue.lock:
+            self._update()
+            self._display.start()
+
+    def __exit__(self, *exc_info: object) -> None:
+        """
+        Shows the final numbers, and stops the display.
+        """
+        with self._queue.lock:
+            self._running.clear()
+            self._update()
+        self.stop()
+
+    def stop(self) -> None:
+        """
+        Stops the display if it is shown; its last state stays on the console.
+        """
+        if self._display.live.is_started:
+            self._display.stop()
+
+    def _update(self) -> None:
+        """
+        Shows the numbers of the queue and the names of the running jobs. The
+        caller holds the lock of the queue, under which the queue counts.
+        """
+        failed = self._queue.failed
+        self._display.update(
+            self._task,
+            total=self._queue.total,
+            completed=self._queue.completed,
+            failed=f'{failed} failed' if failed else '',
+            running=', '.join(job.name for job in self._running),
+            refresh=True,
+        )
+
+    def _on_job_started(self, job: Thread) -> None:
+        """
+        Shows the given job as running.
+        """
+        with self._queue.lock:
+            self._running[job] = None
+            self._update()
+
+    def _on_job_ended(self, job: Thread, exc_info: object = None) -> None:
+        """
+        Shows that the given job is no longer running after an attempt that
+        failed, and the number of failed hosts after its last attempt.
+        """
+        with self._queue.lock:
+            self._running.pop(job, None)
+            self._update()
+
+    def _on_job_succeeded(self, job: Thread) -> None:
+        """
+        Writes that the given job succeeded, and shows it as done.
+        """
+        with self._queue.lock:
+            self._running.pop(job, None)
+            _print(self._console, job.name + ' succeeded.', _SUCCESS)
+            self._update()
+
+
+class _RichOutput(_Output):
+    """
+    The output of the commands on terminals with rich: the messages in
+    colors, and a progress display instead of the status bar of the queue.
+    """
+
+    def __init__(self, stdout: 'Console', stderr: 'Console') -> None:
+        """
+        Constructor.
+
+        :param stdout: The console of stdout.
+        :param stderr: The console of stderr, which also shows the progress.
+        """
+        self._stdout = stdout
+        self._stderr = stderr
+        self._progress: _Progress | None = None
+
+    def warning(self, text: str) -> None:
+        """
+        Writes the given warning to stdout, in yellow.
+        """
+        _print(self._stdout, text, _WARNING)
+
+    def error(self, text: str) -> None:
+        """
+        Writes the given error to stderr, in red.
+        """
+        _print(self._stderr, text, _ERROR)
+
+    def interrupted(self) -> None:
+        """
+        Stops the progress display if it is shown, and writes "Interrupted."
+        to stderr, in yellow.
+        """
+        if self._progress is not None:
+            self._progress.stop()
+        _print(self._stderr, 'Interrupted.', _WARNING)
+
+    def password(self, text: str) -> None:
+        """
+        Writes the given one-time password to stdout, in bold.
+        """
+        _print(self._stdout, text, 'bold')
+
+    def queue(self, domain: str, host_driver: str | None, verbose: int, max_threads: int) -> Queue:
+        """
+        Returns a new queue with the given options, see :class:`Queue`, which
+        writes its errors in red. With more than one thread at verbosity 1,
+        the default, the progress display replaces its status bar.
+        """
+        # At verbosity 0, the queue writes the same as at 1 but the status bar.
+        # From 2 on, it logs debug messages, which would garble the display.
+        progress = verbose == 1 and max_threads > 1
+        queue = Queue(
+            domain=domain,
+            host_driver=host_driver,
+            verbose=0 if progress else verbose,
+            max_threads=max_threads,
+            stderr=_ErrorWriter(self._stderr),
+        )
+        if progress:
+            self._progress = _Progress(self._stderr, queue)
+        return queue
+
+    def progress(self) -> contextlib.AbstractContextManager[object]:
+        """
+        Returns the context in which the queue of :meth:`queue` runs its
+        jobs: the progress display, if the queue has one.
+        """
+        return self._progress or contextlib.nullcontext()
+
+
+def _create_output() -> _Output:
+    """
+    Returns the output of the commands: :class:`_RichOutput` if rich is
+    installed and stdout and stderr are terminals that show colors, unless
+    the environment variable NO_COLOR is set; else :class:`_Output`, as
+    plain text.
+    """
+    try:
+        from rich.console import Console
+    except ImportError:  # the optional "cli" extra is not installed
+        return _Output()
+    stdout, stderr = Console(), Console(stderr=True)
+    # No color system: no terminal, or a dumb one.
+    if stdout.no_color or stdout.color_system is None or stderr.color_system is None:
+        return _Output()
+    return _RichOutput(stdout, stderr)
+
+
+def _exit_on_sigint(
+    signum: int, frame: FrameType | None, output: _Output | None = None
+) -> NoReturn:
     """
     The handler of SIGINT (Ctrl+C) while the template runs: writes
-    "Interrupted." to stderr, and ends the process at once with exit status
-    130. A KeyboardInterrupt would end it only after the threads of the
-    running connections, which cannot be interrupted.
+    "Interrupted." to stderr through the given output, plain by default, and
+    ends the process at once with exit status 130. A KeyboardInterrupt would
+    end it only after the threads of the running connections, which cannot
+    be interrupted.
     """
     try:
         sys.stdout.flush()
-        sys.stderr.write('Interrupted.\n')
-        sys.stderr.flush()
+        (output or _Output()).interrupted()
     finally:
         os._exit(130)
 
@@ -172,7 +470,7 @@ def _join(queue: Queue) -> None:
     queue.join()
 
 
-def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
+def _run(parser: argparse.ArgumentParser, args: argparse.Namespace, output: _Output) -> int:
     """
     Runs the template on the hosts as the given command line arguments say,
     and returns the number of hosts on which it failed. Invalid arguments
@@ -182,6 +480,7 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
     :param parser: The parser of the arguments, see :func:`_create_parser`.
     :type  args: argparse.Namespace
     :param args: The parsed arguments.
+    :param output: The output of the messages and the progress.
     :rtype:  int
     :return: The number of failed actions.
     """
@@ -241,7 +540,7 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
         except OSError as e:
             parser.error(str(e))
         if not csv_hosts:
-            print(f"Warning: {args.csv_hosts} is empty.")
+            output.warning(f"Warning: {args.csv_hosts} is empty.")
         hosts += csv_hosts
 
     # If a filename containing hostnames was given, read it.
@@ -254,7 +553,7 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
         except ValueError as e:
             parser.error(str(e))
         if not txt_hosts:
-            print(f"Warning: {args.hosts} is empty.")
+            output.warning(f"Warning: {args.hosts} is empty.")
         hosts += txt_hosts
 
     # If a filename of an Exscript driver was given, import it.
@@ -270,7 +569,7 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
         except OSError as e:
             parser.error(str(e))
         except Exception:
-            sys.stderr.write(f"Error in driver {args.load_driver}\n")
+            output.error(f"Error in driver {args.load_driver}")
             raise
         for name, obj in list(driver_module.__dict__.items()):
             if Exscript.protocols.drivers.isdriver(obj):
@@ -328,7 +627,7 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
     template.debug = 0
 
     # Create Exscript.
-    queue = Queue(
+    queue = output.queue(
         domain=args.default_domain,
         host_driver=args.use_driver,
         verbose=args.verbose,
@@ -345,7 +644,7 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
     except OSError as e:
         parser.error(str(e))
     if args.account_pool and default_pool.n_accounts() == 0:
-        print(f"WARNING: No accounts found in account pool file ({args.account_pool})!")
+        output.warning(f"WARNING: No accounts found in account pool file ({args.account_pool})!")
 
     # Read username and password.
     if args.non_interactive or default_pool.n_accounts() > 0:
@@ -444,7 +743,7 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
     # Ctrl+C ends the process at once from here on, see _exit_on_sigint().
     # Not before: while getpass() reads a password, the terminal does not
     # echo, and only a KeyboardInterrupt lets getpass() turn the echo on again.
-    sigint_handler = signal.signal(signal.SIGINT, _exit_on_sigint)
+    sigint_handler = signal.signal(signal.SIGINT, partial(_exit_on_sigint, output=output))
     try:
         # Wait until the specified time.
         if args.sleep:
@@ -453,8 +752,9 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
             print("time expired, starting script.")
 
         # Run the template.
-        queue.run(hosts, function, attempts=args.retry + 1)
-        _join(queue)
+        with output.progress():
+            queue.run(hosts, function, attempts=args.retry + 1)
+            _join(queue)
     finally:
         signal.signal(signal.SIGINT, sigint_handler)
     failed = queue.failed
@@ -931,9 +1231,11 @@ def main(argv: list[str] | None = None) -> int:
         process through SystemExit, as usual with argparse.
     """
     parser = _create_parser()
-    failed = _run(parser, parser.parse_args(argv))
+    args = parser.parse_args(argv)
+    output = _create_output()
+    failed = _run(parser, args, output)
     if failed != 0:
-        print(f"error: {failed} actions failed.", file=sys.stderr)
+        output.error(f"error: {failed} actions failed.")
         return 1
     return 0
 
@@ -965,5 +1267,5 @@ def otp_main(argv: list[str] | None = None) -> int:
         parser.error('first argument must be a number')
 
     password = getpass.getpass('Password: ')
-    print(otp(password, salt, seq))
+    _create_output().password(otp(password, salt, seq))
     return 0
