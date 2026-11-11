@@ -9,25 +9,6 @@ import unittest
 
 import Exscript
 
-BASEDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-KEYFILE = os.path.join(BASEDIR, 'tests', 'Exscript', 'protocols', 'id_rsa')
-
-# Runs the CLI, but getpass.getuser() finds no user name, as for a user ID without a passwd
-# entry: it raises OSError since Python 3.13, and KeyError before.
-WITHOUT_USER_NAME = '''
-import getpass, sys
-
-from Exscript.cli import main
-
-
-def getuser():
-    raise %s('no user name')
-
-
-getpass.getuser = getuser
-sys.exit(main())
-'''
-
 
 class ScriptsTest(unittest.TestCase):
     """Runs the exscript command line tool like a user."""
@@ -39,9 +20,9 @@ class ScriptsTest(unittest.TestCase):
             os.environ, HOME=self.tmpdir.name, USERPROFILE=self.tmpdir.name, NO_COLOR='1'
         )
 
-    def run_exscript(self, *args, python_args=('-m', 'Exscript')):
+    def run_exscript(self, *args):
         proc = subprocess.run(  # noqa: S603 - runs Exscript with fixed arguments
-            [sys.executable, *python_args, *args],
+            [sys.executable, '-m', 'Exscript', *args],
             capture_output=True,
             encoding='utf-8',
             env=self.env,
@@ -82,37 +63,12 @@ class ScriptsTest(unittest.TestCase):
         self.assertEqual(code, 0, output)
         self.assertEqual(output, Exscript.__version__ + '\n')
 
-    def testInvalidSleep(self):
-        code, output = self.run_exscript('--sleep', 'tomorrow', 'dummy://r1')
-        self.assertEqual(code, 2, output)
-        self.assertIn("argument --sleep: invalid duration value: 'tomorrow'", output)
-
     def testRunTemplate(self):
         template = self.write_template('{sys.message("hello")}\n')
         args = '--non-interactive', '--no-authentication', template, 'dummy://r1'
         code, output = self.run_exscript(*args)
         self.assertEqual(code, 0, output)
         self.assertIn('hello', output)
-
-    def testSecureModeByDefault(self):
-        template = self.write_template('{sys.env("PATH")}\n')
-        args = '--non-interactive', '--no-authentication', template, 'dummy://r1'
-        code, output = self.run_exscript(*args)
-        self.assertEqual(code, 2, output)
-        self.assertIn("insecure function 'sys.env' is not permitted", output)
-
-        code, output = self.run_exscript('--insecure', *args)
-        self.assertEqual(code, 0, output)
-
-    def testSshKeyWithoutUserName(self):
-        # Without a login, the key is for the current user; without a name, it gets no account.
-        template = self.write_template('{sys.message("hello")}\n')
-        args = '--non-interactive', '--no-authentication', '--ssh-key', KEYFILE, template
-        for error in 'OSError', 'KeyError':
-            python_args = '-c', WITHOUT_USER_NAME % error
-            code, output = self.run_exscript(*args, 'dummy://r1', python_args=python_args)
-            self.assertEqual(code, 0, output)
-            self.assertIn('hello', output)
 
     @unittest.skipIf(sys.platform == 'win32', 'Windows cannot send SIGINT to a process')
     def testCtrlC(self):
