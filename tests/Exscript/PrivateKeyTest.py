@@ -1,5 +1,6 @@
 import io
 import os
+import tempfile
 import unittest
 
 import paramiko
@@ -38,6 +39,36 @@ class PrivateKeyTest(unittest.TestCase):
         self.assertEqual(self.key.get_type(), 'ecdsa')
         self.assertEqual(self.filename, self.key.get_filename())
         self.assertEqual(self.password, self.key.get_password())
+
+    def testFromFileDetectsTheType(self):
+        tmpdir = self.enterContext(tempfile.TemporaryDirectory())
+        ed25519_text = (
+            ed25519.Ed25519PrivateKey.generate()
+            .private_bytes(
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.OpenSSH,
+                serialization.BestAvailableEncryption(self.password.encode()),
+            )
+            .decode()
+        )
+        for keytype, text in (
+            ('rsa', key_text(paramiko.RSAKey(filename=KEYFILE), self.password)),
+            ('ecdsa', key_text(paramiko.ECDSAKey.generate(), self.password)),
+            ('ed25519', ed25519_text),
+        ):
+            with self.subTest(keytype=keytype):
+                filename = os.path.join(tmpdir, 'id_' + keytype)
+                with open(filename, 'w', encoding='utf-8') as fp:
+                    fp.write(text)
+                key = PrivateKey.from_file(filename, self.password)
+                self.assertEqual(key.get_type(), keytype)
+                self.assertEqual(key.get_filename(), filename)
+
+        filename = os.path.join(tmpdir, 'id_rsa.pub')
+        with open(filename, 'w', encoding='utf-8') as fp:
+            fp.write('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA admin@host\n')
+        with self.assertRaisesRegex(ValueError, 'not a recognized private key'):
+            PrivateKey.from_file(filename)
 
     def testFromString(self):
         ed25519_text = (
