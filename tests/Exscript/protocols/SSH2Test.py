@@ -19,6 +19,7 @@ from Exscript.protocols.exception import ConnectionClosedException, LoginFailure
 from Exscript.protocols.ssh2 import _prefer_key_type
 from Exscript.servers import SSHd, sshd
 
+from .listener import listen
 from .ProtocolTest import ProtocolTest
 
 keyfile = os.path.join(os.path.dirname(__file__), 'id_rsa')
@@ -69,7 +70,7 @@ class KeyServer:
         self.interface = interface
         self._transports = []
         self._closing = threading.Event()
-        self._listener = socket.create_server((HOST, 0))
+        self._listener = listen(HOST)
         self._listener.settimeout(0.1)
         self.port = self._listener.getsockname()[1]
         self._thread = threading.Thread(target=self._accept, daemon=True)

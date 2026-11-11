@@ -1,6 +1,5 @@
 import io
 import logging
-import socket
 import threading
 import unittest
 from unittest import mock
@@ -11,6 +10,7 @@ from Exscript.protocols import Telnet
 from Exscript.protocols.telnetlib import DO, IAC, NAWS, SB, SE, WILL
 from Exscript.servers import Telnetd
 
+from .listener import listen
 from .ProtocolTest import ProtocolTest
 
 
@@ -32,7 +32,7 @@ class TerminalSizeTest(unittest.TestCase):
     """The size sent with NAWS does not depend on the terminal that runs the script."""
 
     def sentSize(self, **kwargs):
-        listener = socket.create_server(('127.0.0.1', 0))
+        listener = listen()
         self.addCleanup(listener.close)
         received = bytearray()
 

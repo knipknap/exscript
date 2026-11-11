@@ -7,6 +7,8 @@ import unittest
 import unittest.mock
 import warnings
 
+from protocols.listener import listen
+
 from Exscript import Account
 from Exscript.emulators import VirtualDevice
 from Exscript.servers.server import Server
@@ -111,7 +113,7 @@ class ServerInternalsTest(unittest.TestCase):
         self.assertRaises(NotImplementedError, self.server._handle_connection, None)
 
     def testStartOnAPortInUse(self):
-        with socket.create_server(('127.0.0.1', 0)) as listener:
+        with listen() as listener:
             server = Server('127.0.0.1', listener.getsockname()[1], self.server.device)
             self.addCleanup(server.to_parent.close)
             self.addCleanup(server.to_child.close)

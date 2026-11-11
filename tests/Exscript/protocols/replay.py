@@ -25,6 +25,8 @@ from xml.sax.saxutils import quoteattr
 
 import paramiko
 
+from .listener import listen
+
 EOM = b']]>]]>'
 NETCONF_BASE_11 = b'urn:ietf:params:netconf:base:1.1'
 IAC, SB, SE = 255, 250, 240
@@ -151,7 +153,7 @@ class ReplayServer:
         self._transports = []
         self._session_threads = []
         self._host_key = paramiko.ECDSAKey.generate() if recording.protocol != 'telnet' else None
-        self._listener = socket.create_server(('127.0.0.1', 0))
+        self._listener = listen()
         self._listener.settimeout(0.1)
         self.port = self._listener.getsockname()[1]
         self._thread = threading.Thread(target=self._accept, daemon=True)

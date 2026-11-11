@@ -9,6 +9,8 @@ from hypothesis import strategies as st
 from Exscript.protocols import telnetlib
 from Exscript.protocols.telnetlib import DO, DONT, IAC, NAWS, SB, SE, TTYPE, WILL, WONT, Telnet
 
+from .listener import listen
+
 ECHO, SGA, BINARY, NOP = 1, 3, 0, 241
 
 
@@ -161,7 +163,7 @@ class telnetlibTest(unittest.TestCase):
     def testOpen(self):
         for family, address in (socket.AF_INET, '127.0.0.1'), (socket.AF_INET6, '::1'):
             try:
-                listener = socket.create_server((address, 0), family=family)
+                listener = listen(address, family)
             except OSError:
                 continue  # no IPv6 on this host
             with listener:
