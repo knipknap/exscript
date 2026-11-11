@@ -34,6 +34,13 @@ class BigIPDriverTest(unittest.TestCase):
         conn.auto_app_authorize(ACCOUNT)
         self.assertEqual(device.received, [])
 
+    def testLoginWithoutFlush(self):
+        # The prompt stays in the buffer.
+        device = Device(PROMPT)
+        conn = connect(self, device, 'bigip', prompt=False)
+        conn.login(ACCOUNT, flush=False)
+        self.assertEqual(conn.expect_prompt()[1].group(), PROMPT)
+
     def testInitTerminal(self):
         device = Device(PROMPT)
         conn = connect(self, device, 'bigip')

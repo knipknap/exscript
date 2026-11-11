@@ -105,6 +105,12 @@ NX-OS errors
     commands that NX-OS rejects with them; 2.x returned their response.
     Catch the exception where a command may fail.
 
+Login without flush
+    With the ``nxos``, ``bigip`` and ``rios`` drivers,
+    ``login(flush=False)`` leaves the prompt in the buffer, as with the
+    other drivers; 2.x consumed it. Consume it, e.g. with
+    ``expect_prompt()``, before the first command, or omit ``flush=False``.
+
 Templates
 ---------
 

@@ -466,6 +466,13 @@ development versions; "before" refers to them.
 - **`disable_driver()`:** `Exscript.protocols.drivers.disable_driver()` works; it
   raised a `TypeError` after it had removed the driver only from `driver_map`, so the
   OS guesser still chose it.
+- **BREAKING - `login(flush=False)` With `nxos`, `bigip` and `rios`:**
+  `login(flush=False)` leaves the prompt in the buffer with these drivers, as with the
+  others. Their `supports_auto_authorize()` returns `False`, as their
+  `auto_authorize()` sends nothing. Before, `login()` consumed the prompt before it
+  called their `auto_authorize()`, so that e.g. `expect_prompt()` after the login
+  waited until the timeout. To migrate, consume the prompt before the first command,
+  e.g. with `expect_prompt()`, or omit `flush=False`.
 
 #### Class `Exscript.protocols.drivers.Driver`
 

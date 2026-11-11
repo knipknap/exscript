@@ -32,6 +32,13 @@ class RIOSDriverTest(unittest.TestCase):
         conn.auto_app_authorize(ACCOUNT)
         self.assertEqual(device.received, [])
 
+    def testLoginWithoutFlush(self):
+        # The prompt stays in the buffer.
+        device = Device('amnesiac > ')
+        conn = connect(self, device, 'rios', prompt=False)
+        conn.login(ACCOUNT, flush=False)
+        self.assertEqual(conn.expect_prompt()[1].group().strip(), 'amnesiac >')
+
     def testErrors(self):
         device = Device('amnesiac # ')
         device.add_command(

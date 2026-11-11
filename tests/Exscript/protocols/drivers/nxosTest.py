@@ -78,6 +78,13 @@ class NXOSDriverTest(unittest.TestCase):
         conn.auto_app_authorize(ACCOUNT)
         self.assertEqual(device.received, ['admin', 'login-secret'])
 
+    def testLoginWithoutFlush(self):
+        # The prompt stays in the buffer.
+        device = Device('N7K-1# ', login=('Username: ', 'Password: '))
+        conn = connect(self, device, 'nxos', prompt=False)
+        conn.login(ACCOUNT, flush=False)
+        self.assertEqual(conn.expect_prompt()[1].group().strip(), 'N7K-1#')
+
     def testLoginPrompt(self):
         # The login works at each user name prompt of NX-OS, also without the host name.
         for prompt in 'switch login: ', 'login: ', ' login: ', 'Username: ':

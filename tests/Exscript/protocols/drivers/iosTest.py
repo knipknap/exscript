@@ -46,6 +46,14 @@ class IOSDriverTest(unittest.TestCase):
         self.assertEqual(device.received, ['admin', 'login-secret', 'enable', 'enable-secret'])
         self.assertTrue(conn.is_app_authorized())
 
+    def testLoginAndEnableWithoutFlush(self):
+        # The prompt after "enable" stays in the buffer.
+        device = Device('Router>', login=('Username: ', 'Password: '), enabled_prompt='Router#')
+        conn = connect(self, device, 'ios', prompt=False)
+        conn.login(ACCOUNT, flush=False)
+        self.assertEqual(conn.expect_prompt()[1].group().strip(), 'Router#')
+        self.assertEqual(device.received, ['admin', 'login-secret', 'enable', 'enable-secret'])
+
     def testInitTerminal(self):
         device = Device('Router#')
         conn = connect(self, device, 'ios')

@@ -116,6 +116,12 @@ class NXOSDriver(Driver):
         """
         conn.execute('term len 0')
 
+    def supports_auto_authorize(self) -> bool:
+        """
+        Returns False, as auto_authorize() sends nothing.
+        """
+        return False
+
     def auto_authorize(
         self,
         conn: 'Protocol',

@@ -1184,7 +1184,12 @@ class Protocol:
             if driver.supports_auto_authorize():
                 self._dbg(4, '%s supports auto-authorization.' % repr(driver))
                 self.expect_prompt()
-            self.auto_app_authorize(app_account, flush=flush)
+                self.auto_app_authorize(app_account, flush=flush)
+            else:
+                # The driver may do nothing, so the prompt is consumed here.
+                self.auto_app_authorize(app_account, flush=False)
+                if flush:
+                    self.expect_prompt()
 
     def authenticate(
         self,

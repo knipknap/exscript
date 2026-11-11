@@ -75,6 +75,12 @@ class BigIPDriver(Driver):
         """
         conn.execute('modify cli preference pager disabled')
 
+    def supports_auto_authorize(self) -> bool:
+        """
+        Returns False, as auto_authorize() sends nothing.
+        """
+        return False
+
     def auto_authorize(
         self,
         conn: 'Protocol',

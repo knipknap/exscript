@@ -242,7 +242,11 @@ class Driver:
 
     def supports_auto_authorize(self) -> bool:
         """
-        Returns whether the driver overrides auto_authorize().
+        Returns whether auto_authorize() sends a command that starts the
+        authorization, such as "enable", so that login() consumes the prompt
+        before it calls auto_authorize(). By default, this is whether the
+        driver overrides auto_authorize(); a driver whose auto_authorize()
+        sends nothing returns False.
         """
         return self.__class__.auto_authorize is not Driver.auto_authorize
 

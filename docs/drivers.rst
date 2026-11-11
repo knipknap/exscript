@@ -143,7 +143,9 @@ And it can override these methods:
 ``auto_authorize(conn, account, flush, bailout)``
     Gets the privileges that the commands need, for example with
     ``enable`` on IOS. ``login()`` calls it through
-    ``conn.auto_app_authorize()`` after the authentication.
+    ``conn.auto_app_authorize()`` after the authentication. If the devices
+    need no such command, override it with a method that does nothing, and
+    ``supports_auto_authorize()`` with one that returns ``False``.
 
 ``logout(conn)``
     Ends the session; ``close()`` calls it. The default sends ``exit``.
