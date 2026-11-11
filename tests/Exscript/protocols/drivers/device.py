@@ -30,8 +30,9 @@ class Device(VirtualDevice):
     Shows the banner, the login prompts if given, and the prompt; answers the
     commands that were added with add_command(), and others with the prompt
     only; and records the commands without their line breaks. With an
-    enabled prompt, the enable command asks for a password, and the device
-    shows the enabled prompt afterwards.
+    enabled prompt, the enable command asks for a password, unless the
+    password prompt is None, and the device shows the enabled prompt
+    afterwards.
 
     :param login: The user name prompt and the password prompt of the login.
     """
@@ -64,6 +65,9 @@ class Device(VirtualDevice):
             self.prompt = self.enabled_prompt
             return '\r\n' + self.prompt
         if command == self.enable_command and self.enabled_prompt is not None:
+            if self.enable_password_prompt is None:
+                self.prompt = self.enabled_prompt
+                return command + '\r\n' + self.prompt
             self._enabling = True
             return command + '\r\n' + self.enable_password_prompt
         return super().do(command)
