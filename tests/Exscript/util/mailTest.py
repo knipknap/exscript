@@ -217,6 +217,14 @@ class mailTest(unittest.TestCase):
         self.assertEqual(mail.get_subject(), '2 hosts failed')
         self.assertEqual(mail.get_body(), 'Hosts:\nrouter1\nrouter2')
 
+    def testFromTemplateStringEscapedPlaceholders(self):
+        from Exscript.util.mail import from_template_string
+
+        # A backslash keeps a placeholder as text, also one that names no variable.
+        tmpl = 'From: me@example.com\n\nReplace \\{hosts} and \\{1st} for {count} hosts.'
+        mail = from_template_string(tmpl, count=2)
+        self.assertEqual(mail.get_body(), 'Replace {hosts} and {1st} for 2 hosts.')
+
     def testFromTemplateStringErrors(self):
         from Exscript.util.mail import from_template_string
 

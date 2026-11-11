@@ -67,16 +67,14 @@ class _TemplateParser:
     # substitute the variable against its value.
     def _variable_sub_cb(self, match: re.Match[str]) -> str:
         """
-        Returns the value of the variable that the given placeholder names,
-        as a string; the items of a list are put on separate lines.
-        A placeholder that is escaped with a backslash is replaced by
-        ``$name``. Raises an Exception if the name is not a valid variable
-        name, or if the variable is not defined.
+        Returns the replacement of the given placeholder, see
+        from_template_string(). Raises an Exception if the name is not a
+        valid variable name, or if the variable is not defined.
         """
         escape = match.group(1)
         varname = match.group(2)
         if escape == '\\':
-            return '$' + varname
+            return '{' + varname + '}'
         if not _varname_re.match(varname):
             raise Exception('%s is not a variable name' % varname)
         value = self.tmpl_vars.get(varname)
@@ -474,6 +472,9 @@ def from_template_string(string: str, **kwargs: Any) -> Mail:
 
     Placeholders of the form ``{name}`` are replaced by the value of the
     variable with that name; the items of a list are put on separate lines.
+    A placeholder that is escaped with a backslash, ``\\{name}``, gives the
+    text ``{name}``.
+
     The variables ``date`` (the current date) and ``user`` (the name of the
     current user, or an empty string if it is unknown) are defined by
     default. A line that ends with a space is joined with the next line. The

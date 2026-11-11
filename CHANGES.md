@@ -660,6 +660,9 @@ The names below refer to functions callable from templates, not protocol methods
   line. `Mail()` without a sender, and a template without a `From:` line, raise a
   `ValueError`. Before, all of them failed with the `OSError` of `getuser()`, or with
   a `KeyError` before Python 3.13.
+- **Escaped Placeholders in Mail Templates:** In the templates of `Exscript.util.mail`,
+  a placeholder that is escaped with a backslash, `\{name}`, gives the text `{name}`.
+  Before, it became `$name`.
 - **Pseudo Protocol on Windows:** `pseudo://` URLs accept absolute Windows paths such
   as `pseudo://C:\devices\router.py`; the drive letter was taken for a port number.
 - **`Exscript.util.url.Url.from_string(None)`:** Raises a `TypeError` with the message
