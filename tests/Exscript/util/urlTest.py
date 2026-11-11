@@ -88,6 +88,24 @@ class urlTest(unittest.TestCase):
             self.assertIsInstance(result, Url)
             self.assertTrue(str(result) == expected, error)
 
+    def testPercentSignsThatEscapeNothing(self):
+        # They are kept, in the passwords and in the variables.
+        url = Url.from_string('ssh://admin:100%sure@testhost?note=50%25+of+100%')
+        self.assertEqual(url.password1, '100%sure')
+        self.assertEqual(url.vars, {'note': ['50% of 100%']})
+
+    def testVariablesWithoutValue(self):
+        url = Url.from_string('telnet://testhost?vlan=&interface=ge-0/0/1&shutdown')
+        self.assertEqual(url.vars, {'interface': ['ge-0/0/1']})
+
+    def testToStringOfSomeParts(self):
+        # Without protocol and user name, but with a password and a path.
+        url = Url()
+        url.hostname = 'testhost'
+        url.password1 = 'secret'
+        url.path = 'configs/r1.cfg'
+        self.assertEqual(str(url), ':secret@testhost/configs/r1.cfg')
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(urlTest)
