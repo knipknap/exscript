@@ -16,8 +16,13 @@ class ScriptsTest(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmpdir.cleanup)
+        # UTF-8 output also where the locale encoding is another, e.g. on Windows.
         self.env = dict(
-            os.environ, HOME=self.tmpdir.name, USERPROFILE=self.tmpdir.name, NO_COLOR='1'
+            os.environ,
+            HOME=self.tmpdir.name,
+            USERPROFILE=self.tmpdir.name,
+            NO_COLOR='1',
+            PYTHONIOENCODING='utf-8',
         )
 
     def run_exscript(self, *args):
