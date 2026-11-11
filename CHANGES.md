@@ -592,6 +592,10 @@ The names below refer to functions callable from templates, not protocol methods
 - **`exscript --version`:** Prints the version of Exscript, as in 2.6 and as the
   tutorials say. The 2.9 development versions failed with
   `exscript: error: unrecognized arguments: --version`.
+- **`exscript --hosts` and `--csv-hosts` With `~` and Variables:** Expand `~` and
+  environment variables in the name of the file, as `--account-pool` and
+  `--load-driver` do, e.g. in `--hosts '~/$SITE/hosts.txt'`. Before, they read the
+  name as given, so such a name failed with `No such file`.
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.

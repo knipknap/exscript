@@ -1,13 +1,65 @@
 import contextlib
 import io
+import os
+import tempfile
 import unittest
 from unittest import mock
 
-from Exscript.cli import _duration, _expand_bracket, otp_main
+from Exscript.cli import _duration, _expand_bracket, main, otp_main
+from Exscript.util import template
 from Exscript.util.crypt import otp
 
 
 class cliTest(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+        # main() sets up the logging of the process and the debug level of the templates.
+        for patcher in (
+            mock.patch('Exscript.cli.setupLogging'),
+            mock.patch.object(template, 'debug', 0),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def path(self, *names):
+        """Returns the path of the given file in the temporary directory."""
+        return os.path.join(self.tmpdir.name, *names)
+
+    def write(self, name, text):
+        """Writes the given text to the given file in the temporary directory."""
+        with open(self.path(name), 'w', encoding='utf-8') as fp:
+            fp.write(text)
+        return self.path(name)
+
+    def run_main(self, *args):
+        """Runs main() with the given arguments, and returns the exit status and the output."""
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            try:
+                code = main(list(args))
+            except SystemExit as e:
+                code = e.code
+        return code, stdout.getvalue(), stderr.getvalue()
+
+    def testHostFilesWithUserAndVariables(self):
+        # The shell expands neither in quotes, e.g. --hosts '~/$SITE/hosts.txt'.
+        os.mkdir(self.path('hosts'))
+        self.write(os.path.join('hosts', 'hosts.txt'), 'dummy://r1\n')
+        self.write(os.path.join('hosts', 'hosts.csv'), 'address\tgreeting\ndummy://r2\thello\n')
+        env = {'HOME': self.tmpdir.name, 'USERPROFILE': self.tmpdir.name, 'SITE': 'hosts'}
+        cases = (
+            ('--hosts', 'hosts.txt', '{sys.message("hello")}'),
+            ('--csv-hosts', 'hosts.csv', '{sys.message(greeting)}'),
+        )
+        with mock.patch.dict(os.environ, env):
+            for option, name, script in cases:
+                code, stdout, stderr = self.run_main(
+                    '-n', '-i', '-e', script, option, '~/$SITE/' + name
+                )
+                self.assertEqual(code, 0, stderr)
+                self.assertEqual(stdout, 'hello\n')
+
     def testDuration(self):
         self.assertEqual(_duration(''), 0)
         self.assertEqual(_duration('90'), 90)

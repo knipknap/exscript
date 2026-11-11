@@ -195,14 +195,14 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
 
     def mkhosts_from_file(filename: Path) -> list[Host]:
         return get_hosts_from_file(
-            args.hosts,
+            filename,
             default_protocol=args.protocol,
             default_domain=args.default_domain,
         )
 
     def mkhosts_from_csv(filename: Path) -> list[Host]:
         return get_hosts_from_csv(
-            args.csv_hosts,
+            filename,
             default_protocol=args.protocol,
             default_domain=args.default_domain,
         )
