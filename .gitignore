@@ -1,4 +1,5 @@
 .coverage
+.coverage.*
 .mypy_cache
 .tox
 .venv
