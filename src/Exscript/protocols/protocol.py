@@ -71,7 +71,7 @@ try:
     import tty
 
     _have_termios = True
-except ImportError:
+except ImportError:  # pragma: no cover - Windows has no termios
     _have_termios = False
 
 _logger = logging.getLogger(__name__)
