@@ -638,6 +638,11 @@ The names below refer to functions callable from templates, not protocol methods
   and the copies keep the default factory and the order of the keys. Before,
   `copy.deepcopy()` failed with `TypeError: cannot pickle 'odict_items' object`, and
   `pickle.dumps()` with a `PicklingError`.
+- **`Exscript.util.file.get_accounts_from_file()` With a Missing File:** Raises the
+  `OSError` of opening the file, e.g. `FileNotFoundError` for a missing file, as the
+  other readers of `Exscript.util.file` raise an `OSError`. Before, it raised
+  `configparser.NoSectionError`, because `configparser` skips the files that it cannot
+  read, so a missing file looked like a file without an `[account-pool]` section.
 - **`Exscript.util.ipv4.is_ip()` and `Exscript.util.ip.is_ip()`:** Return True only
   for a complete address. Before, they also returned True for text that starts with
   an IPv4 address, so a `Host` with a name such as `10.0.0.1.nip.io` failed with a

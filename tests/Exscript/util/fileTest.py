@@ -81,6 +81,17 @@ class fileTest(unittest.TestCase):
                 with self.assertRaisesRegex(OSError, 'No such file: ' + re.escape(filename)):
                     func(filename)
 
+    def testGetAccountsFromAFileThatCannotBeRead(self):
+        from Exscript.util.file import get_accounts_from_file
+
+        tmpdir = self.enterContext(tempfile.TemporaryDirectory())
+        filename = os.path.join(tmpdir, 'missing.cfg')
+        with self.assertRaisesRegex(FileNotFoundError, 'No such file') as cm:
+            get_accounts_from_file(filename)
+        self.assertEqual(cm.exception.filename, filename)
+        # Opening a directory fails, too: IsADirectoryError, PermissionError on Windows.
+        self.assertRaises(OSError, get_accounts_from_file, tmpdir)
+
     def testGetAccountsFromFileWithOtherSections(self):
         from Exscript.util.file import get_accounts_from_file
 

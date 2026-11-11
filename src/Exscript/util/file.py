@@ -58,7 +58,8 @@ def get_accounts_from_file(
 
         python3 -c 'import base64; print(base64.b64encode("thepassword".encode()).decode())'
 
-    Raises an Exception if a password can not be decoded.
+    Raises OSError if the file cannot be opened, e.g. FileNotFoundError if
+    it does not exist, and an Exception if a password can not be decoded.
 
     :type  filename: str|os.PathLike
     :param filename: The name of the file containing the list of accounts.
@@ -74,7 +75,8 @@ def get_accounts_from_file(
     # str keeps the case of the user names. The stub declares optionxform as
     # a method, which may not be replaced; the cast is for the type checker.
     cast(Any, parser).optionxform = str
-    parser.read(filename, encoding)
+    with open(filename, encoding=encoding) as fp:  # read() skips files it cannot open
+        parser.read_file(fp)
     password: str | bytes  # read as a string, then decoded to bytes
     for user, password in parser.items('account-pool'):
         try:
