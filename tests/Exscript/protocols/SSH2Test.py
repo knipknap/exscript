@@ -33,11 +33,20 @@ class SSH2Test(ProtocolTest):
         self.daemon = SSHd(self.hostname, self.port, self.device, key=key)
         self.daemon.dbg = 5
 
-    def createProtocol(self):
-        self.protocol = SSH2(timeout=1, debug=5, verify_fingerprint=False)
+    # Sessions that succeed do not wait for the timeout; tests of timeouts pass a short one.
+    def createProtocol(self, timeout=10):
+        self.protocol = SSH2(timeout=timeout, debug=5, verify_fingerprint=False)
 
     def testConstructor(self):
         self.assertIsInstance(self.protocol, SSH2)
+
+    def testSetTimeout(self):
+        self.createProtocol(timeout=1)  # the timeout that ProtocolTest checks
+        super().testSetTimeout()
+
+    def testAppAuthorize2(self):
+        self.createProtocol(timeout=1)  # expects a timeout
+        super().testAppAuthorize2()
 
     def testGetRemoteVersion(self):
         self.assertEqual(self.protocol.get_remote_version(), None)
@@ -111,7 +120,7 @@ class HostKeyTest(unittest.TestCase):
 
     def connect(self, conn=None, cls=SSH2, **kwargs):
         if conn is None:
-            conn = cls(timeout=1, connect_rate_limit=0, known_hosts=self.known_hosts, **kwargs)
+            conn = cls(timeout=10, connect_rate_limit=0, known_hosts=self.known_hosts, **kwargs)
             self.addCleanup(conn.close, force=True)
         conn.connect(HOST, self.server.port)
         return conn
@@ -142,7 +151,7 @@ class HostKeyTest(unittest.TestCase):
         self.known_hosts = os.path.join(home, '.ssh', 'known_hosts')
         self.writeKnownHosts((self.name, self.other_key))
         with mock.patch.dict(os.environ, {'HOME': home, 'USERPROFILE': home}):
-            conn = SSH2(timeout=1, connect_rate_limit=0)
+            conn = SSH2(timeout=10, connect_rate_limit=0)
             self.addCleanup(conn.close, force=True)
             with self.assertRaises(paramiko.BadHostKeyException):
                 self.connect(conn)
@@ -181,7 +190,7 @@ class HostKeyTest(unittest.TestCase):
             return connect((address[0], self.server.port), *args, **kwargs)
 
         with mock.patch('socket.create_connection', redirect):
-            conn = SSH2(timeout=1, connect_rate_limit=0, known_hosts=self.known_hosts)
+            conn = SSH2(timeout=10, connect_rate_limit=0, known_hosts=self.known_hosts)
             self.addCleanup(conn.close, force=True)
             conn.host_key_policy = 'auto-add'
             conn.connect(HOST, 22)
@@ -237,7 +246,7 @@ class ReconnectTest(unittest.TestCase):
 
     def handshakes(self, driver):
         server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=_PasswordOnly)
-        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, driver=driver)
+        conn = SSH2(timeout=10, connect_rate_limit=0, verify_fingerprint=False, driver=driver)
         self.addCleanup(conn.close, force=True)
         home = tempfile.TemporaryDirectory()  # no key files
         self.addCleanup(home.cleanup)
@@ -304,7 +313,7 @@ class KeyboardInteractiveTest(unittest.TestCase):
         interface = type('TwoPrompts', (_TwoPrompts,), {'answers': []})
         server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=interface)
         stdout = io.StringIO()
-        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, stdout=stdout)
+        conn = SSH2(timeout=10, connect_rate_limit=0, verify_fingerprint=False, stdout=stdout)
         self.addCleanup(conn.close, force=True)
         conn.connect(HOST, server.port)
         conn._paramiko_auth('admin', 'S3cret')
@@ -350,7 +359,7 @@ class PartialAuthenticationTest(unittest.TestCase):
         attributes = {'client_key': self.client_key, 'next_types': next_types}
         interface = type('KeyThenPassword', (_KeyThenPassword,), attributes)
         self.server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=interface)
-        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, **kwargs)
+        conn = SSH2(timeout=10, connect_rate_limit=0, verify_fingerprint=False, **kwargs)
         self.addCleanup(conn.close, force=True)
         conn.connect(HOST, self.server.port)
         return conn
@@ -413,7 +422,7 @@ class PartialAuthenticationTest(unittest.TestCase):
         # A method that succeeded partially is not tried again.
         interface = type('PasswordTwice', (_PasswordTwice,), {'passwords': []})
         server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=interface)
-        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False)
+        conn = SSH2(timeout=10, connect_rate_limit=0, verify_fingerprint=False)
         self.addCleanup(conn.close, force=True)
         conn.connect(HOST, server.port)
         with self.assertRaisesRegex(
@@ -444,7 +453,7 @@ class ConnectTest(unittest.TestCase):
             (socket.AF_INET6, socket.SOCK_STREAM, 6, '', ('::1', server.port, 0, 0)),  # refused
             (socket.AF_INET, socket.SOCK_STREAM, 6, '', (HOST, server.port)),
         ]
-        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False)
+        conn = SSH2(timeout=10, connect_rate_limit=0, verify_fingerprint=False)
         self.addCleanup(conn.close, force=True)
         with mock.patch('socket.getaddrinfo', return_value=addresses):
             conn.connect('router.example', server.port)
@@ -475,7 +484,7 @@ class TerminalSizeTest(unittest.TestCase):
     def requestedSize(self, **kwargs):
         interface = type('Shell', (_Shell,), {'sizes': []})
         server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=interface)
-        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, **kwargs)
+        conn = SSH2(timeout=10, connect_rate_limit=0, verify_fingerprint=False, **kwargs)
         self.addCleanup(conn.close, force=True)
         conn.connect(HOST, server.port)
         conn.protocol_authenticate(Account('admin', 'password', needs_lock=False))
@@ -584,7 +593,7 @@ class AuthenticationTest(unittest.TestCase):
         return self.interface.requests
 
     def client(self, **kwargs):
-        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False, **kwargs)
+        conn = SSH2(timeout=10, connect_rate_limit=0, verify_fingerprint=False, **kwargs)
         self.addCleanup(conn.close, force=True)
         conn.connect(HOST, self.server.port)
         return conn
@@ -829,7 +838,7 @@ class SessionTest(unittest.TestCase):
 
     def login(self, **kwargs):
         conn = SSH2(
-            timeout=1,
+            timeout=10,
             connect_rate_limit=0,
             verify_fingerprint=False,
             preferred_authentications=['password'],
