@@ -97,10 +97,6 @@ Debug output
     Configure logging to see them, e.g. with
     ``logging.basicConfig(level=logging.DEBUG)``.
 
-Output and log files
-    The ``stdout`` stream and the ``logfile`` of an adapter get the data as
-    received, also the ``\r`` of ``\r\n`` line breaks; 2.x removed it.
-
 ``connect()``
     Raises a ``ProtocolException`` if the adapter is connected already;
     call ``close()`` first.

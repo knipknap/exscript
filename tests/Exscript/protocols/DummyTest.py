@@ -1,3 +1,4 @@
+import io
 import os
 import re
 import tempfile
@@ -172,12 +173,34 @@ class SecretHygieneTest(unittest.TestCase):
         conn.close(force=True)
 
 
+class OutputTest(unittest.TestCase):
+    def testStdoutAndLogfileWithoutCarriageReturns(self):
+        # The stdout stream and the logfile get the received data without CR, the
+        # listeners of data_received_event get it as the device sent it.
+        tmpdir = self.enterContext(tempfile.TemporaryDirectory())
+        logfile = os.path.join(tmpdir, 'session.log')
+        stdout = io.StringIO()
+        received = []
+        conn = Dummy(device=VirtualDevice('r1', strict=False), stdout=stdout, logfile=logfile)
+        conn.data_received_event.connect(received.append)
+        conn.connect('r1')
+        conn.login(Account('admin', 'password', needs_lock=False))
+        conn.execute('ls')
+        self.assertEqual(conn.response, 'ls')
+        conn.close(force=True)
+        self.assertIn('ls\r\n', ''.join(received))
+        self.assertEqual(stdout.getvalue(), ''.join(received).replace('\r', ''))
+        with open(logfile, encoding='utf-8', newline='') as fp:
+            self.assertEqual(fp.read(), stdout.getvalue().replace('\n', os.linesep))
+
+
 def suite():
     loader = unittest.TestLoader()
     return unittest.TestSuite(
         [
             loader.loadTestsFromTestCase(DummyTest),
             loader.loadTestsFromTestCase(SecretHygieneTest),
+            loader.loadTestsFromTestCase(OutputTest),
         ]
     )
 

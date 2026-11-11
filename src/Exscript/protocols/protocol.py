@@ -577,15 +577,17 @@ class Protocol:
             self.stdout.seek(0)
         self._init()
 
-    def _receive_cb(self, data: str) -> None:
+    def _receive_cb(self, data: str, remove_cr: bool = False) -> None:
         """
         Handles data that was received from the host: writes it to stdout and
-        to the logfile, updates the OS guess and the driver, and emits
-        data_received_event.
+        to the logfile, without CR characters if remove_cr is True, updates
+        the OS guess and the driver, and emits data_received_event with the
+        data as received.
         """
+        text = data.replace('\r', '') if remove_cr else data
         with self._write_lock:
-            self._write_to_streams(data)
-            self._write_to_logs(data)
+            self._write_to_streams(text)
+            self._write_to_logs(text)
 
         # Check whether a better driver is found based on the incoming data.
         self._os_guesser.check_received_data(data, self.is_app_authenticated())

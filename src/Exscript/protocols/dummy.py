@@ -75,9 +75,10 @@ class Dummy(Protocol):
     def _say(self, string: str) -> None:
         """
         Handles the given text as if the device had sent it: passes it to
-        _receive_cb() and appends it to the buffer.
+        _receive_cb(), which writes it to stdout and the logfile without CR
+        characters, and appends it to the buffer.
         """
-        self._receive_cb(string)
+        self._receive_cb(string, remove_cr=True)
         self._buffer.append(string)
 
     def _connect(self) -> bool:

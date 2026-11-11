@@ -256,10 +256,6 @@ including those of the 2.9 development line. Breaking changes are marked with
 - **BREAKING - `connect()` While Connected:** `connect()` raises a `ProtocolException`
   if the adapter is connected already. Before, it opened another connection and left
   the first one open.
-- **BREAKING - Output and Logfile With `\r`:** The `stdout` stream and the `logfile` of
-  the protocol adapters get the data as it was received, also the `\r` of `\r\n` line
-  breaks. Before, `\r` was removed. The logs of `Exscript.util.log` and
-  `exscript --logdir` are unchanged.
 
 ### Interactive Shell
 
