@@ -660,6 +660,22 @@ class AuthenticationTest(unittest.TestCase):
                 conn.close(force=True)
             self.assertEqual([line for line in logs.output if PASSWORD in line], [])
 
+    def testParamikoLogsFromDebugLevel5(self):
+        # paramiko's own logger keeps its state, so other users of paramiko, such as the
+        # server, still log.
+        self.serve()
+        shared = logging.getLogger('paramiko.transport')
+        self.addCleanup(setattr, shared, 'disabled', shared.disabled)
+        for debug in 0, 4, 5:
+            with self.subTest(debug=debug):
+                with self.assertLogs(level=logging.DEBUG) as logs:
+                    self.login(debug=debug).close(force=True)
+                self.assertFalse(shared.disabled)
+                messages = [(record.name, record.getMessage()) for record in logs.records]
+                client = [name for name, message in messages if 'client mode' in message]
+                self.assertEqual(client, ['paramiko.transport'] if debug == 5 else [])
+                self.assertTrue(any('server mode' in message for _, message in messages))
+
     def testKeyboardInteractiveWithAnEmptyRound(self):
         # Some servers send a round without prompts first.
         rounds = [[], [('Password: ', False)]]

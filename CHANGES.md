@@ -163,6 +163,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **SSH Key Fingerprints in Debug Logs:** The keys that are tried for a login are
   logged with their SHA256 fingerprints, as `ssh-add -l` and `ssh-keygen -l` show
   them. Before, the MD5 fingerprint was logged as a Python bytes literal.
+- **paramiko's Logger Stays On:** `SSH2` and `Netconf` connections with a debug level
+  below 5 keep paramiko's messages about them out of the logs with a logger of their
+  own, `Exscript.protocols.ssh2.paramiko`, which logs nothing. Before, they turned off
+  paramiko's logger `paramiko.transport` for the whole process, so that other code that
+  uses paramiko, and connections with debug level 5, logged nothing either.
 - **SSH Banners in Another Encoding:** An authentication banner or a version string
   that is not valid in the encoding of the connection no longer fails the login; the
   invalid bytes become U+FFFD. Before, e.g. a latin-1 banner with `encoding='utf-8'`

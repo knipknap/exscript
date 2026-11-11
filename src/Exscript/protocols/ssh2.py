@@ -49,6 +49,8 @@ from .protocol import Protocol, _skey_re
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
+# paramiko's log channel for connections with a debug level below 5; it logs nothing.
+_QUIET_LOG_CHANNEL = __name__ + '.paramiko'
 _known_hosts_lock = threading.Lock()
 _READ_SIZE = 65536
 
@@ -95,6 +97,8 @@ class SSH2(Protocol):
         Constructor. Takes the keyword arguments of :class:`Protocol`. If
         preferred_authentications is empty or not given, the methods
         publickey, keyboard-interactive and password are tried, in this order.
+        From debug level 5 on, the logger paramiko.transport logs paramiko's
+        messages about the connection, too.
         """
         Protocol.__init__(self, **kwargs)
         # Module-Level
@@ -206,7 +210,9 @@ class SSH2(Protocol):
         t.banner_timeout = self.banner_timeout
         t.name = cast(str, self.host)  # connect() checks that the host is set
         if self.debug < 5:
-            t.logger.disabled = True
+            # Not paramiko's own channel, whose level would apply to all users of paramiko.
+            t.set_log_channel(_QUIET_LOG_CHANNEL)
+            t.logger.setLevel(logging.CRITICAL + 1)
         # No packet dumps (paramiko's set_hexdump()): they show passwords in clear text.
 
         # The known keys are loaded before the key exchange, so that the key is
