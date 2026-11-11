@@ -230,6 +230,7 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
     # Extract the hostnames out of the command line arguments.
     if args.execute and args.filename:
         args.host = [args.filename] + args.host
+        args.filename = None
     hosts = [mkhost(h) for h in args.host]
 
     # If a filename containing hostnames AND VARIABLES was given, read it.

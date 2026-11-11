@@ -95,6 +95,14 @@ class cliTest(unittest.TestCase):
         self.assertEqual(code, 0, stderr)
         self.assertEqual(sorted(stdout.splitlines()), ['r1', 'r2'])
 
+    def testExecuteHasNoFilename(self):
+        for args in ('-n', '-i'), ('-n', '-i', '--no-prompt'):
+            code, stdout, stderr = self.run_main(
+                *args, '-e', '{sys.message(__filename__)}', 'dummy://r1'
+            )
+            self.assertEqual(code, 0, stderr)
+            self.assertEqual(stdout, 'undefined\n')
+
     def testProtocolAndDefaultDomain(self):
         args = '-n', '-i', '-p', 'dummy', '--default-domain', 'example.com'
         code, stdout, stderr = self.run_main(*args, '-e', '{sys.message(__hostname__)}', 'r1')

@@ -602,6 +602,9 @@ The names below refer to functions callable from templates, not protocol methods
   `-i`; it never did. `-n` skips the automatic login, and unless `-i` is given, the
   command still asks for a username and password, so that the template can log in
   itself with them.
+- **`exscript -e` and `__filename__`:** With `-e`, the template variable `__filename__`
+  is `undefined`, as for other templates that are not read from a file. Before, it was
+  the first host, which `-e` takes from the place of the file name.
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.
