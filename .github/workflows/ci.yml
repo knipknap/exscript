@@ -63,6 +63,27 @@ jobs:
           uv run --frozen --python "$PYTHON" pytest --cov=Exscript
           --cov-report=term-missing:skip-covered --cov-fail-under="$COV_FAIL_UNDER"
 
+  lowest:
+    name: Lowest dependency versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      # Only the dependencies of Exscript and its extras get their lowest versions, the test
+      # tools the newest that fit. uv pip neither uses nor changes uv.lock.
+      - name: Install the lowest versions that pyproject.toml allows, on Python 3.12
+        run: |
+          uv venv --python 3.12
+          uv pip compile pyproject.toml --all-extras --resolution lowest-direct --python-version 3.12 -o lowest.txt
+          uv pip install -r lowest.txt -e . --group test
+          # The tests of the extras skip instead of failing if these imports fail.
+          uv run --no-sync python -c 'import Exscript.contrib.otel, rich.console'
+      - name: Run tests
+        run: uv run --no-sync pytest -p no:cacheprovider
+
   build:
     name: Build distributions
     runs-on: ubuntu-latest

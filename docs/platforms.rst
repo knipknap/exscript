@@ -4,7 +4,8 @@ Platforms
 Exscript runs on Linux, macOS and Windows with Python 3.12 or later. CI
 runs the tests with every supported Python version on Linux, with the
 latest one on macOS and Windows, and with the free-threaded build of
-Python 3.14.
+Python 3.14. On Python 3.12, it also runs them with the lowest versions
+of the dependencies and extras that Exscript allows.
 
 Most of Exscript works the same on every platform: for example, it reads
 and writes text files such as templates, host lists and logs as UTF-8
