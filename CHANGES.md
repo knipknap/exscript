@@ -24,8 +24,10 @@ including those of the 2.9 development line. Breaking changes are marked with
   `Any` on purpose (callbacks, options that are passed on, template variables) or comes
   from ncclient, which is not annotated. CI checks that this share does not drop.
 - **Dependencies:** `future` and `configparser`, backports for Python 2, are no longer
-  needed. paramiko 3.4 to 5.x is supported (before: 1.17 to 4.x). New: ncclient and
-  lxml 5.0 or later, for NETCONF.
+  needed. paramiko 3.5.1 to 5.x is supported (before: 1.17 to 4.x), and pycryptodomex
+  3.17 or later (before: any version). New: ncclient and lxml 5.0 or later, for
+  NETCONF. The `otel` extra needs opentelemetry-api 1.30 and
+  opentelemetry-instrumentation 0.51b0 or later.
 - **Console Commands:** The commands `exscript` and `otp` keep their names, and are now
   console entry points of the package: `Exscript.cli.main()` and `otp_main()`.
   `python -m Exscript` runs `exscript`, too. On Windows, the commands are `.exe`

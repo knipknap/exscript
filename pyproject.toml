@@ -39,14 +39,14 @@ classifiers = [
 dependencies = [
     "lxml>=5.0",  # 5.0 stopped resolving external entities by default, also in ncclient
     "ncclient>=0.7,<1",
-    "paramiko>=3.4,<6",
-    "pycryptodomex",
+    "paramiko>=3.5.1,<6",  # older versions cannot load encrypted PEM keys with current cryptography
+    "pycryptodomex>=3.17",  # the first version with wheels for Python 3.12 also on Apple Silicon
 ]
 
 [project.optional-dependencies]
 otel = [
-    "opentelemetry-api>=1.27",
-    "opentelemetry-instrumentation>=0.48b0",
+    "opentelemetry-api>=1.30",  # create_histogram() with explicit_bucket_boundaries_advisory
+    "opentelemetry-instrumentation>=0.51b0",  # the release for opentelemetry-api 1.30
 ]
 cli = [
     "rich>=13",
@@ -66,8 +66,8 @@ Changelog = "https://github.com/knipknap/exscript/blob/master/CHANGES.md"
 test = [
     "pytest>=9.2",
     "pytest-cov>=7.1",
-    "opentelemetry-sdk>=1.27",
-    "opentelemetry-instrumentation>=0.48b0",
+    "opentelemetry-sdk>=1.30",
+    "opentelemetry-instrumentation>=0.51b0",
     "hypothesis>=6.170.14",
 ]
 types = ["mypy>=2.4", "types-lxml>=2026.2", "types-paramiko>=5.1"]
