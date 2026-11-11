@@ -256,8 +256,9 @@ class Queue:
         self.stderr = stderr
         self.host_driver = host_driver
         self.exc_cb = exc_cb
-        # For the output, completed and failed; _enqueue() counts total under
-        # the lock of the pipeline.
+        # Held across each erasing, writing and redrawing of the status bar
+        # and the counting of completed and failed, which the threads of the
+        # jobs do; _enqueue() counts total under the lock of the pipeline.
         self.lock = threading.RLock()
         self.devnull = _Discard()
         self.channel_map = {'fatal_errors': self.stderr}
@@ -372,9 +373,10 @@ class Queue:
         Writes the given message and a newline to the given output channel,
         and redraws the status bar after it.
         """
-        self._del_status_bar()
-        self._write(channel, msg + '\n')
-        self._print_status_bar()
+        with self.lock:
+            self._del_status_bar()
+            self._write(channel, msg + '\n')
+            self._print_status_bar()
 
     def _dbg(self, level: int, msg: str, exc_info: bool | BaseException | None = None) -> None:
         """
@@ -397,8 +399,9 @@ class Queue:
         """
         Redraws the status bar when an attempt of a job starts.
         """
-        self._del_status_bar()
-        self._print_status_bar()
+        with self.lock:
+            self._del_status_bar()
+            self._print_status_bar()
 
     def _on_job_error(
         self,
@@ -427,9 +430,9 @@ class Queue:
         """
         with self.lock:
             self.completed += 1
-        self._del_status_bar()
-        self._write('status_bar', job.name + ' succeeded.' + '\n')
-        self._print_status_bar(exclude=job.name)
+            self._del_status_bar()
+            self._write('status_bar', job.name + ' succeeded.' + '\n')
+            self._print_status_bar(exclude=job.name)
 
     def _on_job_aborted(self, job: 'Thread') -> None:
         """
@@ -439,9 +442,9 @@ class Queue:
         with self.lock:
             self.completed += 1
             self.failed += 1
-        self._del_status_bar()
-        self._write('errors', job.name + ' finally failed.' + '\n')
-        self._print_status_bar(exclude=job.name)
+            self._del_status_bar()
+            self._write('errors', job.name + ' finally failed.' + '\n')
+            self._print_status_bar(exclude=job.name)
 
     def set_max_threads(self, n_connections: int) -> None:
         """

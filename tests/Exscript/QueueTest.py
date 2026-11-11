@@ -75,6 +75,48 @@ class Interleave:
         obj.__dict__[self.name] = value
 
 
+def erase_together(threads):
+    """
+    Returns a replacement for Queue._del_status_bar(): after its first call
+    in each of the given threads, the thread waits until all of them got
+    there, unless it holds the lock of the queue then. So without the lock,
+    all threads erase the status bar before any writes a line or draws it.
+    """
+    erase = Queue._del_status_bar
+    waiting = set(threads)
+    barrier = threading.Barrier(len(waiting), timeout=10)
+
+    def del_status_bar(queue):
+        erase(queue)
+        thread = threading.current_thread()
+        if thread in waiting:
+            waiting.discard(thread)
+            if not holds_lock(queue.lock):
+                barrier.wait()
+
+    return del_status_bar
+
+
+def screen(output):
+    """
+    Returns the lines that the given output leaves on a terminal, where a
+    backspace moves the cursor back and a character replaces the one under
+    the cursor; without the blanks at the end of the lines.
+    """
+    lines = [[]]
+    column = 0
+    for char in output:
+        if char == '\n':
+            lines.append([])
+            column = 0
+        elif char == '\b':
+            column = max(column - 1, 0)
+        else:
+            lines[-1][column : column + 1] = [char]
+            column += 1
+    return [''.join(line).rstrip() for line in lines]
+
+
 def count_calls(job, data, **kwargs):
     assert hasattr(job, 'start')
     assert 'testarg' in kwargs
@@ -582,6 +624,49 @@ class QueueTest(unittest.TestCase):
                     self.queue._print_status_bar()
                 self.assertEqual(self.out.read(), bar)
                 self.assertEqual(self.queue.status_bar_length, len(bar))
+
+    def testStatusBarOfJobsThatEndAtTheSameTime(self):
+        # Both threads erase the bar before either writes its line or draws
+        # the bar again, unless the queue holds its lock across all of it.
+        error = (ValueError, ValueError('intentional error'), 'Traceback (fake)')
+        succeeded = ('job_succeeded_event', ())
+        cases = {
+            'succeeded': ([succeeded, succeeded], ['job0 succeeded.', 'job1 succeeded.']),
+            'aborted': (
+                [('job_aborted_event', ())] * 2,
+                ['job0 finally failed.', 'job1 finally failed.'],
+            ),
+            'started': ([('job_started_event', ()), succeeded], ['job1 succeeded.']),
+            'error': (
+                [('job_error_event', (error,)), succeeded],
+                ['Traceback (fake)', 'job0 error: intentional error', 'job1 succeeded.'],
+            ),
+        }
+        jobs = [SimpleNamespace(name='job0'), SimpleNamespace(name='job1')]
+        for case, (events, lines) in cases.items():
+            with self.subTest(case=case):
+                self.queue.destroy()
+                output = Log()  # stdout and stderr, like on a terminal
+                self.queue = Queue(verbose=1, max_threads=2, stdout=output, stderr=output)
+                self.queue.total = 2
+                workqueue = self.queue.workqueue
+                threads = [
+                    threading.Thread(target=getattr(workqueue, event), args=(job, *args))
+                    for job, (event, args) in zip(jobs, events)
+                ]
+                with (
+                    mock.patch.object(workqueue, 'get_running_jobs', return_value=jobs),
+                    mock.patch('Exscript.queue.get_terminal_size', return_value=(24, 80)),
+                    mock.patch.object(Queue, '_del_status_bar', erase_together(threads)),
+                ):
+                    self.queue._print_status_bar()
+                    for thread in threads:
+                        thread.start()
+                    for thread in threads:
+                        thread.join()
+                *rest, bar = screen(output.read())
+                self.assertEqual(sorted(rest), lines)
+                self.assertRegex(bar, r'^In progress: \[[\w|]+\] \d/2 \(\d+%\)$')
 
     def testForceRun(self):
         data = Value('i', 0)

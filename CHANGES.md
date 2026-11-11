@@ -683,6 +683,11 @@ The names below refer to functions callable from templates, not protocol methods
   the status bar of `Queue`, it cuts them in the middle, at most down to `...`. Before,
   on a terminal of about 30 columns or less, the cut overlapped and made the bar longer
   instead of shorter.
+- **Status Bar of Jobs That End at the Same Time:** The queue erases the status bar,
+  writes the line of a job and draws the bar again as one step, which the threads of
+  other jobs cannot interrupt. Before, jobs that started, failed or ended at the same
+  time could mix these steps: a line such as `job1 succeeded.` could follow a bar on the
+  same line, or two bars could end up on one line.
 
 ## Demos
 
