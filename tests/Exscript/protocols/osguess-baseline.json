@@ -2879,6 +2879,66 @@
    95
   ]
  },
+ "nxos.2|-|64": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.2|-|65536": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.2|SSH-2.0-Cisco-1.25|64": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.2|SSH-2.0-Cisco-1.25|65536": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.2|SSH-2.0-OpenSSH_9.6|64": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
+ "nxos.2|SSH-2.0-OpenSSH_9.6|65536": {
+  "after_auth": [
+   "nxos",
+   95
+  ],
+  "final": [
+   "nxos",
+   95
+  ]
+ },
  "one_os.1|-|64": {
   "after_auth": [
    "one_os",

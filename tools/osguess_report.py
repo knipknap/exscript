@@ -28,7 +28,7 @@ from tests.Exscript.protocols import OsGuesserCorpusTest as corpus  # noqa: E402
 from tests.Exscript.protocols import ReplayTest as replays  # noqa: E402
 from tests.Exscript.protocols.replay import Recording  # noqa: E402
 
-MIN_CORRECT = 217  # 2026-11-10; raise it when a change guesses more sessions right
+MIN_CORRECT = 221  # raise it when a change guesses more sessions right
 
 
 def banner_sessions():

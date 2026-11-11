@@ -74,12 +74,17 @@ class NXOSDriver(Driver):
         """
         Returns 95 if the data contains
         "Cisco Nexus Operating System (NX-OS) Software" or, as newer
-        versions print, "Cisco NX-OS Software", else 0.
+        versions print, "Cisco NX-OS Software", else 70 if it contains
+        "User Access Verification" and ends with the user name prompt of
+        Telnet and the console, e.g. "switch login: ", where IOS asks for
+        "Username:", else 0.
         """
         if 'Cisco Nexus Operating System (NX-OS) Software' in string:
             return 95
         if 'Cisco NX-OS Software' in string:
             return 95
+        if 'User Access Verification' in string and _login_re.search(string):
+            return 70
         return 0
 
     def init_terminal(self, conn: 'Protocol') -> None:

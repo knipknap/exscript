@@ -155,6 +155,21 @@ class SignalTest(unittest.TestCase):
         banner = 'Cisco Nexus Operating System (NX-OS) Software\r\n'
         self.assertEqual(guess(head=banner), 'nxos')
 
+    def testNxosLoginPrompt(self):
+        # IOS shows this banner, too, but asks for "Username:"; NX-OS asks so at the
+        # console and over Telnet. The guesser gets one read or many small ones.
+        head = '\r\nUser Access Verification\r\nswitch login: '
+        self.assertEqual(drivers.driver_map['nxos'].check_head_for_os(head), 70)
+        self.assertEqual(guess(head=head), 'nxos')
+        guesser = OsGuesser()
+        guesser.check_received_data(head, False)
+        self.assertEqual(guesser.get('os'), 'nxos')
+        self.assertEqual(guess(head='\r\nUser Access Verification\r\nlogin: '), 'nxos')
+        self.assertEqual(guess(head='\r\nUser Access Verification\r\n\r\nUsername: '), 'ios')
+        # A read may end after "Last login: ", e.g. of a Linux host with this banner.
+        last_login = 'User Access Verification\r\nLast login: Mon Oct 26 10:00:00 2026\r\n'
+        self.assertNotEqual(guess(head=last_login), 'nxos')
+
     def testIsamPrompt(self):
         self.assertEqual(guess(response='\r\ninfo\r\ntyp:isadmin>#'), 'isam')
         for prompt in 'router#', 'switch>', 'hostname >', 'S>* 10.0.0.0/8 is directly connected':
