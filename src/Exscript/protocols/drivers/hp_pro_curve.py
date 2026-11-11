@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 _user_re = [re.compile(r'(?:\r\n|[\r\n])Username: ?$')]
 _password_re = [re.compile(r'(?:\r\n|[\r\n])Password: ?$')]
-_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\-\w+\.:/]+[>#] ?$')]
+_prompt_re = [re.compile(r'(?:\r\n|[\r\n])[\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re = [re.compile(r'(?:invalid|incomplete|ambiguous) input:', re.I)]
 _login_fail_re = [
     re.compile(r'(?:\r\n|[\r\n])invalid password', re.I),
@@ -50,8 +50,9 @@ _clean_res_re = [
 class HPProCurveDriver(Driver):
     """
     The ``hp_pro_curve`` driver for HP ProCurve switches. Its prompt is a
-    name followed by ">" or "#"; the escape sequences around it are removed
-    before the prompt is matched.
+    name with an optional context in parentheses, followed by ">" or "#",
+    e.g. "HP-2920#" or "HP-2920(config)#"; the escape sequences around it are
+    removed before the prompt is matched.
     """
 
     def __init__(self) -> None:

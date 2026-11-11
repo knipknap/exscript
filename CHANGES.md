@@ -406,6 +406,10 @@ development versions; "before" refers to them.
   banner is now part of the test corpus.
 - **NX-OS Banners:** The `nxos` driver also recognizes the banner "Cisco NX-OS
   Software" of newer versions, e.g. nx-osv9000 (upstream issue #200).
+- **HP ProCurve Configuration Prompts:** The `hp_pro_curve` driver recognizes the
+  prompts of the configuration contexts, e.g. `HP-2920(config)# ` or
+  `HP-2920(vlan-10)# `. Before, a command that entered such a context, e.g.
+  `configure`, waited until the timeout.
 - **Login Errors of `ericsson_ban`:** A login over the `ericsson_ban` driver no longer
   fails with `AttributeError: 'str' object has no attribute 'search'`; its login
   error pattern was a string instead of a compiled pattern. A test checks the

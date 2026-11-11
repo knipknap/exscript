@@ -66,6 +66,25 @@ class HPProCurveDriverTest(unittest.TestCase):
         for line in 'Uptime 2 days', ' Status and Counters - General System Information':
             self.assertFalse(search(self.driver.prompt_re, 'show system\r\n' + line), line)
 
+    def testConfigurationContexts(self):
+        device = Device(PROMPT)
+
+        def enter(context):
+            def handler(command):
+                device.prompt = PROMPT.replace('# ', '(%s)# ' % context)
+                return ''
+
+            return handler
+
+        commands = {'configure': 'config', 'vlan 10': 'vlan-10', 'interface A1': 'eth-A1'}
+        for command, context in commands.items():
+            device.add_command(command, enter(context))
+        conn = connect(self, device, 'hp_pro_curve')
+        for command in commands:
+            index, match = conn.execute(command)
+        self.assertEqual(device.received, list(commands))
+        self.assertEqual(match.group().lstrip(), 'HP-5406zl(eth-A1)# ')
+
     def testInitTerminalPressesAKey(self):
         device = ProCurve(PROMPT)
         device.add_command('show version', VERSION)
