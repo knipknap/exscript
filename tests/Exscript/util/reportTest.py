@@ -70,6 +70,15 @@ class reportTest(unittest.TestCase):
         expect = '3 actions total (1 failed, 2 succeeded)'
         self.assertEqual(status(self.logger), expect)
 
+    def testStatusOfFailedActions(self):
+        from Exscript.util.report import status
+
+        self.assertEqual(status(self.logger), 'No actions done')
+        self.createAbortedLog()
+        self.assertEqual(status(self.logger), 'One action done (failed)')
+        self.createAbortedLog()
+        self.assertEqual(status(self.logger), '2 actions total (all failed)')
+
     def testSummarize(self):
         from Exscript.util.report import summarize
 
@@ -104,6 +113,17 @@ fake3'''.strip()
         )
         expected = expected.replace('FakeError\n', 'util.reportTest.FakeError\n')
         self.assertEqual(format(self.logger), expected)
+
+    def testFormatOptions(self):
+        from Exscript.util.report import format
+
+        self.createSucceededLog()
+        self.createAbortedLog()
+        errors = 'Failed actions:\n---------------\nfake2: FakeError'
+        successes = 'Successful actions:\n-------------------\nfake1'
+        self.assertEqual(format(self.logger, show_traceback=False), errors + '\n\n' + successes)
+        self.assertEqual(format(self.logger, show_successful=False, show_traceback=False), errors)
+        self.assertEqual(format(self.logger, show_errors=False), successes)
 
 
 def suite():
