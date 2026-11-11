@@ -409,6 +409,33 @@ class PartialAuthenticationTest(unittest.TestCase):
         with self.assertRaisesRegex(LoginFailure, 'requires one of: password'):
             conn.protocol_authenticate(account)
 
+    def testNoMethodLeftAfterAPartialSuccess(self):
+        # A method that succeeded partially is not tried again.
+        interface = type('PasswordTwice', (_PasswordTwice,), {'passwords': []})
+        server = KeyServer(self, paramiko.RSAKey(filename=keyfile), interface=interface)
+        conn = SSH2(timeout=1, connect_rate_limit=0, verify_fingerprint=False)
+        self.addCleanup(conn.close, force=True)
+        conn.connect(HOST, server.port)
+        with self.assertRaisesRegex(
+            LoginFailure,
+            r"No method to try after a partial authentication; allowed: \['password'\]",
+        ):
+            conn._paramiko_auth('admin', 'S3cret')
+        self.assertEqual(interface.passwords, ['S3cret'])
+
+
+class _PasswordTwice(paramiko.ServerInterface):
+    """Accepts each password partially, and then allows only the password method."""
+
+    passwords: list[str]
+
+    def get_allowed_auths(self, username):
+        return 'password'
+
+    def check_auth_password(self, username, password):
+        self.passwords.append(password)
+        return paramiko.AUTH_PARTIALLY_SUCCESSFUL
+
 
 class ConnectTest(unittest.TestCase):
     def testTriesAllAddresses(self):
@@ -830,6 +857,19 @@ class SessionTest(unittest.TestCase):
         select.select([conn._channel], [], [], 5)  # the output arrived, but was not read
         conn.close()
         self.assertIn('file1 file2', stdout.getvalue())
+
+    def testGracefulCloseWithPendingOutputThatIsNotValid(self):
+        # The output cannot be decoded, but the connection is closed nevertheless.
+        self.device.add_command('cat', 'Grüße')
+        conn = self.login(encoding='ascii', debug=1)
+        channel, transport = conn._channel, conn._transport
+        conn.send('cat\r')
+        select.select([channel], [], [], 5)  # the output arrived, but was not read
+        with self.assertLogs('Exscript.protocols.ssh2', logging.DEBUG) as logs:
+            conn.close()
+        self.assertNotIn('Error while closing the connection', '\n'.join(logs.output))
+        self.assertTrue(channel.closed)
+        self.assertFalse(transport.is_active())
 
 
 def suite():
