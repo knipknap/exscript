@@ -24,6 +24,7 @@
 Base class for all servers.
 """
 
+import errno
 import logging
 import select
 import socket
@@ -170,18 +171,27 @@ class Server(threading.Thread):
         Starts listening, and then the thread that accepts the connections.
         Clients can connect as soon as this returns. With port 0, the
         operating system chooses a free port; the port attribute has it then.
-        A fixed port is bound with SO_REUSEADDR, so that a restarted server
-        can take it at once.
+        If that port turns out to be in use, another one is tried. A fixed
+        port is bound with SO_REUSEADDR, so that a restarted server can take
+        it at once.
         """
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            if self.port:  # port 0 gets a free port anyway
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind((self.host, self.port))
-            sock.listen(1)
-        except OSError:
-            sock.close()
-            raise
+        # WSL forwards its ports to its Windows host, where the port that the
+        # system chose may be in use, so that listen() fails.
+        attempts = 1 if self.port else 5
+        while True:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                if self.port:  # port 0 gets a free port anyway
+                    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                sock.bind((self.host, self.port))
+                sock.listen(1)
+                break
+            except OSError as e:
+                sock.close()
+                attempts -= 1
+                if e.errno != errno.EADDRINUSE or not attempts:
+                    raise
+                self._dbg(1, 'The free port is in use, trying another one: %s' % e)
         self.socket = sock
         self.port = sock.getsockname()[1]
         self.name = '%s-%s:%s' % (self._get_server_type(), self.host, self.port)

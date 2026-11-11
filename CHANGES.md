@@ -788,3 +788,7 @@ The names below refer to functions callable from templates, not protocol methods
   returns, so clients can connect at once, and raises errors such as a port in use to
   the caller. Before, the thread bound the port a moment later. Port 0 chooses a free
   port, which the `port` attribute has after `start()`.
+- **Port 0 on WSL:** If the port that the system chooses for port 0 is in use on the
+  Windows host of WSL, to which WSL forwards its ports, `start()` of `SSHd` and
+  `Telnetd` tries another one. Before, a start there failed now and then with
+  `OSError: [Errno 98] Address already in use`.

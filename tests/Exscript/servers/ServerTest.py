@@ -1,6 +1,8 @@
+import errno
 import gc
 import re
 import socket
+import types
 import unittest
 import unittest.mock
 import warnings
@@ -139,6 +141,23 @@ class ServerInternalsTest(unittest.TestCase):
         server.join()
         restarted = self.start(server.port)
         self.assertTrue(restarted.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR))
+
+    def testFreePortInUse(self):
+        # E.g. on WSL, which forwards the port to its Windows host, where it may be in use:
+        # start() tries another free port, but not forever.
+        class InUse(socket.socket):
+            def listen(self, *args):
+                raise OSError(errno.EADDRINUSE, 'Address already in use')
+
+        module = types.SimpleNamespace(**vars(socket))
+        with unittest.mock.patch('Exscript.servers.server.socket', module):
+            module.socket = unittest.mock.Mock(side_effect=lambda *args: InUse())
+            self.assertRaises(OSError, self.start, 0)
+            self.assertGreater(module.socket.call_count, 1)
+            module.socket = unittest.mock.Mock(side_effect=[InUse(), socket.socket()])
+            server = self.start(0)
+        self.assertEqual(module.socket.call_count, 2)
+        self.assertTrue(server.is_alive())
 
 
 def suite():
