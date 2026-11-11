@@ -1,6 +1,20 @@
+import threading
 import unittest
 
 from Exscript import Account, PrivateKey
+
+
+def signal_wait(condition):
+    """Returns an event that is set when a thread waits for the given condition."""
+    waiting = threading.Event()
+    wait = condition.wait
+
+    def wait_and_signal(timeout=None):
+        waiting.set()
+        return wait(timeout)
+
+    condition.wait = wait_and_signal
+    return waiting
 
 
 class AccountTest(unittest.TestCase):
@@ -46,6 +60,34 @@ class AccountTest(unittest.TestCase):
         self.account.release()
         self.account.acquire()
         self.account.release()
+
+    def testAcquireWaitsForTheRelease(self):
+        self.account.acquire()
+        waiting = signal_wait(self.account.synclock)
+        thread = threading.Thread(target=self.account.acquire, daemon=True)
+        thread.start()
+        self.assertTrue(waiting.wait(5))
+        acquired = []
+        self.account.acquired_event.connect(acquired.append)
+        self.account.release()
+        thread.join(5)
+        self.assertFalse(thread.is_alive())
+        self.assertEqual(acquired, [self.account])
+        self.assertTrue(self.account.lock.locked())
+        self.account.release()
+
+    def testWithoutLock(self):
+        account = Account(self.user, self.password1, needs_lock=False)
+        events = []
+        account.acquired_event.connect(events.append)
+        account.released_event.connect(events.append)
+        with account:
+            self.assertFalse(account.lock.locked())
+            account.acquire()  # does not wait
+            account.release()
+        account.release()
+        self.assertFalse(account.lock.locked())
+        self.assertEqual(events, [])
 
     def testRelease(self):
         self.assertRaises(Exception, self.account.release)

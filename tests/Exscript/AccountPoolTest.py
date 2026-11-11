@@ -1,5 +1,8 @@
 import os.path
+import threading
 import unittest
+
+from AccountTest import signal_wait
 
 from Exscript import Account
 from Exscript.account import AccountPool
@@ -49,6 +52,12 @@ class AccountPoolTest(unittest.TestCase):
             account.acquire()  # the pool no longer follows the account
             account.release()
 
+    def testResetRefusesAnAccountWithoutOwner(self):
+        self.accm.add_account(self.account1)
+        self.accm.acquire_account()
+        self.assertRaisesRegex(Exception, 'should be unlocked', self.accm.reset)
+        self.assertTrue(self.accm.has_account(self.account1))
+
     def testHasAccount(self):
         self.assertEqual(self.accm.has_account(self.account1), False)
         self.accm.add_account(self.account1)
@@ -59,10 +68,12 @@ class AccountPoolTest(unittest.TestCase):
         thehash = account.__hash__()
         self.accm.add_account(account)
         self.assertEqual(self.accm.get_account_from_hash(thehash), account)
+        self.assertIsNone(self.accm.get_account_from_hash(self.account1.__hash__()))
 
     def testGetAccountFromName(self):
         self.testAddAccount()
         self.assertEqual(self.account2, self.accm.get_account_from_name(self.user2))
+        self.assertIsNone(self.accm.get_account_from_name('admin'))
 
     def testNAccounts(self):
         self.testAddAccount()
@@ -99,6 +110,70 @@ class AccountPoolTest(unittest.TestCase):
             # Release all accounts.
             for account in list(acquired.values()):
                 account.release()
+
+    def acquireInThread(self, account=None):
+        # Calls acquire_account() in a thread, and returns when it waits.
+        waiting = signal_wait(self.accm.unlock_cond)
+        result = []
+        thread = threading.Thread(
+            target=lambda: result.append(self.accm.acquire_account(account)), daemon=True
+        )
+        thread.start()
+        self.assertTrue(waiting.wait(5))
+        return thread, result
+
+    def testAcquireAccountWaitsForTheAccount(self):
+        self.accm.add_account([self.account1, self.account2])
+        self.accm.acquire_account(self.account1)
+        thread, result = self.acquireInThread(self.account1)
+        self.assertEqual(result, [])  # though account2 is free
+        self.account1.release()
+        thread.join(5)
+        self.assertEqual(result, [self.account1])
+        self.assertTrue(self.account1.lock.locked())
+        self.assertEqual(list(self.accm.unlocked_accounts), [self.account2])
+
+    def testAcquireAccountWaitsForAnyAccount(self):
+        self.accm.add_account([self.account1, self.account2])
+        self.accm.acquire_account()
+        self.accm.acquire_account()
+        thread, result = self.acquireInThread()
+        self.assertEqual(result, [])
+        self.account2.release()
+        thread.join(5)
+        self.assertEqual(result, [self.account2])
+        self.assertTrue(self.account2.lock.locked())
+
+    def testAccountAcquiredOutsideThePool(self):
+        # The pool does not lend an account that was acquired directly.
+        self.accm.add_account([self.account1, self.account2])
+        self.account1.acquire()
+        self.assertIs(self.accm.acquire_account(), self.account2)
+        self.account1.release()
+        self.assertIs(self.accm.acquire_account(), self.account1)
+
+    def testAccountOfAnOwnerReleasedDirectly(self):
+        # The account no longer belongs to the owner, so release_accounts()
+        # does not release it when someone else has acquired it since.
+        self.accm.add_account(self.account1)
+        self.accm.acquire_account(owner='job1')
+        self.account1.release()
+        self.accm.acquire_account(owner='job2')
+        self.accm.release_accounts('job1')
+        self.assertTrue(self.account1.lock.locked())
+        self.accm.release_accounts('job2')
+        self.assertFalse(self.account1.lock.locked())
+
+    def testSignalsThatDoNotMatchThePool(self):
+        # Locking an account of the pool without a signal, and unlocking it
+        # with one, or the other way around, is detected.
+        self.accm.add_account(self.account1)
+        self.account1.acquire(signal=False)
+        self.assertRaisesRegex(Exception, 'should be locked', self.account1.release)
+        self.account1.acquire()
+        self.account1.release(signal=False)
+        self.assertRaisesRegex(Exception, 'is already locked', self.account1.acquire)
+        self.account1.release(signal=False)
 
     def testReleaseAccounts(self):
         account1 = Account('foo')
