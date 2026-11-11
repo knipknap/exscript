@@ -51,7 +51,7 @@ CI also measures three kinds of coverage, each with a minimum that only goes up:
   **BREAKING**, and say how to migrate.
 - Document new functions, classes and modules with docstrings in the style of the existing
   code (`:param:`, `:type:`, `:return:`, `:rtype:`). The API reference is generated from
-  them, and pre-commit fails if the share of documented functions drops.
+  them, and pre-commit fails if a module, class or function has none.
 - Annotate new code with types; mypy checks every module strictly. Use `Any` only where a
   type is open on purpose.
 - The public API and the template language stay compatible. Please open an issue before you

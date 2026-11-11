@@ -133,10 +133,10 @@ module = "Exscript.contrib.otel"
 disallow_subclassing_any = false
 
 [tool.interrogate]
-# Docstring coverage (P8). Private functions count; other dunder methods than
-# __init__, nested functions and property setters do not. Raise fail-under as
-# docstrings are added; the goal is 100.
-fail-under = 93
+# Docstring coverage: every module, class and function has a docstring.
+# Private functions count; other dunder methods than __init__, nested
+# functions and property setters do not.
+fail-under = 100
 ignore-magic = true
 ignore-nested-functions = true
 ignore-setters = true
