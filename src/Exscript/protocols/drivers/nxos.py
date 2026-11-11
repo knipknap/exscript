@@ -39,7 +39,7 @@ _password_re = [re.compile(r'(?:(?:\r\n|[\r\n])Password: ?|last resort password:
 _prompt_re = [re.compile(r'(?:\r\n\x00?|[\r\n\x00])[\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re = [
     re.compile(r'%Error'),
-    re.compile(r'invalid input', re.I),
+    re.compile(r'invalid (?:input|command)', re.I),
     re.compile(r'(?:incomplete|ambiguous) command', re.I),
     re.compile(r'connection timed out', re.I),
     re.compile(r'[^\r\n]+ not found', re.I),
@@ -57,7 +57,7 @@ class NXOSDriver(Driver):
         """
         Constructor. Sets the patterns of the user name prompt "Username:",
         the password prompts, the command prompt and the error messages, such
-        as "%Error" and "Invalid input".
+        as "%Error", "Invalid input" and "Invalid command".
         """
         Driver.__init__(self, 'nxos')
         self.user_re = _user_re

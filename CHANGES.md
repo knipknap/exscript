@@ -406,6 +406,10 @@ development versions; "before" refers to them.
   banner is now part of the test corpus.
 - **NX-OS Banners:** The `nxos` driver also recognizes the banner "Cisco NX-OS
   Software" of newer versions, e.g. nx-osv9000 (upstream issue #200).
+- **NX-OS Invalid Commands:** The `nxos` driver recognizes the error message
+  `% Invalid command at '^' marker.` of NX-OS, so `execute()` raises an
+  `InvalidCommandException` for such a command. Before, it returned the response as
+  if the command had succeeded.
 - **HP ProCurve Configuration Prompts:** The `hp_pro_curve` driver recognizes the
   prompts of the configuration contexts, e.g. `HP-2920(config)# ` or
   `HP-2920(vlan-10)# `. Before, a command that entered such a context, e.g.

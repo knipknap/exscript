@@ -43,8 +43,9 @@ class NXOSDriverTest(unittest.TestCase):
         device = Device('N7K-1#')
         device.add_command('show vlan', '\r\n% Invalid input detected at \'^\' marker.')
         device.add_command('show ip', "\r\n% Incomplete command at '^' marker.")
+        device.add_command('shutdown', "\r\n         ^\r\n% Invalid command at '^' marker.")
         conn = connect(self, device, 'nxos')
-        for command in 'show vlan foo', 'show ip':
+        for command in 'show vlan foo', 'show ip', 'shutdown force':
             with self.subTest(command=command):
                 self.assertRaises(InvalidCommandException, conn.execute, command)
 
