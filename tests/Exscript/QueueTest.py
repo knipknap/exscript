@@ -166,6 +166,9 @@ class QueueTest(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
+        # destroy() waits for the queued jobs, so a test that paused the queue
+        # and failed would hang otherwise.
+        self.queue.workqueue.unpause()
         try:
             self.queue.destroy()
         except:
@@ -475,7 +478,6 @@ class QueueTest(unittest.TestCase):
         self.queue.workqueue.pause()
         self.assertIsNotNone(self.queue.run_or_ignore('dummy://dummy2', do_nothing))
         self.assertIsNone(self.queue.run_or_ignore('dummy://dummy2', do_nothing))
-        self.queue.workqueue.unpause()
 
     def testProgressCountsOnlyEnqueuedJobs(self):
         self.queue.workqueue.pause()
@@ -528,7 +530,6 @@ class QueueTest(unittest.TestCase):
                 thread.start()
             for thread in threads:
                 thread.join()
-        self.queue.workqueue.unpause()
         self.assertEqual(self.queue.total, 2)
 
     def testJobsConnectWithTheHostDriver(self):
