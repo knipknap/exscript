@@ -212,6 +212,10 @@ Other renamed or removed names:
   threads only. For several CPU cores, see :doc:`platforms`.
 - ``Exscript.account.AccountProxy`` and ``Exscript.logger.LoggerProxy`` are
   removed; jobs use the accounts and the loggers directly.
+- ``WorkQueue.queue_empty_event`` is emitted when the last job of the queue
+  has ended, and no longer when the queue stops. Code that used it to learn
+  that the queue stopped continues after ``shutdown()`` or ``join()``
+  returns instead.
 - ``parselib.Lexer.expect()`` and ``current_is()`` take ``types``
   instead of ``type``.
 - The ``dump1()`` methods of the template interpreter are removed, and so

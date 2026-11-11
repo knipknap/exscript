@@ -658,9 +658,9 @@ The names below refer to functions callable from templates, not protocol methods
 - **Jobs Connect With `host_driver`:** The `host_driver` of `Queue` is set on each host
   before its job is enqueued. Before, it was set after, so a job that started at once
   could connect without it, with the driver that Exscript guessed.
-- **`WorkQueue.queue_empty_event`:** Is emitted when the queue becomes empty, when the
-  last queued or running job has ended. Before, it was emitted only when the main loop
-  stopped, on `shutdown()` or `destroy()` of an empty queue.
+- **BREAKING - `WorkQueue.queue_empty_event`:** Is emitted when the queue becomes empty,
+  when the last queued or running job has ended. Before, it was emitted only when the
+  main loop stopped, on `shutdown()` or `destroy()` of an empty queue.
 - **Status Bar on Narrow Terminals:** If the names of the running jobs do not fit into
   the status bar of `Queue`, it cuts them in the middle, at most down to `...`. Before,
   on a terminal of about 30 columns or less, the cut overlapped and made the bar longer
