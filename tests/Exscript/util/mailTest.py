@@ -207,6 +207,71 @@ class mailTest(unittest.TestCase):
         self.assertEqual(message.get_payload()[0].get_payload(decode=True), 'Grüße'.encode())
         smtp.return_value.__exit__.assert_called_once()  # QUIT, and the connection is closed
 
+    def testFromTemplateStringPlaceholders(self):
+        from Exscript.util.mail import from_template_string
+
+        # A line that ends with a space is joined with the next one, and the
+        # items of a list are put on separate lines.
+        tmpl = 'From: me@example.com\nSubject: {count} hosts \nfailed\n\nHosts:\n{hosts}'
+        mail = from_template_string(tmpl, count=2, hosts=['router1', 'router2'])
+        self.assertEqual(mail.get_subject(), '2 hosts failed')
+        self.assertEqual(mail.get_body(), 'Hosts:\nrouter1\nrouter2')
+
+    def testFromTemplateStringErrors(self):
+        from Exscript.util.mail import from_template_string
+
+        for tmpl, error in (
+            ('From: me@example.com\n\n{hosts}', 'Undefined value for hosts'),
+            ('From: me@example.com\n\n{1st}', '1st is not a variable name'),
+            ('From: me@example.com\nPriority: high\n\nbody', 'Invalid header field "priority"'),
+        ):
+            with self.subTest(tmpl=tmpl):
+                self.assertRaisesRegex(Exception, error, from_template_string, tmpl)
+
+    def testFromTemplateStringWithoutBody(self):
+        from Exscript.util.mail import from_template_string
+
+        # Also with a blank at the end of the last line, which joins no line.
+        for tmpl in 'To: you@example.com\nSubject: Report', 'To: you@example.com\nSubject: Report ':
+            with self.subTest(tmpl=tmpl):
+                with mock.patch('Exscript.util.mail.getuser', return_value='operator'):
+                    mail = from_template_string(tmpl)
+                self.assertTrue(mail.get_sender().startswith('operator@'), mail.get_sender())
+                self.assertEqual(mail.get_to(), ['you@example.com'])
+                self.assertEqual(mail.get_subject(), 'Report')
+                self.assertEqual(mail.get_body(), '')
+
+    def testSendAttachments(self):
+        # The parts get a content type from the file name, application/octet-stream
+        # for unknown and compressed files.
+        tmpdir = self.enterContext(tempfile.TemporaryDirectory())
+        files = {
+            'report.txt': ('text/plain', 'Grüße\n'.encode()),
+            'graph.png': ('image/png', b'\x89PNG\r\n\x1a\n'),
+            'alarm.wav': ('audio', b'RIFF\x00\x00\x00\x00WAVE'),
+            'config.txt.gz': ('application/octet-stream', b'\x1f\x8b\x08\x00'),
+            'dump.unknown-type': ('application/octet-stream', b'\x00\x01'),
+        }
+        mail = Mail(sender='me@example.com', to='you@example.com')
+        for name, (_, data) in files.items():
+            filename = os.path.join(tmpdir, name)
+            with open(filename, 'wb') as fp:
+                fp.write(data)
+            mail.add_attachment(filename)
+        with mock.patch('smtplib.SMTP') as smtp:
+            Exscript.util.mail.send(mail)
+        text = smtp.return_value.__enter__.return_value.sendmail.call_args.args[2]
+        body, *parts = email.message_from_string(text).get_payload()
+        self.assertEqual(body.get_content_disposition(), 'inline')
+        result = {}
+        for part in parts:
+            self.assertEqual(part.get_content_disposition(), 'attachment')
+            content_type = part.get_content_type()
+            if part.get_content_maintype() == 'audio':
+                content_type = 'audio'  # audio/wav or audio/x-wav, depending on the system
+            result[part.get_filename()] = content_type, part.get_payload(decode=True)
+        self.assertEqual(result, files)
+
     def testSendDoesNotConnectIfTheMailIsIncomplete(self):
         mail = Mail(to='you@example.com')
         mail.add_attachment(os.path.join(tempfile.gettempdir(), 'missing-attachment'))
