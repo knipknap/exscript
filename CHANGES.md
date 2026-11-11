@@ -801,3 +801,7 @@ The names below refer to functions callable from templates, not protocol methods
   Windows host of WSL, to which WSL forwards its ports, `start()` of `SSHd` and
   `Telnetd` tries another one. Before, a start there failed now and then with
   `OSError: [Errno 98] Address already in use`.
+- **Prompt Shutdown:** `SSHd` and `Telnetd` stop within about 0.1 seconds of `exit()`:
+  the server and the handlers of its clients check every 0.05 seconds whether to stop
+  (the `timeout` attribute). Before, they checked every 0.5 seconds, and `exit()` and
+  `join()` took up to a second.

@@ -161,6 +161,13 @@ class ServerInternalsTest(unittest.TestCase):
         self.assertEqual(module.socket.call_count, 2)
         self.assertTrue(server.is_alive())
 
+    def testPromptExit(self):
+        # The server checks every 0.05 seconds whether to stop.
+        server = self.start(0)
+        server.exit()
+        server.join(0.4)
+        self.assertFalse(server.is_alive())
+
 
 def suite():
     loader = unittest.TestLoader()

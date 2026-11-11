@@ -74,7 +74,10 @@ class Server(threading.Thread):
         self.name = '%s-%s:%s' % (self._get_server_type(), host, port)
         self.host = host
         self.port = int(port)
-        self.timeout = 0.5
+        # How often, in seconds, the server and the handlers of its clients check
+        # whether to stop. Waking them at exit() instead would need a socket pair:
+        # select() cannot wait for the pipe on Windows.
+        self.timeout = 0.05
         self.dbg = 0
         self.running = False
         self.socket: socket.socket | None = None  # set by start()
