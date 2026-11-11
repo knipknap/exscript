@@ -56,9 +56,9 @@ jobs:
         env:
           PYTHON: ${{ matrix.python }}
           PYTHON_GIL: ${{ matrix.gil }}  # empty, i.e. ignored, except for free-threading
-          # Line and branch coverage: 94.2 % on 2026-11-10. Raise the floor, never lower it.
+          # Line and branch coverage: 98.6 % on 2026-11-11. Raise the floor, never lower it.
           # Windows and macOS skip the tests of the POSIX terminal, so it applies on Ubuntu only.
-          COV_FAIL_UNDER: ${{ matrix.os == 'ubuntu-latest' && '93' || '0' }}
+          COV_FAIL_UNDER: ${{ matrix.os == 'ubuntu-latest' && '97' || '0' }}
         run: >-
           uv run --frozen --python "$PYTHON" pytest --cov=Exscript
           --cov-report=term-missing:skip-covered --cov-fail-under="$COV_FAIL_UNDER"
