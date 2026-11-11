@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    # A library keeps its lower bounds; only the lockfile used for development moves.
+    versioning-strategy: lockfile-only
+    cooldown:
+      default-days: 7
+    groups:
+      python:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]

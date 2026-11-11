@@ -1,0 +1,29 @@
+# Cisco IOS and IOS XE (lab devices only), with --os ios.
+# Log in as a user that lands in user EXEC (">"); drop the enable and !secret lines if you land in "#".
+# Creates and removes Loopback999 in the running config; check first that it does not exist.
+# Shows no configuration, routes or descriptions, so that there is little to sanitize.
+enable
+!secret
+terminal length 0
+terminal width 0
+show version
+show processes cpu
+show processes memory
+show ip interface brief
+show inventory
+show nonexistent
+show ip
+sh i
+configure terminal
+interface Loopback999
+description Exscript test, safe to remove
+end
+show running-config interface Loopback999
+configure terminal
+no interface Loopback999
+end
+# n answers the [confirm], so no counter is cleared.
+clear counters
+!send n
+show this-command-is-much-longer-than-the-terminal-width | include something-that-does-not-match-anything-at-all
+exit

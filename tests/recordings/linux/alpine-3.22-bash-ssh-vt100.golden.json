@@ -1,0 +1,71 @@
+{
+  "login": "ok",
+  "driver": "shell",
+  "os": "shell",
+  "commands": [
+    {
+      "command": "uname -sr",
+      "error": null,
+      "lines": 3,
+      "sha256": "34f8f2e43f3d72cd066d0d41cd9acbd097fa410f53f516986b642547c384d3dc",
+      "first": "uname -sr",
+      "last": "Linux 6.18.54.1-microsoft-standard-WSL2"
+    },
+    {
+      "command": "cat /etc/os-release",
+      "error": null,
+      "lines": 8,
+      "sha256": "6d8ff4dc6995d994b946ebc2a67aceb2ccbe103ef9c84f13b0270d02dfc5493a",
+      "first": "cat /etc/os-release",
+      "last": "BUG_REPORT_URL=\"https://gitlab.alpinelinux.org/alpine/aports/-/issues\""
+    },
+    {
+      "command": "ls -l --color=always /",
+      "error": null,
+      "lines": 20,
+      "sha256": "1df8396c9ed91b04d313d83680f5873732d55abcfbc14b22b8f5405348a41e06",
+      "first": "ls -l --color=always /",
+      "last": "drwxr-xr-x   11 root     root          4096 Oct 21 19:59 \u001b[1;34mvar"
+    },
+    {
+      "command": "printf 'umlauts: \\303\\244\\303\\266\\303\\274, euro sign: \\342\\202\\254\\n'",
+      "error": null,
+      "lines": 4,
+      "sha256": "001ec9ad040d15730b091884100886f40f6b73ecfbe4589e3910c2244556aac3",
+      "first": "printf 'umlauts: \\303\\244\\303\\266\\303\\274, euro sign: \\342\\202\\254\\n' ",
+      "last": "umlauts: \u00c3\u00a4\u00c3\u00b6\u00c3\u00bc, euro sign: \u00e2\u0082\u00ac"
+    },
+    {
+      "command": "echo the quick brown fox jumps over the lazy dog, the quick brown fox jumps over the lazy dog, and again",
+      "error": null,
+      "lines": 3,
+      "sha256": "8d09d26cd1c2af3ee2b83e9f0f136b8dc95edc9932a8d86859a1c4e02bad7b5b",
+      "first": "echo the quick brown fox jumps over the lazy dog, the quick brown fox jumps over the lazy dog, and again",
+      "last": "the quick brown fox jumps over the lazy dog, the quick brown fox jumps over the lazy dog, and again"
+    },
+    {
+      "command": "seq 1 20000",
+      "error": null,
+      "lines": 20002,
+      "sha256": "bfb51050cec8f4a1a99e80b82e34436879b3a5e107ecee48c27df96fff2cea8d",
+      "first": "seq 1 20000",
+      "last": "20000"
+    },
+    {
+      "command": "ls /nonexistent",
+      "error": null,
+      "lines": 3,
+      "sha256": "be50c8167af6e8a99d8e58d29d7e11779233e693421adac99a08a9d2c479a8ff",
+      "first": "ls /nonexistent",
+      "last": "ls: /nonexistent: No such file or directory"
+    },
+    {
+      "command": "exit",
+      "error": "ConnectionClosedException",
+      "lines": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "first": "",
+      "last": ""
+    }
+  ]
+}

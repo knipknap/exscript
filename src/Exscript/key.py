@@ -1,0 +1,178 @@
+#
+# Copyright (C) 2010-2017 Samuel Abels
+# The MIT License (MIT)
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+Represents a private key.
+"""
+
+import io
+
+from paramiko import ECDSAKey, Ed25519Key, RSAKey
+from paramiko.ssh_exception import SSHException
+
+
+class PrivateKey:
+    """
+    Represents a cryptographic key, and may be used to authenticate
+    using :class:`Exscript.protocols`.
+    """
+
+    keytypes: set[str] = set()
+
+    def __init__(self, keytype: str = 'rsa') -> None:
+        """
+        Constructor. Supported key types are provided by their respective
+        protocol adapters and can be retrieved from the PrivateKey.keytypes
+        class attribute.
+
+        :type  keytype: string
+        :param keytype: The key type.
+        """
+        if keytype not in self.keytypes:
+            raise TypeError('unsupported key type: ' + repr(keytype))
+        self.keytype = keytype
+        self.filename: str | None = None
+        self.data: str | None = None
+        self.password: str | None = None
+
+    @staticmethod
+    def from_file(
+        filename: str, password: str | None = '', keytype: str | None = None
+    ) -> 'PrivateKey':
+        """
+        Returns a new PrivateKey instance with the given attributes.
+        If keytype is None, we attempt to automatically detect the type.
+
+        :type  filename: string
+        :param filename: The key file name.
+        :type  password: string|None
+        :param password: The key password, or None if the key is not encrypted.
+        :type  keytype: string
+        :param keytype: The key type.
+        :rtype:  PrivateKey
+        :return: The new key.
+        """
+        if keytype is None:
+            try:
+                RSAKey.from_private_key_file(filename, password=password)
+                keytype = 'rsa'
+            except SSHException:
+                try:
+                    ECDSAKey.from_private_key_file(filename, password=password)
+                    keytype = 'ecdsa'
+                except SSHException:
+                    try:
+                        Ed25519Key.from_private_key_file(filename, password=password)
+                        keytype = 'ed25519'
+                    except SSHException:
+                        msg = 'not a recognized private key: ' + repr(filename)
+                        raise ValueError(msg)
+        key = PrivateKey(keytype)
+        key.filename = filename
+        key.password = password
+        return key
+
+    @staticmethod
+    def from_string(
+        data: str, password: str | None = '', keytype: str | None = None
+    ) -> 'PrivateKey':
+        """
+        Returns a new PrivateKey with the given key, in the format of a key
+        file, e.g. "-----BEGIN OPENSSH PRIVATE KEY-----...". Use it for a key
+        that is not stored in a file, e.g. one that comes from a secret
+        store. If keytype is None, the type is detected.
+
+        :param data: The key, in the format of a key file.
+        :param password: The key password, or None if the key is not encrypted.
+        :param keytype: The key type, e.g. 'rsa' or 'ed25519'.
+        :raises ValueError: If keytype is None and the key is not one of the
+            supported types, or cannot be decrypted with the password.
+        :return: The new key.
+        """
+        if keytype is None:
+            for name, cls in (('rsa', RSAKey), ('ecdsa', ECDSAKey), ('ed25519', Ed25519Key)):
+                try:
+                    cls.from_private_key(io.StringIO(data), password)
+                except SSHException:
+                    continue
+                keytype = name
+                break
+            else:
+                raise ValueError('not a recognized private key')  # never shows the key
+        key = PrivateKey(keytype)
+        key.data = data
+        key.password = password
+        return key
+
+    def get_type(self) -> str:
+        """
+        Returns the type of the key, e.g. 'rsa' or 'ed25519'.
+
+        :rtype:  string
+        :return: The key type
+        """
+        return self.keytype
+
+    def set_filename(self, filename: str) -> None:
+        """
+        Sets the name of the key file to use.
+
+        :type  filename: string
+        :param filename: The key filename.
+        """
+        self.filename = filename
+
+    def get_filename(self) -> str | None:
+        """
+        Returns the name of the key file.
+
+        :rtype:  string|None
+        :return: The key filename, or None if none was set.
+        """
+        return self.filename
+
+    def get_data(self) -> str | None:
+        """
+        Returns the key, in the format of a key file, if it was given with
+        from_string().
+
+        :return: The key, or None if none was set.
+        """
+        return self.data
+
+    def set_password(self, password: str | None) -> None:
+        """
+        Defines the password used for decrypting the key.
+
+        :type  password: string|None
+        :param password: The key password, or None if the key is not encrypted.
+        """
+        self.password = password
+
+    def get_password(self) -> str | None:
+        """
+        Returns the password for the key.
+
+        :rtype:  string|None
+        :return: The key password, or None if none was set.
+        """
+        return self.password

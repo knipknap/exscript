@@ -1,13 +1,12 @@
+import os.path
 import sys
 import unittest
-import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-
-from tempfile import mkdtemp
 from shutil import rmtree
-from Exscript import Host, FileLogger
-from LoggerTest import LoggerTest, FakeJob
+from tempfile import mkdtemp
+
+from LoggerTest import FakeJob, LoggerTest
+
+from Exscript import FileLogger
 
 
 class FakeError(Exception):
@@ -34,27 +33,26 @@ class FileLoggerTest(LoggerTest):
         self.assertFalse(os.path.exists(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
 
-    def testAddLog(self):
-        log = LoggerTest.testAddLog(self)
-        self.assertTrue(
-            os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
+    def _addLog(self):
+        log = LoggerTest._addLog(self)
+        self.assertTrue(os.path.isfile(self.logfile), 'No such file: ' + self.logfile)
         self.assertFalse(os.path.exists(self.errfile))
         return log
 
-    def testLog(self):
-        log = LoggerTest.testLog(self)
+    def _log(self):
+        log = LoggerTest._log(self)
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
         return log
 
-    def testLogAborted(self):
-        log = LoggerTest.testLogAborted(self)
+    def _logAborted(self):
+        log = LoggerTest._logAborted(self)
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertTrue(os.path.isfile(self.errfile))
         return log
 
-    def testLogSucceeded(self):
-        log = LoggerTest.testLogSucceeded(self)
+    def _logSucceeded(self):
+        log = LoggerTest._logSucceeded(self)
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.isfile(self.errfile))
         return log
@@ -68,7 +66,7 @@ class FileLoggerTest(LoggerTest):
         self.logger.add_log(id(self.job), self.job.name, 2)
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
-        with open(self.logfile) as fp:
+        with open(self.logfile, encoding='utf-8') as fp:
             content = fp.read()
         self.assertEqual(content, '')
 
@@ -78,7 +76,7 @@ class FileLoggerTest(LoggerTest):
         self.logger.log(id(self.job), 'hello world')
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
-        with open(self.logfile) as fp:
+        with open(self.logfile, encoding='utf-8') as fp:
             content = fp.read()
         self.assertEqual(content, 'hello world')
 
@@ -89,8 +87,70 @@ class FileLoggerTest(LoggerTest):
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
 
+    def _runJobs(self, logger):
+        # Logs one job that succeeds and one that fails.
+        job1, job2 = FakeJob('job1'), FakeJob('job2')
+        for job in job1, job2:
+            logger.add_log(id(job), job.name, 1)
+            logger.log(id(job), 'hello')
+        logger.log_succeeded(id(job1))
+        try:
+            raise FakeError('Connection refused')
+        except FakeError:
+            logger.log_aborted(id(job2), sys.exc_info())
+
+    def testClearmem(self):
+        # The logger forgets the logs of finished jobs, but keeps the files.
+        logger = FileLogger(self.logdir)
+        self._runJobs(logger)
+        self.assertEqual(logger.get_logs(), [])
+        self.assertEqual(logger.get_succeeded_actions(), 1)
+        self.assertEqual(logger.get_aborted_actions(), 1)
+        files = ['job1.log', 'job2.log', 'job2.log.error']
+        self.assertEqual(sorted(os.listdir(self.logdir)), files)
+
+    def testDelete(self):
+        # The log of a job that succeeds is deleted, the one of a failed job is kept.
+        logger = FileLogger(self.logdir, delete=True)
+        self._runJobs(logger)
+        self.assertEqual(sorted(os.listdir(self.logdir)), ['job2.log', 'job2.log.error'])
+        with open(os.path.join(self.logdir, 'job2.log'), encoding='utf-8') as fp:
+            self.assertEqual(fp.read(), 'helloERROR: Connection refused \n')
+
+    def testMode(self):
+        # 'a' appends to the log of an earlier run, 'w' overwrites it; both
+        # keep all output of the job.
+        for mode, expected in ('a', 'earlier run\nhello\nworld\n'), ('w', 'hello\nworld\n'):
+            with self.subTest(mode=mode):
+                with open(self.logfile, 'w', encoding='utf-8') as fp:
+                    fp.write('earlier run\n')
+                logger = FileLogger(self.logdir, mode=mode)
+                logger.add_log(id(self.job), self.job.name, 1)
+                logger.log(id(self.job), 'hello\n')
+                logger.log(id(self.job), 'world\n')
+                logger.log_succeeded(id(self.job))
+                with open(self.logfile, encoding='utf-8') as fp:
+                    self.assertEqual(fp.read(), expected)
+
+    def testModeOfTheErrorFile(self):
+        with open(self.errfile, 'w', encoding='utf-8') as fp:
+            fp.write('error of an earlier run\n')
+        logger = FileLogger(self.logdir, mode='w')
+        logger.add_log(id(self.job), self.job.name, 1)
+        logger.log(id(self.job), 'hello\n')
+        try:
+            raise FakeError('Connection refused')
+        except FakeError:
+            logger.log_aborted(id(self.job), sys.exc_info())
+        with open(self.logfile, encoding='utf-8') as fp:
+            self.assertEqual(fp.read(), 'hello\nERROR: Connection refused \n')
+        with open(self.errfile, encoding='utf-8') as fp:
+            self.assertTrue(fp.read().startswith('Traceback (most recent call last):'))
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(FileLoggerTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

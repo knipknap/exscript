@@ -1,0 +1,61 @@
+name: Device not detected or not supported
+description: Exscript picks the wrong driver for a device, or has none for it.
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Exscript picks the driver from the login banner, the prompts and the
+        protocol. To improve this, we need the text that the device sends until
+        the first command prompt. Remove passwords, host names, addresses and
+        other data of your network first.
+  - type: input
+    id: version
+    attributes:
+      label: Exscript version
+      description: 'Output of: python -c "import Exscript; print(Exscript.__version__)"'
+      placeholder: 3.0.0
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device vendor, model, operating system and version
+      placeholder: Cisco NCS 5501, IOS XR 7.11.2
+    validations:
+      required: true
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: Protocol
+      options:
+        - SSH
+        - Telnet
+        - NETCONF
+    validations:
+      required: true
+  - type: input
+    id: guessed
+    attributes:
+      label: Driver that Exscript picks
+      description: Output of conn.guess_os() after conn.login().
+      placeholder: generic
+    validations:
+      required: true
+  - type: input
+    id: expected
+    attributes:
+      label: Driver you expected
+      description: The name of an existing driver, or "new driver".
+      placeholder: ios_xr
+  - type: textarea
+    id: transcript
+    attributes:
+      label: Login transcript
+      description: >
+        Everything from connecting to the first command prompt, including the
+        banner and all prompts, for example from logfile="session.log". With
+        debug=3 after logging.basicConfig(level=logging.DEBUG), the log also
+        shows the text that the detection looked at.
+      render: text
+    validations:
+      required: true

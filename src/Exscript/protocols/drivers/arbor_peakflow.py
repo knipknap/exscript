@@ -1,0 +1,66 @@
+#
+# Copyright (C) 2010-2017 Samuel Abels
+# The MIT License (MIT)
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+A driver for Peakflow SP by Arbor Networks.
+"""
+
+import re
+
+from .driver import Driver
+
+_user_re = [re.compile(r'(user|login): $', re.I)]
+_password_re = [re.compile(r'Password: $')]
+_prompt_re = [
+    re.compile(r'(?:\r\n|[\r\n])[\-\w+\._]+@[\-\w+\._~]+:(?:/\w*)+[#%] $'),  # arbos prompt
+    re.compile(r'Exit anyway\? \[.\] $'),  # confirm on exit
+    re.compile(r'(?:\r\n|[\r\n])DIAG\>'),  # up to 8.0 shell
+    re.compile(r'[\-\w+\._~()]+:.*#'),  # 8.3 shell
+]
+_os_re = re.compile(r'\b(arbo[rs]|peakflow)\b', re.I)
+
+
+class ArborPeakflowDriver(Driver):
+    """
+    The ``arbor_peakflow`` driver for Peakflow SP by Arbor Networks. It
+    recognizes prompts like "admin@host:/#", the "DIAG>" prompt of the shell
+    up to version 8.0, and the question "Exit anyway?" on exit.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name, password and command
+        prompts.
+        """
+        Driver.__init__(self, 'arbor_peakflow')
+        self.user_re = _user_re
+        self.password_re = _password_re
+        self.prompt_re = _prompt_re
+
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 97 if the data contains the word "Arbor", "ArbOS" or
+        "Peakflow" in any case, else 0.
+        """
+        if _os_re.search(string):
+            return 97
+        return 0

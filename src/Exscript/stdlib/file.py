@@ -1,0 +1,148 @@
+#
+# Copyright (C) 2010-2017 Samuel Abels
+# The MIT License (MIT)
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+The functions of the template language for local files, such as
+``file.read()`` or ``file.write()``. Except for ``file.exists()``, they are
+not secure: a template that is compiled in secure mode cannot call them
+(see :func:`Exscript.stdlib.util.secure_function`).
+"""
+
+import os
+from typing import TYPE_CHECKING
+
+from Exscript.stdlib.util import secure_function
+
+if TYPE_CHECKING:
+    from Exscript.interpreter.scope import Scope
+
+
+def chmod(scope: 'Scope', filename: list[str], mode: list[int]) -> bool:
+    """
+    Changes the permissions of the given file (or list of files)
+    to the given mode. You probably want to use an octal representation
+    for the integer, e.g. ``file.chmod(myfile, 0644)``.
+
+    :type  filename: string
+    :param filename: A filename.
+    :type  mode: int
+    :param mode: The access permissions.
+    """
+    for file in filename:
+        os.chmod(file, mode[0])
+    return True
+
+
+def clear(scope: 'Scope', filename: list[str]) -> bool:
+    """
+    Clears the contents of the given file. The file is created if it does
+    not exist.
+
+    :type  filename: string
+    :param filename: A filename.
+    """
+    with open(filename[0], 'w', encoding='utf-8'):
+        pass
+    return True
+
+
+@secure_function
+def exists(scope: 'Scope', filename: list[str]) -> list[bool]:
+    """
+    Returns, for each of the given files, True if the file exists and False
+    otherwise.
+
+    :type  filename: string
+    :param filename: A filename, or a list of filenames.
+    :rtype:  bool
+    :return: True or False for each file.
+    """
+    return [os.path.exists(f) for f in filename]
+
+
+def mkdir(scope: 'Scope', dirname: list[str], mode: list[int] | None = None) -> bool:
+    """
+    Creates the given directory (or directories). The optional access
+    permissions are set to the given mode, and default to whatever
+    is the umask on your system defined.
+
+    :type  dirname: string
+    :param dirname: A directory name, or a list of directory names.
+    :type  mode: int
+    :param mode: The access permissions.
+    """
+    for dir in dirname:
+        if mode is None:
+            os.makedirs(dir)
+        else:
+            os.makedirs(dir, mode[0])
+    return True
+
+
+def read(scope: 'Scope', filename: list[str]) -> list[str]:
+    """
+    Reads the given file and returns the result.
+    The result is also stored in the built-in __response__ variable.
+
+    :type  filename: string
+    :param filename: A filename.
+    :rtype:  string
+    :return: The content of the file, one line per item.
+    """
+    with open(filename[0], encoding='utf-8') as fp:
+        lines = fp.readlines()
+    scope.define(__response__=lines)
+    return lines
+
+
+def rm(scope: 'Scope', filename: list[str]) -> bool:
+    """
+    Deletes the given file (or files) from the file system.
+
+    :type  filename: string
+    :param filename: A filename, or a list of filenames.
+    """
+    for file in filename:
+        os.remove(file)
+    return True
+
+
+def write(scope: 'Scope', filename: list[str], lines: list[str], mode: list[str] = ['a']) -> bool:
+    """
+    Writes the given string into the given file.
+    The following modes are supported:
+
+      - 'a': Append to the file if it already exists.
+      - 'w': Replace the file if it already exists.
+
+    Each line is written without trailing whitespace, followed by a newline.
+
+    :type  filename: string
+    :param filename: A filename.
+    :type  lines: string
+    :param lines: The data that is written into the file.
+    :type  mode: string
+    :param mode: Any of the above listed modes.
+    """
+    with open(filename[0], mode[0], encoding='utf-8') as fp:
+        fp.writelines(['%s\n' % line.rstrip() for line in lines])
+    return True

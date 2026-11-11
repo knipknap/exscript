@@ -1,0 +1,78 @@
+#
+# Copyright (C) 2010-2017 Samuel Abels
+# The MIT License (MIT)
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+A generic shell driver that handles unknown unix shells.
+"""
+
+import re
+
+from .driver import Driver
+
+_user_re = [re.compile(r'(user|login): $', re.I)]
+_password_re = [re.compile(r'Password: ?$')]
+_linux_re = re.compile(r'\blinux\b', re.I)
+# The guesser also sees the data that ends with "Last login: " for a moment
+# when a read ends there.
+_login_prompt_re = re.compile(r'(?<!last )(?:user|login): $', re.I)
+# Prompts like "router1:~$ " or "admin@router1:/etc# ", maybe after escape
+# sequences such as bash's ESC[?2004h.
+_shell_prompt_re = re.compile(
+    r'(?:\r\n|[\r\n])(?:\x1b\[[\d;?]*[A-Za-z])*(?:[\w.-]+@)?[\w.-]+:[~/][^\r\n]*[$#] ?$'
+)
+
+
+class ShellDriver(Driver):
+    """
+    The ``shell`` driver, a generic driver for Unix shells. It uses the
+    generic command prompt pattern.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompts "user:" and
+        "login:" and of the password prompt.
+        """
+        Driver.__init__(self, 'shell')
+        self.user_re = _user_re
+        self.password_re = _password_re
+
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 70 if the data contains the word "Linux" in any case, else 20
+        if it ends with "user: " or "login: ", but not with "Last login: ",
+        else 0.
+        """
+        if _linux_re.search(string):
+            return 70
+        if _login_prompt_re.search(string):
+            return 20
+        return 0
+
+    def check_response_for_os(self, string: str) -> int:
+        """
+        Returns 30 if the data ends with a shell prompt like "router1:~$ " or
+        "admin@router1:/etc# ", maybe after escape sequences, else 0.
+        """
+        if _shell_prompt_re.search(string):
+            return 30
+        return 0

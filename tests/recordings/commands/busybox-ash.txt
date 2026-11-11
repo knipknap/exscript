@@ -1,0 +1,7 @@
+# BusyBox ash over Telnet (R1).
+uname -sr
+cat /etc/passwd
+ls -l /
+seq 1 5000
+ls /nonexistent
+exit

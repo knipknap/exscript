@@ -1,32 +1,23 @@
-from builtins import str
-from builtins import object
-import sys
-import unittest
-import re
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
+import sys
 import traceback
+import unittest
+
 import Exscript.util.report
-from Exscript import Host
-from Exscript import Logger
-from Exscript.util.event import Event
+from Exscript import Host, Logger
 from Exscript.workqueue import WorkQueue
 
 
-class FakeQueue(object):
+class FakeQueue:
     workqueue = WorkQueue()
 
 
-class FakeJob(object):
-
+class FakeJob:
     def __init__(self, name='fake'):
         self.function = lambda x: None
         self.name = name
         self.failures = 0
-        self.data = {'pipe':   0,
-                     'stdout': sys.stdout,
-                     'host':   Host('foo')}
+        self.data = {'pipe': 0, 'stdout': sys.stdout, 'host': Host('foo')}
 
 
 class FakeError(Exception):
@@ -39,6 +30,7 @@ class reportTest(unittest.TestCase):
     def setUp(self):
         self.logger = Logger()
         self.n_actions = 0
+        self.maxDiff = None
 
     def createLog(self):
         self.n_actions += 1
@@ -65,6 +57,7 @@ class reportTest(unittest.TestCase):
 
     def testStatus(self):
         from Exscript.util.report import status
+
         self.createSucceededLog()
         expect = 'One action done (succeeded)'
         self.assertEqual(status(self.logger), expect)
@@ -77,8 +70,18 @@ class reportTest(unittest.TestCase):
         expect = '3 actions total (1 failed, 2 succeeded)'
         self.assertEqual(status(self.logger), expect)
 
+    def testStatusOfFailedActions(self):
+        from Exscript.util.report import status
+
+        self.assertEqual(status(self.logger), 'No actions done')
+        self.createAbortedLog()
+        self.assertEqual(status(self.logger), 'One action done (failed)')
+        self.createAbortedLog()
+        self.assertEqual(status(self.logger), '2 actions total (all failed)')
+
     def testSummarize(self):
         from Exscript.util.report import summarize
+
         self.createSucceededLog()
         self.createAbortedLog()
         expected = 'fake1: ok\nfake2: FakeError'
@@ -86,16 +89,18 @@ class reportTest(unittest.TestCase):
 
     def testFormat(self):
         from Exscript.util.report import format
+
         self.createSucceededLog()
         self.createAbortedLog()
         self.createSucceededLog()
         file = os.path.splitext(__file__)[0]
-        expected = '''
+        expected = (
+            '''
 Failed actions:
 ---------------
 fake2:
 Traceback (most recent call last):
-  File "%s.py", line 54, in createAbortedLog
+  File "%s.py", line %d, in createAbortedLog
     raise FakeError()
 FakeError
 
@@ -103,16 +108,27 @@ FakeError
 Successful actions:
 -------------------
 fake1
-fake3'''.strip() % file
-        expected_py3 = expected.replace('FakeError\n',
-                                        'util.reportTest.FakeError\n')
-        if sys.version_info[0] < 3:
-            self.assertEqual(format(self.logger), expected)
-        else:
-            self.assertEqual(format(self.logger), expected_py3)
+fake3'''.strip()
+            % (file, self.createAbortedLog.__code__.co_firstlineno + 3)
+        )
+        expected = expected.replace('FakeError\n', 'util.reportTest.FakeError\n')
+        self.assertEqual(format(self.logger), expected)
+
+    def testFormatOptions(self):
+        from Exscript.util.report import format
+
+        self.createSucceededLog()
+        self.createAbortedLog()
+        errors = 'Failed actions:\n---------------\nfake2: FakeError'
+        successes = 'Successful actions:\n-------------------\nfake1'
+        self.assertEqual(format(self.logger, show_traceback=False), errors + '\n\n' + successes)
+        self.assertEqual(format(self.logger, show_successful=False, show_traceback=False), errors)
+        self.assertEqual(format(self.logger, show_errors=False), successes)
 
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(reportTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

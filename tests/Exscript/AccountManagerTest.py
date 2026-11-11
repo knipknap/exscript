@@ -1,11 +1,7 @@
-import sys
 import unittest
-import re
-import os.path
-import warnings
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from Exscript.account import Account, AccountPool, AccountManager
+from Exscript import Host
+from Exscript.account import Account, AccountManager, AccountPool
 
 
 class AccountManagerTest(unittest.TestCase):
@@ -104,6 +100,30 @@ class AccountManagerTest(unittest.TestCase):
         self.assertEqual(self.data, {'match-called': True, 'host': 'myhost'})
         self.assertEqual(self.account, account)
 
+    def testPoolsWithMatchFunctions(self):
+        router_account = Account('router-admin')
+        switch_account = Account('switch-admin')
+        routers = AccountPool(router_account)
+        switches = AccountPool(switch_account)
+        self.am.add_pool(routers, lambda host: host.get_name().startswith('router'))
+        self.am.add_pool(switches, lambda host: host.get_name().startswith('switch'))
+        self.am.add_account(self.account)
+
+        # The first pool whose match function returns True is used, else the default pool.
+        self.assertIs(self.am.acquire_account_for(Host('switch1'), 'job1'), switch_account)
+        self.assertIs(self.am.acquire_account_for(Host('server1'), 'job1'), self.account)
+        self.am.release_accounts('job1')
+
+        # A given account is acquired from its pool.
+        self.assertIs(self.am.acquire_account(router_account, 'job2'), router_account)
+        self.assertNotIn(router_account, routers.unlocked_accounts)
+        self.am.release_accounts('job2')
+        self.assertIn(router_account, routers.unlocked_accounts)
+
+        for account in router_account, switch_account, self.account:
+            self.assertIs(self.am.get_account_from_hash(account.__hash__()), account)
+        self.assertIsNone(self.am.get_account_from_hash(Account('other').__hash__()))
+
     def testReleaseAccounts(self):
         account1 = Account('foo')
         pool = AccountPool()
@@ -129,5 +149,7 @@ class AccountManagerTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(AccountManagerTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

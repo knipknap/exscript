@@ -1,0 +1,9 @@
+<get-schema xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"><identifier>ietf-netconf</identifier></get-schema>
+---
+<lock><target><running/></target></lock>
+---
+<lock><target><running/></target></lock>
+---
+<unlock><target><running/></target></unlock>
+---
+<get-config><source><no-such-datastore/></source></get-config>

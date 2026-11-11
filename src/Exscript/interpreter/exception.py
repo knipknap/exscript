@@ -1,0 +1,60 @@
+#
+# Copyright (C) 2010-2017 Samuel Abels
+# The MIT License (MIT)
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+Exceptions of the template interpreter.
+"""
+
+
+class ExscriptException(Exception):
+    """
+    Base class for the exceptions of the template interpreter.
+    """
+
+    pass
+
+
+class FailException(ExscriptException):
+    """
+    This exception type is used if the "fail" command was used in a template.
+    """
+
+    pass
+
+
+class PermissionError(ExscriptException):
+    """
+    Raised if an insecure function was called when the parser is in secure
+    mode.
+    """
+
+    pass
+
+
+class UndefinedVariableError(NameError, ValueError):
+    """
+    Raised if an expression of a template uses a variable that is not
+    defined when the template is compiled. It is a NameError and a
+    ValueError.
+    """
+
+    pass

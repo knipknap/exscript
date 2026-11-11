@@ -1,13 +1,8 @@
-import sys
-import unittest
 import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+import unittest
 
 import Exscript.util.cast
-import re
 from Exscript import Host
-from Exscript.logger import Log, Logfile
 
 
 class castTest(unittest.TestCase):
@@ -15,19 +10,22 @@ class castTest(unittest.TestCase):
 
     def testToList(self):
         from Exscript.util.cast import to_list
-        self.assertEqual(to_list(None),     [None])
-        self.assertEqual(to_list([]),       [])
-        self.assertEqual(to_list('test'),   ['test'])
+
+        self.assertEqual(to_list(None), [None])
+        self.assertEqual(to_list([]), [])
+        self.assertEqual(to_list('test'), ['test'])
         self.assertEqual(to_list(['test']), ['test'])
 
     def testToHost(self):
         from Exscript.util.cast import to_host
-        self.assertIsInstance(to_host('localhost'),       Host)
+
+        self.assertIsInstance(to_host('localhost'), Host)
         self.assertIsInstance(to_host(Host('localhost')), Host)
         self.assertRaises(TypeError, to_host, None)
 
     def testToHosts(self):
         from Exscript.util.cast import to_hosts
+
         self.assertRaises(TypeError, to_hosts, None)
 
         result = to_hosts([])
@@ -53,12 +51,14 @@ class castTest(unittest.TestCase):
 
     def testToRegex(self):
         from Exscript.util.cast import to_regex
+
         self.assertTrue(hasattr(to_regex('regex'), 'match'))
         self.assertTrue(hasattr(to_regex(re.compile('regex')), 'match'))
         self.assertRaises(TypeError, to_regex, None)
 
     def testToRegexs(self):
         from Exscript.util.cast import to_regexs
+
         self.assertRaises(TypeError, to_regexs, None)
 
         result = to_regexs([])
@@ -87,5 +87,7 @@ class castTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(castTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

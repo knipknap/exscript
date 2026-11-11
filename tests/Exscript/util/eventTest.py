@@ -1,8 +1,4 @@
-import sys
 import unittest
-import re
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from Exscript.util.event import Event
 
@@ -34,10 +30,12 @@ class eventTest(unittest.TestCase):
 
     def testListen(self):
         import gc
+
         from Exscript.util.weakmethod import WeakMethod
 
         def thefunction():
             pass
+
         ref = self.event.listen(thefunction)
         self.assertIsInstance(ref, WeakMethod)
         self.assertEqual(self.event.n_subscribers(), 1)
@@ -64,19 +62,19 @@ class eventTest(unittest.TestCase):
 
     def testEmit(self):
         self.event.connect(self.callback)
-        self.assertEqual(self.args,   None)
+        self.assertEqual(self.args, None)
         self.assertEqual(self.kwargs, None)
 
         self.event.emit()
-        self.assertEqual(self.args,   ())
+        self.assertEqual(self.args, ())
         self.assertEqual(self.kwargs, {})
 
         self.event.emit('test')
-        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.args, ('test',))
         self.assertEqual(self.kwargs, {})
 
         self.event.emit('test', foo='bar')
-        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.args, ('test',))
         self.assertEqual(self.kwargs, {'foo': 'bar'})
         self.event.disconnect(self.callback)
 
@@ -85,15 +83,15 @@ class eventTest(unittest.TestCase):
         self.kwargs = None
 
         self.event.emit()
-        self.assertEqual(self.args,   ())
+        self.assertEqual(self.args, ())
         self.assertEqual(self.kwargs, {})
 
         self.event.emit('test')
-        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.args, ('test',))
         self.assertEqual(self.kwargs, {})
 
         self.event.emit('test', foo='bar')
-        self.assertEqual(self.args,   ('test',))
+        self.assertEqual(self.args, ('test',))
         self.assertEqual(self.kwargs, {'foo': 'bar'})
         self.event.disconnect(self.callback)
 
@@ -107,6 +105,12 @@ class eventTest(unittest.TestCase):
         self.event.disconnect(self.callback2)
         self.assertEqual(self.event.n_subscribers(), 0)
 
+    def testDisconnectAFunctionThatIsNotConnected(self):
+        self.event.listen(self.callback)
+        self.event.disconnect(self.callback2)
+        self.assertTrue(self.event.is_connected(self.callback))
+        self.assertEqual(self.event.n_subscribers(), 1)
+
     def testDisconnectAll(self):
         self.assertEqual(self.event.n_subscribers(), 0)
         self.event.connect(self.callback)
@@ -118,5 +122,7 @@ class eventTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(eventTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

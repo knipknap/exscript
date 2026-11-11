@@ -1,21 +1,22 @@
-from __future__ import absolute_import
-from builtins import str
-import sys
-import unittest
+import io
+import os
 import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+import tempfile
+import unittest
 
-from .ProtocolTest import ProtocolTest
+from Exscript import Account
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy
+from Exscript.protocols.exception import InvalidCommandException
+
+from .ProtocolTest import ProtocolTest
 
 
 class DummyTest(ProtocolTest):
     CORRELATE = Dummy
 
     def createProtocol(self):
-        self.protocol = Dummy(device=self.device, timeout=1)
+        self.protocol = Dummy(device=self.device, timeout=1, debug=5)
 
     def testConstructor(self):
         self.assertIsInstance(self.protocol, Dummy)
@@ -26,7 +27,7 @@ class DummyTest(ProtocolTest):
     def _create_dummy_and_eat_banner(self, device, port=None):
         protocol = Dummy(device=device)
         protocol.connect(device.hostname, port)
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         self.assertEqual(protocol.response, None)
         protocol.expect(re.compile(re.escape(self.banner)))
         self.assertEqual(protocol.response, '')
@@ -36,81 +37,77 @@ class DummyTest(ProtocolTest):
         # Test simple instance with banner.
         protocol = Dummy(device=self.device)
         protocol.connect('testhost')
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         self.assertEqual(protocol.response, None)
         protocol.close()
 
         # Test login.
         protocol = Dummy(device=self.device)
         protocol.connect('testhost')
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         self.assertEqual(protocol.response, None)
         protocol.login(self.account, flush=False)
-        self.assertEqual(protocol.buffer.tail(len(self.prompt)), self.prompt)
+        self.assertEqual(protocol._buffer.tail(len(self.prompt)), self.prompt)
         protocol.close()
 
         # Test login with user prompt.
-        device = VirtualDevice(self.hostname,
-                               echo=True,
-                               login_type=VirtualDevice.LOGIN_TYPE_USERONLY)
+        device = VirtualDevice(
+            self.hostname, echo=True, login_type=VirtualDevice.LOGIN_TYPE_USERONLY
+        )
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), 'User: ')
+        self.assertEqual(str(protocol._buffer), 'User: ')
         protocol.login(self.account, flush=False)
-        self.assertEqual(protocol.buffer.tail(len(self.prompt)), self.prompt)
+        self.assertEqual(protocol._buffer.tail(len(self.prompt)), self.prompt)
         protocol.close()
 
         # Test login with password prompt.
-        device = VirtualDevice(self.hostname,
-                               echo=True,
-                               login_type=VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
+        device = VirtualDevice(
+            self.hostname, echo=True, login_type=VirtualDevice.LOGIN_TYPE_PASSWORDONLY
+        )
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), 'Password: ')
+        self.assertEqual(str(protocol._buffer), 'Password: ')
         protocol.login(self.account, flush=False)
-        self.assertEqual(protocol.buffer.tail(len(self.prompt)), self.prompt)
+        self.assertEqual(protocol._buffer.tail(len(self.prompt)), self.prompt)
         protocol.close()
 
         # Test login without user/password prompt.
-        device = VirtualDevice(self.hostname,
-                               echo=True,
-                               login_type=VirtualDevice.LOGIN_TYPE_NONE)
+        device = VirtualDevice(self.hostname, echo=True, login_type=VirtualDevice.LOGIN_TYPE_NONE)
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), self.prompt)
+        self.assertEqual(str(protocol._buffer), self.prompt)
         protocol.close()
 
         # Test login with user prompt and wait parameter.
-        device = VirtualDevice(self.hostname,
-                               echo=True,
-                               login_type=VirtualDevice.LOGIN_TYPE_USERONLY)
+        device = VirtualDevice(
+            self.hostname, echo=True, login_type=VirtualDevice.LOGIN_TYPE_USERONLY
+        )
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), 'User: ')
+        self.assertEqual(str(protocol._buffer), 'User: ')
         protocol.login(self.account)
-        self.assertEqual(str(protocol.buffer), '')
-        self.assertEqual(protocol.response, self.user + '\r')
+        self.assertEqual(str(protocol._buffer), '')
+        self.assertEqual(protocol.response, self.user)
         protocol.close()
 
         # Test login with password prompt and wait parameter.
-        device = VirtualDevice(self.hostname,
-                               echo=True,
-                               login_type=VirtualDevice.LOGIN_TYPE_PASSWORDONLY)
+        device = VirtualDevice(
+            self.hostname, echo=True, login_type=VirtualDevice.LOGIN_TYPE_PASSWORDONLY
+        )
         protocol = self._create_dummy_and_eat_banner(device)
-        self.assertEqual(str(protocol.buffer), 'Password: ')
+        self.assertEqual(str(protocol._buffer), 'Password: ')
         protocol.login(self.account)
-        self.assertEqual(str(protocol.buffer),   '')
-        self.assertEqual(protocol.response, self.password + '\r')
+        self.assertEqual(str(protocol._buffer), '')
+        self.assertEqual(protocol.response, '')  # the password is not echoed
         protocol.close()
 
         # Test login with port number.
         protocol = self._create_dummy_and_eat_banner(device, 1234)
-        self.assertEqual(str(protocol.buffer), 'Password: ')
+        self.assertEqual(str(protocol._buffer), 'Password: ')
         protocol.login(self.account)
-        self.assertEqual(str(protocol.buffer), '')
-        self.assertEqual(protocol.response, self.password + '\r')
+        self.assertEqual(str(protocol._buffer), '')
+        self.assertEqual(protocol.response, '')  # the password is not echoed
         protocol.close()
 
         # Test a custom response.
-        device = VirtualDevice(self.hostname,
-                               echo=True,
-                               login_type=VirtualDevice.LOGIN_TYPE_NONE)
+        device = VirtualDevice(self.hostname, echo=True, login_type=VirtualDevice.LOGIN_TYPE_NONE)
         protocol = Dummy(device=device)
         command = re.compile(r'testcommand')
         response = 'hello world\r\n%s> ' % self.hostname
@@ -119,18 +116,94 @@ class DummyTest(ProtocolTest):
         protocol.connect('testhost')
         protocol.expect(re.compile(re.escape(self.banner)))
         self.assertEqual(protocol.response, '')
-        self.assertEqual(str(protocol.buffer), self.prompt)
+        self.assertEqual(str(protocol._buffer), self.prompt)
         protocol.expect_prompt()
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         self.assertEqual(protocol.response, self.hostname)
         protocol.execute('testcommand')
         expected = 'testcommand\rhello world\r\n' + self.hostname
         self.assertEqual(protocol.response, expected)
-        self.assertEqual(str(protocol.buffer), '')
+        self.assertEqual(str(protocol._buffer), '')
         protocol.close()
 
 
+class SecretHygieneTest(unittest.TestCase):
+    PASSWORD = 'S3cr3t-P@ss'
+
+    def testDebugLogRedactsPassword(self):
+        conn = Dummy(device=VirtualDevice('r1', echo=False, strict=False), debug=4)
+        with self.assertLogs('Exscript.protocols', level='DEBUG') as logs:
+            conn.connect('r1')
+            conn.login(Account('admin', self.PASSWORD, needs_lock=False))
+        conn.close(force=True)
+        self.assertIn('Sending: <secret>', '\n'.join(logs.output))
+        self.assertEqual([line for line in logs.output if self.PASSWORD in line], [])
+
+    def testSentDataRedactsPassword(self):
+        # The listeners of data_sent_event, and the output and the logfile of a protocol
+        # whose host does not echo, see <secret> instead of the password.
+        for echo in True, False:
+            with self.subTest(echo=echo), tempfile.TemporaryDirectory() as tmpdir:
+                logfile = os.path.join(tmpdir, 'session.log')
+                conn = Dummy(device=VirtualDevice('r1', echo=False, strict=False), logfile=logfile)
+                conn._receives_echo = echo
+                sent = []
+                conn.data_sent_event.connect(sent.append)
+                conn.connect('r1')
+                conn.login(Account('admin', self.PASSWORD, needs_lock=False))
+                conn.close(force=True)
+                self.assertIn('admin\r', sent)
+                self.assertIn('<secret>', sent)
+                with open(logfile, encoding='utf-8') as fp:
+                    output = ''.join(sent) + conn.stdout.getvalue() + fp.read()
+                self.assertNotIn(self.PASSWORD, output)
+
+    def testErrorMessageShowsOnlyTheErrorLine(self):
+        device = VirtualDevice('r1', echo=False, strict=False)
+        device.add_command('show run', 'enable secret PRIVATE\r\n% Invalid input detected')
+        conn = Dummy(device=device)
+        conn.connect('r1')
+        conn.login(Account('admin', self.PASSWORD, needs_lock=False))
+        with self.assertRaises(InvalidCommandException) as cm:
+            conn.execute('show run')
+        self.assertEqual(
+            str(cm.exception), 'Error in the response from the device: % Invalid input detected'
+        )
+        self.assertIn('PRIVATE', conn.response)
+        conn.close(force=True)
+
+
+class OutputTest(unittest.TestCase):
+    def testStdoutAndLogfileWithoutCarriageReturns(self):
+        # The stdout stream and the logfile get the received data without CR, the
+        # listeners of data_received_event get it as the device sent it.
+        tmpdir = self.enterContext(tempfile.TemporaryDirectory())
+        logfile = os.path.join(tmpdir, 'session.log')
+        stdout = io.StringIO()
+        received = []
+        conn = Dummy(device=VirtualDevice('r1', strict=False), stdout=stdout, logfile=logfile)
+        conn.data_received_event.connect(received.append)
+        conn.connect('r1')
+        conn.login(Account('admin', 'password', needs_lock=False))
+        conn.execute('ls')
+        self.assertEqual(conn.response, 'ls')
+        conn.close(force=True)
+        self.assertIn('ls\r\n', ''.join(received))
+        self.assertEqual(stdout.getvalue(), ''.join(received).replace('\r', ''))
+        with open(logfile, encoding='utf-8', newline='') as fp:
+            self.assertEqual(fp.read(), stdout.getvalue().replace('\n', os.linesep))
+
+
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(DummyTest)
+    loader = unittest.TestLoader()
+    return unittest.TestSuite(
+        [
+            loader.loadTestsFromTestCase(DummyTest),
+            loader.loadTestsFromTestCase(SecretHygieneTest),
+            loader.loadTestsFromTestCase(OutputTest),
+        ]
+    )
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

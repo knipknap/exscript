@@ -1,100 +1,66 @@
-from builtins import str
-import sys
 import unittest
-import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from Exscript.util.url import Url
 
 urls = [
     # No protocol.
-    ('testhost',
-     'telnet://testhost:23'),
-    ('testhost?myvar=testvalue',
-     'telnet://testhost:23?myvar=testvalue'),
-
+    ('testhost', 'ssh://testhost:22'),
+    ('testhost?myvar=testvalue', 'ssh://testhost:22?myvar=testvalue'),
     # No protocol + empty user.
-    ('@testhost',
-     'telnet://@testhost:23'),
-    ('@testhost?myvar=testvalue',
-     'telnet://@testhost:23?myvar=testvalue'),
-
+    ('@testhost', 'ssh://@testhost:22'),
+    ('@testhost?myvar=testvalue', 'ssh://@testhost:22?myvar=testvalue'),
     # No protocol + user.
-    ('user@testhost',
-     'telnet://user@testhost:23'),
-    ('user:password@testhost',
-     'telnet://user:password@testhost:23'),
-    ('user:password:password2@testhost',
-     'telnet://user:password:password2@testhost:23'),
-
+    ('user@testhost', 'ssh://user@testhost:22'),
+    ('user:password@testhost', 'ssh://user:password@testhost:22'),
+    ('user:password:password2@testhost', 'ssh://user:password:password2@testhost:22'),
     # No protocol + empty password 1.
-    ('user:@testhost',
-     'telnet://user:@testhost:23'),
-    ('user::password2@testhost',
-     'telnet://user::password2@testhost:23'),
-    (':@testhost',
-     'telnet://:@testhost:23'),
-
+    ('user:@testhost', 'ssh://user:@testhost:22'),
+    ('user::password2@testhost', 'ssh://user::password2@testhost:22'),
+    (':@testhost', 'ssh://:@testhost:22'),
     # No protocol + empty password 2.
-    ('user:password:@testhost',
-     'telnet://user:password:@testhost:23'),
-    ('user::@testhost',
-     'telnet://user::@testhost:23'),
-    ('::@testhost',
-     'telnet://::@testhost:23'),
-    (':password:@testhost',
-     'telnet://:password:@testhost:23'),
-
+    ('user:password:@testhost', 'ssh://user:password:@testhost:22'),
+    ('user::@testhost', 'ssh://user::@testhost:22'),
+    ('::@testhost', 'ssh://::@testhost:22'),
+    (':password:@testhost', 'ssh://:password:@testhost:22'),
     # Protocol.
-    ('ssh1://testhost',
-     'ssh1://testhost:22'),
-    ('ssh1://testhost?myvar=testvalue',
-     'ssh1://testhost:22?myvar=testvalue'),
-
+    ('telnet://testhost', 'telnet://testhost:23'),
+    ('telnet://testhost?myvar=testvalue', 'telnet://testhost:23?myvar=testvalue'),
     # Protocol + empty user.
-    ('ssh://@testhost',
-     'ssh://@testhost:22'),
-    ('ssh://:password@testhost',
-     'ssh://:password@testhost:22'),
-    ('ssh://:password:password2@testhost',
-     'ssh://:password:password2@testhost:22'),
-
+    ('ssh://@testhost', 'ssh://@testhost:22'),
+    ('ssh://:password@testhost', 'ssh://:password@testhost:22'),
+    ('ssh://:password:password2@testhost', 'ssh://:password:password2@testhost:22'),
     # Protocol + user.
-    ('ssh://user@testhost',
-     'ssh://user@testhost:22'),
-    ('ssh://user@testhost?myvar=testvalue',
-     'ssh://user@testhost:22?myvar=testvalue'),
-    ('ssh://user:password@testhost',
-     'ssh://user:password@testhost:22'),
-    ('ssh://user:password@testhost?myvar=testvalue',
-     'ssh://user:password@testhost:22?myvar=testvalue'),
-    ('ssh://user:password@testhost',
-     'ssh://user:password@testhost:22'),
-    ('ssh://user:password:password2@testhost',
-     'ssh://user:password:password2@testhost:22'),
-
+    ('ssh://user@testhost', 'ssh://user@testhost:22'),
+    ('ssh://user@testhost?myvar=testvalue', 'ssh://user@testhost:22?myvar=testvalue'),
+    ('ssh://user:password@testhost', 'ssh://user:password@testhost:22'),
+    (
+        'ssh://user:password@testhost?myvar=testvalue',
+        'ssh://user:password@testhost:22?myvar=testvalue',
+    ),
+    ('ssh://user:password@testhost', 'ssh://user:password@testhost:22'),
+    ('ssh://user:password:password2@testhost', 'ssh://user:password:password2@testhost:22'),
     # Multiple arguments.
-    ('ssh://user:password@testhost?myvar=testvalue&myvar2=test%202',
-     'ssh://user:password@testhost:22?myvar=testvalue&myvar2=test+2'),
-    ('ssh://user:password@testhost?myvar=testvalue&amp;myvar2=test%202',
-     'ssh://user:password@testhost:22?myvar=testvalue&myvar2=test+2'),
-
+    (
+        'ssh://user:password@testhost?myvar=testvalue&myvar2=test%202',
+        'ssh://user:password@testhost:22?myvar=testvalue&myvar2=test+2',
+    ),
+    (
+        'ssh://user:password@testhost?myvar=testvalue&amp;myvar2=test%202',
+        'ssh://user:password@testhost:22?myvar=testvalue&myvar2=test+2',
+    ),
     # Encoding.
-    ('foo://%27M%7B7Zk:%27%2FM%7B7Zyk:C7%26Rt%3Ea@ULM-SZRC1:23',
-     'foo://%27M%7B7Zk:%27%2FM%7B7Zyk:C7%26Rt%3Ea@ULM-SZRC1:23'),
-
+    (
+        'foo://%27M%7B7Zk:%27%2FM%7B7Zyk:C7%26Rt%3Ea@ULM-SZRC1:22',
+        'foo://%27M%7B7Zk:%27%2FM%7B7Zyk:C7%26Rt%3Ea@ULM-SZRC1:22',
+    ),
     # Pseudo protocol.
-    ('pseudo://../my/path',
-     'pseudo://../my/path'),
-    ('pseudo://../path',
-     'pseudo://../path'),
-    ('pseudo://filename',
-     'pseudo://filename'),
-    ('pseudo:///abspath',
-     'pseudo:///abspath'),
-    ('pseudo:///abs/path',
-     'pseudo:///abs/path'),
+    ('pseudo://../my/path', 'pseudo://../my/path'),
+    ('pseudo://../path', 'pseudo://../path'),
+    ('pseudo://filename', 'pseudo://filename'),
+    ('pseudo:///abspath', 'pseudo:///abspath'),
+    ('pseudo:///abs/path', 'pseudo:///abs/path'),
+    ('pseudo://C:\\abs\\path', 'pseudo://C:\\abs\\path'),
+    ('pseudo://C:/abs/path', 'pseudo://C:/abs/path'),
 ]
 
 
@@ -122,8 +88,32 @@ class urlTest(unittest.TestCase):
             self.assertIsInstance(result, Url)
             self.assertTrue(str(result) == expected, error)
 
+    def testPercentSignsThatEscapeNothing(self):
+        # They are kept, in the passwords and in the variables.
+        url = Url.from_string('ssh://admin:100%sure@testhost?note=50%25+of+100%')
+        self.assertEqual(url.password1, '100%sure')
+        self.assertEqual(url.vars, {'note': ['50% of 100%']})
+
+    def testVariablesWithoutValue(self):
+        url = Url.from_string('telnet://testhost?vlan=&interface=ge-0/0/1&shutdown')
+        self.assertEqual(url.vars, {'interface': ['ge-0/0/1']})
+
+    def testToStringOfSomeParts(self):
+        # Without protocol and user name, but with a password and a path.
+        url = Url()
+        url.hostname = 'testhost'
+        url.password1 = 'secret'
+        url.path = 'configs/r1.cfg'
+        self.assertEqual(str(url), ':secret@testhost/configs/r1.cfg')
+
+    def testFromStringWithoutString(self):
+        with self.assertRaisesRegex(TypeError, '^Expected string but got NoneType$'):
+            Url.from_string(None)
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(urlTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

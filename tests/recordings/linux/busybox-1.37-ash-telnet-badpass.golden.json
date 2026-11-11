@@ -1,0 +1,6 @@
+{
+  "login": "LoginFailure",
+  "driver": "shell",
+  "os": "shell",
+  "commands": []
+}

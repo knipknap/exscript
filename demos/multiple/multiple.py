@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from Exscript import Host
-from Exscript.util.file import get_hosts_from_file, get_accounts_from_file
+from Exscript.util.file import get_accounts_from_file, get_hosts_from_file
 from Exscript.util.start import start
 
 
@@ -16,12 +16,13 @@ def one(job, host, conn):
 
     # Execute a simple command.
     conn.execute('show ip int brie')
-    print "myvariable is", conn.get_host().get('myvariable')
+    print("myvariable is", host.get('myvariable'))
 
 
 def two(job, host, conn):
     conn.autoinit()
     conn.execute('show interface POS1/0')
+
 
 accounts = get_accounts_from_file('accounts.cfg')
 

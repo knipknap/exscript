@@ -1,17 +1,9 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import next
-import sys
+import time
 import unittest
-import re
-import os.path
-import threading
-import time
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
-import time
-from threading import Thread
+from functools import partial
 from multiprocessing import Value
+from threading import Thread
+
 from Exscript.workqueue import Pipeline
 
 
@@ -76,6 +68,27 @@ class PipelineTest(unittest.TestCase):
     def testAppend(self):
         self.testContains()
 
+    def testAppendRejectsAQueuedName(self):
+        # An item with the name of a queued item is rejected, and leaves the
+        # pipeline unchanged.
+        item1, item2 = object(), object()
+        self.pipeline.append(item1, 'foo')
+        appends = (
+            self.pipeline.append,
+            self.pipeline.appendleft,
+            partial(self.pipeline.appendleft, force=True),
+        )
+        for append in appends:
+            with self.subTest(append=append):
+                with self.assertRaisesRegex(AttributeError, "'foo'"):
+                    append(item2, 'foo')
+                self.assertNotIn(item2, self.pipeline)
+                self.assertEqual(len(self.pipeline), 1)
+                self.assertIs(self.pipeline.get_from_name('foo'), item1)
+        self.assertIs(next(self.pipeline), item1)
+        self.pipeline.task_done(item1)
+        self.assertIsNone(self.pipeline.try_next())
+
     def testAppendleft(self):
         item1 = object()
         item2 = object()
@@ -90,7 +103,7 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.appendleft(item3)
         self.assertEqual(self.pipeline.try_next(), item3)
 
-        self.pipeline.appendleft(item4, True)
+        self.pipeline.appendleft(item4, force=True)
         self.assertEqual(self.pipeline.try_next(), item4)
 
     def testPrioritize(self):
@@ -129,7 +142,6 @@ class PipelineTest(unittest.TestCase):
         thread_completed = Value('i', 0)
 
         class deadlock_until_stop(Thread):
-
             def run(inner_self):
                 self.assertEqual(next(self.pipeline), item1)
                 self.assertEqual(next(self.pipeline), None)  # ***
@@ -162,7 +174,6 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.pause()
 
         class complete_all(Thread):
-
             def run(inner_self):
                 while True:
                     task = next(self.pipeline)
@@ -174,7 +185,7 @@ class PipelineTest(unittest.TestCase):
         thread.daemon = True
         thread.start()
 
-        time.sleep(.2)  # hack: wait long enough for the task to complete.
+        time.sleep(0.2)  # hack: wait long enough for the task to complete.
         self.assertEqual(len(self.pipeline), 1)  # should not be completed.
         self.pipeline.unpause()
         self.pipeline.wait_all()  # now it should not deadlock.
@@ -207,6 +218,23 @@ class PipelineTest(unittest.TestCase):
     def testWake(self):
         self.testSleep()
 
+    def testSleepingItemsKeepTheirOrder(self):
+        # next() and try_next() skip the sleeping items at the start of the
+        # queue, and leave them in their order.
+        for get in (next, Pipeline.try_next):
+            with self.subTest(get=get):
+                pipeline = Pipeline(max_working=3)
+                item1, item2, item3 = object(), object(), object()
+                for item in (item1, item2, item3):
+                    pipeline.append(item)
+                pipeline.sleep(item1)
+                pipeline.sleep(item2)
+                self.assertIs(get(pipeline), item3)
+                pipeline.wake(item1)
+                pipeline.wake(item2)
+                self.assertIs(next(pipeline), item1)
+                self.assertIs(next(pipeline), item2)
+
     def testWaitForId(self):
         item1 = object()
         item2 = object()
@@ -216,10 +244,10 @@ class PipelineTest(unittest.TestCase):
         item = next(self.pipeline)
 
         class complete_item(Thread):
-
             def run(inner_self):
-                time.sleep(.1)
+                time.sleep(0.1)
                 self.pipeline.task_done(item)
+
         thread = complete_item()
         thread.daemon = True
         thread.start()
@@ -241,10 +269,10 @@ class PipelineTest(unittest.TestCase):
         item = next(self.pipeline)
 
         class complete_item(Thread):
-
             def run(inner_self):
-                time.sleep(.1)
+                time.sleep(0.1)
                 self.pipeline.task_done(item)
+
         thread = complete_item()
         thread.daemon = True
         thread.start()
@@ -259,13 +287,13 @@ class PipelineTest(unittest.TestCase):
         self.pipeline.append(item2)
 
         class complete_all(Thread):
-
             def run(inner_self):
                 while True:
                     task = next(self.pipeline)
                     if task is None:
                         break
                     self.pipeline.task_done(task)
+
         thread = complete_all()
         thread.daemon = True
         thread.start()
@@ -379,5 +407,7 @@ class PipelineTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(PipelineTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

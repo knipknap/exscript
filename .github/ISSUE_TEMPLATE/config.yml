@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://exscript.readthedocs.io
+    about: Tutorials, the template language and the API reference.
+  - name: Report a vulnerability
+    url: https://github.com/knipknap/exscript/security/advisories/new
+    about: Report security problems privately, not in a public issue.

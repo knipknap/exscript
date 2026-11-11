@@ -1,13 +1,9 @@
-from builtins import str
 import sys
 import unittest
-import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from Exscript import Host
-from Exscript.logger import Log
 from util.reportTest import FakeError
+
+from Exscript.logger import Log
 
 
 class LogTest(unittest.TestCase):
@@ -28,6 +24,27 @@ class LogTest(unittest.TestCase):
         except FakeError:
             self.log.aborted(sys.exc_info())
         self.assertIn('FakeError', self.log.get_error())
+
+    def testGetErrorWithoutTraceback(self):
+        try:
+            raise FakeError('Connection refused')
+        except FakeError:
+            self.log.aborted(sys.exc_info())
+        self.assertEqual(self.log.get_error(include_tb=False), 'Connection refused')
+        self.assertIn('Traceback (most recent call last)', self.log.get_error())
+
+    def testGetErrorWithoutTracebackAndMessage(self):
+        # Without a message, the name of the exception class is the error.
+        try:
+            raise FakeError()
+        except FakeError:
+            self.log.aborted(sys.exc_info())
+        self.assertEqual(self.log.get_error(include_tb=False), 'FakeError')
+
+    def testLen(self):
+        self.assertEqual(len(self.log), 0)
+        self.log.write('hello', 'world')
+        self.assertEqual(len(self.log), len('hello world'))
 
     def testGetName(self):
         self.assertEqual(self.log.get_name(), 'testme')
@@ -76,5 +93,7 @@ class LogTest(unittest.TestCase):
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(LogTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

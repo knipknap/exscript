@@ -1,0 +1,167 @@
+[build-system]
+requires = ["hatchling>=1.27", "hatch-vcs>=0.5"]
+build-backend = "hatchling.build"
+
+[project]
+name = "Exscript"
+dynamic = ["version"]
+description = "Automating Telnet, SSH and NETCONF"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT AND PSF-2.0"  # PSF-2.0: protocols/telnetlib.py is derived from CPython
+license-files = ["COPYING", "LICENSES/*"]
+authors = [{ name = "Samuel Abels", email = "knipknap@gmail.com" }]
+keywords = [
+    "exscript",
+    "telnet",
+    "ssh",
+    "netconf",
+    "network",
+    "networking",
+    "automate",
+    "automation",
+    "library",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "lxml>=5.0",  # 5.0 stopped resolving external entities by default, also in ncclient
+    "ncclient>=0.7,<1",
+    "paramiko>=3.5.1,<6",  # older versions cannot load encrypted PEM keys with current cryptography
+    "pycryptodomex>=3.17",  # the first version with wheels for Python 3.12 also on Apple Silicon
+]
+
+[project.optional-dependencies]
+otel = [
+    "opentelemetry-api>=1.30",  # create_histogram() with explicit_bucket_boundaries_advisory
+    "opentelemetry-instrumentation>=0.51b0",  # the release for opentelemetry-api 1.30
+]
+cli = [
+    "rich>=13",
+]
+
+[project.scripts]
+exscript = "Exscript.cli:main"
+otp = "Exscript.cli:otp_main"
+
+[project.urls]
+Homepage = "https://github.com/knipknap/exscript"
+Documentation = "https://exscript.readthedocs.io"
+Issues = "https://github.com/knipknap/exscript/issues"
+Changelog = "https://github.com/knipknap/exscript/blob/master/CHANGES.md"
+
+[dependency-groups]
+test = [
+    "pytest>=9.2",
+    "pytest-cov>=7.1",
+    "opentelemetry-sdk>=1.30",
+    "opentelemetry-instrumentation>=0.51b0",
+    "hypothesis>=6.170.14",
+]
+types = ["mypy>=2.4", "types-lxml>=2026.2", "types-paramiko>=5.1"]
+docs = ["sphinx>=9", "furo>=2025.12", "myst-parser>=5"]
+# Not a dependency of Exscript: CI checks that applications can run it under gevent.
+gevent = [{ include-group = "test" }, "gevent>=26"]
+dev = [
+    { include-group = "test" },
+    { include-group = "types" },
+    "rich>=15.0.0",
+]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/Exscript"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+extend-exclude = ["docs/_build"]
+
+[tool.ruff.format]
+quote-style = "preserve"
+
+[tool.ruff.lint]
+# PLW1514 (open() without an encoding) is a preview rule; only explicitly selected
+# preview rules are enabled.
+preview = true
+explicit-preview-rules = true
+select = ["E", "W", "F", "I", "UP", "B", "S", "PLW1514"]
+ignore = [
+    "UP031",  # printf-style formatting is used throughout
+    # Baseline of existing findings: fix a rule everywhere, then remove it here.
+    "B004", "B006", "B007", "B008", "B011", "B017", "B018", "B904", "B905",
+    "E402", "E501", "E721", "E722", "E731", "E741", "F401", "F841", "UP003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S104", "S105", "S106", "S107", "S108", "S311"]
+# Security baseline: existing findings per file, to be reviewed; new code is checked.
+"demos/template/template.py" = ["S101"]
+"src/Exscript/emulators/iosemu.py" = ["S105"]
+"src/Exscript/emulators/vdevice.py" = ["S105"]
+"src/Exscript/interpreter/string.py" = ["S105"]
+"src/Exscript/interpreter/template.py" = ["S105"]
+"src/Exscript/protocols/netconf.py" = ["S110"]
+"src/Exscript/protocols/protocol.py" = ["S101", "S110"]
+"src/Exscript/protocols/ssh2.py" = ["S110"]
+"src/Exscript/protocols/telnet.py" = ["S101", "S110"]
+"src/Exscript/stdlib/mysys.py" = ["S603"]
+"src/Exscript/util/crypt.py" = ["S303"]
+"src/Exscript/util/file.py" = ["S107"]
+"src/Exscript/util/tty.py" = ["S607"]
+"src/Exscript/workqueue/pipeline.py" = ["S101"]
+"tests/Exscript/QueueTest.py" = ["S110"]
+"tests/Exscript/workqueue/JobTest.py" = ["S301"]
+"tools/bench_bulk.py" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+strict = true
+ignore_missing_imports = true  # ncclient and others ship no type hints
+
+[[tool.mypy.overrides]]
+# BaseInstrumentor comes from a module that mypy skips (it starts with "# type: ignore").
+module = "Exscript.contrib.otel"
+disallow_subclassing_any = false
+
+[tool.interrogate]
+# Docstring coverage: every module, class and function has a docstring.
+# Private functions count; other dunder methods than __init__, nested
+# functions and property setters do not.
+fail-under = 100
+ignore-magic = true
+ignore-nested-functions = true
+ignore-setters = true
+exclude = ["docs", "tests", "tools", "demos"]
+
+[tool.coverage.run]
+branch = true
+patch = ["subprocess"]  # e.g. python -m Exscript in the tests of the command
+
+[tool.coverage.report]
+exclude_also = ['if __name__ == .__main__.:']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["*Test.py"]
+addopts = ["-ra", "--strict-config", "--strict-markers"]
+filterwarnings = [
+    "error",
+    # lxml enables the GIL of free-threaded Python; CI runs these tests with PYTHON_GIL=0.
+    "ignore:The global interpreter lock \\(GIL\\) has been enabled:RuntimeWarning",
+]

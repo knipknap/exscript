@@ -1,20 +1,23 @@
-import sys
-import unittest
-import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
 import base64
-import Exscript.util.file
+import binascii
+import os.path
+import re
+import tempfile
+import traceback
+import unittest
 from tempfile import NamedTemporaryFile
 
-account_pool = [('user1', 'password1'),
-                ('user2', 'password2'),
-                ('user3', 'password3'),
-                ('user4', 'password4')]
+import Exscript.util.file
 
-hosts = ['localhost', '1.2.3.4', 'ssh://test', 'ssh1://another:23']
-expected_hosts = ['localhost', '1.2.3.4', 'test',       'another']
+account_pool = [
+    ('user1', 'password1'),
+    ('user2', 'password2'),
+    ('user3', 'password3'),
+    ('user4', 'password4'),
+]
+
+hosts = ['localhost', '1.2.3.4', 'ssh://test', 'telnet://another:23']
+expected_hosts = ['localhost', '1.2.3.4', 'test', 'another']
 
 
 class fileTest(unittest.TestCase):
@@ -26,31 +29,23 @@ class fileTest(unittest.TestCase):
         data += 'user2:' + base64.encodebytes(b'password2').decode('utf8') + '\n'
         data += 'user3 = ' + base64.encodebytes(b'password3').decode('utf8') + '\n'
         data += 'user4 : ' + base64.encodebytes(b'password4').decode('utf8') + '\n'
-        self.account_file = NamedTemporaryFile()
-        self.account_file.write(data.encode('utf8'))
-        self.account_file.flush()
-
-        self.host_file = NamedTemporaryFile()
-        self.host_file.write('\n'.join(hosts).encode('utf8'))
-        self.host_file.flush()
-
+        self.account_file = self.write_tempfile(data.encode('utf8'))
+        self.host_file = self.write_tempfile('\n'.join(hosts).encode('utf8'))
         content = '\n'.join([h + '	blah' for h in hosts])
-        self.csv_host_file = NamedTemporaryFile()
-        self.csv_host_file.write(b'hostname	test\n')
-        self.csv_host_file.write(content.encode('utf8'))
-        self.csv_host_file.flush()
+        self.csv_host_file = self.write_tempfile(b'hostname	test\n' + content.encode('utf8'))
+        self.lib_file = self.write_tempfile(b'__lib__ = {"test": object}\n')
 
-        self.lib_file = NamedTemporaryFile()
-        self.lib_file.write(b'__lib__ = {"test": object}\n')
-        self.lib_file.flush()
-
-    def tearDown(self):
-        self.account_file.close()
-        self.host_file.close()
-        self.csv_host_file.close()
+    def write_tempfile(self, data):
+        # Closed before the test opens it by name, which Windows requires.
+        file = NamedTemporaryFile(delete=False)
+        with file:
+            file.write(data)
+        self.addCleanup(os.remove, file.name)
+        return file
 
     def testGetAccountsFromFile(self):
         from Exscript.util.file import get_accounts_from_file
+
         accounts = get_accounts_from_file(self.account_file.name)
         result = [(a.get_name(), a.get_password()) for a in accounts]
         result.sort()
@@ -58,11 +53,13 @@ class fileTest(unittest.TestCase):
 
     def testGetHostsFromFile(self):
         from Exscript.util.file import get_hosts_from_file
+
         result = get_hosts_from_file(self.host_file.name)
         self.assertEqual([h.get_name() for h in result], expected_hosts)
 
     def testGetHostsFromCsv(self):
         from Exscript.util.file import get_hosts_from_csv
+
         result = get_hosts_from_csv(self.csv_host_file.name)
         hostnames = [h.get_name() for h in result]
         testvars = [h.get('test')[0] for h in result]
@@ -71,12 +68,132 @@ class fileTest(unittest.TestCase):
 
     def testLoadLib(self):
         from Exscript.util.file import load_lib
+
         functions = load_lib(self.lib_file.name)
         name = os.path.splitext(os.path.basename(self.lib_file.name))[0]
         self.assertEqual({name + '.test': object}, functions)
 
+    def testMissingFiles(self):
+        from Exscript.util.file import get_hosts_from_csv, get_hosts_from_file, load_lib
+
+        tmpdir = self.enterContext(tempfile.TemporaryDirectory())
+        filename = os.path.join(tmpdir, 'missing')
+        for func in get_hosts_from_file, get_hosts_from_csv, load_lib:
+            with self.subTest(func=func.__name__):
+                with self.assertRaisesRegex(OSError, 'No such file: ' + re.escape(filename)):
+                    func(filename)
+
+    def testGetAccountsFromAFileThatCannotBeRead(self):
+        from Exscript.util.file import get_accounts_from_file
+
+        tmpdir = self.enterContext(tempfile.TemporaryDirectory())
+        filename = os.path.join(tmpdir, 'missing.cfg')
+        with self.assertRaisesRegex(FileNotFoundError, 'No such file') as cm:
+            get_accounts_from_file(filename)
+        self.assertEqual(cm.exception.filename, filename)
+        # Opening a directory fails, too: IsADirectoryError, PermissionError on Windows.
+        self.assertRaises(OSError, get_accounts_from_file, tmpdir)
+
+    def testGetAccountsFromFileWithOtherSections(self):
+        from Exscript.util.file import get_accounts_from_file
+
+        data = '[other]\nuser9 = cGFzc3dvcmQ=\n[account-pool]\nAdmin = cGFzc3dvcmQ=\n'
+        accounts = get_accounts_from_file(self.write_tempfile(data.encode('utf8')).name)
+        self.assertEqual(
+            [(a.get_name(), a.get_password()) for a in accounts], [('Admin', 'password')]
+        )
+
+    def testGetAccountsFromFileWithInvalidPasswords(self):
+        from Exscript.util.file import get_accounts_from_file
+
+        undecodable = base64.b64encode(b'\xffS3cr3t').decode('ascii')
+        cases = (
+            ('S3cr3t!', binascii.Error, 'invalid base64'),
+            ('S3cr3t-\u00e4', binascii.Error, 'invalid base64'),
+            (undecodable, ValueError, 'invalid utf-8'),
+        )
+        for password, cls, reason in cases:
+            with self.subTest(password=password):
+                data = '[account-pool]\nuser1 = %s\n' % password
+                filename = self.write_tempfile(data.encode('utf8')).name
+                with self.assertRaises(cls) as cm:
+                    get_accounts_from_file(filename)
+                self.assertIs(type(cm.exception), cls)
+                message = 'Could not decode password for user: user1 (%s)' % reason
+                self.assertEqual(str(cm.exception), message)
+                # Neither the message nor the traceback shows the password or its bytes.
+                self.assertTrue(cm.exception.__suppress_context__)
+                output = ''.join(traceback.format_exception(cm.exception))
+                for secret in password, 'S3cr3t', '0xff', '\\xff':
+                    self.assertNotIn(secret, output)
+
+    def testGetAccountsFromFileWithPasswordEncoding(self):
+        from Exscript.util.file import get_accounts_from_file
+
+        password = base64.b64encode('pässword'.encode('latin-1')).decode('ascii')
+        data = '[account-pool]\nuser1 = %s\n' % password
+        filename = self.write_tempfile(data.encode('utf8')).name
+        accounts = get_accounts_from_file(filename, password_encoding='latin-1')
+        self.assertEqual(accounts[0].get_password(), 'pässword')
+
+    def testGetHostsFromFileWithCommentsAndDuplicates(self):
+        from Exscript.util.file import get_hosts_from_file
+
+        data = '# core routers\nrouter1\n\nrouter2  # backup\nrouter1\ntelnet://switch1\n'
+        filename = self.write_tempfile(data.encode('utf8')).name
+        hosts = get_hosts_from_file(filename, default_protocol='telnet')
+        self.assertEqual(
+            [h.get_name() for h in hosts], ['router1', 'router2', 'router1', 'switch1']
+        )
+        self.assertEqual({h.get_protocol() for h in hosts}, {'telnet'})
+        hosts = get_hosts_from_file(filename, remove_duplicates=True, default_domain='example.com')
+        self.assertEqual(
+            [(h.get_protocol(), h.get_address()) for h in hosts],
+            [
+                ('ssh', 'router1.example.com'),
+                ('ssh', 'router2.example.com'),
+                ('telnet', 'switch1.example.com'),
+            ],
+        )
+
+    def testGetHostsFromCsvWithInvalidHeader(self):
+        from Exscript.util.file import get_hosts_from_csv
+
+        for header, error in (
+            ('name\tvar', 'File does not start with "hostname" or "address".'),
+            ('address var', 'Make sure to separate columns by tabs.'),
+            ('address\t\tvar', 'Make sure to separate columns by tabs.'),
+        ):
+            with self.subTest(header=header):
+                filename = self.write_tempfile((header + '\n1.2.3.4\tvalue\n').encode('utf8')).name
+                with self.assertRaisesRegex(Exception, re.escape(error)):
+                    get_hosts_from_csv(filename)
+
+    def testGetHostsFromCsvWithSeveralLinesPerHost(self):
+        # The example of the documentation, with an empty line and a missing value.
+        from Exscript.util.file import get_hosts_from_csv
+
+        data = (
+            'address\thostname\ttestvar1\ttestvar2\n'
+            '10.0.0.1\tmyhost\tvalue1\tothervalue\n'
+            '\n'
+            '10.0.0.1\tmyhost\tvalue2\tothervalue2\n'
+            '10.0.0.2\totherhost\tfoo\n'
+        )
+        filename = self.write_tempfile(data.encode('utf8')).name
+        hosts = get_hosts_from_csv(filename, default_protocol='telnet')
+        self.assertEqual([h.get_address() for h in hosts], ['10.0.0.1', '10.0.0.2'])
+        self.assertEqual([h.get_name() for h in hosts], ['myhost', 'otherhost'])
+        self.assertEqual([h.get_protocol() for h in hosts], ['telnet', 'telnet'])
+        self.assertEqual(hosts[0].get('testvar1'), ['value1', 'value2'])
+        self.assertEqual(hosts[0].get('testvar2'), ['othervalue', 'othervalue2'])
+        self.assertEqual(hosts[1].get('testvar1'), ['foo'])
+        self.assertEqual(hosts[1].get('testvar2'), [''])
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(fileTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

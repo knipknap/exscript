@@ -1,0 +1,191 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint and type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # hatch-vcs derives the version from tags
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - run: uvx pre-commit run --all-files --show-diff-on-failure
+      - name: Type check and type coverage (mypy; fails below the minimum)
+        shell: bash  # with pipefail; the default shell lets tee hide a failure
+        run: uv run --frozen python tools/type_coverage.py --check | tee -a "$GITHUB_STEP_SUMMARY"
+
+  test:
+    name: Test ${{ matrix.python }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    # Windows, macOS and free-threading are not part of the gate until their baselines are green.
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.12", "3.13", "3.14", "3.15"]
+        experimental: [false]
+        include:
+          # lxml has not declared support for free-threading, so importing it enables the GIL;
+          # PYTHON_GIL=0 keeps it off, so that this job tests without the GIL.
+          - { os: ubuntu-latest, python: "3.14t", experimental: true, gil: "0" }
+          - { os: windows-latest, python: "3.14", experimental: true }
+          - { os: macos-latest, python: "3.14", experimental: true }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Run tests
+        shell: bash  # also on Windows, where the default shell does not expand "$PYTHON"
+        env:
+          PYTHON: ${{ matrix.python }}
+          PYTHON_GIL: ${{ matrix.gil }}  # empty, i.e. ignored, except for free-threading
+          # Line and branch coverage: 98.6 % on 2026-11-11. Raise the floor, never lower it.
+          # Windows and macOS skip the tests of the POSIX terminal, so it applies on Ubuntu only.
+          COV_FAIL_UNDER: ${{ matrix.os == 'ubuntu-latest' && '97' || '0' }}
+        run: >-
+          uv run --frozen --python "$PYTHON" pytest --cov=Exscript
+          --cov-report=term-missing:skip-covered --cov-fail-under="$COV_FAIL_UNDER"
+
+  lowest:
+    name: Lowest dependency versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      # Only the dependencies of Exscript and its extras get their lowest versions, the test
+      # tools the newest that fit. uv pip neither uses nor changes uv.lock.
+      - name: Install the lowest versions that pyproject.toml allows, on Python 3.12
+        run: |
+          uv venv --python 3.12
+          uv pip compile pyproject.toml --all-extras --resolution lowest-direct --python-version 3.12 -o lowest.txt
+          uv pip install -r lowest.txt -e . --group test
+          # The tests of the extras skip instead of failing if these imports fail.
+          uv run --no-sync python -c 'import Exscript.contrib.otel, rich.console'
+      - name: Run tests
+        run: uv run --no-sync pytest -p no:cacheprovider
+
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - run: uv build
+      - run: uvx twine check --strict dist/*
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: dist
+          path: dist/
+
+  benchmarks:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Run the benchmarks (fails on 4x the targets)
+        shell: bash  # with pipefail; the default shell lets tee hide a failure
+        run: uv run --frozen --python 3.14 python tools/bench_bulk.py --json bench.json --check 2>&1 | tee bench.txt
+      - name: Add the results to the summary
+        if: always()
+        run: |
+          {
+            echo '### Benchmarks (4 MiB, median of 3 runs)'
+            echo '```'
+            cat bench.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        if: always()
+        with:
+          name: benchmarks
+          path: bench.json
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Build the documentation (warnings are errors, like on Read the Docs)
+        run: uv run --frozen --python 3.14 --group docs sphinx-build -W --keep-going docs docs/_build/html
+
+  gevent:
+    name: Queue under gevent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Run Telnet and SSH sessions through a queue under gevent
+        run: uv run --frozen --python 3.14 --group gevent pytest -p no:cacheprovider tests/Exscript/GeventTest.py
+
+  os-guessing:
+    name: OS-guess accuracy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Compare the guesses with the ground truth (fails if fewer are right)
+        shell: bash  # with pipefail; the default shell lets tee hide a failure
+        run: uv run --frozen --python 3.14 python tools/osguess_report.py --check | tee -a "$GITHUB_STEP_SUMMARY"
+
+  api-diff:
+    name: Public API changes (report only)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - name: Compare with the target branch
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        # griffe exits with 1 when it finds breaking changes; this job only reports them.
+        # Both search paths: the target branch may still have the package in the repository root.
+        run: |
+          status=0
+          uvx griffe check Exscript --search src --search . --against "origin/$BASE_REF" --verbose \
+            > api-changes.txt 2>&1 || status=$?
+          cat api-changes.txt
+          {
+            echo "### Breaking API changes against $BASE_REF"
+            if [ "$status" -eq 0 ]; then echo 'None.'; else echo '```'; cat api-changes.txt; echo '```'; fi
+          } >> "$GITHUB_STEP_SUMMARY"

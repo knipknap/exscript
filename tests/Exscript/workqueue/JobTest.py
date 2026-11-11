@@ -1,20 +1,15 @@
-from future import standard_library
-standard_library.install_aliases()
-import sys
 import unittest
-import re
-import os.path
-import threading
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
-from multiprocessing import Pipe
-from tempfile import NamedTemporaryFile
 from pickle import dumps, loads
-from Exscript.workqueue.job import Thread, Process, Job
+
+from Exscript.workqueue.job import Job, Thread
 
 
 def do_nothing(job):
     pass
+
+
+def fail(job):
+    raise ValueError('intentional error')
 
 
 class ThreadTest(unittest.TestCase):
@@ -26,24 +21,22 @@ class ThreadTest(unittest.TestCase):
 
     def testRun(self):
         job = self.CORRELATE(1, do_nothing, 'myaction', None)
-        to_child, to_self = Pipe()
-        job.start(to_self)
-        response = to_child.recv()
-        while job.is_alive():
-            pass
+        job.start()
         job.join()
-        self.assertEqual(response, '')
+        self.assertIsNone(job.exc_info)
+
+    def testRunWithAnError(self):
+        job = self.CORRELATE(1, fail, 'myaction', None)
+        job.start()
+        job.join()
+        self.assertIs(job.exc_info[0], ValueError)
+        self.assertIn('intentional error', job.exc_info[2])  # the traceback as text
 
     def testStart(self):
         pass  # See testRun()
 
 
-class ProcessTest(ThreadTest):
-    CORRELATE = Process
-
-
 class JobTest(unittest.TestCase):
-
     def testConstructor(self):
         job = Job(do_nothing, 'myaction', 1, 'foo')
         self.assertEqual(job.name, 'myaction')
@@ -62,8 +55,9 @@ class JobTest(unittest.TestCase):
 def suite():
     loader = unittest.TestLoader()
     suite1 = loader.loadTestsFromTestCase(ThreadTest)
-    suite2 = loader.loadTestsFromTestCase(ProcessTest)
-    suite3 = loader.loadTestsFromTestCase(JobTest)
-    return unittest.TestSuite((suite1, suite2, suite3))
+    suite2 = loader.loadTestsFromTestCase(JobTest)
+    return unittest.TestSuite((suite1, suite2))
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

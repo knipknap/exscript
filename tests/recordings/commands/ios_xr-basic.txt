@@ -1,0 +1,29 @@
+# Cisco IOS XR: cXR, eXR and XR7 (lab devices only), with --os ios_xr.
+# Creates and removes Loopback999 in the running config (two commits); check first that it does not
+# exist. Shows no configuration, routes or descriptions, so that there is little to sanitize.
+terminal length 0
+terminal width 0
+show version
+show processes cpu
+show processes memory
+show interfaces brief
+show inventory
+show nonexistent
+show ip
+configure terminal
+interface Loopback999
+description Exscript test, safe to remove
+commit
+end
+show running-config interface Loopback999
+configure terminal
+no interface Loopback999
+commit
+end
+show this-command-is-much-longer-than-the-terminal-width | include something-that-does-not-match-anything-at-all
+# The admin mode has a prompt of its own (eXR: sysadmin-vm:0_RP0#). Where the user may not enter it,
+# or it does not exist, the first exit ends the session.
+admin
+show platform
+exit
+exit

@@ -1,13 +1,11 @@
-from builtins import str
-import sys
-import unittest
+import copy
 import re
-import os.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import unittest
 
-from Exscript import Host, Account
-from Exscript.util.url import Url
 from util.urlTest import urls
+
+from Exscript import Account, Host
+from Exscript.util.url import Url
 
 
 class HostTest(unittest.TestCase):
@@ -19,51 +17,74 @@ class HostTest(unittest.TestCase):
 
     def testConstructor(self):
         host = Host('localhost')
-        self.assertEqual(host.get_protocol(), 'telnet')
+        self.assertEqual(host.get_protocol(), 'ssh')
         host = Host('localhost', default_protocol='foo')
         self.assertEqual(host.get_protocol(), 'foo')
 
         for url, result in urls:
             host = Host(url)
             uri = Url.from_string(url)
-            self.assertEqual(host.get_name(),    uri.hostname)
+            self.assertEqual(host.get_name(), uri.hostname)
             self.assertEqual(host.get_address(), uri.hostname)
-            self.assertEqual(host.get_uri().split('&').sort(),
-                             str(uri).split('&').sort())
+            self.assertEqual(host.get_uri().split('&').sort(), str(uri).split('&').sort())
 
     def testSetUri(self):
         for url, result in urls:
             self.host.set_uri(url)
             uri = Url.from_string(url)
-            self.assertEqual(self.host.get_name(),    uri.hostname)
+            self.assertEqual(self.host.get_name(), uri.hostname)
             self.assertEqual(self.host.get_address(), uri.hostname)
 
     def testGetUri(self):
         for url, result in urls:
             host = Host(url)
             uri = Url.from_string(url)
-            self.assertEqual(host.get_uri().split('&').sort(),
-                             str(uri).split('&').sort())
+            self.assertEqual(host.get_uri().split('&').sort(), str(uri).split('&').sort())
 
     def testGetDict(self):
         host = Host('foo')
         host.set_address('foo2')
-        self.assertEqual(host.get_dict(), {'hostname': 'foo',
-                                           'address':  'foo2',
-                                           'protocol': 'telnet',
-                                           'port':     23})
+        self.assertEqual(
+            host.get_dict(), {'hostname': 'foo', 'address': 'foo2', 'protocol': 'ssh', 'port': 22}
+        )
 
     def testSetAddress(self):
         self.host.set_protocol('dummy')
         self.host.set_address('test.org')
         self.assertEqual(self.host.get_protocol(), 'dummy')
-        self.assertEqual(self.host.get_name(),     'localhost')
-        self.assertEqual(self.host.get_address(),  'test.org')
+        self.assertEqual(self.host.get_name(), 'localhost')
+        self.assertEqual(self.host.get_address(), 'test.org')
 
         self.host.set_address('001.002.003.004')
         self.assertEqual(self.host.get_protocol(), 'dummy')
-        self.assertEqual(self.host.get_name(),     'localhost')
-        self.assertEqual(self.host.get_address(),  '1.2.3.4')
+        self.assertEqual(self.host.get_name(), 'localhost')
+        self.assertEqual(self.host.get_address(), '1.2.3.4')
+
+    def testNameThatStartsWithAnIp(self):
+        # E.g. the host names of wildcard DNS services such as nip.io.
+        for name in '10.0.0.1.nip.io', '192.168.1.10-router':
+            host = Host(name)
+            self.assertEqual(host.get_name(), name)
+            self.assertEqual(host.get_address(), name)
+
+    def testInvalidUri(self):
+        for uri in 'ssh://router:abc', 'ssh://[::1':
+            with self.assertRaisesRegex(
+                ValueError, re.escape('Hostname parse error: ' + repr(uri))
+            ):
+                Host(uri)
+
+    def testCopy(self):
+        # The copy gets the URI, i.e. all but the options and the variables
+        # that are no strings, and the name.
+        host = Host('telnet://admin:secret@10.0.0.1:2323?vlan=10')
+        host.set_name('router1')
+        clone = copy.copy(host)
+        self.assertEqual(clone.get_name(), 'router1')
+        self.assertEqual(clone.get_uri(), host.get_uri())
+        self.assertEqual((clone.get_protocol(), clone.get_tcp_port()), ('telnet', 2323))
+        self.assertEqual(clone.get_account().get_password(), 'secret')
+        self.assertEqual(clone.get('vlan'), ['10'])
 
     def testGetAddress(self):
         self.assertEqual(self.host.get_address(), 'localhost')
@@ -74,8 +95,8 @@ class HostTest(unittest.TestCase):
         self.host.set_protocol('dummy')
         self.host.set_name('test.org')
         self.assertEqual(self.host.get_protocol(), 'dummy')
-        self.assertEqual(self.host.get_name(),     'test.org')
-        self.assertEqual(self.host.get_address(),  'localhost')
+        self.assertEqual(self.host.get_name(), 'test.org')
+        self.assertEqual(self.host.get_address(), 'localhost')
         self.host.set_name('testhost')
         self.assertEqual(self.host.get_name(), 'testhost')
 
@@ -83,7 +104,7 @@ class HostTest(unittest.TestCase):
         pass  # Tested in testSetName().
 
     def testSetProtocol(self):
-        self.assertEqual(self.host.get_protocol(), 'telnet')
+        self.assertEqual(self.host.get_protocol(), 'ssh')
         self.host.set_protocol('dummy')
         self.assertEqual(self.host.get_protocol(), 'dummy')
 
@@ -94,11 +115,12 @@ class HostTest(unittest.TestCase):
         self.assertRaises(TypeError, self.host.set_option, 'test', True)
         self.assertEqual(self.host.get_options(), {})
         self.assertEqual(self.host.get_option('verify_fingerprint'), None)
-        self.assertEqual(
-            self.host.get_option('verify_fingerprint', False), False)
+        self.assertEqual(self.host.get_option('verify_fingerprint', False), False)
         self.host.set_option('verify_fingerprint', True)
         self.assertEqual(self.host.get_option('verify_fingerprint'), True)
         self.assertEqual(self.host.get_options(), {'verify_fingerprint': True})
+        self.host.set_option('timeout', 60)
+        self.assertEqual(self.host.get_options(), {'verify_fingerprint': True, 'timeout': 60})
 
     def testGetOption(self):
         pass  # Tested in testSetOption().
@@ -107,9 +129,9 @@ class HostTest(unittest.TestCase):
         pass  # Tested in testSetOption().
 
     def testSetTcpPort(self):
-        self.assertEqual(self.host.get_tcp_port(), 23)
-        self.host.set_protocol('ssh')
-        self.assertEqual(self.host.get_tcp_port(), 23)
+        self.assertEqual(self.host.get_tcp_port(), 22)
+        self.host.set_protocol('telnet')
+        self.assertEqual(self.host.get_tcp_port(), 22)
         self.host.set_tcp_port(123)
         self.assertEqual(self.host.get_tcp_port(), 123)
 
@@ -133,7 +155,7 @@ class HostTest(unittest.TestCase):
     def testSetAll(self):
         self.testSet()
         self.host.set_all({'test1': 1, 'test2': 2})
-        self.assertEqual(self.host.get('test'),  None)
+        self.assertEqual(self.host.get('test'), None)
         self.assertEqual(self.host.get('test1'), 1)
         self.assertEqual(self.host.get('test2'), 2)
 
@@ -154,11 +176,11 @@ class HostTest(unittest.TestCase):
 
     def testSetDefault(self):
         self.testSet()
-        self.assertEqual(self.host.get('test'),  3)
+        self.assertEqual(self.host.get('test'), 3)
         self.assertEqual(self.host.get('test2'), None)
-        self.host.set_default('test',  5)
+        self.host.set_default('test', 5)
         self.host.set_default('test2', 1)
-        self.assertEqual(self.host.get('test'),  3)
+        self.assertEqual(self.host.get('test'), 3)
         self.assertEqual(self.host.get('test2'), 1)
 
     def testHasKey(self):
@@ -168,13 +190,22 @@ class HostTest(unittest.TestCase):
 
     def testGet(self):
         self.testSet()
-        self.assertEqual(self.host.get('test'),     3)
-        self.assertEqual(self.host.get('test2'),    None)
-        self.assertEqual(self.host.get('test',  1), 3)
+        self.assertEqual(self.host.get('test'), 3)
+        self.assertEqual(self.host.get('test2'), None)
+        self.assertEqual(self.host.get('test', 1), 3)
         self.assertEqual(self.host.get('test2', 1), 1)
+
+    def testWithoutVariables(self):
+        host = Host('router1')
+        self.assertFalse(host.has_key('vlan'))
+        self.assertEqual(host.get('vlan', 10), 10)
+        host.set_default('vlan', 20)
+        self.assertEqual(host.get('vlan', 10), 20)
 
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(HostTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

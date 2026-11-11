@@ -1,0 +1,59 @@
+#
+# Copyright (C) 2010-2017 Samuel Abels
+# The MIT License (MIT)
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+A driver for AIX.
+"""
+
+import re
+
+from .driver import Driver
+
+_user_re = [re.compile(r'(?:\r\n|[\r\n])Authorized Login: $')]
+_password_re = [re.compile(r'(?:\r\n|[\r\n])\w+\'s Password: $')]
+_aix_re = re.compile(r'\bAIX\b')
+
+
+class AIXDriver(Driver):
+    """
+    The ``aix`` driver for AIX. Its user name prompt is "Authorized Login:",
+    and its password prompt "<user>'s Password:".
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name and password prompts.
+        """
+        Driver.__init__(self, 'aix')
+        self.user_re = _user_re
+        self.password_re = _password_re
+
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 70 if the data ends with the user name prompt
+        "Authorized Login: ", else 75 if it contains the word "AIX", else 0.
+        """
+        if _user_re[0].search(string):
+            return 70
+        if _aix_re.search(string):
+            return 75
+        return 0

@@ -1,0 +1,93 @@
+#
+# Copyright (C) 2010-2017 Samuel Abels
+# The MIT License (MIT)
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+A driver for devices running the ZTE operating system.
+"""
+
+import re
+from typing import TYPE_CHECKING
+
+from .driver import Driver
+
+if TYPE_CHECKING:
+    from ...account import Account
+    from ...util.impl import _Context
+    from ..protocol import Protocol
+
+_user_re = [re.compile(r'user ?name:', re.I), re.compile(r'login', re.I)]
+_password_re = [re.compile(r'(?:User )?Password:', re.I)]
+_prompt_re = [
+    re.compile(r'(?:\r\n|[\r\n])[\-\w+\.\(\)]+(?:\([^\)]+\))?[>#$] ?$|(?:\(y/n\)\[n\])'),
+    re.compile(r"(?:\r\n|[\r\n])Password: ?", re.I),  # password prompt to be used in privilege mode
+]
+_error_re = [
+    re.compile(r'%Error'),
+    re.compile(r'(?:Unrecognized|Incomplete) command', re.I),
+    re.compile(r'Invalid input', re.I),
+]
+
+_zte_re = re.compile(r"ZTE", re.I)
+
+
+class ZteDriver(Driver):
+    """
+    The ``zte`` driver for devices running the ZTE operating system. Its
+    prompt is a name, which may contain parentheses, with an optional mode in
+    parentheses, followed by ">", "#" or "$", e.g. "hostname#"; the question
+    "(y/n)[n]" counts as a prompt, too, and so does the password prompt that
+    "enable" shows.
+    """
+
+    def __init__(self) -> None:
+        """
+        Constructor. Sets the patterns of the user name prompt, "Username:"
+        or any text with "login", the password prompts "Password:" and "User
+        password:", the command prompts and the error messages, such as
+        "%Error", "Unrecognized command" and "Invalid input".
+        """
+        Driver.__init__(self, 'zte')
+        self.user_re = _user_re
+        self.password_re = _password_re
+        self.prompt_re = _prompt_re
+        self.error_re = _error_re
+
+    def auto_authorize(
+        self,
+        conn: 'Protocol',
+        account: 'Account | _Context | None',
+        flush: bool,
+        bailout: bool,
+    ) -> None:
+        """
+        Sends "enable", then authorizes with conn.app_authorize().
+        """
+        conn.send('enable\r\n')
+        conn.app_authorize(account, flush, bailout)
+
+    def check_head_for_os(self, string: str) -> int:
+        """
+        Returns 90 if the data contains "ZTE" in any case, else 0.
+        """
+        if _zte_re.search(string):
+            return 90
+        return 0

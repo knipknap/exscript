@@ -1,0 +1,2 @@
+# Any OS: records the login and the first prompt only; then the recorder closes the connection.
+# That is what OS guessing uses, so record it for every further model, version or system.

@@ -1,0 +1,55 @@
+{
+  "login": "ok",
+  "driver": "shell",
+  "os": "shell",
+  "commands": [
+    {
+      "command": "uname -sr",
+      "error": null,
+      "lines": 2,
+      "sha256": "3cbc3fd8aee393a4d91615acfa6f59c14e10b97dd2158f66721ff4ecb75cefb3",
+      "first": "uname -sr",
+      "last": "Linux 6.18.54.1-microsoft-standard-WSL2"
+    },
+    {
+      "command": "cat /etc/passwd",
+      "error": null,
+      "lines": 11,
+      "sha256": "285bcc71b24bb46caf324c4490c3c2098d3461c084d981dc19deb5f40b9eaa88",
+      "first": "cat /etc/passwd",
+      "last": "admin:x:1000:1000:Linux User,,,:/home/admin:/bin/sh"
+    },
+    {
+      "command": "ls -l /",
+      "error": null,
+      "lines": 14,
+      "sha256": "eec563e5fb030400147498d45bdacfc0a4c321c317187874d9c879c81f2d4057",
+      "first": "ls -l /",
+      "last": "drwxr-xr-x    4 root     root          4096 Sep 26  2024 \u001b[1;34mvar\u001b[m"
+    },
+    {
+      "command": "seq 1 5000",
+      "error": null,
+      "lines": 5001,
+      "sha256": "3f4e8d91515497e6d24014249a254ed0088b2673095b3e57b1446385b7ae821c",
+      "first": "seq 1 5000",
+      "last": "5000"
+    },
+    {
+      "command": "ls /nonexistent",
+      "error": null,
+      "lines": 2,
+      "sha256": "c44056b106b058656342e300441def2785e91ac86b8e7be94ba989ebe963466b",
+      "first": "ls /nonexistent",
+      "last": "ls: /nonexistent: No such file or directory"
+    },
+    {
+      "command": "exit",
+      "error": "ConnectionClosedException",
+      "lines": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "first": "",
+      "last": ""
+    }
+  ]
+}

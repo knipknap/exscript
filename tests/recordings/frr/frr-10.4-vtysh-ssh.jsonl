@@ -1,0 +1,31 @@
+{"format": "exscript-recording", "version": 1, "protocol": "ssh", "date": "2026-10-31", "sanitized": true, "device": {"os": "unknown", "version": "FRRouting 10.4.1", "platform": "docker quay.io/frrouting/frr:10.4.1"}, "ssh": {"server_version": "SSH-2.0-OpenSSH_9.7", "banner": null, "auth_methods": ["publickey", "password", "keyboard-interactive"], "interactive": null, "host_key_type": "ssh-ed25519"}, "terminal": {"type": "dumb", "width": 80, "height": 24}}
+{"t": 0.089, "dir": "recv", "data": "Welcome to Alpine!\r\n\r\nThe Alpine Wiki contains a large amount of how-to guides and general\r\ninformation about administrating Alpine systems.\r\nSee <https://wiki.alpinelinux.org/>.\r\n\r\nYou can setup the system with the command: setup-alpine\r\n\r\nYou may change this message by editing /etc/motd.\r\n\r\n\r\nHello, this is FRRouting (version 10.4.1_git).\r\nCopyright 1996-2005 Kunihiro Ishiguro, et al.\r\n\r\nrouter2# "}
+{"t": 2.098, "dir": "send", "data": "terminal length 0\r", "phase": "command"}
+{"t": 2.1, "dir": "recv", "data": "terminal length 0\r\nrouter2# "}
+{"t": 4.101, "dir": "send", "data": "show version\r", "phase": "command"}
+{"t": 4.11, "dir": "recv", "data": "show version\r\nFRRouting 10.4.1_git (router2) on Linux(6.18.54.1-microsoft-standard-WSL2).\r\nCopyright 1996-2005 Kunihiro Ishiguro, et al.\r\nconfigured with:\r\n    '--prefix=/usr' '--sysconfdir=/etc' '--localstatedir=/var' '--sbindir=/usr/lib/frr' '--libdir=/usr/lib' '--enable-rpki' '--enable-vtysh' '--enable-multipath=64' '--enable-vty-group=frrvty' '--enable-user=frr' '--enable-group=frr' '--enable-pcre2posix' '--enable-scripting' 'CC=gcc' 'CXX=g++'\r\nrouter2# "}
+{"t": 6.111, "dir": "send", "data": "show running-config\r", "phase": "command"}
+{"t": 6.113, "dir": "recv", "data": "show running-config\r\nBuilding configuration...\r\n\r\nCurrent configuration:\r\n!\r\nfrr version 10.4.1_git\r\nfrr defaults traditional\r\nhostname router2\r\ndomainname localdomain\r\n!\r\nip route 192.0.2.0/24 Null0\r\nip route 198.51.100.0/24 Null0\r\nipv6 route 2001:db8:1::/48 Null0\r\n!\r\nend\r\nrouter2# "}
+{"t": 8.114, "dir": "send", "data": "show interface brief\r", "phase": "command"}
+{"t": 8.116, "dir": "recv", "data": "show interface brief\r\nInterface       Status  VRF             Addresses\r\n---------       ------  ---             ---------\r\neth0            up      default         192.0.2.1/16\r\nlo              up      default         \r\n\r\nrouter2# "}
+{"t": 10.117, "dir": "send", "data": "show ip route\r", "phase": "command"}
+{"t": 10.119, "dir": "recv", "data": "show ip route\r\nCodes: K - kernel route, C - connected, L - local, S - static,\r\n       R - RIP, O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,\r\n       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,\r\n       f - OpenFabric, t - Table-Direct,\r\n       > - selected route, * - FIB route, q - queued, r - rejected, b - backup\r\n       t - trapped, o - offload failure\r\n\r\nIPv4 unicast VRF default:\r\nK>* 0.0.0.0/0 [0/0] via 192.0.2.2, eth0, weight 1, 00:11:08\r\nC>* 192.0.2.3/16 is directly connected, eth0, weight 1, 00:11:08\r\nL>* 192.0.2.1/32 is directly connected, eth0, weight 1, 00:11:08\r\nS>* 192.0.2.0/24 [1/0] unreachable (blackhole), weight 1, 00:00:26\r\nS>* 198.51.100.0/24 [1/0] unreachable (blackhole), weight 1, 00:00:26\r\nrouter2# "}
+{"t": 12.119, "dir": "send", "data": "show nonexistent\r", "phase": "command"}
+{"t": 12.121, "dir": "recv", "data": "show nonexistent\r\n% Unknown command: show nonexistent\r\nrouter2# "}
+{"t": 14.121, "dir": "send", "data": "show ip\r", "phase": "command"}
+{"t": 14.127, "dir": "recv", "data": "show ip\r\n% Command incomplete: show ip\r\nrouter2# "}
+{"t": 16.128, "dir": "send", "data": "sh i\r", "phase": "command"}
+{"t": 16.129, "dir": "recv", "data": "sh i\r\nInterface eth0 is up, line protocol is up\r\n  Link ups:       0    last: (never)\r\n  Link downs:     0    last: (never)\r\n  vrf: default\r\n  index 2 metric 0 mtu 1500 speed 10000 txqlen 0\r\n  flags: <UP,LOWER_UP,BROADCAST,RUNNING,MULTICAST>\r\n  MPLS  Not specified by CLI\r\n  Multicast config is Not specified by CLI\r\n  Shutdown config is Not specified by CLI\r\n  Type: Ethernet\r\n  HWaddr: 02:00:00:00:00:01\r\n  inet 192.0.2.1/16\r\n  Interface Type VETH\r\n  Interface Slave Type None\r\n  protodown: off \r\n  Parent ifindex: 18\r\nInterface lo is up, line protocol is up\r\n  Link ups:       0    last: (never)\r\n  Link downs:     0    last: (never)\r\n  vrf: default\r\n  index 1 metric 0 mtu 65536 speed 0 txqlen 1000\r\n  flags: <UP,LOWER_UP,LOOPBACK,RUNNING>\r\n  MPLS  Not specified by CLI\r\n  Multicast config is Not specified by CLI\r\n  Shutdown config is Not specified by CLI\r\n  Type: Loopback\r\n  Interface Type Other\r\n  Interface Slave Type None\r\n  protodown: off \r\nrouter2# "}
+{"t": 18.132, "dir": "send", "data": "configure terminal\r", "phase": "command"}
+{"t": 18.137, "dir": "recv", "data": "configure terminal\r\nrouter2(config)# "}
+{"t": 20.137, "dir": "send", "data": "interface lo\r", "phase": "command"}
+{"t": 20.139, "dir": "recv", "data": "interface lo\r\nrouter2(config-if)# "}
+{"t": 22.141, "dir": "send", "data": "description loopback for the Exscript tests\r", "phase": "command"}
+{"t": 22.15, "dir": "recv", "data": "description loopback for the Exscript tests\r\nrouter2(config-if)# "}
+{"t": 24.151, "dir": "send", "data": "end\r", "phase": "command"}
+{"t": 24.153, "dir": "recv", "data": "end\r\nrouter2# "}
+{"t": 26.154, "dir": "send", "data": "show running-config\r", "phase": "command"}
+{"t": 26.157, "dir": "recv", "data": "show running-config\r\nBuilding configuration...\r\n\r\nCurrent configuration:\r\n!\r\nfrr version 10.4.1_git\r\nfrr defaults traditional\r\nhostname router2\r\ndomainname localdomain\r\n!\r\nip route 192.0.2.0/24 Null0\r\nip route 198.51.100.0/24 Null0\r\nipv6 route 2001:db8:1::/48 Null0\r\n!\r\ninterface lo\r\n description loopback for the Exscript tests\r\nexit\r\n!\r\nend\r\nrouter2# "}
+{"t": 28.158, "dir": "send", "data": "exit\r", "phase": "command"}
+{"t": 28.16, "dir": "recv", "data": "exit\r\n"}
+{"t": 28.161, "dir": "close", "data": ""}

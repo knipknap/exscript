@@ -1,13 +1,7 @@
-from __future__ import unicode_literals
-from builtins import str
-import sys
 import unittest
-import re
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
-from tempfile import TemporaryFile
 from functools import partial
+from tempfile import TemporaryFile
+
 from Exscript.util.buffer import MonitoredBuffer
 
 
@@ -99,6 +93,7 @@ class bufferTest(unittest.TestCase):
         def monitor_cb(thedata, *args, **kwargs):
             thedata['args'] = args
             thedata['kwargs'] = kwargs
+
         data = {}
         b.add_monitor('abc', partial(monitor_cb, data))
 
@@ -128,8 +123,27 @@ class bufferTest(unittest.TestCase):
         self.assertEqual(data.get('args')[1].group(0), 'abc')
         self.assertEqual(data.get('kwargs'), {})
 
+    def testMonitorAfterPop(self):
+        b = MonitoredBuffer()
+        matches = []
+        b.add_monitor('abc', lambda index, match: matches.append(match.group()))
+        b.append('xxabc')
+        b.pop(5)  # e.g. expect() consumed the data
+        b.append('abc')
+        self.assertEqual(matches, ['abc', 'abc'])
+
+    def testMonitorSeesContextBeforeTheTail(self):
+        b = MonitoredBuffer()
+        matches = []
+        b.add_monitor(r'(?<=foo)bar\b', lambda index, match: matches.append(match.group()), limit=3)
+        b.append('x' * 1000 + 'foo')
+        b.append('bar')
+        self.assertEqual(matches, ['bar'])
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(bufferTest)
+
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
