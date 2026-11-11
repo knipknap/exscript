@@ -327,11 +327,8 @@ def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
     template.debug = 0
 
     # Create Exscript.
-    # Switch to 'threading' mode to match API default.
-    # See also: https://github.com/knipknap/exscript/issues/230
     queue = Queue(
         domain=args.default_domain,
-        mode="threading",
         host_driver=args.use_driver,
         verbose=args.verbose,
         max_threads=args.connections,
