@@ -18,6 +18,8 @@ class ipTest(unittest.TestCase):
 
         self.assertEqual(normalize_ip('0.128.255.0'), '000.128.255.000')
         self.assertEqual(normalize_ip('1234:0:01:02::'), '1234:0000:0001:0002:0000:0000:0000:0000')
+        for ip in 'router1', '1.2.3.4.5':
+            self.assertRaisesRegex(ValueError, 'neither ipv4 nor ipv6', normalize_ip, ip)
 
     def testCleanIp(self):
         from Exscript.util.ip import clean_ip

@@ -18,6 +18,8 @@ class ipv4Test(unittest.TestCase):
         self.assertTrue(not is_ip('.1.2.3'))
         self.assertTrue(not is_ip('1.23.4'))
         self.assertTrue(not is_ip('1..3.4'))
+        self.assertFalse(is_ip('1.2.3.256'))
+        self.assertFalse(is_ip('300.2.3.4'))
 
     def testIsIpWithMoreText(self):
         # E.g. host names of wildcard DNS services such as nip.io.
@@ -34,6 +36,8 @@ class ipv4Test(unittest.TestCase):
         self.assertEqual(normalize_ip('001.002.003.004'), '001.002.003.004')
         self.assertEqual(normalize_ip('192.168.010.001'), '192.168.010.001')
         self.assertEqual(normalize_ip('0.128.255.0'), '000.128.255.000')
+        for ip in '1.2.3', '1.2.3.4.5':
+            self.assertRaisesRegex(ValueError, 'ip should be 4 tuples', normalize_ip, ip)
 
     def testCleanIp(self):
         from Exscript.util.ipv4 import clean_ip
