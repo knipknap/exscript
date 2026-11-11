@@ -144,6 +144,7 @@ exclude = ["docs", "tests", "tools", "demos"]
 
 [tool.coverage.run]
 branch = true
+patch = ["subprocess"]  # e.g. python -m Exscript in the tests of the command
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
