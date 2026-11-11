@@ -58,6 +58,13 @@ class HostTest(unittest.TestCase):
         self.assertEqual(self.host.get_name(), 'localhost')
         self.assertEqual(self.host.get_address(), '1.2.3.4')
 
+    def testNameThatStartsWithAnIp(self):
+        # E.g. the host names of wildcard DNS services such as nip.io.
+        for name in '10.0.0.1.nip.io', '192.168.1.10-router':
+            host = Host(name)
+            self.assertEqual(host.get_name(), name)
+            self.assertEqual(host.get_address(), name)
+
     def testGetAddress(self):
         self.assertEqual(self.host.get_address(), 'localhost')
         # Additional tests are in testSetAddress().

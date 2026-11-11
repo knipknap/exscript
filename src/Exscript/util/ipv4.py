@@ -69,7 +69,7 @@ def is_ip(string: str) -> bool:
     :rtype:  bool
     :return: True if the string is an IP address, False otherwise.
     """
-    mo = re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)', string)
+    mo = re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\Z', string)
     if mo is None:
         return False
     for group in mo.groups():

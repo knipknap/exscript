@@ -630,6 +630,10 @@ The names below refer to functions callable from templates, not protocol methods
   and the copies keep the default factory and the order of the keys. Before,
   `copy.deepcopy()` failed with `TypeError: cannot pickle 'odict_items' object`, and
   `pickle.dumps()` with a `PicklingError`.
+- **`Exscript.util.ipv4.is_ip()` and `Exscript.util.ip.is_ip()`:** Return True only
+  for a complete address. Before, they also returned True for text that starts with
+  an IPv4 address, so a `Host` with a name such as `10.0.0.1.nip.io` failed with a
+  `ValueError`.
 - **Overwritten Log Files:** `FileLogger(mode='w')`, `log_to_file(mode='w')` and
   `exscript --overwrite-logs` overwrite the log file of an earlier run and keep all
   output of the job. Before, every write overwrote the file, so it kept only the last

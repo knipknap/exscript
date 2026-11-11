@@ -19,6 +19,13 @@ class ipv4Test(unittest.TestCase):
         self.assertTrue(not is_ip('1.23.4'))
         self.assertTrue(not is_ip('1..3.4'))
 
+    def testIsIpWithMoreText(self):
+        # E.g. host names of wildcard DNS services such as nip.io.
+        from Exscript.util.ipv4 import is_ip
+
+        for string in '10.0.0.1.nip.io', '1.2.3.4.5', '1.2.3.4a', '1.2.3.4/24', '1.2.3.4\n':
+            self.assertFalse(is_ip(string), repr(string))
+
     def testNormalizeIp(self):
         from Exscript.util.ipv4 import normalize_ip
 
