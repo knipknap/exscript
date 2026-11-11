@@ -1,0 +1,19 @@
+{"format": "exscript-recording", "version": 1, "protocol": "telnet", "date": "2026-11-11", "sanitized": true, "device": {"os": "shell", "version": "BusyBox 1.37", "platform": "docker busybox:1.37, telnetd", "login_fails": true}, "terminal": {"type": "dumb", "width": 510, "height": 1000}}
+{"t": 0.003, "dir": "recv", "data": "\u00ff\u00fd\u0001\u00ff\u00fd\u001f\u00ff\u00fb\u0001\u00ff\u00fb\u0003"}
+{"t": 0.003, "dir": "send", "data": "\u00ff\u00fc\u0001", "phase": "negotiation"}
+{"t": 0.003, "dir": "send", "data": "\u00ff\u00fb\u001f", "phase": "negotiation"}
+{"t": 0.003, "dir": "send", "data": "\u00ff\u00fa\u001f\u0001\u00fe\u0003\u00e8\u00ff\u00f0", "phase": "negotiation"}
+{"t": 0.003, "dir": "send", "data": "\u00ff\u00fd\u0001", "phase": "negotiation"}
+{"t": 0.003, "dir": "send", "data": "\u00ff\u00fd\u0003", "phase": "negotiation"}
+{"t": 0.004, "dir": "recv", "data": "\r\r\nrouter3 login: "}
+{"t": 10.015, "dir": "send", "data": "admin\r", "phase": "login"}
+{"t": 10.016, "dir": "recv", "data": "admin\r\nPassword: "}
+{"t": 20.069, "dir": "send", "data": "", "secret": true, "phase": "login"}
+{"t": 20.071, "dir": "recv", "data": "\r\nLogin incorrect\r\nrouter3 login: "}
+{"t": 33.082, "dir": "send", "data": "admin\r", "phase": "login"}
+{"t": 33.084, "dir": "recv", "data": "admin\r\nPassword: "}
+{"t": 43.095, "dir": "send", "data": "", "secret": true, "phase": "login"}
+{"t": 43.096, "dir": "recv", "data": "\r\nLogin incorrect\r\nrouter3 login: "}
+{"t": 56.107, "dir": "send", "data": "admin\r", "phase": "login"}
+{"t": 56.109, "dir": "recv", "data": "admin\r\nPassword: \r\r\nLogin timed out after 60 seconds\r\r\n"}
+{"t": 60.017, "dir": "close", "data": ""}

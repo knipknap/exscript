@@ -1,14 +1,15 @@
-# Cisco NX-OS (R2, lab devices only), with --os nxos.
-# Log in as a network-admin. Changes the running config: creates and removes loopback999.
+# Cisco NX-OS (lab devices only), with --os nxos.
+# Log in as a network-admin. Creates and removes loopback999 in the running config; check first that
+# it does not exist. Shows no configuration, routes or descriptions, so that there is little to sanitize.
 terminal length 0
 show version
-show running-config
+show processes cpu
+show processes memory
 show interface brief
-show ip route
 show inventory
 show nonexistent
 show i
-show interface ethernet
+show vlan id
 show interface ethernet 99/99
 configure terminal
 interface loopback999

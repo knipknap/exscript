@@ -6,8 +6,8 @@ to it. The replay server (`tests/Exscript/protocols/replay.py`) runs on 127.0.0.
 recorded device output, so the tests need no devices.
 
 Each recording runs twice: with the output as recorded, and split into small random pieces. Both
-runs must give the same result. A third test checks the device's ground truth: login succeeds and
-`guess_os()` returns `device.os`. `tools/osguess_report.py` compares the guesses for all recordings
+runs must give the same result. A third test checks the device's ground truth: the login succeeds
+(fails, if the recording has `device.login_fails`) and `guess_os()` returns `device.os`. `tools/osguess_report.py` compares the guesses for all recordings
 and for the banners in `tests/Exscript/protocols/banners` with their ground truth; CI shows its
 report in the job summary and fails if fewer sessions are guessed right than before.
 
@@ -18,10 +18,12 @@ report in the job summary and fails if fewer sessions are guessed right than bef
    for (e.g. after `enable`), and `!send TEXT` sends keys without a line end (`!send \x20` answers a
    pager). For NETCONF, separate the RPC bodies with lines of `---`.
 
-2. Record the session. The recorder asks for the password and never stores it:
+2. Record the session. The recorder asks for the password and never stores it. Write the raw
+   recording outside the checkout: it contains host names, addresses and user names, and may
+   contain secrets, so never commit or share it.
 
    ```sh
-   uv run tools/record_session.py ssh 192.0.2.1 -u admin -c cmds.txt -o raw.jsonl \
+   uv run tools/record_session.py ssh 192.0.2.1 -u admin -c cmds.txt -o ~/exscript-raw/raw.jsonl \
        --os ios --os-version 15.9 --platform C2960X
    ```
 
@@ -32,18 +34,24 @@ report in the job summary and fails if fewer sessions are guessed right than bef
      the replay test uses the recorded values.
    - Use `--auth password` for SSH servers that drop the connection after a failed
      keyboard-interactive attempt.
+   - OS guessing uses only the login and the first prompt, which `commands/login-only.txt`
+     records. It is quick to record and to review, so use it for every further model or version.
    - See `--help` for the other options.
 
 3. Sanitize the recording, and replace host names, user names and anything else identifying:
 
    ```sh
-   uv run tools/sanitize_recording.py raw.jsonl tests/recordings/ios/ios-15.9-c2960x-ssh.jsonl \
+   uv run tools/sanitize_recording.py ~/exscript-raw/raw.jsonl \
+       tests/recordings/ios/ios-15.9-c2960x-ssh-basic.jsonl \
        --replace core-rtr-01=router1 --replace jdoe=admin
    ```
 
    The sanitizer replaces addresses, MACs, secrets and serial numbers, and prints every replacement
    and the prompts it saw. It cannot know every identifier: read the sanitized file before
-   committing it. Never commit a raw recording.
+   committing it, and look in particular for host, domain, site and organization names, the names
+   of other users (e.g. in "Last login" lines), banners, AS numbers, phone numbers, e-mail
+   addresses, and serial numbers in tables, which have no label such as `SN:` before them. Never
+   commit a raw recording.
 
 4. Create the golden file, review it, and commit both files:
 
@@ -55,8 +63,18 @@ report in the job summary and fails if fewer sessions are guessed right than bef
    `ReplayTest.py` with the reason. If its results depend on read timing, add it to
    `TIMING_ISSUES` instead.
 
-Name files `<dir>/<os>-<version>-<platform>-<protocol>[-<scenario>].jsonl`. The directory groups
-recordings by device family.
+Name files `<dir>/<os>-<version>-<platform>-<protocol>[-<scenario>].jsonl`, in lower case, with `_`
+instead of `-` within a part:
+
+- `<dir>` groups recordings by device family, e.g. `ios` (IOS and IOS XE), `iosxr`, `junos` or
+  `nxos`.
+- `<os>` names the system, e.g. `ios`, `iosxe`, `cxr`, `exr` or `xr7` (IOS XR 32-bit, 64-bit and
+  XR7), `junos`, `evo` (Junos OS Evolved) or `nxos`.
+- `<version>` is the release, e.g. `17.9.4a` or `23.4r2`; `--os-version` takes the full version.
+- `<platform>` is the model, e.g. `asr9903` or `n9k_c93180yc_fx`.
+- `<scenario>` is the command file without its OS prefix, e.g. `basic` or `pager`; `login` for
+  `login-only.txt`, and `badpass` for `login-only.txt` over Telnet with a wrong password and
+  `--login-fails`.
 
 ## Format (version 1)
 
@@ -77,6 +95,7 @@ The first line is the header:
 - `ssh` (SSH and NETCONF only) holds the server's version string, the pre-login banner, the
   authentication methods it offered, and the keyboard-interactive query it sent, if any.
 - `terminal` (CLI sessions only) holds the terminal that the recorder requested.
+- `device.login_fails: true` (from `--login-fails`) marks a session whose login fails.
 - `incomplete: true` marks a recording that ended with an error.
 
 Each following line is an event:

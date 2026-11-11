@@ -16,8 +16,9 @@ The sanitizer replaces, consistently within a recording:
 Consecutive output events are merged first, so a value split between two reads
 is still found. NETCONF 1.1 chunks are re-framed with their original sizes.
 
-The sanitizer prints every replacement and the prompts it saw, but it cannot
-know every identifier: read the result before committing it. Example::
+The sanitizer prints every replacement (secrets without their values) and the
+prompts it saw, but it cannot know every identifier: read the result before
+committing it. Example::
 
     uv run tools/sanitize_recording.py raw.jsonl tests/recordings/ios/ios-15.9-ssh.jsonl \\
         --replace core-rtr-01=router1 --replace jdoe=admin
@@ -151,7 +152,8 @@ class Sanitizer:
         quoted = len(value) > 1 and value[0] == value[-1] == '"'
         if value.strip('"') == REMOVED or value in self.keep:
             return value
-        self.report[kind, value[:2] + '...', REMOVED] += 1
+        shown = value[:2] + '...' if kind == 'serial' else '...'  # no part of a secret
+        self.report[kind, shown, REMOVED] += 1
         return f'"{REMOVED}"' if quoted else REMOVED
 
 

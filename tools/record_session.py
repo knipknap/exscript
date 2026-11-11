@@ -315,6 +315,9 @@ def main():
     parser.add_argument('--os', help='ground truth: Exscript OS/driver name, e.g. ios')
     parser.add_argument('--os-version', help='ground truth: OS version')
     parser.add_argument('--platform', help='ground truth: hardware or image')
+    parser.add_argument(
+        '--login-fails', action='store_true', help='ground truth: the login fails (wrong password)'
+    )
     parser.add_argument('--prompt', type=re.compile, help='regex that ends a read early')
     parser.add_argument(
         '--idle', type=float, default=2.0, help='seconds without data that end a read'
@@ -345,6 +348,9 @@ def main():
     password = None if args.no_password or args.key else getpass.getpass('Password: ')
     secret = getpass.getpass('Secret for !secret: ') if '!secret' in commands else None
 
+    device = {'os': args.os, 'version': args.os_version, 'platform': args.platform}
+    if args.login_fails:
+        device['login_fails'] = True
     recording = Recording(
         {
             'format': 'exscript-recording',
@@ -352,7 +358,7 @@ def main():
             'protocol': args.protocol,
             'date': datetime.date.today().isoformat(),
             'sanitized': False,
-            'device': {'os': args.os, 'version': args.os_version, 'platform': args.platform},
+            'device': device,
         }
     )
     try:

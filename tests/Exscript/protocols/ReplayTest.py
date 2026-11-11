@@ -135,10 +135,10 @@ class ReplayTest(unittest.TestCase):
 def _truth_test(path):
     def test(self):
         result = replay(path, 'recorded')[0]
-        self.assertEqual('ok', result['login'])
-        expected_os = Recording(path).header['device'].get('os')
-        if expected_os:
-            self.assertEqual(expected_os, result['os'])
+        device = Recording(path).header['device']
+        self.assertEqual('LoginFailure' if device.get('login_fails') else 'ok', result['login'])
+        if device.get('os'):
+            self.assertEqual(device['os'], result['os'])
 
     return test
 

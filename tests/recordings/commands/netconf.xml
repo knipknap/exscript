@@ -1,4 +1,4 @@
-<get-config><source><running/></source></get-config>
+<get-schema xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"><identifier>ietf-netconf</identifier></get-schema>
 ---
 <lock><target><running/></target></lock>
 ---

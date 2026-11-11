@@ -1,19 +1,21 @@
-# Juniper Junos and Junos Evolved (R2, lab devices only), with --os junos.
-# Enters configuration mode but commits nothing (commit check, then rollback 0).
+# Juniper Junos OS and Junos OS Evolved (lab devices only), with --os junos.
+# Edits a private candidate configuration and commits nothing (commit check, then rollback 0).
+# Shows no configuration, routes or hardware, so that there is little to sanitize.
 set cli screen-length 0
 set cli screen-width 0
 show version
-show configuration
+show system statistics
 show interfaces terse
-show route
-show chassis hardware
 show nonexistent
 show i
-configure
+configure private
 set interfaces lo0 description "Exscript test"
 show | compare
 commit check
 rollback 0
 exit configuration-mode
 show this-command-is-much-longer-than-the-terminal-width | match something-that-does-not-match-anything-at-all
+# The shell has a prompt of its own. Where the user may not start it, the first exit ends the session.
+start shell
+exit
 exit

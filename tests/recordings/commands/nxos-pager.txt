@@ -1,7 +1,7 @@
-# Cisco NX-OS (R2): output with the pager on.
+# Cisco NX-OS: output with the pager on.
 # The recorder asks for 1000 lines, so set the pager length explicitly.
 terminal length 24
-show running-config
+show processes memory
 !send \x20
 !send \x20
 !send q
