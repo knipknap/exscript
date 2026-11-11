@@ -115,11 +115,7 @@ including those of the 2.9 development line. Breaking changes are marked with
   `host_key_policy='auto-add'` or `host_key_policy='warn'`.
 - **Passwords in Debug Logs:** Passwords and S/Key responses sent by the app-level
   login are logged as `<secret>`. Before, debug level 4 logged them in clear text.
-  Debug levels above 5 no longer turn on paramiko's packet dumps, which showed the
-  password of an SSH login in clear text.
-  Listeners of `data_sent_event`, and the output and the logfile of a protocol whose
-  host does not echo, get `<secret>` instead of the password and the S/Key response,
-  too; before, `data_sent_event` passed them in clear text.
+  The listeners of the new `data_sent_event` get `<secret>`, too.
 - **BREAKING - `InvalidCommandException` Message:** The message contains only the
   line that matched an error pattern, for example `Error in the response from the
   device: % Invalid input detected`. Before, it contained the full response, which
@@ -131,8 +127,8 @@ including those of the 2.9 development line. Breaking changes are marked with
   `sys.env`, and `file.*` except `file.exists`. Templates that call them raise
   `Exscript.interpreter.exception.PermissionError` when they are compiled. Functions
   that the caller passes as template variables are allowed. Before, secure mode was
-  available only for `test()` and off by default. To migrate, pass `secure=False`,
-  or use the new CLI option `--insecure`.
+  available only through `test_secure()`. To migrate, pass `secure=False`, or use the
+  new CLI option `--insecure`.
 - **BREAKING - `sys.exec` Without a Shell:** The template function `sys.exec` runs
   the command without a shell and waits for it to finish. Pipes, redirections and
   shell variables no longer work; use for example `sys.exec("sh -c '...'")`.
@@ -143,10 +139,9 @@ including those of the 2.9 development line. Breaking changes are marked with
 - **BREAKING - CLI Without `eval()` and Shell:** A value entered at a
   `-d VAR={"PROMPT"}` prompt is text, and one entered at a `-d VAR={#"PROMPT"}` prompt
   is parsed as a Python literal, such as a number or a list. Before, the value of a
-  `{"PROMPT"}` prompt was run as Python code, so text had to be entered in quotes; the
-  2.9 development versions ran the value of a `{#"PROMPT"}` prompt. `--sleep` no longer
-  runs the `sleep` command in a shell; it accepts seconds with an optional suffix `m`,
-  `h` or `d`, also on Windows.
+  `{"PROMPT"}` prompt was run as Python code, so text had to be entered in quotes.
+  `--sleep` no longer runs the `sleep` command in a shell; it accepts seconds with an
+  optional suffix `m`, `h` or `d`, also on Windows.
 
 ## Protocols
 
@@ -170,10 +165,7 @@ including those of the 2.9 development line. Breaking changes are marked with
 - **Connect Rate Limit Per Host:** Connects to the same host, also concurrent ones,
   are spaced by 60 / `connect_rate_limit` + 0.1 seconds. The new option
   `connect_rate_limit` (also a `Host` option) is 60 connects per minute by default; 0
-  turns the limit off. Connects to other hosts are not delayed. 2.6 had no limit. The
-  limiter of the 2.9 development versions slept while it held a process-wide lock, so
-  one waiting connect blocked all others, by default for up to 1.1 seconds, and
-  concurrent connects to the same host could start together.
+  turns the limit off. Connects to other hosts are not delayed.
 - **Fewer SSH Reconnects:** Drivers that reconnect between authentication methods
   (`ios`) now reconnect only after a method sent a request that failed. Before, they
   reconnected before every method, also before the public key methods when there was
@@ -197,15 +189,16 @@ including those of the 2.9 development line. Breaking changes are marked with
 - **SSH Key Fingerprints in Debug Logs:** The keys that are tried for a login are
   logged with their SHA256 fingerprints, as `ssh-add -l` and `ssh-keygen -l` show
   them. Before, the MD5 fingerprint was logged as a Python bytes literal.
-- **paramiko's Logger Stays On:** `SSH2` and `Netconf` connections with a debug level
-  below 5 keep paramiko's messages about them out of the logs with a logger of their
-  own, `Exscript.protocols.ssh2.paramiko`, which logs nothing. Before, they turned off
-  paramiko's logger `paramiko.transport` for the whole process, so that other code that
-  uses paramiko, and connections with debug level 5, logged nothing either.
-- **SSH Banners in Another Encoding:** An authentication banner or a version string
-  that is not valid in the encoding of the connection no longer fails the login; the
-  invalid bytes become U+FFFD. Before, e.g. a latin-1 banner with `encoding='utf-8'`
-  raised a `UnicodeDecodeError`.
+- **paramiko's Logger:** Importing Exscript leaves paramiko's logger `paramiko` as it
+  is. Before, importing Exscript set the level of this logger to `DEBUG` and gave it a
+  handler that wrote to `os.devnull`, so the handlers of the root logger got all debug
+  messages of paramiko. `SSH2` and `Netconf` connections with a debug level below 5
+  keep paramiko's messages about them out of the logs with a logger of their own,
+  `Exscript.protocols.ssh2.paramiko`, which logs nothing.
+- **BREAKING - SSH Banners:** `SSH2.get_banner()` returns the authentication banner as
+  text instead of bytes; bytes that are not valid in the encoding of the connection
+  become U+FFFD. The banner is also part of the received data, e.g. of the log, and
+  helps to guess the OS.
 - **Keyboard-Interactive Logins:** Every prompt gets an answer: password prompts the
   password, S/Key challenges the one-time password, other prompts, e.g. for a
   verification code, an empty string. Before, other prompts got no answer, and
@@ -250,9 +243,7 @@ including those of the 2.9 development line. Breaking changes are marked with
   previous behavior without a terminal, pass `term_width=80, term_height=25`.
 - **Reliable `close()`:** `close()` closes the connection and resets the object even
   if the logout fails. Errors of the logout and while closing, e.g. because the host
-  closed the connection first, are only logged (debug level 1); before, errors of
-  the logout were ignored silently, and `close(force=True)` could raise an
-  `EOFError`.
+  closed the connection first, are only logged (debug level 1).
 - **BREAKING - `connect()` While Connected:** `connect()` raises a `ProtocolException`
   if the adapter is connected already. Before, it opened another connection and left
   the first one open.
@@ -328,18 +319,10 @@ including those of the 2.9 development line. Breaking changes are marked with
   received data instead of a copy of all of it for each read: 8 MiB of output in
   1 KiB reads take 0.015 seconds instead of 9.4. The positions in the match object
   that the callback gets refer to the searched text, not to the whole buffer.
-- **NETCONF 1.1 Chunks:** `Netconf.reassemble_chunks()` takes linear time: a 16 MiB
-  reply in 4 KiB chunks takes 0.02 seconds instead of 5.2.
-- **NETCONF Threads:** ncclient's thread appends the received data to the buffer that
-  the caller searches. The buffer is locked now; before, a search could move the
-  position at which the thread wrote. Exscript still sends its `<hello>` and RPCs
-  pretty-printed, but no longer makes other users of ncclient in the same process do
-  so (changes against the 2.9 development versions).
-- **Free-Threaded Python:** `import Exscript` no longer imports lxml and ncclient;
-  NETCONF sessions and templates with RPCs load them when they need them. lxml
-  enables the GIL of free-threaded Python (3.14t), so before, Exscript always ran with
-  the GIL there. XML is parsed with a new parser for each call, so threads no longer
-  wait for each other.
+- **Free-Threaded Python:** `import Exscript` does not import lxml and ncclient,
+  which NETCONF uses; NETCONF sessions and templates with RPCs import them when they
+  need them, as lxml enables the GIL of free-threaded Python (3.14t). XML is parsed
+  with a new parser for each call, so threads do not wait for each other.
 
 ### Telnet
 
@@ -371,15 +354,20 @@ including those of the 2.9 development line. Breaking changes are marked with
   the telnetlib module that Python 3.13 removed, use the package `standard-telnetlib`.
 - **Closing While Receiving:** If `close()` of `Exscript.protocols.telnetlib.Telnet`
   runs in another thread while `receive()` waits for data, the connection stays
-  closed, and `receive()` returns `False`. Before, data that arrived in the meantime
-  cleared the end-of-file flag, and the next `receive()` failed with
-  `AttributeError: 'NoneType' object has no attribute 'settimeout'`.
+  closed, and `receive()` returns `False`.
 
 ### NETCONF
 
 The `Netconf` adapter is new in 3.0, so these fixes matter only to users of the 2.9
 development versions; "before" refers to them.
 
+- **NETCONF 1.1 Chunks:** `Netconf.reassemble_chunks()` takes linear time: a 16 MiB
+  reply in 4 KiB chunks takes 0.02 seconds instead of 5.2.
+- **NETCONF Threads:** ncclient's thread appends the received data to the buffer that
+  the caller searches. The buffer is locked now; before, a search could move the
+  position at which the thread wrote. Exscript still sends its `<hello>` and RPCs
+  pretty-printed, but no longer makes other users of ncclient in the same process do
+  so.
 - **`close()` Ends ncclient's Thread:** `close()` ends the thread in which ncclient reads
   the session, also with `force=True` or if the server does not answer
   `<close-session/>`. If a callback, e.g. of a monitor, keeps the thread busy during
@@ -425,16 +413,10 @@ development versions; "before" refers to them.
   constructor ignored such a name silently and guessed the driver, so a typo, e.g. in
   an inventory, went unnoticed. To migrate, correct the name; `drivers.driver_map`
   lists the names.
-- **Junos and MRV Prompts in Linear Time:** The prompt patterns of the `junos` and `mrv`
-  drivers backtracked exponentially on line breaks that no prompt follows: 22 empty
-  lines took 41 seconds to check with `junos`, and every further line doubled the time,
-  so a device that sent a block of empty lines could stall the session. They now match
-  each run of line breaks once, in linear time, and match the same texts at the same
-  positions, verified against the old patterns.
 - **Generic Prompt Pattern in Linear Time:** The prompt pattern of the generic driver,
   which other drivers inherit, backtracked catastrophically on long lines that are no
-  prompt: a line with a run of 100 word characters took 1.3 seconds to check, 200
-  characters 25 seconds, so hex or base64 output could stall a session. The pattern
+  prompt: a line with a run of 100 word characters took 0.6 seconds to check, 200
+  characters 9 seconds, so hex or base64 output could stall a session. The pattern
   matches the same strings, verified against the old one, in linear time. A test
   checks every driver pattern for this. The isam driver's prompt pattern, which the
   OS guesser runs on all received data, matches the same strings 3.5 times faster.
@@ -504,10 +486,10 @@ development versions; "before" refers to them.
   mode waited for the prompt until the timeout.
 - **NX-OS Over NETCONF:** A NETCONF session with NX-OS is guessed as `nxos` by the
   capability of its device model, `http://cisco.com/ns/yang/cisco-nx-os-device`, as
-  sessions with IOS XR and Junos are guessed by theirs. Before, the guess was
-  `unknown`. The driver keeps ncclient's default device handler: the `nexus` handler
-  replaces the base capability of RFC 6241 in the hello of the client with the one of
-  the old XML agent, which a server may reject.
+  sessions with IOS XR and Junos are guessed by theirs. The driver keeps ncclient's
+  default device handler: the `nexus` handler replaces the base capability of RFC 6241
+  in the hello of the client with the one of the old XML agent, which a server may
+  reject.
 - **HP ProCurve Configuration Prompts:** The `hp_pro_curve` driver recognizes the
   prompts of the configuration contexts, e.g. `HP-2920(config)# ` or
   `HP-2920(vlan-10)# `. Before, a command that entered such a context, e.g.
@@ -581,8 +563,7 @@ development versions; "before" refers to them.
   and the new option `--no-escaping` of `exscript`, keep the old behavior, except that
   `\t` in a string is a tab. A Unicode sequence above U+10FFFF, such as `\UFFFFFFFF`,
   and an octal sequence above `\377`, such as `\400`, raise a `CompileError` that shows
-  their position; the 2.9 development versions raised a `SyntaxError` of Python for the
-  former, and gave the characters U+0100 to U+01FF for the latter.
+  their position.
 - **BREAKING - `extract` Requires a Regular Expression:** `extract` raises a
   `CompileError` if no regular expression between slashes follows, e.g. in
   `{extract "(a)" as y from "a"}` or `{extract x as y}`. Before, the character after
@@ -609,21 +590,16 @@ development versions; "before" refers to them.
 - **`is not` and `not in` With Several Blanks:** `is  not` and `not  in` with more
   than one blank or a line break between the words mean the same as `is not` and
   `not in`. Before, they gave `None`, and as a condition a `TypeError` of Python.
-- **Lines With Only Whitespace:** A line with only whitespace is ignored, also if the
-  whitespace is not a space or a tab, e.g. a no-break space, as in 2.6. The 2.9
-  development versions sent such whitespace at the start of the command in the next
-  line.
 - **BREAKING - Escaped Characters Start No Comment:** A hash behind an escaped
   character is part of the command: `show \}# x` sends `show }# x`, and `show a\n# b`
   sends `# b` in its second line. Before, the hash started a comment there, so these
-  sent `show }` and `show an`. `\# x` sends `# x`, as before. A hash behind an `<rpc>`
-  element starts a comment, as behind a code block. The 2.9 development versions sent
-  an empty line for `\# x` and for a hash behind an `<rpc>` element, and took the next
-  line into the command for `show \}# x`.
+  sent `show }` and `show an`. A hash behind an `<rpc>` element starts a comment, as
+  behind a code block.
 - **Undefined Variables:** A template that uses an undefined variable in an
   expression, e.g. in `{if x is "a"}`, raises the new
   `Exscript.interpreter.exception.UndefinedVariableError` when it is compiled. It is a
-  `ValueError`, as before, and a `NameError`.
+  `ValueError`, as before, and a `NameError`. Its message says `Undefined variable 'x'`
+  instead of `Undeclared variable x`.
 - **BREAKING - `<rpc>` Elements:** A template sends the content of an `<rpc>` element,
   e.g. `<rpc><get-config>...</get-config></rpc>`, as a command of its own, without the
   `rpc` tags, and checks its XML syntax when it is compiled; `Netconf` sends it as an
@@ -671,18 +647,12 @@ development versions; "before" refers to them.
   function like to a variable, e.g. `"$f"` with a function `f` that the caller
   passes, raises an `ExecuteError`, as the interpreter intends. Before, it contained
   the text of the function object, such as `<function f at 0x7f...>`.
-- **Syntax Errors of Custom Grammars:** If no expression of the grammar of
-  `Exscript.parselib.Lexer` matches, and the next 50 characters contain no blank and
-  not the end of the input, the lexer raises a `CompileError` that shows these 50
-  characters. Before, it raised an `AttributeError`. The grammars of the template
-  language were not affected.
-- **BREAKING - Errors of the Device in Functions:** If a function of a template raises
-  a `ProtocolException`, e.g. `connection.execline()` an `InvalidCommandException` for
-  a command that the device rejects, the exception stops the template unchanged, like
-  the error of a command, and `try` ignores it. Other exceptions of functions raise an
-  `ExecuteError` that shows the position of the call. Before, all of them raised an
-  `ExecuteError`, which `try` does not ignore; Exscript 2.6 raised all of them
-  unchanged.
+- **BREAKING - Errors of Functions:** If a function of a template raises a
+  `ProtocolException`, e.g. `connection.execline()` an `InvalidCommandException` for a
+  command that the device rejects, the exception stops the template unchanged, like
+  the error of a command, and `try` ignores it, as before. Other exceptions of
+  functions raise an `ExecuteError` that shows the position of the call; before, they
+  were raised unchanged.
 
 ### Standard Library
 
@@ -732,9 +702,6 @@ The names below refer to functions callable from templates, not protocol methods
   for the current user. If the name of the current user is unknown, it adds none, as
   without a default user name. Before, the CLI failed with the `OSError` of
   `getpass.getuser()`, or with a `KeyError` before Python 3.13.
-- **`exscript --version`:** Prints the version of Exscript, as in 2.6 and as the
-  tutorials say. The 2.9 development versions failed with
-  `exscript: error: unrecognized arguments: --version`.
 - **`exscript --hosts` and `--csv-hosts` With `~` and Variables:** Expand `~` and
   environment variables in the name of the file, as `--account-pool` and
   `--load-driver` do, e.g. in `--hosts '~/$SITE/hosts.txt'`. Before, they read the
@@ -745,9 +712,6 @@ The names below refer to functions callable from templates, not protocol methods
   `-i`; it never did. `-n` skips the automatic login, and unless `-i` is given, the
   command still asks for a username and password, so that the template can log in
   itself with them.
-- **`exscript -e` and `__filename__`:** With `-e`, the template variable `__filename__`
-  is `undefined`, as for other templates that are not read from a file. Before, it was
-  the first host, which `-e` takes from the place of the file name.
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.

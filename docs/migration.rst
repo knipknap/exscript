@@ -306,6 +306,7 @@ Other renamed or removed names:
 - :func:`~Exscript.util.file.get_accounts_from_file` decodes the
   passwords as UTF-8; 2.x decoded them as latin-1. For non-ASCII passwords
   that were encoded as latin-1, pass ``password_encoding='latin-1'``.
+- ``SSH2.get_banner()`` returns the banner as text instead of bytes.
 - Adapters that subclass ``Protocol`` must pass its arguments by
   keyword; new ones were inserted.
 
