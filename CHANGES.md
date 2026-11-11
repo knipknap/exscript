@@ -20,9 +20,9 @@ including those of the 2.9 development line. Breaking changes are marked with
   versions before 3.12 are no longer supported.
 - **Type Annotations:** Exscript is annotated and ships the `py.typed` marker (PEP 561),
   so type checkers such as mypy and pyright check the code that uses it. All modules
-  pass `mypy --strict`. mypy knows the type of 95.7 % of the expressions; the rest is
-  `Any` on purpose (callbacks, options that are passed on, template variables) or comes
-  from ncclient, which is not annotated. CI checks that this share does not drop.
+  pass `mypy --strict`. CI requires that mypy knows the type of at least 95 % of the
+  expressions; the rest is `Any` on purpose (callbacks, options that are passed on,
+  template variables) or comes from ncclient, which is not annotated.
 - **Dependencies:** `future` and `configparser`, backports for Python 2, are no longer
   needed. paramiko 3.5.1 to 5.x is supported (before: 1.17 to 4.x), and pycryptodomex
   3.17 or later (before: any version). New: ncclient and lxml 5.0 or later, for
