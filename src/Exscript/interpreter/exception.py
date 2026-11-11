@@ -48,3 +48,13 @@ class PermissionError(ExscriptException):
     """
 
     pass
+
+
+class UndefinedVariableError(NameError, ValueError):
+    """
+    Raised if an expression of a template uses a variable that is not
+    defined when the template is compiled. It is a NameError and a
+    ValueError.
+    """
+
+    pass

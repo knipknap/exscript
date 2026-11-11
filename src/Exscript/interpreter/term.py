@@ -27,6 +27,7 @@ The terms of expressions in the template language.
 from typing import TYPE_CHECKING, Any, cast
 
 from ..parselib import Lexer, Token
+from .exception import UndefinedVariableError
 from .functioncall import FunctionCall
 from .number import Number
 from .regex import Regex
@@ -47,8 +48,8 @@ class Term(Token):
 
     def __init__(self, lexer: Lexer, parser: 'Parser', parent: Scope) -> None:
         """
-        Constructor. Parses the term. Raises a NameError if a variable is
-        not defined.
+        Constructor. Parses the term. Raises an UndefinedVariableError, a
+        NameError and a ValueError, if a variable is not defined.
 
         :param lexer: The lexer that reads the template.
         :param parser: The parser of the template.
@@ -63,7 +64,7 @@ class Term(Token):
             if not parent.is_defined(token):
                 self.mark_start()
                 self.mark_end(distance=len(token))
-                lexer.error('Undefined variable %s' % repr(token), self, NameError)
+                lexer.error('Undefined variable %s' % repr(token), self, UndefinedVariableError)
             self.term = Variable(lexer, parser, parent)
         elif lexer.current_is('open_function_call'):
             self.term = FunctionCall(lexer, parser, parent)

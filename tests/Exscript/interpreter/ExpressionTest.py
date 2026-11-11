@@ -1,5 +1,6 @@
 import unittest
 
+from Exscript.interpreter.exception import UndefinedVariableError
 from Exscript.parselib.exception import CompileError, ExecuteError
 
 from .helpers import TemplateTestCase
@@ -26,8 +27,10 @@ class ExpressionTest(TemplateTestCase):
         self.assertValues('{a = list.new("x", "y")}{b = a}', b=['x', 'y'])
 
     def testUndefinedVariable(self):
-        with self.assertRaises(NameError) as cm:
+        with self.assertRaises(UndefinedVariableError) as cm:
             self.evaluate('ls\n{x = nothing}')
+        self.assertIsInstance(cm.exception, NameError)
+        self.assertIsInstance(cm.exception, ValueError)
         message = "Undefined variable 'nothing' in undefined:2"
         self.assertError(cm.exception, ['{x = nothing}'], '     ^^^^^^^', message)
         self.assertSent()

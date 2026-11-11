@@ -624,9 +624,10 @@ development versions; "before" refers to them.
   element starts a comment, as behind a code block. The 2.9 development versions sent
   an empty line for `\# x` and for a hash behind an `<rpc>` element, and took the next
   line into the command for `show \}# x`.
-- **BREAKING - Undefined Variables Raise `NameError`:** A template that uses an
-  undefined variable in an expression, e.g. in `{if x is "a"}`, raises a `NameError`
-  when it is compiled. Before, it raised a `ValueError`.
+- **Undefined Variables:** A template that uses an undefined variable in an
+  expression, e.g. in `{if x is "a"}`, raises the new
+  `Exscript.interpreter.exception.UndefinedVariableError` when it is compiled. It is a
+  `ValueError`, as before, and a `NameError`.
 - **BREAKING - `<rpc>` Elements:** A template sends the content of an `<rpc>` element,
   e.g. `<rpc><get-config>...</get-config></rpc>`, as a command of its own, without the
   `rpc` tags, and checks its XML syntax when it is compiled; `Netconf` sends it as an

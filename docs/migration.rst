@@ -210,10 +210,6 @@ Values of the caller
     the tuple, and ``{x = t}`` copies the items instead of storing the
     tuple as one item.
 
-Undefined variables
-    An undefined variable in an expression raises a ``NameError`` when the
-    template is compiled, instead of a ``ValueError``.
-
 Errors of functions
     An exception of a function, other than a
     :class:`~Exscript.protocols.exception.ProtocolException`, stops the
