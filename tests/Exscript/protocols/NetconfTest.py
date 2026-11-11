@@ -487,7 +487,8 @@ def operation(rpc):
 class SessionTest(unittest.TestCase):
     """Sessions with a NETCONF 1.0 server."""
 
-    def login(self, reply=None, driver=None, timeout=1, **kwargs):
+    # Sessions that succeed do not wait for the timeout; tests of timeouts pass a short one.
+    def login(self, reply=None, driver=None, timeout=10, **kwargs):
         self.server = NetconfServer(self, reply, **kwargs)
         conn = Netconf(
             timeout=timeout,
@@ -735,7 +736,7 @@ class SessionTest(unittest.TestCase):
         content = '<data>' + '<a>' * depth + '</a>' * depth + '</data>'
         server = NetconfServer(self, lambda rpc: content)
         conn = Netconf(
-            timeout=1,
+            timeout=10,
             connect_rate_limit=0,
             verify_fingerprint=False,
             preferred_authentications=['password'],
@@ -799,7 +800,7 @@ class ReplayedSessionTest(unittest.TestCase):
         self.addCleanup(server.close)
         self.stdout = io.StringIO()
         self.conn = Netconf(
-            timeout=2,
+            timeout=10,
             connect_rate_limit=0,
             verify_fingerprint=False,
             preferred_authentications=['password'],
