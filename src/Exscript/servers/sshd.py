@@ -24,7 +24,6 @@
 An SSH2 server.
 """
 
-import base64
 import logging
 import socket
 import threading
@@ -48,17 +47,6 @@ class _ParamikoServer(ServerInterface):
     The paramiko server interface of SSHd. It accepts session channels, any
     password, any public key, and any shell and pseudo-terminal request.
     """
-
-    # Must match the public key of the test suite!
-    data = (
-        b'AAAAB3NzaC1yc2EAAAADAQABAAABAQChbnHaPrmxa5NpvtKXSMfMJEklUlinrnaNc'
-        b'VsLZeQv+3DfZBrdR4pTwJVIeda60JS6IwqtAl+pkSgZxdgW1TTxteMYCNz/zCpJSC'
-        b'KQ6oVP3/DVyZYODkmZaLz44INFDQp6cOfFzrhjvyi1SsUAKHvJIhS74u1swGm7TbD'
-        b'Nw56WAhjeQqfk+mOcLdzwwSBYiw4q7TdJ/iVT3DFFcoikBajegUpbaG8GVypBkluN'
-        b'sW3FmKG3WH0+V6Zi8HrV2t+kh1jaSSOsZfN4QVNYKlDs+pn9ZJc/nhQ40wFPgWDSW'
-        b'rasB8FNmAy7rpRlfQJ6Mnv3ez2lbrhieMSsiwLoyPpqxn87'
-    )
-    good_pub_key = paramiko.RSAKey(data=base64.decodebytes(data))
 
     def __init__(self) -> None:
         """
