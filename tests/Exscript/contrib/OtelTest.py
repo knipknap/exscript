@@ -1,3 +1,4 @@
+import importlib.metadata
 import unittest
 from unittest import mock
 
@@ -135,3 +136,63 @@ class OtelTest(unittest.TestCase):
         self.assertIsNot(Dummy.connect, original)
         ExscriptInstrumentor().uninstrument()
         self.assertIs(Dummy.connect, original)
+
+    def testHooks(self):
+        calls = []
+
+        def request_hook(span, conn):
+            calls.append(('request', span.name))
+            span.set_attribute('test.hook', 'request')
+
+        def response_hook(span, conn, result):
+            calls.append(('response', span.name, result))
+
+        self.instrument(request_hook=request_hook, response_hook=response_hook)
+        conn = Dummy(device=VirtualDevice('r1', echo=False, strict=False), connect_rate_limit=0)
+        conn.connect('r1')
+        conn.close(force=True)
+        expected = [
+            ('request', 'Dummy connect'),
+            ('response', 'Dummy connect', True),
+            ('request', 'Dummy close'),
+            ('response', 'Dummy close', None),
+        ]
+        self.assertEqual(calls, expected)
+        self.assertEqual({span.attributes['test.hook'] for span in self.spans()}, {'request'})
+
+    def testFailedCallGetsNoResponseHook(self):
+        responses = []
+        self.instrument(response_hook=lambda span, conn, result: responses.append(result))
+        conn = Dummy(connect_rate_limit=0)
+        with mock.patch.object(Dummy, '_connect', side_effect=OSError('unreachable')):
+            self.assertRaises(OSError, conn.connect, 'r1')
+        self.assertEqual(responses, [])
+
+    def testArgumentsThatDoNotFit(self):
+        # The method raises the TypeError, and no span is created.
+        self.instrument()
+        conn = Dummy(connect_rate_limit=0)
+        self.assertRaises(TypeError, conn.execute)
+        self.assertRaises(TypeError, conn.connect, 'r1', 23, 'extra')
+        self.assertEqual(self.spans(), [])
+
+    def testWithoutAddress(self):
+        # The address and the port are set only if they are known.
+        self.instrument()
+        Dummy(connect_rate_limit=0).close()
+        (span,) = self.spans('Dummy close')
+        self.assertNotIn('server.address', span.attributes)
+        self.assertNotIn('server.port', span.attributes)
+
+    def testDependencyCheck(self):
+        # Exscript is installed, so instrument() works without skip_dep_check.
+        try:
+            importlib.metadata.version('Exscript')
+        except importlib.metadata.PackageNotFoundError:
+            self.skipTest('Exscript is not installed')
+        instrumentor = ExscriptInstrumentor()
+        self.assertEqual(instrumentor.instrumentation_dependencies(), ('exscript',))
+        original = Dummy.connect
+        instrumentor.instrument()
+        self.addCleanup(instrumentor.uninstrument)
+        self.assertIsNot(Dummy.connect, original)
