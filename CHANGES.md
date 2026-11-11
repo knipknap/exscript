@@ -187,6 +187,12 @@ marked with **BREAKING**; a migration guide will accompany the release.
   Before, it raised paramiko's `AuthenticationException` or `SSHException` when the
   server rejected the key, and an `OSError` when the key file could not be read, so
   `autologin(attempts=...)` did not retry key logins.
+- **App-Level Logins Without a Password:** If the device asks for a password or an
+  S/Key response, but the account has no password, e.g. an account with only a key
+  like that of `exscript -i --ssh-key`, `login()`, `app_authenticate()` and
+  `app_authorize()` raise `LoginFailure`, as for a wrong password, with a message that
+  says so. Before, they failed with
+  `TypeError: unsupported operand type(s) for +: 'NoneType' and 'str'`.
 - **SSH Keys Without Files:** `PrivateKey.from_string()` creates a key from its text, in
   the format of a key file, e.g. a key from a secret store, which then never needs to
   be written to a file (upstream issue #209). The type is detected unless it is given.

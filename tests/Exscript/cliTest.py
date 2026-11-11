@@ -326,6 +326,18 @@ class cliTest(unittest.TestCase):
             for call in account.call_args_list:
                 self.assertIsInstance(call.kwargs['key'], PrivateKey)
 
+    def testSshKeyAtAPasswordPrompt(self):
+        # The dummy device asks for a password, which the account with the key lacks.
+        args = '-i', '--ssh-key', KEYFILE, '-l', self.path('logs'), '-e', HELLO, 'dummy://r1'
+        with mock.patch('getpass.getuser', return_value='jane'):
+            code, stdout, stderr = self.run_main(*args)
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr, 'error: 1 actions failed.\n')
+        error = self.read('logs', 'r1.log.error')
+        self.assertIn(
+            'LoginFailure: The device asks for a password, but the account has none', error
+        )
+
     def testInvalidSshKey(self):
         key = self.write('id_invalid', 'not a key\n')
         code, stdout, stderr = self.run_main(

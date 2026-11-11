@@ -1263,7 +1263,7 @@ class Protocol:
     def _app_authenticate(
         self,
         account: _Context,
-        password: str,
+        password: str | None,
         flush: bool = True,
         bailout: bool = False,
     ) -> None:
@@ -1277,7 +1277,9 @@ class Protocol:
         :param account: The context of the account whose name is sent at a
             username prompt.
         :param password: The password that is sent at a password prompt, or
-            from which the response to an S/Key challenge is computed.
+            from which the response to an S/Key challenge is computed. If it
+            is None, e.g. for an account with only a key, these prompts raise
+            a LoginFailure.
         :param flush: Whether to consume the CLI prompt from the buffer.
         :param bailout: Whether to return after sending the password, without
             waiting for a CLI prompt.
@@ -1335,6 +1337,9 @@ class Protocol:
                 seed = match.group(2)
                 self.otp_requested_event(account, seq, seed)
                 self._dbg(3, "Seq: %s, Seed: %s" % (seq, seed))
+                if password is None:
+                    msg = 'The device asks for an S/Key response, but the account has no password'
+                    raise LoginFailure(msg)
                 phrase = otp(password, seed, seq)
 
                 # A password prompt is now required.
@@ -1349,6 +1354,8 @@ class Protocol:
             elif section == 'password':
                 self._dbg(2, "Password prompt received.")
                 self.expect(prompt)  # consume the prompt from the buffer
+                if password is None:
+                    raise LoginFailure('The device asks for a password, but the account has none')
                 with self._secret():
                     self.send(password + '\r')
                 if bailout:

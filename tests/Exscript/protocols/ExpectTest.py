@@ -308,6 +308,33 @@ class LoginTest(unittest.TestCase):
         self.assertTrue(conn.is_app_authorized())
         self.assertEqual(conn.sent, [])
 
+    def testPasswordPromptWithoutPassword(self):
+        # E.g. an account with only a key: the login fails, and the next account may follow.
+        conn = Dummy(device=VirtualDevice('router', strict=False))
+        conn.connect('router')
+        self.addCleanup(conn.close, force=True)
+        with self.assertRaises(LoginFailure) as cm:
+            conn.login(Account('admin', None, needs_lock=False))
+        self.assertEqual(
+            str(cm.exception), 'The device asks for a password, but the account has none'
+        )
+
+        conn = self.connect(['Password: '])
+        with self.assertRaises(LoginFailure) as cm:
+            conn.app_authorize(Account('admin', None, needs_lock=False))
+        self.assertEqual(
+            str(cm.exception), 'The device asks for a password, but the account has none'
+        )
+        self.assertEqual(conn.sent, [])
+
+    def testSKeyWithoutPassword(self):
+        conn = self.connect(['User: ', 'otp-md4 9999 abc123 ext\r\nPassword: '])
+        with self.assertRaises(LoginFailure) as cm:
+            conn.login(Account('admin', None, needs_lock=False))
+        expected = 'The device asks for an S/Key response, but the account has no password'
+        self.assertEqual(str(cm.exception), expected)
+        self.assertEqual(conn.sent, ['admin\r'])
+
     def testAccountForTheDevice(self):
         # The app account logs into the device; the other account is for the protocol.
         conn = self.connect(['User: ', 'Password: ', '\r\nrouter> '])
