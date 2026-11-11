@@ -60,6 +60,12 @@ class cliTest(unittest.TestCase):
                 self.assertEqual(code, 0, stderr)
                 self.assertEqual(stdout, 'hello\n')
 
+    def testDefineValueWithEqualSign(self):
+        script = '{sys.message(a)}'
+        code, stdout, stderr = self.run_main('-n', '-i', '-d', 'a=b=c', '-e', script, 'dummy://r1')
+        self.assertEqual(code, 0, stderr)
+        self.assertEqual(stdout, 'b=c\n')
+
     def testDuration(self):
         self.assertEqual(_duration(''), 0)
         self.assertEqual(_duration('90'), 90)

@@ -596,6 +596,8 @@ The names below refer to functions callable from templates, not protocol methods
   environment variables in the name of the file, as `--account-pool` and
   `--load-driver` do, e.g. in `--hosts '~/$SITE/hosts.txt'`. Before, they read the
   name as given, so such a name failed with `No such file`.
+- **`exscript -d` With `=` in the Value:** `-d a=b=c` gives the variable `a` the value
+  `b=c`. Before, the command failed with `ValueError: too many values to unpack`.
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.

@@ -503,7 +503,7 @@ class _DefineAction(argparse.Action):
             values = [values]
         d = getattr(namespace, self.dest)
         for value in values or ():
-            left, right = value.split("=")
+            left, right = value.split("=", 1)
             if left.startswith('__') and left.endswith('__'):
                 parser.error('Assignment to internal variable %s' % repr(left))
             d[left] = right
