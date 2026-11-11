@@ -18,7 +18,7 @@ class TelnetdTest(ServerTest):
         self.daemon = Telnetd(self.host, self.port, self.device)
 
     def _create_client(self):
-        return Telnet()
+        return Telnet(timeout=10, connect_rate_limit=0)
 
 
 class TelnetdSessionTest(unittest.TestCase):

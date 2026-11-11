@@ -24,10 +24,10 @@ class SSHdTest(ServerTest):
     CORRELATE = SSHd
 
     def _create_daemon(self):
-        self.daemon = SSHd(self.host, self.port, self.device)
+        self.daemon = SSHd(self.host, self.port, self.device, key=PrivateKey.from_file(KEYFILE))
 
     def _create_client(self):
-        return SSH2(verify_fingerprint=False)
+        return SSH2(timeout=10, connect_rate_limit=0, verify_fingerprint=False)
 
 
 class _ImpatientServer(sshd._ParamikoServer):

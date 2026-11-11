@@ -44,20 +44,21 @@ class ServerTest(unittest.TestCase):
 
     def testConstructor(self):
         # Test can not work on the abstract base.
-        if self.daemon.__class__ == Server:
-            return
+        if type(self) is ServerTest:
+            self.skipTest('the base of SSHdTest and TelnetdTest')
         self._create_daemon()
         self.daemon.start()
 
     def testStart(self):
         # Test can not work on the abstract base.
-        if self.daemon.__class__ == Server:
-            return
+        if type(self) is ServerTest:
+            self.skipTest('the base of SSHdTest and TelnetdTest')
         self._create_daemon()
         self._add_commands()
         self.daemon.start()
 
         client = self._create_client()
+        self.addCleanup(client.close, force=True)
         client.set_prompt(re.compile(r'\w+:\d+> ?'))
         client.connect(self.host, self.daemon.port)
         client.login(Account('user', 'password'))
@@ -72,13 +73,14 @@ class ServerTest(unittest.TestCase):
 
     def testExit(self):
         # Test can not work on the abstract base.
-        if self.daemon.__class__ == Server:
-            return
+        if type(self) is ServerTest:
+            self.skipTest('the base of SSHdTest and TelnetdTest')
         self.testStart()
         # Since testStart() sent an "exit" command to the server,
         # it should be shutting down even without us calling
         # self.daemon.exit().
-        self.daemon.join()
+        self.daemon.join(5)
+        self.assertFalse(self.daemon.is_alive())
         self.testConstructor()
 
 
