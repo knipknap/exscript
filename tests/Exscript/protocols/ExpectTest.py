@@ -558,8 +558,9 @@ class InteractTest(unittest.TestCase):
 
         import tty  # POSIX only
 
-        master, slave = os.openpty()  # interact() closes the slave
+        master, slave = os.openpty()
         self.addCleanup(os.close, master)
+        self.addCleanup(os.close, slave)
         raw = threading.Event()
         setcbreak = tty.setcbreak
 
@@ -597,7 +598,10 @@ class InteractTest(unittest.TestCase):
 
 @unittest.skipUnless(hasattr(os, 'openpty'), 'interact() reads from a POSIX terminal')
 class TerminalTest(unittest.TestCase):
-    """interact() on a POSIX terminal: key handlers, and the size of the local terminal."""
+    """
+    interact() on a POSIX terminal: key handlers, the size of the local
+    terminal, and standard input, which stays open.
+    """
 
     def interact(self, daemon_cls, conn, **kwargs):
         import tty  # POSIX only
@@ -617,8 +621,9 @@ class TerminalTest(unittest.TestCase):
         received = []
         conn.data_received_event.connect(received.append)
 
-        master, slave = os.openpty()  # interact() closes the slave
+        master, slave = os.openpty()
         self.addCleanup(os.close, master)
+        self.addCleanup(os.close, slave)
         raw = threading.Event()
         setcbreak = tty.setcbreak
 
@@ -642,6 +647,7 @@ class TerminalTest(unittest.TestCase):
         ):
             conn.interact({'\x19': handled.append})
         typist.join()
+        self.assertTrue(os.isatty(slave))  # still open, e.g. for input()
         self.assertEqual(handled, [conn])  # ^Y was handled, not sent
         self.assertIn('hi!', ''.join(received))
         self.assertEqual(conn.send_data.getvalue(), 'say hi\rexit\r')
@@ -683,7 +689,8 @@ class ClosedTerminalTest(unittest.TestCase):
         conn = Telnet(timeout=1, connect_rate_limit=0)
         self.addCleanup(conn.close, force=True)
         conn.connect(HOST, start_daemon(self, Telnetd, device)[1])
-        master, slave = os.openpty()  # interact() closes the slave
+        master, slave = os.openpty()
+        self.addCleanup(os.close, slave)
         self.terminal = os.fdopen(master, 'wb', 0)
         self.addCleanup(self.terminal.close)
         setcbreak = tty.setcbreak

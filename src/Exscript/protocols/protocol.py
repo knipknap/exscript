@@ -1977,8 +1977,9 @@ class Protocol:
         # Typed characters may take several bytes.
         decoder = codecs.getincrementaldecoder(sys.stdin.encoding or 'utf-8')(errors='replace')
         # We need to make sure to use an unbuffered stdin, else multi-byte
-        # chars (such as arrow keys) won't work properly.
-        with os.fdopen(sys.stdin.fileno(), 'rb', 0) as stdin:
+        # chars (such as arrow keys) won't work properly. The file descriptor
+        # is that of sys.stdin, so it stays open.
+        with os.fdopen(sys.stdin.fileno(), 'rb', 0, closefd=False) as stdin:
             oldtty = termios.tcgetattr(stdin)
 
             # Update the terminal size whenever the size changes.

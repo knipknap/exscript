@@ -222,6 +222,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
   e.g. because its window was closed, `interact()` returns, or raises the error that
   ended the session, and restores the previous `SIGWINCH` handler. Before, it raised
   `termios.error` instead and kept its own `SIGWINCH` handler.
+- **Standard Input Stays Open:** `interact()` on a POSIX terminal no longer closes the
+  file descriptor of standard input when it ends, so that the script can still read
+  from it, e.g. with `input()`. Before, `input()` then failed with
+  `OSError: [Errno 9] Bad file descriptor`, also in 2.6.
 
 ### Waiting for Responses
 
