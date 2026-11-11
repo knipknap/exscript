@@ -86,8 +86,9 @@ class _Framer:
     1.1). A character whose bytes arrive in two reads, or that a device
     splits across two chunks, raises a UnicodeDecodeError in the IO thread,
     which ends the session. Remove this class when ncclient frames the
-    messages on bytes, and let _init_ncclient() keep the parser of ncclient
-    again (session.parser = device_handler.get_xml_parser(session)).
+    messages on bytes (https://github.com/ncclient/ncclient/issues/671), and
+    let _init_ncclient() keep the parser of ncclient again
+    (session.parser = device_handler.get_xml_parser(session)).
     """
 
     def __init__(self, session: Any) -> None:
