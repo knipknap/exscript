@@ -117,6 +117,36 @@ class FileLoggerTest(LoggerTest):
         with open(os.path.join(self.logdir, 'job2.log'), encoding='utf-8') as fp:
             self.assertEqual(fp.read(), 'helloERROR: Connection refused \n')
 
+    def testMode(self):
+        # 'a' appends to the log of an earlier run, 'w' overwrites it; both
+        # keep all output of the job.
+        for mode, expected in ('a', 'earlier run\nhello\nworld\n'), ('w', 'hello\nworld\n'):
+            with self.subTest(mode=mode):
+                with open(self.logfile, 'w', encoding='utf-8') as fp:
+                    fp.write('earlier run\n')
+                logger = FileLogger(self.logdir, mode=mode)
+                logger.add_log(id(self.job), self.job.name, 1)
+                logger.log(id(self.job), 'hello\n')
+                logger.log(id(self.job), 'world\n')
+                logger.log_succeeded(id(self.job))
+                with open(self.logfile, encoding='utf-8') as fp:
+                    self.assertEqual(fp.read(), expected)
+
+    def testModeOfTheErrorFile(self):
+        with open(self.errfile, 'w', encoding='utf-8') as fp:
+            fp.write('error of an earlier run\n')
+        logger = FileLogger(self.logdir, mode='w')
+        logger.add_log(id(self.job), self.job.name, 1)
+        logger.log(id(self.job), 'hello\n')
+        try:
+            raise FakeError('Connection refused')
+        except FakeError:
+            logger.log_aborted(id(self.job), sys.exc_info())
+        with open(self.logfile, encoding='utf-8') as fp:
+            self.assertEqual(fp.read(), 'hello\nERROR: Connection refused \n')
+        with open(self.errfile, encoding='utf-8') as fp:
+            self.assertTrue(fp.read().startswith('Traceback (most recent call last):'))
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(FileLoggerTest)

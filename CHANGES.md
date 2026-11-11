@@ -630,6 +630,10 @@ The names below refer to functions callable from templates, not protocol methods
   and the copies keep the default factory and the order of the keys. Before,
   `copy.deepcopy()` failed with `TypeError: cannot pickle 'odict_items' object`, and
   `pickle.dumps()` with a `PicklingError`.
+- **Overwritten Log Files:** `FileLogger(mode='w')`, `log_to_file(mode='w')` and
+  `exscript --overwrite-logs` overwrite the log file of an earlier run and keep all
+  output of the job. Before, every write overwrote the file, so it kept only the last
+  piece of the output, e.g. the last prompt.
 - **BREAKING - Removed Modules:** `Exscript.util.daemonize`, `Exscript.util.pidutil`,
   `Exscript.util.sigint` and `Exscript.util.sigintcatcher` are removed; `daemonize()`
   failed on Python 3 with `ValueError: can't have unbuffered text I/O`. Run long-lived scripts under a service manager such as systemd

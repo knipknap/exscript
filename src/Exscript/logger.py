@@ -253,7 +253,9 @@ class Logfile(Log):
         traceback to the same file name with the suffix '.error'. The
         directory of the file is created if it does not exist.
 
-        :param mode: The mode in which the files are opened for each write.
+        :param mode: The mode in which each file is opened for the first
+            write, e.g. 'w' to overwrite the file of an earlier run; the
+            later writes append to it.
         :param delete: Whether to delete the file when the log succeeds
             without an error.
         """
@@ -263,6 +265,7 @@ class Logfile(Log):
         self.mode = mode
         self.delete = delete
         self.do_log = True
+        self._written: set[str] = set()  # the files that later writes append to
         dirname = os.path.dirname(filename)
         if dirname:
             try:
@@ -283,19 +286,21 @@ class Logfile(Log):
 
     def _write_file(self, filename: str, *data: str) -> None:
         """
-        Writes the given strings to the given file, separated by spaces.
-        If writing fails, the error is raised, and later writes are
-        skipped.
+        Writes the given strings to the given file, separated by spaces, in
+        the mode of the log on the first write and appending after that. If
+        writing fails, the error is raised, and later writes are skipped.
         """
         if not self.do_log:
             return
+        mode = 'a' if filename in self._written else self.mode
         try:
-            with open(filename, self.mode, encoding='utf-8') as thefile:
+            with open(filename, mode, encoding='utf-8') as thefile:
                 thefile.write(' '.join(data))
         except Exception as e:
             print('Error writing to %s: %s' % (filename, e))
             self.do_log = False
             raise
+        self._written.add(filename)
 
     def write(self, *data: str) -> None:
         """
