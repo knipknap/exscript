@@ -218,6 +218,10 @@ marked with **BREAKING**; a migration guide will accompany the release.
   instead of shown, and typed text is sent like with `send()`, so Telnet escapes the
   byte 255. The previous `SIGWINCH` handler is restored when the session ends. On
   Windows, the thread that receives no longer keeps the process alive.
+- **`interact()` on a Closed Terminal:** If the terminal is gone when the session ends,
+  e.g. because its window was closed, `interact()` returns, or raises the error that
+  ended the session, and restores the previous `SIGWINCH` handler. Before, it raised
+  `termios.error` instead and kept its own `SIGWINCH` handler.
 
 ### Waiting for Responses
 

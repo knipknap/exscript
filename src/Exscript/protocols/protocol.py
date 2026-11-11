@@ -1972,7 +1972,7 @@ class Protocol:
         terminal to raw mode, passes the typed characters to the key handlers
         or sends them, and receives data from the channel, until the host
         closes the connection or the input ends. Restores the terminal
-        settings afterwards.
+        settings afterwards, unless the terminal is gone, e.g. closed.
         """
         # Typed characters may take several bytes.
         decoder = codecs.getincrementaldecoder(sys.stdin.encoding or 'utf-8')(errors='replace')
@@ -2024,9 +2024,11 @@ class Protocol:
                             if self.send_data is not None:
                                 self.send_data.write(data)
             finally:
-                termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
                 if handle_window_size:
                     signal.signal(signal.SIGWINCH, old_handler or signal.SIG_DFL)
+                # The terminal may be gone, e.g. closed: its settings do not matter then.
+                with contextlib.suppress(termios.error):
+                    termios.tcsetattr(stdin, termios.TCSADRAIN, oldtty)
 
     def _open_windows_shell(
         self,

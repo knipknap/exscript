@@ -659,3 +659,58 @@ class TerminalTest(unittest.TestCase):
             preferred_authentications=['password'],
         )
         self.interact(SSHd, conn, key=PrivateKey.from_file(KEYFILE))
+
+
+@unittest.skipUnless(hasattr(os, 'openpty'), 'interact() reads from a POSIX terminal')
+class ClosedTerminalTest(unittest.TestCase):
+    """
+    interact() on a terminal that is closed while it runs, e.g. its window,
+    so that the settings of the terminal cannot be restored.
+    """
+
+    def setUp(self):
+        self.old_handler = signal.getsignal(signal.SIGWINCH)
+        self.addCleanup(signal.signal, signal.SIGWINCH, self.old_handler)
+
+    def interact(self, typed=b'', key_handlers=None):
+        """
+        Runs interact() on a new terminal, which gets the typed bytes when it
+        is in raw mode, or else is closed then.
+        """
+        import tty  # POSIX only
+
+        device = VirtualDevice(HOST, login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False)
+        conn = Telnet(timeout=1, connect_rate_limit=0)
+        self.addCleanup(conn.close, force=True)
+        conn.connect(HOST, start_daemon(self, Telnetd, device)[1])
+        master, slave = os.openpty()  # interact() closes the slave
+        self.terminal = os.fdopen(master, 'wb', 0)
+        self.addCleanup(self.terminal.close)
+        setcbreak = tty.setcbreak
+
+        def set_raw_mode(fd, *args):
+            setcbreak(fd, *args)  # discards the bytes typed before
+            if typed:
+                self.terminal.write(typed)
+            else:
+                self.terminal.close()
+
+        with (
+            mock.patch('sys.stdin', mock.Mock(encoding='utf-8', fileno=lambda: slave)),
+            mock.patch('tty.setcbreak', set_raw_mode),
+        ):
+            conn.interact(key_handlers)
+
+    def testEndOfInput(self):
+        self.interact()
+        self.assertEqual(signal.getsignal(signal.SIGWINCH), self.old_handler)
+
+    def testErrorOfAKeyHandler(self):
+        # The error that ended interact() is raised, not the error of the terminal.
+        def close(conn):
+            self.terminal.close()
+            raise ValueError('stop')
+
+        with self.assertRaisesRegex(ValueError, 'stop'):
+            self.interact(b'\x19', {'\x19': close})
+        self.assertEqual(signal.getsignal(signal.SIGWINCH), self.old_handler)
