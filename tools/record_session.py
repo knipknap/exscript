@@ -324,7 +324,7 @@ def main():
         '--term', default='dumb', help="terminal type (default: Exscript's default)"
     )
     parser.add_argument(
-        '--width', type=int, default=511, help='terminal width (default: 511, like Exscript)'
+        '--width', type=int, default=510, help='terminal width (default: 510, like Exscript)'
     )
     parser.add_argument(
         '--height', type=int, default=1000, help='terminal height (default: 1000, like Exscript)'

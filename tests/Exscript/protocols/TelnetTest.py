@@ -53,9 +53,14 @@ class TerminalSizeTest(unittest.TestCase):
         return bytes(received)
 
     def testDefault(self):
-        # 511 columns = 0x01FF, so the byte 255 is doubled; 1000 rows = 0x03E8.
-        naws = bytes([IAC, SB, NAWS, 0x01, 0xFF, 0xFF, 0x03, 0xE8, IAC, SE])
+        # 510 columns = 0x01FE, 1000 rows = 0x03E8.
+        naws = bytes([IAC, SB, NAWS, 0x01, 0xFE, 0x03, 0xE8, IAC, SE])
         self.assertEqual(self.sentSize(), bytes([IAC, WILL, NAWS]) + naws)
+
+    def testByte255IsDoubled(self):
+        # 511 columns = 0x01FF.
+        naws = bytes([IAC, SB, NAWS, 0x01, 0xFF, 0xFF, 0x03, 0xE8, IAC, SE])
+        self.assertEqual(self.sentSize(term_width=511), bytes([IAC, WILL, NAWS]) + naws)
 
     def testOptions(self):
         naws = bytes([IAC, SB, NAWS, 0, 80, 0, 25, IAC, SE])

@@ -28,7 +28,7 @@ report in the job summary and fails if fewer sessions are guessed right than bef
    - The protocol is `ssh`, `telnet` or `netconf`.
    - `--os` is the ground truth: the Exscript driver name that `guess_os()` should return
      (`unknown` if no driver fits).
-   - Keep the default terminal type `dumb` and size 511×1000. They are Exscript's defaults, and
+   - Keep the default terminal type `dumb` and size 510×1000. They are Exscript's defaults, and
      the replay test uses the recorded values.
    - Use `--auth password` for SSH servers that drop the connection after a failed
      keyboard-interactive attempt.

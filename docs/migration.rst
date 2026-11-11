@@ -48,7 +48,7 @@ Connections
 -----------
 
 Terminal size
-    Sessions get a terminal of 511 columns and 1000 lines, instead of the
+    Sessions get a terminal of 510 columns and 1000 lines, instead of the
     size of the terminal that runs the script, or 80×25 without one.
     Devices whose driver does not set the width themselves, e.g. Linux
     hosts, no longer wrap lines at 80 characters. For the old size, pass

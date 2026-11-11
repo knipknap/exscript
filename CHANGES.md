@@ -232,7 +232,7 @@ including those of the 2.9 development line. Breaking changes are marked with
   SSH agent (`SSH_AUTH_SOCK`) as soon as the login is done with its keys. Before, the
   garbage collector closed it, with a `ResourceWarning`, and after a login with a key
   of the agent not before the end of the session.
-- **BREAKING - Terminal Size:** SSH and Telnet sessions get a terminal of 511 columns
+- **BREAKING - Terminal Size:** SSH and Telnet sessions get a terminal of 510 columns
   and 1000 lines; the new options `term_width` and `term_height` (also `Host`
   options) choose another size. Before, Exscript used the size of the terminal that
   ran the script, or 80×25 without one (cron, services), so the same script could

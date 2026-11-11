@@ -498,7 +498,7 @@ class TerminalSizeTest(unittest.TestCase):
         return interface.sizes
 
     def testDefault(self):
-        self.assertEqual(self.requestedSize(), [(511, 1000)])
+        self.assertEqual(self.requestedSize(), [(510, 1000)])
 
     def testOptions(self):
         self.assertEqual(self.requestedSize(term_width=80, term_height=25), [(80, 25)])

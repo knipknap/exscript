@@ -260,7 +260,7 @@ class Protocol:
         *,
         host_key_policy: str = 'reject',  # SSH2 only
         known_hosts: str | None = None,  # SSH2 only
-        term_width: int = 511,
+        term_width: int = 510,
         term_height: int = 1000,
     ) -> None:
         """
@@ -297,9 +297,11 @@ class Protocol:
         :keyword term_width: The width of the terminal on the remote host, in
             characters, for SSH and Telnet. Hosts wrap or cut longer lines
             unless the driver changes the width, e.g. on Linux or NX-OS. The
-            default, 511, is the widest that many devices accept. The size
-            does not depend on the terminal that the script runs in;
-            interact() changes it to the size of that terminal.
+            default, 510, is about the widest that many devices accept. Avoid
+            sizes with a byte 255, such as 511: some Telnet servers, e.g.
+            BusyBox's, misread them. The size does not depend on the terminal
+            that the script runs in; interact() changes it to the size of that
+            terminal.
         :type term_height: int
         :keyword term_height: The height of the terminal on the remote host,
             in lines. Hosts may wait for a key press after this many lines
