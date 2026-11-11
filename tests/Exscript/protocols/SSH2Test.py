@@ -36,7 +36,9 @@ class SSH2Test(ProtocolTest):
 
     # Sessions that succeed do not wait for the timeout; tests of timeouts pass a short one.
     def createProtocol(self, timeout=10):
-        self.protocol = SSH2(timeout=timeout, debug=5, verify_fingerprint=False)
+        self.protocol = SSH2(
+            timeout=timeout, connect_rate_limit=0, debug=5, verify_fingerprint=False
+        )
 
     def testConstructor(self):
         self.assertIsInstance(self.protocol, SSH2)

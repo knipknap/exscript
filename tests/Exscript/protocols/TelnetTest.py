@@ -22,7 +22,7 @@ class TelnetTest(ProtocolTest):
         self.daemon.dbg = 5
 
     def createProtocol(self):
-        self.protocol = Telnet(timeout=1, debug=5)
+        self.protocol = Telnet(timeout=1, connect_rate_limit=0, debug=5)
 
     def testConstructor(self):
         self.assertIsInstance(self.protocol, Telnet)
