@@ -38,6 +38,8 @@ JUNOS_BEFORE = re.compile(
     _JUNOS_PREFIX + r'(?:\r\n|[\r\n])+[\w\-\.]+@[\-\w+\.:]++(?:[~/][\w\-\./]*+ ?)?[%>#] $'
 )
 MRV_BEFORE = re.compile(r'(?:\r\n|[\r\n])+[^$\r\n]+\$ ?$')
+# A reference pattern for the NX-OS prompt, with at most one mode in parentheses.
+NXOS_BEFORE = re.compile(r'(?:\r\n\x00?|[\r\n\x00])[\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')
 
 
 def random_texts(alphabet, count, seed):
@@ -108,6 +110,57 @@ class PromptRegexTest(unittest.TestCase):
         for text in random_texts(alphabet, 20000, 20261110):
             if JUNOS_2X.search(text):
                 self.assertEqual(span(JUNOS_2X, text), span(regex, text), repr(text))
+
+    def testNxosPrompts(self):
+        regex = driver_map['nxos'].prompt_re[0]
+        prompts = [
+            # Exec mode, also of a network-operator, and after a CR.
+            'switch# ',
+            'nx1#',
+            '\rTEST-12345# ',
+            # Configuration mode and its sub-modes.
+            'switch(config)# ',
+            'switch(config-if)#',
+            'switch(config-subif)#',
+            'switch(config-vrf)#',
+            'switch(config-if-range)#',
+            'switch(config-vlan)#',
+            'switch(config-router)#',
+            'switch(config-router-af)#',
+            'switch(config-router-neighbor)#',
+            'switch(config-router-neighbor-af)#',
+            'switch(config-route-map)#',
+            'N7K-1(config-vpc-domain)# ',
+            'switch(config-console)#',
+            'switch(config-line)#',
+            'switch(config-applet)#',
+            'switch(config-tacacs+)# ',
+            'switch(config-s)# ',
+            'switch(config-s-acl)# ',
+            'switch(config-dual-stage)#',
+            # Maintenance mode, standby supervisor, boot image, routing context, Tcl.
+            'switch(maint-mode)# ',
+            'switch(maint-mode)(config)# ',
+            'switch(standby)# ',
+            'switch(boot)# ',
+            'switch(boot)(config)# ',
+            'switch-red#',
+            'switch-tcl# ',
+            'switch(config-tcl)#',
+            'switch(config-if-tcl)#',
+        ]
+        for prompt in prompts:
+            self.assertTrue(regex.search('output\r\n' + prompt), repr(prompt))
+        for text in 'switch(config)', 'switch (config)# ', 'line without prompt':
+            self.assertIsNone(regex.search('output\r\n' + text), repr(text))
+
+        # The pattern matches everything that NXOS_BEFORE matches, at the same position.
+        tokens = ['x', 'x(y)', '(', ')', '#', '\r\n', '\n', '\x00']
+        for length in range(1, 6):
+            for chars in itertools.product(tokens, repeat=length):
+                text = '\r\n' + ''.join(chars)
+                if NXOS_BEFORE.search(text):
+                    self.assertEqual(span(NXOS_BEFORE, text), span(regex, text), repr(text))
 
     def testRunsOfLineBreaksAsBefore(self):
         # The patterns match each run of line breaks as a whole, and the same texts at the

@@ -40,7 +40,12 @@ if TYPE_CHECKING:
 _login_re = re.compile(r'(?:^|[\r\n])(?![Ll]ast )[^\s:]* ?login: ?$')
 _user_re = [re.compile(r'user ?name: ?$', re.I), _login_re]
 _password_re = [re.compile(r'(?:(?:\r\n|[\r\n])Password: ?|last resort password:)$')]
-_prompt_re = [re.compile(r'(?:\r\n\x00?|[\r\n\x00])[\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
+# A name and modes in parentheses, e.g. "switch(maint-mode)(config)#". The
+# modes after the first one contain none of the characters before a prompt, so
+# each prompt that the pattern matched with one mode keeps its position.
+_prompt_re = [
+    re.compile(r'(?:\r\n\x00?|[\r\n\x00])[\-\w+\.:/]+(?:\([^\)]+\))?(?:\([^\)\r\n\x00]+\))*[>#] ?$')
+]
 _error_re = [
     re.compile(r'%Error'),
     re.compile(r'invalid (?:input|command)', re.I),
@@ -60,8 +65,8 @@ _error_re = [
 class NXOSDriver(Driver):
     """
     The ``nxos`` driver for Cisco Nexus OS (NXOS). Its prompt is a name with
-    an optional mode in parentheses, followed by ">" or "#", e.g.
-    "hostname#".
+    optional modes in parentheses, followed by ">" or "#", e.g. "switch#",
+    "switch(config-if)#" or "switch(maint-mode)(config)#".
     """
 
     def __init__(self) -> None:

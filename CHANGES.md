@@ -425,6 +425,10 @@ development versions; "before" refers to them.
   only the messages that IOS shows, too, such as `% Incomplete command`, and returned
   the response of the other commands as if they had succeeded. To migrate, catch the
   exception where a command may fail.
+- **NX-OS Prompts With Two Modes:** The `nxos` driver recognizes prompts with more than
+  one mode in parentheses, e.g. `switch(maint-mode)(config)# ` in maintenance mode or
+  `switch(boot)(config)# ` in the boot image. Before, a command that entered such a
+  mode waited for the prompt until the timeout.
 - **NX-OS Invalid Commands:** The `nxos` driver recognizes the error message
   `% Invalid command at '^' marker.` of NX-OS, so `execute()` raises an
   `InvalidCommandException` for such a command. Before, it returned the response as
