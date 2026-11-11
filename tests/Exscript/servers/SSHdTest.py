@@ -133,6 +133,34 @@ class SSHdSessionTest(unittest.TestCase):
             self.assertRaises(ConnectionClosedException, conn.execute, 'fail')
         self.assertIn('RuntimeError in connection handler: handler failed', '\n'.join(logs.output))
 
+    def testClientDisappearsDuringACommand(self):
+        # Sending the response fails, and the server ends the session.
+        channels = []
+
+        class Server(sshd._ParamikoServer):
+            def check_channel_shell_request(self, channel):
+                channels.append(channel)
+                return super().check_channel_shell_request(channel)
+
+        entered = threading.Event()
+
+        def slow(command):
+            entered.set()
+            channels[0].status_event.wait(5)  # set when the client has closed the channel
+            return 'done'
+
+        self.device.add_command('slow', slow)
+        self.start()
+        with mock.patch.object(sshd, '_ParamikoServer', Server):
+            conn = self.connect()
+        with self.assertLogs('Exscript.servers.sshd', logging.DEBUG) as logs:
+            conn.send('slow\r')
+            self.assertTrue(entered.wait(5))
+            conn.close(force=True)
+            self.daemon.exit()
+            self.daemon.join()
+        self.assertIn('Client disappeared: Socket is closed', '\n'.join(logs.output))
+
     def testClientWithoutShell(self):
         server_sock, client_sock = socket.socketpair()
         self.daemon.running = True
