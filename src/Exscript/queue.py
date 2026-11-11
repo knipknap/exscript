@@ -613,14 +613,16 @@ class Queue:
     ) -> None:
         """
         Enqueues a job by calling the given function of the work queue with
-        the given arguments, and adds the id of the job to the given task,
-        unless the function ignored the job. Holds the lock of the pipeline
-        meanwhile, so the job cannot start before the task knows its id.
+        the given arguments; unless the function ignored the job, counts it
+        in total and adds its id to the given task. Holds the lock of the
+        pipeline meanwhile, so the job cannot start before it is counted and
+        the task knows its id.
         """
 
         def enqueue(pipeline: 'Pipeline') -> None:
             job_id = queue_function(*args, **kwargs)
             if job_id is not None:
+                self.total += 1
                 task.add_job_id(job_id)
 
         self.workqueue.collection.with_lock(enqueue)
@@ -642,7 +644,6 @@ class Queue:
         :return: The task of the jobs, or None if no job was enqueued.
         """
         hosts = to_hosts(hosts, default_domain=self.domain)
-        self.total += len(hosts)
         callback = _prepare_connection(callback, self.account_manager)
         task = Task(self.workqueue)
         for host in hosts:
@@ -787,7 +788,6 @@ class Queue:
         :rtype:  Task
         :return: An object representing the task.
         """
-        self.total += 1
         task = Task(self.workqueue)
         self._enqueue(task, self.workqueue.enqueue, function, name, attempts)
         self._dbg(2, 'Function enqueued.')

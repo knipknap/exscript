@@ -661,6 +661,12 @@ The names below refer to functions callable from templates, not protocol methods
 - **BREAKING - `WorkQueue.queue_empty_event`:** Is emitted when the queue becomes empty,
   when the last queued or running job has ended. Before, it was emitted only when the
   main loop stopped, on `shutdown()` or `destroy()` of an empty queue.
+- **Progress Counts Only Enqueued Jobs:** `Queue.get_progress()` and the status bar
+  count only the jobs that the queue enqueued, so the progress reaches 100 % when they
+  have ended. Before, they also counted the hosts that `run_or_ignore()` and
+  `priority_run_or_raise()` did not enqueue as they were queued already, and those that
+  `priority_run()` and `force_run()` did not enqueue as they raised an `AttributeError`
+  for a queued host.
 - **Status Bar on Narrow Terminals:** If the names of the running jobs do not fit into
   the status bar of `Queue`, it cuts them in the middle, at most down to `...`. Before,
   on a terminal of about 30 columns or less, the cut overlapped and made the bar longer

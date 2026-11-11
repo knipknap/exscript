@@ -450,6 +450,18 @@ class QueueTest(unittest.TestCase):
         self.assertIsNone(self.queue.run_or_ignore('dummy://dummy2', do_nothing))
         self.queue.workqueue.unpause()
 
+    def testProgressCountsOnlyEnqueuedJobs(self):
+        self.queue.workqueue.pause()
+        self.queue.run_or_ignore('dummy://dummy1', do_nothing)
+        self.queue.run_or_ignore('dummy://dummy1', do_nothing)  # ignored
+        self.queue.priority_run_or_raise('dummy://dummy1', do_nothing)  # moves it
+        hosts = ['dummy://dummy2', 'dummy://dummy1', 'dummy://dummy3']
+        with self.assertRaises(AttributeError):
+            self.queue.priority_run(hosts, do_nothing)  # enqueues only dummy2
+        self.queue.workqueue.unpause()
+        self.queue.join()
+        self.assertEqual(self.queue.get_progress(), 100.0)
+
     def testJobsConnectWithTheHostDriver(self):
         # Each job ends before the driver is set on its host, if it can start
         # then.
