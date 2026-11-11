@@ -3,19 +3,19 @@ import io
 import unittest
 from unittest import mock
 
-from Exscript.cli import duration, expand_bracket, otp_main
+from Exscript.cli import _duration, _expand_bracket, otp_main
 from Exscript.util.crypt import otp
 
 
 class cliTest(unittest.TestCase):
     def testDuration(self):
-        self.assertEqual(duration(''), 0)
-        self.assertEqual(duration('90'), 90)
-        self.assertEqual(duration('1.5m'), 90)
-        self.assertEqual(duration('1h 30m'), 5400)
-        self.assertEqual(duration('2d'), 172800)
+        self.assertEqual(_duration(''), 0)
+        self.assertEqual(_duration('90'), 90)
+        self.assertEqual(_duration('1.5m'), 90)
+        self.assertEqual(_duration('1h 30m'), 5400)
+        self.assertEqual(_duration('2d'), 172800)
         for invalid in 'tomorrow', '1x', '-1', '1; rm -rf ~':
-            self.assertRaises(ValueError, duration, invalid)
+            self.assertRaises(ValueError, _duration, invalid)
 
     def testPromptValuesAreLiteralsOnly(self):
         cases = {
@@ -26,7 +26,7 @@ class cliTest(unittest.TestCase):
         }
         for typed, expected in cases.items():
             with mock.patch('builtins.input', return_value=typed):
-                self.assertEqual(expand_bracket('count', '{#count}'), expected)
+                self.assertEqual(_expand_bracket('count', '{#count}'), expected)
 
     def testOtp(self):
         stdout = io.StringIO()

@@ -82,6 +82,11 @@ class ScriptsTest(unittest.TestCase):
         self.assertEqual(code, 0, output)
         self.assertEqual(output, Exscript.__version__ + '\n')
 
+    def testInvalidSleep(self):
+        code, output = self.run_exscript('--sleep', 'tomorrow', 'dummy://r1')
+        self.assertEqual(code, 2, output)
+        self.assertIn("argument --sleep: invalid duration value: 'tomorrow'", output)
+
     def testRunTemplate(self):
         template = self.write_template('{sys.message("hello")}\n')
         args = '--non-interactive', '--no-authentication', template, 'dummy://r1'

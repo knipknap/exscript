@@ -61,15 +61,15 @@ from Exscript.util.interact import get_login
 from Exscript.util.log import log_to_file
 from Exscript.workqueue.job import Thread
 
-bracket_expression = r"\{([^\]]*)\}"
-define_expression = rf"^\S+=(?:\S+|{bracket_expression})$"
-bracket_expression_re = re.compile(rf"^{bracket_expression}$")
-define_expression_re = re.compile(define_expression)
-duration_re = re.compile(r"(\d+(?:\.\d*)?|\.\d+)([smhd]?)")
-duration_units = {"": 1, "s": 1, "m": 60, "h": 3600, "d": 86400}
+_bracket_expression = r"\{([^\]]*)\}"
+_define_expression = rf"^\S+=(?:\S+|{_bracket_expression})$"
+_bracket_expression_re = re.compile(rf"^{_bracket_expression}$")
+_define_expression_re = re.compile(_define_expression)
+_duration_re = re.compile(r"(\d+(?:\.\d*)?|\.\d+)([smhd]?)")
+_duration_units = {"": 1, "s": 1, "m": 60, "h": 3600, "d": 86400}
 
 
-def duration(text: str) -> float:
+def _duration(text: str) -> float:
     """
     Returns the seconds of a time like the sleep command takes it, e.g. "1h 30m":
     numbers with an optional suffix s, m, h or d, separated by blanks.
@@ -82,14 +82,18 @@ def duration(text: str) -> float:
     """
     seconds = 0.0
     for part in text.split():
-        match = duration_re.fullmatch(part)
+        match = _duration_re.fullmatch(part)
         if match is None:
             raise ValueError(part)
-        seconds += float(match.group(1)) * duration_units[match.group(2)]
+        seconds += float(match.group(1)) * _duration_units[match.group(2)]
     return seconds
 
 
-def expand_bracket(value_name: str, value: str) -> object:
+# argparse names the type in its errors: "invalid duration value: 'x'".
+_duration.__name__ = "duration"
+
+
+def _expand_bracket(value_name: str, value: str) -> object:
     """
     Returns the given value of the variable with the given name, or, if the
     value is a prompt in braces, asks the user for the value and returns
@@ -104,7 +108,7 @@ def expand_bracket(value_name: str, value: str) -> object:
     :rtype:  object
     :return: The value.
     """
-    match = bracket_expression_re.match(value)
+    match = _bracket_expression_re.match(value)
     if match is None:
         return value
     prompt = match.group(1) or f"a value for '{value_name}' "
@@ -120,11 +124,11 @@ def expand_bracket(value_name: str, value: str) -> object:
     return value
 
 
-def expand_host_variables(host: Host) -> None:
+def _expand_host_variables(host: Host) -> None:
     """
     Asks the user for the values of the variables of the given host that are
     prompts in braces, also in lists, and replaces the prompts by the
-    values; see :func:`expand_bracket`.
+    values; see :func:`_expand_bracket`.
 
     :type  host: Host
     :param host: The host.
@@ -132,12 +136,12 @@ def expand_host_variables(host: Host) -> None:
     # Define host-specific variables.
     for key, value in list(host.get_all().items()):
         if isinstance(value, str):
-            value = expand_bracket(key, value)
+            value = _expand_bracket(key, value)
         elif hasattr(value, "__iter__"):
             for n in range(len(value)):
                 if not isinstance(value[n], str):
                     continue
-                value[n] = expand_bracket(key, value[n])
+                value[n] = _expand_bracket(key, value[n])
         host.set(key, value)
 
 
@@ -168,14 +172,14 @@ def _join(queue: Queue) -> None:
     queue.join()
 
 
-def run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
+def _run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
     """
     Runs the template on the hosts as the given command line arguments say,
     and returns the number of hosts on which it failed. Invalid arguments
     end the process through ``parser.error()``.
 
     :type  parser: argparse.ArgumentParser
-    :param parser: The parser of the arguments, see :func:`create_parser`.
+    :param parser: The parser of the arguments, see :func:`_create_parser`.
     :type  args: argparse.Namespace
     :param args: The parsed arguments.
     :rtype:  int
@@ -383,9 +387,9 @@ def run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
 
     # Ask for values of marked variables.
     for host in hosts:
-        expand_host_variables(host)
+        _expand_host_variables(host)
     for key, val in list(args.define.items()):
-        args.define[key] = expand_bracket(key, val)
+        args.define[key] = _expand_bracket(key, val)
 
     # Choose the template processing type.
     tmpl_vars = args.define
@@ -461,7 +465,7 @@ def run(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
 
 
 # Define command line option value types.
-def assignment(value: str, pattern: re.Pattern[str] = define_expression_re) -> str:
+def _assignment(value: str, pattern: re.Pattern[str] = _define_expression_re) -> str:
     """
     Checks a value of the option -d/--define: returns it if it matches the
     given pattern, by default that of an assignment NAME=VALUE, and raises
@@ -479,7 +483,7 @@ def assignment(value: str, pattern: re.Pattern[str] = define_expression_re) -> s
     return value
 
 
-class DefineAction(argparse.Action):
+class _DefineAction(argparse.Action):
     """
     The action of the option -d/--define: stores the variables of the given
     assignments NAME=VALUE in the dictionary of the option. Variables in
@@ -509,7 +513,7 @@ class DefineAction(argparse.Action):
         setattr(namespace, self.dest, d)
 
 
-def create_parser() -> argparse.ArgumentParser:
+def _create_parser() -> argparse.ArgumentParser:
     """
     Returns a parser of the command line arguments of ``exscript``.
 
@@ -584,8 +588,8 @@ and the values of the variables in the following columns.
     parser.add_argument(
         "-d",
         "--define",
-        type=assignment,
-        action=DefineAction,
+        type=_assignment,
+        action=_DefineAction,
         default=dict(),
         metavar="PAIR",
         help="""
@@ -806,7 +810,7 @@ Defines the number of retries per host on login failure. Default is 0.
     parser.add_argument(
         "--sleep",
         metavar="TIME",
-        type=duration,
+        type=_duration,
         default="",
         help="""
 Waits for the specified time before running the script.
@@ -926,8 +930,8 @@ def main(argv: list[str] | None = None) -> int:
         else 1. Invalid arguments, ``--help`` and ``--version`` end the
         process through SystemExit, as usual with argparse.
     """
-    parser = create_parser()
-    failed = run(parser, parser.parse_args(argv))
+    parser = _create_parser()
+    failed = _run(parser, parser.parse_args(argv))
     if failed != 0:
         print(f"error: {failed} actions failed.", file=sys.stderr)
         return 1
