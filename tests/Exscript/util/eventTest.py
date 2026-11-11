@@ -105,6 +105,12 @@ class eventTest(unittest.TestCase):
         self.event.disconnect(self.callback2)
         self.assertEqual(self.event.n_subscribers(), 0)
 
+    def testDisconnectAFunctionThatIsNotConnected(self):
+        self.event.listen(self.callback)
+        self.event.disconnect(self.callback2)
+        self.assertTrue(self.event.is_connected(self.callback))
+        self.assertEqual(self.event.n_subscribers(), 1)
+
     def testDisconnectAll(self):
         self.assertEqual(self.event.n_subscribers(), 0)
         self.event.connect(self.callback)
