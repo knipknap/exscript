@@ -1,3 +1,4 @@
+import contextlib
 import io
 import logging
 import os
@@ -5,9 +6,12 @@ import select
 import shutil
 import socket
 import stat
+import struct
+import sys
 import tempfile
 import threading
 import unittest
+import warnings
 from unittest import mock
 
 import paramiko
@@ -827,6 +831,118 @@ class AuthenticationTest(unittest.TestCase):
             self.login()
 
 
+class FakeAgent:
+    """
+    An SSH agent on a UNIX socket that holds the given keys. It records the
+    type of each request, and sets the event closed when a client closes its
+    connection.
+    """
+
+    def __init__(self, test, *keys):
+        self.keys = keys
+        self.requests = []
+        self.closed = threading.Event()
+        tmpdir = tempfile.TemporaryDirectory()
+        test.addCleanup(tmpdir.cleanup)
+        self.path = os.path.join(tmpdir.name, 'agent')
+        self._listener = socket.socket(socket.AF_UNIX)
+        self._listener.bind(self.path)
+        self._listener.listen()
+        self._listener.settimeout(0.1)
+        self._connections = []
+        self._threads = []
+        self._closing = threading.Event()
+        self._thread = threading.Thread(target=self._accept, daemon=True)
+        self._thread.start()
+        test.addCleanup(self.close)
+
+    def _accept(self):
+        while not self._closing.is_set():
+            try:
+                conn, _ = self._listener.accept()
+            except TimeoutError:
+                continue
+            self._connections.append(conn)
+            thread = threading.Thread(target=self._serve, args=(conn,), daemon=True)
+            self._threads.append(thread)
+            thread.start()
+
+    def _serve(self, conn):
+        with conn, conn.makefile('rb') as fp:
+            while header := fp.read(4):
+                request = paramiko.Message(fp.read(struct.unpack('>I', header)[0]))
+                kind = request.get_byte()[0]
+                self.requests.append(kind)
+                reply = paramiko.Message()
+                if kind == 11:  # SSH2_AGENTC_REQUEST_IDENTITIES
+                    reply.add_byte(bytes([12]))
+                    reply.add_int(len(self.keys))
+                    for key in self.keys:
+                        reply.add_string(key.asbytes())
+                        reply.add_string('test key')
+                elif kind == 13:  # SSH2_AGENTC_SIGN_REQUEST
+                    blob, data = request.get_binary(), request.get_binary()
+                    [key] = [key for key in self.keys if key.asbytes() == blob]
+                    reply.add_byte(bytes([14]))
+                    reply.add_string(key.sign_ssh_data(data).asbytes())
+                else:
+                    reply.add_byte(bytes([5]))  # SSH_AGENT_FAILURE
+                conn.sendall(struct.pack('>I', len(reply.asbytes())) + reply.asbytes())
+        self.closed.set()
+
+    def close(self):
+        self._closing.set()
+        self._thread.join()
+        self._listener.close()
+        for conn in self._connections:
+            with contextlib.suppress(OSError):  # closed already
+                conn.shutdown(socket.SHUT_RDWR)
+        for thread in self._threads:
+            thread.join()
+
+
+@unittest.skipIf(
+    sys.platform == 'win32' or not hasattr(socket, 'AF_UNIX'),
+    'paramiko finds the agent through SSH_AUTH_SOCK only with UNIX sockets',
+)
+class AgentTest(unittest.TestCase):
+    """The connection to the SSH agent is closed when the login is done with its keys."""
+
+    def setUp(self):
+        home = tempfile.TemporaryDirectory()  # no key files
+        self.addCleanup(home.cleanup)
+        self.home = home.name
+
+    def environ(self, agent):
+        env = {'SSH_AUTH_SOCK': agent.path, 'HOME': self.home, 'USERPROFILE': self.home}
+        return mock.patch.dict(os.environ, env)
+
+    def testLoginWithAnAgentKey(self):
+        device = VirtualDevice(HOST, login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False)
+        daemon = SSHd(HOST, 0, device, key=key)
+        daemon.start()
+        self.addCleanup(daemon.join)
+        self.addCleanup(daemon.exit)
+        agent = FakeAgent(self, paramiko.ECDSAKey.generate())
+        conn = SSH2(timeout=10, connect_rate_limit=0, verify_fingerprint=False)
+        self.addCleanup(conn.close, force=True)
+        with self.environ(agent):
+            conn.connect(HOST, daemon.port)
+            conn.login(Account('user', PASSWORD, needs_lock=False))
+        self.assertEqual(agent.requests, [11, 13])  # the key signed the login
+        self.assertTrue(agent.closed.wait(5))  # while the session is open
+
+    def testAgentWithoutKeys(self):
+        agent = FakeAgent(self)
+        conn = SSH2()
+        with self.environ(agent), warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always', ResourceWarning)
+            with self.assertRaisesRegex(paramiko.AuthenticationException, 'found no keys'):
+                conn._paramiko_auth_agent('admin')
+        self.assertEqual([str(warning.message) for warning in caught], [])  # closed, not collected
+        self.assertTrue(agent.closed.wait(5))
+
+
 class SessionTest(unittest.TestCase):
     """Sending to and closing a session that the host ended or that has pending output."""
 
@@ -897,6 +1013,7 @@ def suite():
             loader.loadTestsFromTestCase(ConnectTest),
             loader.loadTestsFromTestCase(TerminalSizeTest),
             loader.loadTestsFromTestCase(AuthenticationTest),
+            loader.loadTestsFromTestCase(AgentTest),
             loader.loadTestsFromTestCase(SessionTest),
         ]
     )

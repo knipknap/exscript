@@ -287,26 +287,31 @@ class SSH2(Protocol):
         Authenticates with the keys of the SSH agent, one after the other
         until the server accepts one; the password is not used. Raises the
         error of the last key, or AuthenticationException if the agent has no
-        keys.
+        keys. Closes the connection to the agent before it returns or raises.
 
         :return: After a partial success, the authentication types that the
             server allows next; else an empty list.
         """
-        keys = paramiko.Agent().get_keys()
-        if not keys:
-            raise AuthenticationException('auth agent found no keys')
+        agent = paramiko.Agent()
+        try:
+            keys = agent.get_keys()
+            if not keys:
+                raise AuthenticationException('auth agent found no keys')
 
-        saved_exception: SSHException = AuthenticationException(
-            'Failed to authenticate with given username'
-        )
+            saved_exception: SSHException = AuthenticationException(
+                'Failed to authenticate with given username'
+            )
 
-        for key in keys:
-            try:
-                self._dbg(2, 'Trying SSH agent key %s' % key.fingerprint)
-                return cast(paramiko.Transport, self._transport).auth_publickey(username, key)
-            except SSHException as e:
-                saved_exception = e
-        raise saved_exception
+            for key in keys:
+                try:
+                    self._dbg(2, 'Trying SSH agent key %s' % key.fingerprint)
+                    return cast(paramiko.Transport, self._transport).auth_publickey(username, key)
+                except SSHException as e:
+                    saved_exception = e
+            raise saved_exception
+        finally:
+            # Not before: the keys sign through this connection.
+            agent.close()
 
     def _paramiko_auth_key(
         self, username: str, keys: Iterable[tuple[type[paramiko.PKey], str]], password: str | None
