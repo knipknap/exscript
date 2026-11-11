@@ -34,7 +34,11 @@ if TYPE_CHECKING:
     from ...util.impl import _Context
     from ..protocol import Protocol
 
-_user_re = [re.compile(r'user ?name: ?$', re.I)]
+# The user name prompt of Telnet and the console is "<hostname> login: ", or
+# "login: " without the hostname. A read may end after "Last login: ", which
+# is no prompt.
+_login_re = re.compile(r'(?:^|[\r\n])(?![Ll]ast )[^\s:]* ?login: ?$')
+_user_re = [re.compile(r'user ?name: ?$', re.I), _login_re]
 _password_re = [re.compile(r'(?:(?:\r\n|[\r\n])Password: ?|last resort password:)$')]
 _prompt_re = [re.compile(r'(?:\r\n\x00?|[\r\n\x00])[\-\w+\.:/]+(?:\([^\)]+\))?[>#] ?$')]
 _error_re = [
@@ -55,9 +59,10 @@ class NXOSDriver(Driver):
 
     def __init__(self) -> None:
         """
-        Constructor. Sets the patterns of the user name prompt "Username:",
-        the password prompts, the command prompt and the error messages, such
-        as "%Error", "Invalid input" and "Invalid command".
+        Constructor. Sets the patterns of the user name prompts
+        "<hostname> login:" (also without the hostname) and "Username:", the
+        password prompts, the command prompt and the error messages, such as
+        "%Error" and "Invalid input".
         """
         Driver.__init__(self, 'nxos')
         self.user_re = _user_re

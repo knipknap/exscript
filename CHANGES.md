@@ -406,6 +406,10 @@ development versions; "before" refers to them.
   banner is now part of the test corpus.
 - **NX-OS Banners:** The `nxos` driver also recognizes the banner "Cisco NX-OS
   Software" of newer versions, e.g. nx-osv9000 (upstream issue #200).
+- **NX-OS Login Prompt:** The `nxos` driver recognizes the user name prompt that NX-OS
+  shows at the console and over Telnet, e.g. `switch login: `, or `login: ` without the
+  host name, besides `Username:` (upstream PR #178). Before, a login with
+  `driver='nxos'` waited for `Username:` until the timeout.
 - **NX-OS Invalid Commands:** The `nxos` driver recognizes the error message
   `% Invalid command at '^' marker.` of NX-OS, so `execute()` raises an
   `InvalidCommandException` for such a command. Before, it returned the response as
