@@ -247,6 +247,9 @@ Emulators and test servers
 - The test servers ``SSHd`` and ``Telnetd`` run as threads; stop them with
   ``exit()`` and ``join()``. Their ``buf`` attribute and the ``encoding``
   argument of ``Telnetd`` are removed.
+- ``SSHd`` without ``key`` creates a host key of its own instead of using
+  ``~/.ssh/id_rsa``. To keep a fixed host key, e.g. for ``known_hosts``,
+  pass ``key=PrivateKey.from_file(...)``.
 - ``Exscript.servers.HTTPd`` and its ``RequestHandler`` are removed; their
   digest authentication never worked on Python 3. Use ``http.server`` from
   the standard library or a web framework.

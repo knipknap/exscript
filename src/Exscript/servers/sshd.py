@@ -26,7 +26,6 @@ An SSH2 server.
 
 import base64
 import logging
-import os
 import socket
 import threading
 
@@ -142,15 +141,16 @@ class SSHd(Server):
         encoding, which is UTF-8.
 
         :param key: The host key; the server reads the RSA key from its file.
-            Defaults to the key in ~/.ssh/id_rsa.
+            Without it, the server creates an ECDSA key of its own, which is
+            new for each server.
         """
         Server.__init__(self, host, port, device)
         self._logger = _logger
-        if key:
-            keyfile = key.get_filename()
-        else:
-            keyfile = os.path.expanduser('~/.ssh/id_rsa')
-        self.host_key = paramiko.RSAKey(filename=keyfile)
+        # A device emulator has no use for the private key of the user, which
+        # may be missing or need a passphrase.
+        self.host_key: paramiko.PKey = (
+            paramiko.RSAKey(filename=key.get_filename()) if key else paramiko.ECDSAKey.generate()
+        )
 
     def _recvline(self, channel: paramiko.Channel, buf: bytes) -> tuple[str | None, bytes]:
         """

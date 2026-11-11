@@ -790,6 +790,10 @@ The names below refer to functions callable from templates, not protocol methods
   authentication never worked on Python 3: every login with a valid password failed
   with a `TypeError`. Use `http.server` from the
   standard library or a web framework instead.
+- **BREAKING - Host Key of `SSHd`:** Without `key`, `SSHd` creates an ECDSA host key of
+  its own, new for each server. Before, it read the private key of the user,
+  `~/.ssh/id_rsa`, and failed where that file was missing, e.g. with only an Ed25519 key
+  or in CI, or needed a passphrase. For a fixed host key, pass `key`.
 - **Client Handling:** `SSHd` and `Telnetd` keep listening after a client disconnects,
   allowing sequential connections. They share the supplied emulator device; concurrent
   clients are not supported.

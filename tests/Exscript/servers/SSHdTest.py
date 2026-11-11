@@ -69,13 +69,19 @@ class SSHdSessionTest(unittest.TestCase):
         return conn
 
     def testDefaultKey(self):
+        # Without a key, the server creates its own, and does not read the
+        # private key of the user, which may be missing.
         home = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, home)
-        os.mkdir(os.path.join(home, '.ssh'))
-        shutil.copy(KEYFILE, os.path.join(home, '.ssh', 'id_rsa'))
         with mock.patch.dict(os.environ, {'HOME': home, 'USERPROFILE': home}):
-            daemon = SSHd('127.0.0.1', 0, self.device)
-        self.assertEqual(daemon.host_key, paramiko.RSAKey(filename=KEYFILE))
+            self.daemon = SSHd('127.0.0.1', 0, self.device)
+        self.assertIsInstance(self.daemon.host_key, paramiko.ECDSAKey)
+        self.assertNotEqual(self.daemon.host_key, SSHd('127.0.0.1', 0, self.device).host_key)
+        self.device.add_command('ls', 'file')
+        self.start()
+        conn = self.connect()
+        conn.execute('ls')
+        self.assertEqual(conn.response, 'file')
 
     def testOnlySessionChannels(self):
         server = sshd._ParamikoServer()
