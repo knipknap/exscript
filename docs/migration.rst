@@ -76,7 +76,38 @@ Key logins
 Responses
     ``conn.get_response()`` returns the response without the echo of the
     command, control characters and terminal escape sequences, and with
-    ``\n`` line ends. ``conn.response`` is unchanged.
+    ``\n`` line ends. ``conn.response`` no longer ends with the ``\r`` of
+    the line break before the prompt, and ``send()`` sets it to ``None``.
+    :func:`~Exscript.util.match.first_match` and
+    :func:`~Exscript.util.match.any_match` search ``conn.get_response()``
+    when they get a connection; pass ``conn.response`` to search it as
+    before.
+
+Errors in ``expect()``
+    ``expect()`` raises
+    :class:`~Exscript.protocols.exception.InvalidCommandException` if a
+    line of the response matches an error pattern, as ``expect_prompt()``
+    does; 2.x checked only in ``expect_prompt()``. The data is consumed all
+    the same, so catch the exception where such a line is expected.
+
+Debug output
+    The messages of ``debug=`` and of ``Queue(verbose=2)`` and higher go to
+    Python's :mod:`logging`, to loggers such as ``Exscript.protocols.ssh2``
+    and ``Exscript.queue``, instead of to ``stderr`` and ``stdout``.
+    Configure logging to see them, e.g. with
+    ``logging.basicConfig(level=logging.DEBUG)``.
+
+Output and log files
+    The ``stdout`` stream and the ``logfile`` of an adapter get the data as
+    received, also the ``\r`` of ``\r\n`` line breaks; 2.x removed it.
+
+``connect()``
+    Raises a ``ProtocolException`` if the adapter is connected already;
+    call ``close()`` first.
+
+Connect rate limit
+    Connects to the same host are spaced by 1.1 seconds by default. Pass
+    ``connect_rate_limit=0`` to connect at once, as 2.x did.
 
 Generic prompt
     A match of the prompt pattern of the generic driver, which the
@@ -132,6 +163,24 @@ Last line
     A template also sends its last line if the line does not end with a
     line break. 2.x ignored such a line.
 
+Escape sequences
+    Commands and strings evaluate escape sequences such as ``\t``,
+    ``\x41`` or ``\u00e4``, e.g. ``show \x41`` sends ``show A``; in 2.x, a
+    backslash only made the next character literal. Escape the backslash,
+    as in ``\\x41``, or pass ``no_escaping=True`` to
+    :func:`~Exscript.util.template.eval`, ``eval_file()``, ``paste()`` or
+    ``paste_file()`` (command line: ``--no-escaping``) for the old
+    behavior; with it, ``\t`` in a string is still a tab.
+
+Comments
+    A hash behind an escaped character is text: ``show \}# x`` sends
+    ``show }# x``; 2.x sent ``show }``.
+
+``<rpc>`` elements
+    A template sends the content of an ``<rpc>`` element as a command of
+    its own, without the tags, for NETCONF. To send the tags as text,
+    escape them: ``\<rpc>``, ``\</rpc>``.
+
 ``extract``
     Requires a regular expression between slashes. 2.x also accepted a
     string in double quotes, e.g. ``{extract "(a)" as y}``.
@@ -161,14 +210,28 @@ Values of the caller
     the tuple, and ``{x = t}`` copies the items instead of storing the
     tuple as one item.
 
+Undefined variables
+    An undefined variable in an expression raises a ``NameError`` when the
+    template is compiled, instead of a ``ValueError``.
+
+Errors of functions
+    An exception of a function, other than a
+    :class:`~Exscript.protocols.exception.ProtocolException`, stops the
+    template with an :class:`~Exscript.parselib.exception.ExecuteError`
+    that shows the position of the call; the exception of the function is
+    its ``__context__``. 2.x raised the exception of the function. ``$f``
+    for a function ``f`` in a command or a string raises an
+    ``ExecuteError``, too; 2.x inserted the text of the function object.
+
 Command line tool
 -----------------
 
-Besides the defaults above: a value entered at a ``-d VAR={#"PROMPT"}``
-prompt is parsed as a Python literal, such as a number or a list, instead
-of being run as Python code, and ``--sleep`` accepts seconds with an
-optional suffix ``m``, ``h`` or ``d`` instead of running ``sleep`` in a
-shell.
+Besides the defaults above: a value entered at a ``-d VAR={"PROMPT"}``
+prompt is text instead of being run as Python code, so enter it without
+quotes; for a number or a list, write ``-d VAR={#"PROMPT"}``, which
+parses a Python literal. ``--sleep`` accepts seconds with an optional
+suffix ``m``, ``h`` or ``d`` instead of running ``sleep`` in a shell. The
+debug messages of ``-v 2`` and higher go to the standard error.
 
 Python API
 ----------
@@ -203,7 +266,8 @@ private. Use these instead:
      - ``conn.logfile``, the path of the log file; setting it switches
        to another file
    * - ``SSH2.client``, ``shell``, ``sock``, ``Telnet.tn``,
-       ``conn.last_account``
+       ``conn.last_account``, ``conn.driver_replaced``,
+       ``Dummy.init_done``
      - none; they are internal
 
 Other renamed or removed names:
@@ -213,7 +277,10 @@ Other renamed or removed names:
   package ``standard-telnetlib`` as a replacement for the telnetlib module
   that Python 3.13 removed.
 - ``OsGuesser.data_received()`` and ``protocol_info()`` are
-  ``check_received_data()`` and ``check_protocol_info()``.
+  ``check_received_data()`` and ``check_protocol_info()``. Its attributes
+  ``info``, ``os_map``, ``auth_os_map``, ``protocol_os_map`` and
+  ``auth_buffer`` are private; use ``get()`` and ``set()``.
+  ``conn.os_guesser`` is read-only.
 - ``Exscript.util.template.test_secure()`` is ``test(secure=True)``.
 - ``Exscript.util.interact.InputHistory.file`` is ``filename``.
 - ``Exscript.util.daemonize``, ``Exscript.util.pidutil``,
@@ -222,11 +289,12 @@ Other renamed or removed names:
   To stop the connections of a queue at once on Ctrl+C, as
   ``SigIntWatcher`` did, end the process with ``os._exit()`` in a handler
   of ``signal.SIGINT``.
-- ``WorkQueue`` has no ``debug`` argument, and ``set_debug()`` takes
+- ``WorkQueue`` has no ``debug`` argument, and ``set_debug()`` requires
   ``level``. Pass the other arguments by keyword.
 - ``Queue(mode='multiprocessing')`` raises a ``ValueError``: jobs run in
   threads only. For several CPU cores, see :doc:`platforms`.
-- ``Exscript.account.AccountProxy`` and ``Exscript.logger.LoggerProxy`` are
+- ``Exscript.account.AccountProxy``, ``Exscript.logger.LoggerProxy``,
+  ``Exscript.workqueue.job.Process`` and ``Queue.pipe_handlers`` are
   removed; jobs use the accounts and the loggers directly.
 - ``WorkQueue.queue_empty_event`` is emitted when the last job of the queue
   has ended, and no longer when the queue stops. Code that used it to learn
@@ -239,6 +307,13 @@ Other renamed or removed names:
   ``ExpressionNode.parent_node``, the ``prio`` argument of
   ``Expression.prioritize()``, and ``lft``, ``rgt``, ``op`` and
   ``priority()`` of ``Term``.
+- ``string_re`` of ``Exscript.interpreter.string`` is ``varstring_re``;
+  ``bracket_re`` and ``Regex.n_groups`` of ``Exscript.interpreter.regex``
+  are replaced by ``Regex.groups``. ``HPProCurveDriver.clean_res_re`` is
+  removed.
+- :func:`~Exscript.util.file.get_accounts_from_file` decodes the
+  passwords as UTF-8; 2.x decoded them as latin-1. For non-ASCII passwords
+  that were encoded as latin-1, pass ``password_encoding='latin-1'``.
 - Adapters that subclass ``Protocol`` must pass its arguments by
   keyword; new ones were inserted.
 

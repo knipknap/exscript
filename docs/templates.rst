@@ -28,6 +28,20 @@ that ends with the line, e.g. in ``{x = 1}  # set x``. Escaped characters
 are text: ``\# text`` sends the command ``# text``, and ``show \}# x``
 sends ``show }# x``.
 
+Escape Sequences
+----------------
+
+A backslash makes the next character text, e.g. in ``\{``, ``\$`` or
+``\\``. Commands and strings also evaluate the escape sequences of
+Python: ``\n``, ``\r``, ``\t``, ``\0``, ``\a``, ``\b``, ``\f``, ``\v``,
+``\e`` (escape), octal sequences of three digits such as ``\101``,
+``\xhh``, ``\uhhhh`` and ``\Uhhhhhhhh``. For example, ``show \x41``
+sends ``show A``. With ``no_escaping=True`` (command line:
+``--no-escaping``), only ``\n``, ``\r`` and ``\t`` in strings are
+evaluated, and other escaped characters are text. In regular
+expressions, a backslash keeps its meaning for Python's :mod:`re`, e.g.
+in ``/\d+/``.
+
 Using Variables
 ---------------
 

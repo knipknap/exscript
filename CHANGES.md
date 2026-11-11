@@ -2,9 +2,9 @@
 
 ## 3.0.0 (unreleased)
 
-Work in progress: the entries below cover the changes merged from the 2.9 development
-line and are completed against Exscript 2.6.32 before the release. Breaking changes are
-marked with **BREAKING**; a migration guide will accompany the release.
+Work in progress: the entries below describe the changes against Exscript 2.6.32,
+including those of the 2.9 development line. Breaking changes are marked with
+**BREAKING**; the migration guide says what to change.
 
 ## General
 
@@ -46,20 +46,33 @@ marked with **BREAKING**; a migration guide will accompany the release.
 - **NETCONF Protocol:** The new adapter `Exscript.protocols.Netconf` (scheme
   `netconf://`, port 830) sends RPCs over SSH with ncclient, and returns the replies as
   text or as lxml elements; an `<rpc-error>` raises `RPCError`. The IOS XR and Junos
-  drivers recognize their devices by the NETCONF capabilities.
+  drivers recognize their devices by the NETCONF capabilities. Templates send RPCs in
+  `<rpc>` elements.
 - **BREAKING - Internal Attributes and Helpers:** Attributes and helpers that were
   meant for internal use are private or removed; the migration guide lists their
   public replacements. Among them are the attributes `buffer`, `auto_driver`,
-  `manual_driver`, `manual_*_re`, `*_authenticated`, `last_account`, `cancel` and `log`
-  of the protocol adapters, `SSH2.client`, `shell` and `sock`, and `Telnet.tn`;
-  `OsGuesser.data_received()` and `protocol_info()`, now `check_received_data()` and
-  `check_protocol_info()`; `Exscript.util.template.test_secure()`, now
+  `manual_driver`, `manual_*_re`, `*_authenticated`, `driver_replaced`,
+  `last_account`, `cancel` and `log` of the protocol adapters, `Dummy.init_done`,
+  `SSH2.client`, `shell` and `sock`, and `Telnet.tn`; `os_guesser` of the protocol
+  adapters is read-only; `OsGuesser.data_received()` and `protocol_info()`, now
+  `check_received_data()` and `check_protocol_info()`, and its attributes `info`,
+  `os_map`, `auth_os_map`, `protocol_os_map` and `auth_buffer`;
+  `HPProCurveDriver.clean_res_re`; `Exscript.util.template.test_secure()`, now
   `test(secure=True)`; `InputHistory.file`, now `filename`; the `debug` argument of
-  `WorkQueue`, whose `set_debug()` argument is now `level`; the `type` argument of
-  `parselib.Lexer.expect()` and `current_is()`, now `types`; and the `dump1()` methods
-  of the template interpreter, `ExpressionNode.parent_node`, the `prio` argument of
-  `Expression.prioritize()`, and `lft`, `rgt`, `op` and `priority()` of `Term`, which
-  only the old ordering of operators used.
+  `WorkQueue`, whose `set_debug()` argument is now `level`, which is required; the
+  `type` argument of `parselib.Lexer.expect()` and `current_is()`, now `types`;
+  `string_re` of `Exscript.interpreter.string`, now `varstring_re`; `bracket_re` and
+  `Regex.n_groups` of `Exscript.interpreter.regex`, now `Regex.groups`; and the
+  `dump1()` methods of the template interpreter, `ExpressionNode.parent_node`, the
+  `prio` argument of `Expression.prioritize()`, and `lft`, `rgt`, `op` and
+  `priority()` of `Term`, which only the old ordering of operators used.
+- **BREAKING - Debug Messages Through `logging`:** The protocol adapters write the
+  messages of their `debug` level to the logger of their module, e.g.
+  `Exscript.protocols.ssh2`, at the level `DEBUG`, and the queue those of its
+  `verbose` level 2 or more to `Exscript.queue` at the level `INFO`. Before, the
+  adapters wrote them to their `stderr`, which they no longer use, and the queue to
+  its `stdout`. Configure `logging` to see them, e.g. with
+  `logging.basicConfig(level=logging.DEBUG)`; `exscript` shows them on standard error.
 - **OpenTelemetry Tracing (optional):** Install the `otel` extra (`Exscript[otel]`)
   and call `Exscript.contrib.otel.ExscriptInstrumentor().instrument()`. Every call of
   `connect()`, `login()`, `authenticate()`, `send()`, `execute()` and `close()` creates
@@ -125,10 +138,13 @@ marked with **BREAKING**; a migration guide will accompany the release.
   entities, loading DTDs, or accessing the network, also with `huge_tree`. lxml 5.0 or
   later is required, which no longer resolves external entities by default, also in
   the parsers of ncclient.
-- **CLI Without `eval()` and Shell:** A value entered at a `-d VAR={#"PROMPT"}` prompt
-  is parsed as a Python literal, such as a number or a list, instead of being run as
-  Python code. `--sleep` no longer runs the `sleep` command in a shell; it accepts
-  seconds with an optional suffix `m`, `h` or `d`, also on Windows.
+- **BREAKING - CLI Without `eval()` and Shell:** A value entered at a
+  `-d VAR={"PROMPT"}` prompt is text, and one entered at a `-d VAR={#"PROMPT"}` prompt
+  is parsed as a Python literal, such as a number or a list. Before, the value of a
+  `{"PROMPT"}` prompt was run as Python code, so text had to be entered in quotes; the
+  2.9 development versions ran the value of a `{#"PROMPT"}` prompt. `--sleep` no longer
+  runs the `sleep` command in a shell; it accepts seconds with an optional suffix `m`,
+  `h` or `d`, also on Windows.
 
 ## Protocols
 
@@ -149,10 +165,13 @@ marked with **BREAKING**; a migration guide will accompany the release.
 
 ### Connecting
 
-- **Connect Rate Limit Per Host:** `connect_rate_limit` no longer delays connects to
-  other hosts. The limiter slept while it held a process-wide lock, so one waiting
-  connect blocked all others, by default for up to 1.1 seconds. Concurrent connects
-  to the same host are now spaced, too; before, they could start together.
+- **Connect Rate Limit Per Host:** Connects to the same host, also concurrent ones,
+  are spaced by 60 / `connect_rate_limit` + 0.1 seconds. The new option
+  `connect_rate_limit` (also a `Host` option) is 60 connects per minute by default; 0
+  turns the limit off. Connects to other hosts are not delayed. 2.6 had no limit. The
+  limiter of the 2.9 development versions slept while it held a process-wide lock, so
+  one waiting connect blocked all others, by default for up to 1.1 seconds, and
+  concurrent connects to the same host could start together.
 - **Fewer SSH Reconnects:** Drivers that reconnect between authentication methods
   (`ios`) now reconnect only after a method sent a request that failed. Before, they
   reconnected before every method, also before the public key methods when there was
@@ -168,6 +187,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   `PreferredAuthentications`. The default order is `publickey`,
   `keyboard-interactive`, `password`; methods that the server does not offer are
   skipped.
+- **BREAKING - Order of the Arguments of `Protocol`:** The new arguments
+  `connect_rate_limit`, before `connect_timeout`, and `disabled_algorithms` and
+  `preferred_authentications`, before `verify_fingerprint`, move the later arguments
+  of `Protocol.__init__()`, so adapters that subclass `Protocol` must pass them by
+  keyword. The adapters take keyword arguments only, as before.
 - **SSH Key Fingerprints in Debug Logs:** The keys that are tried for a login are
   logged with their SHA256 fingerprints, as `ssh-add -l` and `ssh-keygen -l` show
   them. Before, the MD5 fingerprint was logged as a Python bytes literal.
@@ -227,6 +251,13 @@ marked with **BREAKING**; a migration guide will accompany the release.
   closed the connection first, are only logged (debug level 1); before, errors of
   the logout were ignored silently, and `close(force=True)` could raise an
   `EOFError`.
+- **BREAKING - `connect()` While Connected:** `connect()` raises a `ProtocolException`
+  if the adapter is connected already. Before, it opened another connection and left
+  the first one open.
+- **BREAKING - Output and Logfile With `\r`:** The `stdout` stream and the `logfile` of
+  the protocol adapters get the data as it was received, also the `\r` of `\r\n` line
+  breaks. Before, `\r` was removed. The logs of `Exscript.util.log` and
+  `exscript --logdir` are unchanged.
 
 ### Interactive Shell
 
@@ -268,6 +299,16 @@ marked with **BREAKING**; a migration guide will accompany the release.
   `ProtocolException`, and Telnet an `EOFError`, or a `TimeoutException` if unmatched
   data was left. The new exception is a `ProtocolException` and an `EOFError`, so only
   code that expects a `TimeoutException` for a closed connection must change.
+- **BREAKING - `expect()` Checks for Errors:** `expect()` raises an
+  `InvalidCommandException` if a line of the response matches an error pattern, as
+  `expect_prompt()` and `execute()` do; the data is consumed all the same. Before, only
+  `expect_prompt()` checked. `waitfor()` does not check.
+- **BREAKING - `response` Without `\r` Before the Prompt:** The prompt patterns of the
+  drivers match a `\r\n` before the prompt as a whole, so after `execute()` and
+  `expect_prompt()`, `response` no longer ends with the `\r` of that line break.
+- **BREAKING - `send()` Clears `response`:** `send()` sets `response` to `None`, and
+  `get_response()` returns an empty string, until the next `expect()`, `waitfor()` or
+  `expect_prompt()`. Before, `send()` kept the response to the previous command.
 - **Login Errors After Sending Only:** `login()`, `app_authenticate()` and
   `app_authorize()` raise `LoginFailure` only if the driver's login error patterns
   match data that arrived after Exscript sent something, e.g. the password. Before,
@@ -323,8 +364,9 @@ marked with **BREAKING**; a migration guide will accompany the release.
   `read_eager()`, `read_very_eager()`, `read_lazy()`, `read_very_lazy()`, `read_all()`,
   `expect()`, `waitfor()`, `interact()` and `mt_interact()` with their helpers,
   `sock_avail()`, `get_socket()`, `fileno()` and `set_receive_callback()`; the
-  attribute `cancel_expect`; the function `test()`; the option constants other than
-  those Exscript negotiates; and the `stdout` and `stderr` arguments. The new method
+  attributes `cancel_expect`, `cookedq`, `irawq` and `data_callback_kwargs`; the
+  function `test()`; the option constants other than those Exscript negotiates; and
+  the `stdout` and `stderr` arguments and attributes. The new method
   `receive(timeout)` reads once and passes the text to the callback. The remaining
   constants are integers instead of bytes, and the options of the constructor are
   keyword-only. Use `Exscript.protocols.Telnet`. If you need a drop-in replacement for
@@ -500,11 +542,11 @@ development versions; "before" refers to them.
 
 ### Class `Exscript.protocols.Protocol`
 
-| Old                                      | New                                                       | Comment                                                                                                               |
-| ---                                      | ---                                                       | ---                                                                                                                   |
-| -                                        | `cleanup_response(response, ...)`                         | Static method to cleanup a response. Used by the `get_response` method.                                               |
-| `close(force=False, reconnecting=False)` | `close(force=False)`                                      | **BREAKING:** `reconnecting` removed. `force=False` now performs a graceful, driver-driven logout before closing.     |
-| -                                        | `get_response(*, strip_command, strip_chars, strip_ansi)` | Should be the first choice to retrieve a clean response. `Protocol.response` still exists with the raw received data. |
+| Old                  | New                                                       | Comment                                                                                                               |
+| ---                  | ---                                                       | ---                                                                                                                   |
+| -                    | `cleanup_response(response, ...)`                         | Static method to cleanup a response. Used by the `get_response` method.                                               |
+| `close(force=False)` | `close(force=False)`                                      | **BREAKING:** `force=False` now performs a graceful, driver-driven logout before closing.                             |
+| -                    | `get_response(*, strip_command, strip_chars, strip_ansi)` | Should be the first choice to retrieve a clean response. `Protocol.response` still exists with the raw received data. |
 
 ## Emulators
 
@@ -531,11 +573,18 @@ development versions; "before" refers to them.
 - **BREAKING - Last Line Without a Line Break:** A template also sends its last line
   if the line does not end with a line break, e.g. `show version` in
   `template.eval(conn, 'ls\nshow version')`. Before, such a line was ignored.
-- **BREAKING - Escape Sequences Out of Range:** A Unicode sequence above U+10FFFF,
-  such as `\UFFFFFFFF`, and an octal sequence above `\377`, such as `\400`, in a
-  command or a string raise a `CompileError` that shows their position. Before, the
-  former raised a `SyntaxError` of Python, and the latter gave the characters U+0100
-  to U+01FF with a `SyntaxWarning` of Python.
+- **BREAKING - Escape Sequences:** Commands and strings evaluate the escape sequences
+  of Python: `\n`, `\r`, `\t`, `\0`, `\a`, `\b`, `\f`, `\v`, `\e` (escape), octal
+  sequences of three digits such as `\101`, `\xhh`, `\uhhhh` and `\Uhhhhhhhh`; e.g.
+  `show \x41` sends `show A`, and `\n` in a command sends a line break. Before, a
+  backslash made the next character literal, so `show \x41` sent `show x41`, and only
+  `\n` and `\r` in strings were line breaks. The new argument `no_escaping=True` of
+  `eval()`, `eval_file()`, `paste()` and `paste_file()` of `Exscript.util.template`,
+  and the new option `--no-escaping` of `exscript`, keep the old behavior, except that
+  `\t` in a string is a tab. A Unicode sequence above U+10FFFF, such as `\UFFFFFFFF`,
+  and an octal sequence above `\377`, such as `\400`, raise a `CompileError` that shows
+  their position; the 2.9 development versions raised a `SyntaxError` of Python for the
+  former, and gave the characters U+0100 to U+01FF for the latter.
 - **BREAKING - `extract` Requires a Regular Expression:** `extract` raises a
   `CompileError` if no regular expression between slashes follows, e.g. in
   `{extract "(a)" as y from "a"}` or `{extract x as y}`. Before, the character after
@@ -562,15 +611,28 @@ development versions; "before" refers to them.
 - **`is not` and `not in` With Several Blanks:** `is  not` and `not  in` with more
   than one blank or a line break between the words mean the same as `is not` and
   `not in`. Before, they gave `None`, and as a condition a `TypeError` of Python.
-- **BREAKING - Lines With Only Whitespace:** A line with only whitespace is ignored,
-  also if the whitespace is not a space or a tab, e.g. a no-break space. Before, such
-  whitespace was sent at the start of the command in the next line.
-- **BREAKING - Escaped Characters Start No Comment:** An escaped hash, or a hash
-  behind an escaped character, is part of the command: `\# x` sends `# x`,
-  `show \}# x` sends `show }# x`, and `show a\n# b` sends `# b` in its second line.
-  Before, the hash started a comment there, so `\# x` sent an empty line, and
-  `show \}# x` took the next line into the command. A hash behind an `<rpc>` element
-  starts a comment, as behind a code block; before, it sent an empty line.
+- **Lines With Only Whitespace:** A line with only whitespace is ignored, also if the
+  whitespace is not a space or a tab, e.g. a no-break space, as in 2.6. The 2.9
+  development versions sent such whitespace at the start of the command in the next
+  line.
+- **BREAKING - Escaped Characters Start No Comment:** A hash behind an escaped
+  character is part of the command: `show \}# x` sends `show }# x`, and `show a\n# b`
+  sends `# b` in its second line. Before, the hash started a comment there, so these
+  sent `show }` and `show an`. `\# x` sends `# x`, as before. A hash behind an `<rpc>`
+  element starts a comment, as behind a code block. The 2.9 development versions sent
+  an empty line for `\# x` and for a hash behind an `<rpc>` element, and took the next
+  line into the command for `show \}# x`.
+- **BREAKING - Undefined Variables Raise `NameError`:** A template that uses an
+  undefined variable in an expression, e.g. in `{if x is "a"}`, raises a `NameError`
+  when it is compiled. Before, it raised a `ValueError`.
+- **BREAKING - `<rpc>` Elements:** A template sends the content of an `<rpc>` element,
+  e.g. `<rpc><get-config>...</get-config></rpc>`, as a command of its own, without the
+  `rpc` tags, and checks its XML syntax when it is compiled; `Netconf` sends it as an
+  RPC. A `</rpc>` without `<rpc>` raises a `CompileError`. Before, `<rpc>` and
+  `</rpc>` were text; `\<rpc>` and `\</rpc>` still are.
+- **`__username__` Without an Account:** The template variable `__username__` is
+  `undefined` if the connection has no account, like `__hostname__` without a
+  connection. Before, it was `None`.
 - **Errors at Runtime:** A division by zero (`1 / 0`, `1 % 0`), an operand of `/`,
   `ge`, `gt`, `le` or `lt` that is not a number (`"a" / 2`), an operand of an
   arithmetic operator without a value, such as a group that `extract` did not match,
@@ -630,6 +692,9 @@ The names below refer to functions callable from templates, not protocol methods
 | Old                                          | New                                          | Comment                                                                                                                                                            |
 | ---                                          | ---                                          | ---                                                                                                                                                                |
 | `__response__`                               | `__response__`                               | **BREAKING:** Connection helpers now clean responses using `get_response()`, stripping command echoes where applicable, control/ANSI codes, and normalizing CR/LF. |
+| -                                            | `connection.add_error(error)`                | Adds an error pattern to the current ones; `connection.set_error()` replaces them.                                                                                 |
+| -                                            | `connection.add_prompt(prompt)`              | Adds a prompt pattern to the current ones; `connection.set_prompt()` replaces them.                                                                                |
+| -                                            | `connection.authenticate_user(...)`          | Like `connection.authenticate()`, but with the given user name and password.                                                                                       |
 | -                                            | `connection.get_protocol()`                  | Returns the protocol name, e.g. `ssh`, `telnet`, or `netconf`.                                                                                                     |
 | -                                            | `connection.expect(prompt)`                  | Consumes the response and matched prompt.                                                                                                                          |
 | `connection.wait_for(prompt)`                | `connection.wait_for(prompt)`                | **BREAKING:** No longer consumes the response/prompt. Use `connection.expect()` for the previous behavior.                                                         |
@@ -722,6 +787,16 @@ The names below refer to functions callable from templates, not protocol methods
   `exscript --overwrite-logs` overwrite the log file of an earlier run and keep all
   output of the job. Before, every write overwrote the file, so it kept only the last
   piece of the output, e.g. the last prompt.
+- **BREAKING - `first_match()` and `any_match()` With a Connection:**
+  `Exscript.util.match.first_match()` and `any_match()` search `conn.get_response()`
+  when they get a connection: the response without the echo of the command, control
+  characters and terminal escape sequences, and with `\n` line ends. Before, they
+  searched `conn.response`.
+- **BREAKING - Passwords of `get_accounts_from_file()`:** The passwords in the file
+  are decoded as UTF-8 after base64, or with the encoding of the new argument
+  `password_encoding`. A password that is no valid base64 or text in that encoding
+  raises an `Exception` that names the user. Before, the passwords were decoded as
+  latin-1, and invalid base64 raised a `binascii.Error`.
 - **BREAKING - Removed Modules:** `Exscript.util.daemonize`, `Exscript.util.pidutil`,
   `Exscript.util.sigint` and `Exscript.util.sigintcatcher` are removed; `daemonize()`
   failed on Python 3 with `ValueError: can't have unbuffered text I/O`. Run long-lived scripts under a service manager such as systemd
@@ -740,9 +815,9 @@ The names below refer to functions callable from templates, not protocol methods
 - **BREAKING - No Pipes and Proxies:** Jobs take their accounts from the account manager
   and write to their loggers directly, without a pipe and a thread per job. Removed:
   `Exscript.account.AccountProxy`, `Exscript.logger.LoggerProxy`, the duplicate
-  `Exscript.account.LoggerProxy`, `Exscript.workqueue.job.Process` and
-  `Queue._create_pipe()`. The queue, accounts and account pools use the locks of
-  `threading` instead of those of `multiprocessing`.
+  `Exscript.account.LoggerProxy`, `Exscript.workqueue.job.Process`,
+  `Queue.pipe_handlers` and `Queue._create_pipe()`. The queue, accounts and account
+  pools use the locks of `threading` instead of those of `multiprocessing`.
 - **`AccountPool.reset()` With Owners:** Releases the accounts that owners acquired,
   then removes all accounts. Before, it failed with `RuntimeError: dictionary changed
   size during iteration` if an account was acquired with an owner, as in
