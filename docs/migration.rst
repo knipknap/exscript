@@ -95,6 +95,14 @@ Driver names
     option of a ``Host`` and ``--use-driver``. 2.x ignored it and guessed
     the driver.
 
+NX-OS errors
+    The ``nxos`` driver recognizes more error messages of NX-OS, e.g.
+    ``% Invalid command at '^' marker.`` and lines that start with
+    ``ERROR:``, so ``execute()`` raises
+    :class:`~Exscript.protocols.exception.InvalidCommandException` for the
+    commands that NX-OS rejects with them. 2.x returned their response.
+    Catch the exception where a command may fail.
+
 Templates
 ---------
 

@@ -416,6 +416,15 @@ development versions; "before" refers to them.
   `Username:`. Before, the guess was `ios`, whose patterns do not match this prompt, so
   the login waited until the timeout. The transcript of upstream PR #178 is now part of
   the test corpus.
+- **BREAKING - NX-OS Error Messages:** The `nxos` driver recognizes more error messages
+  of NX-OS, so `execute()` raises an `InvalidCommandException` for the commands that
+  NX-OS rejects with them: all parser errors, which end with `at '^' marker.`, e.g.
+  `% Invalid command at '^' marker.` or `Invalid range at '^' marker.`, then
+  `% Permission denied for the role`, and lines that start with `ERROR: ` or `Error: `,
+  e.g. `ERROR: port already in a port-channel, no config allowed.`. Before, it knew
+  only the messages that IOS shows, too, such as `% Incomplete command`, and returned
+  the response of the other commands as if they had succeeded. To migrate, catch the
+  exception where a command may fail.
 - **NX-OS Invalid Commands:** The `nxos` driver recognizes the error message
   `% Invalid command at '^' marker.` of NX-OS, so `execute()` raises an
   `InvalidCommandException` for such a command. Before, it returned the response as

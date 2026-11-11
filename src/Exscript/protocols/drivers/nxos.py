@@ -47,6 +47,13 @@ _error_re = [
     re.compile(r'(?:incomplete|ambiguous) command', re.I),
     re.compile(r'connection timed out', re.I),
     re.compile(r'[^\r\n]+ not found', re.I),
+    # The parser errors, e.g. "% Invalid command at '^' marker." or "Invalid
+    # range at '^' marker.", after a line with a caret under the wrong word.
+    re.compile(r"at '\^' marker\.\s*$"),
+    re.compile(r'^% Permission denied for the role'),
+    # Configuration errors, e.g. "ERROR: port already in a port-channel, no
+    # config allowed." or "Error: AAA authorization failed ...".
+    re.compile(r'^(?:ERROR|Error): '),
 ]
 
 
@@ -62,7 +69,9 @@ class NXOSDriver(Driver):
         Constructor. Sets the patterns of the user name prompts
         "<hostname> login:" (also without the hostname) and "Username:", the
         password prompts, the command prompt and the error messages, such as
-        "%Error" and "Invalid input".
+        "%Error", "Invalid input", the parser errors that end with
+        "at '^' marker.", "% Permission denied for the role", and lines that
+        start with "ERROR: " or "Error: ".
         """
         Driver.__init__(self, 'nxos')
         self.user_re = _user_re

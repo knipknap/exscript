@@ -8,6 +8,7 @@ from Exscript import Account
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import Dummy
 from Exscript.protocols.drivers import driver_map
+from Exscript.protocols.exception import InvalidCommandException
 
 from .ExpectTest import connect
 
@@ -75,8 +76,64 @@ class LoginTest(unittest.TestCase):
         self.assertEqual(conn.guess_os(), 'nxos')
 
 
+class ErrorTest(unittest.TestCase):
+    """The error messages of NX-OS in the response of a command."""
+
+    def setUp(self):
+        self.output = ''
+        device = nxos_device()
+        device.add_command('command', lambda command: self.output)
+        self.conn = Dummy(device=device, driver='nxos', timeout=1)
+        self.addCleanup(self.conn.close, force=True)
+        self.conn.connect('switch')
+        self.conn.login(Account('admin', 'secret', needs_lock=False))
+
+    def testErrors(self):
+        # The parser errors follow a line with a caret under the wrong word.
+        outputs = [
+            "          ^\r\n% Invalid command at '^' marker.",
+            "                        ^\r\n% Incomplete command at '^' marker.",
+            "                          ^\r\n% Ambiguous command at '^' marker.",
+            "                ^\r\n% Invalid number, range is (4096:16777215) at '^' marker.",
+            "                     ^\r\n% Invalid parameter detected at '^' marker.",
+            "                   ^\r\nInvalid range at '^' marker.",
+            "                  ^\r\nInvalid interface format at '^' marker.",
+            '% Permission denied for the role',
+            'Error: AAA authorization failed AAA_AUTHOR_STATUS_METHOD=16(0x10)',
+            'ERROR: port already in a port-channel, no config allowed.',
+            'Error: default interface is not supported as speed-group is configured',
+        ]
+        for output in outputs:
+            with self.subTest(output=output):
+                self.output = output
+                with self.assertRaises(InvalidCommandException) as cm:
+                    self.conn.execute('command')
+                line = output.split('\r\n')[-1]
+                self.assertEqual(
+                    str(cm.exception), 'Error in the response from the device: ' + line
+                )
+
+    def testNoErrors(self):
+        outputs = [
+            '  0 input error  0 short frame',
+            'Errors: 0',
+            'Ethernet1/1 is down (error-disabled)',
+            '2026 Nov 11 10:00:00 switch %ETHPORT-5-IF_DOWN_ERROR_DISABLED: Interface'
+            ' Ethernet1/1 is down (Error disabled. Reason:BPDUGuard)',
+            '  description ERROR: spare port, do not use',
+        ]
+        for output in outputs:
+            with self.subTest(output=output):
+                self.output = output
+                self.conn.execute('command')
+                self.assertEqual(self.conn.get_response(), output)
+
+
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(LoginTest)
+    loader = unittest.TestLoader()
+    return unittest.TestSuite(
+        [loader.loadTestsFromTestCase(LoginTest), loader.loadTestsFromTestCase(ErrorTest)]
+    )
 
 
 if __name__ == '__main__':
