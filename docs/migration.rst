@@ -96,11 +96,13 @@ Driver names
     the driver.
 
 NX-OS errors
-    The ``nxos`` driver recognizes more error messages of NX-OS, e.g.
-    ``% Invalid command at '^' marker.`` and lines that start with
-    ``ERROR:``, so ``execute()`` raises
+    The ``nxos`` driver recognizes the error messages of NX-OS: the parser
+    errors, which end with ``at '^' marker.``, such as
+    ``% Invalid command at '^' marker.``, then
+    ``% Permission denied for the role``, and lines that start with
+    ``ERROR:`` or ``Error:``. So ``execute()`` raises
     :class:`~Exscript.protocols.exception.InvalidCommandException` for the
-    commands that NX-OS rejects with them. 2.x returned their response.
+    commands that NX-OS rejects with them; 2.x returned their response.
     Catch the exception where a command may fail.
 
 Templates

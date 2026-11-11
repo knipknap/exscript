@@ -416,14 +416,15 @@ development versions; "before" refers to them.
   `Username:`. Before, the guess was `ios`, whose patterns do not match this prompt, so
   the login waited until the timeout. The transcript of upstream PR #178 is now part of
   the test corpus.
-- **BREAKING - NX-OS Error Messages:** The `nxos` driver recognizes more error messages
-  of NX-OS, so `execute()` raises an `InvalidCommandException` for the commands that
-  NX-OS rejects with them: all parser errors, which end with `at '^' marker.`, e.g.
-  `% Invalid command at '^' marker.` or `Invalid range at '^' marker.`, then
-  `% Permission denied for the role`, and lines that start with `ERROR: ` or `Error: `,
-  e.g. `ERROR: port already in a port-channel, no config allowed.`. Before, it knew
+- **BREAKING - NX-OS Error Messages:** The `nxos` driver recognizes the error messages
+  of NX-OS, so `execute()` raises an `InvalidCommandException` for a command that NX-OS
+  rejects: for the parser errors, which end with `at '^' marker.`, such as
+  `% Invalid command at '^' marker.` for an unknown command or keyword, the most common
+  one, or `Invalid range at '^' marker.`; for `% Permission denied for the role`; and
+  for lines that start with `ERROR: ` or `Error: `, e.g.
+  `ERROR: port already in a port-channel, no config allowed.`. Before, the driver knew
   only the messages that IOS shows, too, such as `% Incomplete command`, and returned
-  the response of the other commands as if they had succeeded. To migrate, catch the
+  the response of such a command as if it had succeeded. To migrate, catch the
   exception where a command may fail.
 - **NX-OS Prompts With Two Modes:** The `nxos` driver recognizes prompts with more than
   one mode in parentheses, e.g. `switch(maint-mode)(config)# ` in maintenance mode or
@@ -435,10 +436,6 @@ development versions; "before" refers to them.
   `unknown`. The driver keeps ncclient's default device handler: the `nexus` handler
   replaces the base capability of RFC 6241 in the hello of the client with the one of
   the old XML agent, which a server may reject.
-- **NX-OS Invalid Commands:** The `nxos` driver recognizes the error message
-  `% Invalid command at '^' marker.` of NX-OS, so `execute()` raises an
-  `InvalidCommandException` for such a command. Before, it returned the response as
-  if the command had succeeded.
 - **HP ProCurve Configuration Prompts:** The `hp_pro_curve` driver recognizes the
   prompts of the configuration contexts, e.g. `HP-2920(config)# ` or
   `HP-2920(vlan-10)# `. Before, a command that entered such a context, e.g.
