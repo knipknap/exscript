@@ -1,7 +1,9 @@
 import base64
+import binascii
 import os.path
 import re
 import tempfile
+import traceback
 import unittest
 from tempfile import NamedTemporaryFile
 
@@ -104,12 +106,26 @@ class fileTest(unittest.TestCase):
     def testGetAccountsFromFileWithInvalidPasswords(self):
         from Exscript.util.file import get_accounts_from_file
 
-        for password in 'not base64!', base64.b64encode(b'\xffpassword').decode('ascii'):
+        undecodable = base64.b64encode(b'\xffS3cr3t').decode('ascii')
+        cases = (
+            ('S3cr3t!', binascii.Error, 'invalid base64'),
+            ('S3cr3t-\u00e4', binascii.Error, 'invalid base64'),
+            (undecodable, ValueError, 'invalid utf-8'),
+        )
+        for password, cls, reason in cases:
             with self.subTest(password=password):
                 data = '[account-pool]\nuser1 = %s\n' % password
                 filename = self.write_tempfile(data.encode('utf8')).name
-                with self.assertRaisesRegex(Exception, 'Could not decode password for user: user1'):
+                with self.assertRaises(cls) as cm:
                     get_accounts_from_file(filename)
+                self.assertIs(type(cm.exception), cls)
+                message = 'Could not decode password for user: user1 (%s)' % reason
+                self.assertEqual(str(cm.exception), message)
+                # Neither the message nor the traceback shows the password or its bytes.
+                self.assertTrue(cm.exception.__suppress_context__)
+                output = ''.join(traceback.format_exception(cm.exception))
+                for secret in password, 'S3cr3t', '0xff', '\\xff':
+                    self.assertNotIn(secret, output)
 
     def testGetAccountsFromFileWithPasswordEncoding(self):
         from Exscript.util.file import get_accounts_from_file

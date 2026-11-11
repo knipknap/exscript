@@ -796,9 +796,9 @@ The names below refer to functions callable from templates, not protocol methods
   searched `conn.response`.
 - **BREAKING - Passwords of `get_accounts_from_file()`:** The passwords in the file
   are decoded as UTF-8 after base64, or with the encoding of the new argument
-  `password_encoding`. A password that is no valid base64 or text in that encoding
-  raises an `Exception` that names the user. Before, the passwords were decoded as
-  latin-1, and invalid base64 raised a `binascii.Error`.
+  `password_encoding`; before, as latin-1. A password that is not valid in that
+  encoding raises a `ValueError`. Its message, and that of the `binascii.Error` for
+  invalid base64, names the user, but not the password.
 - **BREAKING - Removed Modules:** `Exscript.util.daemonize`, `Exscript.util.pidutil`,
   `Exscript.util.sigint` and `Exscript.util.sigintcatcher` are removed; `daemonize()`
   failed on Python 3 with `ValueError: can't have unbuffered text I/O`. Run long-lived scripts under a service manager such as systemd
