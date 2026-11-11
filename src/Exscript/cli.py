@@ -73,7 +73,8 @@ if TYPE_CHECKING:
     from rich.console import Console
 
 _bracket_expression = r"\{([^\]]*)\}"
-_define_expression = rf"^\S+=(?:\S+|{_bracket_expression})$"
+# NAME=VALUE, where the value may contain blanks but must not start with one.
+_define_expression = r"^\S+=\S"
 _bracket_expression_re = re.compile(rf"^{_bracket_expression}$")
 _define_expression_re = re.compile(_define_expression)
 _duration_re = re.compile(r"(\d+(?:\.\d*)?|\.\d+)([smhd]?)")

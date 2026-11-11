@@ -283,6 +283,8 @@ class cliTest(unittest.TestCase):
     def testDefineErrors(self):
         cases = (
             ('a', 'invalid value: a'),
+            ('a=', 'invalid value: a='),
+            ('a= b', 'invalid value: a= b'),
             ('__filename__=x', "Assignment to internal variable '__filename__'"),
         )
         for value, error in cases:
@@ -295,6 +297,15 @@ class cliTest(unittest.TestCase):
         code, stdout, stderr = self.run_main('-n', '-i', '-d', 'a=b=c', '-e', script, 'dummy://r1')
         self.assertEqual(code, 0, stderr)
         self.assertEqual(stdout, 'b=c\n')
+
+    def testDefineValueWithBlanks(self):
+        args = '-d', 'a=b  c ', '-d', 'd={Enter d}'
+        script = '{sys.message(a)}{sys.message(d)}'
+        with mock.patch('builtins.input', return_value='e f') as input:
+            code, stdout, stderr = self.run_main('-n', '-i', *args, '-e', script, 'dummy://r1')
+        self.assertEqual(code, 0, stderr)
+        self.assertEqual(stdout, 'b  c \ne f\n')
+        input.assert_called_once_with('Please enter Enter d: ')
 
     def testLoginPrompt(self):
         with (
