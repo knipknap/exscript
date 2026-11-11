@@ -1991,10 +1991,13 @@ class Protocol:
                     self._set_terminal_size(rows, cols)
 
                 old_handler = signal.signal(signal.SIGWINCH, handle_sigwinch)
-                handle_sigwinch(None, None)
 
             # Read from stdin and write to the network, endlessly.
             try:
+                # The first resize is within the try, so that the handler is
+                # restored if it fails, e.g. on a channel that the host closed.
+                if handle_window_size:
+                    handle_sigwinch(None, None)
                 tty.setraw(sys.stdin.fileno())
                 tty.setcbreak(sys.stdin.fileno())
 

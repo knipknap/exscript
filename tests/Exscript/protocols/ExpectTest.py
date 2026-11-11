@@ -11,6 +11,8 @@ import time
 import unittest
 from unittest import mock
 
+import paramiko
+
 from Exscript import Account, PrivateKey
 from Exscript.emulators import VirtualDevice
 from Exscript.protocols import SSH2, Dummy, Telnet, drivers
@@ -665,6 +667,32 @@ class TerminalTest(unittest.TestCase):
             preferred_authentications=['password'],
         )
         self.interact(SSHd, conn, key=PrivateKey.from_file(KEYFILE))
+
+    def testResizeOfAClosedChannel(self):
+        # The first resize fails after the host ended the session, but the SIGWINCH handler
+        # of interact() does not stay.
+        device = VirtualDevice(HOST, login_type=VirtualDevice.LOGIN_TYPE_NONE, strict=False)
+        daemon, port = start_daemon(self, SSHd, device, key=PrivateKey.from_file(KEYFILE))
+        device.add_command('exit', daemon.exit_command)
+        conn = SSH2(
+            timeout=10,
+            connect_rate_limit=0,
+            verify_fingerprint=False,
+            preferred_authentications=['password'],
+        )
+        self.addCleanup(conn.close, force=True)
+        conn.connect(HOST, port)
+        conn.protocol_authenticate(Account('user', 'password', needs_lock=False))
+        conn.send('exit\r')
+        self.assertRaises(ConnectionClosedException, conn.expect, 'never')
+        master, slave = os.openpty()
+        self.addCleanup(os.close, master)
+        self.addCleanup(os.close, slave)
+        old_handler = signal.getsignal(signal.SIGWINCH)
+        self.addCleanup(signal.signal, signal.SIGWINCH, old_handler)
+        with mock.patch('sys.stdin', mock.Mock(encoding='utf-8', fileno=lambda: slave)):
+            self.assertRaisesRegex(paramiko.SSHException, 'Channel is not open', conn.interact)
+        self.assertEqual(signal.getsignal(signal.SIGWINCH), old_handler)
 
 
 @unittest.skipUnless(hasattr(os, 'openpty'), 'interact() reads from a POSIX terminal')

@@ -226,6 +226,11 @@ marked with **BREAKING**; a migration guide will accompany the release.
   file descriptor of standard input when it ends, so that the script can still read
   from it, e.g. with `input()`. Before, `input()` then failed with
   `OSError: [Errno 9] Bad file descriptor`, also in 2.6.
+- **`SIGWINCH` Handler After a Failed Resize:** If `interact()` fails to pass the size
+  of the terminal to the host at its start, e.g. because the host closed the SSH
+  channel, it restores the previous `SIGWINCH` handler. Before, its own handler stayed
+  installed, so that resizing the terminal later raised an exception wherever the
+  script was then.
 
 ### Waiting for Responses
 
