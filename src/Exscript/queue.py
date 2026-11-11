@@ -256,6 +256,8 @@ class Queue:
         self.stderr = stderr
         self.host_driver = host_driver
         self.exc_cb = exc_cb
+        # For the output, completed and failed; _enqueue() counts total under
+        # the lock of the pipeline.
         self.lock = threading.RLock()
         self.devnull = _Discard()
         self.channel_map = {'fatal_errors': self.stderr}
@@ -423,7 +425,8 @@ class Queue:
         Counts the given job as completed, and reports its success on the
         status bar channel.
         """
-        self.completed += 1
+        with self.lock:
+            self.completed += 1
         self._del_status_bar()
         self._write('status_bar', job.name + ' succeeded.' + '\n')
         self._print_status_bar(exclude=job.name)
@@ -433,8 +436,9 @@ class Queue:
         Counts the given job as completed and failed, after its last
         attempt failed, and reports it on the errors channel.
         """
-        self.completed += 1
-        self.failed += 1
+        with self.lock:
+            self.completed += 1
+            self.failed += 1
         self._del_status_bar()
         self._write('errors', job.name + ' finally failed.' + '\n')
         self._print_status_bar(exclude=job.name)

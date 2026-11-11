@@ -667,6 +667,12 @@ The names below refer to functions callable from templates, not protocol methods
   `priority_run_or_raise()` did not enqueue as they were queued already, and those that
   `priority_run()` and `force_run()` did not enqueue as they raised an `AttributeError`
   for a queued host.
+- **Jobs That End at the Same Time:** `Task` and `Queue` count the jobs that end at the
+  same time under a lock. Before, two of them could be counted as one, mostly on the
+  free-threaded build: the task then never completed, as `Task.is_completed()` stayed
+  `False` and `done_event` never came, and the progress and the count of failed jobs of
+  the queue stayed too low. And if the last two jobs of a task ended at the same time,
+  both could emit `done_event`.
 - **Status Bar on Narrow Terminals:** If the names of the running jobs do not fit into
   the status bar of `Queue`, it cuts them in the middle, at most down to `...`. Before,
   on a terminal of about 30 columns or less, the cut overlapped and made the bar longer

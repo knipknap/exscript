@@ -26,13 +26,13 @@ logger = logging.getLogger('TestSuite.QueueTest')
 logger.addHandler(logging.NullHandler())
 
 
-def holds_lock(queue):
+def holds_lock(lock):
     """
-    Returns whether the current thread holds the lock of the pipeline of the
-    given queue, which keeps the main loop from taking a job.
+    Returns whether the current thread holds the given lock, or the lock of
+    the given condition; a Lock counts as held if any thread holds it.
     """
     try:
-        queue.workqueue.collection.condition.notify(0)  # raises unless the lock is held
+        threading.Condition(lock).notify(0)  # raises unless the lock is held
     except RuntimeError:
         return False
     return True
@@ -44,8 +44,35 @@ def end_now(queue, job_id):
     taken it at once: unless the current thread holds the lock of the
     pipeline, which keeps the main loop from taking it.
     """
-    if not holds_lock(queue):
+    if not holds_lock(queue.workqueue.collection.condition):
         queue.workqueue.wait_for(job_id)
+
+
+class Interleave:
+    """
+    Replaces the counter with the given name of an object. The first read
+    of the counter in each of the given threads waits until all of them read
+    it, unless the thread holds the given lock then. So without the lock,
+    all threads read the old value before any writes it.
+    """
+
+    def __init__(self, name, threads, lock):
+        self.name = name
+        self.threads = set(threads)
+        self.lock = lock
+        self.barrier = threading.Barrier(len(self.threads), timeout=10)
+
+    def __get__(self, obj, cls=None):
+        value = obj.__dict__[self.name]
+        thread = threading.current_thread()
+        if thread in self.threads:
+            self.threads.discard(thread)
+            if not holds_lock(self.lock):
+                self.barrier.wait()
+        return value
+
+    def __set__(self, obj, value):
+        obj.__dict__[self.name] = value
 
 
 def count_calls(job, data, **kwargs):
@@ -461,6 +488,48 @@ class QueueTest(unittest.TestCase):
         self.queue.workqueue.unpause()
         self.queue.join()
         self.assertEqual(self.queue.get_progress(), 100.0)
+
+    def testCountsJobsThatEndAtTheSameTime(self):
+        # Both jobs read each count before either writes it, unless the queue
+        # locks the counts.
+        expected = {
+            'job_succeeded_event': {'completed': 2, 'failed': 0},
+            'job_aborted_event': {'completed': 2, 'failed': 2},
+        }
+        for event, counts in expected.items():
+            with self.subTest(event=event):
+                self.createQueue(verbose=-1)
+                emit = getattr(self.queue.workqueue, event)
+                jobs = [SimpleNamespace(name='job%d' % i) for i in range(2)]
+                threads = [threading.Thread(target=emit, args=(job,)) for job in jobs]
+                completed = Interleave('completed', threads, self.queue.lock)
+                failed = Interleave('failed', threads, self.queue.lock)
+                with (
+                    mock.patch.object(Queue, 'completed', completed, create=True),
+                    mock.patch.object(Queue, 'failed', failed, create=True),
+                ):
+                    for thread in threads:
+                        thread.start()
+                    for thread in threads:
+                        thread.join()
+                self.assertEqual(
+                    {'completed': self.queue.completed, 'failed': self.queue.failed}, counts
+                )
+
+    def testCountsJobsThatAreEnqueuedAtTheSameTime(self):
+        # Both runs read the count before either writes it, unless they count
+        # under the lock of the pipeline.
+        self.queue.workqueue.pause()
+        hosts = ['dummy://dummy1', 'dummy://dummy2']
+        threads = [threading.Thread(target=self.queue.run, args=(h, do_nothing)) for h in hosts]
+        total = Interleave('total', threads, self.queue.workqueue.collection.condition)
+        with mock.patch.object(Queue, 'total', total, create=True):
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+        self.queue.workqueue.unpause()
+        self.assertEqual(self.queue.total, 2)
 
     def testJobsConnectWithTheHostDriver(self):
         # Each job ends before the driver is set on its host, if it can start
