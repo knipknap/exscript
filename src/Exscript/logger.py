@@ -361,12 +361,6 @@ class Logger:
         self.success = 0
         self.failed = 0
 
-    def _reset(self) -> None:
-        """
-        Forgets all logs.
-        """
-        self.logs = defaultdict(list)
-
     def get_succeeded_actions(self) -> int:
         """
         Returns the number of jobs that were completed successfully.

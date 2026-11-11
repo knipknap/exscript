@@ -24,7 +24,6 @@
 IPv4 address calculation and conversion.
 """
 
-import math
 import re
 import socket
 import struct
@@ -41,23 +40,6 @@ def _least_bit(number: int) -> int:
         if number & (0x00000001 << i) != 0:
             return i
     return 32
-
-
-def _highest_bit(number: int) -> float:
-    """
-    Rounds the given 32-bit number up to the next power of two and returns
-    the square root of the result; returns 0 for 0.
-    """
-    if number == 0:
-        return 0
-    number -= 1
-    number |= number >> 1
-    number |= number >> 2
-    number |= number >> 4
-    number |= number >> 8
-    number |= number >> 16
-    number += 1
-    return math.sqrt(number)
 
 
 def is_ip(string: str) -> bool:

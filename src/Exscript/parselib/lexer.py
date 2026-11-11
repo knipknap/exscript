@@ -151,14 +151,6 @@ class Lexer:
         line = self.get_current_line_number()
         return self._get_line(line)
 
-    def _get_line_from_char(self, char: int) -> str:
-        """
-        Returns the line that contains the given position, without the
-        newline.
-        """
-        line = self._get_line_number_from_char(char)
-        return self._get_line(line)
-
     def _get_line_position_from_char(self, char: int) -> tuple[int, int]:
         """
         Returns the position of the first character of the line that
