@@ -716,7 +716,9 @@ consists of the hostname with ".log.error" appended.
         action="store_true",
         default=False,
         help="""
-When given, the automatic authentication procedure is skipped. Implies -i.
+Skip the automatic login. Unless -i is given, the command still asks for a
+username and password, so that the template can log in itself with them,
+e.g. with connection.authenticate().
 """.strip(),
     )
 

@@ -598,6 +598,10 @@ The names below refer to functions callable from templates, not protocol methods
   name as given, so such a name failed with `No such file`.
 - **`exscript -d` With `=` in the Value:** `-d a=b=c` gives the variable `a` the value
   `b=c`. Before, the command failed with `ValueError: too many values to unpack`.
+- **`exscript --no-authentication` Help:** The help no longer says that `-n` implies
+  `-i`; it never did. `-n` skips the automatic login, and unless `-i` is given, the
+  command still asks for a username and password, so that the template can log in
+  itself with them.
 - **`Exscript.util.mail.send()`:** Ends the SMTP session with `QUIT` and closes the
   connection, also if sending fails; before, it left the connection open. It connects
   only after the mail and its attachments are ready.

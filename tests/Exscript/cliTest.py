@@ -234,6 +234,31 @@ class cliTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(stdout, '')
 
+    def testNoAuthentication(self):
+        # As the help says, -n skips only the automatic login: without -i, the command asks
+        # for the login, and the template can log in with it.
+        code, stdout, stderr = self.run_main('--help')
+        words = ' '.join(stdout.split())
+        help = words[words.index('-n, --no-authentication') : words.index('--authorization ')]
+        expected = (
+            '-n, --no-authentication Skip the automatic login. Unless -i is given, the command'
+            ' still asks for a username and password, so that the template can log in itself'
+            ' with them, e.g. with connection.authenticate(). '
+        )
+        self.assertEqual(help, expected)
+
+        script = '{connection.authenticate()}{sys.message("logged in")}'
+        with (
+            mock.patch('builtins.input', return_value='joe'),
+            mock.patch('getpass.getpass', return_value='secret'),
+        ):
+            code, stdout, stderr = self.run_main(
+                '-n', '-l', self.path('logs'), '-e', script, 'dummy://r1'
+            )
+        self.assertEqual(code, 0, stderr)
+        self.assertTrue(stdout.endswith('logged in\n'), stdout)
+        self.assertIn('User: joe', self.read('logs', 'r1.log'))
+
     def testAuthorizationPrompt(self):
         with (
             mock.patch('builtins.input', return_value='joe'),
