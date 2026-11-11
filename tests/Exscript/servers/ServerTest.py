@@ -121,6 +121,25 @@ class ServerInternalsTest(unittest.TestCase):
         self.assertIsNone(server.socket)
         self.assertFalse(server.is_alive())
 
+    def start(self, port):
+        server = Server('127.0.0.1', port, self.server.device)
+        self.addCleanup(server.to_parent.close)
+        self.addCleanup(server.to_child.close)
+        server.start()
+        self.addCleanup(server.join)
+        self.addCleanup(server.exit)
+        return server
+
+    def testReuseOfTheAddress(self):
+        # Only a fixed port is reused, so that a restarted server can take it at once; port 0
+        # gets a free port anyway.
+        server = self.start(0)
+        self.assertFalse(server.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR))
+        server.exit()
+        server.join()
+        restarted = self.start(server.port)
+        self.assertTrue(restarted.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR))
+
 
 def suite():
     loader = unittest.TestLoader()

@@ -170,10 +170,13 @@ class Server(threading.Thread):
         Starts listening, and then the thread that accepts the connections.
         Clients can connect as soon as this returns. With port 0, the
         operating system chooses a free port; the port attribute has it then.
+        A fixed port is bound with SO_REUSEADDR, so that a restarted server
+        can take it at once.
         """
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if self.port:  # port 0 gets a free port anyway
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind((self.host, self.port))
             sock.listen(1)
         except OSError:
