@@ -630,6 +630,9 @@ The names below refer to functions callable from templates, not protocol methods
   a `KeyError` before Python 3.13.
 - **Pseudo Protocol on Windows:** `pseudo://` URLs accept absolute Windows paths such
   as `pseudo://C:\devices\router.py`; the drive letter was taken for a port number.
+- **`Exscript.util.url.Url.from_string(None)`:** Raises a `TypeError` with the message
+  `Expected string but got NoneType`. Before, building the message failed, so the
+  `TypeError` said `can only concatenate str (not "type") to str`.
 - **`Exscript.util.tty.get_terminal_size()`:** Uses `shutil.get_terminal_size()`: the
   `LINES` and `COLUMNS` environment variables, then the terminal of the standard
   output, then the defaults. It no longer asks standard input, standard error and the

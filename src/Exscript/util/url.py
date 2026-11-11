@@ -191,7 +191,7 @@ class Url:
         :return: The Url object constructed from the given URL.
         """
         if url is None:
-            raise TypeError('Expected string but got' + type(url))
+            raise TypeError('Expected string but got ' + type(url).__name__)
 
         # Extract the protocol name from the URL.
         result = Url()

@@ -106,6 +106,10 @@ class urlTest(unittest.TestCase):
         url.path = 'configs/r1.cfg'
         self.assertEqual(str(url), ':secret@testhost/configs/r1.cfg')
 
+    def testFromStringWithoutString(self):
+        with self.assertRaisesRegex(TypeError, '^Expected string but got NoneType$'):
+            Url.from_string(None)
+
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(urlTest)
