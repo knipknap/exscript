@@ -1,4 +1,5 @@
 import os.path
+import sys
 import unittest
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -85,6 +86,36 @@ class FileLoggerTest(LoggerTest):
         self.logger.log_succeeded(id(self.job))
         self.assertTrue(os.path.isfile(self.logfile))
         self.assertFalse(os.path.exists(self.errfile))
+
+    def _runJobs(self, logger):
+        # Logs one job that succeeds and one that fails.
+        job1, job2 = FakeJob('job1'), FakeJob('job2')
+        for job in job1, job2:
+            logger.add_log(id(job), job.name, 1)
+            logger.log(id(job), 'hello')
+        logger.log_succeeded(id(job1))
+        try:
+            raise FakeError('Connection refused')
+        except FakeError:
+            logger.log_aborted(id(job2), sys.exc_info())
+
+    def testClearmem(self):
+        # The logger forgets the logs of finished jobs, but keeps the files.
+        logger = FileLogger(self.logdir)
+        self._runJobs(logger)
+        self.assertEqual(logger.get_logs(), [])
+        self.assertEqual(logger.get_succeeded_actions(), 1)
+        self.assertEqual(logger.get_aborted_actions(), 1)
+        files = ['job1.log', 'job2.log', 'job2.log.error']
+        self.assertEqual(sorted(os.listdir(self.logdir)), files)
+
+    def testDelete(self):
+        # The log of a job that succeeds is deleted, the one of a failed job is kept.
+        logger = FileLogger(self.logdir, delete=True)
+        self._runJobs(logger)
+        self.assertEqual(sorted(os.listdir(self.logdir)), ['job2.log', 'job2.log.error'])
+        with open(os.path.join(self.logdir, 'job2.log'), encoding='utf-8') as fp:
+            self.assertEqual(fp.read(), 'helloERROR: Connection refused \n')
 
 
 def suite():

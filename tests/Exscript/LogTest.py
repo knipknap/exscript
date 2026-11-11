@@ -25,6 +25,27 @@ class LogTest(unittest.TestCase):
             self.log.aborted(sys.exc_info())
         self.assertIn('FakeError', self.log.get_error())
 
+    def testGetErrorWithoutTraceback(self):
+        try:
+            raise FakeError('Connection refused')
+        except FakeError:
+            self.log.aborted(sys.exc_info())
+        self.assertEqual(self.log.get_error(include_tb=False), 'Connection refused')
+        self.assertIn('Traceback (most recent call last)', self.log.get_error())
+
+    def testGetErrorWithoutTracebackAndMessage(self):
+        # Without a message, the name of the exception class is the error.
+        try:
+            raise FakeError()
+        except FakeError:
+            self.log.aborted(sys.exc_info())
+        self.assertEqual(self.log.get_error(include_tb=False), 'FakeError')
+
+    def testLen(self):
+        self.assertEqual(len(self.log), 0)
+        self.log.write('hello', 'world')
+        self.assertEqual(len(self.log), len('hello world'))
+
     def testGetName(self):
         self.assertEqual(self.log.get_name(), 'testme')
         self.log.started()
