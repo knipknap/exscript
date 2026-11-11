@@ -801,7 +801,8 @@ class Netconf(SSH2):
         """
         Tells ncclient's IO thread that the session is closed on purpose,
         closes the transport, and waits up to a second for the IO thread to
-        end. Then closes the channel and the socket like SSH2._close().
+        end. Then closes the socket like SSH2._close(), and the channel if the
+        IO thread ended; else the thread ends when its listener returns.
         """
         # Clear the ncclient manager reference.
         if self._ncc_manager:
@@ -835,6 +836,16 @@ class Netconf(SSH2):
             ncc_session.join(timeout=1)
             if ncc_session.is_alive():
                 self._dbg(1, "ncclient's IO thread did not end within a second.")
+
+        # If the thread still runs a listener, e.g. a slow monitor callback, or
+        # this is that thread, leave the channel open: closing it would close the
+        # pipe that the thread selects on, so the thread would never see the end
+        # of the session and would wake up every 0.1 seconds until the process
+        # ends. The pipe stays readable, so the thread ends by itself once the
+        # listener returns; paramiko closes the channel when it is
+        # garbage-collected.
+        if ncc_session and ncc_session.is_alive():
+            self._channel = None
 
         # SSH2 closes the paramiko channel, the transport, and the socket.
         super()._close(force=force)

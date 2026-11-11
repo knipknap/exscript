@@ -312,8 +312,10 @@ development versions; "before" refers to them.
 
 - **`close()` Ends ncclient's Thread:** `close()` ends the thread in which ncclient reads
   the session, also with `force=True` or if the server does not answer
-  `<close-session/>`. Before, the thread then kept running until the process ended, and
-  `close()` waited 0.3 seconds for it in vain.
+  `<close-session/>`. If a callback, e.g. of a monitor, keeps the thread busy during
+  `close()` or calls `close()` itself, the thread ends when the callback returns.
+  Before, the thread then kept running until the process ended, and `close()` waited
+  0.3 seconds for it in vain.
 - **RPC Body of One Element:** `execute()` and `send()` raise `XMLValidationError`
   before sending if the RPC body is not one XML element, e.g. `<get-config/><get/>` or
   text. Before, they raised lxml's `XMLSyntaxError`.

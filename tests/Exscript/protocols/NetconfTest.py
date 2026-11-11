@@ -801,6 +801,38 @@ class SessionTest(unittest.TestCase):
                 conn.close(force=force)
                 self.assertFalse(thread.is_alive())
 
+    def testCloseWhileAListenerBlocksTheIOThread(self):
+        # E.g. a slow monitor callback: the thread ends when the listener returns.
+        conn = self.login()
+        thread = conn._ncc_session
+        entered, release = threading.Event(), threading.Event()
+        self.addCleanup(release.set)
+
+        def block(root, raw):
+            entered.set()
+            release.wait(5)
+
+        listener = ncclient.transport.session.SessionListener()
+        listener.callback = block
+        listener.errback = lambda error: None
+        thread.add_listener(listener)
+        self.server.send(NOTIFICATION)
+        self.assertTrue(entered.wait(5))
+        conn.close(force=True)  # waits a second for the thread in vain
+        release.set()
+        thread.join(5)
+        self.assertFalse(thread.is_alive())
+
+    def testCloseInAMonitorCallback(self):
+        # The callback runs in the IO thread, which ends when the callback returns.
+        conn = self.login()
+        thread = conn._ncc_session
+        conn.add_monitor('</notification>', lambda conn, index, match: conn.close(force=True))
+        self.server.send(NOTIFICATION)
+        thread.join(5)
+        self.assertFalse(thread.is_alive())
+        self.assertFalse(conn.connected)
+
     def testSubsystemRefused(self):
         for options in {'subsystem': False}, {'channels': False}:
             with self.assertRaisesRegex(LoginFailure, 'any subsystem: netconf'):
