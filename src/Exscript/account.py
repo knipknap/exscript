@@ -337,7 +337,7 @@ class AccountPool:
         Removes all accounts.
         """
         with self.unlock_cond:
-            for owner in self.owner2account:
+            for owner in list(self.owner2account):
                 self.release_accounts(owner)
             self._remove_account(self.accounts.copy())
             self.unlock_cond.notify_all()

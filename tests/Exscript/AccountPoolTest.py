@@ -38,6 +38,17 @@ class AccountPoolTest(unittest.TestCase):
         self.accm.reset()
         self.assertEqual(self.accm.n_accounts(), 0)
 
+    def testResetReleasesTheAccountsOfOwners(self):
+        self.accm.add_account([self.account1, self.account2])
+        self.accm.acquire_account(self.account1, owner='job1')
+        self.accm.acquire_account(owner='job2')
+        self.accm.reset()
+        self.assertEqual(self.accm.n_accounts(), 0)
+        for account in self.account1, self.account2:
+            self.assertFalse(account.lock.locked())
+            account.acquire()  # the pool no longer follows the account
+            account.release()
+
     def testHasAccount(self):
         self.assertEqual(self.accm.has_account(self.account1), False)
         self.accm.add_account(self.account1)

@@ -655,6 +655,10 @@ The names below refer to functions callable from templates, not protocol methods
   `Exscript.account.LoggerProxy`, `Exscript.workqueue.job.Process` and
   `Queue._create_pipe()`. The queue, accounts and account pools use the locks of
   `threading` instead of those of `multiprocessing`.
+- **`AccountPool.reset()` With Owners:** Releases the accounts that owners acquired,
+  then removes all accounts. Before, it failed with `RuntimeError: dictionary changed
+  size during iteration` if an account was acquired with an owner, as in
+  `pool.acquire_account(owner=job)`.
 - **Order of Sleeping Items:** `next()` and `try_next()` of
   `Exscript.workqueue.Pipeline` leave the sleeping items at the start of the queue in
   their order, so they come next in that order after `wake()`. Before, each call
