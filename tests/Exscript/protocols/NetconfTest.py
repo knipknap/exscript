@@ -22,6 +22,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from lxml import etree
 from ncclient.manager import make_device_handler
+from ncclient.operations.errors import OperationError
 from ncclient.operations.rpc import RPC, RPCReply
 from ncclient.transport.errors import NetconfFramingError
 from ncclient.transport.session import HelloHandler, NetconfBase
@@ -33,6 +34,7 @@ from Exscript.protocols import drivers, netconf
 from Exscript.protocols.exception import (
     ConnectionClosedException,
     LoginFailure,
+    ProtocolException,
     RPCError,
     TimeoutException,
 )
@@ -70,6 +72,14 @@ class ReassembleChunksTest(unittest.TestCase):
 
     def testWithoutChunks(self):
         self.assertEqual(Netconf.reassemble_chunks('<rpc-reply/>'), '<rpc-reply/>')
+
+    def testNoChunkHeader(self):
+        # Text that starts like a chunk header, but is none, is returned as it is.
+        self.assertEqual(Netconf.reassemble_chunks('\n# comment'), '\n# comment')
+
+    def testWithoutEndOfChunks(self):
+        # E.g. if the prompt consumed the end of the chunks.
+        self.assertEqual(Netconf.reassemble_chunks('\n#5\n<ok/>\n#2\nok'), '<ok/>ok')
 
     def testTrailingBytes(self):
         self.assertRaises(ValueError, Netconf.reassemble_chunks, '\n#2\nok\n##\nx')
@@ -159,6 +169,11 @@ class FramerTest(unittest.TestCase):
         # E.g. a newline behind the ]]>]]> of the <hello> of a server.
         data = b'\r\n \n' + encode_message(b'<a/>', True)
         self.assertEqual(self.feed(data, base=NetconfBase.BASE_11), ['<a/>'])
+
+    def testEmptyMessages(self):
+        # Messages without content are not dispatched.
+        data = b'<a/>]]>]]>]]>]]>\r\n]]>]]><b/>]]>]]>'
+        self.assertEqual(self.feed(data), ['<a/>', '<b/>'])
 
     def testSwitchToFraming11(self):
         # ncclient selects NETCONF 1.1 after the <hello> messages.
@@ -303,6 +318,42 @@ class NetconfTest(unittest.TestCase):
         self.assertEqual(''.join(sent), '<a>Zürich €</a>')
         self.assertEqual(self.conn.stdout.getvalue(), '<a>Zürich €</a>')
 
+    def testWriteWithinACharacter(self):
+        sent = []
+        self.conn.data_sent_event.connect(sent.append)
+        channel = FakeChannel()
+        self.conn._wrap_channel(channel)
+        self.assertEqual(channel.send('€'.encode()), 2)  # two of its three bytes
+        self.assertEqual(sent, [])
+        channel.send(b'\xac')
+        self.assertEqual(sent, ['€'])
+
+    def testEndOfTheReceivedData(self):
+        # After the end of the received data, nothing more is replicated.
+        received, sent = [], []
+        self.conn.data_received_event.connect(received.append)
+        self.conn.data_sent_event.connect(sent.append)
+        channel = FakeChannel([b'<a/>'])
+        self.conn._wrap_channel(channel)
+        while channel.recv(4096):
+            pass
+        self.conn._receive_message('<rpc-reply/>')
+        self.assertEqual(channel.send(b'<b/>'), 2)
+        self.assertEqual(received, ['<a/>'])
+        self.assertEqual(sent, [])
+        self.assertEqual(str(self.conn._buffer), '')
+
+    def testWriteToAClosedChannel(self):
+        # Then nothing more is replicated, as after the end of the received data.
+        received, sent = [], []
+        self.conn.data_received_event.connect(received.append)
+        self.conn.data_sent_event.connect(sent.append)
+        channel = ClosedChannel([b'<a/>'])
+        self.conn._wrap_channel(channel)
+        self.assertEqual(channel.send(b'<b/>'), 0)
+        self.assertEqual(channel.recv(4096), b'<a/>')
+        self.assertEqual((received, sent), ([], []))
+
 
 class FakeChannel:
     """Returns the given pieces from recv(), then b''; send() writes two bytes at most."""
@@ -317,6 +368,13 @@ class FakeChannel:
     def send(self, s):
         self.sent += s[:2]
         return len(s[:2])
+
+
+class ClosedChannel(FakeChannel):
+    """Like FakeChannel, but send() returns 0, like paramiko's after the channel was closed."""
+
+    def send(self, s):
+        return 0
 
 
 class NetconfServer:
@@ -680,6 +738,23 @@ class SessionTest(unittest.TestCase):
         self.assertRaises(TimeoutException, conn.execute, '<get/>')
         self.assertIsNone(conn.get_response_element())
         self.assertRaises(TimeoutException, conn.expect, 'never')
+
+    def testReplyThatIsNoXML(self):
+        # lxml's error is raised, and the session goes on.
+        replies = iter(['<data><unclosed></data>', '<ok/>'])
+        conn = self.login(lambda rpc: next(replies))
+        with self.assertRaisesRegex(etree.XMLSyntaxError, 'Opening and ending tag mismatch'):
+            conn.execute(GET_CONFIG)
+        conn.execute(LOCK)
+        self.assertEqual(etree.QName(conn.get_response_element()[0]).localname, 'ok')
+
+    def testOtherErrorsOfNcclient(self):
+        conn = self.login()
+        error = OperationError("Unknown 'message-id': 7")
+        with mock.patch.object(RPC, '_request', side_effect=error):
+            with self.assertRaises(ProtocolException) as cm:
+                conn.execute(GET_CONFIG)
+        self.assertEqual(str(cm.exception), "ncclient related error (Unknown 'message-id': 7)")
 
     def testSetTimeoutAfterLogin(self):
         # Each RPC waits as long as the current timeout says, also close-session.
