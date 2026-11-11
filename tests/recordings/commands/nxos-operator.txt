@@ -1,0 +1,6 @@
+# Cisco NX-OS (R2, optional), with --os nxos, as a user with the role network-operator:
+# the error of a command that the role does not allow.
+terminal length 0
+show version
+configure terminal
+exit
